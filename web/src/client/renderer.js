@@ -73,13 +73,15 @@ export class Renderer {
   }
 
   groundChunk(cx, cy) {
-    const k = cx + "," + cy;
+    const hd = !!this.spr.hd, k = cx + "," + cy + (hd ? "h" : "");
     let c = this.chunks.get(k);
     if (c) return c;
+    const Q = hd ? 2 : 1;                                   // remastered: el suelo se pregenera al doble de resolución
     c = document.createElement("canvas");
-    c.width = c.height = CHUNK * T;
+    c.width = c.height = CHUNK * T * Q;
     const g = c.getContext("2d");
-    g.imageSmoothingEnabled = false;
+    g.scale(Q, Q);
+    g.imageSmoothingEnabled = hd; g.imageSmoothingQuality = "high";
     let ready = true;
     for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
@@ -89,6 +91,7 @@ export class Renderer {
           g.fillRect(i * T, j * T, T, T);
         }
         if (!this.spr.ready("t" + t.spr)) ready = false;
+        else if (hd && this.spr.hdm["t" + t.spr] && this.spr.src("t" + t.spr)[1] === 1) ready = false;   // espera a la hoja HD
         this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
         if (this.grid.procedural && !t.blocked) {
           g.fillStyle = "rgba(24,21,29,.35)"; g.fillRect(i * T, j * T, T, T);
@@ -146,7 +149,7 @@ export class Renderer {
     const span = CHUNK * T;
     for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
       for (let cx = Math.floor(camX / span); cx * span < camX + VW; cx++)
-        if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY);
+        if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY, span, span);
 
     this.drawPortals(s, camX, camY);
 

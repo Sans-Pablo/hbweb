@@ -8,7 +8,7 @@ from PIL import Image
 from hdup import upscale
 
 K = 4
-PREFIX = ("pb", "ph", "pu", "slm", "ske", "scp", "gol", "ant", "amp", "ig", "ip")
+PREFIX = ("pb", "ph", "pu", "slm", "ske", "scp", "gol", "ant", "amp", "ig", "ip", "t")
 data = sys.argv[1]
 out = os.path.join(data, "sprites_hd")
 os.makedirs(out, exist_ok=True)
@@ -26,5 +26,8 @@ def work(k):
 
 if __name__ == "__main__":
     with Pool() as p: done = p.map(work, keys, chunksize=8)
-    json.dump({k: {"png": k + ".webp", "k": K} for k, _ in done}, open(os.path.join(data, "sprites_hd.json"), "w"), separators=(",", ":"))
+    fp = os.path.join(data, "sprites_hd.json")
+    hd = json.load(open(fp)) if os.path.exists(fp) else {}
+    hd.update({k: {"png": k + ".webp", "k": K} for k, _ in done})
+    json.dump(hd, open(fp, "w"), separators=(",", ":"))
     print(len(done), "sprites HD")
