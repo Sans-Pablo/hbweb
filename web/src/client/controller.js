@@ -101,7 +101,7 @@ export class Controller {
     if (!me || me.dead) return;
     const { ent, x: tx, y: ty } = this.target();
     if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
-      if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty }); this.ui.cancelPointing(true); }
+      if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); }
       return;
     }
     if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar

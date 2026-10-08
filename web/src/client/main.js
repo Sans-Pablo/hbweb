@@ -12,7 +12,7 @@ import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
-import { itemDef } from "./names.js";
+import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 
@@ -79,6 +79,13 @@ async function main() {
     learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
+  gui.describe = uid => {
+    const me = world.ents.get(pid), it = me && me.bag.find(i => i.uid === uid); if (!it) return null;
+    const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
+    return { name: itemName(it.id, it.attr) + (it.count > 1 ? " x" + it.count : ""), lines };
+  };
+  gui.onSound = n => sound.playRaw("E" + n, 1, 0);
+  fx.onSfx = (n, x, y) => sound.playAt(n, x, y);
   gui.onItemDrop = (it, x, y, dlg) => {
     const me = world.ents.get(pid), inst = me?.bag.find(i => i.uid === it.uid), d = inst && itemDef(inst.id);
     if (!me || me.dead || !inst) return;
@@ -157,6 +164,8 @@ async function main() {
       if (m.mana > me.mp) { hud.log("No tienes maná suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
+      conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
+      gui.close(3);
       document.body.classList.add("pointing");
       hud.toast(m.name);
     },
@@ -360,7 +369,7 @@ async function main() {
   requestAnimationFrame(loop);
 
   // para pruebas automáticas
-  window.hb = { get world() { return conn.state; }, conn, renderer, ctl, setMode, pid };
+  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid };
   window.hbSound = sound;
 }
 

@@ -192,12 +192,14 @@ export class Gui {
     this.mouse.x = x; this.mouse.y = y; this.mouse.down = true;
     const d = this.dialogAt(x, y);
     if (d) {
+      if (button === 2) { if (!d.fixed) this.close(d.id); return true; }      // clic derecho: cierra el cuadro
       this.front(d.id);
       const now = performance.now(), dbl = button === 0 && this.lastClick && this.lastClick.id === d.id && now - this.lastClick.t < 400 && Math.hypot(x - this.lastClick.x, y - this.lastClick.y) < 6;
       this.lastClick = { id: d.id, t: now, x, y };
       if (dbl && d.dbl?.(this, x - d.x, y - d.y, me)) { this.lastClick = null; return true; }
       if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
       const used = button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
+      if (used) this.onSound?.(14);
       if (!used && button === 0 && !d.fixed) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
     }
@@ -254,7 +256,25 @@ export class Gui {
       c.restore();
     }
     if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
+    this.itemTooltip(me);
     for (const [x, y, s] of this.tips) this.text(x, y, s, "#fafadc", { shadow: true });
+  }
+
+  // estadísticas del objeto que se arrastra o sobre el que está el cursor
+  itemTooltip(me) {
+    const uid = this.item ? this.item.uid : this.hoverUid;
+    this.hoverUid = null;
+    if (!uid || !me || !this.describe) return;
+    const info = this.describe(uid); if (!info) return;
+    const c = this.ctx, rows = [[info.name, "#ffe9a0", true], ...info.lines.map(l => [l.t, l.c || "#e8e8d0", false])];
+    c.font = "12px Tahoma, Verdana, sans-serif";
+    const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14, h = rows.length * 14 + 10;
+    let x = this.mouse.x + 18, y = this.mouse.y + 14;
+    if (x + w > W) x = this.mouse.x - w - 8;
+    if (y + h > H) y = H - h;
+    c.fillStyle = "rgba(10,8,4,.88)"; c.fillRect(x, y, w, h);
+    c.strokeStyle = "#8a7a4a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    rows.forEach((r, i) => this.text(x + 7, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)

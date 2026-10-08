@@ -21,27 +21,48 @@ export function learn(w, p, id) {
   return true;
 }
 
-export function cast(w, p, cmd) {
+// Comprobaciones comunes de lanzar/preparar (UseMagic del cliente original)
+function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
   if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
-  if (w.busy(p)) return w.reject(p, cmd, "ocupado");
-  if (w.time - (p.lastCast ?? -1e9) < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido");
-  const x = cmd.x | 0, y = cmd.y | 0;
-  if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
+  if (p.mp < M.manaCost(p, sp)) return w.reject(p, cmd, "maná insuficiente");
+  return sp;
+}
+
+// Elegir el hechizo en el libro: el personaje empieza a lanzarlo (animación) y espera el objetivo.
+export function prepare(w, p, cmd) {
+  if (p.dead || w.busy(p)) return w.reject(p, cmd, "ocupado");
+  const sp = usable(w, p, cmd); if (!sp) return false;
+  p.prep = { spell: cmd.spell, at: w.time };
+  p.lastCombat = w.time;
+  w.setAct(p, ACT.MAGIC, M.CAST_MS);
+  p.busyUntil = w.time + M.CAST_MS;
+  w.emit({ t: "prepare", id: p.id, spell: cmd.spell });
+  return true;
+}
+
+export function cast(w, p, cmd) {
+  const pre = !!(cmd.pre && p.prep && p.prep.spell === cmd.spell && w.time - p.prep.at < 120000);
+  if (!pre && w.busy(p)) return w.reject(p, cmd, "ocupado");
+  if (w.time - (p.lastCast ?? -1e9) < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido");
+  const sp = usable(w, p, cmd); if (!sp) return false;
+  const x = cmd.x | 0, y = cmd.y | 0;
+  if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
   const cost = M.manaCost(p, sp);
-  if (p.mp < cost) return w.reject(p, cmd, "maná insuficiente");
 
   p.lastCast = w.time;
   p.lastCombat = w.time;
   if (x !== p.x || y !== p.y) p.dir = dirTo(p.x, p.y, x, y) || p.dir;
-  w.setAct(p, ACT.MAGIC, M.CAST_MS);
-  p.busyUntil = w.time + M.CAST_MS;
+  // con el hechizo ya preparado, la animación de lanzar ya se hizo al elegirlo: solo queda soltarlo
+  const wait = pre ? Math.max(0, p.busyUntil - w.time) : 0, ms = pre ? (wait || 160) : M.CAST_MS;
+  p.prep = null;
+  if (!pre || !wait) { w.setAct(p, ACT.MAGIC, ms); p.busyUntil = w.time + ms; }
   w.emit({ t: "cast", id: p.id, spell: cmd.spell, x, y, attr: sp.attr, type: sp.type });
-  w.after(M.CAST_MS, () => resolve(w, p, cmd.spell, sp, x, y, cost));
+  w.after(pre ? wait + 80 : ms, () => resolve(w, p, cmd.spell, sp, x, y, cost));
   return true;
 }
 

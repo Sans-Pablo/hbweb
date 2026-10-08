@@ -231,7 +231,7 @@ def main():
     # Música: data/music/<pista>.mp3 (original) y <pista>.remaster.mp3 (con --remaster).
     sfx_dir = os.path.join(out, "sfx")
     os.makedirs(sfx_dir, exist_ok=True)
-    sounds = ["C1", "C5", "C6", "C8", "C12", "C14"]
+    sounds = ["C%d" % i for i in range(1, 25)] + ["E%d" % i for i in range(1, 54)]   # efectos del jugador y de la interfaz
     for base in MOB_SOUNDS.values():
         sounds += ["M%d" % (base + i) for i in range(4)]
     snd_names = {f.lower(): f for f in os.listdir(os.path.join(hb, "SOUNDS"))}

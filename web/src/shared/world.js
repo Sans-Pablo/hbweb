@@ -148,6 +148,7 @@ const COMMANDS = {
     w.after(ms * PLAYER.attackHitAt, () => Combat.playerHit(w, p, t));
     return true;
   },
+  prepare: (w, p, cmd) => MagicSys.prepare(w, p, cmd),
   cast: (w, p, cmd) => MagicSys.cast(w, p, cmd),
   learn: (w, p, cmd) => MagicSys.learn(w, p, cmd.spell),
   pickup: (w, p) => ItemSys.startPickup(w, p),

@@ -3,6 +3,7 @@ import { itemName } from "./names.js";
 // No influyen en el juego; solo leen los eventos de la simulación.
 import { posOf } from "./anim.js";
 import { TILE } from "../shared/const.js";
+import { SpellFx } from "./spellfx.js";
 
 const SPELL_COLORS = { 0: "197,138,255", 1: "176,138,74", 2: "207,230,255", 3: "255,122,42", 4: "74,168,255" };
 
@@ -14,7 +15,10 @@ export class Fx {
     this.parts = [];
     this.flash = new Map();          // id -> hora del último golpe (destello)
     this.rings = [];
-    this.bolts = [];                 // proyectiles y explosiones de hechizos
+    this.bolts = [];
+    this.sp = new SpellFx();         // efectos de hechizos del cliente original
+    this.sp.hook = (n, x, y) => this.onSfx?.(n, x, y);
+    this.sp.load();
   }
 
   at(id) {
@@ -37,13 +41,11 @@ export class Fx {
         break;
       case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
       case "spell": {
-        const from = this.at(ev.id), col = SPELL_COLORS[ev.attr] || SPELL_COLORS[0];
-        const tx = ev.x * TILE + 16, ty = ev.y * TILE + 16;
-        if (from) this.bolts.push({ x1: from[0], y1: from[1] - 26, x2: tx, y2: ty - 8, col, born: performance.now(), area: ev.type === 3 ? 2 : 0.6 });
-        this.sparks(tx, ty - 8, ev.type === 3 ? 26 : 12, col);
+        const c = this.world.ents.get(ev.id);
+        this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);
         break;
       }
-      case "heal": this.text(ev.id, "+" + ev.amount, "#7fe07f"); this.burst(ev.id, 16, "rgba(120,255,140,", 1.2); break;
+      case "heal": this.text(ev.id, "+" + ev.amount, "#7fe07f"); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
       case "resist": this.text(ev.id, "resiste", "#a9b4c2"); break;
       case "exp": if (mine) this.text(ev.id, "+" + ev.amount + " exp", "#e6c869", false, -16); break;
@@ -92,21 +94,7 @@ export class Fx {
       ctx.stroke();
     }
     this.rings = this.rings.filter(r => now - r.born < 900);
-    // hechizos: proyectil que viaja 250 ms y explosión
-    for (const b of this.bolts) {
-      const t = now - b.born;
-      if (t < 250) {
-        const k = t / 250, x = b.x1 + (b.x2 - b.x1) * k - camX, y = b.y1 + (b.y2 - b.y1) * k - camY;
-        const g = ctx.createRadialGradient(x, y, 1, x, y, 11);
-        g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(0.35, "rgba(" + b.col + ",.8)"); g.addColorStop(1, "rgba(" + b.col + ",0)");
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill();
-      } else if (t < 650) {
-        const k = (t - 250) / 400, r = (10 + 26 * k) * (b.area > 1 ? 1.8 : 1);
-        ctx.strokeStyle = "rgba(" + b.col + "," + (1 - k) + ")"; ctx.lineWidth = 3 * (1 - k) + 1;
-        ctx.beginPath(); ctx.arc(b.x2 - camX, b.y2 - camY, r, 0, Math.PI * 2); ctx.stroke();
-      }
-    }
-    this.bolts = this.bolts.filter(b => now - b.born < 650);
+    this.sp.update(); this.sp.draw(ctx, camX, camY);
     // partículas
     if (remaster) {
       for (const p of this.parts) {

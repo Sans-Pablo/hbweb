@@ -119,11 +119,33 @@ export class Sound {
     s.start();
   }
 
+  // sonido de un efecto en la casilla (tx,ty): volumen y panorámica según la distancia, como PlaySound
+  playAt(name, tx, ty) {
+    const me = this.world.ents.get(this.me);
+    if (!me) return this.play(name, this.me);
+    const d = Math.max(Math.abs(tx - me.x), Math.abs(ty - me.y));
+    if (d > 14) return;
+    this.playRaw(name, Math.max(0, 1 - d / 14), Math.max(-1, Math.min(1, (tx - me.x) / 12)));
+  }
+  async playRaw(name, gain, pan) {
+    if (!this.ctx || !this.on) return;
+    const buf = await this.buffer(name); if (!buf) return;
+    const s = this.ctx.createBufferSource(); s.buffer = buf;
+    const g = this.ctx.createGain(); g.gain.value = gain;
+    const p = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (p) { p.pan.value = pan; s.connect(g).connect(p).connect(this.master); } else s.connect(g).connect(this.master);
+    s.start();
+  }
+
   // M(base) andar, M(base+1) atacar, M(base+2) daño, M(base+3) morir
   onEvent(ev) {
     const e = this.world.ents.get(ev.id);
     const mob = e && e.kind === "npc" ? e.cfg.sound : 0;
     switch (ev.t) {
+      case "equip": if (ev.id === this.me) this.playRaw("E28", 1, 0); break;
+      case "unequip": if (ev.id === this.me) this.playRaw("E29", 1, 0); break;
+      case "pickup": if (ev.id === this.me) this.playRaw(ev.item === 90 ? "E12" : "E20", 1, 0); break;
+      case "levelup": if (ev.id === this.me) this.playRaw("E30", 1, 0); break;
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
         else this.play("C1", ev.id, 0.8);

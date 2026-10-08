@@ -40,7 +40,16 @@ export function registerDialogs(gui, api) {
       L(me.kills, 257);
       L(s.str, 285, 48, 82); L(s.dex, 302, 48, 82); L(s.vit, 285, 218, 251); L(s.int, 285, 135, 167); L(s.mag, 302, 135, 167); L(s.chr, 302, 218, 251);
       this.paperdoll(g, me);
-      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y, on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      if (!g.item && g.dialogAt(m.x, m.y) === this) {          // objeto equipado bajo el cursor
+        for (const pos of ORDER) {
+          const uid = me.equip && me.equip[pos], it = uid && me.bag.find(b => b.uid === uid), d = it && itemDef(it.id), key = d && eqKey(me.gender === 2, d.sprite);
+          if (!key) continue;
+          const [px, py] = SLOT_POS[pos][me.gender === 2 ? 1 : 0];
+          if (g.hitUi(key, d.spriteFrame, px, py, lx, ly)) g.hoverUid = uid;
+        }
+      }
+      const on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
       g.put("dialogtext_1", on(15) ? 5 : 4, 15, 340);           // Quest
       g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
@@ -113,6 +122,7 @@ export function registerDialogs(gui, api) {
         if (d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      if (!g.item && g.dialogAt(m.x, m.y) === this) { const h = this.pick(g, lx, ly, me); if (h) g.hoverUid = h.it.uid; }
       if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 1, 23, 172);
       if (lx >= 140 && lx <= 212 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 2, 140, 172);
     },
@@ -309,7 +319,6 @@ export function registerDialogs(gui, api) {
       const over = (a) => lx >= a && lx <= a + 74 && ly >= 225 && ly <= 245;
       if (S.logoutCount === null) g.put("dialogtext_1", over(30) ? 9 : 8, 30, 225); else g.put("dialogtext_1", over(30) ? 7 : 6, 30, 225);
       if (me.dead) g.put("dialogtext_1", over(154) ? 37 : 36, 154, 225);
-      else { label(133, 214, "Coded by Cleroth,"); label(125, 229, "Diuuude & Snoopy81"); }
       // control deslizante de volumen (mantener pulsado)
       if (m.down && g.order[g.order.length - 1] === 19) {
         if (lx >= 127 && lx <= 238 && ly >= 122 && ly <= 138) api.setSys({ soundVol: Math.max(0, Math.min(100, Math.round(lx - 127))) });
