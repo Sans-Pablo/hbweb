@@ -53,6 +53,42 @@ test("entrada accesible sin alterar la geometría de Aresfarm y validada por la 
   assert.deepEqual(new Uint8Array(a.farm.grid.dv.buffer), before);
 });
 
+test("cámaras amplias, doce galerías anchas y guardianes visibles al entrar", () => {
+  for (let seed = 0; seed < 100; seed++) {
+    const d = generateDungeon(seed);
+    assert.equal(d.grid.w, 112); assert.equal(d.grid.h, 112);
+    assert.equal(d.corridors.length, 12);
+    assert.ok(d.rooms.every(r => r.w >= 18 && r.h >= 18));
+    assert.ok(d.spawns.reduce((n, s) => n + s.max, 0) >= 29);
+    assert.ok(d.spawns.reduce((n, s) => n + s.max, 0) <= 36);
+    const a = session(), id = a.addPlayer("explorador");
+    a.options.rng = seededRandom(seed);
+    const w = enter(a, id), p = w.ents.get(id);
+    const visible = [...w.ents.values()].filter(e => e.kind === "npc" && Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)) <= 8);
+    assert.ok(visible.length >= 2);
+    assert.ok(visible.every(e => Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)) > e.cfg.searchRange));
+    for (const { points, width } of d.corridors) {
+      assert.ok(width >= 6);
+      for (let j = 1; j < points.length; j++) {
+        let [x, y] = points[j - 1]; const [tx, ty] = points[j];
+        while (true) {
+          for (let dy = -width / 2; dy < width / 2; dy++) for (let dx = -width / 2; dx < width / 2; dx++) assert.ok(!d.grid.blocked(x + dx, y + dy), `galería obstruida seed ${seed}`);
+          if (x === tx && y === ty) break;
+          x += Math.sign(tx - x); y += Math.sign(ty - y);
+        }
+      }
+    }
+  }
+});
+
+test("no permite entrar en una cripta vacía cuando faltan los datos NPC", () => {
+  const a = session(), id = a.addPlayer("uno"), p = a.farm.ents.get(id);
+  a.farm.npcDb = {};
+  place(a.farm, p, FARM_PORTAL.x - 1, FARM_PORTAL.y);
+  assert.equal(a.command(id, { t: "portal", portal: FARM_PORTAL.id }), false);
+  assert.equal(a.worldFor(id), a.farm);
+});
+
 test("instancias separadas, IDs únicos y progreso/equipo/vida conservados al volver", () => {
   const a = session(), id = a.addPlayer("uno"), id2 = a.addPlayer("dos");
   const p = a.farm.ents.get(id); p.gold = 543; p.hp = 23; p.mp = 11; p.sp = 14;
@@ -74,8 +110,10 @@ test("instancias separadas, IDs únicos y progreso/equipo/vida conservados al vo
 test("combate, drops y finalización sin respawn de esqueletos", () => {
   const a = session(), id = a.addPlayer("uno"), d = enter(a, id), p = d.ents.get(id);
   const enemies = [...d.ents.values()].filter(e => e.kind === "npc");
+  assert.equal(d.map.remainingEnemies, enemies.length);
   for (const n of enemies) d.killNpc(n, p);
   a.tick(2000);
+  assert.equal(d.map.remainingEnemies, 0);
   assert.ok(d.items.size > 0); assert.ok(p.kills === enemies.length);
   assert.ok(d.drainEvents().some(ev => ev.t === "dungeon-cleared"));
   a.tick(15000);

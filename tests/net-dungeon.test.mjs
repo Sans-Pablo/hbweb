@@ -64,7 +64,8 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));
     await until(() => a.conn.state.map.kind === "dungeon", "entrada A");
     const mapA = a.conn.state.map;
-    assert.equal(a.conn.state.grid.w, 64);
+    assert.equal(a.conn.state.grid.w, 112);
+    assert.ok(mapA.totalEnemies >= 29 && mapA.remainingEnemies === mapA.totalEnemies);
     assert.deepEqual(new Uint8Array(a.conn.state.grid.dv.buffer), new Uint8Array(generateDungeon(mapA.seed).grid.dv.buffer));
     await until(() => !b.conn.state.ents.has(a.conn.pid), "A sale de vista de B");
     assert.equal(b.conn.state.map.kind, "farm");
