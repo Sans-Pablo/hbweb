@@ -226,7 +226,27 @@
   #join.creating .pw2 { display: block; }
   #join .hint { font-size: 11px; color: var(--muted); margin: 10px 0 0; text-align: center; }
   #join input[type=password] { width: 100%; box-sizing: border-box; }
+  #create { position: fixed; inset: 0; display: none; place-items: center; background: rgba(5,5,8,.92); z-index: 60; }
+  #create .box { background: linear-gradient(#1f1b13, #14110b); border: 1px solid #6b5a33; border-radius: 12px; padding: 18px 22px; width: min(620px, 94vw); color: #e8e2d0; font-size: 14px; }
+  #create h2 { margin: 0 0 12px; color: #d9a940; font-family: Georgia, serif; text-align: center; letter-spacing: .08em; }
+  #create .cols { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+  #create .col { flex: 1 1 250px; }
+  #create label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  #create .cname { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 7px 9px; background: #0d0b08; color: #fff3d0; border: 1px solid #6b5a33; border-radius: 6px; }
+  #create .presets { display: flex; gap: 6px; margin-bottom: 10px; }
+  #create .presets button { flex: 1; }
+  #create button { padding: 4px 9px; background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; cursor: pointer; }
+  #create button:disabled { opacity: .35; cursor: default; }
+  #create .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  #create .row span { flex: 1; color: var(--muted); }
+  #create .row b { min-width: 74px; text-align: center; font-weight: 600; }
+  #create .left { color: #ffd76a; font-size: 12px; margin: 8px 0 0; }
+  #create canvas { display: block; margin: 0 auto 8px; background: radial-gradient(#2b2619, #0f0d08); border: 1px solid #3e3526; border-radius: 8px; image-rendering: pixelated; }
+  #create .msg { color: #ff8a7a; font-size: 12px; min-height: 16px; margin: 8px 0 0; text-align: center; }
+  #create .btns { text-align: center; margin-top: 6px; }
+  #create .ok { padding: 8px 22px; font-size: 15px; border-color: #ffd76a; color: #ffd76a; }
 </style>
+<div id="create"></div>
 <div id="lost"><div><h2>Conexión perdida</h2><p>El servidor se ha cerrado o se cortó internet.</p><button onclick="location.reload()">Volver a entrar</button></div></div>
 
 <div id="ui">

@@ -18,8 +18,8 @@ export class Adventure {
   }
 
   worldFor(id) { return this.locations.get(id) || this.farm; }
-  addPlayer(name, save) {
-    const id = this.farm.addPlayer(name, save);
+  addPlayer(name, save, create = null) {
+    const id = this.farm.addPlayer(name, save, create);
     this.locations.set(id, this.farm);
     return id;
   }

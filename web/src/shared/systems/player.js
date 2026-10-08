@@ -8,11 +8,40 @@ import { newInst } from "./itemsys.js";
 
 const LEGACY = { red: 91, bigred: 92, blue: 93, green: 95 };     // partidas guardadas con el formato antiguo
 
-// Personaje nuevo (WorldLServer.exe): 70 puntos entre los seis atributos; habilidades iniciales y objetos.
-function newCharacter(w, p) {
+// Nombre de personaje válido (CMisc::bCheckValidName; el cuadro de texto del cliente admite 10 letras).
+const NAME_BAD = ",= \n\t.\\/:*?<>|\"`;@[]^_'";
+export const validCharName = n => typeof n === "string" && n.length >= 1 && n.length <= 10 &&
+  [...n].every(c => c >= "0" && c <= "z" && !NAME_BAD.includes(c));
+
+// Creación (Client/Game.cpp, UpdateScreen_OnCreateNewCharacter): atributos de 10 a 14 con 70 puntos en total
+// como máximo; género 1/2, piel 1-3, peinado 0-7, color de pelo 0-15, color de ropa interior 0-7.
+const clampInt = (v, lo, hi, d) => (Number.isInteger(v) && v >= lo && v <= hi ? v : d);
+export const PRESETS = {
+  warrior: { str: 14, vit: 12, dex: 14, int: 10, mag: 10, chr: 10 },
+  mage: { str: 10, vit: 12, dex: 10, int: 14, mag: 14, chr: 10 },
+  priest: { str: 14, vit: 10, dex: 10, int: 10, mag: 12, chr: 14 },
+};
+export function sanitizeCreate(c) {
+  c = c || {};
+  let stats = { ...PRESETS.warrior };
+  if (c.stats) {
+    const k = ["str", "vit", "dex", "int", "mag", "chr"], v = {};
+    for (const n of k) v[n] = c.stats[n];
+    if (k.every(n => Number.isInteger(v[n]) && v[n] >= 10 && v[n] <= 14) && k.reduce((a, n) => a + v[n], 0) <= 70) stats = v;
+  }
+  return {
+    stats,
+    gender: clampInt(c.gender, 1, 2, 1),
+    look: { skin: clampInt(c.skin, 1, 3, 2), hair: clampInt(c.hair, 0, 7, 1), hairCol: clampInt(c.hairCol, 0, 15, 0), under: clampInt(c.under, 0, 7, 0) },
+  };
+}
+
+// Personaje nuevo (WorldLServer.exe): habilidades iniciales y objetos.
+function newCharacter(w, p, create) {
+  const c = sanitizeCreate(create);
   Object.assign(p, {
-    gender: 1,
-    stats: { str: 14, vit: 12, dex: 14, int: 10, mag: 10, chr: 10 },
+    gender: c.gender, look: c.look,
+    stats: c.stats,
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
     bag: [], equip: {}, gold: 0, ssn: {}, magic: {},
   });
@@ -27,14 +56,14 @@ function newCharacter(w, p) {
   };
   give("Dagger"); give("Map"); give("RedPotion"); give("BluePotion"); give("GreenPotion");
   give("WoodShield", true);
-  give(p.gender === 1 ? "KneeTrousers(M)" : "Chemise(W)", p.gender === 1);
+  give(p.gender === 1 ? "KneeTrousers(M)" : "Chemise(W)", true);
 }
 
-export function addPlayer(w, name, save = null) {
+export function addPlayer(w, name, save = null, create = null) {
   const [x, y] = w.freeSpotNear(w.start[0], w.start[1]);
   const p = w.makeEnt("player", x, y);
   Object.assign(p, { name, lastMove: -1e9, lastAttack: -1e9, lastCombat: -1e9, lastVitals: w.time, kills: 0, deadAt: 0 });
-  newCharacter(w, p);
+  newCharacter(w, p, create);
   if (save) loadSave(w, p, save);
   recalc(w, p);
   p.hp = p.maxHp; p.mp = p.maxMp;
@@ -47,6 +76,8 @@ export function addPlayer(w, name, save = null) {
 function loadSave(w, p, s) {
   for (const k of ["level", "exp", "pool", "gold", "kills", "gender", "side"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
+  if (s.look) p.look = { ...p.look, ...s.look };
+  if (typeof s.charName === "string" && validCharName(s.charName)) p.name = s.charName;
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic };
@@ -65,7 +96,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side,
+    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.attr ? { attr: i.attr, color: i.color } : {}) })), equip: { ...p.equip },
   };

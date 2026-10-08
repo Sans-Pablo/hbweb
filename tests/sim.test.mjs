@@ -107,6 +107,23 @@ assert(golds / nDrops > 0.55 && golds / nDrops < 0.65, "60 % de lo que cae es or
 
 const counts = {};
 let target = null;
+// --- creación de personaje
+{
+  const P = await import("../web/src/shared/systems/player.js");
+  assert(P.validCharName("Pablo1") && !P.validCharName("Pa blo") && !P.validCharName("a_b") && !P.validCharName("") && !P.validCharName("12345678901"), "nombres válidos como en el original");
+  const mk = c => { const w = new World({ grid, npcDb, data, spawns, rng, start: meta.start }); const id = w.addPlayer("Mago", null, c); return w.ents.get(id); };
+  const m = mk({ stats: P.PRESETS.mage, gender: 2, skin: 3, hair: 5, hairCol: 9, under: 4 });
+  assert(m.stats.int === 14 && m.stats.mag === 14 && m.stats.str === 10 && m.gender === 2, "plantilla de mago");
+  assert(m.look.skin === 3 && m.look.hair === 5 && m.look.hairCol === 9 && m.look.under === 4, "aspecto elegido");
+  assert(m.skills[4] === 14 + 10 && m.skills[5] === 10 + 10, "habilidades iniciales según los atributos");
+  assert(Object.keys(m.equip).length === 2 && m.bag.some(i => data.item(i.id).name === "Chemise(W)"), "mujer: lleva Chemise(W)");
+  const bad = mk({ stats: { str: 14, vit: 14, dex: 14, int: 14, mag: 14, chr: 14 }, gender: 7, skin: 9 });   // 84 puntos: se ignora
+  assert(bad.stats.str === 14 && bad.stats.dex === 14 && bad.stats.int === 10 && bad.gender === 1 && bad.look.skin === 2, "valores fuera de regla vuelven a los de por defecto");
+  const sv = mk({ gender: 2, hair: 3 }), w5 = new World({ grid, npcDb, data, spawns, rng, start: meta.start });
+  const back = w5.ents.get(w5.addPlayer("Otro", { gender: 2, look: { hair: 3 }, charName: "Elfa", stats: { str: 12 } }));
+  assert(back.name === "Elfa" && back.look.hair === 3 && sv.look.hair === 3, "guardado conserva nombre y aspecto");
+}
+
 for (let step = 0; step < 20 * 60 * 20; step++) {          // 20 minutos de juego a 20 Hz
   world.tick(50);
   for (const ev of world.drainEvents()) counts[ev.t] = (counts[ev.t] || 0) + 1;

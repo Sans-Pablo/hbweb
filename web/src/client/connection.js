@@ -11,13 +11,16 @@ export class LocalConnection {
     this.pid = null;
     this.online = false;
   }
-  async join(name) {
+  // ¿ya hay un personaje guardado con esta cuenta?
+  static hasSave(name) { try { return !!localStorage.getItem("hbweb.save." + String(name).toLowerCase()); } catch { return false; } }
+  async join(name, create = null) {
     this.key = "hbweb.save." + String(name).toLowerCase();
     let save;
     try { save = JSON.parse(localStorage.getItem(this.key) || "null") || undefined; } catch {}
     this.returning = !!save;
-    this.pid = this.adventure.addPlayer(name, save);
+    this.pid = this.adventure.addPlayer((create && create.name) || name, save, create);
     this.lastSave = 0;
+    if (!save) this.save();
     addEventListener("pagehide", () => this.save());
     return this.pid;
   }
@@ -157,6 +160,7 @@ export class NetConnection {
       if (isNew) { e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
+      if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }
       if (own) Object.assign(e, {
         mp: o.mp, maxMp: o.mm, level: o.lv, exp: o.xp, prevExp: o.px, nextExp: o.nx, pool: o.pool, gold: o.gold,
         sp: o.sp, maxSp: o.ms, hunger: o.hu, weight: o.wt, maxLoad: o.ml, atkMs: o.am, dmg: o.dmg,

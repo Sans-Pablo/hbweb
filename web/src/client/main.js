@@ -10,6 +10,7 @@ import { Fx } from "./fx.js";
 import { Hud } from "./hud.js";
 import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
+import { createCharacter } from "./create.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -30,7 +31,7 @@ async function main() {
   const conn = online ? new NetConnection(grid, assets.npcDb, assets.data)
     : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start }));
   status.remove();
-  const pid = await askNameAndJoin(conn, online, info);
+  const pid = await askNameAndJoin(conn, online, info, assets.sprites);
   let world = conn.state;
 
   const canvas = document.getElementById("game");
@@ -216,7 +217,7 @@ async function main() {
 }
 
 // pantalla de entrada: cuenta (nombre + contraseña) en la prueba local; solo nombre en línea
-function askNameAndJoin(conn, online, info) {
+function askNameAndJoin(conn, online, info, spr) {
   const box = document.getElementById("join"), msg = box.querySelector(".msg");
   const user = box.querySelector(".user"), pass = box.querySelector(".pass"), pass2 = box.querySelector(".pass2"), go = box.querySelector(".go");
   box.querySelector(".where").textContent = online
@@ -252,7 +253,16 @@ function askNameAndJoin(conn, online, info) {
         }
         store.set("name", name);
         msg.textContent = "Entrando…";
-        const id = await conn.join(name);
+        let create = null;
+        if (!online && !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
+          box.style.display = "none";
+          create = await createCharacter(spr, name);
+        }
+        const id = await conn.join(name, create);
+        if (!online) {                                         // descargar el aspecto antes de empezar
+          const me = conn.state.ents.get(id);
+          if (me) await spr.preload(spr.lookKeys(me.gender, me.look));
+        }
         box.remove();
         resolve(id);
       } catch (e) { msg.textContent = e.message; }

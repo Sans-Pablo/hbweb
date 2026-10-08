@@ -25,18 +25,45 @@ export async function loadAssets(onProgress) {
     img.src = "data/sprites/" + manifest[k].png;
     images[k] = img;
   })));
+  // sprites de personaje (pieles, peinados, ropa interior): se descargan cuando hacen falta
+  const players = await json("data/players.json").catch(() => ({}));
+  Object.assign(manifest, players);
   return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images), npcDb, spawns, data };
 }
 
 export class Sprites {
   constructor(manifest, images) {
     this.m = manifest;
-    this.img = images;
+    // las imágenes que no se cargaron al principio (personajes) se piden la primera vez que se usan
+    this.img = new Proxy(images, {
+      get(t, k) {
+        if (!(k in t) && typeof k === "string" && manifest[k]) { const i = new Image(); i.src = "data/sprites/" + manifest[k].png; t[k] = i; }
+        return t[k];
+      },
+    });
     this.sil = {};                         // siluetas negras para las sombras
     this.tmp = document.createElement("canvas");
     this.tctx = this.tmp.getContext("2d");
   }
   has(key) { return !!this.m[key]; }
+  ready(key) { const i = this.img[key]; return !!i && i.complete && i.naturalWidth > 0; }
+  // espera a que estén descargados estos sprites (para no dibujar al personaje a medias)
+  preload(keys) {
+    return Promise.all(keys.filter(k => this.m[k]).map(k => new Promise(res => {
+      const i = this.img[k];
+      if (i.complete) return res();
+      i.addEventListener("load", res, { once: true }); i.addEventListener("error", res, { once: true });
+    })));
+  }
+  // sprites que hacen falta para dibujar a un personaje con este aspecto (todas las animaciones)
+  lookKeys(gender, look) {
+    const type = (gender === 2 ? 3 : 0) + look.skin, g = gender === 2 ? 1 : 0, keys = [];
+    for (const grp of [0, 1, 2, 3, 4, 6, 8, 9, 10, 11]) {
+      for (let d = 0; d < 8; d++) keys.push("pb" + type + "_" + (grp * 8 + d));
+      keys.push("pu" + g + "_" + look.under + "_" + grp, "ph" + g + "_" + look.hair + "_" + grp);
+    }
+    return keys;
+  }
   frames(key) { return this.m[key] ? this.m[key].frames.length : 0; }
   frame(key, f) { const s = this.m[key]; return s && f >= 0 && f < s.frames.length ? s.frames[f] : null; }
 
@@ -44,8 +71,27 @@ export class Sprites {
   put(ctx, key, f, x, y) {
     const fr = this.frame(key, f);
     if (!fr) return;
+    if (!this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr;
     ctx.drawImage(this.img[key], sx, sy, w, h, x + pvx, y + pvy, w, h);
+  }
+
+  // Pelo teñido: el color del original se suma a los píxeles (PutSpriteRGB); aquí se mezcla con el tono base
+  tintedHair(ctx, key, f, x, y, rgb) {
+    const fr = this.frame(key, f);
+    if (!fr || !this.ready(key)) return;
+    const [sx, sy, w, h, pvx, pvy] = fr;
+    const t = this.tmp, g = this.tctx;
+    if (t.width < w || t.height < h) { t.width = Math.max(t.width, w); t.height = Math.max(t.height, h); }
+    g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, w, h);
+    g.drawImage(this.img[key], sx, sy, w, h, 0, 0, w, h);
+    g.globalCompositeOperation = "multiply";        // oscurece/colorea el pelo gris original
+    g.fillStyle = rgb;
+    g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = "destination-in";  // y recorta de nuevo a la forma del pelo
+    g.drawImage(this.img[key], sx, sy, w, h, 0, 0, w, h);
+    ctx.drawImage(t, 0, 0, w, h, x + pvx, y + pvy, w, h);
   }
 
   silhouette(key) {
@@ -67,7 +113,7 @@ export class Sprites {
   // con los pies como punto fijo (PutShadowSprite oscurece el fondo al 25 %).
   shadow(ctx, key, f, x, y, alpha) {
     const fr = this.frame(key, f);
-    if (!fr) return;
+    if (!fr || !this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr;
     const X0 = x + pvx, Y0 = y + pvy;
     ctx.save();
@@ -80,7 +126,7 @@ export class Sprites {
   // Fotograma teñido de un color (destello al recibir un golpe, resaltado al pasar el ratón)
   tinted(ctx, key, f, x, y, color, alpha, op = "source-over") {
     const fr = this.frame(key, f);
-    if (!fr) return;
+    if (!fr || !this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr;
     const t = this.tmp, g = this.tctx;
     if (t.width < w || t.height < h) { t.width = Math.max(t.width, w); t.height = Math.max(t.height, h); }

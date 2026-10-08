@@ -216,7 +216,7 @@ function pub(e, own) {
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
   if (e.kind === "npc") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); }
   else {
-    o.lc = r1(e.lastCombat);
+    o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
     if (own) Object.assign(o, {
       bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove), mp: e.mp, mm: e.maxMp, lv: e.level, xp: e.exp,
       px: e.prevExp, nx: e.nextExp, pool: e.pool, gold: e.gold, stats: e.stats, def: e.defense,

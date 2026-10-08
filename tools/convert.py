@@ -220,12 +220,7 @@ def main():
     # Grupos (Client/Game.cpp, DrawObject_On*): 0 quieto, 1 quieto en combate, 2 andar,
     # 3 andar en combate, 4 correr, 6 atacar (sin arma o arma corta), 9 recoger,
     # 10 recibir daño, 11 morir. Mpt/Mhr: un sprite por grupo (8 direcciones x fotogramas).
-    for group in PLAYER_GROUPS:
-        for d in range(8):
-            n = group * 8 + d
-            export(pak, "Wm", n, sprites_dir, "wm%d" % n, manifest)
-        export(pak, "Mpt", group, sprites_dir, "mpt%d" % group, manifest)
-        export(pak, "Mhr", 12 * 1 + group, sprites_dir, "mhr%d" % group, manifest)   # peinado 1
+    # (los personajes con todas sus pieles, peinados y ropa interior los exporta convert_players.py)
     # --- monstruos: 5 grupos x 8 direcciones (0 quieto, 1 andar, 2 atacar, 3 daño, 4 morir)
     for pak_name in MOB_PAKS.values():
         for n in range(40):

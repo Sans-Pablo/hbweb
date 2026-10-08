@@ -73,7 +73,7 @@ export class World {
   }
 
   // ------------------------------------------------------------------ jugadores (systems/player.js)
-  addPlayer(name, save = null) { return Player.addPlayer(this, name, save); }
+  addPlayer(name, save = null, create = null) { return Player.addPlayer(this, name, save, create); }
   saveOf(id) { return Player.saveOf(this, id); }
   removePlayer(id) { Player.removePlayer(this, id); }
   recalc(p) { Player.recalc(this, p); }

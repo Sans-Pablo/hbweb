@@ -20,3 +20,8 @@ Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`,
 ## Cripta procedural — entrega 1
 
 Entrada en Aresfarm (134, 94) con E, nueve salas conectadas, esqueletos originales, instancias privadas en local y servidor, portales de regreso, finalización y limpieza. Pruebas y límites en [DUNGEON_V1.md](DUNGEON_V1.md).
+
+## Creación de personaje
+- Pantalla de creación (`client/create.js`) tras crear la cuenta: nombre (≤10, reglas del original), 10 puntos entre atributos de 10 a 14, plantillas Guerrero/Mago/Sacerdote, género, 3 pieles, 8 peinados, 16 colores de pelo y 8 de ropa interior, con vista previa que gira.
+- `tools/convert_players.py` exporta los sprites (6 cuerpos, 16 peinados, 16 ropas interiores) a `data/players.json`; se cargan bajo demanda.
+- Pendiente: el tinte del pelo es una aproximación (el original suma RGB al píxel); el bando (Aresden/Elvine) aún no se elige.
