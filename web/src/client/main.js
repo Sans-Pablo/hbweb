@@ -49,6 +49,9 @@ async function main() {
     log: m => hud.log(m),
     primary: uid => hud.primary(uid),
     disabled: () => false,
+    magic: assets.data.magic,
+    useMagic: id => ui.useMagic(id),
+    learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
   gui.onItemDrop = (it, x, y, dlg) => {
@@ -174,7 +177,7 @@ async function main() {
         return;
       }
       if (e.ctrlKey) {
-        if (/^[0-9]$/.test(k)) { e.preventDefault(); ui.key("book"); return; }   // Ctrl+0..9: página de magia
+        if (/^[0-9]$/.test(k)) { e.preventDefault(); gui.dialogs.get(3).view = (+k + 9) % 10; gui.open(3); return; }   // Ctrl+0..9: página de magia
         switch (K) {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
@@ -219,6 +222,7 @@ async function main() {
         }
         case "char": gui.toggle(1); break;
         case "inv": gui.toggle(2); break;
+        case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
     },
@@ -270,7 +274,8 @@ async function main() {
     e.stopPropagation();
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
-      if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
+      if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
+      else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
   });

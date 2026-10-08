@@ -4,6 +4,7 @@ import { itemDef } from "./names.js";
 import { EQUIP, ITYPE } from "../shared/items.js";
 import { packKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
+import { castChance, manaCost } from "../shared/magic.js";
 
 const INK = "#2d1919";                         // RGB(45,25,25): texto del cliente sobre fondo de pergamino
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -136,4 +137,91 @@ export function registerDialogs(gui, api) {
   };
   gui.register(inv);
   gui.inv = inv;
+
+  // ------------------------------------------------------------ 3: magia (F7, Ctrl+0..9 = círculo)
+  const CIRCLES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+  const TAB_X = [30, 43, 61, 86, 106, 121, 142, 169, 202, 222];                // posiciones de la marca del círculo (sprfonts 20..29)
+  const TAB_HIT = [[16, 38], [39, 56], [57, 81], [82, 101], [102, 116], [117, 137], [138, 165], [166, 197], [198, 217], [218, 239]];
+  const asCaster = me => ({ skills: me.skills || {}, stats: me.stats, level: me.level, eff: me.eff || {} });
+  const spellsOf = (me, view) => {
+    const out = [];
+    for (let i = 0; i < 9; i++) { const id = view * 10 + i, m = api.magic[id]; if (me.magic && me.magic[id] && m) out.push([id, m]); }
+    return out;
+  };
+  const mg = {
+    id: 3, x: 417, y: 117, w: 258, h: 328, view: 0,
+    draw(g, me) {
+      g.put("gamedialog_0", 1, 0, 0);
+      g.put("dialogtext_0", 7, 0, 0);
+      g.aligned(3, 256, 50, "Circle " + CIRCLES[this.view], "#000", { bold: true });
+      const list = spellsOf(me, this.view), caster = asCaster(me);
+      let y = 0;
+      for (const [id, m] of list) {
+        const cost = manaCost(caster, m), name = m.name.replace(/-/g, " ");
+        const over = g.mouse.x - this.x >= 30 && g.mouse.x - this.x <= 240 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
+        const col = cost > me.mp ? "rgb(41,16,41)" : over ? "#fff" : "rgb(8,0,66)";
+        g.text(30, 72 + y, name, col, { bold: true }); g.text(206, 72 + y, String(cost).padStart(3, " "), col, { bold: true });
+        y += 18;
+      }
+      if (!list.length) {
+        ["You have not learned any magic.", "You can learn magic at the Wizard", "Tower in town. To learn a spell", "you need sufficient gold and INT."].forEach((t, i) => g.aligned(3, 256, 100 + 15 * i, t, "#000"));
+      }
+      g.put("interface_1", 19, 30, 250);
+      g.put("interface_1", 20 + this.view, TAB_X[this.view], 250);
+      let r = castChance(caster, this.view * 10), total = r;
+      void total;
+      r = Math.min(100, r);
+      if (me.sp < 1) r = Math.floor(r * 9 / 10);
+      r = Math.max(1, r);
+      const t = "Casting Probability: " + r + "%";
+      g.aligned(0, 256, 267, t, "#000", { bold: true });
+      const over = g.mouse.x - this.x >= 154 && g.mouse.x - this.x <= 228 && g.mouse.y - this.y >= 285 && g.mouse.y - this.y <= 305;
+      g.put("dialogtext_1", over ? 49 : 48, 154, 285);
+    },
+    click(g, lx, ly, me) {
+      let y = 0;
+      for (const [id] of spellsOf(me, this.view)) {
+        if (lx >= 30 && lx <= 240 && ly >= 70 + y && ly <= 88 + y) { api.useMagic(id); g.close(3); return true; }
+        y += 18;
+      }
+      TAB_HIT.forEach(([a, b], i) => { if (lx >= a && lx <= b && ly >= 240 && ly <= 268) this.view = i; });
+      if (lx >= 154 && lx <= 228 && ly >= 285 && ly <= 305) api.log("You should learn alchemy skill to use this item.");
+      return false;
+    },
+    wheel(g, dir) { this.view = (this.view + (dir > 0 ? -1 : 1) + 10) % 10; },
+  };
+  gui.register(mg);
+
+  // ------------------------------------------------------------ 16: tienda de magia (Mago de la torre)
+  const SHOP_TAB = [[44, 52, 0], [57, 70, 1], [75, 95, 2], [100, 115, 3], [120, 131, 4], [135, 152, 5], [156, 179, 6], [183, 212, 7], [216, 232, 8], [236, 247, 9]];
+  const shop = {
+    id: 16, x: 110, y: 90, w: 304, h: 328, view: 0,
+    list(me) { const out = []; for (let i = 0; i < 9; i++) { const id = this.view * 10 + i, m = api.magic[id]; if (m && m.cost >= 0) out.push([id, m]); } return out; },
+    draw(g, me) {
+      g.put("gamedialog_3", 1, 0, 0); g.put("dialogtext_0", 14, 0, 0);
+      g.text(23, 55, "Spell Name", INK); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
+      let y = 0;
+      for (const [id, m] of this.list(me)) {
+        const known = me.magic && me.magic[id], name = m.name.replace(/-/g, " ");
+        const over = g.mouse.x - this.x >= 24 && g.mouse.x - this.x <= 159 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
+        const col = known ? "rgb(41,16,41)" : over ? "#fff" : "rgb(8,0,66)";
+        g.text(24, 72 + y, name, col, { bold: true }); g.text(200, 72 + y, String(m.reqInt).padStart(3, " "), col, { bold: true }); g.text(241, 72 + y, String(m.cost).padStart(3, " "), col, { bold: true });
+        y += 18;
+      }
+      g.put("interface_1", 19, 55, 250);
+      g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
+      g.aligned(0, 304, 275, "Select a magic which you want to learn.", INK);
+    },
+    click(g, lx, ly, me) {
+      let y = 0;
+      for (const [id] of this.list(me)) {
+        if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!(me.magic && me.magic[id])) api.learn(id); return true; }
+        y += 18;
+      }
+      for (const [a, b, v] of SHOP_TAB) if (lx >= a + 11 && lx <= b + 11 && ly >= 248 && ly <= 260) this.view = v;
+      return false;
+    },
+    wheel(g, dir) { this.view = (this.view + (dir > 0 ? -1 : 1) + 10) % 10; },
+  };
+  gui.register(shop);
 }

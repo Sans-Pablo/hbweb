@@ -41,6 +41,7 @@ export class Controller {
     canvas.addEventListener("pointerleave", () => { if (!this.down) this.pointer = null; });
     canvas.addEventListener("contextmenu", e => e.preventDefault());
     canvas.addEventListener("wheel", e => {
+      if (ui.gui.wheel(e.clientX, e.clientY, e.deltaY)) { e.preventDefault(); return; }
       if (renderer.mode !== "remastered") return;
       e.preventDefault();
       renderer.setZoom(renderer.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));

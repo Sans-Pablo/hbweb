@@ -204,6 +204,12 @@ export class Gui {
     if (y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
+  // rueda del ratón: la recibe el cuadro de arriba bajo el cursor (p. ej. círculos de magia). true = consumida
+  wheel(cx, cy, dy) {
+    const [x, y] = this.toGui(cx, cy), d = this.dialogAt(x, y);
+    if (d && d.wheel) { d.wheel(this, dy < 0 ? 1 : -1); return true; }
+    return !!d;
+  }
   up(cx, cy) {
     this.mouse.down = false; this.drag = null;
     if (this.item) {
