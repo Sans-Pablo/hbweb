@@ -1,5 +1,7 @@
 // Elegir un hechizo en el libro empieza la animación de lanzar; el clic lo suelta sobre el objetivo.
 // node tests/magic-prep.test.mjs
+import { MAGIC_MODE } from "../web/src/shared/magic.js";
+MAGIC_MODE.free = false;
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";
 import { World } from "../web/src/shared/world.js";

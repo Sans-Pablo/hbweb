@@ -4,6 +4,7 @@ import * as Inv from "../inventory.js";
 import { EQUIP } from "../items.js";
 import { ACT } from "../const.js";
 import { initVitals } from "./vitals.js";
+import { MAGIC_MODE } from "../magic.js";
 import { newInst } from "./itemsys.js";
 
 const LEGACY = { red: 91, bigred: 92, blue: 93, green: 95 };     // partidas guardadas con el formato antiguo
@@ -37,13 +38,20 @@ export function sanitizeCreate(c) {
 }
 
 // Personaje nuevo (WorldLServer.exe): habilidades iniciales y objetos.
+// modo pruebas: todos los hechizos conocidos
+function allSpells(w) {
+  const m = {};
+  if (MAGIC_MODE.free) for (const id in w.magic) if (w.magic[id]) m[id] = 1;
+  return m;
+}
+
 function newCharacter(w, p, create) {
   const c = sanitizeCreate(create);
   Object.assign(p, {
     gender: c.gender, look: c.look,
     stats: c.stats,
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
-    bag: [], equip: {}, gold: 0, ssn: {}, magic: {},
+    bag: [], equip: {}, gold: 0, ssn: {}, magic: allSpells(w),
   });
   const s = p.stats;
   p.skills = { 3: Math.floor(s.mag / 3), 4: s.mag + 10, 5: s.str + 10, 7: s.dex + 10 };
@@ -80,7 +88,7 @@ function loadSave(w, p, s) {
   if (typeof s.charName === "string" && validCharName(s.charName)) p.name = s.charName;
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
-  if (s.magic) p.magic = { ...s.magic };
+  if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
   if (Array.isArray(s.bag)) {
     p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
     p.equip = {};

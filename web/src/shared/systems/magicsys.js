@@ -29,9 +29,11 @@ export function learn(w, p, id) {
 // Comprobaciones comunes de lanzar/preparar (UseMagic del cliente original)
 function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
+  if (sp && M.MAGIC_MODE.free) p.magic[cmd.spell] = 1;
   if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
+  if (M.MAGIC_MODE.free) return sp;
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
   if (p.mp < M.manaCost(p, sp)) return w.reject(p, cmd, "maná insuficiente");
@@ -92,8 +94,8 @@ function resolve(w, p, id, sp, x, y, cost) {
   if (p.dead) return;
   // ¿sale el hechizo?
   const chance = M.castChance(p, id);
-  if (chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
-  if ((p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   p.mp = Math.max(0, p.mp - cost);
   gainSSN(p, 4, 1);
   sclear(w, p, "invis");                                              // lanzar un hechizo rompe la invisibilidad

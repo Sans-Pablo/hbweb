@@ -1,5 +1,7 @@
 // Prueba de la simulación sin navegador: un "jugador" automático caza en la granja.
 // node tests/sim.test.mjs
+import { MAGIC_MODE } from "../web/src/shared/magic.js";
+MAGIC_MODE.free = false;
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";
 import { World } from "../web/src/shared/world.js";
@@ -58,7 +60,7 @@ assert(golds / nDrops > 0.55 && golds / nDrops < 0.65, "60 % de lo que cae es or
   const w2 = new World({ grid, npcDb, data, spawns, rng, start: meta.start });
   const id2 = w2.addPlayer("mago"), m = w2.ents.get(id2);
   m.stats.int = 30; m.stats.mag = 40; m.gold = 500; w2.recalc(m); m.mp = m.maxMp;
-  assert(w2.command(id2, { t: "learn", spell: 0 }) && m.magic[0] === 1 && m.gold === 400, "aprender Magic Missile cuesta 100 de oro");
+  delete m.magic[0]; assert(w2.command(id2, { t: "learn", spell: 0 }) && m.magic[0] === 1 && m.gold === 400, "aprender Magic Missile cuesta 100 de oro");
   const shield = m.bag.find(i => data.item(i.id).name === "WoodShield");
   w2.tick(100);
   assert(!w2.command(id2, { t: "cast", spell: 0, x: m.x, y: m.y }) , "con escudo no se puede lanzar");

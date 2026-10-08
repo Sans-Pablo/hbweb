@@ -57,7 +57,9 @@ export function castChance(p, id) {
 }
 
 // Maná que cuesta: el ahorro de maná lo reduce; las varitas tipo 34 suman 20.
+export const MAGIC_MODE = { free: true };                                         // modo pruebas: todos los hechizos, sin coste de maná
 export function manaCost(p, spell) {
+  if (MAGIC_MODE.free) return 0;
   let c = spell.mana;
   if (p.eff.manaSave > 0) { c = Math.floor(c - (p.eff.manaSave / 100) * c); if (c <= 0) c = 1; }
   if (p.eff.wtype === 34) c += 20;
