@@ -222,6 +222,14 @@ export class Hud {
       const rows = Object.entries(STAT_NAMES).map(([k, n]) =>
         `<div class="row"><span>${n}</span><b>${me.stats[k]}</b>${me.pool ? `<button data-stat="${k}" title="Subir ${n}">+</button>` : "<i></i>"}</div>`).join("");
       const skills = Object.entries(me.skills).filter(([, v]) => v > 0).map(([k, v]) => `<div class="sk"><span>${SKILL_NAMES[k] || "Habilidad " + k}</span><b>${v}%</b></div>`).join("");
+      const e = me.eff || {}, ar = Object.values(e.armor || {}).reduce((a, b) => a + b, 0);
+      const SEC = [["Probabilidad de acierto", e.addAR, ""], ["Defensa añadida", e.addDR, ""], ["Recuperación de vida", e.addHP, " %"],
+        ["Recuperación de aguante", e.addSP, " %"], ["Recuperación de maná", e.addMP, " %"], ["Resistencia mágica", e.addMR, " %"],
+        ["Resistencia al veneno", e.addPR, " %"], ["Absorción física", ar, " %"], ["Absorción mágica", e.addAbsMD, " %"],
+        ["Daño de ataques seguidos", e.addCD, ""], ["Experiencia", e.addExp, " %"], ["Oro", e.addGold, " %"],
+        ["Ahorro de maná", e.manaSave, " %"], ["Probabilidad de lanzar magia", e.castBonus, " %"],
+        ["Daño convertido en maná", e.transMana, " %"], ["Probabilidad de crítico", e.chargeCrit, " %"]];
+      const sec = SEC.filter(r => r[1]).map(([n, v, u]) => `<div class="row"><span>${n}</span><b>+${v}${u}</b><i></i></div>`).join("");
       const html = `<h3>${me.name} <small>nivel ${me.level}</small></h3>
         <p class="pool">${me.pool ? "Puntos para repartir: <b>" + me.pool + "</b>" : "Sin puntos para repartir"}</p>
         ${rows}
@@ -232,6 +240,7 @@ export class Hud {
         <div class="row"><span>Defensa</span><b>${me.defense}</b><i></i></div>
         <div class="row"><span>Daño</span><b>${lo}–${hi}</b><i></i></div>
         <div class="row"><span>Monstruos muertos</span><b>${me.kills}</b><i></i></div>
+        ${sec ? "<hr><p class=\"pool\">Bonos del equipo</p>" + sec : ""}
         <hr>${skills}`;
       this.set("char", $("#charpanel .body"), "html", html);
     }
