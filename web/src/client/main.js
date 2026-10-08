@@ -9,6 +9,7 @@ import { Controller } from "./controller.js";
 import { Fx } from "./fx.js";
 import { Hud } from "./hud.js";
 import { Sound } from "./audio.js";
+import * as Accounts from "./accounts.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -108,6 +109,32 @@ async function main() {
       }
     },
   };
+  // cuenta: guardar, copia de seguridad, cerrar sesión
+  const $id = i => document.getElementById(i);
+  if (online) $id("btn-export").parentElement.style.display = "none";
+  $id("btn-save").onclick = () => { conn.save?.(); hud.toast("Partida guardada"); };
+  $id("btn-export").onclick = () => {
+    conn.save?.();
+    const txt = Accounts.exportSave(store.get("name", ""));
+    if (!txt) return hud.toast("Aún no hay nada guardado");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" }));
+    a.download = "helbreath-" + store.get("name", "personaje") + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $id("btn-import").onclick = () => $id("file-import").click();
+  $id("file-import").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      if (!confirm("Esto reemplaza el progreso de " + store.get("name", "") + " con el del archivo. ¿Seguir?")) return;
+      Accounts.importSave(store.get("name", ""), await f.text());
+      conn.save = () => {};                                  // que no pise la copia importada al recargar
+      location.reload();
+    } catch (err) { hud.toast(err.message); }
+  };
+  $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
+  addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onButton = k => ui.key(k);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
 
@@ -171,28 +198,50 @@ async function main() {
   window.hbSound = sound;
 }
 
-// pantalla de entrada: nombre del personaje
+// pantalla de entrada: cuenta (nombre + contraseña) en la prueba local; solo nombre en línea
 function askNameAndJoin(conn, online, info) {
-  const box = document.getElementById("join"), input = box.querySelector("input"), msg = box.querySelector(".msg");
+  const box = document.getElementById("join"), msg = box.querySelector(".msg");
+  const user = box.querySelector(".user"), pass = box.querySelector(".pass"), pass2 = box.querySelector(".pass2"), go = box.querySelector(".go");
   box.querySelector(".where").textContent = online
     ? "Partida en línea" + (info.players.length ? " · conectados: " + info.players.join(", ") : " · aún no hay nadie")
     : "Prueba local (un jugador)";
-  input.value = store.get("name", "");
+  let creating = false;
+  const setTab = c => {
+    creating = c;
+    box.classList.toggle("creating", c);
+    for (const t of box.querySelectorAll(".tabs button")) t.classList.toggle("on", (t.dataset.tab === "new") === c);
+    go.textContent = c ? "Crear cuenta y entrar" : "Entrar";
+    msg.textContent = "";
+    pass.autocomplete = c ? "new-password" : "current-password";
+  };
+  if (online) { box.querySelector(".tabs").style.display = "none"; box.querySelector(".pw").style.display = "none"; }
+  for (const t of box.querySelectorAll(".tabs button")) t.onclick = () => setTab(t.dataset.tab === "new");
+  user.value = store.get("name", "");
+  const known = Accounts.listAccounts();
+  if (!online && !known.length && !user.value) setTab(true);
   box.style.display = "grid";
-  input.focus();
+  (user.value && !online ? pass : user).focus();
   return new Promise(resolve => {
-    const go = async () => {
-      const name = input.value.trim().slice(0, 16) || "Aventurero";
-      store.set("name", name);
-      msg.textContent = "Entrando…";
+    const submit = async () => {
+      const name = user.value.trim().slice(0, 16) || (online ? "Aventurero" : "");
+      msg.textContent = "…";
       try {
+        if (!online) {
+          if (!name) throw new Error("Escribe un nombre.");
+          if (creating) {
+            if (pass.value !== pass2.value) throw new Error("Las contraseñas no coinciden.");
+            await Accounts.createAccount(name, pass.value);   // una partida guardada antes con ese nombre se conserva
+          } else await Accounts.login(name, pass.value);
+        }
+        store.set("name", name);
+        msg.textContent = "Entrando…";
         const id = await conn.join(name);
         box.remove();
         resolve(id);
       } catch (e) { msg.textContent = e.message; }
     };
-    box.querySelector("button").onclick = go;
-    input.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") go(); };
+    go.onclick = submit;
+    box.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") submit(); };
   });
 }
 

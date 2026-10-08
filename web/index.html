@@ -209,8 +209,24 @@
 <div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span></div></div>
 
 <div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>
-  <label>Nombre del personaje<input maxlength="16" autocomplete="off" spellcheck="false"></label>
-  <button type="submit">Entrar</button><p class="msg"></p></form></div>
+  <div class="tabs"><button type="button" data-tab="login" class="on">Entrar</button><button type="button" data-tab="new">Crear cuenta</button></div>
+  <label>Nombre<input class="user" maxlength="16" autocomplete="username" spellcheck="false"></label>
+  <label class="pw">Contraseña<input class="pass" type="password" autocomplete="current-password"></label>
+  <label class="pw2">Repite la contraseña<input class="pass2" type="password" autocomplete="new-password"></label>
+  <button type="submit" class="go">Entrar</button><p class="msg"></p>
+  <p class="hint">Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.</p></form></div>
+<style>
+  #join .tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
+  #join .tabs button { flex: 1; padding: 6px; background: #1b1810; color: #bba; border: 1px solid #4a3f28; border-radius: 6px; cursor: pointer; }
+  #join .tabs button.on { background: #3a2f18; color: #ffd76a; border-color: #ffd76a; }
+  #options .acct { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+  #options .acct b { width: 100%; }
+  #options .acct button { padding: 4px 8px; font-size: 12px; background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; cursor: pointer; }
+  #join .pw2 { display: none; }
+  #join.creating .pw2 { display: block; }
+  #join .hint { font-size: 11px; color: var(--muted); margin: 10px 0 0; text-align: center; }
+  #join input[type=password] { width: 100%; box-sizing: border-box; }
+</style>
 <div id="lost"><div><h2>Conexión perdida</h2><p>El servidor se ha cerrado o se cortó internet.</p><button onclick="location.reload()">Volver a entrar</button></div></div>
 
 <div id="ui">
@@ -257,6 +273,12 @@
     <label>Estilo del mapa
       <select data-opt="mapStyle"><option value="corner">Esquina</option><option value="overlay">Superpuesto (estilo Diablo II)</option></select></label>
     <label><input type="checkbox" data-opt="grid"> Mostrar casillas bloqueadas (<kbd>B</kbd>)</label>
+    <div class="acct"><b>Cuenta</b>
+      <button type="button" id="btn-save">Guardar ahora</button>
+      <button type="button" id="btn-export">Exportar copia</button>
+      <button type="button" id="btn-import">Importar copia</button>
+      <button type="button" id="btn-logout">Cerrar sesión</button>
+      <input type="file" id="file-import" accept=".json,application/json" hidden></div>
     <label><input type="checkbox" data-opt="sound"> Sonido (<kbd>N</kbd>)</label>
     <label>Gráficos
       <select data-opt="mode"><option value="classic">Clásico</option><option value="remastered">Remastered</option></select></label>
