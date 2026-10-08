@@ -178,7 +178,7 @@ async function main() {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
       if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
       if (ui.pointing != null) return;
-      if (m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
+      if (!MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro

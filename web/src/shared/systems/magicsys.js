@@ -17,7 +17,7 @@ export function learn(w, p, id) {
   if (!sp) return w.reject(p, { t: "learn" }, "no existe");
   if (p.magic[id]) return w.reject(p, { t: "learn" }, "ya la conoces");
   if (sp.cost < 0) return w.reject(p, { t: "learn" }, "no se vende");
-  if (p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
+  if (!M.MAGIC_MODE.free && p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
   if (p.gold < sp.cost) return w.reject(p, { t: "learn" }, "oro insuficiente");
   p.gold -= sp.cost;
   p.magic[id] = 1;

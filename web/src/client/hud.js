@@ -1,3 +1,4 @@
+import { MAGIC_MODE } from "../shared/magic.js";
 // Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
 import * as R from "../shared/rules.js";
@@ -197,7 +198,7 @@ export class Hud {
       const m = M[id]; if (m.cost < 0 || !SUP.has(m.type)) continue;
       const known = me.magic && me.magic[id];
       const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
-        : `<button data-learn="${id}"${me.stats.int < m.reqInt || me.gold < m.cost ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
+        : `<button data-learn="${id}"${(!MAGIC_MODE.free && (me.stats.int < m.reqInt || me.gold < m.cost)) ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
       html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · MP ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
     }
     $("#book .list").innerHTML = html;

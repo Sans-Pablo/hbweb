@@ -11,7 +11,8 @@ os.makedirs(sd, exist_ok=True)
 pak = PakFolder(os.path.join(hb, "SPRITES"))
 man = {}
 GROUPS = [("effect", 0, 10), ("effect2", 10, 3), ("effect3", 13, 6), ("effect4", 19, 5), ("CruEffect1", 31, 9),
-          ("effect6", 40, 5), ("effect7", 45, 12), ("effect8", 57, 9), ("effect9", 66, 21)]
+          ("effect6", 40, 5), ("effect7", 45, 12), ("effect8", 57, 9), ("effect9", 66, 21),
+          ("effect10", 87, 2), ("effect11", 89, 14), ("effect11s", 104, 1), ("effect12", 148, 4)]
 for name, start, count in GROUPS:
     for i in range(count):
         export(pak, name, i, sd, "fx%d" % (start + i), man)
