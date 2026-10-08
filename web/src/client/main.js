@@ -2,6 +2,7 @@
 // el jugador y mueve el bucle de juego.
 import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
+import { chooseDungeon } from "./dungeon-choice.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
 import { Renderer } from "./renderer.js";
@@ -356,6 +357,7 @@ async function main() {
       fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
     }
     for (const ev of events) {
+      if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world);
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });

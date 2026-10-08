@@ -3,7 +3,7 @@
 
 import { GameData } from "../shared/data.js";
 import { setData } from "./names.js";
-import { DUNGEON_ASSETS, DUNGEON_FLOOR_FRAMES } from "../shared/dungeon.js";
+import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v2";
 const spriteUrl = png => "data/sprites/" + png + "?v=" + ASSET_VERSION;
@@ -31,7 +31,7 @@ export function validateDungeonAssets(manifest, npcDb) {
     if (!manifest[k]?.png || !manifest[k]?.frames?.length) throw new Error("Falta el gráfico " + k + ". Recarga la página.");
     if (k.startsWith("ske") && manifest[k].frames.length < 4) throw new Error("Animación incompleta: " + k);
   }
-  for (const f of DUNGEON_FLOOR_FRAMES) if (!manifest.t330.frames[f]) throw new Error("Falta el suelo de la cripta: " + f);
+  for (const floor of DUNGEON_FLOORS) for (const f of floor.frames) if (!manifest["t" + floor.spr].frames[f]) throw new Error("Falta el suelo de la cripta: " + floor.spr + "/" + f);
 }
 
 export async function loadAssets(onProgress) {

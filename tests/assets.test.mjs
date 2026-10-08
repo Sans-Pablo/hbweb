@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { loadSpriteImage, validateDungeonAssets } from "../web/src/client/assets.js";
-import { DUNGEON_ASSETS, DUNGEON_FLOOR_FRAMES } from "../web/src/shared/dungeon.js";
+import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../web/src/shared/dungeon.js";
 import { Renderer } from "../web/src/client/renderer.js";
 
 const root = new URL("../web/data/", import.meta.url);
@@ -51,9 +51,9 @@ test("todas las hojas de la cripta existen y los fotogramas caben en el PNG", ()
 });
 
 test("cada suelo elegido contiene piedra visible, no negro ni transparencia", () => {
-  const im = png(manifest.t330.png);
-  for (const f of DUNGEON_FLOOR_FRAMES) {
-    const [x, y, w, h] = manifest.t330.frames[f]; let visible = 0, light = 0;
+  for (const floor of DUNGEON_FLOORS) for (const f of floor.frames) {
+    const entry = manifest["t" + floor.spr], im = png(entry.png);
+    const [x, y, w, h] = entry.frames[f]; let visible = 0, light = 0;
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
       const o = (j * im.w + i) * 4;
       if (im.rgba[o + 3] === 255) visible++;

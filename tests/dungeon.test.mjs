@@ -15,7 +15,7 @@ const farmBytes = new Uint8Array(readFileSync(new URL("arefarm.bin", dir)));
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 function session() { return new Adventure({ grid: new Grid(meta.w, meta.h, farmBytes), start: meta.start, npcDb, data, spawns: [], rng: seededRandom(54) }); }
 function place(w, p, x, y) { w.grid.release(p.x, p.y, p.id); p.x = p.fx = x; p.y = p.fy = y; w.grid.occupy(x, y, p.id); }
-function enter(a, id) { place(a.farm, a.farm.ents.get(id), FARM_PORTAL.x - 1, FARM_PORTAL.y); assert.equal(a.command(id, { t: "portal", portal: FARM_PORTAL.id }), true); return a.worldFor(id); }
+function enter(a, id, restart) { place(a.farm, a.farm.ents.get(id), FARM_PORTAL.x - 1, FARM_PORTAL.y); assert.equal(a.command(id, { t: "portal", portal: FARM_PORTAL.id, ...(restart !== undefined ? { restart } : {}) }), true); return a.worldFor(id); }
 
 test("1000 seeds: todas las casillas abiertas, salas, enemigos y salidas son alcanzables", () => {
   const signatures = new Set();
@@ -53,11 +53,15 @@ test("entrada accesible sin alterar la geometría de Aresfarm y validada por la 
   assert.deepEqual(new Uint8Array(a.farm.grid.dv.buffer), before);
 });
 
-test("cámaras amplias, doce galerías anchas y guardianes visibles al entrar", () => {
+test("salas variadas, curvas, ramales y ancho transitable de 3–7 casillas", () => {
   for (let seed = 0; seed < 100; seed++) {
     const d = generateDungeon(seed);
     assert.equal(d.grid.w, 112); assert.equal(d.grid.h, 112);
-    assert.equal(d.corridors.length, 12);
+    assert.equal(d.corridors.length, 16);
+    assert.equal(d.alcoves.length, 4);
+    assert.ok(new Set(d.rooms.map(r => r.shape)).size >= 4);
+    assert.ok(d.corridors.some(c => c.width === 3));
+    assert.ok(d.corridors.some(c => c.width >= 6));
     assert.ok(d.rooms.every(r => r.w >= 18 && r.h >= 18));
     assert.ok(d.spawns.reduce((n, s) => n + s.max, 0) >= 29);
     assert.ok(d.spawns.reduce((n, s) => n + s.max, 0) <= 36);
@@ -67,16 +71,10 @@ test("cámaras amplias, doce galerías anchas y guardianes visibles al entrar", 
     const visible = [...w.ents.values()].filter(e => e.kind === "npc" && Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)) <= 8);
     assert.ok(visible.length >= 2);
     assert.ok(visible.every(e => Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)) > e.cfg.searchRange));
-    for (const { points, width } of d.corridors) {
-      assert.ok(width >= 6);
-      for (let j = 1; j < points.length; j++) {
-        let [x, y] = points[j - 1]; const [tx, ty] = points[j];
-        while (true) {
-          for (let dy = -width / 2; dy < width / 2; dy++) for (let dx = -width / 2; dx < width / 2; dx++) assert.ok(!d.grid.blocked(x + dx, y + dy), `galería obstruida seed ${seed}`);
-          if (x === tx && y === ty) break;
-          x += Math.sign(tx - x); y += Math.sign(ty - y);
-        }
-      }
+    for (const { cells, width } of d.corridors) {
+      assert.ok(width >= 3 && width <= 7);
+      const pad = Math.floor(width / 2);
+      for (const [x, y] of cells) for (let dy = -pad; dy < width - pad; dy++) for (let dx = -pad; dx < width - pad; dx++) assert.ok(!d.grid.blocked(x + dx, y + dy), `galería obstruida seed ${seed}`);
     }
   }
 });
@@ -101,7 +99,8 @@ test("instancias separadas, IDs únicos y progreso/equipo/vida conservados al vo
   for (const n of d.ents.values()) if (n.kind === "npc") assert.ok(!d.grid.blocked(n.x, n.y));
   assert.equal(a.command(id, { t: "attack", target: [...d2.ents.values()].find(e => e.kind === "npc").id }), false);
   assert.equal(a.command(id, { t: "portal", portal: "return" }), true);
-  assert.equal(a.worldFor(id), a.farm); assert.ok(!a.worlds.has(d.map.id));
+  assert.equal(a.worldFor(id), a.farm); assert.ok(a.worlds.has(d.map.id));
+  assert.equal(a.instances.get(id), d);
   assert.deepEqual(a.saveOf(id), before);
   assert.equal(p.hp, 23); assert.equal(p.mp, 11); assert.equal(p.sp, 14);
   assert.equal(a.farm.grid.occupant(p.x, p.y), id);
@@ -120,7 +119,10 @@ test("combate, drops y finalización sin respawn de esqueletos", () => {
   assert.equal([...d.ents.values()].filter(e => e.kind === "npc").length, 0);
   assert.equal(d.generators.reduce((sum, g) => sum + g.alive, 0), 0);
   assert.equal(a.command(id, { t: "portal", portal: "return" }), true);
-  const next = enter(a, id); assert.notEqual(next.map.seed, d.map.seed);
+  const same = enter(a, id, false); assert.equal(same, d); assert.equal(same.map.remainingEnemies, 0);
+  assert.equal(a.command(id, { t: "portal", portal: "return" }), true);
+  const next = enter(a, id, true); assert.notEqual(next.map.seed, d.map.seed);
+  assert.ok(!a.worlds.has(d.map.id));
 });
 
 test("un esqueleto recibe ataques validados y concede experiencia y botín", () => {
@@ -152,8 +154,31 @@ test("morir dentro vuelve a la granja, y desconectar destruye la instancia", () 
   assert.equal(a.command(id, { t: "respawn" }), true);
   assert.equal(a.worldFor(id), a.farm); assert.equal(p.hp, p.maxHp);
   assert.ok(p.eff && typeof p.eff === "object");
-  const d2 = enter(a, id); const save = a.saveOf(id); a.removePlayer(id);
+  const d2 = enter(a, id, false); const save = a.saveOf(id); a.removePlayer(id);
   assert.ok(!a.worlds.has(d2.map.id)); assert.equal(a.worlds.size, 1);
   const restored = a.addPlayer("uno", save); assert.equal(a.worldFor(restored), a.farm);
   assert.deepEqual(a.saveOf(restored).stats, save.stats);
+});
+
+test("salir y continuar mantiene seed, bajas, HP y botín; reiniciar requiere una elección explícita", () => {
+  const a = session(), id = a.addPlayer("uno"), d = enter(a, id), p = d.ents.get(id);
+  const [first, second] = [...d.ents.values()].filter(e => e.kind === "npc");
+  d.killNpc(first, p); second.hp -= 2; a.tick(2000);
+  const remaining = d.map.remainingEnemies, hp = second.hp, loot = JSON.stringify([...d.items]);
+  assert.equal(a.command(id, { t: "portal", portal: "return" }), true);
+  place(a.farm, p, FARM_PORTAL.x - 1, FARM_PORTAL.y);
+  assert.equal(a.command(id, { t: "portal", portal: FARM_PORTAL.id }), false);
+  assert.equal(a.worldFor(id), a.farm);
+  assert.ok(a.farm.drainEvents().some(e => e.t === "dungeon-choice" && e.id === id && e.remaining === remaining));
+  assert.equal(a.instances.get(id), d); // cancelar no altera nada
+  const same = enter(a, id, false);
+  assert.equal(same, d); assert.ok(first.dead); assert.equal(second.hp, hp);
+  assert.equal(same.map.remainingEnemies, remaining); assert.equal(JSON.stringify([...same.items]), loot);
+  assert.equal(a.command(id, { t: "portal", portal: "return" }), true);
+  const fresh = enter(a, id, true);
+  assert.notEqual(fresh.map.id, d.map.id); assert.notEqual(fresh.map.seed, d.map.seed);
+  assert.equal(fresh.map.remainingEnemies, fresh.map.totalEnemies);
+  assert.ok(!a.worlds.has(d.map.id));
+  a.command(id, { t: "portal", portal: "return" }); a.removePlayer(id);
+  assert.equal(a.instances.size, 0); assert.equal(a.worlds.size, 1);
 });
