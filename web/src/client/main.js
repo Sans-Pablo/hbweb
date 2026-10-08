@@ -45,29 +45,53 @@ async function main() {
     document.body.classList.toggle("remastered", m === "remastered");
     renderer.setMode(m);
     sound.setMode(m);
-    store.set("mode", m);
+    
     document.getElementById("modename").textContent = m === "classic" ? "Clásico" : "Remastered";
     hud.place(renderer.viewRect);
   }
-  let runMode = store.get("run", "0") === "1";      // por defecto: andar
+  // opciones del jugador (se recuerdan en el navegador)
+  const defaults = { run: false, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered" };
+  const opts = { ...defaults };
+  try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
+  const optionsEl = document.getElementById("options");
+  function applyOpts() {
+    view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
+    if (sound.on !== opts.sound) sound.toggle();
+    if (renderer.mode !== opts.mode) setMode(opts.mode);
+    for (const el of optionsEl.querySelectorAll("[data-opt]")) {
+      const v = opts[el.dataset.opt];
+      if (el.type === "checkbox") el.checked = !!v; else el.value = v;
+    }
+    store.set("opts", JSON.stringify(opts));
+  }
+  function setOpt(k, v) { opts[k] = v; applyOpts(); }
+  optionsEl.addEventListener("change", e => {
+    const el = e.target.closest("[data-opt]"); if (!el) return;
+    setOpt(el.dataset.opt, el.type === "checkbox" ? el.checked : el.value);
+  });
   const ui = {
-    get run() { return runMode; },
+    get run() { return opts.run; },
     unlockAudio: () => sound.unlock(),
     key(k) {
       switch (k) {
         case "g": {
           const m = renderer.mode === "classic" ? "remastered" : "classic";
-          setMode(m);
+          setOpt("mode", m);
           hud.toast(m === "classic" ? "Gráficos clásicos" : "Gráficos remastered");
           break;
         }
-        case "r": runMode = !runMode; store.set("run", runMode ? "1" : "0"); hud.toast(runMode ? "Correr: activado" : "Correr: desactivado"); break;
-        case "m": view.showMinimap = !view.showMinimap; break;
-        case "b": view.showGrid = !view.showGrid; break;
+        case "r": setOpt("run", !opts.run); hud.toast(opts.run ? "Correr: activado" : "Correr: desactivado"); break;
+        case "m": case "tab": setOpt("map", !opts.map); break;
+        case "b": setOpt("grid", !opts.grid); break;
+        case "o": optionsEl.classList.toggle("open"); break;
         case "c": document.getElementById("charpanel").classList.toggle("open"); break;
         case "h": case "?": case "f1": document.getElementById("help").classList.toggle("open"); break;
-        case "escape": for (const p of document.querySelectorAll(".panel.open")) p.classList.remove("open"); break;
-        case "n": hud.log(sound.toggle() ? "Sonido activado." : "Sonido desactivado."); break;
+        case "escape": {
+          const open = document.querySelectorAll(".panel.open");
+          if (open.length) for (const p of open) p.classList.remove("open"); else optionsEl.classList.add("open");
+          break;
+        }
+        case "n": setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); break;
         case "enter": {
           const me = world.ents.get(pid);
           if (me && me.dead) conn.send({ t: "respawn" });
@@ -80,7 +104,8 @@ async function main() {
   hud.onButton = k => ui.key(k);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
 
-  setMode(store.get("mode", "remastered"));
+  setMode(opts.mode);
+  applyOpts();
   addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); });
   hud.log("Bienvenido a la granja de Aresden. Pulsa H para ver los controles.");
   hud.log("G cambia entre gráficos clásicos y remastered.", "gold");
@@ -126,7 +151,7 @@ async function main() {
     renderer.render({
       world, me, dt, fx,
       hover: ctl.hover, hoverEnt: ctl.hoverEnt, path: ctl.path, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, bubbles, pid,
+      labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
     canvas.style.cursor = ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";

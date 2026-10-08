@@ -202,7 +202,7 @@ export class Renderer {
     for (const [x, y, text, color] of labels) this.label(x, y, text, color);
     s.fx.draw(ctx, camX, camY, this.mode);
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
-    if (s.showMinimap) this.drawMinimap(s, ppx, ppy);
+    if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
     ctx.restore();
   }
 
@@ -350,6 +350,42 @@ export class Renderer {
     c.fillStyle = "rgba(0,0,0,.35)";
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) if (g.blocked(x, y)) c.fillRect(x, y, 1, 1);
     this.minimap = m;
+    // versión "líneas" para el mapa superpuesto: solo los bordes de lo que bloquea el paso
+    const o = document.createElement("canvas");
+    o.width = g.w; o.height = g.h;
+    const oc = o.getContext("2d");
+    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
+      if (g.blocked(x, y)) {
+        const edge = !g.blocked(x - 1, y) || !g.blocked(x + 1, y) || !g.blocked(x, y - 1) || !g.blocked(x, y + 1);
+        if (edge) { oc.fillStyle = "rgba(226,208,150,.9)"; oc.fillRect(x, y, 1, 1); }
+      } else { oc.fillStyle = "rgba(90,140,200,.18)"; oc.fillRect(x, y, 1, 1); }
+    }
+    this.overlayImg = o;
+  }
+
+  // Mapa superpuesto (estilo Diablo II): translúcido sobre toda la vista, centrado en el jugador
+  drawOverlayMap(s, ppx, ppy) {
+    const { ctx } = this;
+    const sc = 4, cx = this.viewW / 2, cy = this.viewH / 2;       // 4 px por casilla
+    const ox = cx - ppx / T * sc, oy = cy - ppy / T * sc;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    ctx.fillRect(0, 0, this.viewW, this.viewH);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.overlayImg, ox, oy, this.grid.w * sc, this.grid.h * sc);
+    for (const e of s.world.ents.values()) {
+      if (e.kind !== "npc" || e.dead) continue;
+      ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
+      ctx.fillRect(ox + e.x * sc, oy + e.y * sc, 3, 3);
+    }
+    for (const e of s.world.ents.values()) {
+      if (e.kind !== "player" || e === s.me || e.dead) continue;
+      ctx.fillStyle = "#7fc4ff";
+      ctx.fillRect(ox + e.x * sc - 1, oy + e.y * sc - 1, 5, 5);
+    }
+    ctx.fillStyle = "#9fe07f";
+    ctx.fillRect(cx - 3, cy - 3, 6, 6);
+    ctx.restore();
   }
 
   drawMinimap(s, ppx, ppy) {
