@@ -79,6 +79,9 @@ export function npcStrikes(w, n, t) {
   }
   if (a.shielded) gainSSN(t, 11, 1);
   damagePlayer(w, t, a.damage, n);
+  // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
+  if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
+  if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) t.superAttack = Math.min(Math.floor(t.level / 10), (t.superAttack || 0) + 1);
 }
 
 export function damageNpc(w, n, dmg, p, skill) {
@@ -89,7 +92,7 @@ export function damageNpc(w, n, dmg, p, skill) {
   if (n.noDieRemainExp > 0) {
     const gain = Math.min(dmg, n.noDieRemainExp);
     n.noDieRemainExp -= gain;
-    giveExp(w, p, gain);
+    giveExp(w, p, gain + (p.eff.addExp ? Math.floor((p.eff.addExp / 100) * gain) : 0));      // atributo "Experiencia +%"
   }
   if (n.hp <= 0) {
     // experiencia de habilidad por matar: 1d(dados de golpe del monstruo), doble con poca vida

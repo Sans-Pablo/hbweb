@@ -27,6 +27,7 @@ export function castChance(p, id) {
   let r = Math.floor((mastery / 100) * MC_PROB[circle]);
   if (p.stats.int > 50) r += Math.floor((p.stats.int - 50) / 2);
   r = levelAdjust(r, circle, p.level);
+  r += p.eff.castBonus || 0;                                 // atributo "Special" de las varitas
   return r <= 0 ? 1 : r;
 }
 

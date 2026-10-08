@@ -71,6 +71,40 @@ assert(golds / nDrops > 0.55 && golds / nDrops < 0.65, "60 % de lo que cae es or
   assert(w2.drainEvents().some(e => e.t === "spell") || slime.dead, "el hechizo se lanza");
 }
 
+// --- atributos de los objetos que caen
+{
+  const A = await import("../web/src/shared/attributes.js");
+  const sword = data.named("GreatSword"), plate = data.named("PlateMail(M)"), wand = data.item(256);
+  const tally = {}; let n2 = 0;
+  for (let i = 0; i < 20000; i++) {
+    const r = A.rollAttributes(rng, sword, 8), a = A.parseAttr(r.attr);
+    tally[a.t1] = (tally[a.t1] || 0) + 1;
+    assert(a.t1 !== 1 || a.v1 >= 5, "crítico: valor mínimo 5");
+    assert((a.t1 !== 2 && a.t1 !== 6) || a.v1 >= 4, "veneno/ligero: valor mínimo 4");
+    assert(a.t1 !== 8 || a.v1 >= 2, "fuerte: valor mínimo 2");
+    if (a.t2) { n2++; assert([2, 10, 11, 12].includes(a.t2), "secundario de arma válido"); }
+    const low = A.rollAttributes(rng, sword, 1);
+    assert(A.parseAttr(low.attr).v1 <= 7 && A.parseAttr(low.attr).v2 <= 7, "monstruos de nivel bajo: valores hasta 7");
+  }
+  assert(Math.abs(tally[8] / 20000 - 0.07) < 0.012 && Math.abs(tally[5] / 20000 - 0.20) < 0.015, "reparto de tipos principales de arma");
+  assert(Math.abs(n2 / 20000 - 0.40) < 0.02, "40 % lleva atributo secundario");
+  const w2 = A.rollAttributes(rng, wand, 7); assert(A.parseAttr(w2.attr).t1 === 10 && w2.color === 5, "varita: atributo Special");
+  const pa = A.rollAttributes(rng, plate, 7), pp = A.parseAttr(pa.attr);
+  assert([6, 8, 11, 12].includes(pp.t1), "armadura: ligero, fuerte, convierte maná o crítico");
+  // _AdjustRareItemValue
+  const light = (4 << 16 | 6 << 20) >>> 0, rs = A.realStats(plate, { attr: light });
+  assert(rs.weight === plate.weight - Math.floor(plate.weight * 16 / 100), "ligero: -4 % por punto de peso");
+  assert(A.realStats(sword, { attr: (5 << 20 | 1 << 16) >>> 0 }).speed === Math.max(0, sword.speed - 1), "ágil: velocidad -1");
+  assert(A.realStats(sword, { attr: (8 << 20 | 3 << 16) >>> 0 }).maxLife === sword.maxLife + Math.floor(sword.maxLife * 21 / 100), "fuerte: durabilidad +7 % por punto");
+  // efecto al equipar: Sharp (+1 al dado) y secundario "Hitting Probability +"
+  const w3 = new World({ grid, npcDb, data, spawns, rng, start: meta.start });
+  const id3 = w3.addPlayer("atr"), q = w3.ents.get(id3);
+  const inst = { uid: 9100, id: sword.id, count: 1, life: sword.maxLife, attr: (7 << 20 | 1 << 16 | 2 << 12 | 3 << 8) >>> 0, color: 6 };
+  q.bag.push(inst); q.stats.str = 100; w3.recalc(q);
+  const before = q.eff.addAR;
+  assert(Inv.equip(q, data, 9100).ok && q.eff.addAR === before + 21 && q.eff.sm[1] === sword.v2 + 1, "arma Sharp con acierto +21");
+}
+
 const counts = {};
 let target = null;
 for (let step = 0; step < 20 * 60 * 20; step++) {          // 20 minutos de juego a 20 Hz

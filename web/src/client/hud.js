@@ -5,6 +5,7 @@ import { itemDef, itemName, packKey } from "./names.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
 import { damageRange } from "../shared/combat.js";
+import { realStats, attrLines } from "../shared/attributes.js";
 
 const $ = s => document.querySelector(s);
 const STAT_NAMES = { str: "Fuerza", vit: "Vitalidad", dex: "Destreza", int: "Inteligencia", mag: "Magia", chr: "Carisma" };
@@ -75,7 +76,7 @@ export class Hud {
         if (ev.id === me) this.log("Has muerto.", "bad");
         else if (ev.by === me) this.log("Has matado a " + (who(ev.id)?.name || "un monstruo") + ".");
         break;
-      case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
+      case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item, ev.attr) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
       case "use": if (ev.id === me) this.log("Usas " + itemName(ev.item) + (ev.amount ? " (+" + ev.amount + ")" : "") + "."); break;
       case "equip": if (ev.id === me) this.log("Equipas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;
       case "unequip": if (ev.id === me) this.log("Te quitas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;
@@ -125,19 +126,21 @@ export class Hud {
     if (d.type === ITYPE.EQUIP) {
       if (d.effectType === EFFECT.ATTACK || d.effectType === EFFECT.ATTACK_MANASAVE || d.effectType === EFFECT.ATTACK_ARROW) {
         L.push("Daño " + d.v1 + "d" + d.v2 + (d.v3 ? "+" + d.v3 : "") + " (grandes " + d.v4 + "d" + d.v5 + (d.v6 ? "+" + d.v6 : "") + ")");
-        if (d.skill >= 0) L.push("Habilidad: " + (SKILL_NAMES[d.skill] || d.skill) + " · velocidad " + d.speed);
+        if (d.skill >= 0) L.push("Habilidad: " + (SKILL_NAMES[d.skill] || d.skill) + " · velocidad " + realStats(d, it).speed);
       } else if (d.effectType === EFFECT.DEFENSE || d.effectType === EFFECT.DEFENSE_SPECABLTY) {
         L.push("Defensa +" + d.v1 + (d.equipPos === EQUIP.LHAND ? " · bloqueo " + (d.v1 - Math.floor(d.v1 / 3)) + " %" : d.v2 ? " · absorbe " + d.v2 + " %" : ""));
       }
       L.push(pos + (d.levelLimit ? " · nivel " + d.levelLimit : "") + (d.gender === 1 ? " · hombre" : d.gender === 2 ? " · mujer" : ""));
-      L.push("Fuerza necesaria " + Math.ceil(d.weight / 100) + " · durabilidad " + it.life + "/" + d.maxLife);
+      const rs = realStats(d, it);
+      L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
+      for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
     } else L.push(d.type === ITYPE.EAT ? "Consumible" : "Objeto");
-    L.push("Peso " + (d.weight / 100).toFixed(2) + (isStack(d) ? " c/u" : ""));
+    L.push("Peso " + (realStats(d, it).weight / 100).toFixed(2) + (isStack(d) ? " c/u" : ""));
     return L;
   }
 
   renderInv(me) {
-    const key = [me.bag.map(i => i.uid + ":" + i.count + ":" + i.life).join(","), JSON.stringify(me.equip), this.sel, me.weight, me.maxLoad, me.gold].join("|");
+    const key = [me.bag.map(i => i.uid + ":" + i.count + ":" + i.life).join(","), JSON.stringify(me.equip), this.sel, me.weight, me.maxLoad, me.gold, me.bag.map(i => i.attr || 0).join(",")].join("|");
     if (this.invKey === key) return;
     this.invKey = key;
     $("#inv .load").textContent = "Peso " + (me.weight / 100).toFixed(1) + " / " + (me.maxLoad / 100).toFixed(0) + " · oro " + me.gold.toLocaleString("es") + " · " + me.bag.length + "/50";
@@ -151,7 +154,7 @@ export class Hud {
         ico = `<span class="ico" style="width:${w}px;height:${h}px;background:url(data/sprites/${this.sprites.m[packKey(d)].png}) -${sx}px -${sy}px;transform:scale(${k})"></span>`;
       }
       const eq = this.isEquipped(me, it.uid), dead = d.type === ITYPE.EQUIP && it.life === 0;
-      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
+      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
     }
     $("#inv .grid").innerHTML = html;
     const it = me.bag.find(i => i.uid === this.sel);
@@ -161,7 +164,7 @@ export class Hud {
     if (d.type === ITYPE.EQUIP) acts += `<button data-act="${eq ? "unequip" : "equip"}">${eq ? "Quitar" : "Equipar"}</button>`;
     if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) acts += '<button data-act="use">Usar</button>';
     acts += '<button data-act="drop">Tirar</button>';
-    $("#inv .detail").innerHTML = `<h4>${itemName(it.id)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
+    $("#inv .detail").innerHTML = `<h4${it.attr ? ' style="color:#9fe39a"' : ""}>${itemName(it.id, it.attr)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
   }
 
   renderBook(me) {

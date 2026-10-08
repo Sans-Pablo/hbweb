@@ -1,18 +1,22 @@
 // Mochila, equipo y efectos del equipo (CalcTotalItemEffect, bEquipItemHandler...).
 // Un jugador tiene:  p.bag = [{uid, id, count, life}]   p.equip = {posición: uid}
 import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./items.js";
+import { realStats, applyEquipAttr } from "./attributes.js";
+
+// definición del objeto con el peso real de esta unidad (los atributos "Light" lo reducen)
+const real = (d, inst) => (inst && inst.attr ? { ...d, weight: realStats(d, inst).weight } : d);
 
 export const instOf = (p, uid) => p.bag.find(i => i.uid === uid);
 export const isEquipped = (p, uid) => Object.values(p.equip).includes(uid);
 
 export function totalWeight(p, data) {
   let w = itemWeight(data.item(GOLD), p.gold || 0);
-  for (const i of p.bag) { const d = data.item(i.id); w += itemWeight(d, isStack(d) ? i.count : 1); }
+  for (const i of p.bag) { const d = data.item(i.id); w += itemWeight(real(d, i), isStack(d) ? i.count : 1); }
   return w;
 }
 export const maxLoad = p => p.stats.str * 500 + p.level * 500;
-export function canCarry(p, data, def, count = 1) {
-  return totalWeight(p, data) + itemWeight(def, isStack(def) ? count : 1) <= maxLoad(p);
+export function canCarry(p, data, def, count = 1, inst = null) {
+  return totalWeight(p, data) + itemWeight(real(def, inst), isStack(def) ? count : 1) <= maxLoad(p);
 }
 
 // Mete un objeto en la mochila (los apilables se juntan por id). Devuelve false si no cabe.
@@ -46,7 +50,7 @@ export function equip(p, data, uid) {
   if (d.levelLimit > p.level) { out.why = "nivel " + d.levelLimit + " necesario"; return out; }
   if (d.gender === 1 && p.gender !== 1) { out.why = "solo para hombres"; return out; }
   if (d.gender === 2 && p.gender !== 2) { out.why = "solo para mujeres"; return out; }
-  const w = itemWeight(d, 1);
+  const w = itemWeight(real(d, inst), 1);
   if (w > p.stats.str * 100) { out.why = "demasiado pesado (fuerza " + Math.ceil(w / 100) + ")"; return out; }
   const pos = d.equipPos;
   // requisito de atributo de cascos y armaduras (v4 = atributo, v5 = mínimo); si falla, se suelta lo que haya puesto
@@ -93,6 +97,8 @@ export function recalc(p, data) {
   const fx = {
     sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
     defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, resistMagic: 0,
+    addDR: 0, addHP: 0, addSP: 0, addMP: 0, addMR: 0, addPR: 0, addAbsMD: 0, addCD: 0, addExp: 0, addGold: 0,
+    castBonus: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0,
   };
   if (p.equip[EQUIP.TWOHAND] !== undefined) delete p.equip[EQUIP.RHAND];        // el arma a dos manos manda
   for (const [ps, uid] of Object.entries(p.equip)) {
@@ -124,8 +130,10 @@ export function recalc(p, data) {
         else if (d.v1 === 12) fx.addAR += d.v2;
         break;
     }
-    if (pos === EQUIP.RHAND || pos === EQUIP.TWOHAND) fx.speedNib = Math.max(0, d.speed - Math.floor(s.str / 13));
+    applyEquipAttr(fx, inst.attr, d, pos);
+    if (pos === EQUIP.RHAND || pos === EQUIP.TWOHAND) fx.speedNib = Math.max(0, realStats(d, inst).speed - Math.floor(s.str / 13));
   }
+  fx.defense += fx.addDR;
   p.eff = fx;
   p.defense = fx.defense;
   return fx;

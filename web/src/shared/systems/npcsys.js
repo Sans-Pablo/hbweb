@@ -40,10 +40,12 @@ export function killNpc(w, n, p) {
   w.grid.release(n.x, n.y, n.id);
   p.kills++;
   w.emit({ t: "death", id: n.id, by: p.id });
-  giveExp(w, p, Math.floor(n.exp / 3) + n.noDieRemainExp);       // NpcKilledHandler
+  let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;             // NpcKilledHandler
+  if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
+  giveExp(w, p, xp);
   n.noDieRemainExp = 0;
-  const drop = rollKillDrop(w.rng, n, { rating: p.rating || 0 });
-  if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count)));
+  const drop = rollKillDrop(w.rng, n, { rating: p.rating || 0, data: w.data, addGold: p.eff?.addGold || 0 });
+  if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
   w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
   w.after(n.dur.dying + CORPSE_MS, () => { w.ents.delete(n.id); w.emit({ t: "remove", id: n.id }); });

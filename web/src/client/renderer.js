@@ -147,7 +147,7 @@ export class Renderer {
       const d = itemDef(it.id);
       if (d) this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y);
       if (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
-        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id), it.id === 90 ? "#f0d080" : "#e8e2d0"]);
+        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr), it.id === 90 ? "#f0d080" : it.attr ? "#9fe39a" : "#e8e2d0"]);
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)

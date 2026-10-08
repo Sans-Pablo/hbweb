@@ -51,7 +51,7 @@ function loadSave(w, p, s) {
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic };
   if (Array.isArray(s.bag)) {
-    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid }));
+    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}) }));
     p.equip = {};
     for (const [pos, old] of Object.entries(s.equip || {})) { const m = p.bag.find(i => i.old === old); if (m) p.equip[pos] = m.uid; }
     for (const i of p.bag) delete i.old;
@@ -67,7 +67,7 @@ export function saveOf(w, id) {
   return {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
-    bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life })), equip: { ...p.equip },
+    bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.attr ? { attr: i.attr, color: i.color } : {}) })), equip: { ...p.equip },
   };
 }
 

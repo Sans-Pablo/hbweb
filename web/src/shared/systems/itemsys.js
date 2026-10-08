@@ -5,9 +5,11 @@ import { PLAYER, ACT } from "../const.js";
 import * as Inv from "../inventory.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
 
-export const newInst = (w, id, count = 1) => {
+export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
-  return { uid: w.nextItem++, id, count, life: d ? d.maxLife : 1 };
+  const inst = { uid: w.nextItem++, id, count, life: d ? d.maxLife : 1 };
+  if (extra && extra.attr) { inst.attr = extra.attr; inst.color = extra.color || 0; }
+  return inst;
 };
 
 export function startPickup(w, p) {
@@ -23,14 +25,14 @@ function takeItem(w, p) {
   const it = groundTop(w, p.x, p.y);
   if (!it || p.dead) return;
   const d = w.data.item(it.id);
-  if (!Inv.canCarry(p, w.data, d, it.count)) { w.emit({ t: "cantcarry", id: p.id, why: "weight" }); return; }
+  if (!Inv.canCarry(p, w.data, d, it.count, it)) { w.emit({ t: "cantcarry", id: p.id, why: "weight" }); return; }
   if (it.id !== GOLD && !(isStack(d) && p.bag.some(i => i.id === it.id)) && p.bag.length >= MAX_ITEMS) {
     w.emit({ t: "cantcarry", id: p.id, why: "slots" }); return;
   }
   groundPop(w, p.x, p.y);
   Inv.addToBag(p, w.data, it);
   w.recalc(p);
-  w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y });
+  w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0 });
 }
 
 // tirar un objeto de la mochila a la casilla propia (amount < count divide una pila)
