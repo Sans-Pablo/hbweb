@@ -207,7 +207,7 @@ export class SpellFx {
   }
 
   draw(ctx, camX, camY) {
-    if (!this.man) return;
+    if (!this.man || this.off) return;
     for (const e of this.list) {
       const f = e.frame, x = e.mx - camX, y = e.my - camY;
       switch (e.type) {

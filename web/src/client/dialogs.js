@@ -108,8 +108,20 @@ export function registerDialogs(gui, api) {
       const ids = new Set(me.bag.map(i => i.uid));
       this.order = this.order.filter(u => ids.has(u));
       for (const i of me.bag) if (!this.order.includes(i.uid)) this.order.push(i.uid);
+      // los objetos nuevos no se amontonan: cada uno toma la primera casilla libre de una cuadrícula de 34 px
+      const slot = this.slot || (this.slot = {});
+      for (const u of Object.keys(slot)) if (!ids.has(+u)) delete slot[u];
+      const taken = me.bag.filter(i => i.x !== undefined).map(i => [i.x, i.y]).concat(Object.values(slot));
+      for (const i of me.bag) {
+        if (i.x !== undefined || slot[i.uid]) continue;
+        let best = [40, 30];
+        search: for (let y = 30; y <= 95; y += 34) for (let x = 0; x <= 170; x += 34) {
+          if (!taken.some(t => Math.abs(t[0] - x) < 30 && Math.abs(t[1] - y) < 30)) { best = [x, y]; break search; }
+        }
+        slot[i.uid] = best; taken.push(best);
+      }
     },
-    pos(it) { return [32 + (it.x ?? 40), 44 + (it.y ?? 30)]; },
+    pos(it) { const s = this.slot && this.slot[it.uid]; return [32 + (it.x ?? (s ? s[0] : 40)), 44 + (it.y ?? (s ? s[1] : 30))]; },
     equipped(me, uid) { return Object.values(me.equip || {}).includes(uid); },
     draw(g, me) {
       this.sync(me);
@@ -314,6 +326,8 @@ export function registerDialogs(gui, api) {
       label(23, 180, "Guide Map"); g.isOpen(9) ? val(99, 180, "On", W_) : val(98, 180, "Off", GR);
       const d = new Date();
       label(23, 204, `${d.getMonth() + 1}:${d.getDate()}:${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`);
+      const mm = g.mouse, mlx = mm.x - this.x, mly = mm.y - this.y, mo = mlx >= 150 && mlx <= 235 && mly >= 200 && mly <= 214;
+      label(150, 204, "Mejoras…"); if (mo) val(150, 204, "Mejoras…", "#fff");
       label(23, 41, "Helbreath Web");
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
       const over = (a) => lx >= a && lx <= a + 74 && ly >= 225 && ly <= 245;
@@ -336,6 +350,7 @@ export function registerDialogs(gui, api) {
       else if (inb(123, 203, 108, 119)) api.setSys({ shout: !S.shout });
       else if (inb(28, 235, 156, 171)) api.setSys({ trans: !S.trans });
       else if (inb(28, 127, 178, 193)) g.toggle(9);
+      else if (inb(150, 235, 200, 214)) { g.close(19); g.toggle(20); }
       else if (inb(30, 104, 225, 245)) { api.logout(); if (S.logoutCount === null) g.close(19); }
       else if (me.dead && inb(154, 228, 225, 245)) { api.restart(); g.close(19); }
       else if (inb(127, 238, 122, 138) || inb(127, 238, 139, 155)) return true;
@@ -344,6 +359,27 @@ export function registerDialogs(gui, api) {
     },
   };
   gui.register(sys);
+
+  // ------------------------------------------------------------ 20: mejoras de esta versión (activables)
+  const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
+    ["spellFx", "Animaciones de hechizos"], ["freeMagic", "Magia libre (sin MP)"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
+  const mods = {
+    id: 20, x: 417, y: 140, w: 258, h: 268,
+    draw(g) {
+      const O = api.mods(), c = g.ctx;
+      c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);
+      const label = (x, y, t, col = "#e8dcc3") => g.text(x, y, t, col);
+      label(23, 28, "Mejoras de esta versión", "#f0d080");
+      MODS.forEach(([k, n], i) => { label(23, 66 + i * 20, n); O[k] ? g.text(205, 66 + i * 20, "On", "#9fe39a") : g.text(203, 66 + i * 20, "Off", "#9a8f7a"); });
+      label(23, 66 + MODS.length * 20 + 10, "Clic derecho: cerrar", "#9a8f7a");
+    },
+    click(g, lx, ly) {
+      const O = api.mods();
+      for (let i = 0; i < MODS.length; i++) if (lx >= 20 && lx <= 238 && ly >= 62 + i * 20 && ly <= 78 + i * 20) { api.setMod(MODS[i][0], !O[MODS[i][0]]); return true; }
+      return false;
+    },
+  };
+  gui.register(mods);
 
   // ------------------------------------------------------------ 15: habilidades (F8), lista de Skill.cfg
   const SKILLS = [["Mining", 1], ["Fishing", 1], ["Farming", 1], ["Magic-Resistance", 0], ["Magic", 0], ["Hand-Attack", 0], ["Archery", 0], ["Short-Sword", 0], ["Long-Sword", 0], ["Fencing", 0], ["Axe-Attack", 0], ["Shield", 0], ["Alchemy", 1], ["Manufacturing", 1], ["Hammer", 0], ["????", 1], ["????", 1], ["????", 1], ["????", 1], ["Pretend-Corpse", 2], ["????", 1], ["Staff-Attack", 0], ["????", 1], ["Poison-Resistance", 1]];

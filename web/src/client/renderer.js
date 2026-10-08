@@ -33,7 +33,7 @@ export class Renderer {
     this.cam = null; this.chunks.clear(); this.buildMinimap();
   }
 
-  setMode(m) { this.mode = m; this.spr.hd = m === "remastered"; this.cam = null; this.layout(); }
+  setMode(m) { this.mode = m; this.spr.hd = m === "remastered" && this.hdOpt !== false; this.cam = null; this.layout(); }
 
   resize() {
     const r = this.canvas.getBoundingClientRect();
@@ -225,7 +225,7 @@ export class Renderer {
     if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
 
     // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
-    if (remaster) {
+    if (remaster && this.lighting !== false) {
       const cx = ppx - camX, cy = ppy - camY - 20, R = Math.max(VW, VH) * 0.75;
       const g = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
       g.addColorStop(0, "rgba(255,200,120,0.06)");

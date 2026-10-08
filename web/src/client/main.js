@@ -1,5 +1,6 @@
 // Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 // el jugador y mueve el bucle de juego.
+import { MAGIC_MODE } from "../shared/magic.js";
 import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
@@ -57,6 +58,8 @@ async function main() {
     magic: assets.data.magic,
     useMagic: id => ui.useMagic(id),
     sys: () => ({ detail: flags.detail, sound: opts.sound, music: opts.music, whisper: flags.whisper, shout: flags.shout, soundVol: opts.soundVol, musicVol: opts.musicVol, trans: document.body.classList.contains("dialogtrans"), logoutCount: logout.n }),
+    mods: () => opts,
+    setMod: (k, v) => { setOpt(k, v); hud.log(k + (v ? ' activado.' : ' desactivado.')); },
     setSys: o => {
       if ("detail" in o) { flags.detail = o.detail; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][o.detail]); }
       if ("sound" in o) setOpt("sound", o.sound);
@@ -127,7 +130,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, spellFx: true, freeMagic: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   const optionsEl = document.getElementById("options");
@@ -135,6 +138,11 @@ async function main() {
     view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
     sound.setVolume?.(opts.soundVol);
+    MAGIC_MODE.free = !!opts.freeMagic;
+    renderer.lighting = !!opts.lighting;
+    renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
+    if (fx.sp) fx.sp.off = !opts.spellFx;
+    document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
     for (const el of optionsEl.querySelectorAll("[data-opt]")) {
       const v = opts[el.dataset.opt];
@@ -170,7 +178,7 @@ async function main() {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
       if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
       if (ui.pointing != null) return;
-      if (m.mana > me.mp) { hud.log("No tienes maná suficiente.", "bad"); return; }
+      if (m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
@@ -373,8 +381,18 @@ async function main() {
     });
     hud.update(world, ctl.hoverEnt);
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
-    gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control") });
-    canvas.style.cursor = ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
+    // cursor del original (interface.pak, sprite 0): 0 flecha · 3 enemigo · 6 otro jugador · 4/5 hechizo amigo/enemigo · 10 mano para recoger
+    let cur;
+    if (opts.classicCursor) {
+      const ov = gui.dialogAt(gui.mouse.x, gui.mouse.y) || gui.mouse.y >= 548;
+      const he = ctl.hoverEnt, foe = he && he.kind !== "player";
+      cur = 0;
+      if (!ov && ui.pointing != null) cur = foe ? 5 : 4;
+      else if (!ov && he) cur = foe ? 3 : 6;
+      else if (!ov && ctl.hover && world.items.get(world.grid.idx(ctl.hover[0], ctl.hover[1]))?.length) cur = 10;
+    }
+    gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur });
+    canvas.style.cursor = opts.classicCursor ? "none" : ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);

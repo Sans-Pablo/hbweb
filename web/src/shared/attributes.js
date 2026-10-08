@@ -118,12 +118,12 @@ export function attrLines(attr) {
   const main = {
     1: `Daño crítico +${v1}`, 2: `Daño de veneno +${v1 * 5}`, 5: "Velocidad de ataque -1", 6: `${v1 * 4} % más ligero`,
     7: "Daño añadido", 8: `Resistencia +${v1 * 7} %`, 9: "Daño extra añadido", 10: `Probabilidad de lanzar magia +${v1 * 3} %`,
-    11: `Convierte ${v1} % del daño en maná`, 12: `Probabilidad de crítico +${v1} %`,
+    11: `Convierte ${v1} % del daño en MP`, 12: `Probabilidad de crítico +${v1} %`,
   }[t1];
   if (main) L.push(main);
   const sub = {
-    1: `Resistencia al veneno +${v2 * 7} %`, 2: `Probabilidad de acierto +${v2 * 7}`, 3: `Defensa +${v2 * 7}`, 4: `Recuperación de vida ${v2 * 7} %`,
-    5: `Recuperación de aguante ${v2 * 7} %`, 6: `Recuperación de maná ${v2 * 7} %`, 7: `Resistencia mágica +${v2 * 7} %`,
+    1: `Resistencia al veneno +${v2 * 7} %`, 2: `Probabilidad de acierto +${v2 * 7}`, 3: `Defensa +${v2 * 7}`, 4: `Recuperación de HP ${v2 * 7} %`,
+    5: `Recuperación de SP ${v2 * 7} %`, 6: `Recuperación de MP ${v2 * 7} %`, 7: `Resistencia mágica +${v2 * 7} %`,
     8: `Absorción física +${v2 * 3} %`, 9: `Absorción mágica +${v2 * 3} %`, 10: `Daño de ataques seguidos +${v2}`,
     11: `Experiencia +${v2 * 10} %`, 12: `Oro +${v2 * 10} %`,
   }[t2];

@@ -205,6 +205,7 @@
 #gui { position: fixed; pointer-events: none; z-index: 5; image-rendering: pixelated; }
 #hudbar { display: none !important; }
 body.pointing #game, body.pointing canvas { cursor: crosshair !important; }
+  body.classic-cursor canvas, body.classic-cursor.pointing canvas { cursor: none !important; }
 body.dialogtrans .panel { opacity: .55; }
 </style>
 </head>
@@ -299,6 +300,12 @@ body.dialogtrans .panel { opacity: .55; }
       <select data-opt="mapStyle"><option value="corner">Esquina</option><option value="overlay">Superpuesto (estilo Diablo II)</option></select></label>
     <label><input type="checkbox" data-opt="autoAttack"> Ataque automático (clic izquierdo sobre un monstruo)</label>
     <label><input type="checkbox" data-opt="grid"> Mostrar casillas bloqueadas</label>
+    <b>Mejoras</b>
+    <label><input type="checkbox" data-opt="classicCursor"> Cursor clásico del juego</label>
+    <label><input type="checkbox" data-opt="hdSprites"> Sprites y terreno en HD (solo Remastered)</label>
+    <label><input type="checkbox" data-opt="lighting"> Luz y viñeta (solo Remastered)</label>
+    <label><input type="checkbox" data-opt="spellFx"> Animaciones de hechizos</label>
+    <label><input type="checkbox" data-opt="freeMagic"> Magia libre: todos los hechizos, sin coste de MP (pruebas)</label>
     <div class="acct"><b>Cuenta</b>
       <button type="button" id="btn-save">Guardar ahora</button>
       <button type="button" id="btn-export">Exportar copia</button>

@@ -258,6 +258,7 @@ export class Gui {
     if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
     this.itemTooltip(me);
     for (const [x, y, s] of this.tips) this.text(x, y, s, "#fafadc", { shadow: true });
+    if (info.cursor !== undefined && this.mouse.x >= 0) this.put("interface_0", info.cursor, this.mouse.x, this.mouse.y);   // cursor del cliente original
   }
 
   // estadísticas del objeto que se arrastra o sobre el que está el cursor

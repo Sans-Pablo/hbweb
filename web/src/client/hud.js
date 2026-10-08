@@ -95,7 +95,7 @@ export class Hud {
         const bad = ev.key === "hold" || ev.key === "ice" || ev.key === "poison" || ev.key === "confuse";
         this.log(ev.on ? "Estás " + names[ev.key] + "." : "Ya no estás " + names[ev.key] + ".", ev.on && bad ? "bad" : "");
       } break;
-      case "respawn": if (ev.id === me) this.log("Vuelves a la granja con la vida llena."); break;
+      case "respawn": if (ev.id === me) this.log("Vuelves a la granja con el HP lleno."); break;
       case "chat": this.log(ev.system ? ev.text : ev.name + ": " + ev.text, ev.system ? "gold" : "chat"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;
     }
@@ -116,7 +116,7 @@ export class Hud {
   quickUse(kind) {
     const it = this.quickItem(kind);
     if (it) this.conn.send({ t: "use", uid: it.uid });
-    else this.log("No tienes " + { hp: "pociones de vida", mp: "pociones de maná", sp: "pociones de resistencia" }[kind] + ".", "bad");
+    else this.log("No tienes " + { hp: "pociones de HP", mp: "pociones de MP", sp: "pociones de SP" }[kind] + ".", "bad");
   }
   isEquipped(me, uid) { return Object.values(me.equip || {}).includes(uid); }
   primary(uid) {
@@ -198,7 +198,7 @@ export class Hud {
       const known = me.magic && me.magic[id];
       const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
         : `<button data-learn="${id}"${me.stats.int < m.reqInt || me.gold < m.cost ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
-      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · maná ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
+      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · MP ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
     }
     $("#book .list").innerHTML = html;
   }
@@ -241,19 +241,19 @@ export class Hud {
         `<div class="row"><span>${n}</span><b>${me.stats[k]}</b>${me.pool ? `<button data-stat="${k}" title="Subir ${n}">+</button>` : "<i></i>"}</div>`).join("");
       const skills = Object.entries(me.skills).filter(([, v]) => v > 0).map(([k, v]) => `<div class="sk"><span>${SKILL_NAMES[k] || "Habilidad " + k}</span><b>${v}%</b></div>`).join("");
       const e = me.eff || {}, ar = Object.values(e.armor || {}).reduce((a, b) => a + b, 0);
-      const SEC = [["Probabilidad de acierto", e.addAR, ""], ["Defensa añadida", e.addDR, ""], ["Recuperación de vida", e.addHP, " %"],
-        ["Recuperación de aguante", e.addSP, " %"], ["Recuperación de maná", e.addMP, " %"], ["Resistencia mágica", e.addMR, " %"],
+      const SEC = [["Probabilidad de acierto", e.addAR, ""], ["Defensa añadida", e.addDR, ""], ["Recuperación de HP", e.addHP, " %"],
+        ["Recuperación de SP", e.addSP, " %"], ["Recuperación de MP", e.addMP, " %"], ["Resistencia mágica", e.addMR, " %"],
         ["Resistencia al veneno", e.addPR, " %"], ["Absorción física", ar, " %"], ["Absorción mágica", e.addAbsMD, " %"],
         ["Daño de ataques seguidos", e.addCD, ""], ["Experiencia", e.addExp, " %"], ["Oro", e.addGold, " %"],
-        ["Ahorro de maná", e.manaSave, " %"], ["Probabilidad de lanzar magia", e.castBonus, " %"],
-        ["Daño convertido en maná", e.transMana, " %"], ["Probabilidad de crítico", e.chargeCrit, " %"]];
+        ["Ahorro de MP", e.manaSave, " %"], ["Probabilidad de lanzar magia", e.castBonus, " %"],
+        ["Daño convertido en MP", e.transMana, " %"], ["Probabilidad de crítico", e.chargeCrit, " %"]];
       const sec = SEC.filter(r => r[1]).map(([n, v, u]) => `<div class="row"><span>${n}</span><b>+${v}${u}</b><i></i></div>`).join("");
       const html = `<h3>${me.name} <small>nivel ${me.level}</small></h3>
         <p class="pool">${me.pool ? "Puntos para repartir: <b>" + me.pool + "</b>" : "Sin puntos para repartir"}</p>
         ${rows}
-        <hr><div class="row"><span>Vida</span><b>${me.hp}/${me.maxHp}</b><i></i></div>
-        <div class="row"><span>Maná</span><b>${me.mp}/${me.maxMp}</b><i></i></div>
-        <div class="row"><span>Resistencia</span><b>${me.sp}/${me.maxSp}</b><i></i></div>
+        <hr><div class="row"><span>HP</span><b>${me.hp}/${me.maxHp}</b><i></i></div>
+        <div class="row"><span>MP</span><b>${me.mp}/${me.maxMp}</b><i></i></div>
+        <div class="row"><span>SP</span><b>${me.sp}/${me.maxSp}</b><i></i></div>
         <div class="row"><span>Hambre</span><b>${me.hunger}%</b><i></i></div>
         <div class="row"><span>Defensa</span><b>${me.defense}</b><i></i></div>
         <div class="row"><span>Daño</span><b>${lo}–${hi}</b><i></i></div>
