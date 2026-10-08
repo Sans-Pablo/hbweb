@@ -43,7 +43,7 @@ export class Controller {
     addEventListener("keydown", e => {
       if (e.target instanceof HTMLInputElement) return;
       const k = e.key.toLowerCase();
-      if (e.key.startsWith("Arrow") || e.key === " " || e.key === "Alt" || e.key === "Tab") e.preventDefault();
+      if (e.key === " " || e.key === "Alt" || e.key === "Tab") e.preventDefault();
       if (!e.repeat) ui.unlockAudio();
       this.keys.add(k);
       if (e.repeat) return;
@@ -61,15 +61,6 @@ export class Controller {
 
   get world() { return this.conn.state; }
   get me() { return this.world.ents.get(this.conn.pid); }
-
-  keyDir() {
-    const k = this.keys;
-    const up = k.has("arrowup") || k.has("w"), down = k.has("arrowdown") || k.has("s");
-    const left = k.has("arrowleft") || k.has("a"), right = k.has("arrowright") || k.has("d");
-    const ax = (right ? 1 : 0) - (left ? 1 : 0), ay = (down ? 1 : 0) - (up ? 1 : 0);
-    const dirs = { "0,-1": 1, "1,-1": 2, "1,0": 3, "1,1": 4, "0,1": 5, "-1,1": 6, "-1,0": 7, "-1,-1": 8 };
-    return dirs[ax + "," + ay] || 0;
-  }
 
   // monstruo bajo el cursor: el sprite ocupa la casilla de los pies y lo que hay encima
   pick(wx, wy) {
@@ -119,12 +110,6 @@ export class Controller {
 
     if (world.busy(me)) return;
     const run = this.ui.run;
-    const kd = this.keyDir();
-    if (kd) {
-      this.intent = null; this.path = [];
-      this.conn.send({ t: "move", dir: kd, run });
-      return;
-    }
     const it = this.intent;
     if (!it) { this.path = []; return; }
 

@@ -42,7 +42,7 @@ Doble clic en **`Jugar con mi hermano (multijugador).bat`**. La primera vez desc
 | Clic en el suelo | andar (mantén pulsado para seguir al cursor) |
 | Clic en un monstruo | atacar hasta matarlo |
 | Clic en un objeto / `Espacio` | recoger |
-| `WASD` / flechas, `Mayús` | andar, correr |
+| `R` | alternar andar / correr |
 | `1` `2` `3` (o `Insert` / `Supr`) | pociones |
 | `C` | personaje y reparto de puntos |
 | `G` | gráficos clásicos / remastered |
