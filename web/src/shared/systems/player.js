@@ -121,6 +121,7 @@ export function respawn(w, p) {
   p.x = p.fx = x; p.y = p.fy = y;
   w.grid.occupy(x, y, p.id);
   p.dead = false;
+  p.st = {};
   p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100;
   w.setAct(p, ACT.STOP, 0);
   p.busyUntil = 0;

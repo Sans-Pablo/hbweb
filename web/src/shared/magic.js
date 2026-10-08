@@ -5,7 +5,32 @@ const MC_PROB = [0, 300, 250, 200, 150, 100, 80, 70, 60, 50, 40];       // _tmp_
 const MC_PENALTY = [0, 5, 5, 8, 8, 10, 14, 28, 32, 36, 40];             // _tmp_iMLevelPenalty
 
 export const MAGIC_TYPE = { DAMAGE_SPOT: 1, HPUP_SPOT: 2, DAMAGE_AREA: 3 };
-export const SUPPORTED_TYPES = new Set([1, 2, 3]);                      // por ahora: daño, curación y daño en área
+// Todos los tipos de Magic.cfg salvo la invocación (9), que necesita monstruos aliados
+export const SUPPORTED_TYPES = new Set([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 28, 29, 30, 31, 32, 33]);
+
+// CMisc::GetPoint2: casilla n pasos más allá de (x0,y0) siguiendo la recta hacia (x1,y1)
+export function linePoint(x0, y0, x1, y1, count) {
+  if (x0 === x1 && y0 === y1) return [x0, y0];
+  let dx = x1 - x0, dy = y1 - y0, error = 0, rx = x0, ry = y0, cnt = 0;
+  const xi = dx >= 0 ? 1 : -1, yi = dy >= 0 ? 1 : -1;
+  dx = Math.abs(dx); dy = Math.abs(dy);
+  if (dx > dy) {
+    for (let i = 0; i <= dx; i++) {
+      error += dy;
+      if (error > dx) { error -= dx; ry += yi; }
+      rx += xi;
+      if (++cnt >= count) break;
+    }
+  } else {
+    for (let i = 0; i <= dy; i++) {
+      error += dx;
+      if (error > dy) { error -= dy; rx += xi; }
+      ry += yi;
+      if (++cnt >= count) break;
+    }
+  }
+  return [rx, ry];
+}
 export const CAST_MS = 16 * 40;                                         // animación de lanzar: 16 fotogramas x 40 ms
 export const CAST_COOLDOWN_MS = 1000;                                   // el servidor expulsa si se lanza más rápido
 export const circleOf = id => Math.floor(id / 10) + 1;

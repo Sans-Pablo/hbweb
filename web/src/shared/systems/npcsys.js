@@ -6,6 +6,7 @@ import { rollKillDrop } from "../drops.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import { giveExp, npcStrikes } from "./combatsys.js";
+import { sget } from "./status.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -38,13 +39,15 @@ export function killNpc(w, n, p) {
   n.hp = 0; n.dead = true;
   w.setAct(n, ACT.DYING, n.dur.dying);
   w.grid.release(n.x, n.y, n.id);
-  p.kills++;
-  w.emit({ t: "death", id: n.id, by: p.id });
-  let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;             // NpcKilledHandler
-  if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
-  giveExp(w, p, xp);
+  w.emit({ t: "death", id: n.id, by: p ? p.id : 0 });
+  if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
+    p.kills++;
+    let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
+    if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
+    giveExp(w, p, xp);
+  }
   n.noDieRemainExp = 0;
-  const drop = rollKillDrop(w.rng, n, { rating: p.rating || 0, data: w.data, addGold: p.eff?.addGold || 0 });
+  const drop = rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
   if (n.gen.respawn !== false) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
@@ -53,12 +56,13 @@ export function killNpc(w, n, p) {
 
 export function npcThink(w, n) {
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
-  n.nextAct = w.time + n.cfg.actionTime;
+  n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1);       // hielo: un 50 % más lento
+  if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   let t = n.target ? w.ents.get(n.target) : null;
-  if (t && (t.dead || dist(n, t) > CHASE_LIMIT)) { n.target = null; t = null; }
+  if (t && (t.dead || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
   if (!t) {
     for (const e of w.ents.values())
-      if (e.kind === "player" && !e.dead && dist(n, e) <= n.cfg.searchRange) { t = e; n.target = e.id; break; }
+      if (e.kind === "player" && !e.dead && !sget(w, e, "invis") && dist(n, e) <= n.cfg.searchRange) { t = e; n.target = e.id; break; }
   }
   if (t) {
     if (dist(n, t) <= n.cfg.attackRange) return npcAttack(w, n, t);

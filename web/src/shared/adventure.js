@@ -16,6 +16,22 @@ export class Adventure {
     this.farm = new World({ ...options, ids: this.ids });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
     this.worlds.set(this.farm.map.id, this.farm);
+    this.farm.hooks = this.hooks(this.farm);
+  }
+
+  // ganchos que el mundo usa para cosas que cruzan mapas (Recall)
+  hooks(w) { return { recall: p => this.recall(p, w) }; }
+  recall(p, w) {
+    if (p.dead) return;
+    if (w !== this.farm) { this.transfer(p, w, this.farm, this.farm.start); return; }
+    const spot = w.freeSpotNear(...w.start);
+    if (!spot) return;
+    w.grid.release(p.x, p.y, p.id);
+    p.x = p.fx = spot[0]; p.y = p.fy = spot[1];
+    w.grid.occupy(p.x, p.y, p.id);
+    p.act = ACT.STOP; p.actStart = w.time; p.actDur = 0; p.busyUntil = w.time;
+    for (const n of w.ents.values()) if (n.target === p.id) n.target = null;
+    w.emit({ t: "teleport", id: p.id, x: p.x, y: p.y });
   }
 
   worldFor(id) { return this.locations.get(id) || this.farm; }
@@ -56,6 +72,7 @@ export class Adventure {
         const layout = generateDungeon(seed);
         const d = new World({ grid: layout.grid, npcDb: w.npcDb, data: w.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
         d.time = this.time;
+        d.hooks = this.hooks(d);
         d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta de esqueletos", seed, version: DUNGEON_VERSION, portals: layout.portals };
         d.map.totalEnemies = d.map.remainingEnemies = d.ents.size;
         // Los temporizadores del mundo recién creado usan el reloj de la sesión.

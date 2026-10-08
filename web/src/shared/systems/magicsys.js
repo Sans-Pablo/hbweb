@@ -5,6 +5,11 @@ import { gainSSN } from "../skills.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
 import { damageNpc } from "./combatsys.js";
+import { sget, sset, sclear } from "./status.js";
+import { addField, DYN, iceResisted, poison } from "./fields.js";
+import { newInst } from "./itemsys.js";
+import { groundPush, groundTop, groundPop } from "./ground.js";
+import * as Inv from "../inventory.js";
 
 // RequestStudyMagicHandler: hace falta Int >= ReqInt y pagar el coste (negativo = no se vende).
 export function learn(w, p, id) {
@@ -66,6 +71,23 @@ export function cast(w, p, cmd) {
   return true;
 }
 
+const occ = (w, x, y) => { const oid = w.grid.occupant(x, y); return oid === undefined ? null : w.ents.get(oid) || null; };
+
+// bCheckResistingMagicSuccess: la protección contra magia (2) resiste todo lo normal y la absoluta (5) todo
+function resist(w, tgt, power) {
+  const pr = sget(w, tgt, "protect");
+  if (pr === 5) return true;
+  if (power < 1000 && pr === 2) return true;
+  if (power >= 10000) power -= 10000;
+  let rr;
+  if (tgt.kind === "npc") rr = tgt.cfg.resistMagic;
+  else {
+    rr = (tgt.skills[3] || 0) + (tgt.eff.addMR || 0);
+    if (tgt.stats.mag > 50) rr += tgt.stats.mag - 50;
+  }
+  return M.resists(w.rng, power, rr);
+}
+
 function resolve(w, p, id, sp, x, y, cost) {
   if (p.dead) return;
   // ¿sale el hechizo?
@@ -74,22 +96,43 @@ function resolve(w, p, id, sp, x, y, cost) {
   if ((p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   p.mp = Math.max(0, p.mp - cost);
   gainSSN(p, 4, 1);
-  const power = M.castPower(p, id);
-  const at = (tx, ty) => { const oid = w.grid.occupant(tx, ty); return oid === undefined ? null : w.ents.get(oid); };
-  const hurt = (tgt, n, d, k) => {
-    if (!tgt || tgt.kind !== "npc" || tgt.dead) return;
-    if (M.resists(w.rng, power, tgt.cfg.resistMagic)) { w.emit({ t: "resist", id: tgt.id }); return; }
-    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2) return;     // invulnerables
+  sclear(w, p, "invis");                                              // lanzar un hechizo rompe la invisibilidad
+  let power = M.castPower(p, id);
+  if (id >= 80 || sp.type === 28) power += 10000;                     // los hechizos de 9º círculo y rompe-armaduras no se resisten
+  const secs = (sp.last || 0) * 1000;
+
+  // daño mágico a un monstruo: resistencia, absorción, protección, y la mitad de experiencia en golpes de zona
+  const hurt = (tgt, n, d, k, half = false) => {
+    if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
+    if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
+    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4) return null;     // invulnerables
     let dmg = M.spellDamage(w.rng, p, n, d, k);
-    if (tgt.cfg.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.cfg.absDamage / 100)); if (dmg < 0) dmg = 1; }
-    damageNpc(w, tgt, dmg, p, null);
+    if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
+    if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
+    damageNpc(w, tgt, dmg, p, null, half);
+    return tgt;
   };
+  const freeze = (tgt, s) => {
+    if (!tgt || tgt.dead || tgt.kind !== "npc" || sget(w, tgt, "ice")) return;
+    if (!iceResisted(w, tgt)) sset(w, tgt, "ice", 1, s * 1000);
+  };
+  const area = (rx, ry, fn) => { for (let iy = y - ry; iy <= y + ry; iy++) for (let ix = x - rx; ix <= x + rx; ix++) fn(occ(w, ix, iy), ix, iy); };
+  // línea del lanzador al objetivo: cada paso golpea la casilla y sus cuatro vecinas
+  const line = fn => {
+    for (let i = 2; i < 10; i++) {
+      const [tx, ty] = M.linePoint(p.x, p.y, x, y, i);
+      for (const [ax, ay] of [[tx, ty], [tx - 1, ty], [tx + 1, ty], [tx, ty - 1], [tx, ty + 1]]) fn(occ(w, ax, ay));
+      if (Math.abs(tx - x) <= 1 && Math.abs(ty - y) <= 1) break;
+    }
+  };
+  const target = occ(w, x, y);
+
   switch (sp.type) {
-    case M.MAGIC_TYPE.DAMAGE_SPOT:
-      hurt(at(x, y), sp.v4, sp.v5, sp.v6);
+    case 1:                                                            // daño a un objetivo
+      hurt(target, sp.v4, sp.v5, sp.v6);
       break;
-    case M.MAGIC_TYPE.HPUP_SPOT: {
-      const t = at(x, y);
+    case 2: {                                                          // curación
+      const t = target;
       if (t && t.kind === "player" && !t.dead && t.hp < t.maxHp) {
         const heal = dice(w.rng, sp.v4, sp.v5) + sp.v6;
         t.hp = Math.min(t.maxHp, t.hp + heal);
@@ -97,11 +140,122 @@ function resolve(w, p, id, sp, x, y, cost) {
       }
       break;
     }
-    case M.MAGIC_TYPE.DAMAGE_AREA:
-      hurt(at(x, y), sp.v4, sp.v5, sp.v6);                                 // centro
-      for (let iy = y - sp.v3; iy <= y + sp.v3; iy++) for (let ix = x - sp.v2; ix <= x + sp.v2; ix++)
-        hurt(at(ix, iy), sp.v7, sp.v8, sp.v9);                              // zona (incluye el centro, como el original)
+    case 3:                                                            // daño en área con el centro aparte
+    case 22:                                                           // temblor: igual que el área en el servidor
+      hurt(target, sp.v4, sp.v5, sp.v6);
+      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
       break;
+    case 5:                                                            // baja la resistencia de jugadores (los monstruos no la tienen)
+      for (const t of [target]) if (t && t.kind === "player") t.sp = Math.max(0, t.sp - (dice(w.rng, sp.v4, sp.v5) + sp.v6));
+      area(sp.v2, sp.v3, t => { if (t && t.kind === "player") t.sp = Math.max(0, t.sp - (dice(w.rng, sp.v7, sp.v8) + sp.v9)); });
+      break;
+    case 4: case 6: break;
+    case 7: {                                                          // recupera resistencia de los jugadores de la zona
+      const up = (t, n, d, k) => { if (t && t.kind === "player" && !t.dead) t.sp = Math.min(t.maxSp, t.sp + dice(w.rng, n, d) + k); };
+      up(target, sp.v4, sp.v5, sp.v6);
+      area(sp.v2, sp.v3, t => up(t, sp.v7, sp.v8, sp.v9));
+      break;
+    }
+    case 8:                                                            // Recall: solo sobre uno mismo
+      if (sp.v4 === 1 && target === p && w.hooks?.recall) w.hooks.recall(p);
+      break;
+    case 10: {                                                         // Create Food
+      if (w.grid.blocked(x, y)) break;
+      const food = dice(w.rng, 1, 2) === 1 ? 99 : 98;                  // Meat / Baguette
+      if (w.data.item(food)) groundPush(w, x, y, newInst(w, food, 1));
+      break;
+    }
+    case 11:                                                           // escudos y protecciones
+      if (target && !target.dead && !sget(w, target, "protect") && !(target.kind === "npc" && target.cfg.actionLimit)) sset(w, target, "protect", sp.v4, secs);
+      break;
+    case 12:                                                           // Hold Person / Paralyze
+      if (target && !target.dead && !resist(w, target, power)) {
+        if (target.kind === "npc" && (target.cfg.magicLevel >= 6 || sget(w, target, "hold"))) break;
+        if (target.kind === "player" && ((target.eff.addPR || 0) >= 500 || sget(w, target, "hold"))) break;
+        sset(w, target, "hold", sp.v4, secs);
+      } else if (target) w.emit({ t: "resist", id: target.id });
+      break;
+    case 13:                                                           // Invisibility (1) / Detect Invisibility (2)
+      if (sp.v4 === 1) {
+        if (target && !target.dead && !sget(w, target, "invis") && !(target.kind === "npc" && target.cfg.actionLimit)) {
+          sset(w, target, "invis", 1, secs);
+          for (const n of w.ents.values()) if (n.target === target.id) n.target = null;     // RemoveFromTarget
+        }
+      } else if (sp.v4 === 2) {
+        for (let iy = y - 8; iy <= y + 8; iy++) for (let ix = x - 8; ix <= x + 8; ix++) { const t = occ(w, ix, iy); if (t) sclear(w, t, "invis"); }
+      }
+      break;
+    case 14:                                                           // campos: fuego, nube venenosa, tormenta de hielo, pinchos
+      field(w, p, sp, x, y, secs);
+      break;
+    case 15: {                                                         // Possession: trae un objeto del suelo
+      if (!p.side || target) break;
+      const it = groundTop(w, x, y);
+      if (!it) break;
+      const d = w.data.item(it.id);
+      if (!Inv.canCarry(p, w.data, d, it.count, it)) break;
+      groundPop(w, x, y);
+      Inv.addToBag(p, w.data, it);
+      w.recalc(p);
+      w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0 });
+      break;
+    }
+    case 17:                                                           // veneno (1) / curar (0)
+      if (sp.v4 === 1) {
+        if (target && target.kind === "player" && !target.dead && !resist(w, target, power)) {
+          const res = (target.skills[23] || 0) + (target.eff.addPR || 0);
+          if (dice(w.rng, 1, 100) >= res) poison(w, target, sp.v5);
+        }
+      } else if (target && target.kind === "player") sclear(w, target, "poison");
+      break;
+    case 18:                                                           // Berserk
+      if (sp.v4 === 1 && target && !target.dead && !sget(w, target, "berserk") && !(target.kind === "npc" && (target.cfg.actionLimit || target.cfg.side !== p.side))) sset(w, target, "berserk", 1, secs);
+      break;
+    case 19:                                                           // rayo lineal
+    case 30:
+      line(t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      hurt(target, sp.v4, sp.v5, sp.v6);
+      break;
+    case 21:                                                           // área sin centro aparte
+      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      break;
+    case 23:                                                           // hielo en área
+      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v4, sp.v5, sp.v6, true)) freeze(t, sp.v10); });
+      break;
+    case 25:                                                           // área sin centro, con daño v4..v6
+      area(sp.v2, sp.v3, t => hurt(t, sp.v4, sp.v5, sp.v6, true));
+      break;
+    case 26:                                                           // Blizzard: línea de hielo
+      line(t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
+      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
+      if (hurt(target, sp.v4, sp.v5, sp.v6)) freeze(target, sp.v10);
+      break;
+    case 28:                                                           // rompe-armaduras: daño de zona (el desgaste solo afecta a jugadores)
+      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      break;
+    case 29:                                                           // Cancellation: quita los efectos a un jugador
+      if (target && target.kind === "player" && !target.dead) for (const k of ["invis", "ice", "hold", "protect", "berserk", "confuse"]) sclear(w, target, k);
+      break;
+    case 33:                                                           // Scan
+      if (target && !resist(w, target, power))
+        w.emit({ t: "scan", id: p.id, text: target.kind === "player" ? ` Player: ${target.name} HP:${target.hp} MP:${target.mp}.` : ` NPC: ${target.name} HP:${target.hp} MP:0` });
+      break;
+    default: break;                                                    // 16, 31, 32: solo afectan a otros jugadores
   }
   w.emit({ t: "spell", id: p.id, spell: id, x, y, attr: sp.attr, type: sp.type });
+}
+
+// Hechizos de campo (DEF_MAGICTYPE_CREATE_DYNAMIC)
+function field(w, p, sp, x, y, secs) {
+  const dyn = sp.v10;
+  if (dyn === DYN.ICESTORM) { addField(w, dyn, x, y, secs, p.skills[4] || 0, p.id); return; }
+  if (![DYN.FIRE, DYN.SPIKE, DYN.PCLOUD].includes(dyn)) return;
+  if (sp.v11 === 1) {                                                  // muro: casilla central y v12 a cada lado
+    const rx = [0, 1, 1, 0, -1, 1, -1, 0, 1][dirTo(p.x, p.y, x, y)] ?? 1, ry = [0, 0, 1, 1, 1, 0, -1, -1, -1][dirTo(p.x, p.y, x, y)] ?? 0;
+    addField(w, dyn, x, y, secs, 0, p.id);
+    for (let i = 1; i <= sp.v12; i++) { addField(w, dyn, x + i * rx, y + i * ry, secs, 0, p.id); addField(w, dyn, x - i * rx, y - i * ry, secs, 0, p.id); }
+  } else if (sp.v11 === 2) {                                           // campo cuadrado de radio v12
+    for (let ix = x - sp.v12; ix <= x + sp.v12; ix++) for (let iy = y - sp.v12; iy <= y + sp.v12; iy++) addField(w, dyn, ix, iy, secs, sp.v5, p.id);
+  }
 }

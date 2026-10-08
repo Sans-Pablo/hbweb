@@ -3,6 +3,7 @@
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
+import { sget } from "../shared/systems/status.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
@@ -116,6 +117,7 @@ export class Renderer {
   // ---------------------------------------------------------------- fotograma
   render(s) {
     const { ctx } = this;
+    this.fx = s.fx;
     const remaster = this.mode === "remastered";
     const time = s.world.time;
     const [ppx, ppy] = posOf(s.me, time);
@@ -152,6 +154,7 @@ export class Renderer {
         if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY, span, span);
 
     this.drawPortals(s, camX, camY);
+    this.drawFields(s, camX, camY);
 
     // 2) ayudas sobre el suelo (solo remastered): casilla bajo el cursor y ruta prevista
     if (remaster) {
@@ -242,6 +245,51 @@ export class Renderer {
     ctx.restore();
   }
 
+  // Auras de los escudos y del veneno (CheckActiveAura / CheckActiveAura2 del cliente original)
+  auras(e, x, y, w, below) {
+    if (!e.st || !below) return;
+    const sp = this.fx?.sp || null;
+    if (!sp) return;
+    const t = performance.now(), ctx = this.ctx, pr = sget(w, e, "protect");
+    if (pr === 3 || pr === 4) sp.put(ctx, 80, Math.floor(t / 80) % 17, x + 75, y + 107, "add", .5);
+    if (pr === 2 || pr === 5) sp.put(ctx, 79, Math.floor(t / 80) % 15, x + 101, y + 135, "add", .7);
+    if (pr === 1) sp.put(ctx, 72, Math.floor(t / 80) % 30, x, y + 35, "add", .7);
+    if (sget(w, e, "poison")) sp.put(ctx, 81, Math.floor(t / 80) % 21, x + 115, y + 120 - (e.kind === "player" ? 75 : 40), "add", .7);
+  }
+
+  // Objetos dinámicos de los campos de hechizos: fuego, nube venenosa, tormenta de hielo y pinchos
+  drawFields(s, camX, camY) {
+    const dyn = s.world.dyn, sp = s.fx?.sp;
+    if (!dyn || !dyn.length || !sp) return;
+    const ctx = this.ctx, now = s.world.time;
+    for (const f of dyn) {
+      const x = f.x * T - camX, y = f.y * T - camY;
+      if (x < -120 || y < -160 || x > this.viewW + 120 || y > this.viewH + 80) continue;
+      const age = now - f.born, fr = Math.floor(age / 100) + (f.x * 7 + f.y * 3);
+      const left = f.until - now;
+      switch (f.type) {
+        case 1: case 14: {
+          const a = [.25, .5, .7][Math.floor(Math.random() * 3)];
+          sp.put(ctx, 0, 1, x + 16, y + 16, "add", a);
+          sp.put(ctx, 9, Math.floor((fr % 24) / 3), x + 16, y + 16, "add", .8);
+          break;
+        }
+        case 10: {
+          const phase = age < 800 ? Math.floor(age / 100) : left < 800 ? 16 + Math.floor((800 - left) / 100) : 8 + (fr % 8);
+          sp.put(ctx, 23, Math.min(23, phase), x + 16 + Math.floor(Math.random() * 2), y + 16 + Math.floor(Math.random() * 2), "over", .5);
+          break;
+        }
+        case 8:
+          sp.put(ctx, 0, 1, x + 16, y + 16, "add", .6);
+          sp.put(ctx, 13, fr % 10, x + 16, y + 16, "over", .7);
+          break;
+        case 9:
+          sp.put(ctx, 17, fr % 13, x + 16, y + 16, "add", .7);
+          break;
+      }
+    }
+  }
+
   drawDungeonInfo(s) {
     const { ctx } = this, map = s.world.map;
     const room = this.grid.rooms?.find(r => s.me.x >= r.x && s.me.x < r.x + r.w && s.me.y >= r.y && s.me.y < r.y + r.h);
@@ -281,8 +329,16 @@ export class Renderer {
       const { group, f, d } = playerSprite(e, time);
       const look = e.look || DEFAULT_LOOK, gender = e.gender || 1;
       const body = bodyKey(gender, look, group, d);
+      const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice"), zerk = sget(w, e, "berserk");
+      if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
+      this.auras(e, x, y, w, true);
+      if (invis) ctx.globalAlpha = 0.4;
       spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75);
       drawPerson(ctx, spr, gender, look, group, d, f, x, y, apparelOf(e, itemDef));
+      ctx.globalAlpha = 1;
+      if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
+      if (zerk) spr.tinted(ctx, body, f, x, y, "#ff2a1a", 0.35);
+      this.auras(e, x, y, w, false);
       if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
       // nombre de los demás jugadores y bocadillo de chat
       const other = s.pid !== undefined && e.id !== s.pid;
@@ -325,6 +381,9 @@ export class Renderer {
     if (!e.dead) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);
     spr.put(ctx, key, f, x, y);
     ctx.globalAlpha = 1;
+    if (!e.dead && sget(s.world, e, "ice")) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
+    if (!e.dead && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
+    if (!e.dead) this.auras(e, x, y, s.world, true);
     if (remaster) {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
       else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");

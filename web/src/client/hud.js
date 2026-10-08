@@ -88,6 +88,13 @@ export class Hud {
       case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Cripta completada! Recoge el botín y regresa por un portal (E).", "gold"); this.toast("¡Cripta completada!"); } break;
+      case "scan": if (ev.id === me) this.log(ev.text.trim(), "gold"); break;
+      case "teleport": if (ev.id === me) this.log("Vuelves al punto de inicio."); break;
+      case "status": if (ev.id === me) {
+        const names = { hold: "paralizado", ice: "congelado", protect: "protegido", invis: "invisible", berserk: "en furia", poison: "envenenado", confuse: "confuso" };
+        const bad = ev.key === "hold" || ev.key === "ice" || ev.key === "poison" || ev.key === "confuse";
+        this.log(ev.on ? "Estás " + names[ev.key] + "." : "Ya no estás " + names[ev.key] + ".", ev.on && bad ? "bad" : "");
+      } break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con la vida llena."); break;
       case "chat": this.log(ev.system ? ev.text : ev.name + ": " + ev.text, ev.system ? "gold" : "chat"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;

@@ -12,6 +12,8 @@ import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
+import { tickFields, tickPoison } from "./systems/fields.js";
+import { sget, sclear } from "./systems/status.js";
 import { CAST_MS } from "./magic.js";
 
 export class World {
@@ -105,8 +107,9 @@ export class World {
       }
       for (const e of this.ents.values()) {
         if (e.kind === "npc") Npc.npcThink(this, e);
-        else if (!e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); }
+        else if (!e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
+      if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
     }
   }
 }
@@ -122,6 +125,7 @@ const COMMANDS = {
   },
   move(w, p, cmd) {
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
+    if (sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");
     if (w.time - p.lastMove < LIMITS.moveMs) return w.reject(p, cmd, "demasiado rápido");
     const run = !!cmd.run && p.sp >= 1;                       // sin resistencia no se corre
     if (!w.tryStep(p, cmd.dir, run ? PLAYER.runMs : PLAYER.walkMs, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
@@ -140,6 +144,7 @@ const COMMANDS = {
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
     if (dist(p, t) > 1) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
+    sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
     const ms = attackMs(p);
     w.setAct(p, ACT.ATTACK, ms);
     p.busyUntil = w.time + ms;

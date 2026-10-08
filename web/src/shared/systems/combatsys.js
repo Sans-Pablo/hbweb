@@ -5,6 +5,7 @@ import * as Inv from "../inventory.js";
 import { EQUIP } from "../items.js";
 import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
+import { sget, sclear } from "./status.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
 export function playerHit(w, p, t) {
@@ -84,7 +85,7 @@ export function npcStrikes(w, n, t) {
   if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) t.superAttack = Math.min(Math.floor(t.level / 10), (t.superAttack || 0) + 1);
 }
 
-export function damageNpc(w, n, dmg, p, skill) {
+export function damageNpc(w, n, dmg, p, skill, half = false) {
   n.hp -= dmg;
   p.lastCombat = w.time;
   w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp });
@@ -92,7 +93,8 @@ export function damageNpc(w, n, dmg, p, skill) {
   if (n.noDieRemainExp > 0) {
     const gain = Math.min(dmg, n.noDieRemainExp);
     n.noDieRemainExp -= gain;
-    giveExp(w, p, gain + (p.eff.addExp ? Math.floor((p.eff.addExp / 100) * gain) : 0));      // atributo "Experiencia +%"
+    let xp = gain + (p.eff.addExp ? Math.floor((p.eff.addExp / 100) * gain) : 0);              // atributo "Experiencia +%"
+    giveExp(w, p, half ? Math.floor(xp / 2) : xp);                                            // los golpes de zona dan la mitad
   }
   if (n.hp <= 0) {
     // experiencia de habilidad por matar: 1d(dados de golpe del monstruo), doble con poca vida
@@ -100,7 +102,10 @@ export function damageNpc(w, n, dmg, p, skill) {
     return w.killNpc(n, p);
   }
   if (!n.target || R.dice(w.rng, 1, 3) === 2) n.target = p.id;
-  if (R.dice(w.rng, 1, 3) === 2 && !n.cfg.actionLimit) n.nextAct = w.time + n.cfg.actionTime;
+  if (R.dice(w.rng, 1, 3) === 2 && !n.cfg.actionLimit) {
+    n.nextAct = w.time + n.cfg.actionTime;
+    if (sget(w, n, "hold")) sclear(w, n, "hold");              // un golpe libera al paralizado
+  }
   if (!w.busy(n) || n.act === ACT.DAMAGE) {
     w.setAct(n, ACT.DAMAGE, n.dur.damage);
     n.busyUntil = w.time + n.dur.damage;
