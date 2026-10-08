@@ -43,6 +43,7 @@ export const PLAYER = {
 // Andar = 8 fotogramas lógicos; atacar = 4; morir = 8. restar = 20 en el original.
 const R = 20;
 export const MOB_TIMING = {
+  11: { stop: 150, move: 90 - R, attack: 90, damage: 150, dying: 180 }, // Skeleton (MapData.cpp)
   10: { stop: 240, move: 120 - R - R - R / 1.2, attack: 90, damage: 150, dying: 240 },   // Slime
   12: { stop: 210, move: 100 - R - R, attack: 120, damage: 150, dying: 180 },           // Stone-Golem
   16: { stop: 120, move: 60 - R + 15, attack: 120, damage: 150, dying: 180 },           // Giant-Ant
@@ -65,3 +66,4 @@ export const TRANSLUCENT_MOBS = new Set([10]);
 
 export const CORPSE_MS = 10000;             // cuánto queda el cadáver antes de desaparecer
 export const CHASE_LIMIT = 12;              // casillas: más lejos, el monstruo pierde el objetivo
+

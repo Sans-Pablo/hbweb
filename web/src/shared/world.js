@@ -15,7 +15,7 @@ import * as MagicSys from "./systems/magicsys.js";
 import { CAST_MS } from "./magic.js";
 
 export class World {
-  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start }) {
+  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null }) {
     this.grid = grid;
     this.npcDb = npcDb;
     this.data = data;                // GameData: objetos, hechizos y monstruos
@@ -27,11 +27,15 @@ export class World {
     this.items = new Map();          // índice de casilla -> [{uid, id, count, life, x, y}] (el último está encima)
     this.events = [];
     this.timers = [];
-    this.nextId = 1;
-    this.nextItem = 1;
+    this.ids = ids || { ent: 1, item: 1 };
     this.generators = spawns.map(s => ({ ...s, alive: 0 }));
     for (const g of this.generators) for (let i = 0; i < g.max; i++) Npc.spawnFrom(this, g);
   }
+
+  get nextId() { return this.ids.ent; }
+  set nextId(v) { this.ids.ent = v; }
+  get nextItem() { return this.ids.item; }
+  set nextItem(v) { this.ids.item = v; }
 
   // ------------------------------------------------------------------ utilidades
   emit(ev) { ev.time = this.time; this.events.push(ev); }
@@ -167,3 +171,4 @@ const COMMANDS = {
 
 // Duración de la animación de ataque: el arma lenta alarga cada fotograma 12 ms por punto (Client/MapData.cpp).
 export function attackMs(p) { return PLAYER.attackMs + p.eff.speedNib * 12 * 8; }
+

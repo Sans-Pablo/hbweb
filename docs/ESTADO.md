@@ -15,3 +15,8 @@ Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`,
 - Pantalla de login con «Entrar» / «Crear cuenta» (`client/accounts.js`): contraseña con PBKDF2 + sal en localStorage; una partida previa con el mismo nombre se conserva al crear la cuenta.
 - Guardado automático cada 10 s, al ocultar/cerrar la pestaña y desde Opciones («Guardar ahora»); copia de seguridad en archivo (exportar/importar) y cerrar sesión.
 - Limitación: todo vive en el navegador (no hay sincronización entre dispositivos; haría falta un servidor).
+
+
+## Cripta procedural — entrega 1
+
+Entrada en Aresfarm (134, 94) con E, nueve salas conectadas, esqueletos originales, instancias privadas en local y servidor, portales de regreso, finalización y limpieza. Pruebas y límites en [DUNGEON_V1.md](DUNGEON_V1.md).

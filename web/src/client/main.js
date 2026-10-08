@@ -1,7 +1,7 @@
 // Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 // el jugador y mueve el bucle de juego.
 import { Grid } from "../shared/grid.js";
-import { World } from "../shared/world.js";
+import { Adventure } from "../shared/adventure.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
 import { Renderer } from "./renderer.js";
@@ -28,10 +28,10 @@ async function main() {
   const info = await fetch("api/info").then(r => r.ok ? r.json() : null).catch(() => null);
   const online = !!(info && info.multiplayer);
   const conn = online ? new NetConnection(grid, assets.npcDb, assets.data)
-    : new LocalConnection(new World({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start }));
+    : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start }));
   status.remove();
   const pid = await askNameAndJoin(conn, online, info);
-  const world = conn.state;
+  let world = conn.state;
 
   const canvas = document.getElementById("game");
   const renderer = new Renderer(canvas, assets, grid);
@@ -84,6 +84,13 @@ async function main() {
           const m = renderer.mode === "classic" ? "remastered" : "classic";
           setOpt("mode", m);
           hud.toast(m === "classic" ? "Gráficos clásicos" : "Gráficos remastered");
+          break;
+        }
+        case "e": {
+          const me = world.ents.get(pid);
+          const portal = world.map?.portals.find(g => me && Math.max(Math.abs(g.x - me.x), Math.abs(g.y - me.y)) <= 1);
+          if (portal) conn.send({ t: "portal", portal: portal.id });
+          else hud.toast("Acércate a un portal para usarlo (E)");
           break;
         }
         case "r": setOpt("run", !opts.run); hud.toast(opts.run ? "Correr: activado" : "Correr: desactivado"); break;
@@ -142,6 +149,7 @@ async function main() {
   applyOpts();
   addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); });
   hud.log("Bienvenido a la granja de Aresden. Pulsa H para ver los controles.");
+  hud.log("Cripta de esqueletos: entrada en (134, 94), cerca del inicio. Acércate y pulsa E.", "gold");
   hud.log("G cambia entre gráficos clásicos y remastered.", "gold");
   if (online) hud.log(conn.returning ? "Partida en línea: se ha cargado tu progreso. Intro para hablar." : "Partida en línea. Pulsa Intro para hablar con los demás.", "gold");
 
@@ -174,7 +182,16 @@ async function main() {
       fpsEl.textContent = txt;
     }
 
-    for (const ev of conn.update(dt)) {
+    const events = conn.update(dt);
+    world = conn.state;
+    fx.world = sound.world = world;
+    if (renderer.grid !== world.grid) {
+      renderer.setMap(world.grid, world.map.name);
+      ctl.grid = world.grid; ctl.intent = null; ctl.path = []; ctl.down = false;
+      ctl.hover = ctl.hoverEnt = ctl.clickFx = null;
+      fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
+    }
+    for (const ev of events) {
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world);
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";
@@ -194,7 +211,7 @@ async function main() {
   requestAnimationFrame(loop);
 
   // para pruebas automáticas
-  window.hb = { world, conn, renderer, ctl, setMode, pid };
+  window.hb = { get world() { return conn.state; }, conn, renderer, ctl, setMode, pid };
   window.hbSound = sound;
 }
 
@@ -250,3 +267,4 @@ main().catch(err => {
   document.querySelector("#loading span").textContent =
     "No se pudieron cargar los datos (" + err.message + "). Abre la prueba con «Abrir prueba web.bat», no con doble clic en el HTML.";
 });
+

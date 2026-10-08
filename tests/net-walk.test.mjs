@@ -25,4 +25,5 @@ while (Date.now() - start < 12000) {
 await new Promise(r => setTimeout(r, 1200));
 console.log({ steps, rejects, pos });
 ws.close(); srv.kill();
-process.exit(rejects > 1 ? 1 : 0);
+process.exit(!me || !pos || rejects > 1 ? 1 : 0);
+
