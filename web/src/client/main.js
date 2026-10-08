@@ -111,7 +111,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered" };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   const optionsEl = document.getElementById("options");
@@ -143,6 +143,7 @@ async function main() {
   const ui = {
     gui,
     get run() { return opts.run; },
+    get autoAttack() { return opts.autoAttack; },
     unlockAudio: () => sound.unlock(),
     quick: k => hud.quickUse(k),
     get spell() { return hud.spell; },
@@ -305,6 +306,7 @@ async function main() {
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
+      else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
       else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();

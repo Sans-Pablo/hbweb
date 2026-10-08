@@ -104,7 +104,7 @@ export class Controller {
       if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty }); this.ui.cancelPointing(true); }
       return;
     }
-    if (this.ctrl && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
+    if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
     if (!first && this.intent && this.intent.t === "attack") return;
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
     this.intent = { t: "move", x: tx, y: ty };

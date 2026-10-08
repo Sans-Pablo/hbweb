@@ -32,7 +32,7 @@ export const PLAYER = {
   idleFrameMs: 64,            // 32 ms, pero el cliente avanza medio fotograma (cFrame/2)
   attackMs: 8 * 37,           // 8 fotogramas x 41/1.1 ms
   attackHitAt: 0.5,           // el golpe "conecta" a mitad de la animación
-  attackCooldownMs: 500,      // por encima del límite de 450 ms del servidor
+  attackCooldownMs: 0,        // como el original: el siguiente golpe empieza al acabar la animación
   getItemMs: 4 * 50,
   damageMs: 8 * 32,
   dyingMs: 13 * 40,
