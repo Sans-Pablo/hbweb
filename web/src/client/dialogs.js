@@ -1,7 +1,8 @@
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
 import { itemDef } from "./names.js";
-import { EQUIP } from "../shared/items.js";
+import { EQUIP, ITYPE } from "../shared/items.js";
+import { packKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
 
 const INK = "#2d1919";                         // RGB(45,25,25): texto del cliente sobre fondo de pergamino
@@ -39,6 +40,21 @@ export function registerDialogs(gui, api) {
       L(s.str, 285, 48, 82); L(s.dex, 302, 48, 82); L(s.vit, 285, 218, 251); L(s.int, 285, 135, 167); L(s.mag, 302, 135, 167); L(s.chr, 302, 218, 251);
       this.paperdoll(g, me);
     },
+    // coger una pieza equipada del muñeco (para soltarla en la mochila y quitársela)
+    press(g, lx, ly, me) {
+      const female = me.gender === 2;
+      for (let i = ORDER.length - 1; i >= 0; i--) {
+        const pos = ORDER[i], uid = me.equip && me.equip[pos], it = uid && me.bag.find(b => b.uid === uid), d = it && itemDef(it.id);
+        if (!d) continue;
+        const key = eqKey(female, d.sprite); if (!key) continue;
+        const [x, y] = SLOT_POS[pos][female ? 1 : 0];
+        if (g.hitUi(key, d.spriteFrame, x, y, lx, ly)) {
+          g.item = { uid, from: 1, dx: 0, dy: 0, draw: (gg, mx, my) => gg.putGame(packKey(d), d.spriteFrame, mx, my, 0.9) };
+          return true;
+        }
+      }
+      return false;
+    },
     paperdoll(g, me) {
       const female = me.gender === 2, look = me.look || { skin: 2, hair: 0, hairCol: 0, under: 0 };
       const worn = {};
@@ -61,4 +77,63 @@ export function registerDialogs(gui, api) {
       void skirt;
     },
   });
+
+  // ------------------------------------------------------------ 2: inventario (F6)
+  // Los objetos están en posiciones libres (x 0..170, y -10..95 desde (32, 44) del cuadro), como en el original.
+  // Los equipados no se dibujan aquí. Nuevos: (40, 30). El último de `order` queda encima.
+  const inv = {
+    id: 2, x: 460, y: 270, w: 225, h: 185, order: [],
+    sync(me) {
+      const ids = new Set(me.bag.map(i => i.uid));
+      this.order = this.order.filter(u => ids.has(u));
+      for (const i of me.bag) if (!this.order.includes(i.uid)) this.order.push(i.uid);
+    },
+    pos(it) { return [32 + (it.x ?? 40), 44 + (it.y ?? 30)]; },
+    equipped(me, uid) { return Object.values(me.equip || {}).includes(uid); },
+    draw(g, me) {
+      this.sync(me);
+      g.put("gamedialog_7", 0, 0, 0);
+      for (const uid of this.order) {
+        const it = me.bag.find(i => i.uid === uid), d = it && itemDef(it.id);
+        if (!d || this.equipped(me, uid) || (g.item && g.item.uid === uid)) continue;
+        const [x, y] = this.pos(it);
+        g.putGame(packKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
+        if (d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
+      }
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 1, 23, 172);
+      if (lx >= 140 && lx <= 212 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 2, 140, 172);
+    },
+    // objeto bajo el cursor (de arriba abajo), con colisión por píxel
+    pick(g, lx, ly, me) {
+      this.sync(me);
+      for (let i = this.order.length - 1; i >= 0; i--) {
+        const it = me.bag.find(b => b.uid === this.order[i]), d = it && itemDef(it.id);
+        if (!d || this.equipped(me, it.uid)) continue;
+        const [x, y] = this.pos(it);
+        if (g.hitGame(packKey(d), d.spriteFrame, x, y, lx, ly)) return { it, d, x, y };
+      }
+      return null;
+    },
+    press(g, lx, ly, me) {
+      const h = this.pick(g, lx, ly, me); if (!h) return false;
+      this.order = this.order.filter(u => u !== h.it.uid); this.order.push(h.it.uid);
+      const fr = g.spr.frame(packKey(h.d), h.d.spriteFrame);
+      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => gg.putGame(packKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
+      return true;
+    },
+    dbl(g, lx, ly, me) {
+      const h = this.pick(g, lx, ly, me); if (!h) return false;
+      g.item = null;
+      api.primary(h.it.uid);
+      return true;
+    },
+    click(g, lx, ly) {
+      if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) { api.log("No hay mejora de objetos en esta versión."); return true; }
+      if (lx >= 140 && lx <= 212 && ly >= 172 && ly <= 184) { api.log("Aprende la habilidad de fabricación para usar el manual."); return true; }
+      return false;
+    },
+  };
+  gui.register(inv);
+  gui.inv = inv;
 }

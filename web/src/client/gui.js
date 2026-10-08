@@ -49,6 +49,39 @@ export class Gui {
   // coordenadas de ventana (CSS) -> coordenadas 800x600
   toGui(cx, cy) { return [(cx - this.rect.x) / this.scale, (cy - this.rect.y) / this.scale]; }
 
+  // ---------------------------------------------------------------- sprites del juego (item-pack...)
+  setGameSprites(spr) { this.spr = spr; this._px = {}; }
+  putGame(key, f, x, y, alpha = 1) {
+    const fr = this.spr && this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return;
+    const [sx, sy, w, h, px, py] = fr;
+    if (alpha !== 1) this.ctx.globalAlpha = alpha;
+    this.ctx.drawImage(this.spr.img[key], sx, sy, w, h, x + px, y + py, w, h);
+    if (alpha !== 1) this.ctx.globalAlpha = 1;
+  }
+  // ¿el punto (mx, my) toca un píxel opaco del fotograma dibujado en (x, y)? (_bCheckCollison)
+  hitUi(key, f, x, y, mx, my) {
+    const m = this.manifest[key], fr = m && m.frames[f]; if (!fr) return false;
+    return this._hit("u" + key, f, fr, this.img[key], x, y, mx, my);
+  }
+  hitGame(key, f, x, y, mx, my) {
+    const fr = this.spr && this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return false;
+    return this._hit(key, f, fr, this.spr.img[key], x, y, mx, my);
+  }
+  _hit(key, f, fr, img, x, y, mx, my) {
+    const [sx, sy, w, h, px, py] = fr;
+    const lx = Math.floor(mx - (x + px)), ly = Math.floor(my - (y + py));
+    if (lx < 0 || ly < 0 || lx >= w || ly >= h) return false;
+    const k = key + ":" + f;
+    let c = this._px[k];
+    if (!c) {
+      const t = document.createElement("canvas"); t.width = w; t.height = h;
+      const g = t.getContext("2d", { willReadFrequently: true });
+      g.drawImage(img, sx, sy, w, h, 0, 0, w, h);
+      c = this._px[k] = g.getImageData(0, 0, w, h).data;
+    }
+    return c[(ly * w + lx) * 4 + 3] > 0;
+  }
+
   // ---------------------------------------------------------------- dibujo de sprites
   // fotograma f de un sprite con su pivote en (x, y); w recorta el ancho (PutSpriteFastWidth), vertical recorta el alto
   put(key, f, x, y, w = null, vertical = false, alpha = 1) {
@@ -160,6 +193,10 @@ export class Gui {
     const d = this.dialogAt(x, y);
     if (d) {
       this.front(d.id);
+      const now = performance.now(), dbl = button === 0 && this.lastClick && this.lastClick.id === d.id && now - this.lastClick.t < 400 && Math.hypot(x - this.lastClick.x, y - this.lastClick.y) < 6;
+      this.lastClick = { id: d.id, t: now, x, y };
+      if (dbl && d.dbl?.(this, x - d.x, y - d.y, me)) { this.lastClick = null; return true; }
+      if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
       const used = button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
       if (!used && button === 0 && !d.fixed) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
@@ -167,7 +204,14 @@ export class Gui {
     if (y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
-  up() { this.mouse.down = false; this.drag = null; }
+  up(cx, cy) {
+    this.mouse.down = false; this.drag = null;
+    if (this.item) {
+      const it = this.item; this.item = null;
+      if (cx !== undefined) { const [x, y] = this.toGui(cx, cy); this.mouse.x = x; this.mouse.y = y; }
+      this.onItemDrop?.(it, this.mouse.x, this.mouse.y, this.dialogAt(this.mouse.x, this.mouse.y), cx, cy);
+    }
+  }
 
   // clic en el panel de iconos (DlgBoxClick_IconPannel)
   panelClick(x, y) {
@@ -199,6 +243,7 @@ export class Gui {
       d.draw(this, me, world);
       c.restore();
     }
+    if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
     for (const [x, y, s] of this.tips) this.text(x, y, s, "#fafadc", { shadow: true });
   }
 

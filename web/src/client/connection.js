@@ -164,7 +164,7 @@ export class NetConnection {
       if (own) Object.assign(e, {
         mp: o.mp, maxMp: o.mm, level: o.lv, exp: o.xp, prevExp: o.px, nextExp: o.nx, pool: o.pool, gold: o.gold,
         sp: o.sp, maxSp: o.ms, hunger: o.hu, weight: o.wt, maxLoad: o.ml, atkMs: o.am, dmg: o.dmg,
-        bag: o.bag.map(([uid, id, count, life, attr, color]) => ({ uid, id, count, life, ...(attr ? { attr, color } : {}) })), equip: o.eq, magic: o.mg,
+        bag: o.bag.map(([uid, id, count, life, attr, color, x, y]) => ({ uid, id, count, life, x, y, ...(attr ? { attr, color } : {}) })), equip: o.eq, magic: o.mg,
         stats: o.stats, defense: o.def, kills: o.kills, skills: o.skills, deadAt: o.deadAt,
       });
       if (e.busyUntil === undefined) e.busyUntil = 0;

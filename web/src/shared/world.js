@@ -159,6 +159,13 @@ const COMMANDS = {
     if (uid === undefined && cmd.item !== undefined) uid = p.bag.find(i => i.id === cmd.item)?.uid;   // por id de objeto (atajos)
     return ItemSys.useItem(w, p, uid);
   },
+  // posición del objeto dentro de la mochila (MSGID_REQUEST_SETITEMPOS: x 0..170, y -10..95)
+  setpos(w, p, cmd) {
+    const it = p.bag.find(i => i.uid === cmd.uid);
+    if (!it || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return w.reject(p, cmd, "no tienes");
+    it.x = Math.max(0, Math.min(170, Math.round(cmd.x))); it.y = Math.max(-10, Math.min(95, Math.round(cmd.y)));
+    return true;
+  },
   stat(w, p, cmd) {
     if (p.pool <= 0 || !(cmd.stat in p.stats) || p.stats[cmd.stat] >= R.STAT_LIMIT) return w.reject(p, cmd, "sin puntos");
     p.stats[cmd.stat]++;

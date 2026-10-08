@@ -12,6 +12,8 @@ import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
+import { itemDef } from "./names.js";
+import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 
 const store = {
@@ -42,7 +44,29 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   await gui.load();
-  registerDialogs(gui, {});
+  gui.setGameSprites(assets.sprites);
+  const guiApi = {
+    log: m => hud.log(m),
+    primary: uid => hud.primary(uid),
+    disabled: () => false,
+  };
+  registerDialogs(gui, guiApi);
+  gui.onItemDrop = (it, x, y, dlg) => {
+    const me = world.ents.get(pid), inst = me?.bag.find(i => i.uid === it.uid), d = inst && itemDef(inst.id);
+    if (!me || me.dead || !inst) return;
+    if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
+      if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
+    } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
+      if (Object.values(me.equip || {}).includes(inst.uid)) hud.act("unequip", inst.uid);
+      if (it.from === 2) {
+        const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
+        inst.x = Math.max(0, Math.min(170, nx)); inst.y = Math.max(-10, Math.min(95, ny));
+        conn.send({ t: "setpos", uid: inst.uid, x: nx, y: ny });
+      }
+    } else if (!dlg && y < 548 && it.from === 2) {               // fuera de la interfaz: tirar al suelo
+      hud.act("drop", inst.uid);
+    }
+  };
   hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
@@ -194,6 +218,7 @@ async function main() {
           break;
         }
         case "char": gui.toggle(1); break;
+        case "inv": gui.toggle(2); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
     },

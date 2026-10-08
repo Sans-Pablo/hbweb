@@ -221,7 +221,7 @@ function pub(e, own) {
       bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove), mp: e.mp, mm: e.maxMp, lv: e.level, xp: e.exp,
       px: e.prevExp, nx: e.nextExp, pool: e.pool, gold: e.gold, stats: e.stats, def: e.defense,
       sp: e.sp, ms: e.maxSp, hu: e.hunger, wt: e.weight, ml: e.maxLoad, am: attackMs(e), dmg: damageRange(e),
-      bag: e.bag.map(i => [i.uid, i.id, i.count, i.life, i.attr || 0, i.color || 0]), eq: e.equip, mg: e.magic,
+      bag: e.bag.map(i => [i.uid, i.id, i.count, i.life, i.attr || 0, i.color || 0, i.x ?? 40, i.y ?? 30]), eq: e.equip, mg: e.magic,
       kills: e.kills, skills: e.skills, deadAt: e.deadAt,
     });
   }
