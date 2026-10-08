@@ -17,5 +17,11 @@ for name, nths in WANT.items():
         print("falta", name); continue
     for n in nths:
         export(pak, name, n, sd, "%s_%d" % (name.lower(), n), man)
+# paperdoll del diálogo de personaje: item-equipM / item-equipW (15 hojas cada una) y colgantes de item-pack
+for pk, tag in (("item-equipM", "em"), ("item-equipW", "ew")):
+    for n in range(15):
+        export(pak, pk, n, sd, "%s_%d" % (tag, n), man)
+for n in (15, 19):
+    export(pak, "item-pack", n, sd, "pk_%d" % n, man)
 json.dump(man, open(os.path.join(out, "ui.json"), "w"), separators=(",", ":"))
 print(len(man), "sprites")

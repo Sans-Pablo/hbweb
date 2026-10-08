@@ -94,6 +94,20 @@ export class Gui {
     this.ctx.drawImage(t, x + px, y + py);
   }
 
+  // fotograma teñido multiplicando por un color CSS (aproxima PutSpriteRGB; p. ej. el pelo)
+  mul(key, f, x, y, color) {
+    const m = this.manifest[key], fr = m && m.frames[f], img = this.img[key];
+    if (!fr || !img || !img.naturalWidth) return;
+    const [sx, sy, sw, sh, px, py] = fr;
+    const t = this._m || (this._m = document.createElement("canvas")), g = t.getContext("2d");
+    t.width = sw; t.height = sh;
+    g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, sw, sh);
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    g.globalCompositeOperation = "multiply"; g.fillStyle = color; g.fillRect(0, 0, sw, sh);
+    g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    this.ctx.drawImage(t, x + px, y + py);
+  }
+
   // texto con la letra del cliente (GDI): sombra de 1 píxel opcional
   text(x, y, s, color = "#fafadc", { align = "left", shadow = false, bold = false, size = 12 } = {}) {
     const c = this.ctx;

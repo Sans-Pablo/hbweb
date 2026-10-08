@@ -12,6 +12,7 @@ import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
+import { registerDialogs } from "./dialogs.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -41,6 +42,7 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   await gui.load();
+  registerDialogs(gui, {});
   hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
@@ -191,6 +193,7 @@ async function main() {
           for (const p of open) p.classList.remove("open");
           break;
         }
+        case "char": gui.toggle(1); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
     },
