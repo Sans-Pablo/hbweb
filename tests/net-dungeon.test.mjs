@@ -83,6 +83,18 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(!a.conn.state.ents.has(b.conn.pid));
     b.conn.send({ t: "portal", portal: "return" });
     await until(() => b.conn.state.map.kind === "farm" && a.conn.state.ents.has(b.conn.pid), "salida B");
+    assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));
+    await until(() => a.packets.some(m => m.ev?.some(e => e.t === "dungeon-choice" && e.id === a.conn.pid)), "elección de instancia existente");
+    assert.equal(a.conn.state.map.kind, "farm");
+    assert.ok(!b.packets.some(m => m.ev?.some(e => e.t === "dungeon-choice" && e.id === a.conn.pid)), "elección privada");
+    a.conn.send({ t: "portal", portal: FARM_PORTAL.id, restart: false });
+    await until(() => a.conn.state.map.id === mapA.id, "continuar instancia A");
+    assert.equal(a.conn.state.map.seed, mapA.seed);
+    a.conn.send({ t: "portal", portal: "return" });
+    await until(() => a.conn.state.map.kind === "farm", "salida para reiniciar");
+    a.conn.send({ t: "portal", portal: FARM_PORTAL.id, restart: true });
+    await until(() => a.conn.state.map.kind === "dungeon" && a.conn.state.map.id !== mapA.id, "reiniciar explícitamente");
+    assert.notEqual(a.conn.state.map.seed, mapA.seed);
     assert.ok(!exited, output);
     assert.ok(![...a.packets, ...b.packets].some(m => (m.ev || []).some(e => e.t === "reject" && e.cmd === "portal")));
   } finally {

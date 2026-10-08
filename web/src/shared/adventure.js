@@ -11,6 +11,7 @@ export class Adventure {
     this.time = 0;
     this.serial = 0;
     this.locations = new Map();
+    this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
     this.farm = new World({ ...options, ids: this.ids });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
@@ -28,7 +29,9 @@ export class Adventure {
     const w = this.worldFor(id);
     w.removePlayer(id);
     this.locations.delete(id);
-    if (w !== this.farm) this.worlds.delete(w.map.id);
+    const instance = this.instances.get(id);
+    if (instance) this.worlds.delete(instance.map.id);
+    this.instances.delete(id);
   }
 
   command(id, cmd) {
@@ -40,6 +43,15 @@ export class Adventure {
       if (!gate || dist(p, gate) > 1) return w.reject(p, cmd, "acércate al portal");
       if (w === this.farm) {
         if (!w.npcDb.Skeleton) return w.reject(p, cmd, "faltan los datos de los esqueletos; recarga la página");
+        const previous = this.instances.get(id);
+        if (previous && typeof cmd.restart !== "boolean") {
+          w.emit({ t: "dungeon-choice", id, remaining: previous.map.remainingEnemies, total: previous.map.totalEnemies });
+          return false;
+        }
+        if (previous && cmd.restart === false) {
+          if (!this.transfer(p, w, previous, previous.start)) return w.reject(p, cmd, "entrada ocupada");
+          return true;
+        }
         const seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
         const layout = generateDungeon(seed);
         const d = new World({ grid: layout.grid, npcDb: w.npcDb, data: w.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
@@ -50,17 +62,17 @@ export class Adventure {
         for (const n of d.ents.values()) n.nextAct += this.time;
         this.worlds.set(d.map.id, d);
         if (!this.transfer(p, w, d, layout.start)) { this.worlds.delete(d.map.id); return w.reject(p, cmd, "entrada ocupada"); }
+        if (previous) this.worlds.delete(previous.map.id);
+        this.instances.set(id, d);
         return true;
       }
       const ok = this.transfer(p, w, this.farm, [FARM_PORTAL.x, FARM_PORTAL.y]);
       if (!ok) return w.reject(p, cmd, "salida ocupada");
-      this.worlds.delete(w.map.id);
       return true;
     }
     if (cmd.t === "respawn" && w !== this.farm) {
       if (!p.dead || w.time - p.deadAt < 1500) return false;
       if (!this.transfer(p, w, this.farm, this.farm.start)) return false;
-      this.worlds.delete(w.map.id);
       return respawn(this.farm, p);
     }
     return w.command(id, cmd);
