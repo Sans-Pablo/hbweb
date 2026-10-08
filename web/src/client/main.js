@@ -418,7 +418,7 @@ function askNameAndJoin(conn, online, info, spr) {
         const id = await conn.join(name, create);
         if (!online) {                                         // descargar el aspecto antes de empezar
           const me = conn.state.ents.get(id);
-          if (me) await spr.preload(spr.lookKeys(me.gender, me.look));
+          if (me) { const lk = spr.lookKeys(me.gender, me.look); await Promise.all([spr.preload(lk), spr.preloadHd(lk)]); }
         }
         box.remove();
         resolve(id);

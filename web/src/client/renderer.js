@@ -19,6 +19,7 @@ export class Renderer {
     this.grid = grid;
     this.mapName = assets.meta.map;
     this.mode = "remastered";
+    this.spr.hd = true;
     this.zoom = 1;
     this.cam = null;
     this.chunks = new Map();
@@ -31,7 +32,7 @@ export class Renderer {
     this.cam = null; this.chunks.clear(); this.buildMinimap();
   }
 
-  setMode(m) { this.mode = m; this.cam = null; this.layout(); }
+  setMode(m) { this.mode = m; this.spr.hd = m === "remastered"; this.cam = null; this.layout(); }
 
   resize() {
     const r = this.canvas.getBoundingClientRect();
@@ -167,6 +168,8 @@ export class Renderer {
       }
     }
 
+    // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
+    ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = "high";
     // 3) objetos en el suelo
     const labels = [];
     for (const list of s.world.items.values()) {

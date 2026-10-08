@@ -22,7 +22,7 @@ export function createCharacter(spr, defaultName) {
         <p class="left"></p>
       </div>
       <div class="col">
-        <canvas width="200" height="230"></canvas>
+        <canvas width="520" height="600" style="width:260px;height:300px"></canvas>
         <div class="opts"></div>
       </div>
     </div>
@@ -41,7 +41,30 @@ export function createCharacter(spr, defaultName) {
     ["under", "Ropa interior", () => UNDER_NAMES[c.under], v => (c.under = (v + 8) % 8)],
   ];
   const look = () => ({ skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under });
-  const need = () => spr.preload(spr.lookKeys(c.gender, look()));
+  // solo la animación de reposo (grupo 0): el resto se descarga después, al entrar al juego
+  const idleKeys = (gender, lk) => {
+    const type = (gender === 2 ? 3 : 0) + lk.skin, g = gender === 2 ? 1 : 0, keys = [];
+    for (let d = 0; d < 8; d++) keys.push("pb" + type + "_" + d);
+    keys.push("pu" + g + "_" + lk.under + "_0", "ph" + g + "_" + lk.hair + "_0");
+    return keys;
+  };
+  let shown = { gender: c.gender, look: look(), ready: false };
+  const need = () => {
+    const want = { gender: c.gender, look: look() }, keys = idleKeys(want.gender, want.look);
+    return Promise.all([spr.preload(keys), spr.preloadHd(keys)]).then(() => {
+      if (want.gender === c.gender && JSON.stringify(want.look) === JSON.stringify(look())) shown = { ...want, ready: true };
+    });
+  };
+  // calentar la caché: todas las pieles, peinados y ropas interiores de ambos géneros (el actual primero)
+  const warm = () => {
+    const gs = [c.gender, c.gender === 1 ? 2 : 1], keys = [];
+    for (const gd of gs) {
+      for (let skin = 1; skin <= 3; skin++) keys.push(...idleKeys(gd, { skin, hair: 0, under: 0 }).slice(0, 8));
+      for (let i = 0; i < 8; i++) keys.push(...idleKeys(gd, { skin: 1, hair: i, under: i }).slice(8));
+    }
+    spr.preload(keys); spr.preloadHd(keys);
+  };
+  spr.hd = true;
 
   function render() {
     root.querySelector(".stats").innerHTML = STATS.map(([k, n]) =>
@@ -50,18 +73,18 @@ export function createCharacter(spr, defaultName) {
     root.querySelector(".opts").innerHTML = OPTS.map(([k, n, txt]) =>
       `<div class="row"><span>${n}</span><button data-o="${k}" data-d="-1">◀</button><b>${txt()}</b><button data-o="${k}" data-d="1">▶</button></div>`).join("");
   }
-  render(); need();
+  render(); need(); warm();
 
   const cv = root.querySelector("canvas"), g = cv.getContext("2d");
-  g.imageSmoothingEnabled = false;
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
   let raf = 0, t0 = performance.now();
   const draw = t => {
     g.clearRect(0, 0, cv.width, cv.height);
-    g.save(); g.scale(3, 3);
+    g.save(); g.scale(8, 8);
     const d = Math.floor((t - t0) / 900) % 8, f = Math.floor((t - t0) / 160) % 4;
     // sombra sencilla bajo los pies
     g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(33, 70, 14, 5, 0, 0, 7); g.fill();
-    drawPerson(g, spr, c.gender, look(), 0, d, f, 33, 68);
+    drawPerson(g, spr, shown.gender, shown.look, 0, d, f, 33, 68);
     g.restore();
     raf = requestAnimationFrame(draw);
   };

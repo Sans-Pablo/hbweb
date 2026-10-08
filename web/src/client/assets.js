@@ -67,12 +67,16 @@ export async function loadAssets(onProgress) {
   // sprites de personaje (pieles, peinados, ropa interior): se descargan cuando hacen falta
   const players = await json("data/players.json").catch(() => ({}));
   Object.assign(manifest, players);
-  return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images), npcDb, spawns, data };
+  const hd = await json("data/sprites_hd.json").catch(() => ({}));
+  return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images, hd), npcDb, spawns, data };
 }
 
 export class Sprites {
-  constructor(manifest, images) {
+  constructor(manifest, images, hdManifest = {}) {
     this.m = manifest;
+    this.hd = false;                       // modo remastered: usa las hojas HD (data/sprites_hd) cuando ya están descargadas
+    this.hdm = hdManifest;
+    this.hdi = {};
     // las imágenes que no se cargaron al principio (personajes) se piden la primera vez que se usan
     this.img = new Proxy(images, {
       get(t, k) {
@@ -83,6 +87,25 @@ export class Sprites {
     this.sil = {};                         // siluetas negras para las sombras
     this.tmp = document.createElement("canvas");
     this.tctx = this.tmp.getContext("2d");
+  }
+  // hoja a usar para este sprite: [imagen, factor]. La HD se pide la primera vez; mientras llega se usa la original.
+  src(key) {
+    const h = this.hd && this.hdm[key];
+    if (h) {
+      let i = this.hdi[key];
+      if (!i) { i = this.hdi[key] = new Image(); i.src = "data/sprites_hd/" + h.png + "?v=" + ASSET_VERSION; }
+      if (i.complete && i.naturalWidth > 0) return [i, h.k];
+    }
+    return [this.img[key], 1];
+  }
+  // espera a que estén listas las hojas HD de estos sprites (si las hay)
+  preloadHd(keys) {
+    return Promise.all(keys.filter(k => this.hdm[k]).map(k => new Promise(res => {
+      const h = this.hdm[k]; let i = this.hdi[k];
+      if (!i) { i = this.hdi[k] = new Image(); i.src = "data/sprites_hd/" + h.png + "?v=" + ASSET_VERSION; }
+      if (i.complete) return res();
+      i.addEventListener("load", res, { once: true }); i.addEventListener("error", res, { once: true });
+    })));
   }
   has(key) { return !!this.m[key]; }
   ready(key) { const i = this.img[key]; return !!i && i.complete && i.naturalWidth > 0; }
@@ -111,26 +134,26 @@ export class Sprites {
     const fr = this.frame(key, f);
     if (!fr) return;
     if (!this.ready(key)) return;
-    const [sx, sy, w, h, pvx, pvy] = fr;
-    ctx.drawImage(this.img[key], sx, sy, w, h, x + pvx, y + pvy, w, h);
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key);
+    ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
   }
 
   // Pelo teñido: el color del original se suma a los píxeles (PutSpriteRGB); aquí se mezcla con el tono base
   tintedHair(ctx, key, f, x, y, rgb) {
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
-    const [sx, sy, w, h, pvx, pvy] = fr;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
     const t = this.tmp, g = this.tctx;
-    if (t.width < w || t.height < h) { t.width = Math.max(t.width, w); t.height = Math.max(t.height, h); }
+    if (t.width < W || t.height < H) { t.width = Math.max(t.width, W); t.height = Math.max(t.height, H); }
     g.globalCompositeOperation = "source-over";
-    g.clearRect(0, 0, w, h);
-    g.drawImage(this.img[key], sx, sy, w, h, 0, 0, w, h);
+    g.clearRect(0, 0, W, H);
+    g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
     g.globalCompositeOperation = "multiply";        // oscurece/colorea el pelo gris original
     g.fillStyle = rgb;
-    g.fillRect(0, 0, w, h);
+    g.fillRect(0, 0, W, H);
     g.globalCompositeOperation = "destination-in";  // y recorta de nuevo a la forma del pelo
-    g.drawImage(this.img[key], sx, sy, w, h, 0, 0, w, h);
-    ctx.drawImage(t, 0, 0, w, h, x + pvx, y + pvy, w, h);
+    g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+    ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
   }
 
   silhouette(key) {
@@ -166,19 +189,19 @@ export class Sprites {
   tinted(ctx, key, f, x, y, color, alpha, op = "source-over") {
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
-    const [sx, sy, w, h, pvx, pvy] = fr;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
     const t = this.tmp, g = this.tctx;
-    if (t.width < w || t.height < h) { t.width = Math.max(t.width, w); t.height = Math.max(t.height, h); }
+    if (t.width < W || t.height < H) { t.width = Math.max(t.width, W); t.height = Math.max(t.height, H); }
     g.globalCompositeOperation = "source-over";
-    g.clearRect(0, 0, w, h);
-    g.drawImage(this.img[key], sx, sy, w, h, 0, 0, w, h);
+    g.clearRect(0, 0, W, H);
+    g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
     g.globalCompositeOperation = "source-in";
     g.fillStyle = color;
-    g.fillRect(0, 0, w, h);
+    g.fillRect(0, 0, W, H);
     ctx.save();
     ctx.globalAlpha *= alpha;
     ctx.globalCompositeOperation = op;
-    ctx.drawImage(t, 0, 0, w, h, x + pvx, y + pvy, w, h);
+    ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
     ctx.restore();
   }
 }
