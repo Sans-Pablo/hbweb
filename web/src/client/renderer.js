@@ -79,17 +79,29 @@ export class Renderer {
     c.width = c.height = CHUNK * T;
     const g = c.getContext("2d");
     g.imageSmoothingEnabled = false;
+    let ready = true;
     for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
       if (t) {
+        if (this.grid.procedural) {
+          g.fillStyle = t.blocked ? "#302c28" : "#71675b";
+          g.fillRect(i * T, j * T, T, T);
+        }
+        if (!this.spr.ready("t" + t.spr)) ready = false;
         this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
         if (this.grid.procedural && t.blocked) {
-          g.fillStyle = "rgba(0,0,0,.7)"; g.fillRect(i * T, j * T, T, T);
-          g.strokeStyle = "rgba(150,136,120,.22)"; g.strokeRect(i * T + .5, j * T + .5, T - 1, T - 1);
+          const x = cx * CHUNK + i, y = cy * CHUNK + j;
+          const edge = !this.grid.blocked(x - 1, y) || !this.grid.blocked(x + 1, y) || !this.grid.blocked(x, y - 1) || !this.grid.blocked(x, y + 1);
+          g.fillStyle = edge ? "rgba(0,0,0,.18)" : "rgba(0,0,0,.5)"; g.fillRect(i * T, j * T, T, T);
+          if (!this.grid.blocked(x, y + 1)) {
+            g.fillStyle = "#65564a"; g.fillRect(i * T, j * T + T - 6, T, 2);
+            g.fillStyle = "rgba(0,0,0,.5)"; g.fillRect(i * T, j * T + T - 4, T, 4);
+          }
         }
       }
     }
-    this.chunks.set(k, c);
+    // Una hoja pendiente no debe dejar un bloque vacío guardado para toda la partida.
+    if (ready) this.chunks.set(k, c);
     if (this.chunks.size > 96) this.chunks.delete(this.chunks.keys().next().value);
     return c;
   }
@@ -217,6 +229,20 @@ export class Renderer {
     s.fx.draw(ctx, camX, camY, this.mode);
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
+    if (s.world.map?.kind === "dungeon") this.drawDungeonInfo(s);
+    ctx.restore();
+  }
+
+  drawDungeonInfo(s) {
+    const { ctx } = this, map = s.world.map;
+    const room = this.grid.rooms?.find(r => s.me.x >= r.x && s.me.x < r.x + r.w && s.me.y >= r.y && s.me.y < r.y + r.h);
+    const remaining = map.remainingEnemies ?? [...s.world.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
+    ctx.save();
+    ctx.fillStyle = "rgba(15,14,19,.85)"; ctx.fillRect(10, 10, 290, 48);
+    ctx.textAlign = "left"; ctx.font = "bold 13px Tahoma, sans-serif";
+    ctx.fillStyle = "#e8dcc3"; ctx.fillText(room?.name || "Galerías de la cripta", 20, 29);
+    ctx.font = "12px Tahoma, sans-serif"; ctx.fillStyle = remaining ? "#e5bca0" : "#9fe07f";
+    ctx.fillText(remaining ? "Esqueletos restantes: " + remaining + " / " + map.totalEnemies : "¡Cripta despejada! Recoge el botín y regresa (E).", 20, 47);
     ctx.restore();
   }
 
@@ -371,7 +397,7 @@ export class Renderer {
     c.imageSmoothingQuality = "high";
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
       const t = g.tile(x, y), key = "t" + t.spr, fr = this.spr.frame(key, t.frame);
-      if (!fr) continue;
+      if (!fr || !this.spr.ready(key)) { c.fillStyle = g.blocked(x, y) ? "#302c28" : "#71675b"; c.fillRect(x, y, 1, 1); continue; }
       c.drawImage(this.spr.img[key], fr[0], fr[1], fr[2], fr[3], x, y, 1, 1);
     }
     c.fillStyle = "rgba(0,0,0,.35)";

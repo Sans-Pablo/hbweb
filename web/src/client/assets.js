@@ -3,28 +3,67 @@
 
 import { GameData } from "../shared/data.js";
 import { setData } from "./names.js";
+import { DUNGEON_ASSETS, DUNGEON_FLOOR_FRAMES } from "../shared/dungeon.js";
+
+const ASSET_VERSION = "crypt-v2";
+const spriteUrl = png => "data/sprites/" + png + "?v=" + ASSET_VERSION;
+
+// Reintenta una descarga fallida; nunca da por cargada una imagen rota.
+export async function loadSpriteImage(png, timeoutMs = 20000) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const img = new Image();
+        const timer = setTimeout(() => { img.onload = img.onerror = null; reject(new Error("tiempo de espera")); }, timeoutMs);
+        img.onload = () => { clearTimeout(timer); resolve(img); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error("descarga fallida")); };
+        img.src = spriteUrl(png) + (attempt ? "&retry=1" : "");
+      });
+    } catch (err) {
+      if (attempt === 1) throw new Error("No se pudo cargar data/sprites/" + png + ". Recarga la página para reintentar.", { cause: err });
+    }
+  }
+}
+
+export function validateDungeonAssets(manifest, npcDb) {
+  if (npcDb.Skeleton?.sprite !== "ske") throw new Error("Faltan los datos de Skeleton. Recarga la página.");
+  for (const k of DUNGEON_ASSETS) {
+    if (!manifest[k]?.png || !manifest[k]?.frames?.length) throw new Error("Falta el gráfico " + k + ". Recarga la página.");
+    if (k.startsWith("ske") && manifest[k].frames.length < 4) throw new Error("Animación incompleta: " + k);
+  }
+  for (const f of DUNGEON_FLOOR_FRAMES) if (!manifest.t330.frames[f]) throw new Error("Falta el suelo de la cripta: " + f);
+}
 
 export async function loadAssets(onProgress) {
-  const json = async u => (await fetch(u)).json();
+  const response = async u => {
+    const r = await fetch(u, { cache: "no-cache" });
+    if (!r.ok) throw new Error("No se pudo cargar " + u + " (HTTP " + r.status + ")");
+    return r;
+  };
+  const json = async u => (await response(u)).json();
   const meta = await json("data/map.json");
   const [buf, manifest, npcDb, spawns, items, magic] = await Promise.all([
-    fetch("data/" + meta.map + ".bin").then(r => r.arrayBuffer()),
+    response("data/" + meta.map + ".bin").then(r => r.arrayBuffer()),
     json("data/sprites.json"),
-    json("data/npc.json").catch(() => ({})),
+    json("data/npc.json"),
     json("data/" + meta.map + ".spawns.json").catch(() => []),
     json("data/items.json"),
     json("data/magic.json"),
   ]);
+  validateDungeonAssets(manifest, npcDb);
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
   const keys = Object.keys(manifest), images = {};
   let done = 0;
-  await Promise.all(keys.map(k => new Promise(res => {
-    const img = new Image();
-    img.onload = img.onerror = () => { done++; onProgress?.(done / keys.length); res(); };
-    img.src = "data/sprites/" + manifest[k].png;
-    images[k] = img;
-  })));
+  // Limitar peticiones simultáneas evita saturar la descarga con cientos de hojas.
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(12, keys.length) }, async () => {
+    while (next < keys.length) {
+      const k = keys[next++];
+      images[k] = await loadSpriteImage(manifest[k].png);
+      done++; onProgress?.(done / keys.length);
+    }
+  }));
   // sprites de personaje (pieles, peinados, ropa interior): se descargan cuando hacen falta
   const players = await json("data/players.json").catch(() => ({}));
   Object.assign(manifest, players);
@@ -37,7 +76,7 @@ export class Sprites {
     // las imágenes que no se cargaron al principio (personajes) se piden la primera vez que se usan
     this.img = new Proxy(images, {
       get(t, k) {
-        if (!(k in t) && typeof k === "string" && manifest[k]) { const i = new Image(); i.src = "data/sprites/" + manifest[k].png; t[k] = i; }
+        if (!(k in t) && typeof k === "string" && manifest[k]) { const i = new Image(); i.src = spriteUrl(manifest[k].png); t[k] = i; }
         return t[k];
       },
     });

@@ -39,11 +39,13 @@ export class Adventure {
       if (p.dead || w.busy(p)) return w.reject(p, cmd, "ocupado o muerto");
       if (!gate || dist(p, gate) > 1) return w.reject(p, cmd, "acércate al portal");
       if (w === this.farm) {
+        if (!w.npcDb.Skeleton) return w.reject(p, cmd, "faltan los datos de los esqueletos; recarga la página");
         const seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
         const layout = generateDungeon(seed);
         const d = new World({ grid: layout.grid, npcDb: w.npcDb, data: w.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
         d.time = this.time;
         d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta de esqueletos", seed, version: DUNGEON_VERSION, portals: layout.portals };
+        d.map.totalEnemies = d.map.remainingEnemies = d.ents.size;
         // Los temporizadores del mundo recién creado usan el reloj de la sesión.
         for (const n of d.ents.values()) n.nextAct += this.time;
         this.worlds.set(d.map.id, d);
@@ -84,7 +86,8 @@ export class Adventure {
   tick(dt) {
     for (const w of this.worlds.values()) {
       w.tick(dt);
-      if (w !== this.farm && !w.cleared && [...w.ents.values()].every(e => e.kind !== "npc" || e.dead)) {
+      if (w !== this.farm) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
+      if (w !== this.farm && !w.cleared && w.map.remainingEnemies === 0) {
         w.cleared = true;
         for (const p of w.ents.values()) if (p.kind === "player") w.emit({ t: "dungeon-cleared", id: p.id });
       }

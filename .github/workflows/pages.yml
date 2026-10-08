@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node tests/sim.test.mjs
-      - run: node --test tests/dungeon.test.mjs tests/net-dungeon.test.mjs
+      - run: node --test tests/assets.test.mjs tests/dungeon.test.mjs tests/net-dungeon.test.mjs
       - run: node tests/net-walk.test.mjs
   deploy:
     if: github.event_name != 'pull_request'

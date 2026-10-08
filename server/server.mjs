@@ -262,7 +262,10 @@ setInterval(() => {
     for (const id of c.sent.keys()) if (!seen.has(id)) { gone.push(id); c.sent.delete(id); }
     const ev = events.filter(v => v.t === "chat" || seen.has(v.id) || v.t === "drop" || v.id === c.pid);
     const msg = { t: "s", time: r1(world.time), ack: c.ack };
-    if (mapChanged) msg.map = world.map;
+    if (mapChanged || c.remainingEnemies !== world.map.remainingEnemies) {
+      msg.map = world.map;
+      c.remainingEnemies = world.map.remainingEnemies;
+    }
     if (changed.length) msg.e = changed;
     if (gone.length) msg.g = gone;
     if (ev.length) msg.ev = ev;
