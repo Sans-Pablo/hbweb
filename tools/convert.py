@@ -28,7 +28,7 @@ from PIL import Image
 from tile_table import locate
 
 
-PLAYER_GROUPS = (0, 1, 2, 3, 4, 6, 9, 10, 11)
+PLAYER_GROUPS = (0, 1, 2, 3, 4, 6, 8, 9, 10, 11)
 
 # número de monstruo de "spot-mob-generator" -> nombre en NPC.cfg (HGServer/Game.cpp)
 SPOT_MOB_NAMES = {10: "Slime", 16: "Giant-Ant", 17: "Scorpion", 12: "Stone-Golem", 22: "Amphis",
@@ -165,6 +165,24 @@ def read_items(server, hb):
     return items
 
 
+MAGIC_FIELDS = ["type", "delay", "last", "mana", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+                "reqInt", "cost", "category", "attr"]
+
+def read_magic(server):
+    """Files/Magic.cfg -> {id: {name, type, delay, last, mana, v2..v12, reqInt, cost, category, attr}}"""
+    import re
+    out = {}
+    for line in open(os.path.join(server, "Files", "Magic.cfg"), encoding="latin-1"):
+        m = re.match(r"\s*magic\s*=\s*(\d+)\s+(\S+)\s+(.*)", line)
+        if not m: continue
+        nums = m.group(3).split()
+        if len(nums) < len(MAGIC_FIELDS): continue
+        d = {"name": m.group(2).replace("-", " ")}
+        for k, v in zip(MAGIC_FIELDS, nums): d[k] = int(v)
+        out[int(m.group(1))] = d
+    return out
+
+
 def main():
     hb, out = sys.argv[1], sys.argv[2]
     map_name = sys.argv[3] if len(sys.argv) > 3 else "arefarm"
@@ -260,6 +278,9 @@ def main():
         items = read_items(server, hb)
         json.dump(items, open(os.path.join(out, "items.json"), "w"), separators=(",", ":"))
         print("ítems:", len(items))
+        magic = read_magic(server)
+        json.dump(magic, open(os.path.join(out, "magic.json"), "w"), separators=(",", ":"))
+        print("hechizos:", len(magic))
         json.dump(spawns, open(os.path.join(out, map_name + ".spawns.json"), "w"), indent=1)
         print("Monstruos: %s; %d generadores" % (", ".join(npc_out), len(spawns)))
 

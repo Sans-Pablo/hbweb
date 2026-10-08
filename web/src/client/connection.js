@@ -137,7 +137,7 @@ export class NetConnection {
       if (this.resync || (settled && differs) || !!o.dead !== !!e.dead ||
           (newAction && (o.act === ACT.DAMAGE || o.act === ACT.DYING || o.act === ACT.STOP && o.d === 0 && !o.dead && e.dead))) {
         posFields(); this.resync = false;
-      } else if (newAction && o.act === ACT.GETITEM) {
+      } else if (newAction && (o.act === ACT.GETITEM || o.act === ACT.MAGIC)) {
         e.act = o.act; e.actStart = this.world.time; e.actDur = o.d;   // recoger: no se predice
       }
     }
@@ -150,7 +150,7 @@ export class NetConnection {
       if (own) Object.assign(e, {
         mp: o.mp, maxMp: o.mm, level: o.lv, exp: o.xp, prevExp: o.px, nextExp: o.nx, pool: o.pool, gold: o.gold,
         sp: o.sp, maxSp: o.ms, hunger: o.hu, weight: o.wt, maxLoad: o.ml, atkMs: o.am, dmg: o.dmg,
-        bag: o.bag.map(([uid, id, count, life]) => ({ uid, id, count, life })), equip: o.eq,
+        bag: o.bag.map(([uid, id, count, life]) => ({ uid, id, count, life })), equip: o.eq, magic: o.mg,
         stats: o.stats, defense: o.def, kills: o.kills, skills: o.skills, deadAt: o.deadAt,
       });
       if (e.busyUntil === undefined) e.busyUntil = 0;

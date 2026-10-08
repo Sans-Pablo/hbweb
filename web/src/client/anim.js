@@ -2,7 +2,7 @@
 // Mismas reglas que el cliente original (Client/Game.cpp, DrawObject_On*).
 import { ACT, TILE, PLAYER } from "../shared/const.js";
 
-const TIMED = new Set([ACT.MOVE, ACT.RUN, ACT.ATTACK, ACT.GETITEM, ACT.DAMAGE]);
+const TIMED = new Set([ACT.MOVE, ACT.RUN, ACT.ATTACK, ACT.MAGIC, ACT.GETITEM, ACT.DAMAGE]);
 
 // Acción efectiva: al acabar un paso o un golpe vuelve a "quieto"
 export function actionAt(e, time) {
@@ -30,6 +30,7 @@ export function playerSprite(e, time) {
     case ACT.MOVE: group = combat ? 3 : 2; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.RUN: group = 4; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.ATTACK: group = 6; f = Math.min(7, Math.floor(p * 8)); break;
+    case ACT.MAGIC: group = 8; f = Math.min(15, Math.floor(p * 16)); break;
     case ACT.GETITEM: group = 9; f = Math.min(3, Math.floor(p * 4)); break;
     case ACT.DAMAGE: group = 10; f = Math.min(3, Math.floor(p * 4)); break;
     case ACT.DYING: group = 11; f = Math.min(7, Math.floor(p * 8)); break;

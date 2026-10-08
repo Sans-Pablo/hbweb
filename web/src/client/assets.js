@@ -7,14 +7,15 @@ import { setData } from "./names.js";
 export async function loadAssets(onProgress) {
   const json = async u => (await fetch(u)).json();
   const meta = await json("data/map.json");
-  const [buf, manifest, npcDb, spawns, items] = await Promise.all([
+  const [buf, manifest, npcDb, spawns, items, magic] = await Promise.all([
     fetch("data/" + meta.map + ".bin").then(r => r.arrayBuffer()),
     json("data/sprites.json"),
     json("data/npc.json").catch(() => ({})),
     json("data/" + meta.map + ".spawns.json").catch(() => []),
     json("data/items.json"),
+    json("data/magic.json"),
   ]);
-  const data = new GameData({ items, npcs: npcDb });
+  const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
   const keys = Object.keys(manifest), images = {};
   let done = 0;

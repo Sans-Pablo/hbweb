@@ -25,6 +25,7 @@ export class Controller {
       e.preventDefault();
       ui.unlockAudio();
       this.pointer = [e.clientX, e.clientY];
+      if (e.button === 2) { this.cast(); return; }
       this.down = true;
       canvas.setPointerCapture?.(e.pointerId);
       this.click(true);
@@ -76,6 +77,17 @@ export class Controller {
       if (d < bestD) { bestD = d; best = e; }
     }
     return best;
+  }
+
+  // botón derecho: lanza el hechizo elegido en el libro (K) sobre la casilla del cursor
+  cast() {
+    const me = this.me;
+    if (!me || me.dead || !this.pointer) return;
+    if (this.ui.spell == null) { this.ui.say("Elige un hechizo en el libro de magia (K)."); return; }
+    const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
+    const ent = this.pick(wx, wy);
+    const x = ent ? ent.x : Math.floor(wx / T), y = ent ? ent.y : Math.floor(wy / T);
+    this.conn.send({ t: "cast", spell: this.ui.spell, x, y });
   }
 
   click(first) {

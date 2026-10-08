@@ -34,7 +34,7 @@ const bytes = new Uint8Array(fs.readFileSync(path.join(DATA, meta.map + ".bin"))
 const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
-const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), npcs: npcDb });
+const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
 const world = new World({ grid, npcDb, data, spawns, start: meta.start });
 
 let saves = {};
@@ -218,7 +218,7 @@ function pub(e, own) {
       bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove), mp: e.mp, mm: e.maxMp, lv: e.level, xp: e.exp,
       px: e.prevExp, nx: e.nextExp, pool: e.pool, gold: e.gold, stats: e.stats, def: e.defense,
       sp: e.sp, ms: e.maxSp, hu: e.hunger, wt: e.weight, ml: e.maxLoad, am: attackMs(e), dmg: damageRange(e),
-      bag: e.bag.map(i => [i.uid, i.id, i.count, i.life]), eq: e.equip,
+      bag: e.bag.map(i => [i.uid, i.id, i.count, i.life]), eq: e.equip, mg: e.magic,
       kills: e.kills, skills: e.skills, deadAt: e.deadAt,
     });
   }

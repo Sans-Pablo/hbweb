@@ -15,7 +15,7 @@ const meta = JSON.parse(readFileSync(new URL("map.json", D)));
 const bytes = new Uint8Array(readFileSync(new URL(meta.map + ".bin", D)));
 const npcDb = JSON.parse(readFileSync(new URL("npc.json", D)));
 const spawns = JSON.parse(readFileSync(new URL(meta.map + ".spawns.json", D)));
-const data = new GameData({ items: JSON.parse(readFileSync(new URL("items.json", D))), npcs: npcDb });
+const data = new GameData({ items: JSON.parse(readFileSync(new URL("items.json", D))), magic: JSON.parse(readFileSync(new URL("magic.json", D))), npcs: npcDb });
 
 let seed = 12345;
 const rng = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
@@ -52,6 +52,24 @@ let nDrops = 0, golds = 0;
 for (let i = 0; i < 2000; i++) { const d = rollKillDrop(rng, npcs[0]); if (d) { nDrops++; if (d.id === 90) golds++; } }
 assert(nDrops > 1900, "tasa primaria 1: casi siempre cae algo");
 assert(golds / nDrops > 0.55 && golds / nDrops < 0.65, "60 % de lo que cae es oro");
+
+// --- magia: aprender Magic-Missile, quitarse el escudo y matar un slime a hechizos
+{
+  const w2 = new World({ grid, npcDb, data, spawns, rng, start: meta.start });
+  const id2 = w2.addPlayer("mago"), m = w2.ents.get(id2);
+  m.stats.int = 30; m.stats.mag = 40; m.gold = 500; w2.recalc(m); m.mp = m.maxMp;
+  assert(w2.command(id2, { t: "learn", spell: 0 }) && m.magic[0] === 1 && m.gold === 400, "aprender Magic Missile cuesta 100 de oro");
+  const shield = m.bag.find(i => data.item(i.id).name === "WoodShield");
+  w2.tick(100);
+  assert(!w2.command(id2, { t: "cast", spell: 0, x: m.x, y: m.y }) , "con escudo no se puede lanzar");
+  w2.command(id2, { t: "unequip", uid: shield.uid });
+  const slime = [...w2.ents.values()].find(e => e.kind === "npc" && e.name === "Slime");
+  [m.x, m.y] = [slime.x - 3, slime.y]; w2.grid.release(m.fx, m.fy, m.id); w2.grid.occupy(m.x, m.y, m.id);
+  let hits = 0, mp0 = m.mp;
+  for (let i = 0; i < 40 && !slime.dead; i++) { w2.tick(1100); if (w2.command(id2, { t: "cast", spell: 0, x: slime.x, y: slime.y })) hits++; w2.tick(700); }
+  assert(hits > 0 && m.mp < mp0, "el hechizo gasta maná");
+  assert(w2.drainEvents().some(e => e.t === "spell") || slime.dead, "el hechizo se lanza");
+}
 
 const counts = {};
 let target = null;

@@ -23,6 +23,11 @@ export class Hud {
     });
     for (const b of document.querySelectorAll("[data-use]")) b.onclick = () => this.quickUse(b.dataset.use);
     this.sel = null;
+    $("#book .list").addEventListener("click", e => {
+      const b = e.target.closest("[data-learn],[data-pick]"); if (!b) return;
+      if (b.dataset.learn) conn.send({ t: "learn", spell: +b.dataset.learn });
+      else { this.spell = +b.dataset.pick; this.bookKey = ""; this.log("Hechizo elegido: " + this.magicData[this.spell].name + ". Clic derecho para lanzarlo.", "gold"); }
+    });
     $("#inv .grid").addEventListener("click", e => { const c = e.target.closest("[data-uid]"); if (c) { this.sel = +c.dataset.uid; this.invKey = ""; } });
     $("#inv .grid").addEventListener("dblclick", e => { const c = e.target.closest("[data-uid]"); if (c) this.primary(+c.dataset.uid); });
     $("#inv .detail").addEventListener("click", e => {
@@ -77,7 +82,8 @@ export class Hud {
       case "equipfail": if (ev.id === me) this.log("No puedes equiparlo: " + ev.why + ".", "bad"); break;
       case "cantcarry": if (ev.id === me) this.log(ev.why === "weight" ? "Pesa demasiado para llevarlo." : "No tienes sitio en la mochila.", "bad"); break;
       case "broken": if (ev.id === me) this.log("Un objeto se ha gastado del todo: hay que repararlo.", "bad"); break;
-      case "reject": if (ev.id === me && ev.cmd === "use") this.log("No puedes usar eso.", "bad"); break;
+      case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
+      case "reject": if (ev.id === me && ev.cmd === "cast") this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con la vida llena."); break;
       case "chat": this.log(ev.system ? ev.text : ev.name + ": " + ev.text, ev.system ? "gold" : "chat"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;
@@ -158,6 +164,24 @@ export class Hud {
     $("#inv .detail").innerHTML = `<h4>${itemName(it.id)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
   }
 
+  renderBook(me) {
+    const M = this.magicData || {};
+    const key = [JSON.stringify(me.magic), me.gold, me.stats.int, this.spell].join("|");
+    if (this.bookKey === key) return;
+    this.bookKey = key;
+    const SUP = new Set([1, 2, 3]);
+    const attr = ["", "tierra", "aire", "fuego", "agua"];
+    let html = "";
+    for (const id of Object.keys(M).map(Number).sort((a, b) => a - b)) {
+      const m = M[id]; if (m.cost < 0 || !SUP.has(m.type)) continue;
+      const known = me.magic && me.magic[id];
+      const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
+        : `<button data-learn="${id}"${me.stats.int < m.reqInt || me.gold < m.cost ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
+      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · maná ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
+    }
+    $("#book .list").innerHTML = html;
+  }
+
   update(world, hoverEnt) {
     const me = world.ents.get(this.conn.pid);
     if (!me) return;
@@ -175,6 +199,7 @@ export class Hud {
     }
     this.set("spf", $("#sp .fill"), "--k", pct(me.sp, me.maxSp));
     if ($("#inv").classList.contains("open")) this.renderInv(me);
+    if ($("#book").classList.contains("open")) this.renderBook(me);
     this.set("pool", $("#poolbadge"), "text", me.pool ? String(me.pool) : "");
     this.set("dead", $("#death"), "display", me.dead ? "grid" : "none");
     this.set("low", document.body, "--low", me.hp < me.maxHp * 0.3 && !me.dead ? "1" : "0");

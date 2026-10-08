@@ -36,6 +36,7 @@ async function main() {
   const renderer = new Renderer(canvas, assets, grid);
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
+  hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
   sound.setTrack(meta.music || "maintm");
@@ -74,6 +75,8 @@ async function main() {
     get run() { return opts.run; },
     unlockAudio: () => sound.unlock(),
     quick: k => hud.quickUse(k),
+    get spell() { return hud.spell; },
+    say: m => hud.log(m, "bad"),
     key(k) {
       switch (k) {
         case "g": {
@@ -87,6 +90,7 @@ async function main() {
         case "b": setOpt("grid", !opts.grid); break;
         case "o": optionsEl.classList.toggle("open"); break;
         case "c": document.getElementById("charpanel").classList.toggle("open"); break;
+        case "k": document.getElementById("book").classList.toggle("open"); break;
         case "i": document.getElementById("inv").classList.toggle("open"); break;
         case "h": case "?": case "f1": document.getElementById("help").classList.toggle("open"); break;
         case "escape": {

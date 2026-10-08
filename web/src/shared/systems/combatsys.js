@@ -93,7 +93,7 @@ export function damageNpc(w, n, dmg, p, skill) {
   }
   if (n.hp <= 0) {
     // experiencia de habilidad por matar: 1d(dados de golpe del monstruo), doble con poca vida
-    gainSSN(p, skill, R.dice(w.rng, 1, n.cfg.hitDice) * (p.hp <= 3 ? 2 : 1));
+    if (skill != null) gainSSN(p, skill, R.dice(w.rng, 1, n.cfg.hitDice) * (p.hp <= 3 ? 2 : 1));
     return w.killNpc(n, p);
   }
   if (!n.target || R.dice(w.rng, 1, 3) === 2) n.target = p.id;

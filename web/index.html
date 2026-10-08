@@ -121,6 +121,14 @@
   #inv .cell.broken { opacity: .45; }
   #inv .cell b { position: absolute; right: 3px; bottom: 1px; font-size: 11px; text-shadow: 0 1px 2px #000; }
   #inv .cell .ico { image-rendering: pixelated; }
+  #book { left: 14px; top: 50px; width: 330px; }
+  #book .hint { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+  #book .sp { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #3e3526; font-size: 13px; }
+  #book .sp small { display: block; color: var(--muted); font-size: 11px; }
+  #book .sp.known span { color: #9fe39a; }
+  #book button { background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  #book button.dis { opacity: .45; }
+  #book button.on { border-color: #ffd76a; }
   #inv .detail { margin-top: 10px; font-size: 12px; min-height: 90px; color: var(--parch); }
   #inv .detail h4 { margin: 0 0 4px; color: var(--brass); font: 600 14px Georgia, serif; }
   #inv .detail p { margin: 2px 0; color: var(--muted); }
@@ -225,6 +233,7 @@
     <div id="buttons">
       <button data-key="c">Personaje<span id="poolbadge"></span></button>
       <button data-key="i">Mochila</button>
+      <button data-key="k">Magia</button>
       <button data-key="g">Gráficos</button>
       <button data-key="n">Sonido</button>
       <button data-key="o">Opciones</button>
@@ -236,6 +245,9 @@
 
   <div id="inv" class="panel"><button class="close" data-key="i">×</button><h3>Mochila</h3>
     <div class="load"></div><div class="grid"></div><div class="detail"></div></div>
+
+  <div id="book" class="panel"><button class="close" data-key="k">×</button><h3>Libro de magia</h3>
+    <p class="hint">Aprende con oro y elige uno. Clic derecho lanza el hechizo (sin escudo ni arma a dos manos).</p><div class="list"></div></div>
 
   <div id="options" class="panel">
     <button class="close" data-key="escape">×</button>
@@ -261,6 +273,7 @@
       <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>: poción de vida, maná, resistencia (también <kbd>Insert</kbd> <kbd>Supr</kbd>)</li>
       <li><kbd>I</kbd>: mochila (clic = ver, doble clic = equipar o usar)</li>
       <li><kbd>C</kbd>: personaje y puntos</li>
+      <li><kbd>K</kbd>: libro de magia · clic derecho: lanzar el hechizo elegido</li>
       <li><kbd>Alt</kbd>: nombres de los objetos</li>
       <li><kbd>G</kbd>: gráficos clásicos / remastered</li>
       <li>Rueda del ratón: zoom (remastered)</li>

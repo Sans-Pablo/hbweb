@@ -14,7 +14,7 @@ function newCharacter(w, p) {
     gender: 1,
     stats: { str: 14, vit: 12, dex: 14, int: 10, mag: 10, chr: 10 },
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
-    bag: [], equip: {}, gold: 0, ssn: {},
+    bag: [], equip: {}, gold: 0, ssn: {}, magic: {},
   });
   const s = p.stats;
   p.skills = { 3: Math.floor(s.mag / 3), 4: s.mag + 10, 5: s.str + 10, 7: s.dex + 10 };
@@ -49,6 +49,7 @@ function loadSave(w, p, s) {
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
+  if (s.magic) p.magic = { ...s.magic };
   if (Array.isArray(s.bag)) {
     p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid }));
     p.equip = {};
@@ -65,7 +66,7 @@ export function saveOf(w, id) {
   if (!p || p.kind !== "player") return null;
   return {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side,
-    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, hunger: p.hunger,
+    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life })), equip: { ...p.equip },
   };
 }

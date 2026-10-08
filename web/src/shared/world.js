@@ -11,13 +11,15 @@ import * as Combat from "./systems/combatsys.js";
 import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals } from "./systems/vitals.js";
-import { groundTop } from "./systems/ground.js";
+import * as MagicSys from "./systems/magicsys.js";
+import { CAST_MS } from "./magic.js";
 
 export class World {
   constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start }) {
     this.grid = grid;
     this.npcDb = npcDb;
-    this.data = data;                // GameData: objetos y monstruos
+    this.data = data;                // GameData: objetos, hechizos y monstruos
+    this.magic = data.magic;
     this.rng = rng;
     this.start = start;
     this.time = 0;
@@ -142,6 +144,8 @@ const COMMANDS = {
     w.after(ms * PLAYER.attackHitAt, () => Combat.playerHit(w, p, t));
     return true;
   },
+  cast: (w, p, cmd) => MagicSys.cast(w, p, cmd),
+  learn: (w, p, cmd) => MagicSys.learn(w, p, cmd.spell),
   pickup: (w, p) => ItemSys.startPickup(w, p),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },
   equip: (w, p, cmd) => ItemSys.equipCmd(w, p, cmd.uid),
