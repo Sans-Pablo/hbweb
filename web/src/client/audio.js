@@ -1,0 +1,143 @@
+// Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
+// como PlaySound(tipo, n, distancia, pan) del cliente, y la música del mapa.
+import { posOf } from "./anim.js";
+
+const MUSIC_VOL = 0.35;
+
+export class Sound {
+  constructor(world, me) {
+    this.world = world;
+    this.me = me;
+    this.on = true;
+    this.ctx = null;
+    this.buffers = new Map();
+    this.tracks = null;
+    this.track = "maintm";
+    this.mode = "remastered";
+    this.last = new Map();
+  }
+
+  // los navegadores solo dejan sonar audio después de un gesto del usuario
+  unlock() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.on ? 0.7 : 0;
+      this.master.connect(this.ctx.destination);
+    } catch { return; }
+    // música: la original y la remasterizada suenan a la vez y sincronizadas; el modo
+    // gráfico decide cuál se oye (como Diablo II Resurrected al cambiar de modo)
+    const mk = src => {
+      const a = new window.Audio(src);
+      a.loop = true; a.preload = "auto"; a.volume = 0;
+      a.addEventListener("error", () => { a.broken = true; this.applyMusic(0); });
+      return a;
+    };
+    this.tracks = {
+      classic: mk("data/music/" + this.track + ".mp3"),
+      remastered: mk("data/music/" + this.track + ".remaster.mp3"),
+    };
+    if (this.on) this.startMusic();
+  }
+
+  setTrack(name) { this.track = name; }
+
+  startMusic() {
+    for (const a of Object.values(this.tracks)) a.play().catch(() => {});
+    this.applyMusic(0);
+  }
+
+  // modo "classic" o "remastered": funde una versión con la otra en el mismo punto
+  setMode(mode) {
+    if (this.mode === mode) return;
+    this.mode = mode;
+    if (!this.tracks) return;
+    const to = this.tracks[mode], from = this.tracks[mode === "classic" ? "remastered" : "classic"];
+    if (!to.broken && !from.broken && isFinite(from.currentTime) && to.duration) {
+      try { to.currentTime = from.currentTime % to.duration; } catch {}
+    }
+    this.applyMusic(700);
+  }
+
+  applyMusic(ms) {
+    if (!this.tracks) return;
+    const want = this.tracks[this.mode]?.broken ? "classic" : this.mode;
+    const target = { classic: want === "classic" ? MUSIC_VOL : 0, remastered: want === "remastered" ? MUSIC_VOL : 0 };
+    const start = performance.now(), from = { classic: this.tracks.classic.volume, remastered: this.tracks.remastered.volume };
+    cancelAnimationFrame(this.fadeRaf);
+    const step = () => {
+      const k = ms ? Math.min(1, (performance.now() - start) / ms) : 1;
+      for (const m of ["classic", "remastered"]) this.tracks[m].volume = from[m] + (target[m] - from[m]) * k;
+      if (k < 1) this.fadeRaf = requestAnimationFrame(step);
+    };
+    step();
+  }
+
+  toggle() {
+    this.on = !this.on;
+    if (this.master) this.master.gain.value = this.on ? 0.7 : 0;
+    if (this.tracks) {
+      if (this.on) this.startMusic();
+      else for (const a of Object.values(this.tracks)) a.pause();
+    }
+    return this.on;
+  }
+
+  async buffer(name) {
+    if (this.buffers.has(name)) return this.buffers.get(name);
+    const p = fetch("data/sfx/" + name + ".wav").then(r => r.arrayBuffer()).then(b => this.ctx.decodeAudioData(b)).catch(() => null);
+    this.buffers.set(name, p);
+    return p;
+  }
+
+  async play(name, id, vol = 1) {
+    if (!this.ctx || !this.on) return;
+    // no repetir el mismo sonido de la misma fuente más de una vez cada 60 ms
+    const k = name + ":" + id, now = performance.now();
+    if (now - (this.last.get(k) || 0) < 60) return;
+    this.last.set(k, now);
+    let pan = 0, gain = vol;
+    const src = this.world.ents.get(id), me = this.world.ents.get(this.me);
+    if (src && me && src !== me) {
+      const [sx, sy] = posOf(src, this.world.time), [mx, my] = posOf(me, this.world.time);
+      const d = Math.hypot(sx - mx, sy - my) / 32;
+      if (d > 14) return;
+      gain *= Math.max(0, 1 - d / 14);
+      pan = Math.max(-1, Math.min(1, (sx - mx) / 400));
+    }
+    const buf = await this.buffer(name);
+    if (!buf) return;
+    const s = this.ctx.createBufferSource();
+    s.buffer = buf;
+    const g = this.ctx.createGain();
+    g.gain.value = gain;
+    const p = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (p) { p.pan.value = pan; s.connect(g).connect(p).connect(this.master); }
+    else s.connect(g).connect(this.master);
+    s.start();
+  }
+
+  // M(base) andar, M(base+1) atacar, M(base+2) daño, M(base+3) morir
+  onEvent(ev) {
+    const e = this.world.ents.get(ev.id);
+    const mob = e && e.kind === "npc" ? e.cfg.sound : 0;
+    switch (ev.t) {
+      case "attack":
+        if (mob) this.play("M" + (mob + 1), ev.id);
+        else this.play("C1", ev.id, 0.8);
+        break;
+      case "damage":
+        if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }
+        else { this.play("C5", ev.id); this.play("C12", ev.id, 0.8); }
+        break;
+      case "death":
+        this.play(mob ? "M" + (mob + 3) : "C14", ev.id);
+        break;
+      case "step":
+        if (mob) this.play("M" + mob, ev.id, 0.35);
+        else this.play("C8", ev.id, 0.35);
+        break;
+    }
+  }
+}

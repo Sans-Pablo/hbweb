@@ -1,0 +1,156 @@
+[
+ {
+  "id": 1,
+  "rect": [
+   116,
+   80,
+   138,
+   102
+  ],
+  "mob": 10,
+  "max": 15,
+  "specialProb": 5,
+  "specialKind": 1,
+  "name": "Slime"
+ },
+ {
+  "id": 2,
+  "rect": [
+   193,
+   102,
+   217,
+   119
+  ],
+  "mob": 10,
+  "max": 15,
+  "specialProb": 5,
+  "specialKind": 1,
+  "name": "Slime"
+ },
+ {
+  "id": 3,
+  "rect": [
+   68,
+   22,
+   195,
+   71
+  ],
+  "mob": 10,
+  "max": 15,
+  "specialProb": 5,
+  "specialKind": 1,
+  "name": "Slime"
+ },
+ {
+  "id": 4,
+  "rect": [
+   65,
+   173,
+   84,
+   214
+  ],
+  "mob": 17,
+  "max": 15,
+  "specialProb": 15,
+  "specialKind": 3,
+  "name": "Scorpion"
+ },
+ {
+  "id": 5,
+  "rect": [
+   137,
+   203,
+   163,
+   215
+  ],
+  "mob": 17,
+  "max": 15,
+  "specialProb": 15,
+  "specialKind": 3,
+  "name": "Scorpion"
+ },
+ {
+  "id": 6,
+  "rect": [
+   146,
+   88,
+   182,
+   116
+  ],
+  "mob": 16,
+  "max": 15,
+  "specialProb": 10,
+  "specialKind": 2,
+  "name": "Giant-Ant"
+ },
+ {
+  "id": 7,
+  "rect": [
+   84,
+   149,
+   108,
+   175
+  ],
+  "mob": 16,
+  "max": 15,
+  "specialProb": 10,
+  "specialKind": 2,
+  "name": "Giant-Ant"
+ },
+ {
+  "id": 8,
+  "rect": [
+   146,
+   26,
+   184,
+   46
+  ],
+  "mob": 16,
+  "max": 15,
+  "specialProb": 10,
+  "specialKind": 2,
+  "name": "Giant-Ant"
+ },
+ {
+  "id": 9,
+  "rect": [
+   206,
+   56,
+   218,
+   76
+  ],
+  "mob": 22,
+  "max": 10,
+  "specialProb": 20,
+  "specialKind": 3,
+  "name": "Amphis"
+ },
+ {
+  "id": 10,
+  "rect": [
+   173,
+   199,
+   193,
+   217
+  ],
+  "mob": 22,
+  "max": 10,
+  "specialProb": 20,
+  "specialKind": 3,
+  "name": "Amphis"
+ },
+ {
+  "id": 11,
+  "rect": [
+   185,
+   80,
+   220,
+   115
+  ],
+  "mob": 12,
+  "max": 10,
+  "specialProb": 25,
+  "specialKind": 5,
+  "name": "Stone-Golem"
+ }
+]

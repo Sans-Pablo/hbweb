@@ -1,0 +1,5 @@
+server/saves.json
+tools/node/
+tools/cloudflared.exe
+*.log
+__pycache__/

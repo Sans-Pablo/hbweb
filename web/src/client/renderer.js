@@ -1,0 +1,383 @@
+// Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+//   classic    -> 800x600 del original, cámara fija al personaje, sin efectos añadidos
+//   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
+//                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
+import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
+import { ITEMS } from "../shared/rules.js";
+import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
+import { ITEM_NAMES } from "./fx.js";
+
+const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
+const CLASSIC_W = 800, CLASSIC_H = 600;
+const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 5: "255,120,80" };
+
+export class Renderer {
+  constructor(canvas, assets, grid) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d", { alpha: false });
+    this.spr = assets.sprites;
+    this.grid = grid;
+    this.mapName = assets.meta.map;
+    this.mode = "remastered";
+    this.zoom = 1;
+    this.cam = null;
+    this.chunks = new Map();
+    this.buildMinimap();
+    this.resize();
+  }
+
+  setMode(m) { this.mode = m; this.cam = null; this.layout(); }
+
+  resize() {
+    const r = this.canvas.getBoundingClientRect();
+    this.dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(r.width * this.dpr)), h = Math.max(1, Math.round(r.height * this.dpr));
+    if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+    this.layout();
+  }
+
+  layout() {
+    const cw = this.canvas.width, ch = this.canvas.height;
+    if (this.mode === "classic") {
+      this.scale = Math.min(cw / CLASSIC_W, ch / CLASSIC_H);
+      this.viewW = CLASSIC_W; this.viewH = CLASSIC_H;
+      this.ox = Math.round((cw - CLASSIC_W * this.scale) / 2);
+      this.oy = Math.round((ch - CLASSIC_H * this.scale) / 2);
+    } else {
+      // misma altura de mundo que el original (600) y todo el ancho que dé la pantalla
+      // en vertical (móvil) se limita por el ancho para no ver solo 9 casillas
+      this.scale = Math.min(ch / CLASSIC_H, cw / 640) * this.zoom;
+      this.viewW = cw / this.scale; this.viewH = ch / this.scale;
+      this.ox = 0; this.oy = 0;
+    }
+    // rectángulo visible en píxeles CSS (para colocar el HUD encima)
+    this.viewRect = {
+      x: this.ox / this.dpr, y: this.oy / this.dpr,
+      w: (this.viewW * this.scale) / this.dpr, h: (this.viewH * this.scale) / this.dpr,
+    };
+  }
+
+  setZoom(z) { this.zoom = Math.max(0.75, Math.min(1.75, z)); this.layout(); }
+
+  // píxel de pantalla (CSS) -> píxel del mundo
+  toWorld(clientX, clientY) {
+    const r = this.canvas.getBoundingClientRect();
+    const px = (clientX - r.left) * this.dpr, py = (clientY - r.top) * this.dpr;
+    return [(px - this.ox) / this.scale + this.camX, (py - this.oy) / this.scale + this.camY];
+  }
+
+  groundChunk(cx, cy) {
+    const k = cx + "," + cy;
+    let c = this.chunks.get(k);
+    if (c) return c;
+    c = document.createElement("canvas");
+    c.width = c.height = CHUNK * T;
+    const g = c.getContext("2d");
+    g.imageSmoothingEnabled = false;
+    for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
+      const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
+      if (t) this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
+    }
+    this.chunks.set(k, c);
+    if (this.chunks.size > 96) this.chunks.delete(this.chunks.keys().next().value);
+    return c;
+  }
+
+  // ---------------------------------------------------------------- fotograma
+  render(s) {
+    const { ctx } = this;
+    const remaster = this.mode === "remastered";
+    const time = s.world.time;
+    const [ppx, ppy] = posOf(s.me, time);
+
+    // cámara: fija al personaje (clásico) o con un pequeño seguimiento suave (remastered)
+    const tx = ppx - this.viewW / 2, ty = ppy - this.viewH / 2 - 4;
+    if (!this.cam || !remaster) this.cam = [tx, ty];
+    else {
+      const k = 1 - Math.exp(-s.dt / 70);
+      this.cam[0] += (tx - this.cam[0]) * k;
+      this.cam[1] += (ty - this.cam[1]) * k;
+      if (Math.abs(tx - this.cam[0]) > 200 || Math.abs(ty - this.cam[1]) > 200) this.cam = [tx, ty];
+    }
+    // alineada a píxel físico: sin temblor
+    const camX = this.camX = Math.round(this.cam[0] * this.scale) / this.scale;
+    const camY = this.camY = Math.round(this.cam[1] * this.scale) / this.scale;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = remaster ? "#000" : "#0b0c0e";
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.setTransform(this.scale, 0, 0, this.scale, this.ox, this.oy);
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, this.viewW, this.viewH); ctx.clip();
+
+    const VW = this.viewW, VH = this.viewH;
+    const tx0 = Math.floor(camX / T), ty0 = Math.floor(camY / T);
+    const cols = Math.ceil(VW / T) + 1, rows = Math.ceil(VH / T) + 1;
+
+    // 1) suelo
+    const span = CHUNK * T;
+    for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
+      for (let cx = Math.floor(camX / span); cx * span < camX + VW; cx++)
+        if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY);
+
+    // 2) ayudas sobre el suelo (solo remastered): casilla bajo el cursor y ruta prevista
+    if (remaster) {
+      if (s.hover && !s.hoverEnt && !s.showGrid) {
+        const [hx, hy] = s.hover;
+        ctx.strokeStyle = this.grid.blocked(hx, hy) ? "rgba(230,90,80,.55)" : "rgba(255,240,200,.3)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hx * T - camX + .5, hy * T - camY + .5, T - 1, T - 1);
+      }
+      if (s.path && s.path.length) {
+        let x = s.me.x, y = s.me.y;
+        ctx.fillStyle = "rgba(255,230,160,.5)";
+        for (const d of s.path) {
+          x += DX[d]; y += DY[d];
+          ctx.beginPath(); ctx.arc(x * T + 16 - camX, y * T + 18 - camY, 1.8, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+
+    // 3) objetos en el suelo
+    const labels = [];
+    for (const list of s.world.items.values()) {
+      const it = list[list.length - 1];
+      const x = it.x * T + 16 - camX, y = it.y * T + 16 - camY;
+      if (x < -40 || y < -40 || x > VW + 40 || y > VH + 40) continue;
+      this.spr.put(ctx, "ig5", ITEMS[it.kind].frame, x, y);
+      if (remaster && (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y)))
+        labels.push([x, y - 14, it.kind === "gold" ? it.count + " oro" : ITEM_NAMES[it.kind], it.kind === "gold" ? "#f0d080" : "#e8e2d0"]);
+    }
+
+    // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)
+    const buckets = new Map();
+    for (const e of s.world.ents.values()) {
+      const [px, py] = posOf(e, time);
+      if (px < camX - 120 || px > camX + VW + 120 || py < camY - 120 || py > camY + VH + 200) continue;
+      const moving = (e.act === ACT.MOVE || e.act === ACT.RUN) && time < e.actStart + e.actDur;
+      const row = moving ? Math.max(e.y, e.fy) : e.y;
+      const col = Math.round((px - 16) / T);
+      const k = row * 100000 + col;
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push([e, px - camX, py - camY]);
+    }
+    const overlays = [];
+    for (let j = -2; j <= rows + 8; j++) {
+      const ty = ty0 + j;
+      for (let i = -7; i <= cols + 7; i++) {
+        const tx = tx0 + i;
+        const list = buckets.get(ty * 100000 + tx);
+        if (list) {
+          if (list.length > 1) list.sort((a, b) => (a[0].dead ? 0 : 1) - (b[0].dead ? 0 : 1));
+          for (const [e, x, y] of list) this.drawEntity(e, x, y, s, overlays);
+        }
+        const t = this.grid.tile(tx, ty);
+        if (!t || !t.obj) continue;
+        const cx = tx * T + 16 - camX, cy = ty * T + 16 - camY;
+        if (t.obj >= 100 && t.obj < 150) {             // árbol: sombra + árbol
+          ctx.globalAlpha = 0.45;
+          this.spr.put(ctx, "t" + (t.obj + 50), t.objFrame, cx, cy);
+          ctx.globalAlpha = 1;
+        }
+        this.spr.put(ctx, "t" + t.obj, t.objFrame, cx - 16, cy - 16);
+      }
+    }
+
+    if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
+
+    // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
+    if (remaster) {
+      const cx = ppx - camX, cy = ppy - camY - 20, R = Math.max(VW, VH) * 0.75;
+      const g = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
+      g.addColorStop(0, "rgba(255,200,120,0.06)");
+      g.addColorStop(0.45, "rgba(0,0,0,0)");
+      g.addColorStop(1, "rgba(5,6,14,0.62)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, VW, VH);
+    }
+
+    // 6) barras de vida, nombres, etiquetas, efectos
+    for (const o of overlays) o();
+    for (const [x, y, text, color] of labels) this.label(x, y, text, color);
+    s.fx.draw(ctx, camX, camY, this.mode);
+    if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
+    if (s.showMinimap) this.drawMinimap(s, ppx, ppy);
+    ctx.restore();
+  }
+
+  drawEntity(e, x, y, s, overlays) {
+    const { ctx, spr } = this;
+    const remaster = this.mode === "remastered";
+    const time = s.world.time;
+    const hovered = s.hoverEnt === e;
+    const flashAge = performance.now() - (s.fx.flash.get(e.id) || -1e9);
+
+    if (e.kind === "player") {
+      const { group, f, d } = playerSprite(e, time);
+      const body = "wm" + (group * 8 + d);
+      const fpd = spr.frames("mpt" + group) / 8;
+      spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75);
+      spr.put(ctx, body, f, x, y);
+      spr.put(ctx, "mpt" + group, d * fpd + f, x, y);
+      spr.put(ctx, "mhr" + group, d * fpd + f, x, y);
+      if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
+      // nombre de los demás jugadores y bocadillo de chat
+      const other = s.pid !== undefined && e.id !== s.pid;
+      const bubble = s.bubbles && s.bubbles.get(e.id);
+      overlays.push(() => {
+        let yy = y - 78;
+        if (bubble && performance.now() < bubble.until) {
+          this.label(x, yy, bubble.text.length > 48 ? bubble.text.slice(0, 47) + "…" : bubble.text, "#ffffff");
+          yy -= 17;
+        }
+        if (other && !e.dead) {
+          if (remaster) this.label(x, yy, e.name, "#9fd2ff");
+          else {
+            ctx.font = "12px 'Courier New', monospace"; ctx.textAlign = "center";
+            ctx.fillStyle = "#000"; ctx.fillText(e.name, x + 1, yy + 1);
+            ctx.fillStyle = "#b8dcff"; ctx.fillText(e.name, x, yy);
+          }
+        }
+      });
+      return;
+    }
+
+    // monstruo
+    const { key, f } = mobSprite(e, time);
+    const act = actionAt(e, time);
+    let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
+    if (act === ACT.DEAD) {
+      const left = e.actStart + e.actDur + CORPSE_MS - time;
+      if (remaster && left < 1500) alpha *= Math.max(0, left / 1500);
+    }
+    if (remaster && e.special && !e.dead) {
+      const pulse = 0.55 + 0.25 * Math.sin(time / 220);
+      const g = ctx.createRadialGradient(x, y + 2, 2, x, y + 2, 26);
+      g.addColorStop(0, "rgba(" + AURA[e.special] + "," + pulse + ")");
+      g.addColorStop(1, "rgba(" + AURA[e.special] + ",0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(x, y + 2, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = alpha;
+    if (!e.dead) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);
+    spr.put(ctx, key, f, x, y);
+    ctx.globalAlpha = 1;
+    if (remaster) {
+      if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
+      else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
+    }
+
+    // encima de todo: nombre y vida
+    if (e.dead) return;
+    const top = y - this.mobHeight(key, f) - 6;
+    if (remaster && (e.hp < e.maxHp || hovered)) {
+      overlays.push(() => {
+        const w = 30, k = e.hp / e.maxHp;
+        ctx.fillStyle = "rgba(0,0,0,.65)";
+        ctx.fillRect(x - w / 2 - 1, top - 1, w + 2, 5);
+        ctx.fillStyle = k > 0.5 ? "#6fcf4f" : k > 0.25 ? "#e3b341" : "#e0493b";
+        ctx.fillRect(x - w / 2, top, w * k, 3);
+      });
+    }
+    if (hovered) {
+      overlays.push(() => {
+        const name = (e.special && remaster ? "★ " : "") + e.name;
+        if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
+        else {
+          ctx.font = "12px 'Courier New', monospace";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#000"; ctx.fillText(e.name, x + 1, y + 21);
+          ctx.fillStyle = "#fff"; ctx.fillText(e.name, x, y + 20);
+        }
+      });
+    }
+  }
+
+  mobHeight(key, f) {
+    const fr = this.spr.frame(key, f);
+    return fr ? -fr[5] : 40;
+  }
+
+  label(x, y, text, color) {
+    const { ctx } = this;
+    ctx.font = "600 11px 'Segoe UI', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    const w = ctx.measureText(text).width + 10;
+    ctx.fillStyle = "rgba(12,12,16,.78)";
+    ctx.fillRect(Math.round(x - w / 2), Math.round(y - 11), Math.round(w), 15);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+
+  drawGrid(camX, camY, tx0, ty0, cols, rows) {
+    const { ctx } = this;
+    ctx.lineWidth = 1 / this.scale;
+    for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) {
+      const x = (tx0 + i) * T - camX, y = (ty0 + j) * T - camY;
+      const t = this.grid.tile(tx0 + i, ty0 + j);
+      if (!t) continue;
+      if (t.blocked) { ctx.fillStyle = "rgba(200,40,40,.28)"; ctx.fillRect(x, y, T, T); }
+      if (t.teleport) { ctx.fillStyle = "rgba(80,140,255,.45)"; ctx.fillRect(x, y, T, T); }
+      ctx.strokeStyle = "rgba(0,0,0,.28)";
+      ctx.strokeRect(x, y, T, T);
+    }
+  }
+
+  drawClickFx(c, camX, camY) {
+    const { ctx } = this;
+    const k = (performance.now() - c.t) / 450;
+    if (k >= 1) return;
+    const x = c.x * T + 16 - camX, y = c.y * T + 22 - camY;
+    ctx.strokeStyle = (c.ok ? "rgba(255,225,140," : "rgba(235,90,80,") + (1 - k) + ")";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y, 14 * (1 - k * .5), 7 * (1 - k * .5), 0, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // ---------------------------------------------------------------- minimapa
+  buildMinimap() {
+    const g = this.grid;
+    const m = document.createElement("canvas");
+    m.width = g.w; m.height = g.h;
+    const c = m.getContext("2d");
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = "high";
+    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
+      const t = g.tile(x, y), key = "t" + t.spr, fr = this.spr.frame(key, t.frame);
+      if (!fr) continue;
+      c.drawImage(this.spr.img[key], fr[0], fr[1], fr[2], fr[3], x, y, 1, 1);
+    }
+    c.fillStyle = "rgba(0,0,0,.35)";
+    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) if (g.blocked(x, y)) c.fillRect(x, y, 1, 1);
+    this.minimap = m;
+  }
+
+  drawMinimap(s, ppx, ppy) {
+    const { ctx } = this;
+    const remaster = this.mode === "remastered";
+    const size = remaster ? 170 : 140, pad = 10, x0 = this.viewW - size - pad, y0 = pad;
+    const sc = size / this.grid.w;
+    ctx.globalAlpha = remaster ? 0.9 : 1;
+    ctx.fillStyle = "#14161a";
+    ctx.fillRect(x0 - 3, y0 - 3, size + 6, size + 6);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.minimap, x0, y0, size, size);
+    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(232,220,192,.6)";
+    ctx.lineWidth = 1 / this.scale;
+    ctx.strokeRect(x0 + this.camX / T * sc, y0 + this.camY / T * sc, this.viewW / T * sc, this.viewH / T * sc);
+    for (const e of s.world.ents.values()) {
+      if (e.kind !== "npc" || e.dead) continue;
+      ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
+      ctx.fillRect(x0 + e.x * sc - 1, y0 + e.y * sc - 1, 2, 2);
+    }
+    for (const e of s.world.ents.values()) {
+      if (e.kind !== "player" || e === s.me || e.dead) continue;
+      ctx.fillStyle = "#7fc4ff";
+      ctx.beginPath(); ctx.arc(x0 + (e.x * T + 16) / T * sc, y0 + (e.y * T + 16) / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = "#9fe07f";
+    ctx.beginPath(); ctx.arc(x0 + ppx / T * sc, y0 + ppy / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+}

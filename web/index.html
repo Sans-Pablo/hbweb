@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Helbreath Web</title>
+<style>
+  :root {
+    --stone: #15171b;
+    --slab: #23262d;
+    --edge: #3a3e47;
+    --parch: #ece2c6;
+    --muted: #9a937f;
+    --brass: #d4ab52;
+    --blood: #c8352b;
+    --mana: #3569d6;
+    --cursor: crosshair;
+    --cursor-attack: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cpath d='M2 2l9 3 11 11-3 3L8 8z' fill='%23e8e2d0' stroke='%23000' stroke-width='1.2'/%3E%3Cpath d='M17 21l4-4 3 3-4 4z' fill='%23c9a24a' stroke='%23000'/%3E%3C/svg%3E") 2 2, pointer;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--parch);
+    font: 14px/1.45 "Segoe UI", system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated;
+    touch-action: none; cursor: var(--cursor); }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--stone); color: var(--muted); z-index: 10; }
+  #loading b { display: block; color: var(--brass); font: 600 22px Georgia, serif; letter-spacing: .08em; text-align: center; margin-bottom: 6px; }
+
+  /* ---------------- HUD: capa que sigue al área visible del juego */
+  #ui { position: fixed; pointer-events: none; overflow: hidden; }
+  #ui button, #ui .panel { pointer-events: auto; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  kbd { font: 11px "Cascadia Mono", Consolas, monospace; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 3px; padding: 0 4px; color: var(--parch); }
+
+  #topleft { position: absolute; left: 10px; top: 8px; font: 12px "Cascadia Mono", Consolas, monospace; color: var(--parch);
+    text-shadow: 0 1px 2px #000; opacity: .8; }
+  #target { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); min-width: 200px; text-align: center; display: none; }
+  #target .name { font-weight: 600; text-shadow: 0 1px 2px #000; }
+  #target .bar { height: 6px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.15); margin-top: 3px; }
+  #target .fill { height: 100%; width: var(--k, 100%); background: var(--blood); transition: width .15s; }
+
+  #toast { position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%); font: 700 34px Georgia, serif; color: #ffd76a;
+    text-shadow: 0 2px 0 #000, 0 0 24px rgba(255,190,60,.6); opacity: 0; white-space: nowrap; }
+  #toast.show { animation: toast 2.2s ease-out; }
+  @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.8); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -70%); } }
+
+  #log { position: absolute; left: 12px; bottom: 120px; width: min(460px, 60%); font-size: 13px; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+  #log div { transition: opacity 1.5s; }
+  #log div.old { opacity: 0; }
+  #log .gold { color: #f0d080; }
+  #log .bad { color: #ff8a7a; }
+
+  .gauge .fill, .xpbar .fill { --k: 100%; }
+
+  /* ---------------- Remastered: orbes y paneles de cristal */
+  body.remastered #hudbar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: grid;
+    grid-template-columns: 96px auto 96px; grid-template-areas: "hp belt mp" "xp xp xp" "btn btn btn"; gap: 8px 14px; align-items: end; }
+  body.remastered .gauge { grid-area: hp; position: relative; width: 96px; height: 96px; border-radius: 50%; overflow: hidden;
+    background: radial-gradient(circle at 50% 35%, #2a1414, #090606); border: 2px solid #5a4a2c;
+    box-shadow: 0 0 0 3px #17130c, 0 6px 18px rgba(0,0,0,.6), inset 0 0 18px #000; }
+  body.remastered #mp { grid-area: mp; background: radial-gradient(circle at 50% 35%, #141a2a, #06070b); }
+  body.remastered .gauge .fill { position: absolute; left: 0; right: 0; bottom: 0; height: var(--k); transition: height .25s;
+    background: radial-gradient(circle at 35% 20%, #ff8a70, #c3261b 40%, #5c0b07 100%); }
+  body.remastered #mp .fill { background: radial-gradient(circle at 35% 20%, #8fb8ff, #2a5fd0 40%, #0a1d57 100%); }
+  body.remastered .gauge::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.35), transparent 32%); }
+  body.remastered .gauge .lbl { display: none; }
+  body.remastered .gauge .val { position: absolute; inset: 0; display: grid; place-items: center; font: 600 13px "Segoe UI", sans-serif;
+    text-shadow: 0 1px 2px #000, 0 0 6px #000; z-index: 1; }
+  body.remastered[style*="--low: 1"] #hp { animation: low 0.9s infinite; }
+  @keyframes low { 50% { box-shadow: 0 0 0 3px #17130c, 0 0 26px rgba(255,40,30,.8), inset 0 0 18px #000; } }
+  body.remastered #belt { grid-area: belt; display: flex; gap: 6px; align-items: center; padding: 8px 10px; border-radius: 12px;
+    background: linear-gradient(rgba(28,26,22,.86), rgba(14,13,11,.9)); border: 1px solid #4b3f27; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+  body.remastered #xp { grid-area: xp; position: relative; height: 12px; border-radius: 6px; background: rgba(0,0,0,.65); border: 1px solid #4b3f27; overflow: hidden; }
+  body.remastered #xp .fill { height: 100%; width: var(--k); background: linear-gradient(#f3d47c, #b98a2a); transition: width .3s; }
+  body.remastered #xp .val { position: absolute; inset: -2px 0 0; text-align: center; font-size: 10px; text-shadow: 0 1px 2px #000; }
+  body.remastered #buttons { grid-area: btn; display: flex; justify-content: center; gap: 6px; }
+  body.remastered #buttons button { background: rgba(20,19,16,.8); border: 1px solid #4b3f27; border-radius: 8px; padding: 3px 10px; font-size: 12px; }
+  body.remastered #buttons button:hover { border-color: var(--brass); }
+
+  .slot { position: relative; width: 46px; height: 46px; display: grid; place-items: center; background: rgba(0,0,0,.45);
+    border: 1px solid #3e3526; border-radius: 8px; padding: 0; }
+  .slot:hover { border-color: var(--brass); }
+  .slot b { position: absolute; right: 4px; bottom: 1px; font-size: 12px; text-shadow: 0 1px 2px #000; }
+  .slot kbd { position: absolute; left: 3px; top: 2px; font-size: 9px; padding: 0 3px; }
+  .icon { display: block; background: url(data/sprites/ig5.png) no-repeat; image-rendering: pixelated; transform: scale(2); }
+  .icon.red { width: 7px; height: 15px; background-position: -16px 0; }
+  .icon.blue { width: 6px; height: 18px; background-position: -42px 0; }
+  .icon.bigred { width: 15px; height: 18px; background-position: -25px 0; transform: scale(1.6); }
+  .icon.gold { width: 16px; height: 9px; background-position: 0 -1px; }
+  #goldbox { display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; color: #f0d080; font-weight: 600; min-width: 90px; }
+
+  .panel { position: absolute; display: none; background: linear-gradient(rgba(30,28,24,.96), rgba(16,15,13,.97)); border: 1px solid #5a4a2c;
+    border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6); padding: 14px 16px; }
+  .panel.open { display: block; }
+  .panel h3 { margin: 0 0 4px; color: var(--brass); font: 600 18px Georgia, serif; }
+  .panel h3 small { color: var(--muted); font: 13px "Segoe UI", sans-serif; margin-left: 6px; }
+  .panel .close { position: absolute; right: 8px; top: 6px; background: none; border: 0; font-size: 20px; color: var(--muted); }
+  #charpanel { left: 14px; top: 50px; width: 290px; }
+  #charpanel .pool { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+  #charpanel .pool b { color: #ffd76a; }
+  #charpanel .row { display: grid; grid-template-columns: 1fr auto 28px; gap: 8px; align-items: center; padding: 3px 0; font-size: 13px; }
+  #charpanel .row b { color: var(--parch); }
+  #charpanel .row button { width: 24px; height: 22px; border-radius: 6px; border: 1px solid var(--brass); background: #2c2414; color: #ffd76a; padding: 0; }
+  #charpanel hr { border: 0; border-top: 1px solid #3e3526; margin: 8px 0; }
+  #poolbadge:not(:empty) { background: #c8352b; color: #fff; border-radius: 8px; padding: 0 5px; font-size: 11px; margin-left: 4px; }
+  #help { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92%); }
+  #help ul { margin: 6px 0 0; padding: 0; list-style: none; columns: 2; column-gap: 24px; font-size: 13px; }
+  #help li { padding: 3px 0; break-inside: avoid; }
+  #help p { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+
+  #death { position: absolute; inset: 0; display: none; place-items: center; background: radial-gradient(rgba(60,0,0,.35), rgba(0,0,0,.75)); pointer-events: auto; }
+  #death h2 { font: 700 40px Georgia, serif; color: #e04a3a; margin: 0 0 14px; text-shadow: 0 2px 0 #000; text-align: center; }
+  #death button { display: block; margin: 0 auto; background: #2c2414; border: 1px solid var(--brass); border-radius: 8px; padding: 8px 18px; }
+
+  #join, #lost { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; background: rgba(10,10,12,.82); }
+  #join form, #lost > div { background: linear-gradient(rgba(30,28,24,.98), rgba(16,15,13,.98)); border: 1px solid #5a4a2c; border-radius: 14px;
+    padding: 22px 24px; width: min(360px, 90vw); text-align: center; box-shadow: 0 16px 50px rgba(0,0,0,.6); }
+  #join b { display: block; color: var(--brass); font: 600 22px Georgia, serif; letter-spacing: .08em; }
+  #join .where { color: var(--muted); font-size: 13px; margin: 6px 0 16px; }
+  #join label { display: block; text-align: left; font-size: 13px; color: var(--muted); }
+  #join input, #chat input { display: block; width: 100%; margin-top: 6px; padding: 9px 11px; border-radius: 8px; border: 1px solid #5a4a2c;
+    background: #0f0e0c; color: var(--parch); font: inherit; outline: none; }
+  #join input:focus, #chat input:focus { border-color: var(--brass); }
+  #join button, #lost button { margin-top: 14px; width: 100%; padding: 9px; border-radius: 8px; border: 1px solid var(--brass); background: #2c2414; color: #ffd76a; font-weight: 600; }
+  #join .msg { min-height: 18px; color: #ff9a8a; font-size: 13px; margin: 10px 0 0; }
+  #lost h2 { margin: 0 0 6px; color: #e04a3a; font: 700 26px Georgia, serif; }
+  #lost p { color: var(--muted); margin: 0; }
+  #chat { position: absolute; left: 12px; bottom: 96px; width: min(460px, 70%); display: none; pointer-events: auto; }
+  #chat.open { display: block; }
+  body.remastered #chat { bottom: 200px; }
+  #log .chat { color: #cfe6ff; }
+
+  /* ---------------- Clásico: barra de piedra baja como el cliente original */
+  body.classic #ui { font-family: "Courier New", monospace; }
+  body.classic #hudbar { position: absolute; left: 0; right: 0; bottom: 0; height: 54px; display: grid;
+    grid-template-columns: 160px 1fr 160px auto; grid-template-rows: 1fr 12px; grid-template-areas: "hp belt mp btn" "xp xp xp xp";
+    gap: 2px 8px; padding: 5px 8px 3px; background: linear-gradient(#5d5850, #3b3732 40%, #2a2724); border-top: 2px solid #8a8173;
+    box-shadow: inset 0 1px 0 #a39986; }
+  body.classic .gauge { position: relative; height: 18px; align-self: center; background: #120f0d; border: 1px solid #000;
+    box-shadow: inset 0 0 0 1px #6e6659; }
+  body.classic #hp { grid-area: hp; } body.classic #mp { grid-area: mp; }
+  body.classic .gauge .fill { position: absolute; left: 1px; top: 1px; bottom: 1px; width: calc(var(--k) - 2px); background: #b21d12; }
+  body.classic #mp .fill { background: #1f43b5; }
+  body.classic .gauge .lbl { position: absolute; left: 4px; top: 1px; font-size: 11px; color: #f3e9d0; }
+  body.classic .gauge .val { position: absolute; right: 4px; top: 1px; font-size: 11px; color: #f3e9d0; }
+  body.classic #belt { grid-area: belt; display: flex; justify-content: center; align-items: center; gap: 4px; }
+  body.classic .slot { width: 32px; height: 32px; border-radius: 0; background: #1a1714; border: 1px solid #000; box-shadow: inset 0 0 0 1px #6e6659; }
+  body.classic .slot .icon { transform: scale(1.3); }
+  body.classic #goldbox { color: #f0e0a0; font-weight: 400; font-size: 12px; }
+  body.classic #xp { grid-area: xp; position: relative; background: #120f0d; border: 1px solid #000; }
+  body.classic #xp .fill { height: 100%; width: var(--k); background: #8e7a2a; }
+  body.classic #xp .val { position: absolute; inset: -3px 0 0; text-align: center; font-size: 10px; color: #f3e9d0; }
+  body.classic #buttons { grid-area: btn; align-self: center; display: flex; gap: 3px; }
+  body.classic #buttons button { background: #3b3732; border: 1px solid #000; box-shadow: inset 0 0 0 1px #8a8173; padding: 1px 6px; font-size: 11px; }
+  body.classic #log { bottom: 62px; font-size: 12px; }
+  body.classic .panel { border-radius: 0; background: #2a2724; border: 2px solid #8a8173; box-shadow: none; }
+  body.classic .panel h3 { font-family: "Courier New", monospace; }
+  body.classic #toast { font-family: "Courier New", monospace; font-size: 24px; text-shadow: 1px 1px 0 #000; }
+  body.classic .slot kbd { display: none; }
+  body.classic #target { top: 6px; }
+
+  @media (max-width: 640px) {
+    body.remastered #hudbar { grid-template-columns: 64px auto 64px; gap: 6px 8px; bottom: 8px; }
+    body.remastered .gauge { width: 64px; height: 64px; }
+    body.remastered .gauge .val { font-size: 11px; }
+    body.remastered #belt { gap: 4px; padding: 6px; }
+    .slot { width: 36px; height: 36px; }
+    #goldbox { min-width: 0; padding: 0 4px 0 8px; gap: 8px; }
+    body.remastered #buttons button { padding: 3px 7px; }
+    #log { bottom: 140px; font-size: 12px; }
+  }
+</style>
+</head>
+<body class="remastered">
+<canvas id="game"></canvas>
+<div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span></div></div>
+
+<div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>
+  <label>Nombre del personaje<input maxlength="16" autocomplete="off" spellcheck="false"></label>
+  <button type="submit">Entrar</button><p class="msg"></p></form></div>
+<div id="lost"><div><h2>Conexión perdida</h2><p>El servidor se ha cerrado o se cortó internet.</p><button onclick="location.reload()">Volver a entrar</button></div></div>
+
+<div id="ui">
+  <div id="topleft"><span id="modename"></span> · <span id="fps"></span></div>
+  <div id="target"><div class="name"></div><div class="bar"><div class="fill"></div></div></div>
+  <div id="toast"></div>
+  <div id="log"></div>
+
+  <div id="hudbar">
+    <div id="hp" class="gauge"><div class="fill"></div><span class="lbl">HP</span><span class="val"></span></div>
+    <div id="belt">
+      <button class="slot" data-use="red" title="Poción roja"><span class="icon red"></span><b>0</b><kbd>1</kbd></button>
+      <button class="slot" data-use="blue" title="Poción azul"><span class="icon blue"></span><b>0</b><kbd>2</kbd></button>
+      <button class="slot" data-use="bigred" title="Poción roja grande"><span class="icon bigred"></span><b>0</b><kbd>3</kbd></button>
+      <div id="goldbox"><span class="icon gold"></span><span id="gold">0</span></div>
+    </div>
+    <div id="mp" class="gauge"><div class="fill"></div><span class="lbl">MP</span><span class="val"></span></div>
+    <div id="xp" class="xpbar"><div class="fill"></div><span class="val"></span></div>
+    <div id="buttons">
+      <button data-key="c">Personaje<span id="poolbadge"></span></button>
+      <button data-key="g">Gráficos</button>
+      <button data-key="n">Sonido</button>
+      <button data-key="h">Ayuda</button>
+    </div>
+  </div>
+
+  <div id="charpanel" class="panel"><button class="close" data-key="c">×</button><div class="body"></div></div>
+
+  <div id="help" class="panel">
+    <button class="close" data-key="h">×</button>
+    <h3>Controles</h3>
+    <ul>
+      <li>Clic en el suelo: andar (mantén pulsado para seguir)</li>
+      <li>Clic en un monstruo: atacar hasta matarlo</li>
+      <li>Clic en un objeto o <kbd>Espacio</kbd>: recoger</li>
+      <li><kbd>WASD</kbd> / flechas: andar</li>
+      <li><kbd>R</kbd>: correr / andar (se recuerda)</li>
+      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (o <kbd>Insert</kbd> <kbd>Supr</kbd>): pociones</li>
+      <li><kbd>C</kbd>: personaje y puntos</li>
+      <li><kbd>Alt</kbd>: nombres de los objetos</li>
+      <li><kbd>G</kbd>: gráficos clásicos / remastered</li>
+      <li>Rueda del ratón: zoom (remastered)</li>
+      <li><kbd>M</kbd>: minimapa · <kbd>B</kbd>: casillas</li>
+      <li><kbd>N</kbd>: sonido</li>
+      <li><kbd>Intro</kbd>: hablar (o reaparecer al morir)</li>
+    </ul>
+    <p>La lógica (fórmulas de combate, experiencia, monstruos y sus zonas) sale del servidor original. Los dos modos gráficos juegan exactamente igual.</p>
+  </div>
+
+  <div id="chat"><input maxlength="120" placeholder="Escribe y pulsa Intro (Esc para cancelar)"></div>
+  <div id="death"><div><h2>Has muerto</h2><button>Reaparecer <kbd>Intro</kbd></button></div></div>
+</div>
+
+<script type="module" src="src/client/main.js"></script>
+</body>
+</html>
