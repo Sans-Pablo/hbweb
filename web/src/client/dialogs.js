@@ -40,6 +40,17 @@ export function registerDialogs(gui, api) {
       L(me.kills, 257);
       L(s.str, 285, 48, 82); L(s.dex, 302, 48, 82); L(s.vit, 285, 218, 251); L(s.int, 285, 135, 167); L(s.mag, 302, 135, 167); L(s.chr, 302, 218, 251);
       this.paperdoll(g, me);
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y, on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
+      g.put("dialogtext_1", on(15) ? 5 : 4, 15, 340);           // Quest
+      g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
+      g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
+    },
+    click(g, lx, ly) {
+      const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
+      if (hit(15)) api.log("No hay misiones en esta versión.");
+      else if (hit(98)) api.log("No hay grupos en esta versión.");
+      else if (hit(180)) { g.close(1); g.open(12); return true; }
+      return false;
     },
     // coger una pieza equipada del muñeco (para soltarla en la mochila y quitársela)
     press(g, lx, ly, me) {
@@ -224,4 +235,104 @@ export function registerDialogs(gui, api) {
     wheel(g, dir) { this.view = (this.view + (dir > 0 ? -1 : 1) + 10) % 10; },
   };
   gui.register(shop);
+
+  // ------------------------------------------------------------ 12: reparto de puntos al subir de nivel (cuadro de "Level Up")
+  const LU = [["Strength", "str", 125], ["Vitality", "vit", 144], ["Dexterity", "dex", 163], ["Intelligence", "int", 182], ["Magic", "mag", 201], ["Charisma", "chr", 220]];
+  const lu = {
+    id: 12, x: 80, y: 60, w: 258, h: 339, d: {},
+    onOpen() { this.d = {}; },
+    left(me) { return me.pool - Object.values(this.d).reduce((a, b) => a + b, 0); },
+    draw(g, me) {
+      g.put("gamedialog_1", 0, 0, 0); g.put("dialogtext_0", 2, 0, 0); g.put("gamedialog_3", 4, 16, 100);
+      g.aligned(0, 258, 50, "When level up, your specific stats", INK); g.aligned(0, 258, 65, "will be increased by setting.", INK);
+      g.text(20, 85, "* Points left:", "#000");
+      const left = this.left(me);
+      g.text(73, 102, String(left), left > 0 ? "#00ff00" : "#000", { bold: true });
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      for (const [name, k, y] of LU) {
+        g.text(24, y, name, "rgb(5,5,5)");
+        g.text(109, y, String(me.stats[k]), "rgb(25,35,25)");
+        const nv = me.stats[k] + (this.d[k] || 0);
+        g.text(162, y, String(nv), nv !== me.stats[k] ? "#f00" : "rgb(25,35,25)");
+        if (lx >= 195 && lx <= 205 && ly >= y + 2 && ly <= y + 8 && left > 0 && me.stats[k] < 200) g.put("gamedialog_3", 5, 195, y + 2);
+        if (lx >= 210 && lx <= 220 && ly >= y + 2 && ly <= y + 8 && (this.d[k] || 0) > 0) g.put("gamedialog_3", 6, 210, y + 2);
+      }
+      g.put("dialogtext_1", lx >= 154 && lx <= 228 && ly > 292 && ly < 312 ? 1 : 0, 154, 292);
+    },
+    click(g, lx, ly, me, e) {
+      const step = g.info?.ctrl ? 5 : 1;
+      for (const [, k, y] of LU) {
+        if (lx >= 195 && lx <= 205 && ly >= y + 2 && ly <= y + 8 && this.left(me) > 0) {
+          const n = step === 5 && this.left(me) < 5 ? 0 : step;
+          if (n) this.d[k] = (this.d[k] || 0) + n;
+          return true;
+        }
+        if (lx >= 210 && lx <= 220 && ly >= y + 2 && ly <= y + 8 && (this.d[k] || 0) > 0) {
+          const n = step === 5 && this.d[k] < 5 ? 0 : step;
+          if (n) this.d[k] -= n;
+          return true;
+        }
+      }
+      if (lx >= 154 && lx <= 228 && ly > 292 && ly < 312) {
+        for (const [, k] of LU) for (let i = 0; i < (this.d[k] || 0); i++) api.stat(k);
+        g.close(12);
+        return true;
+      }
+      return false;
+    },
+  };
+  gui.register(lu);
+
+  // ------------------------------------------------------------ 19: menú del sistema (F12)
+  const sys = {
+    id: 19, x: 417, y: 167, w: 258, h: 268,
+    draw(g, me) {
+      const S = api.sys();
+      g.put("gamedialog_0", 0, 0, 0); g.put("dialogtext_0", 6, 0, 0);
+      const label = (x, y, t) => { g.text(x, y, t, INK); g.text(x + 1, y, t, INK); };
+      const val = (x, y, t, c) => g.text(x, y, t, c);
+      const W_ = "#fff", GR = "#c8c8c8";
+      label(23, 63, "Detail Level");
+      ["Low", "Normal", "High"].forEach((t, i) => val([121, 153, 205][i], 63, t, S.detail === i ? W_ : INK));
+      label(23, 84, "Sound"); S.sound ? val(85, 85, "On", W_) : val(83, 85, "Off", GR);
+      label(123, 84, "Music"); S.music ? val(180, 85, "On", W_) : val(178, 85, "Off", GR);
+      label(23, 106, "Whisper"); S.whisper ? val(85, 106, "On", W_) : val(82, 106, "Off", GR);
+      label(123, 106, "Shout"); S.shout ? val(180, 106, "On", W_) : val(177, 106, "Off", GR);
+      label(23, 124, "Sound Volume"); g.put("gamedialog_1", 8, 130 + S.soundVol, 129);
+      label(23, 141, "Music Volume"); g.put("gamedialog_1", 8, 130 + S.musicVol, 145);
+      label(23, 158, "Dialog Box Transparency"); S.trans ? val(208, 158, "On", W_) : val(207, 158, "Off", GR);
+      label(23, 180, "Guide Map"); g.isOpen(9) ? val(99, 180, "On", W_) : val(98, 180, "Off", GR);
+      const d = new Date();
+      label(23, 204, `${d.getMonth() + 1}:${d.getDate()}:${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`);
+      label(23, 41, "Helbreath Web");
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      const over = (a) => lx >= a && lx <= a + 74 && ly >= 225 && ly <= 245;
+      if (S.logoutCount === null) g.put("dialogtext_1", over(30) ? 9 : 8, 30, 225); else g.put("dialogtext_1", over(30) ? 7 : 6, 30, 225);
+      if (me.dead) g.put("dialogtext_1", over(154) ? 37 : 36, 154, 225);
+      else { label(133, 214, "Coded by Cleroth,"); label(125, 229, "Diuuude & Snoopy81"); }
+      // control deslizante de volumen (mantener pulsado)
+      if (m.down && g.order[g.order.length - 1] === 19) {
+        if (lx >= 127 && lx <= 238 && ly >= 122 && ly <= 138) api.setSys({ soundVol: Math.max(0, Math.min(100, Math.round(lx - 127))) });
+        if (lx >= 127 && lx <= 238 && ly >= 139 && ly <= 155) api.setSys({ musicVol: Math.max(0, Math.min(100, Math.round(lx - 127))) });
+      }
+    },
+    click(g, lx, ly, me) {
+      const S = api.sys(), inb = (x1, x2, y1, y2) => lx >= x1 && lx <= x2 && ly >= y1 && ly <= y2;
+      if (inb(120, 150, 63, 74)) api.setSys({ detail: 0 });
+      else if (inb(151, 200, 63, 74)) api.setSys({ detail: 1 });
+      else if (inb(201, 234, 63, 74)) api.setSys({ detail: 2 });
+      else if (inb(24, 115, 81, 100)) api.setSys({ sound: !S.sound });
+      else if (inb(116, 202, 81, 100)) api.setSys({ music: !S.music });
+      else if (inb(23, 108, 108, 119)) api.setSys({ whisper: !S.whisper });
+      else if (inb(123, 203, 108, 119)) api.setSys({ shout: !S.shout });
+      else if (inb(28, 235, 156, 171)) api.setSys({ trans: !S.trans });
+      else if (inb(28, 127, 178, 193)) g.toggle(9);
+      else if (inb(30, 104, 225, 245)) { api.logout(); if (S.logoutCount === null) g.close(19); }
+      else if (me.dead && inb(154, 228, 225, 245)) { api.restart(); g.close(19); }
+      else if (inb(127, 238, 122, 138) || inb(127, 238, 139, 155)) return true;
+      else return false;
+      return true;
+    },
+  };
+  gui.register(sys);
 }

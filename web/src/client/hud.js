@@ -71,7 +71,7 @@ export class Hud {
     const me = this.conn.pid;
     const who = id => world.ents.get(id);
     switch (ev.t) {
-      case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (C).", "gold"); this.toast("Nivel " + ev.level); } break;
+      case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":
         if (ev.id === me) this.log("Has muerto.", "bad");
         else if (ev.by === me) this.log("Has matado a " + (who(ev.id)?.name || "un monstruo") + ".");

@@ -45,12 +45,35 @@ async function main() {
   const gui = new Gui(document.getElementById("gui"));
   await gui.load();
   gui.setGameSprites(assets.sprites);
+  const logout = { n: null, t: 0 };
   const guiApi = {
     log: m => hud.log(m),
     primary: uid => hud.primary(uid),
     disabled: () => false,
     magic: assets.data.magic,
     useMagic: id => ui.useMagic(id),
+    sys: () => ({ detail: flags.detail, sound: opts.sound, music: opts.music, whisper: flags.whisper, shout: flags.shout, soundVol: opts.soundVol, musicVol: opts.musicVol, trans: document.body.classList.contains("dialogtrans"), logoutCount: logout.n }),
+    setSys: o => {
+      if ("detail" in o) { flags.detail = o.detail; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][o.detail]); }
+      if ("sound" in o) setOpt("sound", o.sound);
+      if ("music" in o) setOpt("music", o.music);
+      if ("whisper" in o) flags.whisper = o.whisper;
+      if ("shout" in o) flags.shout = o.shout;
+      if ("soundVol" in o) setOpt("soundVol", o.soundVol);
+      if ("musicVol" in o) setOpt("musicVol", o.musicVol);
+      if ("trans" in o) document.body.classList.toggle("dialogtrans", o.trans);
+    },
+    logout: () => {
+      if (logout.n !== null) { clearInterval(logout.t); logout.n = null; hud.log("Logout count stopped."); return; }
+      logout.n = 10;
+      hud.log("Logging out... " + logout.n);
+      logout.t = setInterval(() => {
+        logout.n--;
+        if (logout.n <= 0) { clearInterval(logout.t); conn.save?.(); location.reload(); } else hud.log("Logging out... " + logout.n);
+      }, 1000);
+    },
+    restart: () => conn.send({ t: "respawn" }),
+    stat: k => conn.send({ t: "stat", stat: k }),
     learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
@@ -86,13 +109,14 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered" };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered" };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   const optionsEl = document.getElementById("options");
   function applyOpts() {
     view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
+    sound.setVolume?.(opts.soundVol);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
     for (const el of optionsEl.querySelectorAll("[data-opt]")) {
       const v = opts[el.dataset.opt];
@@ -109,7 +133,7 @@ async function main() {
   // los botones de la interfaz usan los mismos nombres.
   const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", help: "help" };
   const togglePanel = id => document.getElementById(id).classList.toggle("open");
-  const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "" };
+  const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "", whisper: true, shout: true };
   const shortcuts = [null, null];                        // F2 / F3: { item: id } | { spell: id }
   try { Object.assign(shortcuts, JSON.parse(store.get("shortcuts", "[]"))); } catch {}
   let recent = null;
@@ -222,6 +246,7 @@ async function main() {
         }
         case "char": gui.toggle(1); break;
         case "inv": gui.toggle(2); break;
+        case "options": gui.toggle(19); break;
         case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
@@ -254,7 +279,7 @@ async function main() {
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("char"), chat: () => hud.toast("Historial de chat: pendiente"), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("char"), chat: () => hud.toast("Historial de chat: pendiente"), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
@@ -274,7 +299,8 @@ async function main() {
     e.stopPropagation();
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
-      if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
+      if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
+      else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
       else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }

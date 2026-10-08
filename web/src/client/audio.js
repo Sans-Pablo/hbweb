@@ -23,7 +23,7 @@ export class Sound {
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.master = this.ctx.createGain();
-      this.master.gain.value = this.on ? 0.7 : 0;
+      this.master.gain.value = this.on ? 0.7 * (this.vol ?? 1) : 0;
       this.master.connect(this.ctx.destination);
     } catch { return; }
     // música: la original y la remasterizada suenan a la vez y sincronizadas; el modo
@@ -74,9 +74,10 @@ export class Sound {
     step();
   }
 
+  setVolume(pct) { this.vol = Math.max(0, Math.min(1, pct / 100)); if (this.master) this.master.gain.value = this.on ? 0.7 * this.vol : 0; }
   toggle() {
     this.on = !this.on;
-    if (this.master) this.master.gain.value = this.on ? 0.7 : 0;
+    if (this.master) this.master.gain.value = this.on ? 0.7 * (this.vol ?? 1) : 0;
     if (this.tracks) {
       if (this.on) this.startMusic();
       else for (const a of Object.values(this.tracks)) a.pause();

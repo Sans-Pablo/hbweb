@@ -201,6 +201,10 @@ export class Gui {
       if (!used && button === 0 && !d.fixed) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
     }
+    if (me && button === 0 && x >= 720 && x <= 780 && y >= 510 && y <= 525) {      // "Level Up!" / "Restart"
+      if (me.dead) this.onAction?.("restart"); else if (me.pool > 0) this.toggle(12);
+      return true;
+    }
     if (y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
