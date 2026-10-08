@@ -31,3 +31,9 @@ Las pruebas incluyen 1.000 seeds conectadas; ancho libre de todas las galerías;
 Para probar: recargar la página y entrar en (134,94) con E cuando el personaje haya terminado de caminar. Comprobar piedra sin cuadros negros, dos guardianes en el vestíbulo, galerías anchas y contador decreciente al combatir. Repetir con gráficos clásicos y remastered.
 
 Vista pública sin combate ni guardado: [`dungeon-preview.html`](https://sans-pablo.github.io/hbweb/dungeon-preview.html). Usa el mismo generador, World, Sprites y Renderer; permite cambiar seed, cámara y modo gráfico. Sirve para comprobar texturas y distribución sin modificar una partida.
+
+## Comprobación visual
+
+Vista publicada validada en clásico y remastered tras desplegar `7b9a4fa`: guardianes visibles, piedra sin cuadros negros, pilares, contador y cámara dentro del mapa. Captura del vestíbulo (seed 54; vista sin combate):
+
+![Cripta con los dos guardianes y las texturas cargadas](dungeon-v2.jpg)
