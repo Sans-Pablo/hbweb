@@ -335,4 +335,113 @@ export function registerDialogs(gui, api) {
     },
   };
   gui.register(sys);
+
+  // ------------------------------------------------------------ 15: habilidades (F8), lista de Skill.cfg
+  const SKILLS = [["Mining", 1], ["Fishing", 1], ["Farming", 1], ["Magic-Resistance", 0], ["Magic", 0], ["Hand-Attack", 0], ["Archery", 0], ["Short-Sword", 0], ["Long-Sword", 0], ["Fencing", 0], ["Axe-Attack", 0], ["Shield", 0], ["Alchemy", 1], ["Manufacturing", 1], ["Hammer", 0], ["????", 1], ["????", 1], ["????", 1], ["????", 1], ["Pretend-Corpse", 2], ["????", 1], ["Staff-Attack", 0], ["????", 1], ["Poison-Resistance", 1]];
+  const skill = {
+    id: 15, x: 417, y: 117, w: 258, h: 339, view: 0, down: -1,
+    draw(g, me) {
+      g.put("gamedialog_1", 0, 0, 0); g.put("dialogtext_0", 1, 0, 0);
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      for (let i = 0; i < 17; i++) {
+        const k = i + this.view; if (!SKILLS[k]) continue;
+        const [nm, use] = SKILLS[k], lv = (me.skills && me.skills[k]) || 0, name = nm.replace(/-/g, " "), pct = String(lv).padStart(3, " ") + "%";
+        const usable = use === 1 && lv !== 0, over = lx >= 25 && lx <= 166 && ly >= 45 + i * 15 && ly <= 59 + i * 15;
+        const col = usable ? (over ? "#fff" : "rgb(34,30,120)") : "rgb(5,5,5)";
+        g.text(30, 45 + i * 15, name, col); g.text(183, 45 + i * 15, pct, col);
+        if (this.down === k) g.tint("interface2_0", 21, 215, 47 + i * 15, [50, 50, 50]); else g.put("interface2_0", 20, 215, 47 + i * 15);
+      }
+      g.put("gamedialog_1", 1, 0, 0);
+      const maxView = SKILLS.length - 17, loc = maxView > 0 ? Math.floor(274 * this.view / maxView) : 0;
+      g.put("gamedialog_1", 7, 242, loc + 35);
+      if (m.down && g.order[g.order.length - 1] === 15 && lx >= 240 && lx <= 260 && ly >= 30 && ly <= 320)
+        this.view = Math.max(0, Math.min(maxView, Math.floor(((ly - 35) * maxView) / 274 + 0.5)));
+    },
+    click(g, lx, ly, me) {
+      for (let i = 0; i < 17; i++) {
+        const k = i + this.view; if (!SKILLS[k]) continue;
+        if (lx >= 44 && lx <= 179 && ly >= 45 + i * 15 && ly <= 59 + i * 15) {
+          const lv = (me.skills && me.skills[k]) || 0;
+          if (SKILLS[k][1] === 1 && lv !== 0) api.log("Esa habilidad aún no se puede usar en esta versión.");
+          return true;
+        } else if (lx >= 215 && lx <= 240 && ly >= 45 + i * 15 && ly <= 59 + i * 15) { this.down = this.down === k ? -1 : k; return true; }
+      }
+      return lx >= 240 && lx <= 260 && ly >= 30 && ly <= 320;
+    },
+    wheel(g, dir) { this.view = Math.max(0, Math.min(SKILLS.length - 17, this.view + (dir > 0 ? -1 : 1))); },
+  };
+  gui.register(skill);
+
+  // ------------------------------------------------------------ 18: texto (ayuda, noticias...) y 35: ayuda (F1)
+  const text = {
+    id: 18, x: 100, y: 125, w: 258, h: 339, view: 0, lines: [],
+    load(n) {
+      this.lines = []; this.view = 0;
+      fetch("data/help/" + n + ".txt").then(r => r.text()).then(t => { this.lines = t.replace(/\r/g, "").split("\n"); }).catch(() => {});
+    },
+    draw(g) {
+      g.put("gamedialog_1", 0, 0, 0);
+      const total = this.lines.length, max = Math.max(0, total - 17);
+      this.view = Math.max(0, Math.min(max, this.view));
+      if (total > 17) { g.put("gamedialog_1", 1, 0, 0); g.put("gamedialog_1", 7, 242, 35 + Math.floor(274 * this.view / max + 0.5)); }
+      for (let i = 0; i < 17; i++) {
+        let t = this.lines[i + this.view]; if (t === undefined) continue;
+        let col = INK;
+        if (t[0] === "_") { t = t.slice(1); col = "#fff"; } else if (t[0] === ";") { t = t.slice(1); col = "rgb(4,0,50)"; }
+        g.aligned(24, 236, 50 + i * 13, t, col);
+      }
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      g.put("dialogtext_1", lx > 154 && lx < 228 && ly > 292 && ly < 312 ? 1 : 0, 154, 292);
+      if (m.down && g.order[g.order.length - 1] === 18 && total > 17 && lx >= 240 && lx <= 260 && ly >= 40 && ly <= 320)
+        this.view = Math.max(0, Math.min(max, Math.floor(((ly - 35) * max) / 274)));
+    },
+    click(g, lx, ly) {
+      if (lx > 154 && lx < 228 && ly > 292 && ly < 312) { g.close(18); return true; }
+      return lx >= 240 && lx <= 260;
+    },
+    wheel(g, dir) { this.view = Math.max(0, this.view + (dir > 0 ? -3 : 3)); },
+  };
+  gui.register(text);
+  const TOPICS = [["News", 1000], ["Helbreath World?", 900], ["How to move", 901], ["Attack, Defence, Enemy, Friend", 902], ["Interface", 903], ["Magic", 904],
+    ["Specific Point, Skill System", 905], ["Guilds", 906], ["Items", 907], ["Communication", 908], ["What's the Crusade?", 909], ["Commands", 910], ["F.A.Q.", 911], ["Beginner's Guide", 912]];
+  gui.register({
+    id: 35, x: 438, y: 125, w: 258, h: 339,
+    onClose(g) { g.close(18, true); },
+    draw(g) {
+      g.put("gamedialog_1", 2, 0, 0);
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      TOPICS.forEach(([t], i) => g.aligned(0, 258, 50 + 15 * i, t, lx >= 25 && lx <= 248 && ly >= 50 + 15 * i && ly < 65 + 15 * i ? "#fff" : "rgb(4,0,50)"));
+      g.put("dialogtext_1", lx >= 154 && lx <= 228 && ly > 292 && ly < 312 ? 1 : 0, 154, 292);
+    },
+    click(g, lx, ly) {
+      TOPICS.forEach(([, n], i) => { if (lx >= 25 && lx <= 248 && ly >= 50 + 15 * i && ly < 65 + 15 * i) { g.close(18, true); text.load(n); g.open(18); } });
+      if (lx >= 154 && lx <= 228 && ly > 292 && ly < 312) { g.close(35); g.close(18); }
+      return true;
+    },
+  });
+
+  // ------------------------------------------------------------ 10: historial de chat (F9). api.chatLog: más nuevo primero, {t, type}
+  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 10: "rgb(180,255,180)", 20: "rgb(150,150,170)" };
+  const MAXSCROLL = 500;
+  gui.register({
+    id: 10, x: 215, y: 393, w: 364, h: 162, view: 0,
+    draw(g) {
+      g.put("gamedialog_1", 4, 0, 0); g.put("dialogtext_0", 22, 0, 0);
+      this.view = Math.max(0, Math.min(MAXSCROLL - 8, this.view));
+      g.put("gamedialog_1", 7, 346, 33 + 105 - Math.floor(this.view * 105 / (MAXSCROLL - 8)));
+      const log = api.chatLog;
+      for (let i = 0; i < 8; i++) {
+        const e = log[i + this.view]; if (!e) continue;
+        g.text(25, 127 - i * 13, e.t, CHAT_COL[e.type] || CHAT_COL[0], { shadow: true, size: 11 });
+      }
+      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
+      if (m.down && g.order[g.order.length - 1] === 10) {
+        if (lx >= 336 && lx <= 361 && ly >= 28 && ly <= 140) this.view = MAXSCROLL - 8 - Math.floor(((MAXSCROLL - 8) * (ly - 28)) / 105);
+        if (lx >= 336 && lx <= 361 && ly > 18 && ly < 28) this.view = MAXSCROLL - 8;
+        if (lx >= 336 && lx <= 361 && ly > 140 && ly < 163) this.view = 0;
+      }
+    },
+    click(g, lx) { return lx >= 336 && lx <= 361; },
+    wheel(g, dir) { this.view += dir > 0 ? 1 : -1; },
+  });
 }

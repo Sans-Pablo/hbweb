@@ -51,6 +51,7 @@ export class Hud {
   }
 
   log(text, cls = "") {
+    this.onLog?.(text, cls);
     const d = document.createElement("div");
     d.textContent = text;
     if (cls) d.className = cls;

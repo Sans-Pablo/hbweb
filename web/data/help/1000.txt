@@ -1,0 +1,54 @@
+
+/////--2.25a release--\\\\\
+
+
+========================================
+
+Commands:
+Note: Some commands like
+/disconnectall and
+/shutdownthisserverrightnow have
+been disabled to prevent abuse.
+/shutup has also been disabled,
+as well as /closeconn and
+/checkip.
+
+/kill charname damageoverhead
+
+/revive charname damageoverhead hptheywillhave
+
+/summondeath(space)
+Summons a statted Wyvern like /summondemon
+(stat can't be seen but it's there)
+
+/setzerk 1\0
+
+/setfreeze 1\0
+
+/enableadmincreateitem(space)
+
+New Command just finished today:
+/storm magic# amount#
+Magic # is the same as the number they are listed
+in the magiccfg.txt. Only a few work though.
+They are, energy-bolt(10), mass-fire-strike(61),
+fire-ball(20), fire-strike(30), lightning(43),
+lightning-bolt(51), meteor-strike(81)
+bloody-shock-wave(70)
+
+Example, /storm 81 10
+That would cause 10 meteors to fall on
+your screen. The diameter of the area
+they can fall on is the width and height
+of your screen. They can do damage and
+can even damage GMs. The limit on the
+amount# is 30. Anything more will be
+automatically set to 30.
+
+These are only the commands we have added.
+I would put all the bug fixes but that's not
+fun and it's a long list. So enjoy yourself :P
+==============================================
+Downloaded from HelbreathSS.tk
+http://www.helbreathss.tk
+info: helbreathss@hotmail.com

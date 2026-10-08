@@ -46,7 +46,9 @@ async function main() {
   await gui.load();
   gui.setGameSprites(assets.sprites);
   const logout = { n: null, t: 0 };
+  const chatLog = [];
   const guiApi = {
+    chatLog,
     log: m => hud.log(m),
     primary: uid => hud.primary(uid),
     disabled: () => false,
@@ -193,8 +195,8 @@ async function main() {
           case "F5": ui.key("char"); break;
           case "F6": ui.key("inv"); break;
           case "F7": ui.key("book"); break;
-          case "F8": ui.key("char"); break;                    // habilidades (aún en el panel de personaje)
-          case "F9": hud.toast("Historial de chat: pendiente"); break;
+          case "F8": ui.key("skill"); break;
+          case "F9": gui.toggle(10); break;
           case "F11": document.body.classList.toggle("dialogtrans"); break;
           case "F12": ui.key("options"); break;
         }
@@ -247,6 +249,8 @@ async function main() {
         case "char": gui.toggle(1); break;
         case "inv": gui.toggle(2); break;
         case "options": gui.toggle(19); break;
+        case "skill": gui.toggle(15); break;
+        case "help": if (gui.isOpen(35)) { gui.close(35); gui.close(18); } else gui.open(35); break;
         case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
@@ -278,8 +282,9 @@ async function main() {
   };
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
+  hud.onLog = (t, cls) => { chatLog.unshift({ t, type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("char"), chat: () => hud.toast("Historial de chat: pendiente"), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
