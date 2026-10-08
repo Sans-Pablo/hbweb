@@ -51,7 +51,9 @@ export function generateDungeon(seed) {
   for (let i = 0; i < w * h; i++) {
     const wall = !!(bytes[i * 10 + 8] & 0x80);
     dv.setInt16(i * 10, wall ? 301 : 330, true);
-    dv.setInt16(i * 10 + 2, [0, 1, 20, 21][Math.floor(rng() * 4)], true);
+    // t330/0 es transparente: usar únicamente pavimento opaco para el suelo.
+    const frames = wall ? [0, 1, 20, 21] : [1, 20, 21];
+    dv.setInt16(i * 10 + 2, frames[Math.floor(rng() * frames.length)], true);
   }
   const grid = new Grid(w, h, bytes);
   grid.procedural = true;
