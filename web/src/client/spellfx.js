@@ -25,6 +25,8 @@ const SETUP = {
   30: [15, 20], 31: [15, 20],
   100: [0, 20], 101: [14, 80], 110: [0, 20], 120: [0, 20], 121: [14, 80], 130: [0, 20], 137: [0, 20], 143: [7, 10],
   147: [0, 20], 156: [3, 130], 161: [0, 20],
+  40: [15, 30], 41: [14, 20], 42: [14, 20], 43: [14, 20], 44: [14, 20], 45: [14, 20], 46: [14, 20], 56: [14, 30],
+  60: [10, 50], 61: [16, 10], 62: [6, 100], 63: [16, 20], 145: [0, 20], 157: [0, 20], 163: [0, 20], 172: [0, 20], 181: [10, 50],
 };
 
 export class SpellFx {
@@ -57,6 +59,10 @@ export class SpellFx {
       case 11: e.rx = 6 - rnd(12); e.ry = -2 - rnd(4); break;
       case 12: e.rx = 8 - rnd(16); e.ry = 4 - rnd(12); break;
       case 5: case 30: case 31: this.hook?.("E4", sx / 32 | 0, sy / 32 | 0); break;
+      case 41: case 42: case 43: case 44: case 45: case 46: e.my = sy - 220; e.fall = 220; break;
+      case 40: case 56: this.hook?.("E45", sx / 32 | 0, sy / 32 | 0); break;
+      case 61: this.hook?.("E4", sx / 32 | 0, sy / 32 | 0); break;
+      case 60: case 181: e.mx = sx + 300; e.my = sy - 460; break;
       case 4: break;
     }
     if (type === 15) e.ry = -1;
@@ -64,9 +70,25 @@ export class SpellFx {
     return e;
   }
 
+  // grupo de efectos de hielo/meteoro a partir de un punto en píxeles
+  ring(type, X, Y) {
+    this.add(type, X, Y, 0, 0, 0); this.add(type, X - 30, Y - 15, 0, 0, -10); this.add(type, X + 35, Y - 30, 0, 0, -6); this.add(type, X + 20, Y + 30, 0, 0, -3);
+  }
+
   // Un hechizo lanzado por la entidad en (cx,cy) contra la casilla (tx,ty).
   spell(id, cx, cy, tx, ty) {
     const t = id + 100;
+    const X = tx * 32 + 16, Y = ty * 32 + 16;
+    if (t === 145) { this.ring(40, X, Y); return; }
+    if (t === 163) { this.ring(56, X, Y); for (let i = 0; i < 4; i++) this.add(56, X + 40 - rnd(80), Y + 30 - rnd(60), 0, 0, -rnd(12)); return; }
+    if (t === 157 || t === 172) {
+      const big = t === 172, n = big ? 28 : 14, r = big ? 90 : 55;
+      this.add(41, X, Y, 0, 0, 0);
+      for (let i = 0; i < n; i++) this.add(41 + rnd(3), X + r - rnd(r * 2), Y + r / 2 - rnd(r), 0, 0, -rnd(12) - 1);
+      for (let i = 0; i < (big ? 12 : 6); i++) this.add(45 + rnd(2), X + r - rnd(r * 2), Y + r / 2 - rnd(r), 0, 0, -rnd(12) - 11);
+      return;
+    }
+    if (t === 181) { this.add(181, X, Y, tx, ty); return; }
     if (t === 147) { const e = this.add(147, cx, cy, tx, ty); if (e) { e.mx = cx * 32 + 16; e.my = cy * 32 - 24; } return; }
     if (t === 156) { this.add(156, cx, cy, tx, ty); return; }
     if (t === 143) { this.add(143, tx, ty, tx, ty); return; }
@@ -138,6 +160,21 @@ export class SpellFx {
           end();
         }
         break;
+      case 41: case 42: case 43: case 44: case 45: case 46:
+        if (e.frame < 0) break;
+        if (e.fall > 0) { e.my += 20; e.fall -= 20; e.frame = 0; if (e.fall <= 0) this.hook?.("E46", e.mx / 32 | 0, e.my / 32 | 0); }
+        else if (e.frame > e.max) end();
+        break;
+      case 181: {
+        e.mx -= 30; e.my += 46; this.add(62, e.mx, e.my, 0, 0, 0);
+        if (e.my >= e.dy * 32 + 16) {
+          const X = e.dx * 32 + 16, Y = e.dy * 32 + 16;
+          this.add(61, X, Y, 0, 0, 0); this.add(63, X, Y, 0, 0, 0);
+          for (let i = 0; i < 5; i++) this.add(12, X + 20 - rnd(40), Y + 10 - rnd(20), 0, 0, -rnd(3));
+          end();
+        }
+        break;
+      }
       default: if (e.frame > e.max) end();
     }
   }
@@ -195,6 +232,15 @@ export class SpellFx {
           this.put(ctx, 10, (e.dir - 1) * 4 + rnd(4), x, y);
           break;
         }
+        case 40: if (f >= 0) this.put(ctx, 20, f, x, y, "add", .5); break;
+        case 56: if (f >= 0) this.put(ctx, 29, f, x, y, "add", .5); break;
+        case 41: case 42: case 43: case 44: case 45: case 46:
+          if (f >= 0) this.put(ctx, 21, Math.min(48, (e.type - 41) * 8 + f), x, y, e.fall > 0 ? "over" : "add", e.fall > 0 ? 1 : Math.max(.2, 1 - f / 16));
+          break;
+        case 62: if (f >= 0) this.put(ctx, 31, 24 - f, x, y, "add", .6); break;
+        case 61: if (f >= 0) this.put(ctx, 32, f, x, y); break;
+        case 63: if (f >= 0) this.put(ctx, 33, f, x, y); break;
+        case 181: this.put(ctx, 31, 15 + Math.min(9, e.frame), x, y); break;
         case 143: this.thunder(ctx, e.dx * 32 + 16 - camX, e.dy * 32 + 16 - camY, e.rx, e.ry); break;
       }
     }
