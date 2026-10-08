@@ -73,47 +73,121 @@ async function main() {
     const el = e.target.closest("[data-opt]"); if (!el) return;
     setOpt(el.dataset.opt, el.type === "checkbox" ? el.checked : el.value);
   });
+  // Teclas del cliente original (Game.cpp, OnKeyUp/OnKeyDown). Las acciones tienen nombre propio;
+  // los botones de la interfaz usan los mismos nombres.
+  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", help: "help" };
+  const togglePanel = id => document.getElementById(id).classList.toggle("open");
+  const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "" };
+  const shortcuts = [null, null];                        // F2 / F3: { item: id } | { spell: id }
+  try { Object.assign(shortcuts, JSON.parse(store.get("shortcuts", "[]"))); } catch {}
+  let recent = null;
+  const flag = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); };
   const ui = {
     get run() { return opts.run; },
     unlockAudio: () => sound.unlock(),
     quick: k => hud.quickUse(k),
     get spell() { return hud.spell; },
+    pointing: null,
     say: m => hud.log(m, "bad"),
-    key(k) {
+    // UseMagic: prepara el hechizo; el siguiente clic izquierdo elige el objetivo, el derecho cancela
+    useMagic(id) {
+      const me = world.ents.get(pid), m = hud.magicData?.[id];
+      if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
+      if (ui.pointing != null) return;
+      if (m.mana > me.mp) { hud.log("No tienes maná suficiente.", "bad"); return; }
+      ui.pointing = id; hud.spell = id; hud.bookKey = "";
+      recent = { spell: id };
+      document.body.classList.add("pointing");
+      hud.toast(m.name);
+    },
+    cancelPointing(silent) {
+      if (ui.pointing == null) return;
+      ui.pointing = null; document.body.classList.remove("pointing");
+      if (!silent) hud.log("Hechizo cancelado.");
+    },
+    // F2 / F3: usar el atajo; con Ctrl se asigna lo último usado
+    useShortcut(n, ctrl) {
+      const F = "F" + (n + 2);
+      if (ctrl) {
+        if (!recent) { hud.log("Para asignar un atajo usa primero un objeto o un hechizo, luego pulsa Ctrl+" + F + "."); return; }
+        shortcuts[n] = recent; store.set("shortcuts", JSON.stringify(shortcuts));
+        hud.log("Atajo asignado a [" + F + "].");
+        return;
+      }
+      const sc = shortcuts[n];
+      if (!sc) { hud.log("No hay nada asignado a [" + F + "]. Usa un objeto o hechizo y pulsa Ctrl+" + F + " para asignarlo."); return; }
+      if (sc.spell != null) ui.useMagic(sc.spell);
+      else hud.useItemId(sc.item);
+    },
+    noteItemUse(id) { recent = { item: id }; },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    // tecla pulsada fuera de los cuadros de texto
+    hotkey(e) {
+      const k = e.key, K = k.toLowerCase();
+      const me = world.ents.get(pid);
+      if (e.altKey) return;
+      if (/^F([1-9]|1[0-2])$/.test(k)) {
+        e.preventDefault();
+        switch (k) {
+          case "F1": ui.key("help"); break;
+          case "F2": ui.useShortcut(0, e.ctrlKey); break;
+          case "F3": ui.useShortcut(1, e.ctrlKey); break;
+          case "F4": if (hud.spell != null) ui.useMagic(hud.spell); break;
+          case "F5": ui.key("char"); break;
+          case "F6": ui.key("inv"); break;
+          case "F7": ui.key("book"); break;
+          case "F8": ui.key("char"); break;                    // habilidades (aún en el panel de personaje)
+          case "F9": hud.toast("Historial de chat: pendiente"); break;
+          case "F11": document.body.classList.toggle("dialogtrans"); break;
+          case "F12": ui.key("options"); break;
+        }
+        return;
+      }
+      if (e.ctrlKey) {
+        if (/^[0-9]$/.test(k)) { e.preventDefault(); ui.key("book"); return; }   // Ctrl+0..9: página de magia
+        switch (K) {
+          case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
+          case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
+          case "h": e.preventDefault(); ui.key("help"); return;
+          case "m": e.preventDefault(); setOpt("map", !opts.map); return;
+          case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
+          case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
+          case "t": e.preventDefault(); openChat("/to "); return;
+          case "w": e.preventDefault(); document.body.classList.toggle("dialogtrans"); return;
+          case "x": e.preventDefault(); ui.key("options"); return;
+        }
+        return;
+      }
       switch (k) {
-        case "g": {
-          const m = renderer.mode === "classic" ? "remastered" : "classic";
-          setOpt("mode", m);
-          hud.toast(m === "classic" ? "Gráficos clásicos" : "Gráficos remastered");
-          break;
-        }
-        case "e": {
-          const me = world.ents.get(pid);
+        case "Insert": e.preventDefault(); hud.quickUse("hp"); return;
+        case "Delete": e.preventDefault(); hud.quickUse("mp"); return;
+        case "Home": e.preventDefault(); flag("safe", "Modo de ataque seguro activado.", "Modo de ataque seguro desactivado."); return;
+        case "Tab": e.preventDefault(); flag("combat", "Modo de combate.", "Modo de paz."); return;
+        case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
+        case "PageUp": e.preventDefault(); hud.log("No tienes ninguna habilidad especial lista."); return;
+        case "+": hud.toast("Mapa ampliado"); return;
+        case "-": hud.toast("Mapa normal"); return;
+        case "Escape": ui.cancelPointing(); ui.key("escape"); return;
+        case "Enter": if (me && me.dead) conn.send({ t: "respawn" }); else openChat(); return;
+        case "e": case "E": {
           const portal = world.map?.portals.find(g => me && Math.max(Math.abs(g.x - me.x), Math.abs(g.y - me.y)) <= 1);
-          if (portal) conn.send({ t: "portal", portal: portal.id });
-          else hud.toast("Acércate a un portal para usarlo (E)");
-          break;
+          if (portal) { conn.send({ t: "portal", portal: portal.id }); return; }
+          break;                                             // sin portal cerca, la E empieza a escribir
         }
-        case "r": setOpt("run", !opts.run); hud.toast(opts.run ? "Correr: activado" : "Correr: desactivado"); break;
-        case "m": case "tab": setOpt("map", !opts.map); break;
-        case "b": setOpt("grid", !opts.grid); break;
-        case "o": optionsEl.classList.toggle("open"); break;
-        case "c": document.getElementById("charpanel").classList.toggle("open"); break;
-        case "k": document.getElementById("book").classList.toggle("open"); break;
-        case "i": document.getElementById("inv").classList.toggle("open"); break;
-        case "h": case "?": case "f1": document.getElementById("help").classList.toggle("open"); break;
+      }
+      // cualquier otra tecla imprimible empieza a escribir en el chat
+      if (k.length === 1 && !e.metaKey) openChat();
+    },
+    key(a) {
+      switch (a) {
+        case "gfx": { const m = renderer.mode === "classic" ? "remastered" : "classic"; setOpt("mode", m); hud.toast(m === "classic" ? "Gráficos clásicos" : "Gráficos remastered"); break; }
+        case "sound": setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); break;
         case "escape": {
           const open = document.querySelectorAll(".panel.open");
-          if (open.length) for (const p of open) p.classList.remove("open"); else optionsEl.classList.add("open");
+          for (const p of open) p.classList.remove("open");
           break;
         }
-        case "n": setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); break;
-        case "enter": {
-          const me = world.ents.get(pid);
-          if (me && me.dead) conn.send({ t: "respawn" });
-          else openChat();
-          break;
-        }
+        default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
     },
   };
@@ -144,25 +218,26 @@ async function main() {
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onButton = k => ui.key(k);
+  hud.onSpell = id => ui.useMagic(id);
+  hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
 
   setMode(opts.mode);
   applyOpts();
   addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); });
-  hud.log("Bienvenido a la granja de Aresden. Pulsa H para ver los controles.");
+  hud.log("Bienvenido a la granja de Aresden. Pulsa F1 para ver los controles.");
   hud.log("Cripta de esqueletos: entrada en (134, 94), cerca del inicio. Acércate y pulsa E.", "gold");
-  hud.log("G cambia entre gráficos clásicos y remastered.", "gold");
   if (online) hud.log(conn.returning ? "Partida en línea: se ha cargado tu progreso. Intro para hablar." : "Partida en línea. Pulsa Intro para hablar con los demás.", "gold");
 
   // chat
   const chatBox = document.getElementById("chat"), chatIn = chatBox.querySelector("input");
   const bubbles = new Map();
-  function openChat() { chatBox.classList.add("open"); chatIn.value = ""; chatIn.focus(); }
+  function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
-      if (t) conn.send({ t: "say", text: t });
+      if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
   });

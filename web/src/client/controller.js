@@ -21,16 +21,20 @@ export class Controller {
     this.clickFx = null;
     this.lastHold = 0;
 
+    // Ratón como en el cliente original (Game.cpp, CommandProcessor):
+    //   izquierdo = andar / correr (sobre uno mismo, recoger); Ctrl + izquierdo = atacar al objetivo;
+    //   derecho = atacar al monstruo adyacente sin moverse; con un hechizo preparado el izquierdo lo lanza y el derecho cancela.
     canvas.addEventListener("pointerdown", e => {
       e.preventDefault();
       ui.unlockAudio();
       this.pointer = [e.clientX, e.clientY];
-      if (e.button === 2) { this.cast(); return; }
+      this.ctrl = e.ctrlKey;
+      this.btn = e.button === 2 ? 2 : 0;
       this.down = true;
       canvas.setPointerCapture?.(e.pointerId);
-      this.click(true);
+      if (this.btn === 2) this.rightClick(); else this.click(true);
     });
-    canvas.addEventListener("pointermove", e => { this.pointer = [e.clientX, e.clientY]; });
+    canvas.addEventListener("pointermove", e => { this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
     canvas.addEventListener("pointerup", () => { this.down = false; });
     canvas.addEventListener("pointercancel", () => { this.down = false; });
     canvas.addEventListener("pointerleave", () => { if (!this.down) this.pointer = null; });
@@ -43,18 +47,10 @@ export class Controller {
 
     addEventListener("keydown", e => {
       if (e.target instanceof HTMLInputElement) return;
-      const k = e.key.toLowerCase();
-      if (e.key === " " || e.key === "Alt" || e.key === "Tab") e.preventDefault();
       if (!e.repeat) ui.unlockAudio();
-      this.keys.add(k);
-      if (e.repeat) return;
-      switch (k) {
-        case "1": case "insert": ui.quick("hp"); break;
-        case "2": case "delete": ui.quick("mp"); break;
-        case "3": ui.quick("sp"); break;
-        case " ": this.conn.send({ t: "pickup" }); break;
-        default: ui.key(k);
-      }
+      this.keys.add(e.key.toLowerCase());
+      if (e.repeat) { if (ui.isHotkey(e)) e.preventDefault(); return; }
+      ui.hotkey(e);
     });
     addEventListener("keyup", e => this.keys.delete(e.key.toLowerCase()));
     addEventListener("blur", () => { this.keys.clear(); this.down = false; });
@@ -79,29 +75,37 @@ export class Controller {
     return best;
   }
 
-  // botón derecho: lanza el hechizo elegido en el libro (K) sobre la casilla del cursor
-  cast() {
-    const me = this.me;
-    if (!me || me.dead || !this.pointer) return;
-    if (this.ui.spell == null) { this.ui.say("Elige un hechizo en el libro de magia (K)."); return; }
+  // posición del cursor -> {ent, x, y}
+  target() {
     const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
     const ent = this.pick(wx, wy);
-    const x = ent ? ent.x : Math.floor(wx / T), y = ent ? ent.y : Math.floor(wy / T);
-    this.conn.send({ t: "cast", spell: this.ui.spell, x, y });
+    return { ent, x: ent ? ent.x : Math.floor(wx / T), y: ent ? ent.y : Math.floor(wy / T) };
+  }
+
+  // botón derecho: cancela el hechizo preparado; si no, ataca al monstruo de al lado (sin moverse)
+  rightClick() {
+    const me = this.me;
+    if (!me || me.dead || !this.pointer) return;
+    if (this.ui.pointing != null) { this.ui.cancelPointing(); return; }
+    const { ent } = this.target();
+    if (!ent || dist(me, ent) > 1) return;
+    this.intent = null; this.path = [];
+    if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: ent.id });
   }
 
   click(first) {
     if (!this.pointer) return;
     const me = this.me;
     if (!me || me.dead) return;
-    const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
-    const tx = Math.floor(wx / T), ty = Math.floor(wy / T);
-    const ent = this.pick(wx, wy);
-    if (ent) { this.intent = { t: "attack", id: ent.id }; return; }
-    if (!first && this.intent && this.intent.t === "attack") return;   // mantener pulsado sigue atacando
+    const { ent, x: tx, y: ty } = this.target();
+    if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
+      if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty }); this.ui.cancelPointing(true); }
+      return;
+    }
+    if (this.ctrl && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
+    if (!first && this.intent && this.intent.t === "attack") return;
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
-    if (this.world.items.has(this.grid.idx(tx, ty))) { this.intent = { t: "pickup", x: tx, y: ty }; }
-    else this.intent = { t: "move", x: tx, y: ty };
+    this.intent = { t: "move", x: tx, y: ty };
     const ok = !this.grid.blocked(tx, ty);
     if (first) this.clickFx = { x: tx, y: ty, t: performance.now(), ok };
     if (!ok) this.intent = null;
@@ -118,7 +122,7 @@ export class Controller {
     if (!me || me.dead) { this.intent = null; this.path = []; return; }
 
     // mantener pulsado = seguir andando hacia el cursor (como Diablo / el original)
-    if (this.down && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); this.click(false); }
+    if (this.down && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
 
     if (world.busy(me)) return;
     const run = this.ui.run && me.sp >= 1;

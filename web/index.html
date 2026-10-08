@@ -202,6 +202,8 @@
     body.remastered #buttons button { padding: 3px 7px; }
     #log { bottom: 140px; font-size: 12px; }
   }
+body.pointing #game, body.pointing canvas { cursor: crosshair !important; }
+body.dialogtrans .panel { opacity: .55; }
 </style>
 </head>
 <body class="remastered">
@@ -258,72 +260,65 @@
   <div id="hudbar">
     <div id="hp" class="gauge"><div class="fill"></div><span class="lbl">HP</span><span class="val"></span></div>
     <div id="belt">
-      <button class="slot" data-use="hp" title="Poción de vida"><span class="icon red"></span><b>0</b><kbd>1</kbd></button>
-      <button class="slot" data-use="mp" title="Poción de maná"><span class="icon blue"></span><b>0</b><kbd>2</kbd></button>
-      <button class="slot" data-use="sp" title="Poción de resistencia"><span class="icon green"></span><b>0</b><kbd>3</kbd></button>
+      <button class="slot" data-use="hp" title="Poción de vida"><span class="icon red"></span><b>0</b><kbd>Ins</kbd></button>
+      <button class="slot" data-use="mp" title="Poción de maná"><span class="icon blue"></span><b>0</b><kbd>Supr</kbd></button>
+      <button class="slot" data-use="sp" title="Poción de resistencia"><span class="icon green"></span><b>0</b></button>
       <div id="goldbox"><span class="icon gold"></span><span id="gold">0</span></div>
     </div>
     <div id="sp"><div class="fill"></div></div>
     <div id="mp" class="gauge"><div class="fill"></div><span class="lbl">MP</span><span class="val"></span></div>
     <div id="xp" class="xpbar"><div class="fill"></div><span class="val"></span></div>
     <div id="buttons">
-      <button data-key="c">Personaje<span id="poolbadge"></span></button>
-      <button data-key="i">Mochila</button>
-      <button data-key="k">Magia</button>
-      <button data-key="g">Gráficos</button>
-      <button data-key="n">Sonido</button>
-      <button data-key="o">Opciones</button>
-      <button data-key="h">Ayuda</button>
+      <button data-key="char">Personaje (F5)<span id="poolbadge"></span></button>
+      <button data-key="inv">Mochila (F6)</button>
+      <button data-key="book">Magia (F7)</button>
+      <button data-key="gfx">Gráficos</button>
+      <button data-key="sound">Sonido</button>
+      <button data-key="options">Opciones (F12)</button>
+      <button data-key="help">Ayuda (F1)</button>
     </div>
   </div>
 
-  <div id="charpanel" class="panel"><button class="close" data-key="c">×</button><div class="body"></div></div>
+  <div id="charpanel" class="panel"><button class="close" data-key="char">×</button><div class="body"></div></div>
 
-  <div id="inv" class="panel"><button class="close" data-key="i">×</button><h3>Mochila</h3>
+  <div id="inv" class="panel"><button class="close" data-key="inv">×</button><h3>Mochila</h3>
     <div class="load"></div><div class="grid"></div><div class="detail"></div></div>
 
-  <div id="book" class="panel"><button class="close" data-key="k">×</button><h3>Libro de magia</h3>
-    <p class="hint">Aprende con oro y elige uno. Clic derecho lanza el hechizo (sin escudo ni arma a dos manos).</p><div class="list"></div></div>
+  <div id="book" class="panel"><button class="close" data-key="book">×</button><h3>Libro de magia</h3>
+    <p class="hint">Aprende con oro y elige uno. Elige un hechizo: el siguiente clic izquierdo lo lanza, el derecho cancela.</p><div class="list"></div></div>
 
   <div id="options" class="panel">
     <button class="close" data-key="escape">×</button>
     <h3>Opciones</h3>
-    <label><input type="checkbox" data-opt="run"> Correr (tecla <kbd>R</kbd>)</label>
-    <label><input type="checkbox" data-opt="map"> Mostrar mapa (tecla <kbd>M</kbd> o <kbd>Tab</kbd>)</label>
+    <label><input type="checkbox" data-opt="run"> Correr (<kbd>Ctrl</kbd>+<kbd>R</kbd>)</label>
+    <label><input type="checkbox" data-opt="map"> Mostrar mapa (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</label>
     <label>Estilo del mapa
       <select data-opt="mapStyle"><option value="corner">Esquina</option><option value="overlay">Superpuesto (estilo Diablo II)</option></select></label>
-    <label><input type="checkbox" data-opt="grid"> Mostrar casillas bloqueadas (<kbd>B</kbd>)</label>
+    <label><input type="checkbox" data-opt="grid"> Mostrar casillas bloqueadas</label>
     <div class="acct"><b>Cuenta</b>
       <button type="button" id="btn-save">Guardar ahora</button>
       <button type="button" id="btn-export">Exportar copia</button>
       <button type="button" id="btn-import">Importar copia</button>
       <button type="button" id="btn-logout">Cerrar sesión</button>
       <input type="file" id="file-import" accept=".json,application/json" hidden></div>
-    <label><input type="checkbox" data-opt="sound"> Sonido (<kbd>N</kbd>)</label>
+    <label><input type="checkbox" data-opt="sound"> Sonido (<kbd>Ctrl</kbd>+<kbd>S</kbd>)</label>
     <label>Gráficos
       <select data-opt="mode"><option value="classic">Clásico</option><option value="remastered">Remastered</option></select></label>
   </div>
 
   <div id="help" class="panel">
-    <button class="close" data-key="h">×</button>
-    <h3>Controles</h3>
+    <button class="close" data-key="help">×</button>
+    <h3>Controles (cliente original)</h3>
     <ul>
-      <li>Clic en el suelo: andar (mantén pulsado para seguir)</li>
-      <li>Clic en un monstruo: atacar hasta matarlo</li>
-      <li>Clic en un objeto o <kbd>Espacio</kbd>: recoger</li>
-      <li><kbd>E</kbd>: usar un portal cercano (cripta: 134, 94)</li>
-      <li><kbd>R</kbd>: correr / andar (se recuerda)</li>
-      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>: poción de vida, maná, resistencia (también <kbd>Insert</kbd> <kbd>Supr</kbd>)</li>
-      <li><kbd>I</kbd>: mochila (clic = ver, doble clic = equipar o usar)</li>
-      <li><kbd>C</kbd>: personaje y puntos</li>
-      <li><kbd>K</kbd>: libro de magia · clic derecho: lanzar el hechizo elegido</li>
-      <li><kbd>Alt</kbd>: nombres de los objetos</li>
-      <li><kbd>G</kbd>: gráficos clásicos / remastered</li>
-      <li>Rueda del ratón: zoom (remastered)</li>
-      <li><kbd>M</kbd> o <kbd>Tab</kbd>: mapa · <kbd>B</kbd>: casillas</li>
-      <li><kbd>Esc</kbd>: opciones (cierra los paneles abiertos)</li>
-      <li><kbd>N</kbd>: sonido</li>
-      <li><kbd>Intro</kbd>: hablar (o reaparecer al morir)</li>
+      <li>Clic izquierdo: andar (correr si el modo correr está activo) · sobre ti: recoger</li>
+      <li>Clic derecho: atacar al monstruo adyacente · <kbd>Ctrl</kbd>+clic izquierdo: ir a atacar</li>
+      <li><kbd>F1</kbd> ayuda · <kbd>F5</kbd> personaje · <kbd>F6</kbd> mochila · <kbd>F7</kbd> magia · <kbd>F12</kbd> sistema</li>
+      <li><kbd>F2</kbd> <kbd>F3</kbd>: atajos (asigna con <kbd>Ctrl</kbd>+<kbd>F2</kbd>/<kbd>F3</kbd> lo último usado) · <kbd>F4</kbd>: hechizo elegido</li>
+      <li><kbd>Insert</kbd> poción de vida · <kbd>Supr</kbd> poción de maná</li>
+      <li><kbd>Tab</kbd> combate/paz · <kbd>Inicio</kbd> ataque seguro · <kbd>Fin</kbd> último mensaje</li>
+      <li><kbd>Ctrl</kbd>+<kbd>R</kbd> correr · <kbd>Ctrl</kbd>+<kbd>A</kbd> ataque automático · <kbd>Ctrl</kbd>+<kbd>M</kbd> mapa · <kbd>Ctrl</kbd>+<kbd>S</kbd> sonido · <kbd>Ctrl</kbd>+<kbd>T</kbd> susurro</li>
+      <li><kbd>Intro</kbd> o cualquier letra: escribir · <kbd>Esc</kbd>: cerrar</li>
+      <li><kbd>E</kbd> junto a un portal de la cripta (añadido de esta versión)</li>
     </ul>
     <p>La lógica (fórmulas de combate, experiencia, monstruos y sus zonas) sale del servidor original. Los dos modos gráficos juegan exactamente igual.</p>
   </div>

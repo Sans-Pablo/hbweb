@@ -27,7 +27,7 @@ export class Hud {
     $("#book .list").addEventListener("click", e => {
       const b = e.target.closest("[data-learn],[data-pick]"); if (!b) return;
       if (b.dataset.learn) conn.send({ t: "learn", spell: +b.dataset.learn });
-      else { this.spell = +b.dataset.pick; this.bookKey = ""; this.log("Hechizo elegido: " + this.magicData[this.spell].name + ". Clic derecho para lanzarlo.", "gold"); }
+      else { this.spell = +b.dataset.pick; this.bookKey = ""; this.onSpell?.(this.spell); }
     });
     $("#inv .grid").addEventListener("click", e => { const c = e.target.closest("[data-uid]"); if (c) { this.sel = +c.dataset.uid; this.invKey = ""; } });
     $("#inv .grid").addEventListener("dblclick", e => { const c = e.target.closest("[data-uid]"); if (c) this.primary(+c.dataset.uid); });
@@ -117,7 +117,15 @@ export class Hud {
     if (d.type === ITYPE.EQUIP) this.act(this.isEquipped(me, uid) ? "unequip" : "equip", uid);
     else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) this.act("use", uid);
   }
+  // atajo F2/F3 de un objeto: equipar/quitar el equipo o usar el consumible
+  useItemId(id) {
+    const me = this.conn.state.ents.get(this.conn.pid), it = me?.bag.find(i => i.id === id);
+    if (!it) { this.log("No tienes ese objeto.", "bad"); return; }
+    this.primary(it.uid);
+  }
   act(a, uid) {
+    const me0 = this.conn.state.ents.get(this.conn.pid), it0 = me0?.bag.find(i => i.uid === uid);
+    if (it0 && (a === "use" || a === "equip" || a === "unequip")) this.onItem?.(it0.id);
     if (a === "drop") { const me = this.conn.state.ents.get(this.conn.pid), it = me?.bag.find(i => i.uid === uid); this.conn.send({ t: "drop", uid, count: it && isStack(itemDef(it.id)) ? it.count : 0 }); }
     else this.conn.send({ t: a, uid });
   }
