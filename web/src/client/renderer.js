@@ -117,9 +117,7 @@ export class Renderer {
     const [ppx, ppy] = posOf(s.me, time);
 
     // cámara: fija al personaje (clásico) o con un pequeño seguimiento suave (remastered)
-    const rawX = ppx - this.viewW / 2, rawY = ppy - this.viewH / 2 - 4;
-    const tx = this.grid.procedural ? Math.max(0, Math.min(rawX, this.grid.w * T - this.viewW)) : rawX;
-    const ty = this.grid.procedural ? Math.max(0, Math.min(rawY, this.grid.h * T - this.viewH)) : rawY;
+    const tx = ppx - this.viewW / 2, ty = ppy - this.viewH / 2 - 4;
     if (!this.cam || !remaster) this.cam = [tx, ty];
     else {
       const k = 1 - Math.exp(-s.dt / 70);

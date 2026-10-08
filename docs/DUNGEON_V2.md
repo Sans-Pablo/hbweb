@@ -7,7 +7,7 @@ Corrige la primera entrega: el suelo elegía `t330/20`, un fotograma negro, y la
 - Pilares y antorchas de `objects1` (`t200`); los pilares bloquean su casilla y nunca estrechan una galería. El minimapa conserva enemigos y portales.
 - Suelos de piedra `t330/1,21,41,61`, paredes rocosas `t301` con bordes iluminados. No se usan los fotogramas negros ni el suelo transparente. Se reutilizan las hojas originales ya convertidas; todavía no es una copia de la geometría ni de la paleta completa de Middle Dungeon.
 - Panel de cámara actual y enemigos restantes; el servidor también transmite el contador al matar enemigos fuera de la vista del cliente.
-- Piedra oscurecida para distinguir los huesos, cámara limitada a los bordes de la cripta y nombres/barras visibles en remastered.
+- Piedra oscurecida para distinguir los huesos y nombres/barras visibles en remastered. La cámara sigue al personaje también junto a los bordes, con el mismo comportamiento que en Aresfarm; no se limita a las dimensiones de la cripta.
 - JSON revalidado, verificación de datos Skeleton y sus 40 hojas, descargas limitadas a doce simultáneas y un reintento por gráfico. Una imagen rota produce un error visible en lugar de simular una carga correcta. Los bloques pendientes no quedan guardados sin texturas.
 - El despliegue añade su SHA a las entradas HTML y a todos los imports ESM mediante `tools/version_web.py`. Así un navegador con caché de la entrega anterior descarga un grafo de módulos consistente. Las fuentes del repositorio y el servidor local mantienen sus rutas habituales.
 
