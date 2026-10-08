@@ -202,12 +202,15 @@
     body.remastered #buttons button { padding: 3px 7px; }
     #log { bottom: 140px; font-size: 12px; }
   }
+#gui { position: fixed; pointer-events: none; z-index: 5; image-rendering: pixelated; }
+#hudbar { display: none !important; }
 body.pointing #game, body.pointing canvas { cursor: crosshair !important; }
 body.dialogtrans .panel { opacity: .55; }
 </style>
 </head>
 <body class="remastered">
 <canvas id="game"></canvas>
+<canvas id="gui"></canvas>
 <div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span></div></div>
 
 <div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>

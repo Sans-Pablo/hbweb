@@ -27,6 +27,7 @@ export class Controller {
     canvas.addEventListener("pointerdown", e => {
       e.preventDefault();
       ui.unlockAudio();
+      if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
@@ -34,8 +35,8 @@ export class Controller {
       canvas.setPointerCapture?.(e.pointerId);
       if (this.btn === 2) this.rightClick(); else this.click(true);
     });
-    canvas.addEventListener("pointermove", e => { this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
-    canvas.addEventListener("pointerup", () => { this.down = false; });
+    canvas.addEventListener("pointermove", e => { ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
+    canvas.addEventListener("pointerup", () => { this.down = false; this.guiDrag = false; ui.gui.up(); });
     canvas.addEventListener("pointercancel", () => { this.down = false; });
     canvas.addEventListener("pointerleave", () => { if (!this.down) this.pointer = null; });
     canvas.addEventListener("contextmenu", e => e.preventDefault());

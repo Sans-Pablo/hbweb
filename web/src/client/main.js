@@ -11,6 +11,7 @@ import { Hud } from "./hud.js";
 import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
+import { Gui } from "./gui.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -38,6 +39,8 @@ async function main() {
   const renderer = new Renderer(canvas, assets, grid);
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
+  const gui = new Gui(document.getElementById("gui"));
+  await gui.load();
   hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
@@ -51,7 +54,7 @@ async function main() {
     sound.setMode(m);
     
     document.getElementById("modename").textContent = m === "classic" ? "Clásico" : "Remastered";
-    hud.place(renderer.viewRect);
+    hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
   const defaults = { run: false, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered" };
@@ -83,6 +86,7 @@ async function main() {
   let recent = null;
   const flag = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); };
   const ui = {
+    gui,
     get run() { return opts.run; },
     unlockAudio: () => sound.unlock(),
     quick: k => hud.quickUse(k),
@@ -218,13 +222,14 @@ async function main() {
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onButton = k => ui.key(k);
+  gui.onAction = a => ({ combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("char"), chat: () => hud.toast("Historial de chat: pendiente"), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
 
   setMode(opts.mode);
   applyOpts();
-  addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); });
+  addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr); });
   hud.log("Bienvenido a la granja de Aresden. Pulsa F1 para ver los controles.");
   hud.log("Cripta de esqueletos: entrada en (134, 94), cerca del inicio. Acércate y pulsa E.", "gold");
   if (online) hud.log(conn.returning ? "Partida en línea: se ha cargado tu progreso. Intro para hablar." : "Partida en línea. Pulsa Intro para hablar con los demás.", "gold");
@@ -281,6 +286,8 @@ async function main() {
       labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
+    gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
+    gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control") });
     canvas.style.cursor = ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
     requestAnimationFrame(loop);
   }
