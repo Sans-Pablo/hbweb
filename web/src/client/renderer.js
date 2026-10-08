@@ -89,6 +89,9 @@ export class Renderer {
         }
         if (!this.spr.ready("t" + t.spr)) ready = false;
         this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
+        if (this.grid.procedural && !t.blocked) {
+          g.fillStyle = "rgba(24,21,29,.35)"; g.fillRect(i * T, j * T, T, T);
+        }
         if (this.grid.procedural && t.blocked) {
           const x = cx * CHUNK + i, y = cy * CHUNK + j;
           const edge = !this.grid.blocked(x - 1, y) || !this.grid.blocked(x + 1, y) || !this.grid.blocked(x, y - 1) || !this.grid.blocked(x, y + 1);
@@ -114,7 +117,9 @@ export class Renderer {
     const [ppx, ppy] = posOf(s.me, time);
 
     // cámara: fija al personaje (clásico) o con un pequeño seguimiento suave (remastered)
-    const tx = ppx - this.viewW / 2, ty = ppy - this.viewH / 2 - 4;
+    const rawX = ppx - this.viewW / 2, rawY = ppy - this.viewH / 2 - 4;
+    const tx = this.grid.procedural ? Math.max(0, Math.min(rawX, this.grid.w * T - this.viewW)) : rawX;
+    const ty = this.grid.procedural ? Math.max(0, Math.min(rawY, this.grid.h * T - this.viewH)) : rawY;
     if (!this.cam || !remaster) this.cam = [tx, ty];
     else {
       const k = 1 - Math.exp(-s.dt / 70);
@@ -324,7 +329,7 @@ export class Renderer {
     // encima de todo: nombre y vida
     if (e.dead) return;
     const top = y - this.mobHeight(key, f) - 6;
-    if (remaster && (e.hp < e.maxHp || hovered)) {
+    if (remaster && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
         ctx.fillStyle = "rgba(0,0,0,.65)";
@@ -333,7 +338,7 @@ export class Renderer {
         ctx.fillRect(x - w / 2, top, w * k, 3);
       });
     }
-    if (hovered) {
+    if (hovered || remaster && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + e.name;
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
