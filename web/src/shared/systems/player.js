@@ -51,7 +51,7 @@ function newCharacter(w, p, create) {
     gender: c.gender, look: c.look,
     stats: c.stats,
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
-    bag: [], equip: {}, gold: 0, ssn: {}, magic: allSpells(w),
+    bag: [], equip: {}, bank: [], gold: 0, ssn: {}, magic: allSpells(w),
   });
   const s = p.stats;
   p.skills = { 3: Math.floor(s.mag / 3), 4: s.mag + 10, 5: s.str + 10, 7: s.dex + 10 };
@@ -89,6 +89,7 @@ function loadSave(w, p, s) {
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
+  if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}) }));
   if (Array.isArray(s.bag)) {
     p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
     p.equip = {};
@@ -106,6 +107,7 @@ export function saveOf(w, id) {
   return {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
+    bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.attr ? { attr: i.attr, color: i.color } : {}) })),
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.attr ? { attr: i.attr, color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
   };
 }

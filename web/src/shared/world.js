@@ -12,6 +12,7 @@ import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
+import * as Shop from "./systems/shopsys.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { CAST_MS } from "./magic.js";
@@ -108,7 +109,7 @@ export class World {
       }
       for (const e of this.ents.values()) {
         if (e.kind === "npc") Npc.npcThink(this, e);
-        else if (!e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
+        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
     }
@@ -161,6 +162,14 @@ const COMMANDS = {
   cast: (w, p, cmd) => MagicSys.cast(w, p, cmd),
   learn: (w, p, cmd) => MagicSys.learn(w, p, cmd.spell),
   pickup: (w, p) => ItemSys.startPickup(w, p),
+  buy: (w, p, cmd) => Shop.buy(w, p, cmd),
+  sellreq: (w, p, cmd) => Shop.sellRequest(w, p, cmd),
+  sellconfirm: (w, p, cmd) => Shop.sellConfirm(w, p, cmd.uid, cmd.count | 0),
+  selllist: (w, p, cmd) => Shop.sellList(w, p, cmd),
+  repairreq: (w, p, cmd) => Shop.repairRequest(w, p, cmd),
+  repairconfirm: (w, p, cmd) => Shop.repairConfirm(w, p, cmd),
+  deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
+  withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },
   equip: (w, p, cmd) => ItemSys.equipCmd(w, p, cmd.uid),
   unequip: (w, p, cmd) => ItemSys.unequipCmd(w, p, cmd.uid),

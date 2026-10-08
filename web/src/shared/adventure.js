@@ -3,6 +3,7 @@ import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
 import { FARM_PORTAL, generateDungeon, DUNGEON_VERSION } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
+import { populate } from "./systems/citizens.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
 
@@ -40,6 +41,7 @@ export class Adventure {
     w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
     w.meta = meta;
     for (const n of w.ents.values()) n.nextAct += this.time;
+    populate(w, meta, id);
     this.worlds.set(id, w);
     return w;
   }
