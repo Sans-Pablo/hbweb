@@ -16,6 +16,8 @@
   <button id="generate">Generar</button>
   <label>Cámara <select id="room"></select></label>
   <button id="mode">Ver clásico</button>
+  <label><input id="walk" type="checkbox"> Caminata del esqueleto</label>
+  <label>Dirección <select id="direction"><option value="1">N</option><option value="2">NE</option><option value="3">E</option><option value="4">SE</option><option value="5">S</option><option value="6">SO</option><option value="7">O</option><option value="8">NO</option></select></label>
   <a href="./">Abrir juego</a>
 </header>
 <p id="status" role="status">Cargando piedra, pilares, antorchas y esqueletos…</p>
@@ -29,11 +31,12 @@
   const $ = id => document.getElementById(id), status = $("status");
   async function start() {
     const json = async file => { const r = await fetch("data/" + file, { cache: "no-cache" }); if (!r.ok) throw Error(file); return r.json(); };
-    const [manifest, npcDb, items, magic] = await Promise.all([json("sprites.json"),json("npc.json"),json("items.json"),json("magic.json")]);
+    const [manifest, npcDb, items, magic, hd] = await Promise.all([json("sprites.json"),json("npc.json"),json("items.json"),json("magic.json"),json("sprites_hd.json")]);
     validateDungeonAssets(manifest, npcDb);
     const images = {};
     await Promise.all(DUNGEON_ASSETS.map(async k => { images[k] = await loadSpriteImage(manifest[k].png); }));
-    const sprites = new Sprites(manifest, images), data = new GameData({ items, magic, npcs: npcDb });
+    const sprites = new Sprites(manifest, images, hd), data = new GameData({ items, magic, npcs: npcDb });
+    await sprites.preloadHd(Array.from({ length:8 }, (_,d) => "ske" + (8+d)));
     let world, layout, renderer, me;
     function generate() {
       const seed = Number($("seed").value) >>> 0; $("seed").value = seed;
@@ -55,6 +58,13 @@
     generate(); addEventListener("resize", () => renderer.resize());
     function frame(time) {
       world.time = time;
+      // Animación de inspección, sin mover entidades ni alterar la simulación del juego.
+      for (const e of world.ents.values()) {
+        e.dir = Number($("direction").value);
+        e.act = $("walk").checked ? 1 : 0;
+        e.actDur = $("walk").checked ? 560 : 0;
+        e.actStart = time - time % 560;
+      }
       renderer.render({ world, me, dt:16, fx:{flash:new Map(),draw(){}}, showMinimap:true, mapStyle:"corner" });
       requestAnimationFrame(frame);
     }

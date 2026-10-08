@@ -72,7 +72,9 @@ export async function loadAssets(onProgress) {
   for (const k of Object.keys(equip)) equip[k].png = "../equip/" + equip[k].png;
   Object.assign(manifest, equip);
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
-  return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images, hd), npcDb, spawns, data };
+  const sprites = new Sprites(manifest, images, hd);
+  await sprites.preloadHd(Array.from({ length: 8 }, (_, d) => "ske" + (8 + d)));
+  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data };
 }
 
 export class Sprites {
@@ -131,7 +133,13 @@ export class Sprites {
     return keys;
   }
   frames(key) { return this.m[key] ? this.m[key].frames.length : 0; }
-  frame(key, f) { const s = this.m[key]; return s && f >= 0 && f < s.frames.length ? s.frames[f] : null; }
+  frame(key, f) {
+    const hd = this.hd && this.hdm[key];
+    // Los redibujos tienen atlas y pivotes propios. Hasta cargar la hoja,
+    // usar juntos la imagen y las coordenadas originales.
+    if (hd?.frames && this.src(key)[0] === this.hdi[key]) return hd.frames[f] || null;
+    const s = this.m[key]; return s && f >= 0 && f < s.frames.length ? s.frames[f] : null;
+  }
 
   // Fotograma f con su pivote en (x, y)
   put(ctx, key, f, x, y) {
@@ -161,9 +169,9 @@ export class Sprites {
   }
 
   silhouette(key) {
-    let c = this.sil[key];
+    const [img, k] = this.src(key), cacheKey = key + "@" + k;
+    let c = this.sil[cacheKey];
     if (c) return c;
-    const img = this.img[key];
     c = document.createElement("canvas");
     c.width = img.width || 1; c.height = img.height || 1;
     const g = c.getContext("2d");
@@ -171,7 +179,7 @@ export class Sprites {
     g.globalCompositeOperation = "source-in";
     g.fillStyle = "#000";
     g.fillRect(0, 0, c.width, c.height);
-    this.sil[key] = c;
+    this.sil[cacheKey] = c;
     return c;
   }
 
@@ -180,12 +188,12 @@ export class Sprites {
   shadow(ctx, key, f, x, y, alpha) {
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
-    const [sx, sy, w, h, pvx, pvy] = fr;
+    const [sx, sy, w, h, pvx, pvy] = fr, [, k] = this.src(key);
     const X0 = x + pvx, Y0 = y + pvy;
     ctx.save();
     ctx.globalAlpha *= alpha;
     ctx.transform(1, 0, 1 / 3, 1 / 3, X0 - h / 3, Y0 + (2 * h) / 3);
-    ctx.drawImage(this.silhouette(key), sx, sy, w, h, 0, 0, w, h);
+    ctx.drawImage(this.silhouette(key), sx * k, sy * k, w * k, h * k, 0, 0, w, h);
     ctx.restore();
   }
 
