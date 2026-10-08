@@ -13,7 +13,7 @@ import crypto from "node:crypto";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Grid } from "../web/src/shared/grid.js";
-import { World } from "../web/src/shared/world.js";
+import { Adventure } from "../web/src/shared/adventure.js";
 import { GameData } from "../web/src/shared/data.js";
 import { damageRange } from "../web/src/shared/combat.js";
 import { attackMs } from "../web/src/shared/world.js";
@@ -22,7 +22,7 @@ import { LIMITS, PLAYER } from "../web/src/shared/const.js";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(HERE, "..", "web");
 const DATA = path.join(WEB, "data");
-const SAVES = path.join(HERE, "saves.json");
+const SAVES = process.env.SAVE_FILE || path.join(HERE, "saves.json");
 const PORT = Number(process.argv[2] || process.env.PORT || 8080);
 const TICK_MS = 50;
 const VIEW = 26;                   // casillas alrededor del jugador que se le envían
@@ -35,12 +35,12 @@ const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
 const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
-const world = new World({ grid, npcDb, data, spawns, start: meta.start });
+const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start });
 
 let saves = {};
 try { saves = JSON.parse(fs.readFileSync(SAVES, "utf8")); } catch {}
 function persist() {
-  for (const c of clients) if (c.pid) saves[c.key] = world.saveOf(c.pid) || saves[c.key];
+  for (const c of clients) if (c.pid) saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
   try { fs.writeFileSync(SAVES, JSON.stringify(saves, null, 1)); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
 setInterval(persist, 30000);
@@ -144,8 +144,8 @@ function drop(c) {
   c.alive = false;
   clients.delete(c);
   if (c.pid) {
-    saves[c.key] = world.saveOf(c.pid) || saves[c.key];
-    world.removePlayer(c.pid);
+    saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
+    adventure.removePlayer(c.pid);
     console.log(`[-] ${c.name} se ha ido (${online()} conectados)`);
     persist();
   }
@@ -162,17 +162,17 @@ function onMessage(c, text) {
     if ([...clients].some(o => o.pid && o.key === key)) { send(c, { t: "error", msg: "Ese nombre ya está jugando. Elige otro." }); return; }
     if (online() >= MAX_PLAYERS) { send(c, { t: "error", msg: "El servidor está lleno." }); return; }
     c.name = name; c.key = key;
-    c.pid = world.addPlayer(name, saves[key]);
-    send(c, { t: "welcome", id: c.pid, time: world.time, returning: !!saves[key] });
+    c.pid = adventure.addPlayer(name, saves[key]);
+    send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: !!saves[key] });
     console.log(`[+] ${name} ha entrado (${online()} conectados)`);
-    world.emit({ t: "chat", id: c.pid, name: "Servidor", text: name + " ha entrado en la granja.", system: true });
+    adventure.farm.emit({ t: "chat", id: c.pid, name: "Servidor", text: name + " ha entrado en la granja.", system: true });
     return;
   }
   if (m.t === "cmd" && c.pid && m.cmd && typeof m.cmd.t === "string") {
     if (c.queue.length > 6) c.queue.shift();
     c.queue.push({ seq: m.seq | 0, cmd: m.cmd, at: Date.now() });
   }
-  if (m.t === "ping") send(c, { t: "pong", c: m.c, time: world.time });
+  if (m.t === "ping") send(c, { t: "pong", c: m.c, time: adventure.time });
 }
 
 // El cliente predice sus pasos, así que a veces una orden llega un poco antes de que el
@@ -180,8 +180,9 @@ function onMessage(c, text) {
 // búfer del servidor original), hasta 700 ms.
 const TIMED = new Set(["move", "attack", "pickup"]);
 function processQueue(c) {
-  const p = world.ents.get(c.pid);
   while (c.queue.length) {
+    const world = adventure.worldFor(c.pid);
+    const p = world.ents.get(c.pid);
     const q = c.queue[0];
     let backdate = null;
     if (p && !p.dead && TIMED.has(q.cmd.t)) {
@@ -199,9 +200,11 @@ function processQueue(c) {
     // siguiente tick): así el servidor no se va retrasando ~25 ms por paso y no hay "tirones".
     const now = world.time;
     if (backdate !== null) world.time = backdate;
-    world.command(c.pid, q.cmd);
+    const changedMap = q.cmd.t === "portal" || q.cmd.t === "respawn";
+    adventure.command(c.pid, q.cmd);
     world.time = now;
     c.ack = q.seq;
+    if (changedMap && adventure.worldFor(c.pid) !== world) { c.queue = []; return; }
     if (TIMED.has(q.cmd.t)) return;          // como mucho una acción con tiempo por tick
   }
 }
@@ -225,12 +228,9 @@ function pub(e, own) {
   return o;
 }
 
-let itemsVer = 0, itemsKey = "";
-function itemsList() {
+function itemsList(world) {
   const out = [];
   for (const list of world.items.values()) { const it = list[list.length - 1]; out.push([it.uid, it.id, it.count, it.x, it.y, it.attr || 0]); }   // solo se ve el de encima
-  const k = out.map(i => i[0]).join(",");
-  if (k !== itemsKey) { itemsKey = k; itemsVer++; }
   return out;
 }
 
@@ -239,14 +239,18 @@ setInterval(() => {
   const now = Date.now(), dt = Math.min(250, now - last);
   last = now;
   for (const c of clients) if (c.pid) processQueue(c);
-  world.tick(dt);
-  const events = world.drainEvents();
-  const items = itemsList();
+  adventure.tick(dt);
+  const eventsByMap = adventure.drainEvents();
   for (const c of clients) {
     if (!c.pid) continue;
+    const world = adventure.worldFor(c.pid);
     const me = world.ents.get(c.pid);
+    const events = eventsByMap.get(world.map.id) || [];
+    const items = itemsList(world);
     if (!me) continue;
     if (c.socket.writableLength > 1 << 20) continue;     // conexión atascada: saltar este envío
+    const mapChanged = c.mapId !== world.map.id;
+    if (mapChanged) { c.sent.clear(); c.itemsKey = null; c.mapId = world.map.id; }
     const changed = [], seen = new Set();
     for (const e of world.ents.values()) {
       if (e !== me && e.kind === "npc" && (Math.abs(e.x - me.x) > VIEW || Math.abs(e.y - me.y) > VIEW)) continue;
@@ -258,10 +262,12 @@ setInterval(() => {
     for (const id of c.sent.keys()) if (!seen.has(id)) { gone.push(id); c.sent.delete(id); }
     const ev = events.filter(v => v.t === "chat" || seen.has(v.id) || v.t === "drop" || v.id === c.pid);
     const msg = { t: "s", time: r1(world.time), ack: c.ack };
+    if (mapChanged) msg.map = world.map;
     if (changed.length) msg.e = changed;
     if (gone.length) msg.g = gone;
     if (ev.length) msg.ev = ev;
-    if (c.itemsVer !== itemsVer) { msg.it = items; c.itemsVer = itemsVer; }
+    const itemsKey = JSON.stringify(items);
+    if (c.itemsKey !== itemsKey) { msg.it = items; c.itemsKey = itemsKey; }
     send(c, msg);
   }
 }, TICK_MS);
@@ -270,8 +276,11 @@ setInterval(() => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log("Helbreath Web - servidor multijugador");
   console.log("  En este PC:        http://localhost:" + PORT + "/");
-  for (const list of Object.values(os.networkInterfaces()))
+  let interfaces = {};
+  try { interfaces = os.networkInterfaces(); } catch {} // Algunos entornos aíslan esta consulta.
+  for (const list of Object.values(interfaces))
     for (const a of list || []) if (a.family === "IPv4" && !a.internal) console.log("  En tu red local:   http://" + a.address + ":" + PORT + "/");
-  console.log("  Monstruos: " + [...world.ents.values()].filter(e => e.kind === "npc").length + ".  Progreso guardado en server/saves.json");
+  console.log("  Monstruos: " + [...adventure.farm.ents.values()].filter(e => e.kind === "npc").length + ".  Progreso guardado en server/saves.json");
 });
 process.on("SIGINT", () => { persist(); process.exit(0); });
+

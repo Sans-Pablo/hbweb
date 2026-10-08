@@ -47,7 +47,7 @@ export function killNpc(w, n, p) {
   const drop = rollKillDrop(w.rng, n, { rating: p.rating || 0, data: w.data, addGold: p.eff?.addGold || 0 });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
-  w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
+  if (n.gen.respawn !== false) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
   w.after(n.dur.dying + CORPSE_MS, () => { w.ents.delete(n.id); w.emit({ t: "remove", id: n.id }); });
 }
 
@@ -80,7 +80,8 @@ function npcAttack(w, n, t) {
   n.busyUntil = w.time + n.dur.attack;
   w.emit({ t: "attack", id: n.id, target: t.id });
   w.after(n.dur.attack * 0.5, () => {
-    if (n.dead || t.dead || dist(n, t) > n.cfg.attackRange) { w.emit({ t: "miss", id: t.id, from: n.id }); return; }
+    if (w.ents.get(t.id) !== t || n.dead || t.dead || dist(n, t) > n.cfg.attackRange) { w.emit({ t: "miss", id: t.id, from: n.id }); return; }
     npcStrikes(w, n, t);
   });
 }
+

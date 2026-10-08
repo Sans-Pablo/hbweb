@@ -87,7 +87,7 @@ export function recalc(w, p) {
 export function respawn(w, p) {
   if (!p.dead || w.time - p.deadAt < 1500) return false;
   const [x, y] = w.freeSpotNear(w.start[0], w.start[1]);
-  p.x = p.eff = x; p.y = p.fy = y;
+  p.x = p.fx = x; p.y = p.fy = y;
   w.grid.occupy(x, y, p.id);
   p.dead = false;
   p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100;
@@ -105,3 +105,4 @@ export function removePlayer(w, id) {
   w.ents.delete(id);
   w.emit({ t: "remove", id });
 }
+

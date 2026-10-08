@@ -1,5 +1,7 @@
 # Helbreath Web (iteración 3)
 
+Primera entrega de la cripta procedural: instrucciones y alcance en [docs/DUNGEON_V1.md](docs/DUNGEON_V1.md).
+
 Prueba en línea (un jugador): ver `SUBIR A GITHUB.md`.
 
 Doble clic en **`Abrir prueba web.bat`**. Arranca un servidor local y abre `http://localhost:8080`. La ventana muestra también la dirección para entrar desde el móvil en tu misma Wi-Fi. Al cerrarla se apaga el servidor.
@@ -79,3 +81,4 @@ tests/sim.test.mjs      prueba de la simulación sin navegador: node tests/sim.t
 La regla de oro: **todo lo que decide qué pasa en el juego va en `src/shared`**, y lo que decide cómo se ve va en `src/client`. Así el modo remastered nunca cambia la jugabilidad. Cuando llegue el servidor de verdad, `world.js` se mueve a Node sin tocarlo.
 
 Para regenerar los datos: `python tools/convert.py <carpeta Helbreath del cliente> web/data arefarm <carpeta del repositorio HelbreathServer>` (necesita Pillow y, para la música, ffmpeg).
+

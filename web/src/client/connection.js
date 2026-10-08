@@ -2,11 +2,12 @@
 //   join(nombre) -> id   send(orden) -> bool   update(dt) -> eventos   state -> vista del mundo
 //   LocalConnection: la simulación corre dentro de la página (un jugador).
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
+import { generateDungeon, FARM_PORTAL } from "../shared/dungeon.js";
 import { ACT, DX, DY, PLAYER, LIMITS, mobDurations } from "../shared/const.js";
 
 export class LocalConnection {
-  constructor(world) {
-    this.world = world;
+  constructor(adventure) {
+    this.adventure = adventure;
     this.pid = null;
     this.online = false;
   }
@@ -15,22 +16,23 @@ export class LocalConnection {
     let save;
     try { save = JSON.parse(localStorage.getItem(this.key) || "null") || undefined; } catch {}
     this.returning = !!save;
-    this.pid = this.world.addPlayer(name, save);
+    this.pid = this.adventure.addPlayer(name, save);
     this.lastSave = 0;
     addEventListener("pagehide", () => this.save());
     return this.pid;
   }
   // el progreso queda en el navegador de cada jugador (sin servidor)
   save() {
-    try { localStorage.setItem(this.key, JSON.stringify(this.world.saveOf(this.pid))); } catch {}
+    try { localStorage.setItem(this.key, JSON.stringify(this.adventure.saveOf(this.pid))); } catch {}
   }
-  send(cmd) { return this.world.command(this.pid, cmd); }
+  send(cmd) { return this.adventure.command(this.pid, cmd); }
   update(dt) {
-    this.world.tick(dt);
+    this.adventure.tick(dt);
     if (this.key && (this.lastSave += dt) > 10000) { this.lastSave = 0; this.save(); }
-    return this.world.drainEvents();
+    const events = this.adventure.drainEvents();
+    return events.get(this.state.map.id) || [];
   }
-  get state() { return this.world; }
+  get state() { return this.adventure.worldFor(this.pid); }
 }
 
 // Copia del mundo en el cliente: las entidades que el servidor nos cuenta, con los mismos
@@ -38,6 +40,8 @@ export class LocalConnection {
 class MirrorWorld {
   constructor(grid, npcDb, data) {
     this.grid = grid;
+    this.farmGrid = grid;
+    this.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
     this.npcDb = npcDb;
     this.data = data;
     this.time = 0;
@@ -98,6 +102,12 @@ export class NetConnection {
     this.serverTime = m.time;
     this.recvAt = performance.now();
     this.ack = m.ack;
+    if (m.map && m.map.id !== w.map.id) {
+      w.grid = m.map.kind === "dungeon" ? generateDungeon(m.map.seed).grid : w.farmGrid;
+      w.ents.clear(); w.items.clear();
+      this.resync = true;
+    }
+    if (m.map) w.map = m.map;
     for (const o of m.e || []) this.applyEnt(o);
     for (const id of m.g || []) w.ents.delete(id);
     if (m.it) {
@@ -209,3 +219,4 @@ function dirToward(a, b) {
   for (let d = 1; d <= 8; d++) if (DX[d] === ax && DY[d] === ay) return d;
   return a.dir;
 }
+

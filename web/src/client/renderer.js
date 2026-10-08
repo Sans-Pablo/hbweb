@@ -25,6 +25,11 @@ export class Renderer {
     this.resize();
   }
 
+  setMap(grid, name) {
+    this.grid = grid; this.mapName = name;
+    this.cam = null; this.chunks.clear(); this.buildMinimap();
+  }
+
   setMode(m) { this.mode = m; this.cam = null; this.layout(); }
 
   resize() {
@@ -75,7 +80,13 @@ export class Renderer {
     g.imageSmoothingEnabled = false;
     for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
-      if (t) this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
+      if (t) {
+        this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
+        if (this.grid.procedural && t.blocked) {
+          g.fillStyle = "rgba(0,0,0,.7)"; g.fillRect(i * T, j * T, T, T);
+          g.strokeStyle = "rgba(150,136,120,.22)"; g.strokeRect(i * T + .5, j * T + .5, T - 1, T - 1);
+        }
+      }
     }
     this.chunks.set(k, c);
     if (this.chunks.size > 96) this.chunks.delete(this.chunks.keys().next().value);
@@ -119,6 +130,8 @@ export class Renderer {
     for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
       for (let cx = Math.floor(camX / span); cx * span < camX + VW; cx++)
         if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY);
+
+    this.drawPortals(s, camX, camY);
 
     // 2) ayudas sobre el suelo (solo remastered): casilla bajo el cursor y ruta prevista
     if (remaster) {
@@ -204,6 +217,21 @@ export class Renderer {
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
     ctx.restore();
+  }
+
+  drawPortals(s, camX, camY) {
+    const { ctx } = this;
+    for (const gate of s.world.map?.portals || []) {
+      const x = gate.x * T + 16 - camX, y = gate.y * T + 16 - camY;
+      if (x < -150 || y < -80 || x > this.viewW + 150 || y > this.viewH + 80) continue;
+      ctx.save();
+      ctx.fillStyle = "rgba(15,20,33,.9)"; ctx.strokeStyle = "#8ccde8"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y + 5, 15, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "rgba(140,205,232,.65)"; ctx.beginPath(); ctx.ellipse(x, y - 10, 10, 19, 0, 0, Math.PI * 2); ctx.stroke();
+      const near = Math.max(Math.abs(gate.x - s.me.x), Math.abs(gate.y - s.me.y)) <= 1;
+      this.label(x, y - 36, gate.label + (near ? " · E" : ""), "#bde8ff");
+      ctx.restore();
+    }
   }
 
   drawEntity(e, x, y, s, overlays) {
@@ -413,7 +441,11 @@ export class Renderer {
       ctx.fillStyle = "#7fc4ff";
       ctx.beginPath(); ctx.arc(x0 + (e.x * T + 16) / T * sc, y0 + (e.y * T + 16) / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
     }
+    for (const gate of s.world.map?.portals || []) {
+      ctx.fillStyle = "#8de4ff"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
+    }
     ctx.fillStyle = "#9fe07f";
     ctx.beginPath(); ctx.arc(x0 + ppx / T * sc, y0 + ppy / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
   }
 }
+
