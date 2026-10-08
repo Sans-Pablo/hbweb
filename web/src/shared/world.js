@@ -17,7 +17,7 @@ import { sget, sclear } from "./systems/status.js";
 import { CAST_MS } from "./magic.js";
 
 export class World {
-  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null }) {
+  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [] }) {
     this.grid = grid;
     this.npcDb = npcDb;
     this.data = data;                // GameData: objetos, hechizos y monstruos
@@ -30,6 +30,7 @@ export class World {
     this.events = [];
     this.timers = [];
     this.ids = ids || { ent: 1, item: 1 };
+    this.teleports = new Map(teleports.map(t => [grid.idx(t.x, t.y), t]));    // casillas de teletransporte (teleport-loc del mapa)
     this.generators = spawns.map(s => ({ ...s, alive: 0 }));
     for (const g of this.generators) for (let i = 0; i < g.max; i++) Npc.spawnFrom(this, g);
   }
@@ -131,6 +132,9 @@ const COMMANDS = {
     if (!w.tryStep(p, cmd.dir, run ? PLAYER.runMs : PLAYER.walkMs, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
     if (run) p.sp -= 1;
     p.lastMove = w.time;
+    // al llegar a una casilla de teletransporte, el servidor original (RequestTeleportHandler) te manda al destino
+    const tp = w.teleports.get(w.grid.idx(p.x, p.y));
+    if (tp) { const x = p.x, y = p.y; w.after(run ? PLAYER.runMs : PLAYER.walkMs, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
   turn(w, p, cmd) {

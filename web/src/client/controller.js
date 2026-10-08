@@ -31,12 +31,12 @@ export class Controller {
       this.pointer = [e.clientX, e.clientY];
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
-      this.down = true;
+      this.down = true; this.noHold = false;
       canvas.setPointerCapture?.(e.pointerId);
       if (this.btn === 2) this.rightClick(); else this.click(true);
     });
     canvas.addEventListener("pointermove", e => { ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
-    canvas.addEventListener("pointerup", e => { this.down = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
+    canvas.addEventListener("pointerup", e => { this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
     canvas.addEventListener("pointercancel", () => { this.down = false; });
     canvas.addEventListener("pointerleave", () => { if (!this.down) this.pointer = null; });
     canvas.addEventListener("contextmenu", e => e.preventDefault());
@@ -101,7 +101,7 @@ export class Controller {
     if (!me || me.dead) return;
     const { ent, x: tx, y: ty } = this.target();
     if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
-      if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); }
+      if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
       return;
     }
     if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
@@ -124,7 +124,7 @@ export class Controller {
     if (!me || me.dead) { this.intent = null; this.path = []; return; }
 
     // mantener pulsado = seguir andando hacia el cursor (como Diablo / el original)
-    if (this.down && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
+    if (this.down && !this.noHold && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
 
     if (world.busy(me)) return;
     const run = this.ui.run && me.sp >= 1;

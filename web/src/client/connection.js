@@ -59,7 +59,8 @@ class MirrorWorld {
 }
 
 export class NetConnection {
-  constructor(grid, npcDb, data) {
+  constructor(grid, npcDb, data, maps = {}) {
+    this.maps = maps;
     this.world = new MirrorWorld(grid, npcDb, data);
     this.pid = null;
     this.online = true;
@@ -106,7 +107,7 @@ export class NetConnection {
     this.recvAt = performance.now();
     this.ack = m.ack;
     if (m.map && m.map.id !== w.map.id) {
-      w.grid = m.map.kind === "dungeon" ? generateDungeon(m.map.seed).grid : w.farmGrid;
+      w.grid = m.map.kind === "dungeon" ? generateDungeon(m.map.seed).grid : (this.maps[m.map.id]?.grid || w.farmGrid);
       w.ents.clear(); w.items.clear();
       this.resync = true;
     }

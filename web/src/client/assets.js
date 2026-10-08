@@ -2,6 +2,7 @@
 // (CSprite::PutSpriteFast, PutShadowSprite, PutTransSprite del cliente original).
 
 import { GameData } from "../shared/data.js";
+import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
 import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../shared/dungeon.js";
 
@@ -51,6 +52,13 @@ export async function loadAssets(onProgress) {
     json("data/magic.json"),
   ]);
   validateDungeonAssets(manifest, npcDb);
+  // mapas de la ciudad (data/maps/<id>.bin + .json): casillas, teleports, NPC y generadores
+  const maps = {};
+  const index = await json("data/maps/index.json").catch(() => ({}));
+  await Promise.all(Object.keys(index).map(async id => {
+    const [bytes, mapMeta] = await Promise.all([response("data/maps/" + id + ".bin").then(r => r.arrayBuffer()), json("data/maps/" + id + ".json")]);
+    maps[id] = { meta: mapMeta, grid: id === "arefarm" ? null : new Grid(mapMeta.w, mapMeta.h, new Uint8Array(bytes)) };
+  }));
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
   const keys = Object.keys(manifest), images = {};
@@ -74,7 +82,7 @@ export async function loadAssets(onProgress) {
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const sprites = new Sprites(manifest, images, hd);
   await sprites.preloadHd(Array.from({ length: 8 }, (_, d) => "ske" + (8 + d)));
-  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data };
+  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps };
 }
 
 export class Sprites {

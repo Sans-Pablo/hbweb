@@ -35,7 +35,14 @@ const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
 const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
-const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start });
+const maps = {};
+try {
+  for (const id of Object.keys(JSON.parse(fs.readFileSync(path.join(DATA, "maps", "index.json"))))) {
+    const mm = JSON.parse(fs.readFileSync(path.join(DATA, "maps", id + ".json")));
+    maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(fs.readFileSync(path.join(DATA, "maps", id + ".bin")))) };
+  }
+} catch {}
+const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, maps });
 
 let saves = {};
 try { saves = JSON.parse(fs.readFileSync(SAVES, "utf8")); } catch {}

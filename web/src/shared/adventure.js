@@ -4,6 +4,8 @@ import { ACT, dist } from "./const.js";
 import { FARM_PORTAL, generateDungeon, DUNGEON_VERSION } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
 
+const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
+
 export class Adventure {
   constructor(options) {
     this.options = options;
@@ -13,14 +15,59 @@ export class Adventure {
     this.locations = new Map();
     this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
-    this.farm = new World({ ...options, ids: this.ids });
+    this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
+    this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)
-  hooks(w) { return { recall: p => this.recall(p, w) }; }
+  hooks(w) { return { recall: p => this.recall(p, w), teleport: (p, tp) => this.teleport(p, w, tp) }; }
+
+  // Mundo compartido de un mapa estático (ciudad, tiendas...); se crea al entrar el primer jugador.
+  staticWorld(id) {
+    if (id === "arefarm") return this.farm;
+    if (this.worlds.has(id)) return this.worlds.get(id);
+    const m = this.maps[id];
+    if (!m) return null;
+    m.start = m.start || Object.values(m.meta.initial || {})[0] || [Math.floor(m.grid.w / 2), Math.floor(m.grid.h / 2)];
+    const { meta } = m, o = this.options;
+    const spawns = (meta.spawns || []).filter(s => s.kind === 1 && o.npcDb[s.name]).map(s => ({ ...s }));
+    const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: meta.teleports });
+    w.time = this.time;
+    w.hooks = this.hooks(w);
+    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
+    w.meta = meta;
+    for (const n of w.ents.values()) n.nextAct += this.time;
+    this.worlds.set(id, w);
+    return w;
+  }
+
+  // teleport-loc: destino en otro mapa (o en el mismo); -1,-1 = punto de inicio del mapa destino
+  teleport(p, w, tp) {
+    const id = tp.map.toLowerCase();
+    const to = id === w.map.id ? w : this.staticWorld(id);
+    if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "mapa no disponible" }); return false; }
+    const init = this.maps[id]?.meta.initial;
+    const spot = tp.dx >= 0 ? [tp.dx, tp.dy] : (init && Object.values(init)[0]) || to.start;
+    if (to === w) return this.relocate(p, w, spot, tp.dir);
+    if (!this.transfer(p, w, to, spot)) return false;
+    if (tp.dir >= 1 && tp.dir <= 8) p.dir = tp.dir;
+    return true;
+  }
+  relocate(p, w, spot, dir) {
+    const s = w.freeSpotNear(...spot);
+    if (!s) return false;
+    w.grid.release(p.x, p.y, p.id);
+    p.x = p.fx = s[0]; p.y = p.fy = s[1];
+    if (dir >= 1 && dir <= 8) p.dir = dir;
+    w.grid.occupy(p.x, p.y, p.id);
+    p.act = ACT.STOP; p.actStart = w.time; p.actDur = 0; p.busyUntil = w.time;
+    for (const n of w.ents.values()) if (n.target === p.id) n.target = null;
+    w.emit({ t: "teleport", id: p.id, x: p.x, y: p.y });
+    return true;
+  }
   recall(p, w) {
     if (p.dead) return;
     if (w !== this.farm) { this.transfer(p, w, this.farm, this.farm.start); return; }
@@ -115,8 +162,9 @@ export class Adventure {
   tick(dt) {
     for (const w of this.worlds.values()) {
       w.tick(dt);
-      if (w !== this.farm) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
-      if (w !== this.farm && !w.cleared && w.map.remainingEnemies === 0) {
+      const dungeon = w.map.kind === "dungeon";
+      if (dungeon) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
+      if (dungeon && !w.cleared && w.map.remainingEnemies === 0) {
         w.cleared = true;
         for (const p of w.ents.values()) if (p.kind === "player") w.emit({ t: "dungeon-cleared", id: p.id });
       }

@@ -35,8 +35,8 @@ async function main() {
   // ¿estamos en el servidor multijugador (server/server.mjs) o en la prueba local?
   const info = await fetch("api/info").then(r => r.ok ? r.json() : null).catch(() => null);
   const online = !!(info && info.multiplayer);
-  const conn = online ? new NetConnection(grid, assets.npcDb, assets.data)
-    : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start }));
+  const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps)
+    : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps }));
   status.remove();
   const pid = await askNameAndJoin(conn, online, info, assets.sprites);
   let world = conn.state;
