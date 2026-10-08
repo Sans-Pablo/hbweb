@@ -1,15 +1,21 @@
 // Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
 // (CSprite::PutSpriteFast, PutShadowSprite, PutTransSprite del cliente original).
 
+import { GameData } from "../shared/data.js";
+import { setData } from "./names.js";
+
 export async function loadAssets(onProgress) {
   const json = async u => (await fetch(u)).json();
   const meta = await json("data/map.json");
-  const [buf, manifest, npcDb, spawns] = await Promise.all([
+  const [buf, manifest, npcDb, spawns, items] = await Promise.all([
     fetch("data/" + meta.map + ".bin").then(r => r.arrayBuffer()),
     json("data/sprites.json"),
     json("data/npc.json").catch(() => ({})),
     json("data/" + meta.map + ".spawns.json").catch(() => []),
+    json("data/items.json"),
   ]);
+  const data = new GameData({ items, npcs: npcDb });
+  setData(data);
   const keys = Object.keys(manifest), images = {};
   let done = 0;
   await Promise.all(keys.map(k => new Promise(res => {
@@ -18,7 +24,7 @@ export async function loadAssets(onProgress) {
     img.src = "data/sprites/" + manifest[k].png;
     images[k] = img;
   })));
-  return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images), npcDb, spawns };
+  return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images), npcDb, spawns, data };
 }
 
 export class Sprites {

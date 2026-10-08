@@ -64,5 +64,4 @@ export function mobDurations(type) {
 export const TRANSLUCENT_MOBS = new Set([10]);
 
 export const CORPSE_MS = 10000;             // cuánto queda el cadáver antes de desaparecer
-export const ITEM_LIFETIME_MS = 180000;     // objetos en el suelo
 export const CHASE_LIMIT = 12;              // casillas: más lejos, el monstruo pierde el objetivo

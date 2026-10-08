@@ -36,9 +36,10 @@ export class LocalConnection {
 // Copia del mundo en el cliente: las entidades que el servidor nos cuenta, con los mismos
 // campos que usa World, para que el dibujo, la interfaz y el control no noten la diferencia.
 class MirrorWorld {
-  constructor(grid, npcDb) {
+  constructor(grid, npcDb, data) {
     this.grid = grid;
     this.npcDb = npcDb;
+    this.data = data;
     this.time = 0;
     this.ents = new Map();
     this.items = new Map();
@@ -51,8 +52,8 @@ class MirrorWorld {
 }
 
 export class NetConnection {
-  constructor(grid, npcDb) {
-    this.world = new MirrorWorld(grid, npcDb);
+  constructor(grid, npcDb, data) {
+    this.world = new MirrorWorld(grid, npcDb, data);
     this.pid = null;
     this.online = true;
     this.events = [];
@@ -101,10 +102,10 @@ export class NetConnection {
     for (const id of m.g || []) w.ents.delete(id);
     if (m.it) {
       w.items.clear();
-      for (const [uid, kind, count, x, y] of m.it) {
+      for (const [uid, id, count, x, y] of m.it) {
         const k = w.grid.idx(x, y);
         if (!w.items.has(k)) w.items.set(k, []);
-        w.items.get(k).push({ uid, kind, count, x, y });
+        w.items.get(k).push({ uid, id, count, x, y });
       }
     }
     for (const ev of m.ev || []) {
@@ -148,7 +149,9 @@ export class NetConnection {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
       if (own) Object.assign(e, {
         mp: o.mp, maxMp: o.mm, level: o.lv, exp: o.xp, prevExp: o.px, nextExp: o.nx, pool: o.pool, gold: o.gold,
-        inv: o.inv, stats: o.stats, defense: o.def, kills: o.kills, skills: o.skills, weapon: o.weapon, deadAt: o.deadAt,
+        sp: o.sp, maxSp: o.ms, hunger: o.hu, weight: o.wt, maxLoad: o.ml, atkMs: o.am, dmg: o.dmg,
+        bag: o.bag.map(([uid, id, count, life]) => ({ uid, id, count, life })), equip: o.eq,
+        stats: o.stats, defense: o.def, kills: o.kills, skills: o.skills, deadAt: o.deadAt,
       });
       if (e.busyUntil === undefined) e.busyUntil = 0;
       if (e.lastAttack === undefined) e.lastAttack = -1e9;
@@ -165,18 +168,21 @@ export class NetConnection {
       const nx = me.x + DX[cmd.dir], ny = me.y + DY[cmd.dir];
       me.dir = cmd.dir;
       if (!w.grid.free(nx, ny, me.id)) return false;
-      const dur = cmd.run ? PLAYER.runMs : PLAYER.walkMs;
+      const run = cmd.run && me.sp >= 1;
+      const dur = run ? PLAYER.runMs : PLAYER.walkMs;
       w.grid.release(me.x, me.y, me.id); w.grid.occupy(nx, ny, me.id);
       me.fx = me.x; me.fy = me.y; me.x = nx; me.y = ny;
-      me.act = cmd.run ? ACT.RUN : ACT.MOVE; me.actStart = w.time; me.actDur = dur;
+      if (run) me.sp -= 1;
+      me.act = run ? ACT.RUN : ACT.MOVE; me.actStart = w.time; me.actDur = dur;
       me.busyUntil = w.time + dur; me.lastMove = w.time;
       this.events.push({ t: "step", id: me.id });
     } else if (cmd.t === "attack" && !me.dead) {
       if (w.busy(me) || w.time - me.lastAttack < PLAYER.attackCooldownMs) return false;
       const t = w.ents.get(cmd.target);
       if (t) me.dir = dirToward(me, t);
-      me.act = ACT.ATTACK; me.actStart = w.time; me.actDur = PLAYER.attackMs;
-      me.busyUntil = w.time + PLAYER.attackMs; me.lastAttack = me.lastCombat = w.time;
+      const ams = me.atkMs || PLAYER.attackMs;
+      me.act = ACT.ATTACK; me.actStart = w.time; me.actDur = ams;
+      me.busyUntil = w.time + ams; me.lastAttack = me.lastCombat = w.time;
     } else if (cmd.t === "pickup") {
       if (w.busy(me)) return false;
       me.busyUntil = w.time + PLAYER.getItemMs;

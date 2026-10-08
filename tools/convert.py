@@ -135,6 +135,36 @@ def export(pak, name, nth, out_dir, tag, manifest):
     return True
 
 
+ITEM_FIELDS = ["type", "equipPos", "effectType", "v1", "v2", "v3", "v4", "v5", "v6", "maxLife", "specialEffect",
+               "sprite", "spriteFrame", "price", "weight", "appr", "speed", "levelLimit", "gender",
+               "seV1", "seV2", "skill", "category", "color"]
+
+def read_items(server, hb):
+    """Item.cfg + Item2.cfg + Item3.cfg del servidor -> {id: {name, display, ...}} (ids únicos entre los tres)."""
+    import re
+    items = {}
+    for fn in ("Item.cfg", "Item2.cfg", "Item3.cfg"):
+        path = os.path.join(server, "Files", fn)
+        for line in open(path, encoding="latin-1"):
+            if line.strip().startswith("[ENDITEMLIST]"): break
+            m = re.match(r"\s*Item\s*=\s*(\d+)\s+(\S+)\s+(.*)", line)
+            if not m: continue
+            nums = m.group(3).split()
+            if len(nums) < len(ITEM_FIELDS): continue
+            it = {"name": m.group(2)}
+            for k, v in zip(ITEM_FIELDS, nums): it[k] = int(v)
+            items[int(m.group(1))] = it
+    # nombres para mostrar (ItemName.cfg del cliente)
+    names = {}
+    nm = os.path.join(hb, "CONTENTS", "ItemName.cfg")
+    if os.path.exists(nm):
+        for line in open(nm, encoding="latin-1"):
+            parts = [x for x in re.split(r"[=\r\n]+", line) if x.strip()]
+            if len(parts) >= 3 and parts[0].strip() == "Item": names[parts[1].strip()] = parts[2].strip()
+    for it in items.values(): it["display"] = names.get(it["name"], it["name"])
+    return items
+
+
 def main():
     hb, out = sys.argv[1], sys.argv[2]
     map_name = sys.argv[3] if len(sys.argv) > 3 else "arefarm"
@@ -209,7 +239,9 @@ def main():
             remaster_music.remaster(music, os.path.join(music_dir, track.lower() + ".remaster.mp3"))
 
     # --- objetos en el suelo (item-ground.pak, sprite 6 de Item.cfg -> índice 5): oro y pociones
-    export(pak, "item-ground", 5, sprites_dir, "ig5", manifest)
+    for n in range(20):
+        export(pak, "item-ground", n, sprites_dir, "ig%d" % n, manifest)   # suelo: sprite de Item.cfg = n+1
+        export(pak, "item-pack", n, sprites_dir, "ip%d" % n, manifest)     # icono de mochila: igual
 
     # --- datos del servidor: NPC.cfg y generadores de monstruos del mapa
     if server:
@@ -225,6 +257,9 @@ def main():
         for s in spawns:
             s["name"] = SPOT_MOB_NAMES[s["mob"]]
         json.dump(npc_out, open(os.path.join(out, "npc.json"), "w"), indent=1)
+        items = read_items(server, hb)
+        json.dump(items, open(os.path.join(out, "items.json"), "w"), separators=(",", ":"))
+        print("ítems:", len(items))
         json.dump(spawns, open(os.path.join(out, map_name + ".spawns.json"), "w"), indent=1)
         print("Monstruos: %s; %d generadores" % (", ".join(npc_out), len(spawns)))
 

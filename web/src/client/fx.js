@@ -1,3 +1,4 @@
+import { itemName } from "./names.js";
 // Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 // No influyen en el juego; solo leen los eventos de la simulación.
 import { posOf } from "./anim.js";
@@ -40,9 +41,9 @@ export class Fx {
         break;
       }
       case "pickup":
-        if (mine) this.text(ev.id, ev.item === "gold" ? "+" + ev.count + " oro" : "+1 " + ITEM_NAMES[ev.item], "#f0d080");
+        if (mine) this.text(ev.id, ev.item === 90 ? "+" + ev.count + " oro" : "+" + (ev.count > 1 ? ev.count + " " : "") + itemName(ev.item), "#f0d080");
         break;
-      case "use": if (mine) this.text(ev.id, "+" + ev.amount + (ev.stat === "hp" ? " vida" : " maná"), ev.stat === "hp" ? "#7fe07f" : "#7fb2ff"); break;
+      case "use": if (mine && ev.amount) this.text(ev.id, "+" + ev.amount + { hp: " vida", mp: " maná", sp: " resistencia", food: " comida" }[ev.stat], { hp: "#7fe07f", mp: "#7fb2ff", sp: "#9fe07f", food: "#e0c07f" }[ev.stat] || "#fff"); break;
     }
   }
 
@@ -110,5 +111,4 @@ export class Fx {
   }
 }
 
-export const ITEM_NAMES = { gold: "oro", red: "poción roja", bigred: "poción roja grande", blue: "poción azul", green: "poción verde" };
 export { TILE };

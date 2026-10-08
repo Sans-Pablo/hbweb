@@ -48,9 +48,9 @@ export class Controller {
       this.keys.add(k);
       if (e.repeat) return;
       switch (k) {
-        case "1": case "insert": this.conn.send({ t: "use", item: "red" }); break;
-        case "2": case "delete": this.conn.send({ t: "use", item: "blue" }); break;
-        case "3": this.conn.send({ t: "use", item: "bigred" }); break;
+        case "1": case "insert": ui.quick("hp"); break;
+        case "2": case "delete": ui.quick("mp"); break;
+        case "3": ui.quick("sp"); break;
         case " ": this.conn.send({ t: "pickup" }); break;
         default: ui.key(k);
       }
@@ -109,7 +109,7 @@ export class Controller {
     if (this.down && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); this.click(false); }
 
     if (world.busy(me)) return;
-    const run = this.ui.run;
+    const run = this.ui.run && me.sp >= 1;
     const it = this.intent;
     if (!it) { this.path = []; return; }
 

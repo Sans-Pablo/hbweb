@@ -14,6 +14,9 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Grid } from "../web/src/shared/grid.js";
 import { World } from "../web/src/shared/world.js";
+import { GameData } from "../web/src/shared/data.js";
+import { damageRange } from "../web/src/shared/combat.js";
+import { attackMs } from "../web/src/shared/world.js";
 import { LIMITS, PLAYER } from "../web/src/shared/const.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -31,7 +34,8 @@ const bytes = new Uint8Array(fs.readFileSync(path.join(DATA, meta.map + ".bin"))
 const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
-const world = new World({ grid, npcDb, spawns, start: meta.start });
+const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), npcs: npcDb });
+const world = new World({ grid, npcDb, data, spawns, start: meta.start });
 
 let saves = {};
 try { saves = JSON.parse(fs.readFileSync(SAVES, "utf8")); } catch {}
@@ -212,8 +216,10 @@ function pub(e, own) {
     o.lc = r1(e.lastCombat);
     if (own) Object.assign(o, {
       bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove), mp: e.mp, mm: e.maxMp, lv: e.level, xp: e.exp,
-      px: e.prevExp, nx: e.nextExp, pool: e.pool, gold: e.gold, inv: e.inv, stats: e.stats, def: e.defense,
-      kills: e.kills, skills: e.skills, weapon: e.weapon, deadAt: e.deadAt,
+      px: e.prevExp, nx: e.nextExp, pool: e.pool, gold: e.gold, stats: e.stats, def: e.defense,
+      sp: e.sp, ms: e.maxSp, hu: e.hunger, wt: e.weight, ml: e.maxLoad, am: attackMs(e), dmg: damageRange(e),
+      bag: e.bag.map(i => [i.uid, i.id, i.count, i.life]), eq: e.equip,
+      kills: e.kills, skills: e.skills, deadAt: e.deadAt,
     });
   }
   return o;
@@ -222,7 +228,7 @@ function pub(e, own) {
 let itemsVer = 0, itemsKey = "";
 function itemsList() {
   const out = [];
-  for (const list of world.items.values()) for (const it of list) out.push([it.uid, it.kind, it.count, it.x, it.y]);
+  for (const list of world.items.values()) { const it = list[list.length - 1]; out.push([it.uid, it.id, it.count, it.x, it.y]); }   // solo se ve el de encima
   const k = out.map(i => i[0]).join(",");
   if (k !== itemsKey) { itemsKey = k; itemsVer++; }
   return out;

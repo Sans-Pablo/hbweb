@@ -3,9 +3,8 @@
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
-import { ITEMS } from "../shared/rules.js";
+import { itemDef, itemName, groundKey } from "./names.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
-import { ITEM_NAMES } from "./fx.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
@@ -145,9 +144,10 @@ export class Renderer {
       const it = list[list.length - 1];
       const x = it.x * T + 16 - camX, y = it.y * T + 16 - camY;
       if (x < -40 || y < -40 || x > VW + 40 || y > VH + 40) continue;
-      this.spr.put(ctx, "ig5", ITEMS[it.kind].frame, x, y);
-      if (remaster && (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y)))
-        labels.push([x, y - 14, it.kind === "gold" ? it.count + " oro" : ITEM_NAMES[it.kind], it.kind === "gold" ? "#f0d080" : "#e8e2d0"]);
+      const d = itemDef(it.id);
+      if (d) this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y);
+      if (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
+        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id), it.id === 90 ? "#f0d080" : "#e8e2d0"]);
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)

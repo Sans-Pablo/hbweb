@@ -26,8 +26,8 @@ async function main() {
   // ¿estamos en el servidor multijugador (server/server.mjs) o en la prueba local?
   const info = await fetch("api/info").then(r => r.ok ? r.json() : null).catch(() => null);
   const online = !!(info && info.multiplayer);
-  const conn = online ? new NetConnection(grid, assets.npcDb)
-    : new LocalConnection(new World({ grid, npcDb: assets.npcDb, spawns: assets.spawns, start: meta.start }));
+  const conn = online ? new NetConnection(grid, assets.npcDb, assets.data)
+    : new LocalConnection(new World({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start }));
   status.remove();
   const pid = await askNameAndJoin(conn, online, info);
   const world = conn.state;
@@ -36,6 +36,7 @@ async function main() {
   const renderer = new Renderer(canvas, assets, grid);
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
+  hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
   sound.setTrack(meta.music || "maintm");
   const view = { showGrid: false, showMinimap: true };
@@ -72,6 +73,7 @@ async function main() {
   const ui = {
     get run() { return opts.run; },
     unlockAudio: () => sound.unlock(),
+    quick: k => hud.quickUse(k),
     key(k) {
       switch (k) {
         case "g": {
@@ -85,6 +87,7 @@ async function main() {
         case "b": setOpt("grid", !opts.grid); break;
         case "o": optionsEl.classList.toggle("open"); break;
         case "c": document.getElementById("charpanel").classList.toggle("open"); break;
+        case "i": document.getElementById("inv").classList.toggle("open"); break;
         case "h": case "?": case "f1": document.getElementById("help").classList.toggle("open"); break;
         case "escape": {
           const open = document.querySelectorAll(".panel.open");

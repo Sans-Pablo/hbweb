@@ -88,6 +88,7 @@
   .icon.red { width: 7px; height: 15px; background-position: -16px 0; }
   .icon.blue { width: 6px; height: 18px; background-position: -42px 0; }
   .icon.bigred { width: 15px; height: 18px; background-position: -25px 0; transform: scale(1.6); }
+  .icon.green { width: 7px; height: 18px; background-position: -66px 0; }
   .icon.gold { width: 16px; height: 9px; background-position: 0 -1px; }
   #goldbox { display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; color: #f0d080; font-weight: 600; min-width: 90px; }
 
@@ -108,6 +109,25 @@
   #charpanel .row button { width: 24px; height: 22px; border-radius: 6px; border: 1px solid var(--brass); background: #2c2414; color: #ffd76a; padding: 0; }
   #charpanel hr { border: 0; border-top: 1px solid #3e3526; margin: 8px 0; }
   #poolbadge:not(:empty) { background: #c8352b; color: #fff; border-radius: 8px; padding: 0 5px; font-size: 11px; margin-left: 4px; }
+
+  #sp { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100% + 4px); width: 120px; height: 4px; background: rgba(0,0,0,.6); border-radius: 2px; overflow: hidden; pointer-events: none; }
+  #sp .fill { height: 100%; width: var(--k, 100%); background: #5fc15a; }
+  #inv { right: 14px; top: 50px; width: 330px; }
+  #inv .load { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+  #inv .grid { display: grid; grid-template-columns: repeat(6, 48px); gap: 4px; }
+  #inv .cell { position: relative; width: 48px; height: 48px; background: rgba(0,0,0,.45); border: 1px solid #3e3526; border-radius: 6px; display: grid; place-items: center; padding: 0; overflow: hidden; }
+  #inv .cell.sel { border-color: #ffd76a; }
+  #inv .cell.eq { box-shadow: inset 0 0 0 2px #5fc15a; }
+  #inv .cell.broken { opacity: .45; }
+  #inv .cell b { position: absolute; right: 3px; bottom: 1px; font-size: 11px; text-shadow: 0 1px 2px #000; }
+  #inv .cell .ico { image-rendering: pixelated; }
+  #inv .detail { margin-top: 10px; font-size: 12px; min-height: 90px; color: var(--parch); }
+  #inv .detail h4 { margin: 0 0 4px; color: var(--brass); font: 600 14px Georgia, serif; }
+  #inv .detail p { margin: 2px 0; color: var(--muted); }
+  #inv .detail .acts { display: flex; gap: 6px; margin-top: 8px; }
+  #inv .detail .acts button { background: #2c2414; border: 1px solid var(--brass); border-radius: 6px; color: #ffd76a; padding: 3px 10px; font-size: 12px; }
+  #charpanel .sk { display: grid; grid-template-columns: 1fr auto; font-size: 12px; padding: 1px 0; color: var(--muted); }
+  #charpanel .sk b { color: var(--parch); }
   #help { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92%); }
   #help ul { margin: 6px 0 0; padding: 0; list-style: none; columns: 2; column-gap: 24px; font-size: 13px; }
   #help li { padding: 3px 0; break-inside: avoid; }
@@ -194,15 +214,17 @@
   <div id="hudbar">
     <div id="hp" class="gauge"><div class="fill"></div><span class="lbl">HP</span><span class="val"></span></div>
     <div id="belt">
-      <button class="slot" data-use="red" title="Poción roja"><span class="icon red"></span><b>0</b><kbd>1</kbd></button>
-      <button class="slot" data-use="blue" title="Poción azul"><span class="icon blue"></span><b>0</b><kbd>2</kbd></button>
-      <button class="slot" data-use="bigred" title="Poción roja grande"><span class="icon bigred"></span><b>0</b><kbd>3</kbd></button>
+      <button class="slot" data-use="hp" title="Poción de vida"><span class="icon red"></span><b>0</b><kbd>1</kbd></button>
+      <button class="slot" data-use="mp" title="Poción de maná"><span class="icon blue"></span><b>0</b><kbd>2</kbd></button>
+      <button class="slot" data-use="sp" title="Poción de resistencia"><span class="icon green"></span><b>0</b><kbd>3</kbd></button>
       <div id="goldbox"><span class="icon gold"></span><span id="gold">0</span></div>
     </div>
+    <div id="sp"><div class="fill"></div></div>
     <div id="mp" class="gauge"><div class="fill"></div><span class="lbl">MP</span><span class="val"></span></div>
     <div id="xp" class="xpbar"><div class="fill"></div><span class="val"></span></div>
     <div id="buttons">
       <button data-key="c">Personaje<span id="poolbadge"></span></button>
+      <button data-key="i">Mochila</button>
       <button data-key="g">Gráficos</button>
       <button data-key="n">Sonido</button>
       <button data-key="o">Opciones</button>
@@ -211,6 +233,9 @@
   </div>
 
   <div id="charpanel" class="panel"><button class="close" data-key="c">×</button><div class="body"></div></div>
+
+  <div id="inv" class="panel"><button class="close" data-key="i">×</button><h3>Mochila</h3>
+    <div class="load"></div><div class="grid"></div><div class="detail"></div></div>
 
   <div id="options" class="panel">
     <button class="close" data-key="escape">×</button>
@@ -233,7 +258,8 @@
       <li>Clic en un monstruo: atacar hasta matarlo</li>
       <li>Clic en un objeto o <kbd>Espacio</kbd>: recoger</li>
       <li><kbd>R</kbd>: correr / andar (se recuerda)</li>
-      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (o <kbd>Insert</kbd> <kbd>Supr</kbd>): pociones</li>
+      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>: poción de vida, maná, resistencia (también <kbd>Insert</kbd> <kbd>Supr</kbd>)</li>
+      <li><kbd>I</kbd>: mochila (clic = ver, doble clic = equipar o usar)</li>
       <li><kbd>C</kbd>: personaje y puntos</li>
       <li><kbd>Alt</kbd>: nombres de los objetos</li>
       <li><kbd>G</kbd>: gráficos clásicos / remastered</li>
