@@ -67,6 +67,10 @@ export async function loadAssets(onProgress) {
   // sprites de personaje (pieles, peinados, ropa interior): se descargan cuando hacen falta
   const players = await json("data/players.json").catch(() => ({}));
   Object.assign(manifest, players);
+  // ropa, armas, escudos y objetos (se descargan al usarse)
+  const equip = await json("data/equip.json").catch(() => ({}));
+  for (const k of Object.keys(equip)) equip[k].png = "../equip/" + equip[k].png;
+  Object.assign(manifest, equip);
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   return { meta, mapBytes: new Uint8Array(buf), sprites: new Sprites(manifest, images, hd), npcDb, spawns, data };
 }

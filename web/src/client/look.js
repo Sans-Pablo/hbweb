@@ -16,15 +16,79 @@ export const bodyKey = (gender, look, group, d) => "pb" + ((gender === 2 ? 3 : 0
 const underKey = (gender, look, group) => "pu" + (gender === 2 ? 1 : 0) + "_" + look.under + "_" + group;
 const hairKey = (gender, look, group) => "ph" + (gender === 2 ? 1 : 0) + "_" + look.hair + "_" + group;
 
+// ---- equipo visible (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4) ----
+// Ropa y armas dibujadas sobre el cuerpo. ap = {armor, arms, pants, boots, mantle, helm, shield, weapon}: cada una es el
+// valor "Appr" del objeto equipado (0 = nada). Orden y grupos de animación como el cliente original.
+const ARMOR_OF_POS = { 1: "helm", 2: "armor", 3: "arms", 4: "pants", 5: "boots", 7: "shield", 8: "weapon", 9: "weapon", 12: "mantle", 13: "armor" };
+export function apparelOf(e, itemDef) {
+  if (!e.equip || !e.bag) return e.ap || null;
+  const ap = {};
+  for (const [pos, uid] of Object.entries(e.equip)) {
+    const it = e.bag.find(b => b.uid === uid), d = it && itemDef(it.id), k = ARMOR_OF_POS[pos];
+    if (!d || !k || !d.appr) continue;
+    ap[k] = k === "armor" && d.appr >= 100 ? d.appr - 100 : d.appr;
+  }
+  return ap;
+}
+const WGROUP = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 6, 6: 4, 10: 5 };          // grupo del cuerpo -> grupo de arma y escudo
+const WEAPON_FIRST = [0, 1, 0, 0, 0, 0, 0, 1, 1];                      // _cDrawingOrder (índice = dirección 1..8)
+const MANTLE_ORDER = [0, 1, 1, 1, 0, 0, 0, 2, 2];                      // _cMantleDrawingOrder
+
+// claves de sprites que hacen falta para el equipo (para precargarlos)
+export function equipKeys(gender, ap) {
+  const g = gender === 2 ? 1 : 0, keys = [];
+  if (!ap) return keys;
+  for (const grp of [0, 1, 2, 3, 4, 6, 8, 9, 10, 11]) {
+    for (const [k, l] of [["armor", "a"], ["arms", "b"], ["pants", "l"], ["boots", "o"], ["mantle", "m"], ["helm", "h"]]) if (ap[k]) keys.push(l + g + "_" + ap[k] + "_" + grp);
+    const wg = WGROUP[grp];
+    if (wg === undefined) continue;
+    if (ap.shield) keys.push("s" + g + "_" + ap.shield + "_" + wg);
+    if (ap.weapon) for (let d = 0; d < 8; d++) keys.push("w" + g + "_" + ap.weapon + "_" + (wg * 8 + d));
+  }
+  return keys;
+}
+
 // Dibuja al personaje (sin sombra). f = fotograma dentro de la animación.
-export function drawPerson(ctx, spr, gender, look, group, d, f, x, y) {
+export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
+  const g = gender === 2 ? 1 : 0, dir = d + 1;
+  const piece = (letter, idx) => {                                       // armadura/capa/casco/botas: un sprite por grupo, 8 direcciones
+    if (!idx) return;
+    const key = letter + g + "_" + idx + "_" + group;
+    if (!spr.has(key)) return;
+    const fpd = spr.frames(key) / 8;
+    spr.put(ctx, key, d * fpd + f, x, y);
+  };
+  const wg = WGROUP[group];
+  const weapon = () => { if (ap && ap.weapon && wg !== undefined) spr.put(ctx, "w" + g + "_" + ap.weapon + "_" + (wg * 8 + d), f, x, y); };
+  const shield = () => {
+    if (!ap || !ap.shield || wg === undefined) return;
+    const key = "s" + g + "_" + ap.shield + "_" + wg;
+    if (spr.has(key)) spr.put(ctx, key, d * (spr.frames(key) / 8) + f, x, y);
+  };
+  const skirt = g === 1 && ap && ap.pants === 1;
+  if (WEAPON_FIRST[dir] === 1) weapon();
   const body = bodyKey(gender, look, group, d);
   spr.put(ctx, body, f, x, y);
+  if (ap && ap.mantle && MANTLE_ORDER[dir] === 0) piece("m", ap.mantle);
   const uk = underKey(gender, look, group), hk = hairKey(gender, look, group);
   const fpd = spr.frames(uk) / 8, hpd = spr.frames(hk) / 8;
   spr.put(ctx, uk, d * fpd + f, x, y);
-  const col = HAIR_COLORS[look.hairCol][1];
-  if (col) spr.tintedHair(ctx, hk, d * hpd + f, x, y, col);
-  else spr.put(ctx, hk, d * hpd + f, x, y);
+  if (!(ap && ap.helm)) {
+    const col = HAIR_COLORS[look.hairCol][1];
+    if (col) spr.tintedHair(ctx, hk, d * hpd + f, x, y, col);
+    else spr.put(ctx, hk, d * hpd + f, x, y);
+  }
+  if (ap) {
+    if (skirt) piece("o", ap.boots);
+    piece("l", ap.pants);
+    piece("b", ap.arms);
+    if (!skirt) piece("o", ap.boots);
+    piece("a", ap.armor);
+    piece("h", ap.helm);
+    if (ap.mantle && MANTLE_ORDER[dir] === 2) piece("m", ap.mantle);
+    shield();
+    if (ap.mantle && MANTLE_ORDER[dir] === 1) piece("m", ap.mantle);
+    if (WEAPON_FIRST[dir] !== 1) weapon();
+  }
   return body;
 }

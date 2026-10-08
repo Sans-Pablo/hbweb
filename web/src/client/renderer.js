@@ -5,7 +5,7 @@
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
-import { bodyKey, drawPerson, DEFAULT_LOOK } from "./look.js";
+import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
@@ -279,7 +279,7 @@ export class Renderer {
       const look = e.look || DEFAULT_LOOK, gender = e.gender || 1;
       const body = bodyKey(gender, look, group, d);
       spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75);
-      drawPerson(ctx, spr, gender, look, group, d, f, x, y);
+      drawPerson(ctx, spr, gender, look, group, d, f, x, y, apparelOf(e, itemDef));
       if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
       // nombre de los demás jugadores y bocadillo de chat
       const other = s.pid !== undefined && e.id !== s.pid;

@@ -12,6 +12,7 @@ import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
+import { apparelOf, equipKeys } from "./look.js";
 import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
@@ -79,6 +80,13 @@ async function main() {
     learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
+  // descarga los sprites del equipo puesto (todas las animaciones) para que no aparezcan a trozos
+  const warmEquip = () => {
+    const me = world.ents.get(pid); if (!me) return;
+    const ks = equipKeys(me.gender || 1, apparelOf(me, itemDef));
+    assets.sprites.preload(ks); assets.sprites.preloadHd(ks);
+  };
+  setTimeout(warmEquip, 0);
   gui.describe = uid => {
     const me = world.ents.get(pid), it = me && me.bag.find(i => i.uid === uid); if (!it) return null;
     const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
@@ -349,6 +357,7 @@ async function main() {
     }
     for (const ev of events) {
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world);
+      if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";
     }
