@@ -4,7 +4,8 @@ import { Grid } from "./grid.js";
 export const FARM_PORTAL = Object.freeze({ id: "skeleton-entry", x: 134, y: 94, label: "Cripta de esqueletos", target: "dungeon" });
 export const DUNGEON_VERSION = 3;
 export const DUNGEON_FLOOR_FRAMES = Object.freeze([1, 21, 41, 61]);
-export const DUNGEON_FLOORS = Object.freeze([{ spr: 330, frames: DUNGEON_FLOOR_FRAMES }, { spr: 363, frames: [1, 21] }, { spr: 365, frames: [1, 21] }]);
+// Solo interiores de tierra y roca: los bordes de pasto del atlas son para exteriores.
+export const DUNGEON_FLOORS = Object.freeze([{ spr: 330, frames: DUNGEON_FLOOR_FRAMES }, { spr: 363, frames: [1, 167, 169, 187] }, { spr: 365, frames: [1, 41, 61, 44] }]);
 export const DUNGEON_ASSETS = Object.freeze(["t301", "t330", "t363", "t365", "t200", "t216", "t219", "t223", ...Array.from({ length: 40 }, (_, i) => "ske" + i)]);
 
 export function seededRandom(seed) {
