@@ -355,7 +355,7 @@ export class Renderer {
       overlays.push(() => {
         let yy = y - 78;
         if (bubble && performance.now() < bubble.until) {
-          this.label(x, yy, bubble.text.length > 48 ? bubble.text.slice(0, 47) + "…" : bubble.text, "#ffffff");
+          this.label(x, yy, bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff");
           yy -= 17;
         }
         if (other && !e.dead) {
@@ -410,6 +410,8 @@ export class Renderer {
         ctx.fillRect(x - w / 2, top, w * k, 3);
       });
     }
+    const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
+    if (say && performance.now() < say.until) overlays.push(() => this.label(x, top - 4, say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8"));
     if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + e.name;

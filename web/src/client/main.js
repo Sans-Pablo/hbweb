@@ -22,6 +22,7 @@ import { registerNpcDialogs } from "./npcdialogs.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
+import { Voice } from "./voice.js";
 import { Sky, trackFor } from "./sky.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -274,6 +275,7 @@ async function main() {
       if (!me || me.dead) return;
       if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 8) { hud.log("Too far to talk to " + cit.name + "."); return; }
       npcUi.clickNpc(cit, gui.mouse.x, gui.mouse.y);
+      voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
     isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
@@ -396,6 +398,8 @@ async function main() {
   // chat
   const chatBox = document.getElementById("chat"), chatIn = chatBox.querySelector("input");
   const bubbles = new Map();
+  let voice = null;                                 // personalidad: frases (voice.js, data/voice.json)
+  fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name); }).catch(() => {});
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
@@ -453,6 +457,7 @@ async function main() {
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
+      voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
@@ -461,6 +466,7 @@ async function main() {
     const me = world.ents.get(pid);
     if (!me) { requestAnimationFrame(loop); return; }      // aún no ha llegado el primer estado
     ctl.update();
+    voice?.update(world, me, assets.npcDb);
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,

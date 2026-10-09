@@ -1,0 +1,1293 @@
+{
+ "me": {
+  "greet": {
+   "shop": [
+    {
+     "es": "¡Buen día! ¿Qué tienes hoy?",
+     "en": "Good day! What have you got today?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Hola, ¿tienes algo bueno en el mostrador?",
+     "en": "Hi, anything good on the counter?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Veamos si mi bolsa alcanza para algo…",
+     "en": "Let's see if my purse can afford anything…",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Una mirada rápida a tus cosas.",
+     "en": "A quick look at your wares.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "¡Tendero! ¿Hay ofertas?",
+     "en": "Shopkeeper! Any deals?",
+     "tone": [
+      "j"
+     ]
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "¡Saludos, herrero! ¿Cómo va la fragua?",
+     "en": "Greetings, smith! How is the forge?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Buenas, maestro del yunque.",
+     "en": "Evening, master of the anvil.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Que el acero te sea ligero, herrero.",
+     "en": "May the steel be light, smith.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Vengo a ver el hierro.",
+     "en": "Here to see the iron.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "¿Tienes un arma que no se rompa en dos golpes?",
+     "en": "Got a weapon that won't break in two swings?",
+     "tone": [
+      "j"
+     ]
+    }
+   ],
+   "warehouse": [
+    {
+     "es": "Buenas, ¿me guardas unas cosas?",
+     "en": "Hello, will you keep some things for me?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Vengo a mi almacén, si no te molesta.",
+     "en": "Here for my storage, if you don't mind.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Mis tesoros siguen aquí, ¿verdad?",
+     "en": "My treasures are still here, right?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Almacén.",
+     "en": "Warehouse.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "mage": [
+    {
+     "es": "Saludos, mago. ¿Qué secretos guardas hoy?",
+     "en": "Greetings, mage. What secrets do you keep today?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¿Tienes algún hechizo para mí?",
+     "en": "Do you have a spell for me?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Prometo no quemar nada… esta vez.",
+     "en": "I promise not to burn anything… this time.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Hechizos. Ahora.",
+     "en": "Spells. Now.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "town": [
+    {
+     "es": "¡Buen día!",
+     "en": "Good day!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Hola, ¿qué tal?",
+     "en": "Hello, how are you?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¡Eh, amigo!",
+     "en": "Hey, friend!",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Saludos.",
+     "en": "Greetings.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  },
+  "thanks": [
+   {
+    "es": "¡Gracias! Esto me vendrá bien.",
+    "en": "Thanks! This will come in handy.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Buen trato, gracias.",
+    "en": "Good deal, thank you.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "¡Mío! Gracias, tendero.",
+    "en": "Mine! Thanks, shopkeeper.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Hecho. Gracias.",
+    "en": "Done. Thanks.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "¡Qué buena compra!",
+    "en": "What a great buy!",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "nogold": [
+   {
+    "es": "Vaya, no me alcanza el oro…",
+    "en": "Oh, I can't afford it…",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Mi bolsa está más vacía que una cripta.",
+    "en": "My purse is emptier than a crypt.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Tendré que cazar más monstruos primero.",
+    "en": "I'll have to hunt more monsters first.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Sin oro. Qué fastidio.",
+    "en": "No gold. How annoying.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "¿Aceptas promesas? No… claro que no.",
+    "en": "Do you take promises? No… of course not.",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "sold": [
+   {
+    "es": "Trato hecho.",
+    "en": "Deal.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "Algo de oro para la próxima aventura.",
+    "en": "Some gold for the next adventure.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "¡Un poco menos de peso en la bolsa!",
+    "en": "A little less weight in the bag!",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Gracias por el pago.",
+    "en": "Thanks for the payment.",
+    "tone": [
+     "w"
+    ]
+   }
+  ],
+  "repaired": [
+   {
+    "es": "¡Como nuevo! Gracias, herrero.",
+    "en": "Good as new! Thanks, smith.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Mi arma te lo agradece.",
+    "en": "My weapon thanks you.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Bien arreglado.",
+    "en": "Well repaired.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "bagfull": [
+   {
+    "es": "Mi bolsa está llena, voy a reventar.",
+    "en": "My bag is full, I'm going to burst."
+   },
+   {
+    "es": "No cabe nada más… tendré que soltar algo.",
+    "en": "Nothing else fits… I'll have to drop something."
+   },
+   {
+    "es": "Demasiada carga para un solo aventurero.",
+    "en": "Too much load for one adventurer."
+   }
+  ],
+  "bank": [
+   {
+    "es": "Mejor guardarlo a buen recaudo.",
+    "en": "Better keep it safe."
+   },
+   {
+    "es": "Aquí estará seguro.",
+    "en": "It will be safe here.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Mis tesoros, bajo llave.",
+    "en": "My treasures, under lock and key.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Guardado.",
+    "en": "Stored.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "levelup": [
+   {
+    "es": "¡Siento cómo me hago más fuerte!",
+    "en": "I can feel myself growing stronger!",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "¡Subí de nivel!",
+    "en": "I leveled up!",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Un nivel más. Sigamos.",
+    "en": "One more level. Onward.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "¡Esto se pone interesante!",
+    "en": "This is getting interesting!",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "lowhp": [
+   {
+    "es": "Estoy herido… debo curarme.",
+    "en": "I'm hurt… I need healing.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "¡Ay! Eso dolió demasiado.",
+    "en": "Ouch! That hurt too much.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Poca vida. Hay que retirarse.",
+    "en": "Low health. Time to retreat.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "Necesito una poción, ya.",
+    "en": "I need a potion, now.",
+    "tone": [
+     "w"
+    ]
+   }
+  ],
+  "kill": [
+   {
+    "es": "¡Uno menos!",
+    "en": "One less!",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Eso estuvo cerca.",
+    "en": "That was close.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Siguiente.",
+    "en": "Next.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "Los monstruos no me asustan… mucho.",
+    "en": "Monsters don't scare me… much.",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "death": [
+   {
+    "es": "Esto… no… debía…",
+    "en": "This… was not… supposed to…"
+   },
+   {
+    "es": "Ugh… se acabó…",
+    "en": "Ugh… it's over…"
+   }
+  ],
+  "broken": [
+   {
+    "es": "¡Mi equipo se ha roto!",
+    "en": "My gear broke!",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Vaya, otra reparación para el herrero.",
+    "en": "Great, another repair for the smith.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Roto. Al herrero.",
+    "en": "Broken. Off to the smith.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "noarrows": [
+   {
+    "es": "¡Sin flechas! Debo conseguir más.",
+    "en": "Out of arrows! I need more.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Se acabaron las flechas…",
+    "en": "I'm out of arrows…",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "¿Alguien tiene flechas de sobra?",
+    "en": "Anyone got spare arrows?",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "night": [
+   {
+    "es": "Cae la noche… ojo con las sombras.",
+    "en": "Night is falling… watch the shadows.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Ya anocheció.",
+    "en": "It's night already.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "De noche todo parece peor.",
+    "en": "Everything looks worse at night.",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "dawn": [
+   {
+    "es": "Amanece, por fin.",
+    "en": "Dawn at last.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Un nuevo día.",
+    "en": "A new day.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "El sol sale y mi ánimo también.",
+    "en": "The sun rises and so does my mood.",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "rain": [
+   {
+    "es": "Empieza a llover…",
+    "en": "It's starting to rain…",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Lluvia. Mis botas lo odian.",
+    "en": "Rain. My boots hate it.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Mal tiempo para el arco.",
+    "en": "Bad weather for the bow.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "idle": {
+   "day": [
+    {
+     "es": "Buen día para una aventura.",
+     "en": "A good day for an adventure.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Me pregunto qué habrá más allá del bosque.",
+     "en": "I wonder what lies beyond the forest.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Quizá debería revisar mi equipo.",
+     "en": "Maybe I should check my gear.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Mmm, ¿y si hoy me toca un botín raro?",
+     "en": "Hmm, what if I get a rare drop today?",
+     "tone": [
+      "j"
+     ]
+    }
+   ],
+   "night": [
+    {
+     "es": "Qué silencio tan raro…",
+     "en": "Such a strange silence…",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "La luna está preciosa… y peligrosa.",
+     "en": "The moon is lovely… and dangerous.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Mejor no alejarme mucho.",
+     "en": "Better not wander far.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "rain": [
+    {
+     "es": "La lluvia no para…",
+     "en": "The rain won't stop…",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Con este agua, ni los monstruos salen.",
+     "en": "In this rain not even monsters come out.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Me gusta el sonido de la lluvia.",
+     "en": "I like the sound of rain.",
+     "tone": [
+      "w"
+     ]
+    }
+   ],
+   "town": [
+    {
+     "es": "Qué ambiente en la ciudad.",
+     "en": "What a lively town.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "A ver si encuentro una buena oferta.",
+     "en": "Let's see if I find a good deal.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Hay que reponer provisiones.",
+     "en": "Need to restock supplies.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  },
+  "crypt": [
+   {
+    "es": "Huele a humedad y a huesos…",
+    "en": "It smells of damp and bones…",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Una cripta. Qué acogedor.",
+    "en": "A crypt. How cozy.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Cuidado con los esqueletos.",
+    "en": "Watch out for skeletons.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "gate": [
+   {
+    "es": "Ese portal da mala espina para mi nivel.",
+    "en": "That portal looks bad for my level.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Aún no estoy listo para lo que hay al otro lado.",
+    "en": "I'm not ready for what's on the other side yet.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Mejor volveré más fuerte.",
+    "en": "I'd better return stronger.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "¿Entrar ahí con mi nivel? Qué gracioso.",
+    "en": "Go in there at my level? How funny.",
+    "tone": [
+     "j"
+    ]
+   }
+  ]
+ },
+ "npc": {
+  "greet": {
+   "shop": [
+    {
+     "es": "¡Bienvenido! Mira todo lo que quieras.",
+     "en": "Welcome! Look at whatever you like."
+    },
+    {
+     "es": "¡Pasa, pasa! Los mejores precios de Aresden.",
+     "en": "Come in, come in! The best prices in Aresden."
+    },
+    {
+     "es": "Buenas. ¿Qué necesitas, viajero?",
+     "en": "Hello. What do you need, traveler?"
+    },
+    {
+     "es": "Hoy tengo género nuevo.",
+     "en": "I have fresh stock today."
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "¡Ah, un cliente! El fuego está a punto.",
+     "en": "Ah, a customer! The fire is just right."
+    },
+    {
+     "es": "Buen hierro para un buen brazo. Dime.",
+     "en": "Good iron for a good arm. Tell me."
+    },
+    {
+     "es": "Cuidado con el yunque. ¿En qué te ayudo?",
+     "en": "Mind the anvil. How can I help?"
+    },
+    {
+     "es": "¿Algo roto? Lo arreglo.",
+     "en": "Something broken? I'll fix it."
+    }
+   ],
+   "warehouse": [
+    {
+     "es": "Tu almacén está a salvo, descuida.",
+     "en": "Your storage is safe, don't worry."
+    },
+    {
+     "es": "Bienvenido. Todo en su sitio.",
+     "en": "Welcome. Everything in its place."
+    },
+    {
+     "es": "Dime qué guardamos hoy.",
+     "en": "Tell me what we're storing today."
+    }
+   ],
+   "mage": [
+    {
+     "es": "Que la magia te acompañe, viajero.",
+     "en": "May magic go with you, traveler."
+    },
+    {
+     "es": "El saber tiene su precio. ¿Qué buscas?",
+     "en": "Knowledge has its price. What do you seek?"
+    },
+    {
+     "es": "Pasa. Los libros no muerden.",
+     "en": "Come in. The books don't bite."
+    }
+   ],
+   "town": [
+    {
+     "es": "¡Muy buenas!",
+     "en": "Well met!"
+    },
+    {
+     "es": "Que tengas buen día, aventurero.",
+     "en": "Have a good day, adventurer."
+    },
+    {
+     "es": "Cuidado ahí fuera.",
+     "en": "Be careful out there."
+    }
+   ]
+  },
+  "thanks": {
+   "shop": [
+    {
+     "es": "¡Gracias a ti! Vuelve pronto.",
+     "en": "Thank you! Come back soon."
+    },
+    {
+     "es": "Buena elección, amigo.",
+     "en": "Good choice, friend."
+    },
+    {
+     "es": "Un placer hacer negocios.",
+     "en": "A pleasure doing business."
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "Que te sirva bien en combate.",
+     "en": "May it serve you well in battle."
+    },
+    {
+     "es": "Acero de calidad. Vuelve cuando quieras.",
+     "en": "Quality steel. Come back anytime."
+    }
+   ],
+   "mage": [
+    {
+     "es": "Úsalo con sabiduría.",
+     "en": "Use it wisely."
+    },
+    {
+     "es": "Que la magia te guíe.",
+     "en": "May the magic guide you."
+    }
+   ],
+   "town": [
+    {
+     "es": "¡Gracias!",
+     "en": "Thank you!"
+    },
+    {
+     "es": "Hasta pronto.",
+     "en": "See you soon."
+    }
+   ]
+  },
+  "nogold": {
+   "shop": [
+    {
+     "es": "Me temo que te falta oro, viajero.",
+     "en": "I'm afraid you're short on gold, traveler."
+    },
+    {
+     "es": "Vuelve cuando lleves la bolsa llena.",
+     "en": "Come back when your purse is full."
+    },
+    {
+     "es": "Sin oro no hay trato, lo siento.",
+     "en": "No gold, no deal, I'm sorry."
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "El hierro no se regala. Trae más oro.",
+     "en": "Iron isn't free. Bring more gold."
+    },
+    {
+     "es": "Sin monedas no enciendo la fragua.",
+     "en": "No coins, no forge."
+    }
+   ],
+   "mage": [
+    {
+     "es": "La magia cuesta. Vuelve con más oro.",
+     "en": "Magic costs. Return with more gold."
+    },
+    {
+     "es": "Aún no puedes pagarlo.",
+     "en": "You can't afford it yet."
+    }
+   ],
+   "town": [
+    {
+     "es": "Parece que andas escaso de oro.",
+     "en": "Looks like you're short on gold."
+    }
+   ]
+  },
+  "sold": {
+   "shop": [
+    {
+     "es": "Gracias, lo pondré a la venta.",
+     "en": "Thanks, I'll put it up for sale."
+    },
+    {
+     "es": "Buen precio para los dos.",
+     "en": "A fair price for us both."
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "Buen material, lo aprovecharé.",
+     "en": "Good material, I'll put it to use."
+    }
+   ],
+   "town": [
+    {
+     "es": "Gracias.",
+     "en": "Thanks."
+    }
+   ]
+  },
+  "repaired": {
+   "blacksmith": [
+    {
+     "es": "Listo. Trátala mejor esta vez.",
+     "en": "Done. Treat it better this time."
+    },
+    {
+     "es": "Reparado. Que dure.",
+     "en": "Repaired. May it last."
+    },
+    {
+     "es": "Un buen trabajo, si me permites.",
+     "en": "A fine job, if I may say so."
+    }
+   ],
+   "town": [
+    {
+     "es": "Listo.",
+     "en": "Done."
+    }
+   ]
+  },
+  "bank": {
+   "warehouse": [
+    {
+     "es": "Guardado. Nadie lo tocará.",
+     "en": "Stored. Nobody will touch it."
+    },
+    {
+     "es": "Anotado en el registro.",
+     "en": "Entered in the ledger."
+    },
+    {
+     "es": "Cuando lo quieras, aquí estará.",
+     "en": "Whenever you want it, it'll be here."
+    }
+   ],
+   "town": [
+    {
+     "es": "De acuerdo.",
+     "en": "All right."
+    }
+   ]
+  },
+  "ambient": {
+   "shop": [
+    {
+     "es": "¡Las mejores armas de Aresden!",
+     "en": "The finest weapons in Aresden!"
+    },
+    {
+     "es": "¡Pociones frescas, pociones frescas!",
+     "en": "Fresh potions, fresh potions!"
+    },
+    {
+     "es": "¡Quien no compra hoy, se arrepiente mañana!",
+     "en": "Who doesn't buy today, regrets tomorrow!"
+    }
+   ],
+   "blacksmith": [
+    {
+     "es": "Clang, clang… el hierro canta.",
+     "en": "Clang, clang… the iron sings."
+    },
+    {
+     "es": "Una buena espada se forja a golpes.",
+     "en": "A good sword is forged with blows."
+    },
+    {
+     "es": "Nada como el olor del carbón.",
+     "en": "Nothing like the smell of coal."
+    }
+   ],
+   "warehouse": [
+    {
+     "es": "Todo en orden en el almacén.",
+     "en": "All in order in the warehouse."
+    },
+    {
+     "es": "Nadie roba en mi almacén.",
+     "en": "Nobody steals from my warehouse."
+    }
+   ],
+   "mage": [
+    {
+     "es": "Los astros están inquietos hoy.",
+     "en": "The stars are restless today."
+    },
+    {
+     "es": "Un hechizo bien lanzado vale más que mil espadas.",
+     "en": "A well-cast spell is worth a thousand swords."
+    }
+   ],
+   "town": [
+    {
+     "es": "¡Qué día tan bueno!",
+     "en": "What a lovely day!"
+    },
+    {
+     "es": "Dicen que hay monstruos al otro lado del valle.",
+     "en": "They say there are monsters across the valley."
+    },
+    {
+     "es": "Aresden siempre resiste.",
+     "en": "Aresden always stands."
+    }
+   ]
+  }
+ },
+ "pit": {
+  "by_name": {
+   "Slime": [
+    {
+     "es": "Babosas… fáciles, pero pegajosas.",
+     "en": "Slimes… easy, but sticky."
+    },
+    {
+     "es": "Aquí abundan las babosas.",
+     "en": "Slimes are everywhere here."
+    }
+   ],
+   "Giant-Ant": [
+    {
+     "es": "Hormigas gigantes. Mejor no rodearme.",
+     "en": "Giant ants. Better not get surrounded."
+    },
+    {
+     "es": "Se oye el rechinar de las hormigas.",
+     "en": "I hear the ants clicking."
+    }
+   ],
+   "Scorpion": [
+    {
+     "es": "Escorpiones: ojo con el veneno.",
+     "en": "Scorpions: mind the venom."
+    },
+    {
+     "es": "Huellas de escorpión en la arena…",
+     "en": "Scorpion tracks in the sand…"
+    }
+   ],
+   "Amphis": [
+    {
+     "es": "Serpientes. Odio las serpientes.",
+     "en": "Snakes. I hate snakes."
+    },
+    {
+     "es": "Algo repta entre la hierba.",
+     "en": "Something slithers in the grass."
+    }
+   ],
+   "Stone-Golem": [
+    {
+     "es": "Golems de piedra: lentos, pero duros como rocas.",
+     "en": "Stone golems: slow, but hard as rock."
+    },
+    {
+     "es": "Ahí hay golems. Golpes lentos, golpes fuertes.",
+     "en": "Golems ahead. Slow hits, heavy hits."
+    }
+   ],
+   "Skeleton": [
+    {
+     "es": "Huesos que caminan… qué mala educación.",
+     "en": "Walking bones… how rude."
+    },
+    {
+     "es": "Se oye el castañeteo de los esqueletos.",
+     "en": "I hear skeletons rattling."
+    }
+   ],
+   "Orc": [
+    {
+     "es": "Orcos. Más ruidosos que peligrosos.",
+     "en": "Orcs. Louder than dangerous."
+    },
+    {
+     "es": "Huele a orco por aquí.",
+     "en": "Smells of orc around here."
+    }
+   ],
+   "Orge": [
+    {
+     "es": "Ogros. Un solo golpe y me arrugo.",
+     "en": "Ogres. One hit and I crumple."
+    },
+    {
+     "es": "Los ogros dominan este paraje.",
+     "en": "Ogres rule this place."
+    }
+   ],
+   "Zombie": [
+    {
+     "es": "Zombis… lentos pero no se rinden.",
+     "en": "Zombies… slow but relentless."
+    },
+    {
+     "es": "Qué olor a podrido.",
+     "en": "What a rotten smell."
+    }
+   ],
+   "Troll": [
+    {
+     "es": "Trolls. Regeneran rápido, hay que golpear fuerte.",
+     "en": "Trolls. They regenerate; hit hard."
+    },
+    {
+     "es": "Un troll no suele estar solo.",
+     "en": "A troll is rarely alone."
+    }
+   ],
+   "Cyclops": [
+    {
+     "es": "Cíclopes: un ojo, mucha fuerza.",
+     "en": "Cyclops: one eye, plenty of strength."
+    }
+   ],
+   "Giant-Frog": [
+    {
+     "es": "Ranas gigantes. Saltan más de lo que imaginas.",
+     "en": "Giant frogs. They jump farther than you think."
+    }
+   ],
+   "Wyvern": [
+    {
+     "es": "Un wyvern… esto ya no es un paseo.",
+     "en": "A wyvern… this is no stroll anymore."
+    },
+    {
+     "es": "Sombras de alas sobre el valle.",
+     "en": "Wing shadows over the valley."
+    }
+   ],
+   "Fire-Wyvern": [
+    {
+     "es": "Fire-Wyvern. Mejor llevar protección contra el fuego.",
+     "en": "Fire-Wyvern. Better bring fire protection."
+    }
+   ],
+   "Demon": [
+    {
+     "es": "Demonios… no debería estar aquí.",
+     "en": "Demons… I shouldn't be here."
+    },
+    {
+     "es": "El aire quema. Esto es territorio demoníaco.",
+     "en": "The air burns. Demon territory."
+    }
+   ],
+   "Hellclaw": [
+    {
+     "es": "Garras del infierno… qué lugar tan hostil.",
+     "en": "Hellclaws… what a hostile place."
+    }
+   ],
+   "Ettin": [
+    {
+     "es": "Ettins. Dos cabezas, el doble de problemas.",
+     "en": "Ettins. Two heads, double the trouble."
+    }
+   ],
+   "Minotaurs": [
+    {
+     "es": "Minotauros: embisten sin pensar.",
+     "en": "Minotaurs: they charge without thinking."
+    }
+   ],
+   "Giant-Plant": [
+    {
+     "es": "Plantas gigantes… no te acerques demasiado.",
+     "en": "Giant plants… don't get too close."
+    }
+   ],
+   "Gagoyle": [
+    {
+     "es": "Gárgolas. Se mueven cuando no miras.",
+     "en": "Gargoyles. They move when you're not looking."
+    }
+   ],
+   "Liche": [
+    {
+     "es": "Un liche. Mejor dejar este lugar en paz.",
+     "en": "A lich. Better leave this place alone."
+    }
+   ],
+   "Beholder": [
+    {
+     "es": "Un vigilante de ojos… me observa.",
+     "en": "An eye-watcher… it's watching me."
+    }
+   ],
+   "Unicorn": [
+    {
+     "es": "Unicornios… qué raro verlos por aquí.",
+     "en": "Unicorns… odd to see them here."
+    }
+   ],
+   "Cat": [
+    {
+     "es": "Gatos. ¿Por qué hay tantos gatos?",
+     "en": "Cats. Why are there so many cats?"
+    }
+   ],
+   "Dark-Elf": [
+    {
+     "es": "Elfos oscuros: rápidos y traicioneros.",
+     "en": "Dark elves: fast and treacherous."
+    }
+   ],
+   "Werewolf": [
+    {
+     "es": "Hombres lobo. Que no haya luna llena…",
+     "en": "Werewolves. Let there be no full moon…"
+    }
+   ]
+  },
+  "easy": [
+   {
+    "es": "Por aquí hay presas fáciles.",
+    "en": "Easy prey around here.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Este sitio parece tranquilo para mi nivel.",
+    "en": "This place looks calm for my level.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Buen lugar para entrenar.",
+    "en": "A good place to train.",
+    "tone": [
+     "d"
+    ]
+   }
+  ],
+  "even": [
+   {
+    "es": "Un buen reto para mi nivel, sin pasarse.",
+    "en": "A fair challenge for my level.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Aquí hay que andar con cuidado.",
+    "en": "Need to tread carefully here.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "Puede salir bien… o muy mal.",
+    "en": "It could go well… or very badly.",
+    "tone": [
+     "j"
+    ]
+   }
+  ],
+  "deadly": [
+   {
+    "es": "Esto me queda grande, mejor ni acercarme.",
+    "en": "This is too much for me; best not to approach.",
+    "tone": [
+     "w"
+    ]
+   },
+   {
+    "es": "Siento que voy a morir aquí.",
+    "en": "I feel like I'll die here.",
+    "tone": [
+     "j"
+    ]
+   },
+   {
+    "es": "Demasiado fuerte. Retirada.",
+    "en": "Too strong. Retreat.",
+    "tone": [
+     "d"
+    ]
+   },
+   {
+    "es": "Qué mala idea haber venido…",
+    "en": "What a bad idea coming here…",
+    "tone": [
+     "j"
+    ]
+   }
+  ]
+ }
+}

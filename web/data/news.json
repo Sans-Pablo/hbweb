@@ -1,55 +1,386 @@
 {
-  "build": { "es": "Versión de pruebas · octubre 2026", "en": "Test build · October 2026" },
+  "build": {
+    "es": "Versión de pruebas · octubre 2026",
+    "en": "Test build · October 2026"
+  },
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
-    { "date": "2026-10-09", "title": { "es": "Arco, mirar con el botón derecho y F1", "en": "Bow, right-click look and F1" }, "items": [
-      { "es": "Arco como en el original: dispara a cualquier distancia (clic derecho sobre un monstruo, o Ctrl + clic izquierdo), gasta una flecha por disparo y sin flechas el gesto se hace pero no hay daño. La flecha vuela hasta el blanco.", "en": "Bow as in the original: it shoots at any distance (right-click on a monster, or Ctrl + left click), spends one arrow per shot, and with no arrows the animation plays but deals no damage. The arrow flies to the target." },
-      { "es": "Clic derecho sobre el suelo: el personaje solo gira hacia esa casilla, sin moverse (DEF_OBJECTSTOP del cliente original). Sobre un habitante de la ciudad no hace nada.", "en": "Right-click on the ground: the character only turns toward that tile without moving (original client DEF_OBJECTSTOP). On a town NPC it does nothing." },
-      { "es": "Esta ventana de novedades sustituye a la ayuda original.", "en": "This news window replaces the original help." }
-    ] },
-    { "date": "2026-10-09", "title": { "es": "Carga bajo demanda", "en": "Lazy loading" }, "items": [
-      { "es": "Solo se descargan los gráficos del mapa en el que estás; los monstruos de otros mapas llegan al entrar y los destinos cercanos se precargan al acercarte a un portal.", "en": "Only the current map's graphics are downloaded; monsters from other maps arrive on entering, and nearby destinations are preloaded as you approach a portal." },
-      { "es": "Caché persistente (service worker) y WebP opcional (tools/to_webp.py).", "en": "Persistent cache (service worker) and optional WebP (tools/to_webp.py)." }
-    ] },
-    { "date": "2026-10-09", "title": { "es": "Interfaz, stamina e idiomas", "en": "Interface, stamina and languages" }, "items": [
-      { "es": "Español e inglés (Opciones o pantalla de entrada).", "en": "Spanish and English (Options or the login screen)." },
-      { "es": "Más resistencia al correr; Ctrl+R alterna correr (Mayús solo agrupa objetos en la mochila).", "en": "More stamina when running; Ctrl+R toggles running (Shift only groups items in the bag)." },
-      { "es": "Doble clic desequipa; clic derecho cierra el minimapa; cursor correcto sobre objetos del suelo; el oro aparece en la mochila.", "en": "Double-click unequips; right-click closes the minimap; correct cursor over ground items; gold shows in the bag." }
-    ] },
-    { "date": "2026-10-09", "title": { "es": "Mundo y monstruos", "en": "World and monsters" }, "items": [
-      { "es": "34 mapas (Aresden, Middleland, dungeons, huntzones), 45 tipos de monstruo con sus tiempos de animación originales y habilidades especiales 1-8 (algunos explotan al morir).", "en": "34 maps (Aresden, Middleland, dungeons, huntzones), 45 monster types with their original animation timings and special abilities 1-8 (some explode on death)." },
-      { "es": "Retroceso con golpes de 40+ de daño; Summon Creature (seguidores que atacan monstruos); conversación con los NPC de la ciudad con los textos originales.", "en": "Knockback on hits of 40+ damage; Summon Creature (followers that attack monsters); town NPC conversations with the original texts." }
-    ] }
+    {
+      "date": "2026-10-09",
+      "title": {
+        "es": "Voz del personaje y de los habitantes",
+        "en": "Character and townsfolk voice"
+      },
+      "items": [
+        {
+          "es": "El personaje habla en burbujas: saluda al abrir el menú de un tendero, herrero, almacenero o mago, agradece al comprar, protesta si falta oro o la mochila está llena, y comenta subir de nivel, poca vida, la noche, la lluvia y las criptas.",
+          "en": "The character speaks in bubbles: greets shopkeepers, blacksmiths, warehouse keepers and mages when opening their menu, thanks on purchase, complains about missing gold or a full bag, and comments on levelling up, low health, night, rain and crypts."
+        },
+        {
+          "es": "Los habitantes contestan (con un breve retraso) y murmuran de vez en cuando si estás cerca. Burbuja dorada.",
+          "en": "Townsfolk answer (after a short delay) and occasionally mutter when you are near. Golden bubble."
+        },
+        {
+          "es": "Al acercarte a una zona de caza, a veces (no siempre) dice algo sobre sus monstruos; el tono depende de lo peligrosos que sean para tu nivel. Cada personaje tiene su tono según su nombre.",
+          "en": "When approaching a hunting ground the character sometimes (not always) says something about its monsters; the tone depends on how dangerous they are for your level. Each character has its own tone derived from its name."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
+        "es": "Arco, mirar con el botón derecho y F1",
+        "en": "Bow, right-click look and F1"
+      },
+      "items": [
+        {
+          "es": "Arco como en el original: dispara a cualquier distancia (clic derecho sobre un monstruo, o Ctrl + clic izquierdo), gasta una flecha por disparo y sin flechas el gesto se hace pero no hay daño. La flecha vuela hasta el blanco.",
+          "en": "Bow as in the original: it shoots at any distance (right-click on a monster, or Ctrl + left click), spends one arrow per shot, and with no arrows the animation plays but deals no damage. The arrow flies to the target."
+        },
+        {
+          "es": "Clic derecho sobre el suelo: el personaje solo gira hacia esa casilla, sin moverse (DEF_OBJECTSTOP del cliente original). Sobre un habitante de la ciudad no hace nada.",
+          "en": "Right-click on the ground: the character only turns toward that tile without moving (original client DEF_OBJECTSTOP). On a town NPC it does nothing."
+        },
+        {
+          "es": "Esta ventana de novedades sustituye a la ayuda original.",
+          "en": "This news window replaces the original help."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
+        "es": "Carga bajo demanda",
+        "en": "Lazy loading"
+      },
+      "items": [
+        {
+          "es": "Solo se descargan los gráficos del mapa en el que estás; los monstruos de otros mapas llegan al entrar y los destinos cercanos se precargan al acercarte a un portal.",
+          "en": "Only the current map's graphics are downloaded; monsters from other maps arrive on entering, and nearby destinations are preloaded as you approach a portal."
+        },
+        {
+          "es": "Caché persistente (service worker) y WebP opcional (tools/to_webp.py).",
+          "en": "Persistent cache (service worker) and optional WebP (tools/to_webp.py)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
+        "es": "Interfaz, stamina e idiomas",
+        "en": "Interface, stamina and languages"
+      },
+      "items": [
+        {
+          "es": "Español e inglés (Opciones o pantalla de entrada).",
+          "en": "Spanish and English (Options or the login screen)."
+        },
+        {
+          "es": "Más resistencia al correr; Ctrl+R alterna correr (Mayús solo agrupa objetos en la mochila).",
+          "en": "More stamina when running; Ctrl+R toggles running (Shift only groups items in the bag)."
+        },
+        {
+          "es": "Doble clic desequipa; clic derecho cierra el minimapa; cursor correcto sobre objetos del suelo; el oro aparece en la mochila.",
+          "en": "Double-click unequips; right-click closes the minimap; correct cursor over ground items; gold shows in the bag."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
+        "es": "Mundo y monstruos",
+        "en": "World and monsters"
+      },
+      "items": [
+        {
+          "es": "34 mapas (Aresden, Middleland, dungeons, huntzones), 45 tipos de monstruo con sus tiempos de animación originales y habilidades especiales 1-8 (algunos explotan al morir).",
+          "en": "34 maps (Aresden, Middleland, dungeons, huntzones), 45 monster types with their original animation timings and special abilities 1-8 (some explode on death)."
+        },
+        {
+          "es": "Retroceso con golpes de 40+ de daño; Summon Creature (seguidores que atacan monstruos); conversación con los NPC de la ciudad con los textos originales.",
+          "en": "Knockback on hits of 40+ damage; Summon Creature (followers that attack monsters); town NPC conversations with the original texts."
+        }
+      ]
+    }
   ],
   "tests": [
-    { "id": "bow-shoot", "group": { "es": "Arco", "en": "Bow" }, "text": { "es": "Equipa un arco con flechas: clic derecho sobre un monstruo lejano dispara; la flecha se ve volar y baja la cantidad de flechas.", "en": "Equip a bow with arrows: right-click a distant monster to shoot; the arrow is seen flying and the arrow count drops." } },
-    { "id": "bow-empty", "group": { "es": "Arco", "en": "Bow" }, "text": { "es": "Sin flechas el gesto se hace pero no hay daño ni mensajes de error.", "en": "With no arrows the animation plays but there is no damage or error message." } },
-    { "id": "bow-anim", "group": { "es": "Arco", "en": "Bow" }, "text": { "es": "La animación de disparo usa la postura de arco .", "en": "The shot uses the bow stance." } },
-    { "id": "bow-ctrl", "group": { "es": "Arco", "en": "Bow" }, "text": { "es": "Ctrl + clic izquierdo sobre un monstruo lejano con arco: dispara sin acercarse. Con espada: se acerca y golpea.", "en": "Ctrl + left click on a distant monster with a bow: shoots without approaching. With a sword: walks up and strikes." } },
-    { "id": "bow-rain", "group": { "es": "Arco", "en": "Bow" }, "text": { "es": "Con lluvia fuerte el arco falla más.", "en": "In heavy rain the bow misses more." } },
-    { "id": "turn", "group": { "es": "Ratón", "en": "Mouse" }, "text": { "es": "Clic derecho en el suelo (también mantenido): el personaje gira hacia el cursor sin andar.", "en": "Right-click on the ground (also held): the character turns toward the cursor without walking." } },
-    { "id": "melee-rc", "group": { "es": "Ratón", "en": "Mouse" }, "text": { "es": "Clic derecho sobre un monstruo adyacente ataca sin moverse; sobre un NPC de ciudad no hace nada.", "en": "Right-click on an adjacent monster attacks without moving; on a town NPC it does nothing." } },
-    { "id": "lazy-farm", "group": { "es": "Carga", "en": "Loading" }, "text": { "es": "Nivel 1 en la granja: en la pestaña Red no aparecen Abaddon, wyvern ni demonios.", "en": "Level 1 on the farm: the Network tab shows no Abaddon, wyvern or demon sheets." } },
-    { "id": "lazy-portal", "group": { "es": "Carga", "en": "Loading" }, "text": { "es": "Camina al portal de Aresden: al entrar no hay huecos largos sin suelo ni monstruos.", "en": "Walk to the Aresden portal: on entering there are no long gaps without ground or monsters." } },
-    { "id": "lazy-tp", "group": { "es": "Carga", "en": "Loading" }, "text": { "es": "Un teletransporte lejano desde el inicio puede decir «cargando el mapa»: repite y debe entrar.", "en": "A far teleport right at the start may say “loading the map”: repeat and it should work." } },
-    { "id": "lazy-crypt", "group": { "es": "Carga", "en": "Loading" }, "text": { "es": "Cripta de esqueletos: se ve completa y los esqueletos caminan bien.", "en": "Skeleton crypt: fully visible and skeletons walk correctly." } },
-    { "id": "lazy-cache", "group": { "es": "Carga", "en": "Loading" }, "text": { "es": "Segunda visita: los gráficos salen de caché (Red: «service worker»).", "en": "Second visit: graphics come from cache (Network: “service worker”)." } },
-    { "id": "ui-fixes", "group": { "es": "Interfaz", "en": "Interface" }, "text": { "es": "Doble clic desequipa · clic derecho cierra el minimapa · Mayús + arrastrar agrupa por tipo · el oro se ve en la mochila.", "en": "Double-click unequips · right-click closes the minimap · Shift + drag groups by type · gold shows in the bag." } },
-    { "id": "stamina", "group": { "es": "Interfaz", "en": "Interface" }, "text": { "es": "Un jugador nuevo puede correr mucho por el mapa antes de quedarse sin aliento.", "en": "A new player can run for a long time before running out of breath." } },
-    { "id": "lang", "group": { "es": "Interfaz", "en": "Interface" }, "text": { "es": "Cambiar a inglés y recorrer los menús: no deben quedar textos en español.", "en": "Switch to English and walk the menus: no Spanish text should remain." } },
-    { "id": "summon", "group": { "es": "Magia y monstruos", "en": "Magic and monsters" }, "text": { "es": "Summon Creature: aparece un seguidor (máx. Magery/20) que ataca monstruos y no da experiencia.", "en": "Summon Creature: a follower appears (max Magery/20) that attacks monsters and gives no experience." } },
-    { "id": "knock", "group": { "es": "Magia y monstruos", "en": "Magic and monsters" }, "text": { "es": "Un golpe de 40+ empuja al jugador una casilla.", "en": "A hit of 40+ pushes the player one tile." } },
-    { "id": "special", "group": { "es": "Magia y monstruos", "en": "Magic and monsters" }, "text": { "es": "Monstruos con aura especial: dan más experiencia; los de tipo 7/8 explotan al morir.", "en": "Monsters with a special aura give more experience; types 7/8 explode on death." } },
-    { "id": "talk", "group": { "es": "Ciudad", "en": "Town" }, "text": { "es": "Hablar con el tendero, herrero, almacén y mago muestra los textos originales.", "en": "Talking to the shopkeeper, blacksmith, warehouse keeper and mage shows the original texts." } }
+    {
+      "id": "bow-shoot",
+      "group": {
+        "es": "Arco",
+        "en": "Bow"
+      },
+      "text": {
+        "es": "Equipa un arco con flechas: clic derecho sobre un monstruo lejano dispara; la flecha se ve volar y baja la cantidad de flechas.",
+        "en": "Equip a bow with arrows: right-click a distant monster to shoot; the arrow is seen flying and the arrow count drops."
+      }
+    },
+    {
+      "id": "bow-empty",
+      "group": {
+        "es": "Arco",
+        "en": "Bow"
+      },
+      "text": {
+        "es": "Sin flechas el gesto se hace pero no hay daño ni mensajes de error.",
+        "en": "With no arrows the animation plays but there is no damage or error message."
+      }
+    },
+    {
+      "id": "bow-anim",
+      "group": {
+        "es": "Arco",
+        "en": "Bow"
+      },
+      "text": {
+        "es": "La animación de disparo usa la postura de arco .",
+        "en": "The shot uses the bow stance."
+      }
+    },
+    {
+      "id": "bow-ctrl",
+      "group": {
+        "es": "Arco",
+        "en": "Bow"
+      },
+      "text": {
+        "es": "Ctrl + clic izquierdo sobre un monstruo lejano con arco: dispara sin acercarse. Con espada: se acerca y golpea.",
+        "en": "Ctrl + left click on a distant monster with a bow: shoots without approaching. With a sword: walks up and strikes."
+      }
+    },
+    {
+      "id": "bow-rain",
+      "group": {
+        "es": "Arco",
+        "en": "Bow"
+      },
+      "text": {
+        "es": "Con lluvia fuerte el arco falla más.",
+        "en": "In heavy rain the bow misses more."
+      }
+    },
+    {
+      "id": "turn",
+      "group": {
+        "es": "Ratón",
+        "en": "Mouse"
+      },
+      "text": {
+        "es": "Clic derecho en el suelo (también mantenido): el personaje gira hacia el cursor sin andar.",
+        "en": "Right-click on the ground (also held): the character turns toward the cursor without walking."
+      }
+    },
+    {
+      "id": "melee-rc",
+      "group": {
+        "es": "Ratón",
+        "en": "Mouse"
+      },
+      "text": {
+        "es": "Clic derecho sobre un monstruo adyacente ataca sin moverse; sobre un NPC de ciudad no hace nada.",
+        "en": "Right-click on an adjacent monster attacks without moving; on a town NPC it does nothing."
+      }
+    },
+    {
+      "id": "lazy-farm",
+      "group": {
+        "es": "Carga",
+        "en": "Loading"
+      },
+      "text": {
+        "es": "Nivel 1 en la granja: en la pestaña Red no aparecen Abaddon, wyvern ni demonios.",
+        "en": "Level 1 on the farm: the Network tab shows no Abaddon, wyvern or demon sheets."
+      }
+    },
+    {
+      "id": "lazy-portal",
+      "group": {
+        "es": "Carga",
+        "en": "Loading"
+      },
+      "text": {
+        "es": "Camina al portal de Aresden: al entrar no hay huecos largos sin suelo ni monstruos.",
+        "en": "Walk to the Aresden portal: on entering there are no long gaps without ground or monsters."
+      }
+    },
+    {
+      "id": "lazy-tp",
+      "group": {
+        "es": "Carga",
+        "en": "Loading"
+      },
+      "text": {
+        "es": "Un teletransporte lejano desde el inicio puede decir «cargando el mapa»: repite y debe entrar.",
+        "en": "A far teleport right at the start may say “loading the map”: repeat and it should work."
+      }
+    },
+    {
+      "id": "lazy-crypt",
+      "group": {
+        "es": "Carga",
+        "en": "Loading"
+      },
+      "text": {
+        "es": "Cripta de esqueletos: se ve completa y los esqueletos caminan bien.",
+        "en": "Skeleton crypt: fully visible and skeletons walk correctly."
+      }
+    },
+    {
+      "id": "lazy-cache",
+      "group": {
+        "es": "Carga",
+        "en": "Loading"
+      },
+      "text": {
+        "es": "Segunda visita: los gráficos salen de caché (Red: «service worker»).",
+        "en": "Second visit: graphics come from cache (Network: “service worker”)."
+      }
+    },
+    {
+      "id": "ui-fixes",
+      "group": {
+        "es": "Interfaz",
+        "en": "Interface"
+      },
+      "text": {
+        "es": "Doble clic desequipa · clic derecho cierra el minimapa · Mayús + arrastrar agrupa por tipo · el oro se ve en la mochila.",
+        "en": "Double-click unequips · right-click closes the minimap · Shift + drag groups by type · gold shows in the bag."
+      }
+    },
+    {
+      "id": "stamina",
+      "group": {
+        "es": "Interfaz",
+        "en": "Interface"
+      },
+      "text": {
+        "es": "Un jugador nuevo puede correr mucho por el mapa antes de quedarse sin aliento.",
+        "en": "A new player can run for a long time before running out of breath."
+      }
+    },
+    {
+      "id": "lang",
+      "group": {
+        "es": "Interfaz",
+        "en": "Interface"
+      },
+      "text": {
+        "es": "Cambiar a inglés y recorrer los menús: no deben quedar textos en español.",
+        "en": "Switch to English and walk the menus: no Spanish text should remain."
+      }
+    },
+    {
+      "id": "summon",
+      "group": {
+        "es": "Magia y monstruos",
+        "en": "Magic and monsters"
+      },
+      "text": {
+        "es": "Summon Creature: aparece un seguidor (máx. Magery/20) que ataca monstruos y no da experiencia.",
+        "en": "Summon Creature: a follower appears (max Magery/20) that attacks monsters and gives no experience."
+      }
+    },
+    {
+      "id": "knock",
+      "group": {
+        "es": "Magia y monstruos",
+        "en": "Magic and monsters"
+      },
+      "text": {
+        "es": "Un golpe de 40+ empuja al jugador una casilla.",
+        "en": "A hit of 40+ pushes the player one tile."
+      }
+    },
+    {
+      "id": "special",
+      "group": {
+        "es": "Magia y monstruos",
+        "en": "Magic and monsters"
+      },
+      "text": {
+        "es": "Monstruos con aura especial: dan más experiencia; los de tipo 7/8 explotan al morir.",
+        "en": "Monsters with a special aura give more experience; types 7/8 explode on death."
+      }
+    },
+    {
+      "id": "talk",
+      "group": {
+        "es": "Ciudad",
+        "en": "Town"
+      },
+      "text": {
+        "es": "Hablar con el tendero, herrero, almacén y mago muestra los textos originales.",
+        "en": "Talking to the shopkeeper, blacksmith, warehouse keeper and mage shows the original texts."
+      }
+    },
+    {
+      "id": "voice-greet",
+      "group": {
+        "es": "Voz",
+        "en": "Voice"
+      },
+      "text": {
+        "es": "Haz clic en el herrero y el tendero: el personaje saluda y el NPC responde un momento después (no siempre).",
+        "en": "Click the blacksmith and shopkeeper: the character greets and the NPC answers a moment later (not always)."
+      }
+    },
+    {
+      "id": "voice-buy",
+      "group": {
+        "es": "Voz",
+        "en": "Voice"
+      },
+      "text": {
+        "es": "Compra algo: a veces da las gracias y el tendero contesta. Intenta comprar sin oro: protesta.",
+        "en": "Buy something: sometimes thanks and the shopkeeper replies. Try buying without gold: it complains."
+      }
+    },
+    {
+      "id": "voice-pit",
+      "group": {
+        "es": "Voz",
+        "en": "Voice"
+      },
+      "text": {
+        "es": "Acércate a distintas zonas de monstruos: ocasionalmente comenta (no en todas). Comprueba que la frase encaja con el monstruo o con el peligro.",
+        "en": "Approach different monster areas: it occasionally comments (not every time). Check the line fits the monster or the danger."
+      }
+    },
+    {
+      "id": "voice-lang",
+      "group": {
+        "es": "Voz",
+        "en": "Voice"
+      },
+      "text": {
+        "es": "Cambia de idioma: las frases nuevas salen en el idioma elegido. Revisa que las burbujas largas se lean bien.",
+        "en": "Switch language: new lines appear in the chosen language. Check long bubbles read well."
+      }
+    }
   ],
   "notes": [
-    { "es": "El código original es la especificación: si algo difiere de tu recuerdo del juego, anótalo con el mapa, tu nivel y el arma equipada.", "en": "The original code is the specification: if something differs from how you remember the game, note the map, your level and the equipped weapon." },
-    { "es": "Guardado solo en tu navegador (localStorage); el multijugador y la persistencia en servidor están aparcados.", "en": "Saves live only in your browser (localStorage); multiplayer and server persistence are parked." },
-    { "es": "Tras actualizar, recarga con Ctrl+F5 (hay caché). Si algo se ve a medias, «Vaciar datos del sitio».", "en": "After an update, reload with Ctrl+F5 (there is a cache). If something looks half-drawn, “Clear site data”." },
-    { "es": "Pendiente de portar: ataques críticos (Mayús/ataque especial), ataque en carrera, reputación (Kloness), zonas de lucha, PvP, hechizos Confusion/Inhibition/Resurrection, menús de Gail, Kennedy, William, McGaffin, Perry y Devlin, y teletransportes a Elvine.", "en": "Still to port: critical attacks (special attack), dash attacks, reputation (Kloness), fight zones, PvP, Confusion/Inhibition/Resurrection spells, menus for Gail, Kennedy, William, McGaffin, Perry and Devlin, and teleports to Elvine." },
-    { "es": "El arco usa los datos del original; el monstruo grande (wyvern) se golpea desde 2 casillas aunque el servidor original solo daña desde 1.", "en": "The bow uses the original data; big monsters (wyvern) can be hit from 2 tiles although the original server only damages from 1." }
+    {
+      "es": "El código original es la especificación: si algo difiere de tu recuerdo del juego, anótalo con el mapa, tu nivel y el arma equipada.",
+      "en": "The original code is the specification: if something differs from how you remember the game, note the map, your level and the equipped weapon."
+    },
+    {
+      "es": "Guardado solo en tu navegador (localStorage); el multijugador y la persistencia en servidor están aparcados.",
+      "en": "Saves live only in your browser (localStorage); multiplayer and server persistence are parked."
+    },
+    {
+      "es": "Tras actualizar, recarga con Ctrl+F5 (hay caché). Si algo se ve a medias, «Vaciar datos del sitio».",
+      "en": "After an update, reload with Ctrl+F5 (there is a cache). If something looks half-drawn, “Clear site data”."
+    },
+    {
+      "es": "Pendiente de portar: ataques críticos (Mayús/ataque especial), ataque en carrera, reputación (Kloness), zonas de lucha, PvP, hechizos Confusion/Inhibition/Resurrection, menús de Gail, Kennedy, William, McGaffin, Perry y Devlin, y teletransportes a Elvine.",
+      "en": "Still to port: critical attacks (special attack), dash attacks, reputation (Kloness), fight zones, PvP, Confusion/Inhibition/Resurrection spells, menus for Gail, Kennedy, William, McGaffin, Perry and Devlin, and teleports to Elvine."
+    },
+    {
+      "es": "El arco usa los datos del original; el monstruo grande (wyvern) se golpea desde 2 casillas aunque el servidor original solo daña desde 1.",
+      "en": "The bow uses the original data; big monsters (wyvern) can be hit from 2 tiles although the original server only damages from 1."
+    }
   ]
 }
