@@ -374,7 +374,7 @@ export class Renderer {
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.ellipse(x, y + 2, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
     }
-    // Compañeros más altos que el personaje: se dibujan a la mitad de su altura (un golem se ve como un mini golem)
+    // Compañeros más altos que el personaje: nacen a la mitad de su altura (un golem es un mini golem) y crecen con el nivel hasta el tamaño real al nivel 50
     const sc = e.comp ? this.petScale(e, key, f) : 1;
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
     ctx.globalAlpha = alpha;
@@ -429,7 +429,8 @@ export class Renderer {
       if (!h || !this.spr.ready(key)) return 1;
       c.set(e.name, h > CHAR_H ? (CHAR_H / 2) / h : 1);
     }
-    return c.get(e.name);
+    const base = c.get(e.name), k = Math.max(0, Math.min(1, ((e.clvl || 1) - 1) / 49));       // crece con el nivel: tamaño real al 50
+    return base + (1 - base) * k;
   }
 
   mobHeight(key, f) {

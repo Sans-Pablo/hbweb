@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.13.2 · Summons que crecen (2026-10-09)
+
+- El tamaño del summon crece linealmente con su nivel: mitad de altura al nivel 1 (solo los más altos que el personaje) y tamaño real al 50.
+
 ## 0.13.1 · Lista de pruebas completa (2026-10-09)
 
 - F1 «Para probar» cubre ahora todas las funciones del juego (~50 casillas nuevas).

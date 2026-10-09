@@ -50,6 +50,10 @@
         {
           "es": "F1 → «Para probar»: añadidas ~50 casillas que cubren todo el juego (personaje, movimiento, inventario, tiendas, mundo, summon, cripta).",
           "en": "F1 → “To test”: ~50 new checkboxes covering the whole game (character, movement, inventory, shops, world, summon, crypt)."
+        },
+        {
+          "es": "Los summons grandes crecen con su nivel: empiezan a la mitad de altura y al nivel 50 miden lo que miden de verdad.",
+          "en": "Big summons grow with their level: they start at half height and at level 50 are full size."
         }
       ]
     },
@@ -1522,6 +1526,17 @@
       "text": {
         "es": "El rey carmesí suelta siempre un hueso de esqueleto rojo.",
         "en": "The crimson king always drops a red skeleton bone."
+      }
+    },
+    {
+      "id": "p-grow",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Sube un Stone-Golem o Cyclops de nivel: su sprite crece poco a poco; al nivel 50 tiene el tamaño real.",
+        "en": "Level up a Stone-Golem or Cyclops: its sprite slowly grows; at level 50 it is full size."
       }
     }
   ],
