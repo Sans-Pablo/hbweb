@@ -11,7 +11,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
   - `world.js` (World: ents, tick, COMMANDS), `adventure.js` (granja + criptas por jugador + mapas estáticos `staticWorld(id)`),
     `systems/*` (combatsys, magicsys, npcsys, itemsys, shopsys, citizens, player, vitals, status…).
 - `web/src/client/*` — dibujado, HUD, audio, diálogos (`gui.js` + `dialogs.js` + `npcdialogs.js`). No decide reglas: manda órdenes (`conn.send`) y pinta eventos.
-- `tools/*.py` — convierten los recursos originales a `web/data/`. Los datos generados se versionan; no se editan a mano.
+- `tools/*.py` — convierten los recursos originales a `web/data/`. Los datos generados (JSON) se versionan; no se editan a mano. Los binarios generados (p. ej. `.webp` de `tools/to_webp.py`) NO se versionan.
 - `tests/*.test.mjs` — `node tests/<x>.test.mjs`, todos deben imprimir OK. Sin dependencias.
 - Guardado en `localStorage` (prueba local). El multijugador (`server/`) está aparcado pero debe seguir compilando y pasando `net-*.test.mjs`.
 

@@ -2,6 +2,7 @@
 // Los números de efecto son los mismos: 100 + número de hechizo = proyectil/aura del hechizo, y los
 // bajos (5, 6, 7, 8, 9, 10, 11, 12, 15...) son explosiones y chispas. Sprites: data/fx.json (EFFECT*.PAK).
 // Las coordenadas de los efectos "bajos" son píxeles de mundo; las de los hechizos (>= 100), casillas.
+import { imgUrl } from "./imgurl.js";
 import { dirTo } from "../shared/const.js";
 
 const rnd = n => Math.floor(Math.random() * n);
@@ -59,7 +60,7 @@ export class SpellFx {
   // imagen de una hoja de efectos, descargándola si hace falta (carga bajo demanda)
   getImg(key) {
     let i = this.img[key];
-    if (!i && this.man?.[key]) { i = new Image(); i.src = "data/fx/" + this.man[key].png; this.img[key] = i; }
+    if (!i && this.man?.[key]) { i = new Image(); i.src = imgUrl("data/fx/" + this.man[key].png); this.img[key] = i; }
     return i;
   }
 

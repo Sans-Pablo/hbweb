@@ -17,8 +17,10 @@ No existe en el original (carga todos los `.pak` al arrancar); es una optimizaci
 ## Caché
 `web/sw.js` (Cache API): cache-first para sprites, HD, equipo, fx, ui, sfx y música (sus URL llevan `?v=ASSET_VERSION`); red primero para JSON y `.bin`. Al cambiar sonidos/música sin versión, subir `CACHE`.
 
+## WebP (no versionado)
+`python3 tools/to_webp.py` convierte `data/sprites/*.png` y `data/fx/*.png` a WebP sin pérdida (142 MB → 56 MB, −61 %) y escribe `data/webp.json` al final. Los `.webp` de esas carpetas y el marcador están en `.gitignore`: no se versionan. `client/imgurl.js` los usa solo si existe el marcador; sin él (p. ej. GitHub Pages) se sirven los PNG. `sprites_hd/` y `equip/` ya eran WebP versionados. Regla: los binarios generados no se suben; si se quiere WebP en producción, ejecutar el script en el despliegue.
+
 ## Pendiente / espacio en el repositorio
-- WebP sin pérdida de `sprites/` y `sprites_hd/` (suelen ahorrar 30-50 %).
 - `web/data` pesa ~450 MB y `.git` ~420 MB: no volver a versionar binarios regenerados sin cambios reales; valorar Git LFS o repositorio de datos aparte.
 
 ## Pruebas

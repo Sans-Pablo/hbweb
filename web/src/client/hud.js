@@ -1,3 +1,4 @@
+import { imgUrl } from "./imgurl.js";
 import { MAGIC_MODE } from "../shared/magic.js";
 // Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
@@ -170,7 +171,7 @@ export class Hud {
       let ico = "";
       if (fr) {
         const [sx, sy, w, h] = fr, k = Math.min(1, 40 / Math.max(w, h));
-        ico = `<span class="ico" style="width:${w}px;height:${h}px;background:url(data/sprites/${this.sprites.m[packKey(d)].png}) -${sx}px -${sy}px;transform:scale(${k})"></span>`;
+        ico = `<span class="ico" style="width:${w}px;height:${h}px;background:url(${imgUrl("data/sprites/" + this.sprites.m[packKey(d)].png)}) -${sx}px -${sy}px;transform:scale(${k})"></span>`;
       }
       const eq = this.isEquipped(me, it.uid), dead = d.type === ITYPE.EQUIP && it.life === 0;
       html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;

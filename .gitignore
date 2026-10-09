@@ -3,3 +3,8 @@ tools/node/
 tools/cloudflared.exe
 *.log
 __pycache__/
+
+# binarios generados (no se versionan): tools/to_webp.py
+web/data/sprites/*.webp
+web/data/fx/*.webp
+web/data/webp.json

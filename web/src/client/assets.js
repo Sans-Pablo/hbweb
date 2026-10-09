@@ -4,11 +4,12 @@
 import { GameData } from "../shared/data.js";
 import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
+import { imgUrl, detectWebp } from "./imgurl.js";
 import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v2";
-const spriteUrl = png => "data/sprites/" + png + "?v=" + ASSET_VERSION;
+const spriteUrl = png => imgUrl("data/sprites/" + png) + "?v=" + ASSET_VERSION;
 
 // Reintenta una descarga fallida; nunca da por cargada una imagen rota.
 export async function loadSpriteImage(png, timeoutMs = 20000) {
@@ -37,6 +38,7 @@ export function validateDungeonAssets(manifest, npcDb) {
 }
 
 export async function loadAssets(onProgress) {
+  await detectWebp();
   const response = async u => {
     const r = await fetch(u, { cache: "no-cache" });
     if (!r.ok) throw new Error("No se pudo cargar " + u + " (HTTP " + r.status + ")");
@@ -111,7 +113,7 @@ export class Sprites {
     const h = this.hd && this.hdm[key];
     if (h) {
       let i = this.hdi[key];
-      if (!i) { i = this.hdi[key] = new Image(); i.src = "data/sprites_hd/" + h.png + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[key] = new Image(); i.src = imgUrl("data/sprites_hd/" + h.png) + "?v=" + ASSET_VERSION; }
       if (i.complete && i.naturalWidth > 0) return [i, h.k];
     }
     return [this.img[key], 1];
@@ -120,7 +122,7 @@ export class Sprites {
   preloadHd(keys) {
     return Promise.all(keys.filter(k => this.hdm[k]).map(k => new Promise(res => {
       const h = this.hdm[k]; let i = this.hdi[k];
-      if (!i) { i = this.hdi[k] = new Image(); i.src = "data/sprites_hd/" + h.png + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[k] = new Image(); i.src = imgUrl("data/sprites_hd/" + h.png) + "?v=" + ASSET_VERSION; }
       if (i.complete) return res();
       i.addEventListener("load", res, { once: true }); i.addEventListener("error", res, { once: true });
     })));
