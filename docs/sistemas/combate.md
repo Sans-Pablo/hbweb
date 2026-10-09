@@ -20,6 +20,9 @@ Origen: `HGServer/Game.cpp` `iCalculateAttackEffect` (línea ~52318). Auditado e
 - Desgaste de la pieza alcanzada y del escudo (solo con bando).
 - Atributos de armadura: maná por daño (`transMana`) y carga de crítico (`chargeCrit`).
 
+## Clima
+La lluvia reduce el acierto de los arcos (5/10/25 %) y aumenta el desgaste de las armas cuerpo a cuerpo; ver [mundo.md](mundo.md).
+
 ## Pendiente (no portado)
 - Ataque crítico / super ataque (modos 20–30, `m_bSuperAttackMode`, maestría 100) y ataque en carrera (`bIsDash`).
 - Retroceso por daño ≥ 40 (`DAMAGEMOVE`) en jugadores y monstruos con `actionLimit 4`.

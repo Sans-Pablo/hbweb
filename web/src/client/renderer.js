@@ -235,6 +235,9 @@ export class Renderer {
       ctx.fillRect(0, 0, VW, VH);
     }
 
+    // 5b) noche y lluvia
+    if (s.sky) s.sky.draw(ctx, VW, VH, s.fx?.sp);
+
     // 6) barras de vida, nombres, etiquetas, efectos
     for (const o of overlays) o();
     for (const [x, y, text, color] of labels) this.label(x, y, text, color);

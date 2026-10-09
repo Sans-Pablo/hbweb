@@ -28,20 +28,48 @@ export class Sound {
     } catch { return; }
     // música: la original y la remasterizada suenan a la vez y sincronizadas; el modo
     // gráfico decide cuál se oye (como Diablo II Resurrected al cambiar de modo)
+    this.tracks = this.makeTracks(this.track);
+    if (this.on) this.startMusic();
+    if (this.wantRain) this.rain(true);
+  }
+
+  makeTracks(name) {
     const mk = src => {
       const a = new window.Audio(src);
       a.loop = true; a.preload = "auto"; a.volume = 0;
       a.addEventListener("error", () => { a.broken = true; this.applyMusic(0); });
       return a;
     };
-    this.tracks = {
-      classic: mk("data/music/" + this.track + ".mp3"),
-      remastered: mk("data/music/" + this.track + ".remaster.mp3"),
+    return { classic: mk("data/music/" + name + ".mp3"), remastered: mk("data/music/" + name + ".remaster.mp3") };
+  }
+
+  // cambia la pista (StartBGM: si ya suena la misma no hace nada); la anterior se apaga con un fundido
+  setTrack(name) {
+    if (name === this.track) return;
+    this.track = name;
+    if (!this.tracks) return;
+    const old = this.tracks, t0 = performance.now(), from = { classic: old.classic.volume, remastered: old.remastered.volume };
+    const fade = () => {
+      const k = Math.min(1, (performance.now() - t0) / 600);
+      for (const m of ["classic", "remastered"]) old[m].volume = from[m] * (1 - k);
+      if (k < 1) requestAnimationFrame(fade); else for (const a of Object.values(old)) a.pause();
     };
+    fade();
+    this.tracks = this.makeTracks(name);
     if (this.on) this.startMusic();
   }
 
-  setTrack(name) { this.track = name; }
+  // lluvia: bucle del sonido E38 mientras llueve (SetWhetherStatus)
+  async rain(on) {
+    if (!this.ctx) { this.wantRain = on; return; }
+    if (on && !this.rainSrc && this.on) {
+      const buf = await this.buffer("E38"); if (!buf || this.rainSrc) return;
+      const s = this.ctx.createBufferSource(); s.buffer = buf; s.loop = true;
+      const g = this.ctx.createGain(); g.gain.value = 0.6;
+      s.connect(g).connect(this.master); s.start();
+      this.rainSrc = s;
+    } else if (!on && this.rainSrc) { try { this.rainSrc.stop(); } catch {} this.rainSrc = null; }
+  }
 
   startMusic() {
     for (const a of Object.values(this.tracks)) a.play().catch(() => {});

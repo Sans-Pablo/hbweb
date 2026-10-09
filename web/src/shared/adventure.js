@@ -19,6 +19,9 @@ export class Adventure {
     this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
+    this.farm.meta = this.maps.arefarm?.meta;
+    this.farm.fixedDay = !!this.farm.meta?.fixedDay;
+    this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
   }
@@ -40,6 +43,8 @@ export class Adventure {
     w.hooks = this.hooks(w);
     w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
     w.meta = meta;
+    w.fixedDay = !!meta.fixedDay;
+    w.clock = o.clock || null;
     for (const n of w.ents.values()) n.nextAct += this.time;
     populate(w, meta, id);
     this.worlds.set(id, w);

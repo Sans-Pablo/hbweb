@@ -6,11 +6,12 @@ import { EQUIP } from "../items.js";
 import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
+import { extraWeaponWear } from "./weather.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
 export function playerHit(w, p, t) {
   if (p.dead || t.dead || dist(p, t) > 1) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p) });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
   const skill = p.eff.wtype === 0 ? 5 : p.eff.skill;
@@ -35,7 +36,8 @@ function weaponBonus(w, p) {
 function wearWeapon(w, p) {
   if (p.side === 0) return;
   const uid = p.equip[EQUIP.TWOHAND] ?? p.equip[EQUIP.RHAND];
-  wear(w, p, uid, 1);
+  const melee = p.eff.wtype >= 1 && p.eff.wtype < 40;
+  wear(w, p, uid, 1 + (melee ? extraWeaponWear(w) : 0));          // con lluvia las armas cuerpo a cuerpo se gastan más
 }
 
 // resta durabilidad; a 0 se desequipa (sigue en la mochila)

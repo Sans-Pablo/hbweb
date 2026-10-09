@@ -19,6 +19,7 @@ import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
+import { Sky, trackFor } from "./sky.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -37,7 +38,7 @@ async function main() {
   const info = await fetch("api/info").then(r => r.ok ? r.json() : null).catch(() => null);
   const online = !!(info && info.multiplayer);
   const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps)
-    : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps }));
+    : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps, clock: () => new Date().getMinutes() }));
   status.remove();
   const pid = await askNameAndJoin(conn, online, info, assets.sprites);
   let world = conn.state;
@@ -133,7 +134,9 @@ async function main() {
   hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
   const sound = new Sound(world, pid);
-  sound.setTrack(meta.music || "maintm");
+  sound.setTrack(trackFor(world));
+  const sky = new Sky();
+  let raining = false;
   const view = { showGrid: false, showMinimap: true };
 
   function setMode(m) {
@@ -359,6 +362,16 @@ async function main() {
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
+      else if (/^\/time (day|night|auto)$/.test(t) && !online) {                      // solo para pruebas: fuerza la hora del cielo
+        const mode = t.slice(6), A = conn.adventure;
+        A.options.clock = mode === "auto" ? () => new Date().getMinutes() : () => (mode === "night" ? 45 : 5);
+        for (const w of A.worlds.values()) { w.clock = A.options.clock; w.tSky = -1e9; }
+        hud.log("Hora: " + mode);
+      }
+      else if (/^\/weather [0-3]$/.test(t) && !online) {                              // solo para pruebas: lluvia 0..3
+        const w = conn.adventure.worldFor(pid); w.weather = +t.slice(9); w.weatherUntil = w.time + 5 * 60000; w.emit({ t: "weather", v: w.weather });
+        hud.log("Clima: " + w.weather);
+      }
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
       else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
@@ -389,11 +402,16 @@ async function main() {
       ctl.grid = world.grid; ctl.intent = null; ctl.path = []; ctl.down = false;
       ctl.hover = ctl.hoverEnt = ctl.clickFx = null;
       fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
+      sound.setTrack(trackFor(world));
     }
+    sky.sync(world); sky.update(dt);
+    const rainNow = !world.fixedDay && world.weather >= 1 && world.weather <= 3;
+    if (rainNow !== raining) { raining = rainNow; sound.rain(raining); }
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
+      if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";
     }
@@ -402,7 +420,7 @@ async function main() {
     ctl.update();
     renderer.render({
       world, me, dt, fx,
-      hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
+      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);

@@ -60,6 +60,7 @@ export function cast(w, p, cmd) {
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
   const cost = M.manaCost(p, sp);
+  if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
 
   p.lastCast = w.time;
   p.lastCombat = w.time;

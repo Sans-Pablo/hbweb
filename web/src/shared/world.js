@@ -15,6 +15,7 @@ import * as MagicSys from "./systems/magicsys.js";
 import * as Shop from "./systems/shopsys.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
+import { tickSky } from "./systems/weather.js";
 import { CAST_MS } from "./magic.js";
 
 export class World {
@@ -32,6 +33,11 @@ export class World {
     this.timers = [];
     this.ids = ids || { ent: 1, item: 1 };
     this.teleports = new Map(teleports.map(t => [grid.idx(t.x, t.y), t]));    // casillas de teletransporte (teleport-loc del mapa)
+    this.dayOrNight = 1;             // 1 día, 2 noche (m_cDayOrNight)
+    this.weather = 0;                // 0 despejado, 1..3 lluvia ligera/media/fuerte
+    this.weatherUntil = 0;
+    this.fixedDay = false;           // mapas de "fixed-day-mode": siempre de día y sin clima
+    this.clock = null;               // () => minuto de la hora; sin reloj siempre es de día
     this.generators = spawns.map(s => ({ ...s, alive: 0 }));
     for (const g of this.generators) for (let i = 0; i < g.max; i++) Npc.spawnFrom(this, g);
   }
@@ -81,6 +87,18 @@ export class World {
   saveOf(id) { return Player.saveOf(this, id); }
   removePlayer(id) { Player.removePlayer(this, id); }
   recalc(p) { Player.recalc(this, p); }
+
+  // Zona sin ataque (CMap::_SetupNoAttackArea + iGetAttribute): los rectángulos de noAttack (-10 = todo el mapa);
+  // iGetAttribute devuelve -1 a menos de 20 casillas del borde, y eso también bloquea los hechizos de ataque.
+  safeAt(x, y) {
+    const m = this.meta; if (!m) return false;
+    if (x < 20 || y < 20 || x >= this.grid.w - 20 || y >= this.grid.h - 20) return true;
+    for (const r of m.noAttack || []) {
+      if (r[1] === -10) return true;
+      if (r[1] > 0 && x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]) return true;
+    }
+    return false;
+  }
   killNpc(n, p) { Npc.killNpc(this, n, p); }
 
   // ------------------------------------------------------------------ órdenes del cliente
@@ -112,6 +130,7 @@ export class World {
         else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
+      tickSky(this);
     }
   }
 }

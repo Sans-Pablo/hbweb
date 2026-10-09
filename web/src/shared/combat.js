@@ -1,6 +1,7 @@
 // Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
 import { dice, hitChance } from "./rules.js";
 import { EQUIP } from "./items.js";
+import { bowHitWithWeather } from "./systems/weather.js";
 
 // bonificación de combo por habilidad y nº de golpe seguido (___iCAB*)
 const CAB = { 5: [0, 0, 0, 1, 2], 6: [0, 0, 0, 0, 0], 7: [0, 0, 1, 2, 3], 8: [0, 0, 1, 3, 5], 9: [0, 0, 2, 4, 8], 10: [0, 0, 1, 2, 3] };
@@ -45,6 +46,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   if (bow && ctx.protect === 1) return { hit: false, damage: 0 };                 // Protección contra flechas: la flecha se pierde sin tocar el combo
   let defense = n.cfg.defenseRatio;
   if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
+  if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
   if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
   if ((p.hunger <= 10 || p.sp <= 0) && dice(rng, 1, 10) === 5) return miss();   // hambre o sin aliento
   let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0);
