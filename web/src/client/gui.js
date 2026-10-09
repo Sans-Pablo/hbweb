@@ -10,7 +10,7 @@ export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
 const DIGIT_SPACE = [6, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6];   // __cSpace2
 
-const NO_AVOID = new Set([10, 17, 20]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
+const NO_AVOID = new Set([10, 17, 20, 46, 47]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
 
 export class Gui {
   constructor(canvas) {

@@ -26,6 +26,7 @@ import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
+import { Tutorial } from "./tutorial.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
 const store = {
@@ -117,6 +118,12 @@ async function main() {
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
   registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
+  // tutorial para jugadores nuevos (shared/systems/tutorial.js): conversaciones con cara + objetivos, se puede saltar
+  const tutorial = new Tutorial({
+    gui, pid, spr: assets.sprites, itemDef, send: c => conn.send(c), lang: getLang, now: () => performance.now(), world: () => world,
+    runOn: () => opts.run, panelOpen: id => gui.isOpen(id), toast: m => hud.toast(m), want: ks => assets.sprites.preload(ks),
+  });
+  addEventListener("keydown", e => { if (document.activeElement?.tagName === "INPUT") return; if (tutorial.key(e)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
   // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
   const dropOnCitizen = (uid, mx, my, cx, cy) => {
     if (cx === undefined) return false;
@@ -288,6 +295,7 @@ async function main() {
       if (!me || me.dead) return;
       if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 8) { hud.log("Too far to talk to " + cit.name + "."); return; }
       npcUi.clickNpc(cit, gui.mouse.x, gui.mouse.y);
+      tutorial.noteTalk(cit);
       voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
@@ -397,6 +405,7 @@ async function main() {
       location.reload();
     } catch (err) { hud.toast(err.message); }
   };
+  $id("btn-tutorial").onclick = () => { optionsEl.classList.remove("open"); tutorial.restart(); };
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
@@ -426,6 +435,8 @@ async function main() {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
       else if (/^\/petname\s+\S/.test(t)) conn.send({ t: "petname", name: t.replace(/^\/petname\s+/, "") });
+      else if (t === "/tutorial") tutorial.restart();
+      else if (t === "/tutorial off") tutorial.skipAll();
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
       else if (/^\/time (day|night|auto)$/.test(t) && !online) {                      // solo para pruebas: fuerza la hora del cielo
@@ -479,9 +490,11 @@ async function main() {
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
+      tutorial.onEvent(ev);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
+      if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia
       if ((ev.t === "companion" && ev.on || ev.t === "ball") && ev.id === pid) {         // baja las hojas de la especie para el icono y el compañero
         const sp = assets.npcDb[ev.sp]?.sprite;
         if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);
@@ -494,6 +507,7 @@ async function main() {
     if (!me) { requestAnimationFrame(loop); return; }      // aún no ha llegado el primer estado
     ctl.update();
     voice?.update(world, me, assets.npcDb);
+    tutorial.update(me, world);
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
@@ -520,7 +534,7 @@ async function main() {
 
   // para pruebas automáticas
   window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };
-  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi };
+  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, tutorial };
   window.hbSound = sound;
 }
 

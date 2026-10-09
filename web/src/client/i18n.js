@@ -33,7 +33,7 @@ const EN = {
   "Ataque automático (clic izquierdo sobre un monstruo)": "Auto attack (left click on a monster)", "Mostrar casillas bloqueadas": "Show blocked tiles", "Mejoras": "Enhancements",
   "Cursor clásico del juego": "Classic game cursor", "Sprites y terreno en HD (solo Remastered)": "HD sprites and terrain (Remastered only)", "Luz y viñeta (solo Remastered)": "Lighting and vignette (Remastered only)",
   "Animaciones de hechizos": "Spell animations", "Magia libre: todos los hechizos, sin coste de MP (pruebas)": "Free magic: all spells, no MP cost (testing)", "Cuenta": "Account",
-  "Guardar ahora": "Save now", "Exportar copia": "Export backup", "Importar copia": "Import backup", "Cerrar sesión": "Log out", "Clásico": "Classic", "Idioma": "Language",
+  "Guardar ahora": "Save now", "Repetir tutorial": "Repeat tutorial", "Exportar copia": "Export backup", "Importar copia": "Import backup", "Cerrar sesión": "Log out", "Clásico": "Classic", "Idioma": "Language",
   "Has muerto": "You died", "Reaparecer": "Respawn",
   "Clic izquierdo: andar (correr si el modo correr está activo) · sobre ti: recoger": "Left click: walk (run if run mode is on) · on yourself: pick up",
   "Clic derecho: atacar al monstruo adyacente ·": "Right click: attack the adjacent monster ·", "+clic izquierdo: ir a atacar": "+left click: go and attack",

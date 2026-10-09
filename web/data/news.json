@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Tutorial para jugadores nuevos (v0.23.0)",
+        "en": "Tutorial for new players (v0.23.0)"
+      },
+      "items": [
+        {
+          "es": "Los personajes nuevos empiezan con un tutorial: conversaciones con la cara del personaje o del NPC a la izquierda y el texto a la derecha (lore + mecánicas básicas), con objetivos que se cumplen jugando y una flecha que indica el camino.",
+          "en": "New characters start with a tutorial: conversations with the character's or NPC's face on the left and the text on the right (lore + basic mechanics), with goals completed by playing and an arrow showing the way."
+        },
+        {
+          "es": "Se puede saltar entero («Saltar tutorial», pide confirmar) o paso a paso («Saltar paso»). Espacio, Intro o clic avanzan. Repítelo con /tutorial o desde Opciones. Las partidas antiguas no lo ven.",
+          "en": "It can be skipped entirely (\"Skip tutorial\", asks to confirm) or step by step (\"Skip step\"). Space, Enter or click advance. Repeat it with /tutorial or from Options. Old saves do not see it."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Arena en su propio mapa y habilidades (v0.22.0)",
         "en": "Arena in its own map and skills (v0.22.0)"
       },
@@ -2228,6 +2245,28 @@
       "text": {
         "es": "Mata monstruos de una especie invocable: ya no cae ninguna bola. Las bolas se compran en Gail (pestaña Bolas).",
         "en": "Kill monsters of a summonable species: no ball drops any more. Balls are bought from Gail (Balls tab)."
+      }
+    },
+    {
+      "id": "tutorial-flow",
+      "group": {
+        "es": "Tutorial",
+        "en": "Tutorial"
+      },
+      "text": {
+        "es": "Crea un personaje nuevo: arranca el tutorial con Gandlf. Avanza con Espacio/Intro/clic y cumple los objetivos (andar, correr, F5, F6, equipar, matar el limo, recoger, poción, tienda, comprar, compañero). Comprueba que la flecha apunta bien.",
+        "en": "Create a new character: the tutorial starts with Gandlf. Advance with Space/Enter/click and complete the goals (walk, run, F5, F6, equip, kill the slime, pick up, potion, shop, buy, companion). Check the arrow points the right way."
+      }
+    },
+    {
+      "id": "tutorial-skip",
+      "group": {
+        "es": "Tutorial",
+        "en": "Tutorial"
+      },
+      "text": {
+        "es": "Prueba «Saltar paso» y «Saltar tutorial» (pide confirmar con un segundo clic). Recarga la página: no debe volver a empezar. Repite con /tutorial o el botón de Opciones; las 400 monedas y la recompensa solo se dan una vez.",
+        "en": "Try \"Skip step\" and \"Skip tutorial\" (asks to confirm with a second click). Reload the page: it must not start again. Repeat with /tutorial or the Options button; the 400 coins and the reward are only given once."
       }
     }
   ],

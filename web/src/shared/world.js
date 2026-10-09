@@ -16,6 +16,7 @@ import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
 import * as Debug from "./systems/debug.js";
 import * as Arena from "./systems/arena.js";
+import * as Tutorial from "./systems/tutorial.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
@@ -198,6 +199,7 @@ const COMMANDS = {
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
+  tut: (w, p, cmd) => Tutorial.command(w, p, cmd),
   arenainfo: (w, p, cmd) => Arena.info(w, p, cmd),
   arenabet: (w, p, cmd) => Arena.bet(w, p, cmd),
   petname: (w, p, cmd) => Companion.rename(w, p, cmd.name),

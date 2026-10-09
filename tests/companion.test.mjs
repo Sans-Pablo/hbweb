@@ -1,4 +1,4 @@
-// Compañeros: bolas por muertes, selección, estadísticas compartidas, experiencia, guardado.
+// Compañeros: obtención en la tienda, selección, estadísticas compartidas, experiencia, guardado.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
