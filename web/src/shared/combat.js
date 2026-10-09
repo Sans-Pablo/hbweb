@@ -37,12 +37,19 @@ export function playerStrike(rng, p) {
 }
 
 // Golpe de un jugador a un monstruo. Devuelve {hit, damage}.
-export function strikeNpc(rng, p, n, sameDir) {
+// ctx (opcional): { berserk, protect (estado del objetivo, 1..5), bonus (armas especiales) } — ver iCalculateAttackEffect.
+export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   const a = playerStrike(rng, p);
   const miss = () => { p.combo = 0; return { hit: false, damage: 0 }; };
-  if (dice(rng, 1, 100) > hitChance(a.hit, n.cfg.defenseRatio, sameDir)) return miss();
+  const bow = p.eff.wtype >= 40;
+  if (bow && ctx.protect === 1) return { hit: false, damage: 0 };                 // Protección contra flechas: la flecha se pierde sin tocar el combo
+  let defense = n.cfg.defenseRatio;
+  if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
+  if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
   if ((p.hunger <= 10 || p.sp <= 0) && dice(rng, 1, 10) === 5) return miss();   // hambre o sin aliento
-  let sm = a.sm + p.eff.addPhys, l = a.l + p.eff.addPhys;
+  let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0);
+  if (ctx.berserk) { sm *= 2; l *= 2; }                                           // furia: el doble de daño (golpes normales)
+  sm = Math.max(1, sm + p.eff.addPhys); l = Math.max(1, l + p.eff.addPhys);
   p.combo = (p.combo || 0) + 1;
   if (p.combo > 4) p.combo = 1;
   const cb = comboBonus(p.eff.wtype === 0 ? 5 : p.eff.skill, p.combo);

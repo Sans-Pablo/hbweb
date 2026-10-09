@@ -10,7 +10,7 @@ import { sget, sclear } from "./status.js";
 // El golpe del jugador "conecta" a mitad de la animación.
 export function playerHit(w, p, t) {
   if (p.dead || t.dead || dist(p, t) > 1) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir);
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p) });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
   const skill = p.eff.wtype === 0 ? 5 : p.eff.skill;
@@ -18,6 +18,18 @@ export function playerHit(w, p, t) {
   if (!lethal) gainSSN(p, skill, 1);
   wearWeapon(w, p);
   damageNpc(w, t, r.damage, p, skill);
+}
+
+// Armas con bonificación fija (iCalculateAttackEffect): varitas de furia +1; espadón/hacha 847 de noche y 848 de día +4
+// (m_cDayOrNight: 1 día, 2 noche). Las de Kloness dependen de la reputación (aún sin portar).
+function weaponBonus(w, p) {
+  const id = uid => { const i = uid !== undefined && Inv.instOf(p, uid); return i ? i.id : 0; };
+  const right = id(p.equip[EQUIP.RHAND]), two = id(p.equip[EQUIP.TWOHAND]);
+  let b = 0;
+  if (right === 732 || right === 738) b += 1;
+  if (two === 847 && w.dayOrNight === 2) b += 4;
+  if (two === 848 && w.dayOrNight === 1) b += 4;
+  return b;
 }
 
 function wearWeapon(w, p) {
@@ -69,8 +81,11 @@ export function damagePlayer(w, p, dmg, from) {
 // El monstruo golpea: acierto contra la defensa del jugador, absorción por la parte del cuerpo, desgaste.
 export function npcStrikes(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
-  const { damage, hitRatio } = R.npcMelee(w.rng, n);
-  if (R.dice(w.rng, 1, 100) > R.hitChance(hitRatio, t.defense, n.dir === t.dir)) return miss();
+  let { damage, hitRatio } = R.npcMelee(w.rng, n);
+  const prot = sget(w, t, "protect");                                  // escudo de defensa (3) / gran escudo (4): +40 / +100 de defensa
+  const defense = t.defense + (prot === 3 ? 40 : prot === 4 ? 100 : 0);
+  if (R.dice(w.rng, 1, 100) > R.hitChance(hitRatio, defense, n.dir === t.dir)) return miss();
+  if (sget(w, n, "berserk")) damage *= 2;                              // furia: el doble de daño
   let ap = R.absorbOnPlayer(w.rng, damage, t.stats);
   if (ap <= 0) return miss();
   const a = absorbOnHit(w.rng, t, ap);
@@ -83,6 +98,18 @@ export function npcStrikes(w, n, t) {
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
   if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) t.superAttack = Math.min(Math.floor(t.level / 10), (t.superAttack || 0) + 1);
+}
+
+// Contraataque (iCalculateAttackEffect): con 1/3 de probabilidad un monstruo herido se vuelve contra el atacante;
+// si ya persigue a otro, solo cambia cuando el atacante está igual o más cerca.
+function retarget(w, n, p) {
+  if (n.cfg.actionLimit !== 0 && n.cfg.actionLimit !== undefined) return;
+  if (R.dice(w.rng, 1, 3) !== 2) return;
+  const cur = n.target && w.ents.get(n.target);
+  if (cur && !cur.dead) {
+    const d = e => (n.x - e.x) ** 2 + (n.y - e.y) ** 2;
+    if (d(p) <= d(cur)) n.target = p.id;
+  } else n.target = p.id;
 }
 
 export function damageNpc(w, n, dmg, p, skill, half = false) {
@@ -101,7 +128,7 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
     if (skill != null) gainSSN(p, skill, R.dice(w.rng, 1, n.cfg.hitDice) * (p.hp <= 3 ? 2 : 1));
     return w.killNpc(n, p);
   }
-  if (!n.target || R.dice(w.rng, 1, 3) === 2) n.target = p.id;
+  retarget(w, n, p);
   if (R.dice(w.rng, 1, 3) === 2 && !n.cfg.actionLimit) {
     n.nextAct = w.time + n.cfg.actionTime;
     if (sget(w, n, "hold")) sclear(w, n, "hold");              // un golpe libera al paralizado
