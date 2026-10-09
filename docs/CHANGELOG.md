@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.20.1 · Publicación estable (2026-10-09)
+
+- `net-dungeon.test.mjs`: la aserción de «A ve esqueletos» dependía del trazado del nivel (radio de interés) y el límite de 30 s rozaba la duración real (~29 s): ahora comprueba que todo npc visible es esqueleto y el límite es 90 s. Fallaba en CI (v0.19.2 y v0.20.0 no se publicaron).
+
 ## 0.20.0 · Arena de apuestas (2026-10-09)
 
 - Nuevo `shared/systems/arena.js`: NPC McGaffin (`role arena`) + arena en Aresfarm, apuestas por el compañero o el retador, simulación previa con cuotas (margen 10 %), combate en directo con gladiadores reales y cobro; apuesta pendiente persistida. Cuadro 44 en `npcdialogs.js`, `renderer.drawArena`, comandos `arenainfo`/`arenabet`. Ficha `docs/sistemas/arena.md`, test `tests/arena.test.mjs`.

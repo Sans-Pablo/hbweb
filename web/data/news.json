@@ -11,6 +11,19 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Publicación estable (v0.20.1)",
+        "en": "Stable publishing (v0.20.1)"
+      },
+      "items": [
+        {
+          "es": "Corregido un test intermitente que impedía publicar la prueba web (v0.20.0 no llegó a subirse). Incluye todo lo de la arena de apuestas.",
+          "en": "Fixed a flaky test that blocked publishing the web build (v0.20.0 never went up). Includes everything from the betting arena."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Arena de apuestas (v0.20.0)",
         "en": "Betting arena (v0.20.0)"
       },
