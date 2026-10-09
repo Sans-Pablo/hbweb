@@ -32,8 +32,8 @@
           "en": "Rare and unique items: coloured name always visible on the ground, light beam, sound and log message."
         },
         {
-          "es": "El collar de protección contra el fuego (KnecklaceOfFirePro) reduce un 80 % el daño de fuego.",
-          "en": "The fire protection necklace (KnecklaceOfFirePro) now reduces fire damage by 80%."
+          "es": "Protección elemental en dos escalones: collares «Pro» (fuego 638, hielo 642) reducen el 50 % y Efreet (645) / IceEle (643) el 90 %.",
+          "en": "Elemental protection in two tiers: 'Pro' necklaces (fire 638, ice 642) cut 50% and Efreet (645) / IceEle (643) cut 90%."
         }
       ]
     },

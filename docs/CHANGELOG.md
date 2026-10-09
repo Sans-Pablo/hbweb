@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.19.2 · Protección al 50 y 90 % (2026-10-09)
+
+- `PROT_OVERRIDE`: 638/642 → 50 %, 645/643 → 90 % (sustituye al 80 % de 0.19.1).
+
 ## 0.19.1 · Collar de fuego al 80 % (2026-10-09)
 
 - `PROT_OVERRIDE`: 638 KnecklaceOfFirePro reduce el 80 % del daño de fuego (Item.cfg: 25).

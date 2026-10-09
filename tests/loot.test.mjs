@@ -51,6 +51,8 @@ console.log("OK");
 {
   const { EQUIP } = await import("../web/src/shared/items.js");
   const p = { stats: { dex: 10, str: 10 }, skills: {}, bag: [{ uid: 1, id: 638, count: 1 }], equip: { [EQUIP.NECK]: 1 } };
-  assert.equal(recalc(p, data).prot.fire, 80, "collar de fuego = 80 %");
+  assert.equal(recalc(p, data).prot.fire, 50, "FirePro = 50 %");
+  p.bag[0].id = 645; assert.equal(recalc(p, data).prot.fire, 90, "Efreet = 90 %");
+  p.bag[0].id = 643; assert.equal(recalc(p, data).prot.ice, 90, "IceEle = 90 %");
   console.log("OK");
 }

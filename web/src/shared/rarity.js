@@ -26,5 +26,5 @@ export function rarityOf(id, attr) {
 // protección elemental del equipo: ADDEFFECT de Item.cfg (v1 7 luz/aire, 9 fuego, 10 hielo, 11 veneno), tope 90 %
 export const ELEM = { 7: "light", 9: "fire", 10: "ice", 11: "poison" };
 export const PROT_CAP = 90;
-// ajuste del port pedido por los testers (el valor de Item.cfg es 25): el collar de protección contra el fuego reduce el 80 %
-export const PROT_OVERRIDE = { 638: 80 };
+// dos escalones de protección (ajuste del port pedido por los testers; Item.cfg trae 25/50): «Pro» 50 %, «Efreet/IceEle» 90 %
+export const PROT_OVERRIDE = { 638: 50, 642: 50, 645: 90, 643: 90 };
