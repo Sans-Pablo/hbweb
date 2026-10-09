@@ -1,4 +1,4 @@
-﻿# Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
+﻿﻿# Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
 # en Documents\hbweb-online, configura ngrok + administrador y arranca "Servidor online.bat". Se puede ejecutar las veces que haga falta.
 $ErrorActionPreference = "Stop"
 function Titulo($t) { Write-Host ""; Write-Host "  == $t" -ForegroundColor Yellow }
@@ -15,10 +15,22 @@ Refrescar
 if (-not (Tiene "winget")) { Write-Host "  Falta winget (Instalador de aplicaciones de Microsoft Store). Actualízalo desde la Store y repite." -ForegroundColor Red; Read-Host "Intro"; exit 1 }
 Instalar "git" "Git.Git" "Git"
 Instalar "node" "OpenJS.NodeJS.LTS" "Node.js"
-Instalar "ngrok" "ngrok.ngrok" "ngrok"
+if (-not (Tiene "ngrok")) {
+  Titulo "Instalando ngrok"
+  # winget no siempre lo encuentra: descarga directa del zip oficial a %LOCALAPPDATA%\ngrok\bin y se añade al PATH del usuario.
+  $nb = Join-Path $env:LOCALAPPDATA "ngrok\bin"
+  New-Item -ItemType Directory -Force -Path $nb | Out-Null
+  $zip = Join-Path $env:TEMP "ngrok.zip"
+  Invoke-WebRequest "https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile $zip -UseBasicParsing
+  Expand-Archive $zip -DestinationPath $nb -Force
+  $up = [Environment]::GetEnvironmentVariable("Path", "User")
+  if ($up -notlike "*$nb*") { [Environment]::SetEnvironmentVariable("Path", "$up;$nb", "User") }
+  Refrescar
+  if (-not (Tiene "ngrok")) { Write-Host "  No se pudo instalar ngrok." -ForegroundColor Red; Read-Host "Intro"; exit 1 }
+}
 
 Titulo "Descargando el juego"
-$dir = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "hbweb-online"
+$dir = Join-Path $env:USERPROFILE "Documents\hbweb-online"
 if (Test-Path (Join-Path $dir ".git")) { git -C $dir pull --rebase origin main } else { git clone https://github.com/Sans-Pablo/hbweb.git $dir }
 Set-Location $dir
 
