@@ -11,6 +11,47 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Fantasmas, Summons y Recall (v0.18.0)",
+        "en": "Ghosts, Summons and Recall (v0.18.0)"
+      },
+      "items": [
+        {
+          "es": "Esqueletos comunes: a veces se levantan como «Fantasma skeleton» (30 % de opacidad) cuando desaparece su cadáver. El nivel no se limpia hasta matarlos.",
+          "en": "Common skeletons sometimes rise as a “Ghost skeleton” (30 % opacity) when their corpse vanishes. The level is not cleared until they are dead."
+        },
+        {
+          "es": "El rey dorado es un 20 % más grande.",
+          "en": "The Golden King is 20 % bigger."
+        },
+        {
+          "es": "Cripta: todas las puertas usan el sprite original de la entrada de dungeon (sin aros azules).",
+          "en": "Crypt: every door now uses the original dungeon-entrance sprite (no blue rings)."
+        },
+        {
+          "es": "Barra: icono nuevo de garra para Summons y botón Recall (3 s quieto, 60 s de recarga).",
+          "en": "Bar: new paw icon for Summons and a Recall button (3 s standing still, 60 s cooldown)."
+        },
+        {
+          "es": "Ventana Summons: se puede mover, tiene el monstruo caminando con su nombre, experiencia y 3 botones (Support, Damage, Warrior) además de Info; márgenes corregidos.",
+          "en": "Summons window: movable, shows the walking monster with its name, experience and 3 buttons (Support, Damage, Warrior) plus Info; margins fixed."
+        },
+        {
+          "es": "La experiencia del summon se ve también en la barra bajo su vida (pasa el ratón para los números).",
+          "en": "Summon experience is also shown under its health bar (hover for numbers)."
+        },
+        {
+          "es": "Alt + clic sobre un monstruo: el summon lo ataca (sustituye a Ctrl+Q); tú das la orden y él responde. Nuevos diálogos por etapa, especie y nivel 10/25/40/50.",
+          "en": "Alt + click a monster: the summon attacks it (replaces Ctrl+Q); you give the order and it answers. New dialogue by stage, species and level 10/25/40/50."
+        },
+        {
+          "es": "Quitados los atajos Ctrl+0..9 de magia y a Gandlf de la tienda de la granja. Al vender un objeto sale un mensaje.",
+          "en": "Removed the Ctrl+0..9 magic shortcuts and Gandlf from the farm shop. Selling an item now prints a message."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Mecánicas únicas de los jefes (v0.17.0)",
         "en": "Unique boss mechanics (v0.17.0)"
       },
@@ -165,8 +206,8 @@
           "en": "Next to the peace/attack symbol there is one for the companion (ATK/PCE): click to toggle. It shows its miniature, which empties top to bottom as it loses health, and above the character's health bar there is a bar with its name, level and health. At peace it only follows you; in attack mode it attacks everything it sees."
         },
         {
-          "es": "Ctrl+Q con el ratón sobre un monstruo: el compañero lo ataca (también en paz).",
-          "en": "Ctrl+Q with the mouse over a monster: the companion attacks it (even at peace)."
+          "es": "Alt + clic sobre un monstruo: el compañero lo ataca (también en paz).",
+          "en": "Alt + click a monster: the companion attacks it (even at peace)."
         },
         {
           "es": "Los compañeros más altos que el personaje se dibujan a la mitad de su altura (un golem es un mini golem).",
@@ -1513,8 +1554,8 @@
         "en": "Summon"
       },
       "text": {
-        "es": "Ctrl+Q sobre un monstruo hace que el summon lo ataque, también en paz.",
-        "en": "Ctrl+Q over a monster makes the summon attack it, even at peace."
+        "es": "Alt + clic sobre un monstruo hace que el summon lo ataque, también en paz.",
+        "en": "Alt + click a monster makes the summon attack it, even at peace."
       }
     },
     {
@@ -1790,6 +1831,138 @@
       "text": {
         "es": "F1 → Herramientas → «vida del jefe»: fija la vida del jefe cercano para ver fases, escudos y clones sin pelear todo el combate.",
         "en": "F1 → Tools → “boss life”: sets the nearby boss's life to trigger phases, shields and clones without fighting the whole battle."
+      }
+    },
+    {
+      "id": "ghost-rise",
+      "group": {
+        "es": "Fantasmas",
+        "en": "Ghosts"
+      },
+      "text": {
+        "es": "En la cripta mata esqueletos comunes: algunos se levantan translúcidos como «Fantasma skeleton» al desaparecer el cadáver y hay que matarlos para abrir la bajada.",
+        "en": "In the crypt kill common skeletons: some rise translucent as “Ghost skeleton” when the corpse vanishes and must be killed to open the way down."
+      }
+    },
+    {
+      "id": "door-sprite",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Las entradas y salidas de la cripta se ven como la puerta de ladrillo original, sin aros azules.",
+        "en": "Crypt entrances and exits look like the original brick doorway, with no blue rings."
+      }
+    },
+    {
+      "id": "boss4-size",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "El rey dorado se ve claramente más grande que los otros tres jefes.",
+        "en": "The Golden King looks clearly bigger than the other three bosses."
+      }
+    },
+    {
+      "id": "sum-icon",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "El botón de la barra entre Personaje y Mochila muestra una huella de garra con el mismo estilo que los demás.",
+        "en": "The bar button between Character and Bag shows a paw print in the same style as the others."
+      }
+    },
+    {
+      "id": "sum-move",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "La ventana Summons (F10) se arrastra desde cualquier hueco, igual que la de Personaje; el texto no pisa el marco.",
+        "en": "The Summons window (F10) drags from any empty spot like the Character one; text does not overlap the frame."
+      }
+    },
+    {
+      "id": "sum-classes",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "Tres botones con icono (Support, Damage, Warrior) y uno de Info cambian la lista; el monstruo camina arriba con su nombre debajo y se ve su EXP.",
+        "en": "Three icon buttons (Support, Damage, Warrior) and an Info one change the list; the monster walks at the top with its name below and its EXP shows."
+      }
+    },
+    {
+      "id": "sum-exp",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "Con el summon fuera, una barra azul bajo su vida muestra su experiencia; al pasar el ratón salen los números.",
+        "en": "With the summon out, a blue bar under its health shows its experience; hover for the numbers."
+      }
+    },
+    {
+      "id": "sum-alt",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "Alt + clic sobre un monstruo: el summon va a por él, sale «Ordenas a X atacar a Y» y personaje y summon se responden. Ctrl+Q y Ctrl+0..9 ya no hacen nada.",
+        "en": "Alt + click a monster: the summon goes for it, “You order X to attack Y” appears and character and summon answer each other. Ctrl+Q and Ctrl+0..9 do nothing now."
+      }
+    },
+    {
+      "id": "sum-voice",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "Con el summon cerca, a veces hablan según su etapa (nv 1-9, 10-24, 25-39, 40+) y su especie; al subir a nv 10, 25, 40 y 50 hay frase propia.",
+        "en": "With the summon nearby they sometimes talk by its stage (lv 1-9, 10-24, 25-39, 40+) and species; reaching lv 10, 25, 40 and 50 has its own line."
+      }
+    },
+    {
+      "id": "sell-msg",
+      "group": {
+        "es": "Tiendas",
+        "en": "Shops"
+      },
+      "text": {
+        "es": "Al vender un objeto sale «You sold … for N Gold.» en el chat.",
+        "en": "Selling an item prints “You sold … for N Gold.” in chat."
+      }
+    },
+    {
+      "id": "shop-gandlf",
+      "group": {
+        "es": "Tiendas",
+        "en": "Shops"
+      },
+      "text": {
+        "es": "En la tienda de la granja ya no está Gandlf (Gail sigue dentro).",
+        "en": "Gandlf is no longer in the farm shop (Gail is still inside)."
+      }
+    },
+    {
+      "id": "recall-btn",
+      "group": {
+        "es": "Recall",
+        "en": "Recall"
+      },
+      "text": {
+        "es": "El botón de la derecha de la barra: 3 s quieto fuera de combate y vuelves a la granja; moverte o pelear cancela; otro clic cancela; 60 s de recarga.",
+        "en": "The button at the right of the bar: 3 s standing still out of combat and you return to the farm; moving or fighting cancels; another click cancels; 60 s cooldown."
       }
     }
   ],

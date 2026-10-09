@@ -24,8 +24,11 @@ function enter(a, id, restart) {
 }
 function clear(a, id) {
   const w = a.worldFor(id), p = w.ents.get(id);
-  for (const n of [...w.ents.values()]) if (n.kind === "npc" && !n.dead) w.killNpc(n, p);
-  a.tick(50);
+  // los esqueletos comunes pueden levantarse como fantasmas al desaparecer su cadáver: se matan también hasta que no quede ninguno
+  for (let i = 0; i < 12 && !w.cleared; i++) {
+    for (const n of [...w.ents.values()]) if (n.kind === "npc" && !n.dead) w.killNpc(n, p);
+    for (let k = 0; k < 400 && !w.cleared; k++) a.tick(50);
+  }
   assert.ok(w.cleared);
 }
 function take(a, id, portal) {

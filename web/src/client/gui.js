@@ -3,6 +3,7 @@
 // Las posiciones son las de Client/Game.cpp (DrawDialogBox_IconPannel, DrawDialogBox_GaugePannel...).
 // El panel inferior es el cuadro 30; los demás cuadros se registran en `dialogs` y se pueden arrastrar.
 import { miniOf } from "./compicon.js";
+import { need } from "../shared/systems/companion.js";
 import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
@@ -257,6 +258,7 @@ export class Gui {
     else if (x > 521 + a && x < 558 + a) this.onAction?.("skill");
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
+    else if (x > 632 + a && x < 669 + a) this.onAction?.("recall");
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -325,18 +327,32 @@ export class Gui {
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 - 1, wd + 2, 8);
     cx.fillStyle = k > .5 ? "#6fcf4f" : k > .25 ? "#e3b341" : "#e0493b"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
-    if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
+    // experiencia del compañero (para tentar al jugador a subirlo): barra fina bajo la de vida y números en el aviso
+    const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
+    cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 8, wd + 2, 5);
+    cx.fillStyle = "#6aa8ff"; cx.fillRect(x0, y0 + 9, Math.round(wd * ek), 3);
+    const expTxt = c.lvl >= 50 ? "EXP MAX" : "EXP " + (c.exp || 0) + "/" + nd + " (" + Math.floor(ek * 100) + "%)";
+    if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 6 && m.y < y0 + 14) this.tip((c.nm || c.sp) + " lv " + c.lvl + "  " + expTxt);
+    else if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
     else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max + " (click: rename)");
   }
 
-  // Intercambia dos casillas de iconos de la barra (copia de la imagen horneada): el icono del libro de hechizos pasa a ser «Summons»
-  // y el inventario ocupa su sitio a la derecha. El original no tiene este botón (invento del port).
+  // Barra inferior: la imagen horneada trae el inventario en 447 y el libro de hechizos en 484. Aquí el inventario pasa a 484 (copia de la imagen
+  // horneada) y 447 es «Summons» con un icono propio (huella de garra, tools/make_crypt_assets.py). Invento del port.
   swapSlots(xa, xb) {
     const m = this.manifest && this.manifest.gamedialog2_6, img = this.img.gamedialog2_6, fr = m && m.frames[14];
     if (!fr || !img || !img.naturalWidth) return;
     const [sx, sy, , , px, py] = fr, w = 37, h = 41, k = 554 - 548 - py, c = this.ctx;
-    c.drawImage(img, sx + (xb - px), sy + k, w, h, xa, 554, w, h);
     c.drawImage(img, sx + (xa - px), sy + k, w, h, xb, 554, w, h);
+    this.put("summons_icon", 0, xa, 554);
+  }
+
+  // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)
+  recallEvent(ev) {
+    const n = performance.now(), r = this.rc || (this.rc = { ch: 0, cd: 0, chMs: 3000 });
+    if (ev.t === "recalling") { r.ch = n + ev.ms; r.chMs = ev.ms; }
+    else if (ev.t === "recalled") { r.ch = 0; r.cd = n + 60000; }
+    else if (ev.t === "recallfail") r.ch = 0;
   }
 
   gauges(me, world, info) {
@@ -373,8 +389,16 @@ export class Gui {
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
       const icons = [[410, 6, 2, "Character"], [447, 8, 0, "Summons"], [484, 7, 1, "Inventory"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"]];
       for (const [x0, f, dx, name] of icons) {
-        if (m.x > x0 + a && m.x < x0 + 37 + a) { this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
+        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === 8) this.put("summons_icon", 1, x0 + a, 554); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }
+    }
+    // Recall: icono en el siguiente hueco de la barra, con barra de canalización / enfriamiento
+    {
+      const rx = 632 + a, n = performance.now(), r = this.rc || {}, ch = r.ch > n, cd = r.cd > n, over = m.x > rx && m.x < rx + 37 && m.y > 436 + RESY && m.y < 478 + RESY;
+      this.put("recall_icon", over || ch ? 1 : 0, rx, 554);
+      if (cd) { const k = (r.cd - n) / 60000; this.ctx.fillStyle = "rgba(0,0,0,.55)"; this.ctx.fillRect(rx + 3, 554 + 4, 31, Math.round(33 * k)); }
+      if (ch) { const k = 1 - (r.ch - n) / r.chMs; this.ctx.fillStyle = "#e3b341"; this.ctx.fillRect(rx + 3, 554 + 38, Math.round(31 * k), 3); }
+      if (over) this.tip(ch ? "Recall (click: cancel)" : cd ? "Recall (" + Math.ceil((r.cd - n) / 1000) + " s)" : "Recall: return to the farm (3 s)", m.x - 20);
     }
     if (m.x > 400 && m.x < 410 && m.y > 432 + RESY) this.tip("Hunger (" + (100 - me.hunger) + "%)", m.x - 20);
   }

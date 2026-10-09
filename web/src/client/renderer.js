@@ -378,12 +378,15 @@ export class Renderer {
       const x = gate.x * T + 16 - camX, y = gate.y * T + 16 - camY;
       if (x < -150 || y < -80 || x > this.viewW + 150 || y > this.viewH + 80) continue;
       ctx.save();
-      ctx.fillStyle = "rgba(15,20,33,.9)"; ctx.strokeStyle = "#8ccde8"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(x, y + 5, 15, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = "rgba(140,205,232,.65)"; ctx.beginPath(); ctx.ellipse(x, y - 10, 10, 19, 0, 0, Math.PI * 2); ctx.stroke();
       const near = Math.max(Math.abs(gate.x - s.me.x), Math.abs(gate.y - s.me.y)) <= 1;
       const closed = gate.locked && (s.world.map.remainingEnemies ?? 1) > 0;
-      this.label(x, y - 36, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      // siempre el sprite de la entrada de dungeon del original (tools/make_crypt_assets.py: ladrillo de middled1n); cerrada = apagada
+      ctx.globalAlpha = closed ? 0.55 : 1;
+      this.spr.put(ctx, "cryptdoor", 0, x, y + 16);
+      ctx.globalAlpha = 1;
+      if (closed) this.spr.tinted(ctx, "cryptdoor", 0, x, y + 16, "#000000", 0.35);
+      else if (near) this.spr.tinted(ctx, "cryptdoor", 0, x, y + 16, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
+      this.label(x, y - 72, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }
@@ -436,6 +439,7 @@ export class Renderer {
     if (e.crystal) { key = "id1"; f = 1; }                                                     // cristal de hielo del jefe glacial: mineral 2 de item-dynamic (Game.cpp, DEF_DYNAMICOBJECT_MINERAL2)
     const act = actionAt(e, time);
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
+    if (e.ghost) alpha *= 0.3;                                                                 // esqueleto fantasma: 30 % de opacidad
     if (e.clone) alpha *= 0.5 + 0.12 * Math.sin(time / 130 + e.id);                           // clon de sombra del rey umbrío: translúcido y parpadeante
     if (e.boss === 2 && !e.clone && e.hasClones && !e.dead) {                                  // el real: aro violeta bajo los pies
       ctx.strokeStyle = "rgba(190,120,255," + (0.55 + 0.3 * Math.sin(time / 200)) + ")"; ctx.lineWidth = 2;
@@ -458,7 +462,7 @@ export class Renderer {
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
-    const big = e.crystal ? 1.8 : e.boss ? 1.2 : 1;
+    const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     spr.put(ctx, key, f, x, y);
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
@@ -479,7 +483,7 @@ export class Renderer {
 
     // encima de todo: nombre y vida
     if (e.dead) return;
-    const top = y - this.mobHeight(key, f) * sc - 6;
+    const top = y - this.mobHeight(key, f) * sc * (e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1) - 6;
     if (remaster && e.kind !== "citizen" && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
@@ -493,7 +497,7 @@ export class Renderer {
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + (e.comp ? (e.nick || e.name) : e.crystal ? "Cristal de hielo" : e.boss ? BOSS_NAMES[e.boss] : e.name);
+        const name = (e.special && remaster ? "★ " : "") + (e.comp ? (e.nick || e.name) : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";

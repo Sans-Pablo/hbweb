@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.18.0 · Fantasmas, Summons y Recall (2026-10-09)
+
+- Esqueleto común → «Fantasma skeleton» (25 %, 30 % de opacidad) al desaparecer su cadáver (`npcsys.killNpc`, `w.ghostsPending` retiene la limpieza del nivel). Test: `tests/ghost.test.mjs`.
+- Rey dorado ×1,44 (20 % más que los otros jefes). Cripta: todas las puertas dibujan el sprite `cryptdoor` (sin aros).
+- Barra: icono de garra (`summons_icon`) y botón Recall (`recall` en `world.js`, 3 s / 60 s; test `tests/recall.test.mjs`). Herramienta `tools/make_crypt_assets.py`.
+- Summons: ventana movible (ClassicDialog devuelve false en huecos), sprite caminando + nombre, EXP (también en el panel junto a la barra), botones Support/Damage/Warrior/Info, margen `mx`.
+- Alt + clic ordena atacar al summon (`pettarget` con `tn`), diálogos por etapa/especie/hitos (`tools/mkvoice_phases.py`). Quitados Ctrl+0..9, Ctrl+Q y Gandlf. Mensaje al vender.
+
 ## 0.17.0 · Jefes con mecánicas (2026-10-09)
 
 - Los 4 reyes esqueleto tienen mecánicas propias (`shared/systems/bosses.js`, ficha `docs/sistemas/jefes.md`): brasas, huesos, rugido, salto, drenaje, clones, suelo helado, congelación, escudo con cristales, fases, contador de furia y reflejo. Test: `tests/bosses.test.mjs`.

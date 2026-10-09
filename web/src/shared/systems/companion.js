@@ -126,7 +126,7 @@ export function rename(w, p, name) {
   return true;
 }
 
-// Modo del compañero: "attack" ataca todo lo que ve; "peace" solo sigue (salvo el objetivo marcado con Ctrl+Q)
+// Modo del compañero: "attack" ataca todo lo que ve; "peace" solo sigue (salvo el objetivo marcado con Alt + clic)
 export function setMode(w, p, mode) {
   const inst = activeBall(p);
   if (!inst) return w.reject(p, { t: "petmode" }, "no tienes compañero");
@@ -141,7 +141,7 @@ export function setTarget(w, p, targetId) {
   if (!pet) return w.reject(p, { t: "pettarget" }, "no tienes compañero fuera");
   if (!t || t.dead || t.kind !== "npc" || t.master || Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) > 16) return w.reject(p, { t: "pettarget" }, "objetivo no válido");
   pet.cTarget = t.id;
-  w.emit({ t: "pettarget", id: p.id, target: t.id, nm: pet.nick });
+  w.emit({ t: "pettarget", id: p.id, target: t.id, nm: pet.nick, tn: t.ghost ? "Fantasma skeleton" : t.name });
   return true;
 }
 

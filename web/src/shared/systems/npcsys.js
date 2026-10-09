@@ -77,8 +77,21 @@ export function killNpc(w, n, p) {
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
   if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
-  w.after(n.dur.dying + CORPSE_MS, () => { w.ents.delete(n.id); w.emit({ t: "remove", id: n.id }); });
+  // Esqueleto común (no jefe, ni auxiliar, ni fantasma): con GHOST_CHANCE se levanta como fantasma cuando desaparece su cadáver. Se decide al
+  // morir (w.ghostsPending retiene la limpieza del nivel de la cripta hasta que el fantasma salga). Invento del port.
+  const rise = n.name === "Skeleton" && !n.boss && !n.aux && !n.ghost && !n.master && !n.comp && !n.noDrop && !w.cleared && w.rng() < GHOST_CHANCE;
+  if (rise) w.ghostsPending = (w.ghostsPending || 0) + 1;
+  w.after(n.dur.dying + CORPSE_MS, () => {
+    w.ents.delete(n.id); w.emit({ t: "remove", id: n.id });
+    if (!rise) return;
+    w.ghostsPending--;
+    if (w.cleared) return;
+    const g = { ...n.gen, rect: [n.x, n.y, n.x, n.y], alive: 0, max: 0, respawn: false, specialProb: 0, boss: 0 };
+    const gh = spawnFrom(w, g) || spawnFrom(w, { ...g, rect: [n.x - 1, n.y - 1, n.x + 1, n.y + 1] });
+    if (gh) { gh.ghost = true; w.emit({ t: "ghost", id: gh.id, x: gh.x, y: gh.y }); }
+  });
 }
+export const GHOST_CHANCE = 0.25;
 
 // ---------------------------------------------------------------- seguidores (hechizo Summon Creature, DEF_MAGICTYPE_SUMMON)
 // Game.cpp ~18660: sale un monstruo según Magery (iV1 = valor 2 del hechizo; 0 -> 1d(magery/10), mínimo magery/20) y sigue al invocador
@@ -113,7 +126,7 @@ function followerThink(w, n) {
   let tc = null;
   if (n.comp) { refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc); }
   let best = null, bd = 1e9;
-  // Objetivo marcado por el dueño (Ctrl+Q): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
+  // Objetivo marcado por el dueño (Alt + clic): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
   if (ct && !ct.dead && ct.kind === "npc" && dist(m, ct) <= 18) { best = ct; bd = dist(n, ct); }
   else {

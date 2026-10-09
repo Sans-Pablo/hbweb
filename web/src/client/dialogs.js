@@ -194,7 +194,7 @@ export function registerDialogs(gui, api) {
   gui.register(inv);
   gui.inv = inv;
 
-  // ------------------------------------------------------------ 3: magia (F7, Ctrl+0..9 = círculo)
+  // ------------------------------------------------------------ 3: magia (F7)
   const CIRCLES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
   const TAB_X = [30, 43, 61, 86, 106, 121, 142, 169, 202, 222];                // posiciones de la marca del círculo (sprfonts 20..29)
   const TAB_HIT = [[16, 38], [39, 56], [57, 81], [82, 101], [102, 116], [117, 137], [138, 165], [166, 197], [198, 217], [218, 239]];

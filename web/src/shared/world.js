@@ -20,6 +20,7 @@ import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
+export const RECALL_CHANNEL_MS = 3000, RECALL_COOLDOWN_MS = 60000;
 export class World {
   constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [] }) {
     this.grid = grid;
@@ -199,6 +200,24 @@ const COMMANDS = {
   dbg: (w, p, cmd) => Debug.run(w, p, cmd),
   talent: (w, p, cmd) => Companion.learnTalent(w, p, cmd),
   talreset: (w, p, cmd) => Companion.resetTalents(w, p, cmd),
+  // Botón «Recall» de la barra (invento del port; el hechizo Recall del original sigue en magicsys): canaliza 3 s inmóvil y fuera de combate
+  // y te lleva a la granja; 60 s de enfriamiento. Un segundo pulso mientras canaliza lo cancela.
+  recall(w, p, cmd) {
+    if (!w.hooks?.recall) return w.reject(p, cmd, "no disponible");
+    if (p.recallTok) { p.recallTok = 0; w.emit({ t: "recallfail", id: p.id, why: "cancel" }); return true; }
+    if (w.time < (p.recallCd || 0)) return w.reject(p, cmd, "recall en recarga: " + Math.ceil((p.recallCd - w.time) / 1000) + " s");
+    const tok = p.recallTok = (p.recallSeq = (p.recallSeq || 0) + 1), at = w.time, x = p.x, y = p.y;
+    w.emit({ t: "recalling", id: p.id, ms: RECALL_CHANNEL_MS });
+    w.after(RECALL_CHANNEL_MS, () => {
+      if (p.recallTok !== tok) return;
+      p.recallTok = 0;
+      if (p.dead || w.ents.get(p.id) !== p || p.x !== x || p.y !== y || p.lastCombat > at) return w.emit({ t: "recallfail", id: p.id, why: "moved" });
+      p.recallCd = w.time + RECALL_COOLDOWN_MS;
+      w.emit({ t: "recalled", id: p.id });
+      w.hooks.recall(p);
+    });
+    return true;
+  },
   petmode: (w, p, cmd) => Companion.setMode(w, p, cmd.mode),
   pettarget: (w, p, cmd) => Companion.setTarget(w, p, cmd.target),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },

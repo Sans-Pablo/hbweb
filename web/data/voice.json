@@ -1650,6 +1650,534 @@
      "en": "With shared stats!"
     }
    }
-  ]
+  ],
+  "attack": {
+   "me": [
+    {
+     "es": "¡Ataca a {t}!",
+     "en": "Attack {t}!",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Ve a por {t}, yo te cubro.",
+     "en": "Go for {t}, I've got your back.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¿Ves a {t}? ¡Dale un buen recuerdo de mi parte!",
+     "en": "See {t}? Give it my regards!",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Ese de ahí: {t}. ¡A él!",
+     "en": "That one: {t}. Get it!",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡A por {t}!",
+     "en": "Going for {t}!"
+    },
+    {
+     "es": "¡Entendido, jefe!",
+     "en": "Understood, boss!"
+    },
+    {
+     "es": "¡{t} no sabe lo que le espera!",
+     "en": "{t} has no idea what's coming!"
+    },
+    {
+     "es": "¡Voy!",
+     "en": "On my way!"
+    }
+   ]
+  },
+  "stage": {
+   "baby": [
+    {
+     "me": {
+      "es": "Todavía eres pequeño, quédate cerca de mí.",
+      "en": "You're still small, stay close to me.",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "¡Pero soy valiente!",
+      "en": "But I'm brave!"
+     }
+    },
+    {
+     "me": {
+      "es": "¿Cómo te sientes, cachorro?",
+      "en": "How are you feeling, little one?",
+      "tone": [
+       "j"
+      ]
+     },
+     "pet": {
+      "es": "¡Con ganas de crecer!",
+      "en": "Eager to grow!"
+     }
+    },
+    {
+     "me": {
+      "es": "Cada monstruo que cae te hace más fuerte.",
+      "en": "Every monster that falls makes you stronger.",
+      "tone": [
+       "d"
+      ]
+     },
+     "pet": {
+      "es": "Entonces ¡a por muchos más!",
+      "en": "Then let's get lots more!"
+     }
+    },
+    {
+     "me": {
+      "es": "Cuidado, aún eres frágil.",
+      "en": "Careful, you're still fragile.",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "Pero crezco rápido, ¿verdad?",
+      "en": "But I'm growing fast, right?"
+     }
+    }
+   ],
+   "young": [
+    {
+     "me": {
+      "es": "Ya no eres un cachorro.",
+      "en": "You're not a pup anymore.",
+      "tone": [
+       "j"
+      ]
+     },
+     "pet": {
+      "es": "¡Y ya llego a los sitios altos!",
+      "en": "And I can reach the high places now!"
+     }
+    },
+    {
+     "me": {
+      "es": "Pegas cada vez más fuerte.",
+      "en": "You hit harder every day.",
+      "tone": [
+       "d"
+      ]
+     },
+     "pet": {
+      "es": "He estado practicando.",
+      "en": "I've been practicing."
+     }
+    },
+    {
+     "me": {
+      "es": "¿Has pensado en qué rama de talentos elegir?",
+      "en": "Have you thought about which talent branch to take?",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "Sorpréndeme: ¡quiero ser útil!",
+      "en": "Surprise me: I want to be useful!"
+     }
+    },
+    {
+     "me": {
+      "es": "Vamos bien de equipo, ¿no crees?",
+      "en": "We make a good team, don't you think?",
+      "tone": [
+       "j"
+      ]
+     },
+     "pet": {
+      "es": "¡El mejor!",
+      "en": "The best!"
+     }
+    }
+   ],
+   "veteran": [
+    {
+     "me": {
+      "es": "Eres todo un veterano.",
+      "en": "You're quite the veteran.",
+      "tone": [
+       "d"
+      ]
+     },
+     "pet": {
+      "es": "Y aún me queda mucho por demostrar.",
+      "en": "And I still have plenty to prove."
+     }
+    },
+    {
+     "me": {
+      "es": "Nadie diría que empezaste siendo pequeño.",
+      "en": "No one would guess you started out small.",
+      "tone": [
+       "j"
+      ]
+     },
+     "pet": {
+      "es": "Yo sí lo recuerdo. Gracias por no rendirte conmigo.",
+      "en": "I remember. Thanks for not giving up on me."
+     }
+    },
+    {
+     "me": {
+      "es": "Los jefes de la cripta ya no te asustan, ¿verdad?",
+      "en": "The crypt bosses don't scare you anymore, right?",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "Con un buen plan, no.",
+      "en": "Not with a good plan."
+     }
+    },
+    {
+     "me": {
+      "es": "Cuando quieras, bajamos a la cripta.",
+      "en": "Whenever you like, we go down to the crypt.",
+      "tone": [
+       "d"
+      ]
+     },
+     "pet": {
+      "es": "¡Estoy listo!",
+      "en": "I'm ready!"
+     }
+    }
+   ],
+   "elite": [
+    {
+     "me": {
+      "es": "Casi no puedo creer lo lejos que hemos llegado.",
+      "en": "I can hardly believe how far we've come.",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "Yo tampoco. Y aquí seguimos.",
+      "en": "Neither can I. And here we still are."
+     }
+    },
+    {
+     "me": {
+      "es": "Eres una leyenda de Aresfarm.",
+      "en": "You're a legend of Aresfarm.",
+      "tone": [
+       "j"
+      ]
+     },
+     "pet": {
+      "es": "Sin ti no habría leyenda.",
+      "en": "There'd be no legend without you."
+     }
+    },
+    {
+     "me": {
+      "es": "Pocos llegan a tu poder.",
+      "en": "Few reach your power.",
+      "tone": [
+       "d"
+      ]
+     },
+     "pet": {
+      "es": "Tú me enseñaste todo.",
+      "en": "You taught me everything."
+     }
+    },
+    {
+     "me": {
+      "es": "Cuando termine la cripta, ¿qué sigue?",
+      "en": "When the crypt is done, what's next?",
+      "tone": [
+       "w"
+      ]
+     },
+     "pet": {
+      "es": "Lo que sea, juntos.",
+      "en": "Whatever it is, together."
+     }
+    }
+   ]
+  },
+  "milestone": {
+   "10": {
+    "me": [
+     {
+      "es": "¡Nivel 10! Ya no eres un recién nacido.",
+      "en": "Level 10! You're no newborn anymore.",
+      "tone": [
+       "j"
+      ]
+     },
+     {
+      "es": "Has crecido. Estoy orgulloso.",
+      "en": "You've grown. I'm proud.",
+      "tone": [
+       "w"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Ahora sí me miran con respeto!",
+      "en": "Now they look at me with respect!"
+     },
+     {
+      "es": "¡Siento que ya puedo con todo!",
+      "en": "I feel like I can take anything!"
+     }
+    ]
+   },
+   "25": {
+    "me": [
+     {
+      "es": "¡Nivel 25! Ya eres un veterano.",
+      "en": "Level 25! You're a veteran now.",
+      "tone": [
+       "d"
+      ]
+     },
+     {
+      "es": "Mírate: ya tienes cicatrices de guerra.",
+      "en": "Look at you: war scars already.",
+      "tone": [
+       "j"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "Y las que me faltan.",
+      "en": "And more to come."
+     },
+     {
+      "es": "¡Esto es solo el principio!",
+      "en": "This is only the beginning!"
+     }
+    ]
+   },
+   "40": {
+    "me": [
+     {
+      "es": "¡Nivel 40! Ya eres de élite.",
+      "en": "Level 40! You're elite now.",
+      "tone": [
+       "d"
+      ]
+     },
+     {
+      "es": "Cuarenta niveles… increíble.",
+      "en": "Forty levels… incredible.",
+      "tone": [
+       "w"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "Gracias por no dejarme atrás.",
+      "en": "Thanks for not leaving me behind."
+     },
+     {
+      "es": "¡Los jefes que se preparen!",
+      "en": "The bosses had better get ready!"
+     }
+    ]
+   },
+   "50": {
+    "me": [
+     {
+      "es": "¡Nivel 50! Has alcanzado tu tamaño real.",
+      "en": "Level 50! You've reached your full size.",
+      "tone": [
+       "w"
+      ]
+     },
+     {
+      "es": "¡Cincuenta! No hay quien te pare.",
+      "en": "Fifty! Nothing can stop you.",
+      "tone": [
+       "j"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Soy imparable!",
+      "en": "I'm unstoppable!"
+     },
+     {
+      "es": "¡Este es mi tamaño de verdad!",
+      "en": "This is my real size!"
+     }
+    ]
+   }
+  },
+  "species": {
+   "Slime": [
+    {
+     "me": {
+      "es": "Dejas un rastro pegajoso por todas partes.",
+      "en": "You leave a sticky trail everywhere."
+     },
+     "pet": {
+      "es": "¡Es mi estilo!",
+      "en": "It's my style!"
+     }
+    }
+   ],
+   "Giant-Ant": [
+    {
+     "me": {
+      "es": "Siempre tan trabajador, ¿eh?",
+      "en": "Always so hardworking, huh?"
+     },
+     "pet": {
+      "es": "¡Una hormiga nunca descansa!",
+      "en": "An ant never rests!"
+     }
+    }
+   ],
+   "Amphis": [
+    {
+     "me": {
+      "es": "Cuidado con ese veneno, no lo apuntes a mí.",
+      "en": "Careful with that venom, don't aim it at me."
+     },
+     "pet": {
+      "es": "Sssólo a los malos.",
+      "en": "Onlyyy at the bad guys."
+     }
+    }
+   ],
+   "Orc": [
+    {
+     "me": {
+      "es": "Un orco leal vale por diez.",
+      "en": "One loyal orc is worth ten."
+     },
+     "pet": {
+      "es": "¡Por la tribu… es decir, por nosotros!",
+      "en": "For the tribe… I mean, for us!"
+     }
+    }
+   ],
+   "Skeleton": [
+    {
+     "me": {
+      "es": "Tu traqueteo no me deja dormir.",
+      "en": "Your rattling won't let me sleep."
+     },
+     "pet": {
+      "es": "Es que me duelen los huesos.",
+      "en": "My bones ache."
+     }
+    }
+   ],
+   "Clay-Golem": [
+    {
+     "me": {
+      "es": "Con cuidado de no agrietarte.",
+      "en": "Careful not to crack."
+     },
+     "pet": {
+      "es": "Aguanto lo que haga falta.",
+      "en": "I can take whatever comes."
+     }
+    }
+   ],
+   "Stone-Golem": [
+    {
+     "me": {
+      "es": "Eres más duro que las paredes de la cripta.",
+      "en": "You're tougher than the crypt walls."
+     },
+     "pet": {
+      "es": "Y más terco también.",
+      "en": "And more stubborn too."
+     }
+    }
+   ],
+   "Orc-Mage": [
+    {
+     "me": {
+      "es": "¿Qué hechizo toca hoy?",
+      "en": "Which spell is it today?"
+     },
+     "pet": {
+      "es": "¡Sorpresa!",
+      "en": "Surprise!"
+     }
+    }
+   ],
+   "Hellbound": [
+    {
+     "me": {
+      "es": "Huele a azufre cuando te enfadas.",
+      "en": "You smell of sulfur when you're angry."
+     },
+     "pet": {
+      "es": "Es mi perfume.",
+      "en": "It's my perfume."
+     }
+    }
+   ],
+   "Cyclops": [
+    {
+     "me": {
+      "es": "¿Con un solo ojo ves bien el peligro?",
+      "en": "Can you see danger well with one eye?"
+     },
+     "pet": {
+      "es": "Mejor que tú con dos.",
+      "en": "Better than you with two."
+     }
+    }
+   ],
+   "Troll": [
+    {
+     "me": {
+      "es": "¿Te regeneras ya la herida?",
+      "en": "Is that wound healing yet?"
+     },
+     "pet": {
+      "es": "Un poco de paciencia y ya está.",
+      "en": "A bit of patience and it's gone."
+     }
+    }
+   ],
+   "Orge": [
+    {
+     "me": {
+      "es": "Cuidado con los techos bajos.",
+      "en": "Watch out for low ceilings."
+     },
+     "pet": {
+      "es": "¡Ya me di en la cabeza!",
+      "en": "I already bumped my head!"
+     }
+    }
+   ]
+  }
  }
 }

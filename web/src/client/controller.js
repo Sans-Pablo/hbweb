@@ -31,6 +31,7 @@ export class Controller {
       if (e.button === 2 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { ui.closeMinimap(); return; }   // clic derecho cierra el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
+      if (e.altKey && e.button === 0) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Alt + clic: orden de ataque al compañero
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
       this.down = true; this.noHold = false;

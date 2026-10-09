@@ -3,10 +3,15 @@
 import { ClassicDialog, INK, RED } from "./classicdialog.js";
 import * as Tal from "../shared/systems/talents.js";
 import { activeBall, statsOf, hpOf, need, MAX_COMP_LEVEL } from "../shared/systems/companion.js";
+import { mobSprite } from "./anim.js";
+import { ACT, mobDurations } from "../shared/const.js";
+
+const BUTTONS = [["summons_icon", "Info", "Name, mode, spells and talent reset."], ["pet_support", "Support", "Support talents: healing and protection."], ["pet_damage", "Damage", "Damage talents: more attack power."], ["pet_warrior", "Warrior", "Warrior talents: more health and defence."]];
+const BX = 14, BY = 108, BPITCH = 52;
 
 export function registerPetDialog(gui, api) {
   const dlg = new class extends ClassicDialog {
-    constructor() { super({ id: 43, title: "Summons", tabs: ["Info", "Support", "Damage", "Warrior"], rowH: 22, top: 98, visible: 7 }); }
+    constructor() { super({ id: 43, title: "Summons", tabs: [], rowH: 20, top: 156, visible: 5 }); this.mx = 24; }
     ball(me) { return me && (activeBall(me) || me.bag.find(i => i.comp)); }
     rows(me) {
       const b = this.ball(me); if (!b) return [];
@@ -26,13 +31,45 @@ export function registerPetDialog(gui, api) {
         return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: r + "/" + t.max, color: locked ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (locked ? " (needs " + Tal.TIER_COST * t.tier + " points in this branch)" : "") };
       });
     }
-    drawBody(g, me) {
+    // Cabecera: el monstruo caminando (sprite original de su especie) con su nombre debajo, nivel, vida y experiencia a la derecha
+    drawBody(g, me, lx, ly) {
       const b = this.ball(me);
       if (!b) { g.aligned(0, this.w, 130, "You have no companion ball.", INK); return; }
-      const c = b.comp, sp = Tal.spec(c), p = api.me();
-      g.text(14, 62, (c.nm || c.sp) + "  lv " + c.lvl + (c.lvl >= MAX_COMP_LEVEL ? " (max)" : ""), INK, { size: 11, bold: true });
-      const hp = p ? hpOf(p, c) + "/" + statsOf(p, c).hp : "";
-      g.text(14, 78, "HP " + hp + "   Points: " + Tal.pointsFree(c) + "   " + (sp ? Tal.BRANCH_NAMES[sp] : "No specialty"), INK, { size: 10 });
+      const c = b.comp, sp = Tal.spec(c), p = api.me(), cfg = api.npc?.(c.sp);
+      this.walker(g, cfg, c, 56, 85);
+      g.aligned(this.mx - 8, 104, 99, c.nm || c.sp, INK, { size: 10, bold: true });
+      const X = 112;
+      g.text(X, 44, "Level " + c.lvl + (c.lvl >= MAX_COMP_LEVEL ? " (max)" : ""), INK, { size: 11, bold: true });
+      g.text(X, 58, "HP " + (p ? hpOf(p, c) + "/" + statsOf(p, c).hp : ""), INK, { size: 10 });
+      const nd = need(c.lvl || 1), k = c.lvl >= MAX_COMP_LEVEL ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd)), cx = g.ctx, bw = this.w - X - 26;
+      cx.fillStyle = "rgba(10,8,4,.75)"; cx.fillRect(X - 1, 72, bw + 2, 9); cx.fillStyle = "#6aa8ff"; cx.fillRect(X, 73, Math.round(bw * k), 7);
+      g.text(X, 84, c.lvl >= MAX_COMP_LEVEL ? "EXP MAX" : "EXP " + (c.exp || 0) + " / " + nd + "  (" + Math.floor(k * 100) + "%)", INK, { size: 9 });
+      g.text(X, 96, "Points: " + Tal.pointsFree(c) + "  " + (sp ? Tal.BRANCH_NAMES[sp] : "No specialty"), INK, { size: 9 });
+      BUTTONS.forEach(([key, , ], i) => {
+        const x = BX + i * BPITCH, over = lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41;
+        g.put(key, over || this.tab === i ? 1 : 0, x, BY);
+      });
+    }
+    // sprite en marcha: fotograma de la hoja de movimiento de la especie, escalado para caber en 64x60 y anclado a los pies
+    walker(g, cfg, c, ax, ay) {
+      if (!cfg || !g.spr) return;
+      const D = mobDurations(cfg.type), dur = Math.max(300, D.move), t = performance.now();
+      const e = { kind: "npc", type: cfg.type, cfg, dir: 5, act: ACT.MOVE, actStart: Math.floor(t / dur) * dur, actDur: dur, phase: 0, dur: D };
+      for (let k = 0; k < 40; k++) api.want?.(cfg.sprite + k);
+      const { key, f } = mobSprite(e, t, k => g.spr.frames(k)), fr = g.spr.frame(key, f);
+      if (!fr || !g.spr.ready(key)) { g.put("summons_icon", 0, ax - 18, ay - 44); return; }
+      const st = mobSprite({ ...e, act: ACT.STOP }, 0, k => g.spr.frames(k)), sf = g.spr.frame(st.key, st.f) || fr;      // tamaño de referencia: el de reposo
+      const s = Math.min(1.5, 60 / Math.max(sf[3], 20), 64 / Math.max(sf[2], 20)), [sx, sy, w, h, px, py] = fr, cx = g.ctx;
+      cx.fillStyle = "rgba(0,0,0,.18)"; cx.beginPath(); cx.ellipse(ax, ay, 20, 6, 0, 0, 7); cx.fill();
+      cx.drawImage(g.spr.img[key], sx, sy, w, h, ax + px * s, ay + py * s, w * s, h * s);
+    }
+    hintOver(lx, ly) {
+      for (let i = 0; i < BUTTONS.length; i++) { const x = BX + i * BPITCH; if (lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41) return BUTTONS[i][1] + ": " + BUTTONS[i][2]; }
+      return "";
+    }
+    click(g, lx, ly, me) {
+      for (let i = 0; i < BUTTONS.length; i++) { const x = BX + i * BPITCH; if (lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41) { this.tab = i; this.view = 0; return true; } }
+      return super.click(g, lx, ly, me);
     }
     pick(r, me) {
       const b = this.ball(me); if (!b) return;

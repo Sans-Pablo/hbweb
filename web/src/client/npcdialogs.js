@@ -489,7 +489,7 @@ export function registerNpcDialogs(gui, api) {
       case "purchased": api.log("You bought a " + nm(ev.item) + " with " + ev.price + " Gold."); break;
       case "nogold": api.log("Not enough Gold."); gui.close(23); break;
       case "cantcarry": api.log("You can't carry anymore items."); api.log(" Your bag is full."); break;
-      case "sold": gui.close(23); break;
+      case "sold": gui.close(23); api.log("You sold " + (ev.count > 1 ? ev.count + " " : "") + nm(ev.item) + " for " + ev.price + " Gold.", "gold"); break;   // el original no avisa; invento del port
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
       case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;

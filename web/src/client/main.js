@@ -117,7 +117,7 @@ async function main() {
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
-  registerPetDialog(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
+  registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
   const dropOnCitizen = (uid, mx, my, cx, cy) => {
     if (cx === undefined) return false;
@@ -292,7 +292,12 @@ async function main() {
       voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmqrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    // Alt + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
+    petOrder(ent) {
+      if (ent && ent.kind === "npc" && !ent.master) conn.send({ t: "pettarget", target: ent.id });
+      else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
+    },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
@@ -317,18 +322,10 @@ async function main() {
         return;
       }
       if (e.ctrlKey) {
-        if (/^[0-9]$/.test(k)) { e.preventDefault(); gui.dialogs.get(3).view = (+k + 9) % 10; gui.open(3); return; }   // Ctrl+0..9: página de magia
         switch (K) {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
           case "h": e.preventDefault(); ui.key("news"); return;
-          case "q": {                                                       // Ctrl+Q: el compañero ataca el monstruo bajo el cursor
-            e.preventDefault();
-            const he = ctl.hoverEnt;
-            if (he && he.kind === "npc" && !he.master) conn.send({ t: "pettarget", target: he.id });
-            else hud.log("Apunta con el ratón a un monstruo y pulsa Ctrl+Q para que tu compañero lo ataque.");
-            return;
-          }
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
           case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
           case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
@@ -405,7 +402,7 @@ async function main() {
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
@@ -483,6 +480,7 @@ async function main() {
     if (rainNow !== raining) { raining = rainNow; sound.rain(raining); }
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
+      if (ev.id === pid) gui.recallEvent(ev);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();

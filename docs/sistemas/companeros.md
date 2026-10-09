@@ -13,7 +13,7 @@ Invento del port (el original no los tiene). Código: `shared/systems/companion.
 - Pendiente: habilidades por especie; compañero en multijugador (snapshot).
 - **Hospital** (v0.12.0): NPC «Gail» (`role "pethospital"`, dentro de la tienda general `gshop_1f`, 57,41; ficha y sprite originales sin uso). Órdenes `petbuy` (bola de cualquier especie, 1 de oro, solo pruebas), `petheal` (cura 2 de oro por punto de vida; revivir `reviveCost` = (1500+400·nv)·(1+0,15·rango)). Cliente: cuadro 41 en `npcdialogs.js`.
 - **Caído**: `inst.comp.down` (no se puede invocar); la vida viaja en `comp.hp` y se recupera 2 % cada 6 s a los 8 s sin recibir daño.
-- **Modo y objetivo**: `comp.mode` `attack`|`peace` (`petmode`, clic en el símbolo del compañero junto al de combate); `pettarget` (Ctrl+Q sobre un monstruo) fija `pet.cTarget`, que se ataca aunque esté en paz.
+- **Modo y objetivo**: `comp.mode` `attack`|`peace` (`petmode`, clic en el símbolo del compañero junto al de combate); `pettarget` (Alt + clic sobre un monstruo) fija `pet.cTarget`, que se ataca aunque esté en paz.
 - **HUD**: `gui.petPanel` (miniatura que se vacía de arriba abajo, símbolo ATQ/PAZ, barra con nombre/nivel/vida). Compañeros más altos que el personaje se dibujan a la mitad de su altura (`renderer.petScale`).
 - Test: `tests/pets.test.mjs` (también cubre los manuales de habilidad, `STUDYSKILL` en `itemsys.js`).
 
@@ -27,3 +27,10 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 - Test: `tests/talents.test.mjs`.
 
 - **Cuadro Summons** (v0.16.0, F10 / botón de la barra): `client/petdialog.js`, id 43. Pestañas Info (renombrar, modo, reinicio de talentos junto a Gail, hechizos aprendidos) y Support/Damage/Warrior.
+
+## Summons v0.18.0
+- Ventana (id 43): movible, cabecera con el monstruo caminando (`petdialog.walker`, hojas de movimiento de su especie) y su nombre debajo, nivel, vida, barra y números de EXP (`need(lvl)`), y 4 botones con icono (Info, Support, Damage, Warrior; `tools/make_crypt_assets.py`). `ClassicDialog.mx` es el margen izquierdo del texto; un clic en un hueco devuelve false para arrastrar.
+- Panel de la barra: barra azul de EXP bajo la vida del summon (tooltip con números).
+- **Alt + clic** (controller → `ui.petOrder` → `pettarget`, evento con `tn`): mensaje «Ordenas a X atacar a Y» y diálogo `companion.attack` (voz). Etapas `stage` (baby 1-9, young 10-24, veteran 25-39, elite 40+), `species` y `milestone` (10/25/40/50) en `voice.json` (`tools/mkvoice_phases.py`).
+- **Recall** (botón a la derecha de la barra, comando `recall`): `RECALL_CHANNEL_MS` 3 s quieto y sin combate, `RECALL_COOLDOWN_MS` 60 s; eventos `recalling/recalled/recallfail`. Test: `tests/recall.test.mjs`.
+- Quitados Ctrl+0..9 (círculos de magia) y Ctrl+Q.

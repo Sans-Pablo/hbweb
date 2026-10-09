@@ -6,7 +6,7 @@ const STOP_MS = { 15: 180, 19: 250, 20: 250, 24: 150 };
 
 // NPC de la tienda general que el servidor original pone en otros mapas (el mago está en la torre): aquí, junto al tendero.
 // "Gail" hace de enfermera del hospital de compañeros (invento del port: usa una ficha y un sprite originales sin función en el juego base).
-export const EXTRA_CITIZENS = { gshop_1f: [{ name: "Gandlf", x: 61, y: 42 }, { name: "Gail", x: 57, y: 41, role: "pethospital" }] };
+export const EXTRA_CITIZENS = { gshop_1f: [{ name: "Gail", x: 57, y: 41, role: "pethospital" }] };
 
 export function spawnCitizen(w, name, x, y, role = null) {
   const cfg = w.npcDb[name];

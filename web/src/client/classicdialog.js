@@ -14,7 +14,7 @@ const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly <
 export class ClassicDialog {
   constructor({ id, x = 150, y = 110, w = 258, h = 339, title = "", tabs = [], rowH = 17, top = 80, visible = null, footer = "" }) {
     visible = visible ?? Math.max(1, Math.floor((256 - top) / rowH));                     // las filas acaban donde empieza la zona de ayuda (y 260)
-    Object.assign(this, { id, x, y, w, h, title, tabs, rowH, top, visible, footer, tab: 0, view: 0 });
+    Object.assign(this, { id, x, y, w, h, title, tabs, rowH, top, visible, footer, tab: 0, view: 0, mx: 14 });      // mx = margen izquierdo del texto
   }
   // --- para sobrescribir
   rows() { return []; }
@@ -37,9 +37,9 @@ export class ClassicDialog {
     let hint = this.hintText || "";
     for (let i = 0; i < this.visible; i++) {
       const r = rows[i + this.view]; if (!r) break;
-      const y = this.top + i * this.rowH, over = inside(lx, ly, 10, this.w - 12, y - 1, y + this.rowH - 2);
+      const y = this.top + i * this.rowH, over = inside(lx, ly, this.mx - 4, this.w - 12, y - 1, y + this.rowH - 2);
       const col = over ? WHITE : r.color || DARK;
-      g.text(14, y, r.text, col, { size: 11 });
+      g.text(this.mx, y, r.text, col, { size: 11 });
       if (r.right != null) g.text(this.w - 44, y, String(r.right), col, { size: 11 });
       if (over && r.tip) hint = r.tip;
     }
@@ -47,7 +47,7 @@ export class ClassicDialog {
     this.hintText = "";
     if (this.hintOver) hint = this.hintOver(lx, ly, me) || hint;
     if (hint) this.paintHint(g, hint);
-    else if (this.footer) g.text(14, 308, this.footer, INK, { size: 9 });
+    else if (this.footer) g.text(this.mx, 308, this.footer, INK, { size: 9 });
   }
   // Texto de ayuda en una zona fija del cuadro (no flota junto al ratón: no tapa filas ni estorba al hacer clic)
   wrap(g, text, maxW, size = 10) {
@@ -61,16 +61,16 @@ export class ClassicDialog {
     return out;
   }
   paintHint(g, text) {
-    const lines = this.wrap(g, text, this.w - 36).slice(0, 2);
-    lines.forEach((l, i) => g.text(14, 262 + i * 12, l, INK, { size: 10 }));
+    const lines = this.wrap(g, text, this.w - this.mx - 22).slice(0, 2);
+    lines.forEach((l, i) => g.text(this.mx, 262 + i * 12, l, INK, { size: 10 }));
   }
   hoverOk(lx, ly) { return lx >= this.w - 104 && lx <= this.w - 30 && ly >= 292 && ly <= 312; }
   click(g, lx, ly, me) {
     if (this.hoverOk(lx, ly)) { g.close(this.id); return true; }
     for (let i = 0; i < this.tabs.length; i++) { const x = this.tabX(i); if (inside(lx, ly, x - 5, x + 85, 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
     const rows = this.rows(me) || [], i = Math.floor((ly - this.top) / this.rowH);
-    if (ly >= this.top && i >= 0 && i < this.visible && lx > 10 && lx < this.w - 12) { const r = rows[i + this.view]; if (r && !r.disabled) this.pick(r, me, g); }
-    return true;
+    if (ly >= this.top && i >= 0 && i < this.visible && lx > this.mx - 4 && lx < this.w - 12) { const r = rows[i + this.view]; if (r && !r.disabled) { this.pick(r, me, g); return true; } }
+    return this.fixed === true;       // clic en un hueco: se agarra el cuadro para moverlo (gui.down)
   }
   wheel(g, d) { this.view -= d; }
 }

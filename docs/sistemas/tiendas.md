@@ -13,7 +13,7 @@ Listas de venta: `contents1.txt` (tienda) y `contents2.txt` (herrero) → `web/d
 | Howard | 20 | 20 → 14 | `how0-7` |
 | Gandlf | 19 | 20 → 16 | `gnd0-7` |
 
-Se colocan en el primer waypoint de cada NPC del mapa (`populate`). Gandlf se añade a `gshop_1f` en (61,42), junto al tendero (59,42).
+Se colocan en el primer waypoint de cada NPC del mapa (`populate`). Gandlf ya no se añade a `gshop_1f` (v0.18.0).
 Clic izquierdo (sin Ctrl) a ≤ 8 casillas abre el menú.
 
 ## Reglas

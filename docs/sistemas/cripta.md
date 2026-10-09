@@ -10,3 +10,8 @@
 
 ## Rey esqueleto carmesí (jefe 1, v0.13.0)
 Cada 20 % de vida perdida (80/60/40/20 %) enciende un Fire Field (hechizo 41) de radio 2 alrededor de sí; es inmune a los campos de fuego (`fields.js`); siempre deja un `SkeletonBones` teñido de rojo (color 14). Los jefes tienen `searchRange` ≥ 12.
+
+## Fantasmas y puertas (v0.18.0)
+- **Fantasma skeleton**: al matar un `Skeleton` común (no jefe, ni auxiliar, ni fantasma) hay un 25 % (`GHOST_CHANCE`, `npcsys.js`) de que, cuando desaparece su cadáver, salga un fantasma en su casilla (misma escala del nivel). `w.ghostsPending` cuenta los pendientes para que el nivel no se dé por limpio antes. Cliente: bit 16 de `bx`, opacidad 0,3, nombre «Fantasma skeleton» / «Ghost skeleton». No resucita dos veces. Test: `tests/ghost.test.mjs`.
+- **Puertas**: `drawPortals` dibuja siempre el sprite `cryptdoor` (ladrillo de la entrada de dungeon de middled1n, `tools/make_crypt_assets.py`, `equip/cryptdoor.webp`); cerrada = apagada, abierta y cerca = brillo.
+- El rey dorado se dibuja ×1,44 (`renderer.drawEntity`).

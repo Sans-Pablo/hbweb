@@ -83,9 +83,12 @@ export class Hud {
       case "dbg": if (ev.id === me) this.log("[test] " + ev.msg, "gold"); break;
       case "talent": if (ev.id === me) this.log(ev.nm + " aprende " + (talentName(ev.talent)) + " (" + ev.rank + ").", "gold"); break;
       case "talentreset": if (ev.id === me) this.log("Has reiniciado los talentos de " + ev.nm + " por " + ev.cost + " de oro.", "gold"); break;
+      case "recalling": if (ev.id === me) this.log("Recall: quédate quieto " + Math.round(ev.ms / 1000) + " segundos…", "gold"); break;
+      case "recalled": if (ev.id === me) this.log("Recall: vuelves a la granja.", "gold"); break;
+      case "recallfail": if (ev.id === me) this.log(ev.why === "cancel" ? "Recall cancelado." : "Recall interrumpido: te moviste o entraste en combate.", "bad"); break;
       case "petname": if (ev.id === me) this.log("Tu compañero se llama ahora " + ev.nm + "."); break;
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
-      case "pettarget": if (ev.id === me) this.log((ev.nm || "Tu compañero") + " ataca el objetivo marcado."); break;
+      case "pettarget": if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-lvl": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
@@ -102,7 +105,7 @@ export class Hud {
       case "cantcarry": if (ev.id === me) this.log(ev.why === "weight" ? "Pesa demasiado para llevarlo." : "No tienes sitio en la mochila.", "bad"); break;
       case "broken": if (ev.id === me) this.log("Un objeto se ha gastado del todo: hay que repararlo.", "bad"); break;
       case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
-      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport")) this.log("No se puede: " + ev.why + ".", "bad"); break;
+      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport" || ev.cmd === "recall")) this.log("No se puede: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
       case "bossmsg": if (ev.id === me) { this.log(ev.text, "gold"); this.toast?.(ev.text); } break;

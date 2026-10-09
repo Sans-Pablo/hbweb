@@ -110,12 +110,13 @@ export class Voice {
   }
   petLine(pet, l) { const n = this.d.companion?.noise?.[pet.name]; return l && n ? { ...l, es: n.es + " " + l.es, en: n.en + " " + l.en } : l; }
   // el personaje dice `me` y el compañero contesta (o al revés si first = "pet"), con probabilidad y pausa propias
-  talkPet(world, set, key, { chance = 0.8, cool = 15000, first = "me", gap = 1100 } = {}) {
-    const pet = this.petOf(world), t = this.now(), c = this.d.companion;
-    if (!pet || !c?.[set] || t < (this.cool.get("pet." + key) || 0) || this.rng() > Math.min(1, chance * this.talk)) return false;
+  talkPet(world, set, key, { chance = 0.8, cool = 15000, first = "me", gap = 1100, list = null, fill = null } = {}) {
+    const pet = this.petOf(world), t = this.now(), c = this.d.companion, src = list || c?.[set];
+    if (!pet || !src || t < (this.cool.get("pet." + key) || 0) || this.rng() > Math.min(1, chance * this.talk)) return false;
     this.cool.set("pet." + key, t + cool);
-    const ex = Array.isArray(c[set]) ? c[set][Math.floor(this.rng() * c[set].length)] : c[set];
-    const meL = this.callName(pet, Array.isArray(ex.me) ? this.pick(ex.me, "pme." + key) : ex.me), petL = this.petLine(pet, Array.isArray(ex.pet) ? this.pick(ex.pet, "ppet." + key) : ex.pet);
+    const ex = Array.isArray(src) ? src[Math.floor(this.rng() * src.length)] : src;
+    const f = l => l && fill ? { ...l, es: l.es.replaceAll("{t}", fill.es), en: l.en.replaceAll("{t}", fill.en) } : l;
+    const meL = f(this.callName(pet, Array.isArray(ex.me) ? this.pick(ex.me, "pme." + key) : ex.me)), petL = f(this.petLine(pet, Array.isArray(ex.pet) ? this.pick(ex.pet, "ppet." + key) : ex.pet));
     const a = first === "me" ? { id: this.pid, l: meL } : { id: pet.id, l: petL }, b = first === "me" ? { id: pet.id, l: petL } : { id: this.pid, l: meL };
     this.say(a.id, a.l); this.lastAny = t;
     this.queue.push({ at: t + gap, id: b.id, l: b.l });
@@ -129,7 +130,15 @@ export class Voice {
         else if (ev.fainted) this.me(this.d.companion.faint.me, "pfaint", 0.9, 4000);
         else this.me(this.d.companion.dismiss.me, "pdismiss", 0.6, 4000);
         break;
-      case "companion-lvl": if (ev.id === this.pid) this.talkPet(world, "levelup", "plvl", { chance: 1, cool: 2000, first: "pet" }); break;
+      case "companion-lvl": if (ev.id === this.pid) {
+        const ms = this.d.companion.milestone?.[ev.lvl];                                  // niveles 10, 25, 40 y 50: frase propia
+        if (ms) this.talkPet(world, "milestone", "pmile", { chance: 1, cool: 0, first: "pet", list: [ms] });
+        else this.talkPet(world, "levelup", "plvl", { chance: 1, cool: 2000, first: "pet" });
+      } break;
+      case "pettarget": if (ev.id === this.pid) {                                        // Alt + clic: el personaje da la orden y el compañero responde
+        const tn = ev.tn || "", nm = tn === "Fantasma skeleton" ? { es: "Fantasma skeleton", en: "Ghost skeleton" } : { es: tn.replace(/-/g, " "), en: tn.replace(/-/g, " ") };
+        this.talkPet(world, "attack", "patk", { chance: 1, cool: 1500, fill: nm });
+      } break;
       case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
       case "damage": if (pet && ev.id === pet.id) {
         if (ev.max && ev.hp / ev.max < 0.3 && ev.hp > 0) this.talkPet(world, "lowhp", "plow", { chance: 0.8, cool: 20000, first: "pet" });
@@ -180,7 +189,16 @@ export class Voice {
     }
     // charla con la mascota cada 35–80 s si está cerca
     if (!this.petChatAt) this.petChatAt = t + 30000;
-    if (t > this.petChatAt) { this.petChatAt = t + 35000 + this.rng() * 45000; this.talkPet(world, "chat", "pchat", { chance: 0.8, cool: 20000 }); }
+    if (t > this.petChatAt) {
+      this.petChatAt = t + 35000 + this.rng() * 45000;
+      // charla general, según la etapa (baby 1-9, young 10-24, veteran 25-39, elite 40+) o según la especie
+      const pet = this.petOf(world), c = this.d.companion, r = this.rng();
+      const lv = pet && pet.clvl || 1, st = lv >= 40 ? "elite" : lv >= 25 ? "veteran" : lv >= 10 ? "young" : "baby";
+      const sp = pet && c.species?.[pet.name];
+      if (r < 0.3 && c.stage?.[st]) this.talkPet(world, "stage", "pstage", { chance: 0.9, cool: 20000, list: c.stage[st] });
+      else if (r < 0.5 && sp) this.talkPet(world, "species", "pspec", { chance: 0.9, cool: 20000, list: sp });
+      else this.talkPet(world, "chat", "pchat", { chance: 0.8, cool: 20000 });
+    }
     // charla de fondo
     if (!this.idleAt) this.idleAt = t + 40000;
     if (t > this.idleAt) {
