@@ -1,11 +1,11 @@
-# Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
+﻿# Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
 # en Documents\hbweb-online, configura ngrok + administrador y arranca "Servidor online.bat". Se puede ejecutar las veces que haga falta.
 $ErrorActionPreference = "Stop"
 function Titulo($t) { Write-Host ""; Write-Host "  == $t" -ForegroundColor Yellow }
 function Refrescar { $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User") }
 function Tiene($c) { [bool](Get-Command $c -ErrorAction SilentlyContinue) }
 function Instalar($cmd, $id, $nombre) {
-  if (Tiene $cmd) { Write-Host "  $nombre: ya instalado" -ForegroundColor Green; return }
+  if (Tiene $cmd) { Write-Host "  ${nombre}: ya instalado" -ForegroundColor Green; return }
   Titulo "Instalando $nombre"
   winget install --id $id -e --silent --accept-package-agreements --accept-source-agreements
   Refrescar

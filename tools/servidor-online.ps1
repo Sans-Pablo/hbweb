@@ -1,4 +1,4 @@
-# Servidor online de Helbreath Web en este PC + túnel con dirección fija (ngrok o Tailscale Funnel).
+﻿# Servidor online de Helbreath Web en este PC + túnel con dirección fija (ngrok o Tailscale Funnel).
 # Primera vez: te pregunta lo necesario y lo guarda en server\config.json. Guía paso a paso: docs\ONLINE.md
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
