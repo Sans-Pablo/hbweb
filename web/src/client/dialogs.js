@@ -151,6 +151,7 @@ export function registerDialogs(gui, api) {
     },
     press(g, lx, ly, me) {
       const h = this.pick(g, lx, ly, me); if (!h) return false;
+      if (api.disabled?.(h.it.uid)) return true;                     // esperando una operación de tienda (m_bIsItemDisabled)
       this.order = this.order.filter(u => u !== h.it.uid); this.order.push(h.it.uid);
       const fr = g.spr.frame(packKey(h.d), h.d.spriteFrame);
       g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => gg.putGame(packKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
@@ -158,6 +159,7 @@ export function registerDialogs(gui, api) {
     },
     dbl(g, lx, ly, me) {
       const h = this.pick(g, lx, ly, me); if (!h) return false;
+      if (api.disabled?.(h.it.uid)) return true;
       g.item = null;
       api.primary(h.it.uid);
       return true;
@@ -350,7 +352,7 @@ export function registerDialogs(gui, api) {
       else if (inb(123, 203, 108, 119)) api.setSys({ shout: !S.shout });
       else if (inb(28, 235, 156, 171)) api.setSys({ trans: !S.trans });
       else if (inb(28, 127, 178, 193)) g.toggle(9);
-      else if (inb(150, 235, 200, 214)) { g.close(19); g.toggle(20); }
+      else if (inb(150, 235, 200, 214)) { g.close(19); g.toggle(60); }
       else if (inb(30, 104, 225, 245)) { api.logout(); if (S.logoutCount === null) g.close(19); }
       else if (me.dead && inb(154, 228, 225, 245)) { api.restart(); g.close(19); }
       else if (inb(127, 238, 122, 138) || inb(127, 238, 139, 155)) return true;
@@ -364,7 +366,7 @@ export function registerDialogs(gui, api) {
   const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
     ["spellFx", "Animaciones de hechizos"], ["freeMagic", "Magia libre (sin MP)"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
   const mods = {
-    id: 20, x: 417, y: 140, w: 258, h: 268,
+    id: 60, x: 417, y: 140, w: 258, h: 268,
     draw(g) {
       const O = api.mods(), c = g.ctx;
       c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);

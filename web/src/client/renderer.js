@@ -322,7 +322,7 @@ export class Renderer {
     const { ctx, spr } = this;
     const remaster = this.mode === "remastered";
     const time = s.world.time;
-    const hovered = s.hoverEnt === e;
+    const hovered = s.hoverEnt === e || s.hoverCit === e;
     const flashAge = performance.now() - (s.fx.flash.get(e.id) || -1e9);
 
     if (e.kind === "player") {
@@ -392,7 +392,7 @@ export class Renderer {
     // encima de todo: nombre y vida
     if (e.dead) return;
     const top = y - this.mobHeight(key, f) - 6;
-    if (remaster && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered)) {
+    if (remaster && e.kind !== "citizen" && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
         ctx.fillStyle = "rgba(0,0,0,.65)";
@@ -401,7 +401,7 @@ export class Renderer {
         ctx.fillRect(x - w / 2, top, w * k, 3);
       });
     }
-    if (hovered || remaster && s.world.map?.kind === "dungeon") {
+    if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + e.name;
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");

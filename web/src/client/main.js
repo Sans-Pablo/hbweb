@@ -18,6 +18,7 @@ import { apparelOf, equipKeys } from "./look.js";
 import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
+import { registerNpcDialogs } from "./npcdialogs.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -54,7 +55,7 @@ async function main() {
     chatLog,
     log: m => hud.log(m),
     primary: uid => hud.primary(uid),
-    disabled: () => false,
+    disabled: uid => npcUi.bag.disabled(uid),
     magic: assets.data.magic,
     useMagic: id => ui.useMagic(id),
     sys: () => ({ detail: flags.detail, sound: opts.sound, music: opts.music, whisper: flags.whisper, shout: flags.shout, soundVol: opts.soundVol, musicVol: opts.musicVol, trans: document.body.classList.contains("dialogtrans"), logoutCount: logout.n }),
@@ -84,6 +85,19 @@ async function main() {
     learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
+  // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
+  const npcUi = registerNpcDialogs(gui, {
+    me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
+    shops: assets.shops, itemByName: n => assets.data.named(n),
+  });
+  // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
+  const dropOnCitizen = (uid, mx, my, cx, cy) => {
+    if (cx === undefined) return false;
+    const [wx, wy] = renderer.toWorld(cx, cy), cit = ctl.pickCitizen(wx, wy), me = world.ents.get(pid);
+    if (!cit || !me) return false;
+    if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 8) { hud.log("Too far to give the item."); return true; }
+    return npcUi.dropOnNpc(cit, uid, mx, my);
+  };
   // descarga los sprites del equipo puesto (todas las animaciones) para que no aparezcan a trozos
   const warmEquip = () => {
     const me = world.ents.get(pid); if (!me) return;
@@ -98,9 +112,11 @@ async function main() {
   };
   gui.onSound = n => sound.playRaw("E" + n, 1, 0);
   fx.onSfx = (n, x, y) => sound.playAt(n, x, y);
-  gui.onItemDrop = (it, x, y, dlg) => {
+  gui.onItemDrop = (it, x, y, dlg, cx, cy) => {
     const me = world.ents.get(pid), inst = me?.bag.find(i => i.uid === it.uid), d = inst && itemDef(inst.id);
     if (!me || me.dead || !inst) return;
+    if (dlg && npcUi.dropOn(dlg, inst.uid, x, y)) return;           // lista de venta o almacén
+    if (!dlg && y < 548 && dropOnCitizen(inst.uid, x, y, cx, cy)) return;
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
     } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
@@ -206,6 +222,14 @@ async function main() {
       else hud.useItemId(sc.item);
     },
     noteItemUse(id) { recent = { item: id }; },
+    // clic en un NPC de ciudad: abre su menú si está cerca
+    npcClick(cit) {
+      const me = world.ents.get(pid);
+      if (!me || me.dead) return;
+      if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 8) { hud.log("Too far to talk to " + cit.name + "."); return; }
+      npcUi.clickNpc(cit, gui.mouse.x, gui.mouse.y);
+    },
+    npcKey: e => npcUi.key(e),
     isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
@@ -333,6 +357,7 @@ async function main() {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
+      else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
       else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
@@ -366,7 +391,7 @@ async function main() {
     }
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
-      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world);
+      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";
@@ -376,11 +401,12 @@ async function main() {
     ctl.update();
     renderer.render({
       world, me, dt, fx,
-      hover: ctl.hover, hoverEnt: ctl.hoverEnt, path: ctl.path, clickFx: ctl.clickFx,
+      hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
+    npcUi.sweep();
     // cursor del original (interface.pak, sprite 0): 0 flecha · 3 enemigo · 6 otro jugador · 4/5 hechizo amigo/enemigo · 10 mano para recoger
     let cur;
     if (opts.classicCursor) {

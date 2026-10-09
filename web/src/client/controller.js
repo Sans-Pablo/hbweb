@@ -49,6 +49,7 @@ export class Controller {
 
     addEventListener("keydown", e => {
       if (e.target instanceof HTMLInputElement) return;
+      if (ui.npcKey(e)) { e.preventDefault(); return; }       // el cuadro de cantidad se queda con el teclado
       if (!e.repeat) ui.unlockAudio();
       this.keys.add(e.key.toLowerCase());
       if (e.repeat) { if (ui.isHotkey(e)) e.preventDefault(); return; }
@@ -62,11 +63,11 @@ export class Controller {
   get me() { return this.world.ents.get(this.conn.pid); }
 
   // monstruo bajo el cursor: el sprite ocupa la casilla de los pies y lo que hay encima
-  pick(wx, wy) {
+  pick(wx, wy, kind = "npc") {
     let best = null, bestD = 1e9;
     const time = this.world.time;
     for (const e of this.world.ents.values()) {
-      if (e.kind !== "npc" || e.dead) continue;
+      if (e.kind !== kind || e.dead) continue;
       const [px, py] = posOf(e, time);
       const { key, f } = mobSprite(e, time);
       const h = Math.max(30, this.r.mobHeight(key, f));
@@ -76,6 +77,9 @@ export class Controller {
     }
     return best;
   }
+
+  // NPC de ciudad bajo un punto del mundo
+  pickCitizen(wx, wy) { return this.pick(wx, wy, "citizen"); }
 
   // posición del cursor -> {ent, x, y}
   target() {
@@ -104,6 +108,10 @@ export class Controller {
       if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
       return;
     }
+    if (first && !this.ctrl) {                            // clic en un NPC de ciudad: abre su menú (no se anda hacia él)
+      const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]), cit = this.pickCitizen(wx, wy);
+      if (cit) { this.intent = null; this.path = []; this.noHold = true; this.ui.npcClick(cit); return; }
+    }
     if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
     if (!first && this.intent && this.intent.t === "attack") return;
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
@@ -120,7 +128,8 @@ export class Controller {
       const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
       this.hover = [Math.floor(wx / T), Math.floor(wy / T)];
       this.hoverEnt = this.pick(wx, wy);
-    } else { this.hover = null; this.hoverEnt = null; }
+      this.hoverCit = this.hoverEnt ? null : this.pickCitizen(wx, wy);
+    } else { this.hover = null; this.hoverEnt = null; this.hoverCit = null; }
     if (!me || me.dead) { this.intent = null; this.path = []; return; }
 
     // mantener pulsado = seguir andando hacia el cursor (como Diablo / el original)

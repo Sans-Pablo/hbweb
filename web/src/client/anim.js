@@ -46,6 +46,7 @@ export function playerSprite(e, time) {
 
 // Monstruo: 5 grupos x 8 direcciones (0 quieto, 1 andar, 2 atacar, 3 daño, 4 morir), 4 fotogramas
 export function mobSprite(e, time) {
+  if (e.kind === "citizen") return { key: e.cfg.sprite + (e.dir - 1), f: Math.floor((time + e.phase) / e.dur.stopFrame) % 8 };   // NPC de ciudad: 8 fotogramas de reposo
   const act = actionAt(e, time), p = progress(e, time);
   let group, f;
   switch (act) {
