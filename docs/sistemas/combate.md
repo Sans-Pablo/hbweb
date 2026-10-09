@@ -14,6 +14,12 @@ Origen: `HGServer/Game.cpp` `iCalculateAttackEffect` (línea ~52318). Auditado e
 - Experiencia por golpe = daño hecho, hasta agotar `noDieRemainExp`; habilidad de arma +1 por golpe, `1d(dados de golpe)` al matar (×2 con ≤ 3 de vida).
 - Contraataque: con 1/3 el monstruo herido se vuelve contra el atacante; si ya persigue a otro, solo cambia si el atacante está igual o más cerca.
 
+## Arco y ratón (cliente y servidor originales)
+- Cliente (`Game.cpp` CommandProcessor, `_iGetAttackType`, `_iGetWeaponSkillType`): con un arco (arma 40..59, habilidad 6) el botón derecho sobre un monstruo, o Ctrl + izquierdo, dispara a cualquier distancia (tipo de ataque 2). El gesto usa el grupo 7 del cuerpo (`DrawObject_OnAttack`, iAdd 7) y la flecha (efecto 2, sprite de efectos 7, 70 px por paso) sale en el fotograma 5 de 8 (`MapData.cpp`).
+- Servidor (`iClientMotion_Attack_Handler`, `_CheckAttackType`, `iCalculateAttackEffect`): sin flechas el tipo pasa a 0 (gesto sin daño); cada disparo con blanco gasta una flecha del primer montón (`_iGetArrowItemIndex`) y notifica la cantidad; cuerpo a cuerpo solo 1 casilla (4 con el arma 845). Aquí: `reachOf`, `useArrow`, `arrowOf` en `combatsys.js`.
+- Botón derecho (rama `cRB`): sobre un monstruo ataca; sobre un habitante no hace nada; **sobre el suelo solo gira** (`DEF_OBJECTSTOP` con la nueva dirección).
+- Las hojas del cuerpo de arco (grupo 7) salen de `tools/convert_players.py`; sin ellas se usa el gesto normal.
+
 ## Monstruo → jugador (comprobado)
 - Dados de `NPC.cfg`; acierto contra defensa (+40/+100 con escudo); furia duplica el daño.
 - Resta `1d(vit/10) - 1`; la parte del cuerpo se tira en 10000 (50 % cuerpo, 25 % piernas, 15 % brazos, 10 % cabeza); absorción de armadura tope 80 %; el escudo absorbe con probabilidad = maestría de escudo.
@@ -24,9 +30,9 @@ Origen: `HGServer/Game.cpp` `iCalculateAttackEffect` (línea ~52318). Auditado e
 La lluvia reduce el acierto de los arcos (5/10/25 %) y aumenta el desgaste de las armas cuerpo a cuerpo; ver [mundo.md](mundo.md).
 
 ## Pendiente (no portado)
-- Ataque crítico / super ataque (modos 20–30, `m_bSuperAttackMode`, maestría 100) y ataque en carrera (`bIsDash`).
+- Ataque crítico / super ataque (modos 20–30, `m_bSuperAttackMode`, maestría 100), ataque en carrera (`bIsDash`), Firebow (873) y Direction-Bow (874).
 - Retroceso (≥ 40 de daño físico sobre el jugador) portado: `knockback` en combatsys; falta en monstruos con `actionLimit 4`.
 - Reputación (Kloness), zonas de lucha, PvP, habilidades especiales (`SpecialAbility`).
 
 ## Pruebas
-`tests/combat.test.mjs` (acierto, dados, furia, escudos, protección de flechas, bonus, mínimos, combo, absorción) y `tests/sim.test.mjs` (simulación completa).
+`tests/bow.test.mjs` (arco: distancia, flechas, sin flechas) · `tests/combat.test.mjs` (acierto, dados, furia, escudos, protección de flechas, bonus, mínimos, combo, absorción) y `tests/sim.test.mjs` (simulación completa).

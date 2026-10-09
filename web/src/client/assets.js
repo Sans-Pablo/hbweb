@@ -140,7 +140,7 @@ export class Sprites {
   // sprites que hacen falta para dibujar a un personaje con este aspecto (todas las animaciones)
   lookKeys(gender, look) {
     const type = (gender === 2 ? 3 : 0) + look.skin, g = gender === 2 ? 1 : 0, keys = [];
-    for (const grp of [0, 1, 2, 3, 4, 6, 8, 9, 10, 11]) {
+    for (const grp of [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11]) {
       for (let d = 0; d < 8; d++) keys.push("pb" + type + "_" + (grp * 8 + d));
       keys.push("pu" + g + "_" + look.under + "_" + grp, "ph" + g + "_" + look.hair + "_" + grp);
     }

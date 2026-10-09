@@ -333,15 +333,17 @@ export class Renderer {
     const flashAge = performance.now() - (s.fx.flash.get(e.id) || -1e9);
 
     if (e.kind === "player") {
-      const { group, f, d } = playerSprite(e, time);
+      const ap = apparelOf(e, itemDef), bow = !!ap && ap.weapon >= 40 && ap.weapon < 60;        // arma 40..59 = arco (DrawObject_OnAttack)
+      let { group, f, d } = playerSprite(e, time, bow);
       const look = e.look || DEFAULT_LOOK, gender = e.gender || 1;
+      if (group === 7 && !this.spr.has(bodyKey(gender, look, 7, d))) group = 6;
       const body = bodyKey(gender, look, group, d);
       const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice"), zerk = sget(w, e, "berserk");
       if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
       spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75);
-      drawPerson(ctx, spr, gender, look, group, d, f, x, y, apparelOf(e, itemDef));
+      drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap);
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
       if (zerk) spr.tinted(ctx, body, f, x, y, "#ff2a1a", 0.35);

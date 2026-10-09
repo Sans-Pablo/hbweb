@@ -38,5 +38,8 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 Trabajo directo en `main`, commits pequeños, `git pull --rebase origin main` antes de cada `push`.
 Otro agente también empuja a `main`.
 
+## Para los testers
+F1 muestra `web/data/news.json` (novedades, lista de pruebas, notas). Cada cambio visible se anota ahí en el mismo commit (`docs/sistemas/novedades.md`).
+
 ## Documentación
 `docs/ESTADO.md` estado y pendientes · `docs/FINDINGS.md` trampas · `docs/sistemas/*.md` una ficha por sistema.

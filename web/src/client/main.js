@@ -20,6 +20,7 @@ import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
+import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
 import { Sky, trackFor } from "./sky.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
@@ -37,6 +38,7 @@ function bindLanguage() {
 
 async function main() {
   startDomTranslation(); bindLanguage();
+  setupNews(document.getElementById("news"));
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});   // caché persistente: la segunda visita no vuelve a bajar nada
   const status = document.getElementById("loading");
   const assets = await loadAssets(k => { status.querySelector("span").textContent = "Cargando gráficos… " + Math.round(100 * k) + "%"; });
@@ -215,7 +217,7 @@ async function main() {
   });
   // Teclas del cliente original (Game.cpp, OnKeyUp/OnKeyDown). Las acciones tienen nombre propio;
   // los botones de la interfaz usan los mismos nombres.
-  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", help: "help" };
+  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", news: "news" };
   const togglePanel = id => document.getElementById(id).classList.toggle("open");
   const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "", whisper: true, shout: true };
   const shortcuts = [null, null];                        // F2 / F3: { item: id } | { spell: id }
@@ -283,7 +285,7 @@ async function main() {
       if (/^F([1-9]|1[0-2])$/.test(k)) {
         e.preventDefault();
         switch (k) {
-          case "F1": ui.key("help"); break;
+          case "F1": ui.key("news"); break;
           case "F2": ui.useShortcut(0, e.ctrlKey); break;
           case "F3": ui.useShortcut(1, e.ctrlKey); break;
           case "F4": if (hud.spell != null) ui.useMagic(hud.spell); break;
@@ -302,7 +304,7 @@ async function main() {
         switch (K) {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
-          case "h": e.preventDefault(); ui.key("help"); return;
+          case "h": e.preventDefault(); ui.key("news"); return;
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
           case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
           case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
@@ -346,7 +348,6 @@ async function main() {
         case "inv": gui.toggle(2); break;
         case "options": gui.toggle(19); break;
         case "skill": gui.toggle(15); break;
-        case "help": if (gui.isOpen(35)) { gui.close(35); gui.close(18); } else gui.open(35); break;
         case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
@@ -388,7 +389,7 @@ async function main() {
   setMode(opts.mode);
   applyOpts();
   addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr); });
-  hud.log("Bienvenido a la granja de Aresden. Pulsa F1 para ver los controles.");
+  hud.log("Bienvenido a la granja de Aresden. Pulsa F1 para ver las novedades y qué probar.");
   hud.log("Cripta de esqueletos: entrada en (134, 94), cerca del inicio. Acércate y pulsa E.", "gold");
   if (online) hud.log(conn.returning ? "Partida en línea: se ha cargado tu progreso. Intro para hablar." : "Partida en línea. Pulsa Intro para hablar con los demás.", "gold");
 

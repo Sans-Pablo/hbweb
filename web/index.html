@@ -136,10 +136,20 @@
   #inv .detail .acts button { background: #2c2414; border: 1px solid var(--brass); border-radius: 6px; color: #ffd76a; padding: 3px 10px; font-size: 12px; }
   #charpanel .sk { display: grid; grid-template-columns: 1fr auto; font-size: 12px; padding: 1px 0; color: var(--muted); }
   #charpanel .sk b { color: var(--parch); }
-  #help { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92%); }
-  #help ul { margin: 6px 0 0; padding: 0; list-style: none; columns: 2; column-gap: 24px; font-size: 13px; }
-  #help li { padding: 3px 0; break-inside: avoid; }
-  #help p { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+  #news { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, 94%); font-size: 13px; }
+  #news p { color: var(--muted); font-size: 12px; margin: 4px 0; }
+  #news .build { color: var(--brass); }
+  #news nav { display: flex; gap: 6px; margin: 8px 0; }
+  #news nav button { padding: 4px 12px; background: #1b1814; border: 1px solid #5a4a2c; color: var(--muted); border-radius: 6px; cursor: pointer; }
+  #news nav button.on { color: #f0d080; border-color: #b8943f; }
+  #news .scroll { max-height: min(60vh, 460px); overflow: auto; padding-right: 6px; }
+  #news h4 { margin: 10px 0 4px; color: #e6c869; font-size: 14px; }
+  #news h4 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  #news ul { margin: 0; padding-left: 18px; }
+  #news ul.checks { list-style: none; padding-left: 0; }
+  #news li { padding: 3px 0; line-height: 1.4; }
+  #news label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+  #news .reset { margin-top: 10px; background: none; border: 1px solid #5a4a2c; color: var(--muted); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
 
   #death { position: absolute; inset: 0; display: none; place-items: center; background: radial-gradient(rgba(60,0,0,.35), rgba(0,0,0,.75)); pointer-events: auto; }
   #death h2 { font: 700 40px Georgia, serif; color: #e04a3a; margin: 0 0 14px; text-shadow: 0 2px 0 #000; text-align: center; }
@@ -283,7 +293,7 @@ body.dialogtrans .panel { opacity: .55; }
       <button data-key="gfx">Gráficos</button>
       <button data-key="sound">Sonido</button>
       <button data-key="options">Opciones (F12)</button>
-      <button data-key="help">Ayuda (F1)</button>
+      <button data-key="news">Novedades (F1)</button>
     </div>
   </div>
 
@@ -322,21 +332,10 @@ body.dialogtrans .panel { opacity: .55; }
       <select data-opt="mode"><option value="classic">Clásico</option><option value="remastered">Remastered</option></select></label>
   </div>
 
-  <div id="help" class="panel">
-    <button class="close" data-key="help">×</button>
-    <h3>Controles (cliente original)</h3>
-    <ul>
-      <li>Clic izquierdo: andar (correr si el modo correr está activo) · sobre ti: recoger</li>
-      <li>Clic derecho: atacar al monstruo adyacente · <kbd>Ctrl</kbd>+clic izquierdo: ir a atacar</li>
-      <li><kbd>F1</kbd> ayuda · <kbd>F5</kbd> personaje · <kbd>F6</kbd> mochila · <kbd>F7</kbd> magia · <kbd>F12</kbd> sistema</li>
-      <li><kbd>F2</kbd> <kbd>F3</kbd>: atajos (asigna con <kbd>Ctrl</kbd>+<kbd>F2</kbd>/<kbd>F3</kbd> lo último usado) · <kbd>F4</kbd>: hechizo elegido</li>
-      <li><kbd>Insert</kbd> poción de vida · <kbd>Supr</kbd> poción de maná</li>
-      <li><kbd>Tab</kbd> combate/paz · <kbd>Inicio</kbd> ataque seguro · <kbd>Fin</kbd> último mensaje</li>
-      <li><kbd>Ctrl</kbd>+<kbd>R</kbd> correr · <kbd>Ctrl</kbd>+<kbd>A</kbd> ataque automático · <kbd>Ctrl</kbd>+<kbd>M</kbd> mapa · <kbd>Ctrl</kbd>+<kbd>S</kbd> sonido · <kbd>Ctrl</kbd>+<kbd>T</kbd> susurro</li>
-      <li><kbd>Intro</kbd> o cualquier letra: escribir · <kbd>Esc</kbd>: cerrar</li>
-      <li><kbd>E</kbd> junto a un portal de la cripta (añadido de esta versión)</li>
-    </ul>
-    <p>La lógica (fórmulas de combate, experiencia, monstruos y sus zonas) sale del servidor original. Los dos modos gráficos juegan exactamente igual.</p>
+  <div id="news" class="panel">
+    <button class="close" data-key="news">×</button>
+    <h3>F1</h3>
+    <div class="body"></div>
   </div>
 
   <div id="chat"><input maxlength="120" placeholder="Escribe y pulsa Intro (Esc para cancelar)"></div>

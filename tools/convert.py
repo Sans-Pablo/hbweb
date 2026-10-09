@@ -28,7 +28,7 @@ from PIL import Image
 from tile_table import locate
 
 
-PLAYER_GROUPS = (0, 1, 2, 3, 4, 6, 8, 9, 10, 11)
+PLAYER_GROUPS = (0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11)      # 7 = ataque con arco (DrawObject_OnAttack: iAdd 7 con arma 40..59)
 
 # número de monstruo de "spot-mob-generator" -> nombre en NPC.cfg (HGServer/Game.cpp)
 SPOT_MOB_NAMES = {10: "Slime", 16: "Giant-Ant", 17: "Scorpion", 12: "Stone-Golem", 22: "Amphis",

@@ -30,7 +30,7 @@ export function apparelOf(e, itemDef) {
   }
   return ap;
 }
-const WGROUP = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 6, 6: 4, 10: 5 };          // grupo del cuerpo -> grupo de arma y escudo
+const WGROUP = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 6, 6: 4, 7: 4, 10: 5 };          // grupo del cuerpo -> grupo de arma y escudo
 const WEAPON_FIRST = [0, 1, 0, 0, 0, 0, 0, 1, 1];                      // _cDrawingOrder (índice = dirección 1..8)
 const MANTLE_ORDER = [0, 1, 1, 1, 0, 0, 0, 2, 2];                      // _cMantleDrawingOrder
 
@@ -38,7 +38,7 @@ const MANTLE_ORDER = [0, 1, 1, 1, 0, 0, 0, 2, 2];                      // _cMant
 export function equipKeys(gender, ap) {
   const g = gender === 2 ? 1 : 0, keys = [];
   if (!ap) return keys;
-  for (const grp of [0, 1, 2, 3, 4, 6, 8, 9, 10, 11]) {
+  for (const grp of [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11]) {
     for (const [k, l] of [["armor", "a"], ["arms", "b"], ["pants", "l"], ["boots", "o"], ["mantle", "m"], ["helm", "h"]]) if (ap[k]) keys.push(l + g + "_" + ap[k] + "_" + grp);
     const wg = WGROUP[grp];
     if (wg === undefined) continue;
@@ -51,6 +51,7 @@ export function equipKeys(gender, ap) {
 // Dibuja al personaje (sin sombra). f = fotograma dentro de la animación.
 export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
   const g = gender === 2 ? 1 : 0, dir = d + 1;
+  if (group === 7 && !spr.has(bodyKey(gender, look, 7, d))) group = 6;       // sin las hojas de arco (tools/convert_players.py), se usa el gesto normal
   const piece = (letter, idx) => {                                       // armadura/capa/casco/botas: un sprite por grupo, 8 direcciones
     if (!idx) return;
     const key = letter + g + "_" + idx + "_" + group;

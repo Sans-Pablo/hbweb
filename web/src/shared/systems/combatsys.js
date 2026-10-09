@@ -2,15 +2,38 @@
 import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
-import { EQUIP } from "../items.js";
+import { EQUIP, ITYPE } from "../items.js";
 import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
 import { extraWeaponWear } from "./weather.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
+// Flechas (iCalculateAttackEffect, HGServer/Game.cpp ~52836): cada disparo con un blanco gasta una flecha del primer montón
+// de la mochila (_iGetArrowItemIndex); sin flechas el arco no hace nada (_CheckAttackType: wType 0).
+export const arrowOf = (w, p) => p.bag.find(i => i.count > 0 && w.data.item(i.id).type === ITYPE.ARROW);
+export function useArrow(w, p) {
+  const a = arrowOf(w, p);
+  if (!a) return false;
+  a.count--;
+  if (a.count <= 0) Inv.removeFromBag(p, a.uid);
+  w.emit({ t: "arrows", id: p.id, uid: a.uid, count: Math.max(0, a.count) });      // DEF_NOTIFY_SETITEMCOUNT
+  w.recalc(p);                                                                       // el peso y el daño dependen de que queden flechas
+  return true;
+}
+// Alcance de un golpe cuerpo a cuerpo: 1 casilla; 4 con el arma 845 (HGServer/Game.cpp, iClientMotion_Attack_Handler); el cliente
+// también permite golpear a monstruos grandes (tipos 66, 73, 81, 91) desde 2 casillas.
+export const BIG_MOBS = new Set([66, 73, 81, 91]);
+export function reachOf(w, p, t) {
+  if (p.eff?.bow) return Infinity;                                  // arco: el cliente manda el disparo a la casilla elegida
+  const two = p.equip[EQUIP.TWOHAND], inst = two !== undefined && Inv.instOf(p, two);
+  if (inst && inst.id === 845) return 4;
+  return BIG_MOBS.has(t.type) ? 2 : 1;
+}
+
 export function playerHit(w, p, t) {
-  if (p.dead || t.dead || dist(p, t) > 1) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
   const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)

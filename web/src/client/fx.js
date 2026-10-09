@@ -40,6 +40,14 @@ export class Fx {
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
+      case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
+        if (!ev.bow) break;
+        const c = this.world.ents.get(ev.id);
+        if (!c) break;
+        const sx = c.x, sy = c.y, tx = ev.tx, ty = ev.ty, dur = c.actDur || 296;
+        setTimeout(() => this.sp.add(2, sx, sy, tx, ty), dur * 5 / 8);
+        break;
+      }
       case "spell": {
         const c = this.world.ents.get(ev.id);
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);

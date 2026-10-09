@@ -20,16 +20,16 @@ export function posOf(e, time) {
 }
 
 // Jugador: grupo de Wm/Mpt/Mhr y fotograma
-//   0 quieto, 1 quieto en combate, 2 andar, 3 andar en combate, 4 correr, 6 atacar,
+//   0 quieto, 1 quieto en combate, 2 andar, 3 andar en combate, 4 correr, 6 atacar, 7 atacar con arco,
 //   9 recoger, 10 daño, 11 morir
-export function playerSprite(e, time) {
+export function playerSprite(e, time, bow = false) {
   const act = actionAt(e, time), p = progress(e, time);
   const combat = time - e.lastCombat < PLAYER.combatStanceMs;
   let group, f;
   switch (act) {
     case ACT.MOVE: group = combat ? 3 : 2; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.RUN: group = 4; f = Math.min(7, Math.floor(p * 8)); break;
-    case ACT.ATTACK: group = 6; f = Math.min(7, Math.floor(p * 8)); break;
+    case ACT.ATTACK: group = bow ? 7 : 6; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.MAGIC: group = 8; f = Math.min(15, Math.floor(p * 16)); break;
     case ACT.GETITEM: group = 9; f = Math.min(3, Math.floor(p * 4)); break;
     case ACT.DAMAGE: group = 10; f = Math.min(3, Math.floor(p * 4)); break;

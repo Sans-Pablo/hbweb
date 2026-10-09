@@ -166,14 +166,15 @@ const COMMANDS = {
     if (!t || t.dead || t.kind !== "npc") return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
-    if (dist(p, t) > 1) return w.reject(p, cmd, "lejos");
+    if (dist(p, t) > Combat.reachOf(w, p, t)) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
     const ms = attackMs(p);
     w.setAct(p, ACT.ATTACK, ms);
     p.busyUntil = w.time + ms;
     p.lastAttack = p.lastCombat = w.time;
-    w.emit({ t: "attack", id: p.id, target: t.id });
+    // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
+    w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), tx: t.x, ty: t.y });
     w.after(ms * PLAYER.attackHitAt, () => Combat.playerHit(w, p, t));
     return true;
   },

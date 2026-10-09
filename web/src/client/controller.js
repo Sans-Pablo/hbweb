@@ -1,7 +1,8 @@
 // Entrada del jugador -> intenciones -> órdenes al servidor.
 // Igual que el cliente original, el camino se calcula aquí y se manda paso a paso;
 // el servidor (World) valida cada paso y cada golpe.
-import { TILE as T, PLAYER, dist } from "../shared/const.js";
+import { TILE as T, PLAYER, dist, dirTo } from "../shared/const.js";
+import { reachOf } from "../shared/systems/combatsys.js";
 import { findPath } from "../shared/path.js";
 import { posOf, mobSprite } from "./anim.js";
 
@@ -89,15 +90,28 @@ export class Controller {
     return { ent, x: ent ? ent.x : Math.floor(wx / T), y: ent ? ent.y : Math.floor(wy / T) };
   }
 
-  // botón derecho: cancela el hechizo preparado; si no, ataca al monstruo de al lado (sin moverse)
+  // golpe o disparo si el objetivo está al alcance (cuerpo a cuerpo 1 casilla, arco a cualquier distancia)
+  strike(me, t) {
+    if (dist(me, t) > reachOf(this.world, me, t)) return false;
+    if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: t.id });
+    return true;
+  }
+
+  // Botón derecho (Client/Game.cpp, CommandProcessor, rama cRB): cancela el hechizo preparado; sobre un monstruo ataca sin moverse
+  // (de cerca, o a distancia con arco); sobre un habitante de la ciudad no hace nada; sobre el suelo el personaje solo MIRA hacia
+  // esa casilla (DEF_OBJECTSTOP con la nueva dirección) sin andar.
   rightClick() {
     const me = this.me;
     if (!me || me.dead || !this.pointer) return;
     if (this.ui.pointing != null) { this.ui.cancelPointing(); return; }
-    const { ent } = this.target();
-    if (!ent || dist(me, ent) > 1) return;
+    const { ent, x, y } = this.target();
+    if (ent) { this.intent = null; this.path = []; this.strike(me, ent); return; }
+    const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
+    if (this.pickCitizen(wx, wy)) return;
+    if (x === me.x && y === me.y) return;
+    const dir = dirTo(me.x, me.y, x, y);
     this.intent = null; this.path = [];
-    if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: ent.id });
+    if (dir && dir !== me.dir && !this.world.busy(me)) this.conn.send({ t: "turn", dir });
   }
 
   click(first) {
@@ -144,7 +158,7 @@ export class Controller {
     if (it.t === "attack") {
       const t = world.ents.get(it.id);
       if (!t || t.dead) { this.intent = null; this.path = []; return; }
-      if (dist(me, t) <= 1) {
+      if (dist(me, t) <= reachOf(world, me, t)) {
         this.path = [];
         if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: t.id });
         return;

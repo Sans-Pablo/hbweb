@@ -183,7 +183,7 @@ export class Sound {
       case "levelup": if (ev.id === this.me) this.playRaw("E30", 1, 0); break;
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
-        else this.play("C1", ev.id, 0.8);
+        else this.play(ev.bow ? "C3" : "C1", ev.id, 0.8);   // C3: arco (MapData.cpp, armas 40..59)
         break;
       case "damage":
         if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }

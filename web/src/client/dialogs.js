@@ -441,54 +441,6 @@ export function registerDialogs(gui, api) {
   };
   gui.register(skill);
 
-  // ------------------------------------------------------------ 18: texto (ayuda, noticias...) y 35: ayuda (F1)
-  const text = {
-    id: 18, x: 100, y: 125, w: 258, h: 339, view: 0, lines: [],
-    load(n) {
-      this.lines = []; this.view = 0;
-      fetch("data/help/" + n + ".txt").then(r => r.text()).then(t => { this.lines = t.replace(/\r/g, "").split("\n"); }).catch(() => {});
-    },
-    draw(g) {
-      g.put("gamedialog_1", 0, 0, 0);
-      const total = this.lines.length, max = Math.max(0, total - 17);
-      this.view = Math.max(0, Math.min(max, this.view));
-      if (total > 17) { g.put("gamedialog_1", 1, 0, 0); g.put("gamedialog_1", 7, 242, 35 + Math.floor(274 * this.view / max + 0.5)); }
-      for (let i = 0; i < 17; i++) {
-        let t = this.lines[i + this.view]; if (t === undefined) continue;
-        let col = INK;
-        if (t[0] === "_") { t = t.slice(1); col = "#fff"; } else if (t[0] === ";") { t = t.slice(1); col = "rgb(4,0,50)"; }
-        g.aligned(24, 236, 50 + i * 13, t, col);
-      }
-      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
-      g.put("dialogtext_1", lx > 154 && lx < 228 && ly > 292 && ly < 312 ? 1 : 0, 154, 292);
-      if (m.down && g.order[g.order.length - 1] === 18 && total > 17 && lx >= 240 && lx <= 260 && ly >= 40 && ly <= 320)
-        this.view = Math.max(0, Math.min(max, Math.floor(((ly - 35) * max) / 274)));
-    },
-    click(g, lx, ly) {
-      if (lx > 154 && lx < 228 && ly > 292 && ly < 312) { g.close(18); return true; }
-      return lx >= 240 && lx <= 260;
-    },
-    wheel(g, dir) { this.view = Math.max(0, this.view + (dir > 0 ? -3 : 3)); },
-  };
-  gui.register(text);
-  const TOPICS = [["News", 1000], ["Helbreath World?", 900], ["How to move", 901], ["Attack, Defence, Enemy, Friend", 902], ["Interface", 903], ["Magic", 904],
-    ["Specific Point, Skill System", 905], ["Guilds", 906], ["Items", 907], ["Communication", 908], ["What's the Crusade?", 909], ["Commands", 910], ["F.A.Q.", 911], ["Beginner's Guide", 912]];
-  gui.register({
-    id: 35, x: 438, y: 125, w: 258, h: 339,
-    onClose(g) { g.close(18, true); },
-    draw(g) {
-      g.put("gamedialog_1", 2, 0, 0);
-      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
-      TOPICS.forEach(([t], i) => g.aligned(0, 258, 50 + 15 * i, t, lx >= 25 && lx <= 248 && ly >= 50 + 15 * i && ly < 65 + 15 * i ? "#fff" : "rgb(4,0,50)"));
-      g.put("dialogtext_1", lx >= 154 && lx <= 228 && ly > 292 && ly < 312 ? 1 : 0, 154, 292);
-    },
-    click(g, lx, ly) {
-      TOPICS.forEach(([, n], i) => { if (lx >= 25 && lx <= 248 && ly >= 50 + 15 * i && ly < 65 + 15 * i) { g.close(18, true); text.load(n); g.open(18); } });
-      if (lx >= 154 && lx <= 228 && ly > 292 && ly < 312) { g.close(35); g.close(18); }
-      return true;
-    },
-  });
-
   // ------------------------------------------------------------ 10: historial de chat (F9). api.chatLog: más nuevo primero, {t, type}
   const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 10: "rgb(180,255,180)", 20: "rgb(150,150,170)" };
   const MAXSCROLL = 500;

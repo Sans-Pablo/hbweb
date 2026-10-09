@@ -20,6 +20,19 @@ function getPoint(x0, y0, x1, y1, error, count) {
   }
   return [rx, ry, error];
 }
+// CMisc::cCalcDirection: dirección (1..8) por pendiente, con los sectores del original
+function calcDir(sx, sy, dx, dy) {
+  if (sx === dx && sy === dy) return 1;
+  if (sx === dx) return sy > dy ? 1 : 5;
+  if (sy === dy) return sx > dx ? 7 : 3;
+  const r = (dx - sx) / (dy - sy);
+  if (r < -3 || r > 3) return sx > dx ? 7 : 3;
+  if (r > -1 / 3 && r <= 1 / 3) return sy > dy ? 1 : 5;
+  if (r > 1 / 3 && r <= 3) return sx > dx ? 8 : 4;
+  if (r >= -1 / 3 && r < 3) return sx > dx ? 7 : 3;
+  if (r >= -3 && r < -1 / 3) return sx > dx ? 6 : 2;
+  return 1;
+}
 // CMisc::cGetNextMoveDir
 function nextDir(sx, sy, dx, dy) {
   if (sx === dx && sy === dy) return 0;
@@ -73,6 +86,10 @@ export class SpellFx {
     const e = { type, sx, sy, dx, dy, v1, frame: start, max: set[0], ft: set[1], t: performance.now(), mx: sx, my: sy, rx: 0, ry: 0, err: 0, dir: 1 };
     const px = c => c * T + 16;
     switch (type) {
+      case 2:                                                      // flecha en vuelo (bAddNewEffect case 2): sale de los pies del tirador a la altura de su cuerpo
+        e.mx = sx * T; e.my = sy * T - 35; e.err = 0; e.dir = calcDir(sx, sy, dx, dy);
+        this.hook?.("C4", sx, sy);
+        break;
       case 16: case 34: case 71: case 196: e.mx = sx * T; e.my = sy * T - (type === 71 || type === 196 ? 0 : 40); e.err = 0; break;
       case 100: case 110: case 120: case 130: case 137: case 161: case 182: case 251:
         e.mx = px(sx); e.my = px(sy) - 40; e.dir = dirTo(sx, sy, dx, dy) || 1; break;
@@ -122,6 +139,12 @@ export class SpellFx {
     const done = () => { if (f > e.max) end(); };
     const spark8 = k => { for (let i = 0; i < k; i++) at(8, e.mx + rnd(20) - 10, e.my + rnd(20) - 10, -rnd(4)); };
     switch (e.type) {
+      case 2: {                                                    // la flecha avanza 70 px por paso hasta casi tocar la casilla del blanco
+        const tx = e.dx * T, ty = e.dy * T - 40;
+        fly(70, tx, ty);
+        if (Math.abs(e.mx - tx) <= 2 && Math.abs(e.my - ty) <= 2) end();
+        break;
+      }
       case 5: case 30: case 31: case 252:
         if (f === 1) for (let i = 0; i < 5; i++) at(12, e.mx + 5 - rnd(10), e.my + 5 - rnd(10), -rnd(2));
         if (f === 7) for (let i = 0; i < 3; i++) at(15, e.mx + 5 - rnd(10), e.my + 5 - rnd(10));
@@ -295,6 +318,7 @@ export class SpellFx {
       const tx = e.dx * T + 16 - camX, ty = e.dy * T + 16 - camY;      // posición de las auras de hechizo (casilla del objetivo)
       const P = (n, fr, xx, yy, m, a) => this.put(ctx, n, fr, xx, yy, m, a);
       switch (e.type) {
+        case 2: P(7, (e.dir - 1) * 2, x, y, "over", 1); break;
         case 4: if (f >= 9) P(1, f - 9, x, y - 40, "over", 1); break;
         case 5: P(3, f, x, y, "add", f < 7 ? 1 : fade((f - 8) * -5)); break;
         case 6: case 10: P(6, f, x, y, "add", f < 6 ? 1 : fade((f - 7) * -6)); break;
