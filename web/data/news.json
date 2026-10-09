@@ -11,6 +11,19 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Cuentas sin límite en pruebas (v0.25.3)",
+        "en": "No account limit while testing (v0.25.3)"
+      },
+      "items": [
+        {
+          "es": "El servidor de pruebas ya no limita las cuentas nuevas por conexión: puedes crear todas las que necesites para probar con varios jugadores.",
+          "en": "The test server no longer limits new accounts per connection: create as many as you need to test with several players."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Movimiento online suave (v0.25.2)",
         "en": "Smooth online movement (v0.25.2)"
       },
