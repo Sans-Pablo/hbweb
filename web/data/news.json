@@ -46,6 +46,10 @@
         {
           "es": "Todos los cuadros nuevos usan la clase ClassicDialog (formato clásico). Nuevo documento de cambios: docs/CHANGELOG.md.",
           "en": "All new dialogs use the ClassicDialog class (classic format). New changelog document: docs/CHANGELOG.md."
+        },
+        {
+          "es": "F1 → «Para probar»: añadidas ~50 casillas que cubren todo el juego (personaje, movimiento, inventario, tiendas, mundo, summon, cripta).",
+          "en": "F1 → “To test”: ~50 new checkboxes covering the whole game (character, movement, inventory, shops, world, summon, crypt)."
         }
       ]
     },
@@ -968,6 +972,556 @@
       "text": {
         "es": "Solo se puede viajar a Aresfarm, la cripta y Middle Dungeon; no hay pociones grandes en tiendas ni drops; nivel máximo 50.",
         "en": "You can only travel to Aresfarm, the crypt and Middle Dungeon; no big potions in shops or drops; max level 50."
+      }
+    },
+    {
+      "id": "c-create",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "Crea un personaje nuevo (atributos 10-14, género, piel, peinado, color de pelo, ropa interior, plantillas) y entra al juego.",
+        "en": "Create a new character (stats 10-14, gender, skin, hair style/colour, underwear, presets) and enter the game."
+      }
+    },
+    {
+      "id": "c-login",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "Cierra la pestaña y vuelve: el login recupera personaje, mochila, oro, nivel, bolas y progreso de la cripta (localStorage).",
+        "en": "Close the tab and come back: login restores character, bag, gold, level, balls and crypt progress (localStorage)."
+      }
+    },
+    {
+      "id": "c-stats",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "F5: el diálogo de personaje muestra equipo, estadísticas y el muñeco con lo equipado.",
+        "en": "F5: the character dialog shows equipment, stats and the doll with what is equipped."
+      }
+    },
+    {
+      "id": "c-levelup",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "Sube de nivel: llegan 3 puntos y el botón Level Up (F5) permite repartirlos; HP/MP/SP máximos cambian.",
+        "en": "Level up: you get 3 points and the Level Up button (F5) lets you spend them; max HP/MP/SP change."
+      }
+    },
+    {
+      "id": "c-cap",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "Al llegar al nivel 50 ya no subes más y la experiencia no se desborda.",
+        "en": "At level 50 you stop levelling and experience does not overflow."
+      }
+    },
+    {
+      "id": "c-death",
+      "group": {
+        "es": "Personaje",
+        "en": "Character"
+      },
+      "text": {
+        "es": "Muere (fuera de zona de lucha): pierdes experiencia, puedes reaparecer con el botón Restart y no te quedas atascado.",
+        "en": "Die (outside a fight zone): you lose experience, can respawn with Restart and do not get stuck."
+      }
+    },
+    {
+      "id": "m-walk",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "Clic izquierdo mueve; las ocho direcciones se animan bien, sin atravesar paredes ni árboles.",
+        "en": "Left click moves; all eight directions animate properly, with no walking through walls or trees."
+      }
+    },
+    {
+      "id": "m-run",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "Ctrl+R alterna correr (no Mayús): gasta SP y al agotarse vuelves a caminar.",
+        "en": "Ctrl+R toggles running (not Shift): it uses SP and when empty you walk again."
+      }
+    },
+    {
+      "id": "m-melee",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "Ataca a un Slime y a una Giant Ant cuerpo a cuerpo: animación, daño flotante, muerte, experiencia y botín en el suelo.",
+        "en": "Attack a Slime and a Giant Ant in melee: animation, floating damage, death, experience and ground loot."
+      }
+    },
+    {
+      "id": "m-auto",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "/auto activa el ataque automático opcional; ataca solo al objetivo y se puede apagar.",
+        "en": "/auto toggles optional auto attack; it attacks the target alone and can be turned off."
+      }
+    },
+    {
+      "id": "m-combat",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "Tab alterna paz/combate; el símbolo cambia y en paz no se ataca por error.",
+        "en": "Tab toggles peace/combat; the symbol changes and in peace you do not attack by mistake."
+      }
+    },
+    {
+      "id": "m-mobs",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "Los monstruos te persiguen, golpean y te dañan; las barras de HP bajan y los golpes fuertes empujan.",
+        "en": "Monsters chase, hit and damage you; HP bars drop and strong hits knock you back."
+      }
+    },
+    {
+      "id": "m-fight-zone",
+      "group": {
+        "es": "Movimiento y combate",
+        "en": "Movement and combat"
+      },
+      "text": {
+        "es": "En una zona de lucha o sin ataque (ciudad) el comportamiento es el esperado (sin ataques en las zonas sin ataque).",
+        "en": "In a fight zone or no-attack zone (town) behaviour is as expected (no attacks in no-attack zones)."
+      }
+    },
+    {
+      "id": "i-bag",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "F6 abre la mochila: arrastra para reordenar, doble clic equipa, tirar al suelo y recoger funcionan.",
+        "en": "F6 opens the bag: drag to reorder, double click to equip, dropping and picking up work."
+      }
+    },
+    {
+      "id": "i-equip",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Equipa armas, escudo, casco, armadura, capa y botas: se ven en el muñeco y en el mundo, y cambian ataque/defensa.",
+        "en": "Equip weapons, shield, helmet, armour, cloak and boots: they show on the doll and in the world, and change attack/defence."
+      }
+    },
+    {
+      "id": "i-stack",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Las pociones y flechas se apilan en una sola casilla; con Mayús al arrastrar se apilan sin desplazarse ni verse raras.",
+        "en": "Potions and arrows stack in one slot; Shift-dragging stacks them without shifting or looking odd."
+      }
+    },
+    {
+      "id": "i-potion",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Usa RedPotion/BluePotion/GreenPotion: recuperan HP/MP/SP; no existen las grandes en tiendas ni drops.",
+        "en": "Use RedPotion/BluePotion/GreenPotion: they restore HP/MP/SP; big ones do not exist in shops or drops."
+      }
+    },
+    {
+      "id": "i-weight",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Cargar demasiado impide recoger («no puedes cargar»); el peso se ve en el diálogo de personaje.",
+        "en": "Carrying too much stops pickups (“cannot carry”); weight shows in the character dialog."
+      }
+    },
+    {
+      "id": "i-durab",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Las armas y armaduras se desgastan al combatir; a 0 se desequipan (con lluvia las armas se gastan más).",
+        "en": "Weapons and armour wear in combat; at 0 they unequip (rain wears weapons faster)."
+      }
+    },
+    {
+      "id": "i-dye",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "Dye (pelo y ropa), ArmorDye y WeaponDye: arrastra el tinte sobre el objeto compatible; con uno incompatible avisa y no se gasta.",
+        "en": "Dye (hair/clothes), ArmorDye and WeaponDye: drag the dye onto a compatible item; an incompatible one warns and is not consumed."
+      }
+    },
+    {
+      "id": "i-hotkeys",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "F2/F3 usan los atajos de objeto; Ctrl+F2/F3 los asignan.",
+        "en": "F2/F3 use item shortcuts; Ctrl+F2/F3 assign them."
+      }
+    },
+    {
+      "id": "i-skills",
+      "group": {
+        "es": "Inventario y objetos",
+        "en": "Inventory and items"
+      },
+      "text": {
+        "es": "F8 muestra habilidades; luchar las sube; un manual enseña la habilidad y se gasta.",
+        "en": "F8 shows skills; fighting raises them; a manual teaches the skill and is consumed."
+      }
+    },
+    {
+      "id": "s-buy",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Compra en la tienda general (Tom): descuento por carisma, oro baja, los objetos entran en la mochila.",
+        "en": "Buy at the general shop (Tom): charisma discount, gold drops, items go in the bag."
+      }
+    },
+    {
+      "id": "s-sell",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Vende un objeto: pide cantidad, muestra precio y confirma; el oro sube.",
+        "en": "Sell an item: asks quantity, shows price and confirms; gold rises."
+      }
+    },
+    {
+      "id": "s-repair",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Repara un arma gastada en la herrería: cuesta oro y la durabilidad se restaura.",
+        "en": "Repair a worn weapon at the blacksmith: it costs gold and durability is restored."
+      }
+    },
+    {
+      "id": "s-bank",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Almacén: deposita y retira objetos, oro y bolas de compañero sin perder datos.",
+        "en": "Warehouse: deposit and withdraw items, gold and companion balls without losing data."
+      }
+    },
+    {
+      "id": "s-doors",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "En Aresden entrar y salir de tiendas, herrería, almacén y demás edificios por sus puertas (los mapas no permitidos devuelven a Aresfarm).",
+        "en": "In Aresden enter and leave shops, blacksmith, warehouse and other buildings by their doors (disallowed maps return you to Aresfarm)."
+      }
+    },
+    {
+      "id": "s-npc",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Los habitantes de la ciudad caminan, se ven con sus sprites y al hacer clic abren su diálogo.",
+        "en": "Townspeople walk, show their sprites and open their dialog on click."
+      }
+    },
+    {
+      "id": "s-anvil",
+      "group": {
+        "es": "Ciudad y tiendas",
+        "en": "Town and shops"
+      },
+      "text": {
+        "es": "Anota si falta el yunque de Tom u otros objetos de la ciudad (mapa y casilla).",
+        "en": "Report if Tom’s anvil or other town objects are missing (map and tile)."
+      }
+    },
+    {
+      "id": "w-daynight",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "El día y la noche cambian por reloj y el brillo del mapa con ellos.",
+        "en": "Day and night change by clock and the map brightness follows."
+      }
+    },
+    {
+      "id": "w-rain",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "Cuando llueve se ve y se oye; las armas cuerpo a cuerpo se gastan más y el arco falla más.",
+        "en": "When it rains you see and hear it; melee weapons wear faster and the bow misses more."
+      }
+    },
+    {
+      "id": "w-music",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "La música cambia por lugar (granja, ciudad, cripta) y se puede apagar en Opciones; hay efectos de sonido al pelear.",
+        "en": "Music changes by place (farm, town, crypt) and can be turned off in Options; combat has sound effects."
+      }
+    },
+    {
+      "id": "w-minimap",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "El minimapa se ve, se puede mover/ocultar con clic derecho, y marca tu posición.",
+        "en": "The minimap shows, can be moved/hidden with right click, and marks your position."
+      }
+    },
+    {
+      "id": "w-chat",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "Enter abre el chat; los mensajes salen sobre el personaje y en el historial; /petname, /auto y otros comandos responden.",
+        "en": "Enter opens chat; messages appear over the character and in history; /petname, /auto and other commands respond."
+      }
+    },
+    {
+      "id": "w-options",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "Opciones (menú del sistema): modo clásico/remasterizado, rejilla, música, sonido, volumen e idioma se aplican al instante y se guardan.",
+        "en": "Options (system menu): classic/remastered mode, grid, music, sound, volume and language apply instantly and persist."
+      }
+    },
+    {
+      "id": "w-fps",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "Arriba a la izquierda se ve la versión (v0.13.1) y los fps; el juego va fluido al caminar por Aresfarm.",
+        "en": "Top left shows the version (v0.13.1) and fps; the game runs smoothly walking Aresfarm."
+      }
+    },
+    {
+      "id": "w-restrict",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "Los portales a mapas no permitidos devuelven a Aresfarm con aviso; Aresfarm, la cripta y middled1n sí funcionan.",
+        "en": "Portals to disallowed maps return you to Aresfarm with a warning; Aresfarm, the crypt and middled1n work."
+      }
+    },
+    {
+      "id": "w-news",
+      "group": {
+        "es": "Mundo y sonido",
+        "en": "World and sound"
+      },
+      "text": {
+        "es": "F1 abre y cierra este panel (también H y Esc); las casillas se guardan al recargar.",
+        "en": "F1 opens and closes this panel (also H and Esc); ticks persist after reload."
+      }
+    },
+    {
+      "id": "p-ball",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Mata 10 monstruos de una especie: llega una bola; la bola también se compra a 1 de oro en el hospital (Gail).",
+        "en": "Kill 10 monsters of a species: a ball arrives; balls also cost 1 gold at the hospital (Gail)."
+      }
+    },
+    {
+      "id": "p-follow",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "El summon te sigue entre mapas, ataca lo que ve en modo ataque y solo te sigue en paz (clic en su símbolo).",
+        "en": "The summon follows across maps, attacks what it sees in attack mode and only follows at peace (click its symbol)."
+      }
+    },
+    {
+      "id": "p-ctrlq",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Ctrl+Q sobre un monstruo hace que el summon lo ataque, también en paz.",
+        "en": "Ctrl+Q over a monster makes the summon attack it, even at peace."
+      }
+    },
+    {
+      "id": "p-bars",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "La barra de vida del summon, su miniatura que se vacía y el nombre/nivel se ven sobre la barra del personaje.",
+        "en": "The summon health bar, its draining thumbnail and name/level show above the character bar."
+      }
+    },
+    {
+      "id": "p-loot",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Cuando el summon mata, el botín cae al suelo y la experiencia se reparte entre él y tú.",
+        "en": "When the summon kills, loot drops and experience is shared between it and you."
+      }
+    },
+    {
+      "id": "p-voice",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "El personaje lo llama por su nombre a veces; solo habla con él si está cerca (a menos de 8 casillas).",
+        "en": "The character calls it by name sometimes; only talks to it when it is near (within 8 tiles)."
+      }
+    },
+    {
+      "id": "p-tank",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Especialízalo en Warrior (Iron Skin, Defense Shield): aguanta mucho más; en Damage hace más daño; en Support te cura y protege.",
+        "en": "Specialise it as Warrior (Iron Skin, Defense Shield): it tanks far more; Damage hits harder; Support heals and shields you."
+      }
+    },
+    {
+      "id": "p-mana",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "El summon gasta maná al lanzar y lo recupera con el tiempo; sin maná vuelve a golpear cuerpo a cuerpo.",
+        "en": "The summon spends mana casting and regenerates it over time; without mana it goes back to melee."
+      }
+    },
+    {
+      "id": "k-enter",
+      "group": {
+        "es": "Cripta de esqueletos",
+        "en": "Skeleton crypt"
+      },
+      "text": {
+        "es": "Entrada por Aresfarm (134,94) y middled1n (100,85) con E.",
+        "en": "Entrance via Aresfarm (134,94) and middled1n (100,85) with E."
+      }
+    },
+    {
+      "id": "k-levels",
+      "group": {
+        "es": "Cripta de esqueletos",
+        "en": "Skeleton crypt"
+      },
+      "text": {
+        "es": "Baja del nivel 1 al 20: cada uno es un mapa distinto, el portal solo se abre al matar todo y el progreso se conserva.",
+        "en": "Descend from level 1 to 20: each is a different map, the portal opens only after killing everything and progress is kept."
+      }
+    },
+    {
+      "id": "k-boss",
+      "group": {
+        "es": "Cripta de esqueletos",
+        "en": "Skeleton crypt"
+      },
+      "text": {
+        "es": "Los niveles 5/10/15/20 tienen jefe de color distinto; el nivel 20 tiene un portal final (victoria).",
+        "en": "Levels 5/10/15/20 have a boss of a different colour; level 20 has a final portal (victory)."
+      }
+    },
+    {
+      "id": "k-bone",
+      "group": {
+        "es": "Cripta de esqueletos",
+        "en": "Skeleton crypt"
+      },
+      "text": {
+        "es": "El rey carmesí suelta siempre un hueso de esqueleto rojo.",
+        "en": "The crimson king always drops a red skeleton bone."
       }
     }
   ],

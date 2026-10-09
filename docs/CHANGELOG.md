@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.13.1 · Lista de pruebas completa (2026-10-09)
+
+- F1 «Para probar» cubre ahora todas las funciones del juego (~50 casillas nuevas).
+
 ## 0.13.0 · Summons con talentos (2026-10-09)
 
 - **Los summons son lo principal**: aportan hasta el 90 % del daño del dueño y hasta el 150 % de su vida; matan por el dueño (mitad de experiencia para cada uno) y **dejan botín**. Si caen hay que pagar caro en el hospital.
