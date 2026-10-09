@@ -8,11 +8,9 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
-import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf, activeBall } from "../shared/systems/companion.js";
-import * as Tal from "../shared/systems/talents.js";
+import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
-const BRANCH_LABEL = { support: "Support", damage: "Damage", tank: "Warrior" };
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
 const NPC_NAMES = { [NPC.SHOP]: "Shop Keeper", [NPC.MAGE]: "Sorcerer", [NPC.WAREHOUSE]: "Warehouse Keeper", [NPC.BLACKSMITH]: "BlackSmith Keeper" };
 // NpcTalkHandler: iWho 2 tienda, 3 herrería, 5 almacén, 6 mago -> texto contents{iWho+150}
@@ -469,36 +467,6 @@ export function registerNpcDialogs(gui, api) {
     }
   }();
   gui.register(hospital);
-
-  // ------------------------------------------------------------ 42: talentos del compañero (F10; ver shared/systems/talents.js)
-  const talents = new class extends ClassicDialog {
-    constructor() { super({ id: 42, title: "Companion talents", tabs: ["Support", "Damage", "Warrior", "Reset"], visible: 9, top: 100 }); }
-    ball(me) { return me && (activeBall(me) || me.bag.find(i => i.comp)); }
-    rows(me) {
-      const b = this.ball(me); if (!b) return [];
-      const c = b.comp;
-      if (this.tab === 3) return [{ reset: true, text: "Reset all talents", right: Tal.resetCost(c), tip: "Near the pet nurse. Costs gold." }];
-      const br = Tal.BRANCHES[this.tab];
-      return Tal.TALENTS.filter(t => t.br === br).map(t => {
-        const r = Tal.rankOf(c, t.id), locked = Tal.spent(c, br) < Tal.TIER_COST * t.tier;
-        return { id: t.id, text: t.name + (t.spell != null ? " ✦" : ""), right: r + "/" + t.max, color: locked ? "#4a4a4a" : r >= t.max ? RED : null, tip: t.desc + (locked ? " (needs " + Tal.TIER_COST * t.tier + " points in this branch)" : ""), disabled: false };
-      });
-    }
-    drawBody(g, me) {
-      const b = this.ball(me);
-      if (!b) { g.aligned(0, this.w, 120, "You have no companion ball.", INK); return; }
-      const c = b.comp, sp = Tal.spec(c);
-      g.text(14, 62, (c.nm || c.sp) + " · lv " + c.lvl, INK, { size: 11, bold: true });
-      g.text(14, 78, "Points: " + Tal.pointsFree(c) + " · " + (sp ? BRANCH_LABEL[sp] : "No specialty"), INK, { size: 10 });
-      if (this.tab < 3) g.text(this.w - 60, 78, Tal.spent(c, Tal.BRANCHES[this.tab]) + " spent", INK, { size: 10 });
-    }
-    pick(r, me) {
-      const b = this.ball(me); if (!b) return;
-      if (r.reset) api.send({ t: "talreset", uid: b.uid, npc: api.nurse?.()?.id });
-      else api.send({ t: "talent", uid: b.uid, talent: r.id });
-    }
-  }();
-  gui.register(talents);
 
   // ------------------------------------------------------------ notificaciones del servidor
   function onEvent(ev, world) {

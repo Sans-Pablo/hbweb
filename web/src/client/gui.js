@@ -252,8 +252,8 @@ export class Gui {
     if (this.petBall && x > 411 && x < 449) this.onAction?.("petmode");
     else if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
     else if (x > 413 + a && x < 447 + a) this.onAction?.("char");
-    else if (x > 447 + a && x < 484 + a) this.onAction?.("inv");
-    else if (x > 484 + a && x < 521 + a) this.onAction?.("book");
+    else if (x > 447 + a && x < 484 + a) this.onAction?.("pets");        // botón nuevo «Summons» (en el puesto del antiguo inventario)
+    else if (x > 484 + a && x < 521 + a) this.onAction?.("inv");
     else if (x > 521 + a && x < 558 + a) this.onAction?.("skill");
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
@@ -329,6 +329,16 @@ export class Gui {
     else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max + " (click: rename)");
   }
 
+  // Intercambia dos casillas de iconos de la barra (copia de la imagen horneada): el icono del libro de hechizos pasa a ser «Summons»
+  // y el inventario ocupa su sitio a la derecha. El original no tiene este botón (invento del port).
+  swapSlots(xa, xb) {
+    const m = this.manifest && this.manifest.gamedialog2_6, img = this.img.gamedialog2_6, fr = m && m.frames[14];
+    if (!fr || !img || !img.naturalWidth) return;
+    const [sx, sy, , , px, py] = fr, w = 37, h = 41, k = 554 - 548 - py, c = this.ctx;
+    c.drawImage(img, sx + (xb - px), sy + k, w, h, xa, 554, w, h);
+    c.drawImage(img, sx + (xa - px), sy + k, w, h, xb, 554, w, h);
+  }
+
   gauges(me, world, info) {
     const m = this.mouse, a = RESX + ADDX;
     this.put("gamedialog2_6", 14, 0, 548);
@@ -348,6 +358,7 @@ export class Gui {
     else if (me.pool > 0 && !this.isOpen(12)) this.blink(725, 510, "Level Up!");
 
     this.petPanel(me, world, a);
+    this.swapSlots(447 + a, 484 + a);
     if (this.flags.safe) this.put("gamedialog2_6", 4, 368 + a - 2, 440 + RESY);
     else if (this.flags.combat) this.put("gamedialog2_6", 5, 368 + a - 1, 440 + RESY);
     if (m.x > 362 + a && m.x < 404 + a && m.y > 434 + RESY && m.y < 475 + RESY) {
@@ -360,7 +371,7 @@ export class Gui {
     this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#c8c878");
 
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
-      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 0, "Magics"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"]];
+      const icons = [[410, 6, 2, "Character"], [447, 8, 0, "Summons"], [484, 7, 1, "Inventory"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"]];
       for (const [x0, f, dx, name] of icons) {
         if (m.x > x0 + a && m.x < x0 + 37 + a) { this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }

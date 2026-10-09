@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { generateLevel, setDungeonPalette, levelSeed, seededRandom, FARM_PORTAL, MIDDLE_PORTAL, DUNGEON_LEVELS, isBossLevel } from "../web/src/shared/dungeon.js";
+import { generateLevel, setDungeonPalette, levelSeed, seededRandom, DUNGEON_LEVELS, isBossLevel } from "../web/src/shared/dungeon.js";
 import { Adventure } from "../web/src/shared/adventure.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { GameData } from "../web/src/shared/data.js";
@@ -17,9 +17,9 @@ const maps = { middled1n: { meta: mj, grid: new Grid(mj.w, mj.h, new Uint8Array(
 function session() { return new Adventure({ grid: new Grid(meta.w, meta.h, farmBytes), start: meta.start, npcDb, data, spawns: [], maps, rng: seededRandom(54) }); }
 function place(w, p, x, y) { w.grid.release(p.x, p.y, p.id); p.x = p.fx = x; p.y = p.fy = y; w.grid.occupy(x, y, p.id); }
 function enter(a, id, restart) {
-  const w = a.worldFor(id), gate = w.map.portals[0];
-  place(w, w.ents.get(id), gate.x - 1, gate.y);
-  const ok = a.command(id, { t: "portal", portal: gate.id, ...(restart !== undefined ? { restart } : {}) });
+  const w = a.worldFor(id), p = w.ents.get(id);
+  place(w, p, 79, 70);                                              // teletransportador de la granja hacia middled1n
+  const ok = restart === undefined ? a.teleport(p, w, { map: "middled1n", dx: 181, dy: 124, dir: 1 }) : a.command(id, { t: "portal", portal: "mid-entry", restart });
   return { ok, w: a.worldFor(id) };
 }
 function clear(a, id) {
@@ -77,10 +77,9 @@ test("dificultad por nivel y jefes cada 5 niveles", () => {
   assert.deepEqual([5, 10, 15, 20].map(l => generateLevel(levelSeed(1, l), l).spawns.find(s => s.boss).boss), [1, 2, 3, 4]);
 });
 
-test("entradas: Aresfarm y middled1n (100,85); bajar exige limpiar; elegir continuar o reiniciar", () => {
+test("entrada: el teletransportador de la granja a middled1n lleva directo a la cripta; bajar exige limpiar; elegir continuar o reiniciar", () => {
   const a = session(), id = a.addPlayer("uno"), p = a.farm.ents.get(id);
-  assert.equal(MIDDLE_PORTAL.x, 100); assert.equal(MIDDLE_PORTAL.y, 85);
-  assert.equal(a.staticWorld("middled1n").map.portals[0].id, MIDDLE_PORTAL.id);
+  assert.deepEqual(a.farm.map.portals, []);                         // ya no hay portales de entrada propios
   let { ok, w } = enter(a, id);
   assert.ok(ok); assert.equal(w.map.kind, "dungeon"); assert.equal(w.map.level, 1);
   assert.equal(take(a, id, "down"), false);                         // enemigos vivos
@@ -105,7 +104,7 @@ test("entradas: Aresfarm y middled1n (100,85); bajar exige limpiar; elegir conti
   const m = a.staticWorld("middled1n"); a.transfer(p, a.farm, m, [98, 85]);
   assert.ok(enter(a, id, true).ok); assert.equal(a.worldFor(id).map.level, 1);
   assert.ok(take(a, id, "return")); assert.equal(a.worldFor(id), m);
-  assert.ok(Math.abs(p.x - 100) <= 3 && Math.abs(p.y - 85) <= 3);
+  assert.ok(Math.abs(p.x - 79) <= 3 && Math.abs(p.y - 70) <= 3);
 });
 
 test("enemigos escalados, jefe y victoria en el nivel 20", () => {

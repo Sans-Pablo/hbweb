@@ -23,6 +23,13 @@
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated;
     touch-action: none; cursor: var(--cursor); }
   #loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--stone); color: var(--muted); z-index: 10; }
+  #loading > div { max-width: min(640px, 92vw); text-align: center; }
+  #joininfo { margin: 6px 0; } #joininfo .log { max-height: 130px; overflow: auto; font-size: 11px; text-align: left; } #joininfo .ver { margin: 4px 0; color: var(--brass); font-size: 12px; }
+  #loadinfo .ver { color: var(--brass); margin: 10px 0 8px; font-size: 14px; }
+  #loadinfo .ver small { color: var(--muted); }
+  #loadinfo .log { max-height: 38vh; overflow: auto; text-align: left; font-size: 12px; padding: 8px 14px; background: #0006; border: 1px solid #ffffff1a; }
+  #loadinfo h4 { margin: 8px 0 3px; color: var(--brass); font-size: 12px; }
+  #loadinfo ul { margin: 0; padding-left: 18px; } #loadinfo li { margin: 2px 0; }
   #loading b { display: block; color: var(--brass); font: 600 22px Georgia, serif; letter-spacing: .08em; text-align: center; margin-bottom: 6px; }
 
   /* ---------------- HUD: capa que sigue al área visible del juego */
@@ -228,9 +235,11 @@ body.dialogtrans .panel { opacity: .55; }
 <body class="remastered">
 <canvas id="game"></canvas>
 <canvas id="gui"></canvas>
-<div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span></div></div>
+<div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span><div id="loadinfo"></div></div></div>
+<script type="module">import { showLoadInfo } from "./src/client/loadinfo.js"; showLoadInfo(document.getElementById("loadinfo")); showLoadInfo(document.getElementById("joininfo"), true);</script>
 
 <div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>
+  <div id="joininfo"></div>
   <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
   <div class="tabs"><button type="button" data-tab="login" class="on">Entrar</button><button type="button" data-tab="new">Crear cuenta</button></div>
   <label>Nombre<input class="user" maxlength="16" autocomplete="username" spellcheck="false"></label>

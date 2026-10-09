@@ -12,7 +12,8 @@ export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
 const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly < y2;
 
 export class ClassicDialog {
-  constructor({ id, x = 150, y = 110, w = 258, h = 339, title = "", tabs = [], rowH = 17, top = 80, visible = 13, footer = "" }) {
+  constructor({ id, x = 150, y = 110, w = 258, h = 339, title = "", tabs = [], rowH = 17, top = 80, visible = null, footer = "" }) {
+    visible = visible ?? Math.max(1, Math.floor((256 - top) / rowH));                     // las filas acaban donde empieza la zona de ayuda (y 260)
     Object.assign(this, { id, x, y, w, h, title, tabs, rowH, top, visible, footer, tab: 0, view: 0 });
   }
   // --- para sobrescribir
@@ -33,16 +34,35 @@ export class ClassicDialog {
     });
     this.drawBody(g, me, lx, ly);
     this.view = Math.max(0, Math.min(this.view, Math.max(0, rows.length - this.visible)));
+    let hint = this.hintText || "";
     for (let i = 0; i < this.visible; i++) {
       const r = rows[i + this.view]; if (!r) break;
       const y = this.top + i * this.rowH, over = inside(lx, ly, 10, this.w - 12, y - 1, y + this.rowH - 2);
       const col = over ? WHITE : r.color || DARK;
       g.text(14, y, r.text, col, { size: 11 });
       if (r.right != null) g.text(this.w - 44, y, String(r.right), col, { size: 11 });
-      if (over && r.tip) g.tip(r.tip, g.mouse.x + 12, g.mouse.y + 14);
+      if (over && r.tip) hint = r.tip;
     }
     if (rows.length > this.visible) g.text(this.w - 22, this.top - 14, this.view > 0 ? "▲" : " ", INK, { size: 9 }), g.text(this.w - 22, this.top + this.visible * this.rowH, this.view + this.visible < rows.length ? "▼" : " ", INK, { size: 9 });
-    if (this.footer) g.text(14, 308, this.footer, INK, { size: 9 });
+    this.hintText = "";
+    if (this.hintOver) hint = this.hintOver(lx, ly, me) || hint;
+    if (hint) this.paintHint(g, hint);
+    else if (this.footer) g.text(14, 308, this.footer, INK, { size: 9 });
+  }
+  // Texto de ayuda en una zona fija del cuadro (no flota junto al ratón: no tapa filas ni estorba al hacer clic)
+  wrap(g, text, maxW, size = 10) {
+    const c = g.ctx; c.font = size + "px Tahoma, Verdana, sans-serif";
+    const out = []; let line = "";
+    for (const word of String(text).split(" ")) {
+      const t = line ? line + " " + word : word;
+      if (c.measureText(t).width > maxW && line) { out.push(line); line = word; } else line = t;
+    }
+    if (line) out.push(line);
+    return out;
+  }
+  paintHint(g, text) {
+    const lines = this.wrap(g, text, this.w - 36).slice(0, 2);
+    lines.forEach((l, i) => g.text(14, 262 + i * 12, l, INK, { size: 10 }));
   }
   hoverOk(lx, ly) { return lx >= this.w - 104 && lx <= this.w - 30 && ly >= 292 && ly <= 312; }
   click(g, lx, ly, me) {

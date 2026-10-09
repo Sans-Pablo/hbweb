@@ -2,7 +2,7 @@
 //   join(nombre) -> id   send(orden) -> bool   update(dt) -> eventos   state -> vista del mundo
 //   LocalConnection: la simulación corre dentro de la página (un jugador).
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
-import { generateLevel, FARM_PORTAL } from "../shared/dungeon.js";
+import { generateLevel } from "../shared/dungeon.js";
 import { ACT, DX, DY, PLAYER, LIMITS, mobDurations } from "../shared/const.js";
 
 export class LocalConnection {
@@ -44,7 +44,7 @@ class MirrorWorld {
   constructor(grid, npcDb, data) {
     this.grid = grid;
     this.farmGrid = grid;
-    this.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
+    this.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [] };
     this.npcDb = npcDb;
     this.data = data;
     this.time = 0;

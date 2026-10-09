@@ -52,4 +52,8 @@ for (const mid of ["middleland", "2ndmiddle", "dglv2"]) {
   for (let i = 0; i < 20; i++) sw.tick(100);
   assert(t0 > 0, mid + ": hay monstruos (" + t0 + ")");
 }
+// Gail (enfermera del hospital de summons) vive dentro de la tienda general de la granja, y no en el inicio de la granja ni en Aresden
+const shop = a.staticWorld("gshop_1f");
+assert([...shop.ents.values()].some(e => e.name === "Gail" && e.role === "pethospital"), "Gail está en gshop_1f");
+assert(![...a.farm.ents.values()].some(e => e.name === "Gail") && ![...a.staticWorld("aresden").ents.values()].some(e => e.name === "Gail"), "Gail no está fuera de la tienda");
 console.log("OK");

@@ -9,7 +9,7 @@ import { Grid } from "../web/src/shared/grid.js";
 import { readFileSync } from "node:fs";
 import { GameData } from "../web/src/shared/data.js";
 import { NetConnection } from "../web/src/client/connection.js";
-import { FARM_PORTAL, generateLevel, setDungeonPalette } from "../web/src/shared/dungeon.js";
+import { generateLevel, setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { findPath } from "../web/src/shared/path.js";
 
 const D = new URL("../web/data/", import.meta.url);
@@ -51,18 +51,18 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
       const w = conn.state;
       while (true) {
         const me = w.ents.get(conn.pid);
+        if (!me || conn.state.map.kind !== "farm") break;                  // ya teletransportado a la cripta
         if (Math.max(Math.abs(me.x - x), Math.abs(me.y - y)) <= 1) break;
         await until(() => w.time >= Math.max(me.busyUntil, me.lastMove + 200) + 60, "fin de paso");
         const route = findPath(w.grid, me.x, me.y, x, y, me.id);
-        assert.ok(route.length, "ruta al portal");
+        assert.ok(route.length, "ruta al portal " + JSON.stringify([me.x, me.y, x, y, conn.state.map.kind]));
         assert.ok(conn.send({ t: "move", dir: route[0], run: true }));
         const seq = conn.seq; await until(() => conn.ack >= seq, "ack paso");
       }
       await until(() => w.time >= w.ents.get(conn.pid).busyUntil + 60, "llegada");
     }
     const a = await connect("cripta-a"), b = await connect("cripta-b");
-    await walk(a.conn, FARM_PORTAL.x, FARM_PORTAL.y);
-    assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));
+    await walk(a.conn, 79, 70);                               // el teletransportador de la granja a middled1n entra directo
     await until(() => a.conn.state.map.kind === "dungeon", "entrada A");
     const mapA = a.conn.state.map;
     assert.equal(mapA.level, 1);
@@ -77,8 +77,7 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(!a.conn.state.ents.has(b.conn.pid));
     assert.ok([...a.conn.state.ents.values()].some(e => e.kind === "npc" && e.name === "Skeleton"));
     assert.ok([...b.conn.state.ents.values()].every(e => e.kind !== "npc" || e.name !== "Skeleton"));
-    await walk(b.conn, FARM_PORTAL.x, FARM_PORTAL.y);
-    b.conn.send({ t: "portal", portal: FARM_PORTAL.id });
+    await walk(b.conn, 79, 70);
     await until(() => b.conn.state.map.kind === "dungeon", "entrada B");
     assert.notEqual(b.conn.state.map.id, mapA.id);
     assert.ok(!b.conn.state.ents.has(a.conn.pid));
@@ -88,7 +87,7 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(!a.conn.state.ents.has(b.conn.pid));
     b.conn.send({ t: "portal", portal: "return" });
     await until(() => b.conn.state.map.kind === "farm" && a.conn.state.ents.has(b.conn.pid), "salida B");
-    assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));        // sin progreso (nivel 1) no pregunta: entra directo
+    try { await walk(a.conn, 76, 66); await walk(a.conn, 79, 70); } catch (e) { if (a.conn.state.map.kind !== "dungeon") throw e; }   // sin progreso (nivel 1) no pregunta: entra directo
     await until(() => a.conn.state.map.kind === "dungeon", "reentrada A");
     assert.notEqual(a.conn.state.map.id, mapA.id);
     assert.ok(!exited, output);

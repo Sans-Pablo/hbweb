@@ -19,6 +19,7 @@ import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
+import { registerPetDialog } from "./petdialog.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
@@ -116,6 +117,7 @@ async function main() {
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
+  registerPetDialog(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
   const dropOnCitizen = (uid, mx, my, cx, cy) => {
     if (cx === undefined) return false;
@@ -308,7 +310,7 @@ async function main() {
           case "F7": ui.key("book"); break;
           case "F8": ui.key("skill"); break;
           case "F9": gui.toggle(10); break;
-          case "F10": gui.toggle(42); break;
+          case "F10": gui.toggle(43); break;
           case "F11": document.body.classList.toggle("dialogtrans"); break;
           case "F12": ui.key("options"); break;
         }
@@ -403,7 +405,7 @@ async function main() {
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
@@ -412,7 +414,7 @@ async function main() {
   applyOpts();
   addEventListener("resize", () => { renderer.resize(); hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr); });
   hud.log("Bienvenido a la granja de Aresden. Pulsa F1 para ver las novedades y qué probar.");
-  hud.log("Cripta de esqueletos: entrada en (134, 94), cerca del inicio. Acércate y pulsa E.", "gold");
+  hud.log("Cripta de esqueletos: pisa el teletransportador de middled1n (78–80, 69–71) de Aresfarm.", "gold");
   if (online) hud.log(conn.returning ? "Partida en línea: se ha cargado tu progreso. Intro para hablar." : "Partida en línea. Pulsa Intro para hablar con los demás.", "gold");
 
   // chat

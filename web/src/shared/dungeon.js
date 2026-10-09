@@ -7,10 +7,7 @@ import { Grid } from "./grid.js";
 export const DUNGEON_LEVELS = 20;
 export const DUNGEON_VERSION = 5;
 export const BOSS_EVERY = 5;
-export const FARM_PORTAL = Object.freeze({ id: "skeleton-entry", x: 134, y: 94, label: "Cripta de esqueletos", target: "dungeon" });
-// Entrada desde el mapa original middled1n (casilla 100,85).
-export const MIDDLE_PORTAL = Object.freeze({ id: "skeleton-entry-n", x: 100, y: 85, label: "Cripta de esqueletos", target: "dungeon" });
-export const DUNGEON_ENTRANCES = Object.freeze({ arefarm: FARM_PORTAL, middled1n: MIDDLE_PORTAL });
+// La entrada es el teletransportador de la granja hacia middled1n (Adventure.teleport lo convierte en entrada directa a la cripta).
 export const DUNGEON_ASSETS = Object.freeze([...Array.from({ length: 10 }, (_, i) => "t" + (300 + i)), "t211", ...Array.from({ length: 40 }, (_, i) => "ske" + i)]);
 export const isBossLevel = level => level % BOSS_EVERY === 0;
 export const BOSS_COLORS = Object.freeze({ 1: "#ff3b2e", 2: "#b052ff", 3: "#22d6c4", 4: "#ffc933" });

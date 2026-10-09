@@ -13,7 +13,7 @@ export function chooseDungeon(conn, info) {
     button.style.cssText = "margin:8px 8px 0 0;padding:8px 12px;background:#393039;color:#e8dcc3;border:1px solid #756959;cursor:pointer";
     button.onclick = () => {
       dialog.close(); dialog.remove();
-      if (restart !== null) conn.send({ t: "portal", portal: info.portal || "skeleton-entry", restart });
+      if (restart !== null) conn.send({ t: "portal", portal: info.portal || "mid-entry", restart });
     };
     dialog.append(button);
   }

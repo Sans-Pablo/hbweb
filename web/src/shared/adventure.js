@@ -3,7 +3,7 @@ import { activeBall } from "./systems/companion.js";
 // Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
-import { DUNGEON_ENTRANCES, FARM_PORTAL, DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
+import { DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
 import { populate, spawnCitizen } from "./systems/citizens.js";
 import * as Comp from "./systems/companion.js";
@@ -11,7 +11,7 @@ import { DEBUG } from "./systems/debug.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
 
-export const ALLOWED_MAPS = new Set(["arefarm", "middled1n"]);
+export const ALLOWED_MAPS = new Set(["arefarm", "gshop_1f", "bsmith_1f", "wrhus_1f"]);
 
 export class Adventure {
   constructor(options) {
@@ -24,14 +24,12 @@ export class Adventure {
     this.worlds = new Map();
     this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
-    this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [FARM_PORTAL] };
+    this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [] };
     this.farm.meta = this.maps.arefarm?.meta;
     this.farm.fixedDay = !!this.farm.meta?.fixedDay;
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
-    const fs = this.farm.start;                                     // enfermera del hospital de compañeros junto al inicio de la granja
-    if (fs) spawnCitizen(this.farm, Comp.HOSPITAL.npc, fs[0] + 3, fs[1] + 1, Comp.HOSPITAL.role);
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)
@@ -50,7 +48,7 @@ export class Adventure {
     const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: meta.teleports });
     w.time = this.time;
     w.hooks = this.hooks(w);
-    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: DUNGEON_ENTRANCES[id] ? [DUNGEON_ENTRANCES[id]] : [] };
+    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
     w.meta = meta;
     w.fixedDay = !!meta.fixedDay;
     w.clock = o.clock || null;
@@ -63,8 +61,12 @@ export class Adventure {
   // teleport-loc: destino en otro mapa (o en el mismo); -1,-1 = punto de inicio del mapa destino
   teleport(p, w, tp) {
     let id = tp.map.toLowerCase();
+    if (id === "middled1n") {                                       // la entrada a middled1n (teletransportador de la granja) lleva directo a la cripta
+      if (w.map.kind === "dungeon") return false;
+      return this.enterCrypt(p, w, { id: "mid-entry", x: p.x, y: p.y }, {});
+    }
     if (!ALLOWED_MAPS.has(id)) {                                    // en esta versión solo existen la granja y las criptas: el resto lleva de vuelta a la granja
-      w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "solo existen Aresfarm y las criptas" });
+      w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "solo existen Aresfarm, sus tiendas y la cripta" });
       if (w === this.farm) return false;
       return this.transfer(p, w, this.farm, this.farm.start);
     }
@@ -120,7 +122,7 @@ export class Adventure {
     const w = this.worldFor(id), p = w.ents.get(id);
     if (!p) return false;
     if (cmd.t === "portal") {
-      const gate = w.map.portals.find(g => g.id === cmd.portal);
+      const gate = cmd.portal === "mid-entry" && w.map.kind !== "dungeon" ? { id: "mid-entry", x: p.x, y: p.y } : w.map.portals.find(g => g.id === cmd.portal);
       if (p.dead || w.busy(p)) return w.reject(p, cmd, "ocupado o muerto");
       if (!gate || dist(p, gate) > 1) return w.reject(p, cmd, "acércate al portal");
       if (w.map.kind !== "dungeon") return this.enterCrypt(p, w, gate, cmd);

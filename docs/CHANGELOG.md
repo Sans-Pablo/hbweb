@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.16.0 · Summons y tiendas (2026-10-09)
+
+- Botón «Summons» en la barra (entre Personaje y Mochila; sustituye al libro de hechizos) y F10: cuadro `client/petdialog.js` (id 43) con Info, renombrar, modo, reinicio y las 3 ramas. Sustituye al cuadro 42.
+- `ClassicDialog`: la ayuda sale en una zona fija abajo (ya no flota junto al ratón); filas más altas; sin solapes.
+- `ALLOWED_MAPS` recupera `gshop_1f`, `bsmith_1f` y `wrhus_1f`. Gail vive dentro de `gshop_1f`.
+- Se eliminan `FARM_PORTAL`, `MIDDLE_PORTAL` y `DUNGEON_ENTRANCES`. El teletransportador de la granja a middled1n entra directo a la cripta (`Adventure.teleport` → `enterCrypt`, portal sintético `mid-entry`).
+- Pantalla de carga y de entrada: versión y novedades (`client/loadinfo.js`).
+
 ## 0.15.0 · Herramientas de prueba (2026-10-09)
 
 - F1 → Herramientas: panel con órdenes `dbg` (nivel, oro, objetos, enemigos y jefes, ir a mapas/cripta, summons y talentos, cielo). Ficha: `docs/sistemas/herramientas.md`. El servidor las desactiva salvo `HB_DEBUG=1`.

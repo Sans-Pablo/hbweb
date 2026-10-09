@@ -11,6 +11,35 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Summons, tiendas y entrada directa (v0.16.0)",
+        "en": "Summons, shops and direct entry (v0.16.0)"
+      },
+      "items": [
+        {
+          "es": "Nuevo botón «Summons» en la barra (entre Personaje y Mochila) y en F10: cuadro con Info, renombrar, modo, hechizos y las 3 ramas de talentos. Sustituye al libro de hechizos de la barra.",
+          "en": "New “Summons” button on the bar (between Character and Bag) and on F10: dialog with Info, rename, mode, spells and the 3 talent branches. It replaces the spellbook on the bar."
+        },
+        {
+          "es": "Los textos de ayuda de los cuadros clásicos ya no flotan junto al ratón: salen en una zona fija abajo, así las filas se pueden pulsar sin estorbos; filas más altas y sin solapes.",
+          "en": "Help text in classic dialogs no longer floats next to the mouse: it shows in a fixed area at the bottom, so rows can be clicked without obstruction; taller rows, no overlap."
+        },
+        {
+          "es": "Vuelven la herrería y el almacén (y la tienda) de Aresfarm. Gail se muda al interior de la tienda general.",
+          "en": "The Aresfarm blacksmith and warehouse (and shop) are back. Gail moves inside the general shop."
+        },
+        {
+          "es": "Se elimina la entrada de la cripta en (134,94). Pisar el teletransportador de middled1n en Aresfarm te lleva directo a la cripta.",
+          "en": "The crypt entrance at (134,94) is removed. Stepping on the Aresfarm teleporter to middled1n takes you straight into the crypt."
+        },
+        {
+          "es": "La pantalla de carga y la de entrada muestran la versión y las últimas novedades.",
+          "en": "The loading and login screens show the version and the latest changes."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Herramientas de prueba (v0.15.0)",
         "en": "Test tools (v0.15.0)"
       },
@@ -806,8 +835,8 @@
         "en": "Crypt"
       },
       "text": {
-        "es": "Entra por Aresfarm (134,94) y por middled1n (100,85). Con esqueletos vivos el portal de bajada dice «cerrado»; al matarlos todos se abre y baja al nivel 2.",
-        "en": "Enter via Aresfarm (134,94) and via middled1n (100,85). With skeletons alive the down portal says “closed”; once all are dead it opens and takes you to level 2."
+        "es": "Entra pisando el teletransportador de Aresfarm hacia middled1n (78–80, 69–71): te lleva directo a la cripta. Con esqueletos vivos el portal de bajada dice «cerrado»; al matarlos todos se abre y baja al nivel 2.",
+        "en": "Enter by stepping on the Aresfarm teleporter to middled1n (78–80, 69–71): it takes you straight into the crypt. With skeletons alive the down portal says “closed”; once all are dead it opens and takes you to level 2."
       }
     },
     {
@@ -861,8 +890,8 @@
         "en": "Companions"
       },
       "text": {
-        "es": "Clic en la enfermera Gail: compra una bola (1 de oro), úsala, y mira el hospital. Con poco oro, revivir/curar avisa de que falta oro.",
-        "en": "Click nurse Gail: buy a ball (1 gold), use it, and look at the hospital. With little gold, reviving/healing says you lack gold."
+        "es": "Entra en la tienda general y haz clic en la enfermera Gail: compra una bola (1 de oro), úsala, y mira el hospital. Con poco oro, revivir/curar avisa de que falta oro.",
+        "en": "Enter the general shop and click nurse Gail: buy a ball (1 gold), use it, and look at the hospital. With little gold, reviving/healing says you lack gold."
       }
     },
     {
@@ -927,8 +956,8 @@
         "en": "Talents"
       },
       "text": {
-        "es": "F10 abre el árbol de talentos; sube el summon a nivel 3 y gasta puntos en una rama.",
-        "en": "F10 opens the talent tree; level the summon to 3 and spend points in a branch."
+        "es": "F10 (o el botón «Summons» de la barra, entre Personaje y Mochila) abre el cuadro del summon con sus talentos; sube el summon a nivel 3 y gasta puntos en una rama.",
+        "en": "F10 (or the “Summons” bar button between Character and Bag) opens the summon dialog with its talents; level the summon to 3 and spend points in a branch."
       }
     },
     {
@@ -949,8 +978,8 @@
         "en": "Talents"
       },
       "text": {
-        "es": "Junto a Gail, pestaña Reset: reinicia los talentos pagando oro.",
-        "en": "Next to Gail, Reset tab: reset talents by paying gold."
+        "es": "Junto a Gail (dentro de la tienda, gshop_1f), pestaña Info → Reset talents: reinicia los talentos pagando oro.",
+        "en": "Next to Gail (inside the shop, gshop_1f), Info tab → Reset talents: reset talents by paying gold."
       }
     },
     {
@@ -1411,7 +1440,7 @@
         "en": "World and sound"
       },
       "text": {
-        "es": "Los portales a mapas no permitidos devuelven a Aresfarm con aviso; Aresfarm, la cripta y middled1n sí funcionan.",
+        "es": "Los portales a mapas no permitidos devuelven a Aresfarm con aviso; Aresfarm, sus tiendas (tienda, herrería, almacén) y la cripta sí funcionan.",
         "en": "Portals to disallowed maps return you to Aresfarm with a warning; Aresfarm, the crypt and middled1n work."
       }
     },
@@ -1521,7 +1550,7 @@
         "en": "Skeleton crypt"
       },
       "text": {
-        "es": "Entrada por Aresfarm (134,94) y middled1n (100,85) con E.",
+        "es": "Entra pisando el teletransportador de middled1n en Aresfarm (78–80, 69–71); no hay portales de entrada.",
         "en": "Entrance via Aresfarm (134,94) and middled1n (100,85) with E."
       }
     },
@@ -1576,8 +1605,8 @@
         "en": "Crypt"
       },
       "text": {
-        "es": "Compara la cripta con middled1n (portal 100,85): mismas paredes, suelos y antorchas; sin cuadros grises ni costuras raras salvo en los bordes sellados del nivel.",
-        "en": "Compare the crypt with middled1n (portal 100,85): same walls, floors and torches; no grey squares or odd seams except at the sealed level borders."
+        "es": "Compara la cripta con middled1n: mismas paredes, suelos y antorchas; sin cuadros grises ni costuras raras salvo en los bordes sellados del nivel.",
+        "en": "Compare the crypt with middled1n: same walls, floors and torches; no grey squares or odd seams except at the sealed level borders."
       }
     },
     {
@@ -1589,6 +1618,94 @@
       "text": {
         "es": "F1 → Herramientas: prueba cada botón (nivel, objeto, enemigo, bola, ir a mapa/cripta, cielo). Los resultados salen en el chat como [test].",
         "en": "F1 → Tools: try each button (level, item, enemy, ball, go to map/crypt, sky). Results show in the chat as [test]."
+      }
+    },
+    {
+      "id": "farm-shops",
+      "group": {
+        "es": "Aresfarm",
+        "en": "Aresfarm"
+      },
+      "text": {
+        "es": "Entra en la tienda general, la herrería y el almacén de la granja: se abren sus diálogos y puedes volver a salir. Otros edificios te devuelven a la granja.",
+        "en": "Enter the farm's general shop, blacksmith and warehouse: their dialogs open and you can walk back out. Other buildings send you back to the farm."
+      }
+    },
+    {
+      "id": "gail-shop",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "Gail está ahora dentro de la tienda general (ya no en el inicio de la granja ni en Aresden).",
+        "en": "Gail is now inside the general shop (no longer at the farm start or in Aresden)."
+      }
+    },
+    {
+      "id": "pets-button",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "La barra inferior tiene un botón «Summons» entre Personaje y Mochila (el libro de hechizos ya no está). Pulsarlo o F10 abre el cuadro.",
+        "en": "The bottom bar has a “Summons” button between Character and Bag (the spellbook is gone). Clicking it or pressing F10 opens the dialog."
+      }
+    },
+    {
+      "id": "pets-dialog",
+      "group": {
+        "es": "Summons",
+        "en": "Summons"
+      },
+      "text": {
+        "es": "En el cuadro Summons: pestaña Info (renombrar, modo Peace/Attack, reiniciar talentos, hechizos) y las ramas Support/Damage/Warrior. Los textos no se pisan y la ayuda sale en la zona fija de abajo.",
+        "en": "In the Summons dialog: Info tab (rename, Peace/Attack mode, reset talents, spells) and the Support/Damage/Warrior branches. Texts don't overlap and help text appears in the fixed area below."
+      }
+    },
+    {
+      "id": "mid-direct",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Pisa el teletransportador de middled1n en Aresfarm: entras directo al nivel de cripta que te toque (con progreso pregunta continuar o reiniciar). Al salir vuelves junto al teletransportador.",
+        "en": "Step on the middled1n teleporter in Aresfarm: you go straight into your crypt level (with progress it asks to continue or restart). On exit you return next to the teleporter."
+      }
+    },
+    {
+      "id": "no-old-portals",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Ya no existe el portal de la cripta en (134,94) de Aresfarm.",
+        "en": "The crypt portal at (134,94) in Aresfarm is gone."
+      }
+    },
+    {
+      "id": "loading-info",
+      "group": {
+        "es": "General",
+        "en": "General"
+      },
+      "text": {
+        "es": "La pantalla de carga y la de entrada muestran la versión (v0.16.0) y las últimas novedades.",
+        "en": "The loading and login screens show the version (v0.16.0) and the latest changes."
+      }
+    },
+    {
+      "id": "dialog-overlap",
+      "group": {
+        "es": "General",
+        "en": "General"
+      },
+      "text": {
+        "es": "En el hospital (Gail) y los demás cuadros clásicos, los textos no se superponen y se puede hacer clic en cada fila con facilidad.",
+        "en": "In the hospital (Gail) and the other classic dialogs, texts don't overlap and each row is easy to click."
       }
     }
   ],
