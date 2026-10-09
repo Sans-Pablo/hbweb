@@ -10,6 +10,7 @@ export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
   const inst = { uid: w.nextItem++, id, count, life: d ? d.maxLife : 1 };
   if (extra && extra.attr) { inst.attr = extra.attr; inst.color = extra.color || 0; }
+  else if (extra && extra.color) inst.color = extra.color;                  // objetos teñidos sin atributo (hueso carmesí)
   return inst;
 };
 
@@ -76,11 +77,27 @@ export function unequipCmd(w, p, uid) {
 }
 
 // UseItemHandler: pociones y comida. Los de tipo comer / gastar se consumen siempre.
-export function useItem(w, p, uid) {
+// Tintes (ITEMEFFECTTYPE_DYE 17, ARMORDYE 32, WEAPONDYE 34; Game.cpp ~36555): se aplican a otro objeto de la mochila de las categorías permitidas.
+// El color es el índice de la tabla del cliente (m_wR[]): el nombre del tinte decide el índice.
+const DYE_INDEX = { Indigo: 1, Brown: 2, Gold: 3, "Crimson-Red": 4, CrimsonRed: 4, Green: 5, Gray: 6, Aqua: 7, Pink: 8, Violet: 9, Blue: 10, Tan: 11, Khaki: 12, Yellow: 13, Red: 14, Black: 15 };
+const DYE_CATS = { 17: [11, 12], 32: [6, 13, 15], 34: [1, 3, 8] };
+function dye(w, p, d, uid, destUid) {
+  const dest = Inv.instOf(p, destUid), dd = dest && w.data.item(dest.id);
+  if (!dest || destUid === uid) return w.reject(p, { t: "use" }, "elige el objeto que quieres teñir");
+  if (!DYE_CATS[d.effectType].includes(dd.category)) return w.reject(p, { t: "use" }, "ese tinte no sirve para este objeto");
+  const m = /\((.+)\)/.exec(d.name), color = m ? (DYE_INDEX[m[1]] ?? 0) : 0;
+  if (color) dest.color = color; else delete dest.color;
+  Inv.removeFromBag(p, uid);
+  w.emit({ t: "dyed", id: p.id, uid: destUid, color, item: d.id });
+  return true;
+}
+
+export function useItem(w, p, uid, destUid) {
   const inst = Inv.instOf(p, uid);
   if (!inst) return w.reject(p, { t: "use" }, "no tienes");
   if (inst.comp) return toggleCompanion(w, p, inst);                 // bola de compañero (companion.js)
   const d = w.data.item(inst.id);
+  if (d.effectType === EFFECT.DYE || d.effectType === 32 || d.effectType === 34) return dye(w, p, d, uid, destUid);
   if (d.type !== ITYPE.EAT && d.type !== ITYPE.USE_DEPLETE) return w.reject(p, { t: "use" }, "no se puede usar");
   const roll = () => dice(w.rng, d.v1, d.v2) + d.v3;
   let amount = 0, stat = null;

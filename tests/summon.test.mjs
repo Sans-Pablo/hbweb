@@ -6,6 +6,7 @@ import { summonFor, followersOf } from "../web/src/shared/systems/npcsys.js";
 import { GameData } from "../web/src/shared/data.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { MAGIC_MODE } from "../web/src/shared/magic.js";
+MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
 MAGIC_MODE.free = false;
 const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
 const npcDb = J("npc.json");

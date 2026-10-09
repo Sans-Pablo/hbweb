@@ -409,13 +409,13 @@ export class Renderer {
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + (e.comp && e.nick ? e.nick + " · " : "") + (e.boss ? BOSS_NAMES[e.boss] : e.name) + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
+        const name = (e.special && remaster ? "★ " : "") + (e.comp ? (e.nick || e.name) : e.boss ? BOSS_NAMES[e.boss] : e.name);
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";
           ctx.textAlign = "center";
-          ctx.fillStyle = "#000"; ctx.fillText(e.name, x + 1, y + 21);
-          ctx.fillStyle = "#fff"; ctx.fillText(e.name, x, y + 20);
+          ctx.fillStyle = "#000"; ctx.fillText(name, x + 1, y + 21);
+          ctx.fillStyle = "#fff"; ctx.fillText(name, x, y + 20);
         }
       });
     }

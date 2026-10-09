@@ -113,6 +113,7 @@ async function main() {
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
   const npcUi = registerNpcDialogs(gui, {
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
+    nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
   // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
@@ -145,16 +146,24 @@ async function main() {
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
     } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
+      if (d && [17, 32, 34].includes(d.effectType)) {             // tinte soltado sobre otro objeto de la mochila: lo tiñe
+        const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
+        let best = null, bd = 1e9;
+        for (const o of me.bag) { if (o === inst || !Number.isFinite(o.x)) continue; const dd = Math.hypot(o.x - nx, o.y - ny); if (dd < bd) { bd = dd; best = o; } }
+        if (best && bd <= 26) conn.send({ t: "use", uid: inst.uid, dest: best.uid });
+        else hud.log("Suelta el tinte encima del objeto que quieres teñir.");
+        return;
+      }
       if (Object.values(me.equip || {}).includes(inst.uid)) hud.act("unequip", inst.uid);
       if (it.from === 2) {
         const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
         inst.x = Math.max(0, Math.min(170, nx)); inst.y = Math.max(-10, Math.min(95, ny));
-        conn.send({ t: "setpos", uid: inst.uid, x: nx, y: ny });
+        conn.send({ t: "setpos", uid: inst.uid, x: inst.x, y: inst.y });
         if (ctl.keys.has("shift")) {                              // Mayús + arrastrar: agrupa en la misma casilla todos los objetos del mismo tipo
           let k = 0;
           for (const o of me.bag) {
             if (o === inst || o.id !== inst.id || Object.values(me.equip || {}).includes(o.uid)) continue;
-            k++; o.x = Math.max(0, Math.min(170, nx + k * 2)); o.y = Math.max(-10, Math.min(95, ny + k * 2));
+            k++; o.x = inst.x; o.y = inst.y;
             conn.send({ t: "setpos", uid: o.uid, x: o.x, y: o.y });
             dlg.order = dlg.order.filter(u => u !== o.uid); dlg.order.splice(dlg.order.indexOf(inst.uid), 0, o.uid);
           }
@@ -241,6 +250,7 @@ async function main() {
     // UseMagic: prepara el hechizo; el siguiente clic izquierdo elige el objetivo, el derecho cancela
     useMagic(id) {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
+      if (!MAGIC_MODE.player) { hud.log("Los hechizos son de tu compañero (F10: talentos).", "bad"); return; }
       if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
       if (ui.pointing != null) return;
       if (!MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
@@ -298,6 +308,7 @@ async function main() {
           case "F7": ui.key("book"); break;
           case "F8": ui.key("skill"); break;
           case "F9": gui.toggle(10); break;
+          case "F10": gui.toggle(42); break;
           case "F11": document.body.classList.toggle("dialogtrans"); break;
           case "F12": ui.key("options"); break;
         }
@@ -392,7 +403,7 @@ async function main() {
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
@@ -417,6 +428,7 @@ async function main() {
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
+      else if (/^\/petname\s+\S/.test(t)) conn.send({ t: "petname", name: t.replace(/^\/petname\s+/, "") });
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
       else if (/^\/time (day|night|auto)$/.test(t) && !online) {                      // solo para pruebas: fuerza la hora del cielo

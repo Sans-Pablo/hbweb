@@ -9,9 +9,10 @@ import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
+import * as Tal from "./talents.js";
 
 export const HUNT = { scale: 1, kills: 10 };  // build de pruebas: 10 muertes por bola (kills = null usa la tabla SPECIES: 500–1000); ?hunt=N las divide aún más
-export const MAX_COMP_LEVEL = 60;
+export const MAX_COMP_LEVEL = 50;
 // Nombres aleatorios (sílabas): cada compañero tiene el suyo, fijado al nacer la bola
 const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "Pip", "Rok", "Sil", "Tor", "Vex", "Zan", "Bol", "Cro", "Dun", "Fiz", "Gor"];
 const SYL_B = ["bo", "ra", "ki", "mo", "tu", "lo", "na", "zi", "ko", "pa", "du", "ri", "so", "ga", "fi"];
@@ -36,10 +37,11 @@ export function avgHit(p) {
   return Math.max(1, fx.wtype < 40 ? base * (1 + str / 500) : base + (Math.floor(str / 20) + 1) / 2);
 }
 // cuota del daño del dueño que aporta el compañero
-export const shareOf = (lvl, sp) => Math.min(0.5, (0.15 + 0.01 * lvl) * (0.85 + 0.03 * rankOf(sp)));
+// Los compañeros son la parte principal del juego (petición del diseñador): aportan mucho, pero caen y cuestan caro de revivir.
+export const shareOf = (lvl, sp) => Math.min(0.9, (0.3 + 0.012 * lvl) * (0.85 + 0.03 * rankOf(sp)));
 export function statsOf(p, c) {
-  const share = shareOf(c.lvl, c.sp);
-  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share)), hp: Math.max(5, Math.round(p.maxHp * Math.min(0.8, 0.3 + 0.01 * c.lvl))) };
+  const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
+  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg)), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp)), mp: Tal.maxMp(c) };
 }
 
 // Muerte de un monstruo a manos del jugador: contador de especie (bola) y experiencia del compañero
@@ -112,6 +114,18 @@ export function buyBall(w, p, cmd) {
   return true;
 }
 
+// El jugador pone el nombre que quiera a su compañero elegido (1–12 letras, cifras, espacios, guion o apóstrofo)
+export function rename(w, p, name) {
+  const inst = activeBall(p) || p.bag.find(i => i.comp);
+  const nm = String(name || "").trim().replace(/\s+/g, " ");
+  if (!inst) return w.reject(p, { t: "petname" }, "no tienes compañero");
+  if (!/^[\p{L}0-9][\p{L}0-9 '\-]{0,11}$/u.test(nm)) return w.reject(p, { t: "petname" }, "nombre no válido (1 a 12 letras o cifras)");
+  inst.comp.nm = nm;
+  for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) e.nick = nm;
+  w.emit({ t: "petname", id: p.id, nm, sp: inst.comp.sp });
+  return true;
+}
+
 // Modo del compañero: "attack" ataca todo lo que ve; "peace" solo sigue (salvo el objetivo marcado con Ctrl+Q)
 export function setMode(w, p, mode) {
   const inst = activeBall(p);
@@ -128,6 +142,28 @@ export function setTarget(w, p, targetId) {
   if (!t || t.dead || t.kind !== "npc" || t.master || Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) > 16) return w.reject(p, { t: "pettarget" }, "objetivo no válido");
   pet.cTarget = t.id;
   w.emit({ t: "pettarget", id: p.id, target: t.id, nm: pet.nick });
+  return true;
+}
+
+// Talentos (talents.js): gastar un punto / reiniciar (cuesta oro, en el hospital)
+export function learnTalent(w, p, cmd) {
+  const inst = Inv.instOf(p, cmd.uid) || activeBall(p) || p.bag.find(i => i.comp);
+  if (!inst?.comp) return w.reject(p, cmd, "no tienes compañero");
+  const why = Tal.learn(inst.comp, String(cmd.talent));
+  if (why) return w.reject(p, cmd, why);
+  w.recalc(p);
+  w.emit({ t: "talent", id: p.id, uid: inst.uid, talent: cmd.talent, rank: Tal.rankOf(inst.comp, cmd.talent), nm: inst.comp.nm });
+  return true;
+}
+export function resetTalents(w, p, cmd) {
+  const inst = Inv.instOf(p, cmd.uid) || activeBall(p) || p.bag.find(i => i.comp);
+  if (!inst?.comp) return w.reject(p, cmd, "no tienes compañero");
+  if (!nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "acércate a la enfermera");
+  const cost = Tal.resetCost(inst.comp);
+  if (!Tal.spentAll(inst.comp)) return w.reject(p, cmd, "no hay talentos que reiniciar");
+  if (p.gold < cost) { w.emit({ t: "nogold", id: p.id }); return false; }
+  p.gold -= cost; Tal.reset(inst.comp); w.recalc(p);
+  w.emit({ t: "talentreset", id: p.id, uid: inst.uid, cost, nm: inst.comp.nm });
   return true;
 }
 

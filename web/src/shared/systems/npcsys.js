@@ -7,7 +7,9 @@ import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
 import { sget } from "./status.js";
+import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
+import * as Tal from "./talents.js";
 import * as Inv from "../inventory.js";
 
 export function spawnFrom(w, g) {
@@ -29,7 +31,7 @@ export function spawnFrom(w, g) {
     }
     // Cripta de esqueletos: cada nivel multiplica vida, daño y experiencia (g.scale); los jefes llevan además g.boss (1..4).
     if (g.scale) { n.hp = Math.ceil(n.hp * g.scale.hp); n.exp = Math.ceil(n.exp * g.scale.exp); n.dmgMul = g.scale.dmg; }
-    if (g.boss) n.boss = g.boss;
+    if (g.boss) { n.boss = g.boss; n.cfg = { ...cfg, searchRange: Math.max(cfg.searchRange, 12), attackRange: Math.max(cfg.attackRange, 1) }; }   // los jefes ven de lejos y no se quedan quietos
     n.maxHp = n.hp;
     n.noDieRemainExp = n.exp - Math.floor(n.exp / 3);
     g.alive++;
@@ -68,6 +70,7 @@ export function killNpc(w, n, p) {
     Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
+  if (n.boss === 1) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, w.data.named("SkeletonBones").id, 1, { color: CRIMSON_COLOR })));   // 100 % de probabilidad
   const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
@@ -104,7 +107,8 @@ export function summonFor(w, p, v1, free) {
 function followerThink(w, n) {
   const m = w.ents.get(n.master);
   if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
-  if (n.comp) refreshCompanion(w, n, m);
+  let tc = null;
+  if (n.comp) { refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc); }
   let best = null, bd = 1e9;
   // Objetivo marcado por el dueño (Ctrl+Q): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
@@ -117,6 +121,11 @@ function followerThink(w, n) {
       const d = dist(n, e);
       if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
     }
+  }
+  if (tc) {                                                                    // hechizos del compañero (talents.js)
+    const hostiles = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && dist(e, m) <= 8);
+    if (Tal.support(w, n, m, tc, hostiles.length ? hostiles : null)) return;
+    if (best && bd <= 7 && Tal.hasAttackSpell(tc) && Tal.offense(w, n, tc, best, (t, dmg) => petHurt(w, n, t, dmg))) return;
   }
   if (best) {
     if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
@@ -135,22 +144,40 @@ function followerAttack(w, n, t) {
   w.after(n.dur.attack * 0.5, () => {
     if (n.dead || t.dead || w.ents.get(t.id) !== t || dist(n, t) > n.cfg.attackRange) return;
     if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return;
-    const dmg = n.comp ? Math.max(1, n.dmgNow + R.dice(w.rng, 1, 3) - 2) : R.npcMelee(w.rng, n).damage;
-    t.hp -= dmg;
-    w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
-    if (t.hp <= 0) {
-      t.noDrop = true; t.noDieRemainExp = 0;
-      const m = w.ents.get(n.master), inst = n.comp && m && Inv.instOf(m, n.ball);
-      if (inst) Comp.addExp(w, m, inst, Math.floor(t.exp / 3 / 2));       // el compañero gana la mitad; el dueño nada
-      return killNpc(w, t, null);
-    }
-    const m = w.ents.get(n.master);
-    if (n.comp ? (!t.target || R.dice(w.rng, 1, 3) === 1) : (m && !t.target)) t.target = n.comp ? n.id : m.id;   // el monstruo herido por el compañero se vuelve contra él
-    if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
+    const dmg = n.comp ? Math.max(1, Math.round((n.dmgNow + R.dice(w.rng, 1, 3) - 2) * (sget(w, n, "berserk") ? 2 : 1))) : R.npcMelee(w.rng, n).damage;
+    petHurt(w, n, t, dmg);
   });
 }
 
+// Daño de un seguidor (golpe o hechizo) a un monstruo. El compañero gana la mitad de la experiencia y el dueño la otra mitad; el botín cae.
+function petHurt(w, n, t, dmg) {
+  if (t.dead) return;
+  t.hp -= dmg;
+  w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
+  if (t.hp <= 0) {
+    t.noDrop = !n.comp; t.noDieRemainExp = 0;
+    const m = w.ents.get(n.master), inst = n.comp && m && Inv.instOf(m, n.ball);
+    if (inst) { const xp = Math.floor(t.exp / 3 / 2); Comp.addExp(w, m, inst, xp); giveExp(w, m, xp); }
+    return killNpc(w, t, null);
+  }
+  const m = w.ents.get(n.master);
+  if (n.comp ? (!t.target || R.dice(w.rng, 1, 3) === 1) : (m && !t.target)) t.target = n.comp ? n.id : m.id;   // el monstruo herido por el compañero se vuelve contra él
+  if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
+}
+
+// Rey esqueleto carmesí (jefe 1): cada 20 % de vida perdida enciende un Fire Field (hechizo 41 de Magic.cfg) a su alrededor y es inmune al fuego.
+export const CRIMSON_COLOR = 14;          // rojo de la tabla de tintes (m_wR[14])
+export const CRIMSON_STEP = 0.2, FIRE_FIELD = 41;
+function crimsonPhase(w, n) {
+  const stage = Math.min(4, Math.floor((1 - n.hp / n.maxHp) / CRIMSON_STEP + 1e-9));
+  if (stage <= (n.bossStage || 0)) return;
+  n.bossStage = stage;
+  const sp = w.magic?.[FIRE_FIELD], r = 2, ms = 12000;
+  w.emit({ t: "spell", id: n.id, spell: FIRE_FIELD, x: n.x, y: n.y, attr: sp?.attr, type: sp?.type });
+  for (let ix = n.x - r; ix <= n.x + r; ix++) for (let iy = n.y - r; iy <= n.y + r; iy++) addField(w, DYN.FIRE, ix, iy, ms, 0, n.id);
+}
 export function npcThink(w, n) {
+  if (n.boss === 1 && !n.dead) crimsonPhase(w, n);
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
   if (n.master) { n.nextAct = w.time + n.cfg.actionTime; return followerThink(w, n); }
   n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1);       // hielo: un 50 % más lento
@@ -241,7 +268,8 @@ export function toggleCompanion(w, p, inst) {
 function companionStruck(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
   if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return miss();
-  const dmg = R.npcMelee(w.rng, n).damage;
+  const tc = Inv.instOf(w.ents.get(t.master), t.ball)?.comp;
+  const dmg = Math.max(1, Math.round(R.npcMelee(w.rng, n).damage * (tc ? Tal.takenFactor(w, t, tc) : 1)));
   t.hp -= dmg; t.hurtAt = w.time;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp > 0) {

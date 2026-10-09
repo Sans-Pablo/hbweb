@@ -1,5 +1,7 @@
 import { imgUrl } from "./imgurl.js";
 import { MAGIC_MODE } from "../shared/magic.js";
+import { talent as talentDef } from "../shared/systems/talents.js";
+const talentName = id => talentDef(id)?.name || id;
 // Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
 import * as R from "../shared/rules.js";
@@ -76,8 +78,11 @@ export class Hud {
     const who = id => world.ents.get(id);
     switch (ev.t) {
       case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball (" + (ev.nm || "") + "): úsala para tener a ese compañero.", "gold"); break;
-      case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " (" + ev.sp.replace(/-/g, " ") + ", nivel " + ev.lvl + ") te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
+      case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
+      case "talent": if (ev.id === me) this.log(ev.nm + " aprende " + (talentName(ev.talent)) + " (" + ev.rank + ").", "gold"); break;
+      case "talentreset": if (ev.id === me) this.log("Has reiniciado los talentos de " + ev.nm + " por " + ev.cost + " de oro.", "gold"); break;
+      case "petname": if (ev.id === me) this.log("Tu compañero se llama ahora " + ev.nm + "."); break;
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
       case "pettarget": if (ev.id === me) this.log((ev.nm || "Tu compañero") + " ataca el objetivo marcado."); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
@@ -96,7 +101,7 @@ export class Hud {
       case "cantcarry": if (ev.id === me) this.log(ev.why === "weight" ? "Pesa demasiado para llevarlo." : "No tienes sitio en la mochila.", "bad"); break;
       case "broken": if (ev.id === me) this.log("Un objeto se ha gastado del todo: hay que repararlo.", "bad"); break;
       case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
-      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); break;
+      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport")) this.log("No se puede: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
       case "scan": if (ev.id === me) this.log(ev.text.trim(), "gold"); break;

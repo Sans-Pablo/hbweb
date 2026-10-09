@@ -226,6 +226,7 @@ export class Gui {
       if (me.dead) this.onAction?.("restart"); else if (me.pool > 0) this.toggle(12);
       return true;
     }
+    if (this.petBall && button === 0 && x >= 103 && x <= 204 && y >= 515 && y <= 538) { this.onAction?.("petname"); return true; }   // clic en el nombre del compañero: renombrar
     if (y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
@@ -325,7 +326,7 @@ export class Gui {
     cx.fillStyle = k > .5 ? "#6fcf4f" : k > .25 ? "#e3b341" : "#e0493b"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
     if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
-    else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max);
+    else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max + " (click: rename)");
   }
 
   gauges(me, world, info) {

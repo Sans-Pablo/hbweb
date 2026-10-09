@@ -1,0 +1,99 @@
+# Changelog
+
+Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
+
+## 0.13.0 · Summons con talentos (2026-10-09)
+
+- **Los summons son lo principal**: aportan hasta el 90 % del daño del dueño y hasta el 150 % de su vida; matan por el dueño (mitad de experiencia para cada uno) y **dejan botín**. Si caen hay que pagar caro en el hospital.
+- **Árbol de talentos del summon** (F10, `ClassicDialog` id 42): 3 ramas — *Support*, *Damage*, *Warrior* — con 18 talentos; 1 punto por nivel del summon; cada fila exige puntos en su rama; la rama con más puntos fija la especialidad (estadísticas de clase). Reiniciar cuesta 50 × nivel de oro, junto a la enfermera.
+- **Los summons lanzan hechizos** de `Magic.cfg` (Heal, Great Heal, Defense Shield, Great Defense Shield, Fire Ball, Lightning, Berserk, Meteor Strike) con maná propio y fórmulas originales; *Taunt* y *Fortitude* propios del port.
+- **El jugador ya no tiene magia** (cast/learn/prepare rechazados).
+- Nivel máximo 50 (jugador y summon). Solo existen pociones pequeñas (Red/Blue/Green): las Big/Super/Power no se venden ni caen.
+- Solo se puede viajar a Aresfarm, la cripta de esqueletos y Middle Dungeon (middled1n).
+- Rey esqueleto carmesí: Fire Field a su alrededor cada 20 % de vida perdida, inmune al fuego, deja siempre un hueso de esqueleto rojo; ve de lejos y ya no se queda quieto.
+- Nombres: el summon solo muestra su nombre; el usuario lo renombra (clic en el nombre del panel o `/petname`); el personaje lo llama por su nombre a veces y solo habla con él si está a menos de 8 casillas.
+- Los tintes (dye) de pelo, ropa, armadura y arma funcionan; apilar objetos con Mayús ya no desplaza la posición.
+- Nueva clase base `ClassicDialog` (`client/classicdialog.js`): formato clásico de Helbreath para todos los cuadros nuevos (hospital y talentos ya la usan).
+- Documento de cambios (este).
+
+## 0.12.0 · Hospital de compañeros (2026-10-09)
+
+- Enfermera Gail, bolas a 1 de oro, caído hasta revivir (caro), modo paz/ataque, barra y miniatura del summon, Ctrl+Q, tamaño reducido, manuales de habilidad y nombre real en la venta.
+
+## 0.11.0 · Cripta de esqueletos de 20 niveles (2026-10-09)
+
+- Teselas de `middled1n/x`, jefes cada 5 niveles, progreso por jugador, entrada desde middled1n (100,85); nombres aleatorios de summons; esqueleto con su sprite original.
+
+## 2026-10-09 (historial de commits)
+
+- Personalidad elegida al crear el personaje (tono de voz y mascota) v0.10.4
+- Compañeros: aggro, penalización de muerte, bolas con color/tamaño, nombre al hover, diálogos con la mascota, arreglo de recoger objetos (v0.10.3)
+- Interfaz: los cuadros evitan solaparse al abrirse y los bocadillos esquivan etiquetas (v0.10.2)
+- Compañeros: 10 muertes por bola en la build de pruebas (v0.10.1)
+- Cazador: sistema de compañeros (bolas por muertes, stats compartidas, experiencia) v0.10.0
+- Versión y nombre de la build junto a los fps (data/version.json)
+- Voz: personalidad del personaje y respuestas de los habitantes (burbujas, pits, tiendas)
+- Hojas del cuerpo para el ataque con arco (grupo 7) y regla: datos generados se versionan siempre
+- Arco como el original (flechas, alcance, animacion), clic derecho en el suelo solo gira, F1 = novedades y pruebas (sin ayuda original)
+- WebP sin perdida opcional para sprites y fx (binarios generados fuera de git)
+- Carga bajo demanda: streaming de sprites por mapa, mapas y fx lazy, prefetch de sonidos, service worker
+- Correcciones de interfaz (cursor, doble clic al desequipar, minimapa, Mayús agrupa, oro en la mochila), resistencia más generosa e idiomas español/inglés
+- docs: estado de la pasada de fidelidad
+- Mapas de Middleland, Dungeons y Huntzones; habilidades especiales 1-8 de monstruos con explosivos
+- Summon Creature: seguidores que atacan monstruos; ficha de magia
+- Retroceso por golpes de 40+ y monstruos sin sombra según el original
+- NPC de ciudad restantes (William, Kennedy, McGaffin, Perry, Devlin, Gail): sprites y fichas
+- Monstruos: 45 tipos con sprites, sonidos y fichas (tabla de los repos de referencia); tiempos y fotogramas por tipo desde MapData.cpp
+- Conversación con los NPC de la ciudad: textos originales (contents15x) y diálogo 21
+- Cielo: día y noche por reloj, lluvia con efectos y sonido, música por lugar, zonas sin ataque; documentación del mundo
+- Tubería de datos única (convert_all.py) y test de coherencia de datos
+- Combate: furia, escudos de defensa, protección de flechas, armas con bonus y contraataque como el original; test de combate y ficha
+- CLAUDE.md, FINDINGS.md y ficha de tiendas
+- Esc cierra el cuadro de NPC de más arriba; gui y npcUi accesibles para pruebas
+- Cliente de los NPC de ciudad: tienda, herrero, almacén y mago (diálogos, clic, arrastre)
+
+## 2026-10-08 (historial de commits)
+
+- NPC de ciudad (tendero, herrero, almacén, mago) y reglas de compra, venta, reparación y almacén del servidor original
+- Ciudades y mapas del servidor Aresden con teletransportes; el lanzar magia ya no hace caminar al personaje
+- Integrar caminata remaster del esqueleto en ocho direcciones
+- Animaciones de hechizos portadas (hielo, rayos, meteoro, curas, escudos, ventisca...), sprites de efectos 87-151, sin requisito de Int/maná
+- Cursor clásico, menú de mejoras, HP/MP/SP, bolsa sin objetos apilados, magia libre
+- Modo pruebas: todos los hechizos sin coste de maná
+- Efectos de hechizos: hielo (viento helado, lanza, tormenta) y meteoro
+- Magia: paralizar, hielo, escudos, invisibilidad, veneno, campos de fuego/nube/tormenta, rayos lineales, recall, comida y más tipos del servidor original
+- HD: terreno, árboles y equipo reescalados; suelo pregenerado al doble de resolución en remastered
+- Elegir tierra y roca sin bordes de pasto para los suelos de la cripta
+- Cripta v3: instancias persistentes y exploración con rutas curvas
+- Conservar instancias de cripta y añadir salas variadas, curvas y ramales
+- Equipo visible en el personaje: armas, armaduras, escudos, cascos, capas y botas originales
+- Sprites HD (reescalado 4x) para personajes, monstruos y objetos; creador sin retardo y más grande; ataque vuelve a 500 ms entre golpes
+- Restaurar seguimiento de cámara del personaje junto a los bordes de la cripta
+- Documentar fase 2 (interfaz, magia, efectos)
+- Magia: lanzar al elegir en el libro, animaciones de hechizos originales (EFFECT.PAK), sonidos E/C, stats al arrastrar, clic derecho cierra, sin créditos
+- Versionar el grafo ESM al desplegar para evitar código antiguo en caché
+- Mejorar el contraste de esqueletos y limitar la cámara a la cripta
+- Ataque sin pausa entre golpes y ataque automático opcional (/auto)
+- Añadir vista de prueba de la cripta sin modificar partidas
+- Merge PR #2: cripta amplia con texturas y encuentros corregidos
+- Ampliar la cripta y corregir suelos negros, carga de sprites y encuentros iniciales
+- Skill, texto/ayuda e historial de chat originales
+- Level up (12), menú del sistema (19) y botones del diálogo de personaje originales
+- Diálogos de magia (F7, Ctrl+0..9) y tienda de magia (16) originales
+- Inventario original (F6): posiciones libres, arrastrar y soltar, doble clic, comando setpos
+- Diálogo de personaje original (F5): sprites DialogText, muñeco con equipo, estadísticas
+- Panel inferior original (GameDialog2): barras HP/MP/SP/exp/hambre, iconos y marco de diálogos 800x600
+- Teclas y ratón como en el cliente original (F1-F12, Ctrl+..., clic derecho ataca, magia con puntería)
+- Creación de personaje: atributos 10-14, plantillas, género, piel, peinado, color de pelo y ropa interior; sprites de personaje bajo demanda
+- Merge pull request #1 from Sans-Pablo/feature/skeleton-dungeon-v1
+- Use opaque original pavement frames throughout dungeon floors
+- Add instanced procedural skeleton dungeon accessible from Aresfarm
+- Login con cuentas locales y guardado del personaje (exportar/importar copia, cerrar sesión)
+- Panel de personaje: bonos secundarios del equipo (acierto, defensa, recuperaciones, absorción, exp, oro...)
+- Atributos de los objetos que caen: generación, efectos, textos y pruebas
+- Magia: libro de hechizos (K), lanzar con clic derecho, efectos y pruebas
+- Docs: especificación de ítems y estado del proyecto
+- Ítems originales: inventario, equipo, peso, absorción, botín del servidor, habilidades, resistencia y hambre
+- Menú de opciones y mapa superpuesto estilo Diablo II
+- Quitar movimiento por teclado (fiel al original)
+- Primera versión

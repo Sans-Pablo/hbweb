@@ -7,9 +7,12 @@ import { itemDef, itemName, itemSet, packKey } from "./names.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
-import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
+import { ClassicDialog } from "./classicdialog.js";
+import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf, activeBall } from "../shared/systems/companion.js";
+import * as Tal from "../shared/systems/talents.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
+const BRANCH_LABEL = { support: "Support", damage: "Damage", tank: "Warrior" };
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
 const NPC_NAMES = { [NPC.SHOP]: "Shop Keeper", [NPC.MAGE]: "Sorcerer", [NPC.WAREHOUSE]: "Warehouse Keeper", [NPC.BLACKSMITH]: "BlackSmith Keeper" };
 // NpcTalkHandler: iWho 2 tienda, 3 herrería, 5 almacén, 6 mago -> texto contents{iWho+150}
@@ -202,7 +205,7 @@ export function registerNpcDialogs(gui, api) {
   // ------------------------------------------------------------ 11: tienda
   const shop = {
     id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false,
-    begin(type) { Object.assign(this, { type, rows: api.shops[type] || [], view: 0, mode: 0, qty: 1 }); },
+    begin(type) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
     onOpen() { if (!this.rows.length) this.begin(this.type); },
     maxQty(me) { return Math.max(1, MAX_ITEMS - bagCount(me)); },
     price(me, row) { return listPrice(stat(me, "chr"), row.price); },
@@ -447,46 +450,55 @@ export function registerNpcDialogs(gui, api) {
   gui.register(bank);
 
   // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
-  const hospital = {
-    id: 41, x: 150, y: 110, w: 258, h: 339, tab: 0, view: 0,
+  const hospital = new class extends ClassicDialog {
+    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas"], footer: "Un caído no se invoca hasta revivirlo." }); }
     rows(me) {
-      if (this.tab === 1) return Object.keys(SPECIES).map(sp => ({ sp, text: sp.replace(/-/g, " "), price: HOSPITAL.ballPrice }));
+      if (this.tab === 1) return Object.keys(SPECIES).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
       return me.bag.filter(i => i.comp).map(i => {
-        const c = i.comp, cost = treatCost(me, c), st = c.down ? "Inconsciente" : hpOf(me, c) < maxOf(me, c) ? "Herido" : "Sano";
-        return { uid: i.uid, text: (c.nm || c.sp) + " (" + c.sp.replace(/-/g, " ") + " nv " + c.lvl + ") · " + st, price: cost, down: !!c.down };
+        const c = i.comp, st = c.down ? "Inconsciente" : hpOf(me, c) < maxOf(me, c) ? "Herido" : "Sano";
+        return { uid: i.uid, text: (c.nm || c.sp) + " (" + c.sp.replace(/-/g, " ") + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
       });
-    },
-    draw(g, me) {
-      const [lx, ly] = rel(g, this), rows = this.rows(me), ROWS = 13;
-      g.put("gamedialog_1", 2, 0, 0);
-      button(g, lx, ly, BTN.right, 0, 1);
-      g.aligned(0, this.w, 22, "Hospital de compañeros", INK, { bold: true });
-      for (const [i, name] of ["Cuidados", "Bolas"].entries()) shadowed(g, 40 + i * 110, 42, name, this.tab === i ? RED : inside(lx, ly, 35 + i * 110, 130 + i * 110, 38, 58) ? WHITE : DARK);
-      g.text(14, 62, this.tab ? "Bolas de prueba (nivel 1)" : "Curar: por punto de vida · Revivir: caro", INK, { size: 10 });
-      g.text(205, 62, "Oro", INK, { size: 10 });
-      if (!rows.length) g.aligned(0, this.w, 120, this.tab ? "" : "No llevas ninguna bola de compañero.", INK);
-      this.view = clamp(this.view, 0, Math.max(0, rows.length - ROWS));
-      for (let i = 0; i < ROWS; i++) {
-        const r = rows[i + this.view]; if (!r) break;
-        const y = 80 + i * 17, over = within(lx, ly, 12, 246, y, y + 15), col = over ? WHITE : r.down ? RED : DARK;
-        g.text(14, y, r.text, col, { size: 11 }); g.text(214, y, String(r.price), col, { size: 11 });
-      }
-      g.text(14, 308, "Un caído no se invoca hasta revivirlo.", INK, { size: 9 });
-    },
-    click(g, lx, ly) {
-      const me = api.me(); if (!me) return true;
-      if (onButton(lx, ly, BTN.right)) { g.close(41); return true; }
-      for (const i of [0, 1]) if (inside(lx, ly, 35 + i * 110, 130 + i * 110, 38, 58)) { this.tab = i; this.view = 0; return true; }
-      const rows = this.rows(me), i = Math.floor((ly - 80) / 17), r = rows[i + this.view];
-      if (r && ly >= 80 && ly < 80 + 13 * 17 && lx > 12 && lx < 246) {
-        if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
-        else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
-      }
-      return true;
-    },
-    wheel(g, d) { this.view -= d; },
-  };
+    }
+    drawBody(g, me) {
+      g.text(14, 62, this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
+      if (!this.rows(me).length) g.aligned(0, this.w, 120, "No llevas ninguna bola de compañero.", INK);
+    }
+    pick(r) {
+      if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
+      else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
+    }
+  }();
   gui.register(hospital);
+
+  // ------------------------------------------------------------ 42: talentos del compañero (F10; ver shared/systems/talents.js)
+  const talents = new class extends ClassicDialog {
+    constructor() { super({ id: 42, title: "Companion talents", tabs: ["Support", "Damage", "Warrior", "Reset"], visible: 9, top: 100 }); }
+    ball(me) { return me && (activeBall(me) || me.bag.find(i => i.comp)); }
+    rows(me) {
+      const b = this.ball(me); if (!b) return [];
+      const c = b.comp;
+      if (this.tab === 3) return [{ reset: true, text: "Reset all talents", right: Tal.resetCost(c), tip: "Near the pet nurse. Costs gold." }];
+      const br = Tal.BRANCHES[this.tab];
+      return Tal.TALENTS.filter(t => t.br === br).map(t => {
+        const r = Tal.rankOf(c, t.id), locked = Tal.spent(c, br) < Tal.TIER_COST * t.tier;
+        return { id: t.id, text: t.name + (t.spell != null ? " ✦" : ""), right: r + "/" + t.max, color: locked ? "#4a4a4a" : r >= t.max ? RED : null, tip: t.desc + (locked ? " (needs " + Tal.TIER_COST * t.tier + " points in this branch)" : ""), disabled: false };
+      });
+    }
+    drawBody(g, me) {
+      const b = this.ball(me);
+      if (!b) { g.aligned(0, this.w, 120, "You have no companion ball.", INK); return; }
+      const c = b.comp, sp = Tal.spec(c);
+      g.text(14, 62, (c.nm || c.sp) + " · lv " + c.lvl, INK, { size: 11, bold: true });
+      g.text(14, 78, "Points: " + Tal.pointsFree(c) + " · " + (sp ? BRANCH_LABEL[sp] : "No specialty"), INK, { size: 10 });
+      if (this.tab < 3) g.text(this.w - 60, 78, Tal.spent(c, Tal.BRANCHES[this.tab]) + " spent", INK, { size: 10 });
+    }
+    pick(r, me) {
+      const b = this.ball(me); if (!b) return;
+      if (r.reset) api.send({ t: "talreset", uid: b.uid, npc: api.nurse?.()?.id });
+      else api.send({ t: "talent", uid: b.uid, talent: r.id });
+    }
+  }();
+  gui.register(talents);
 
   // ------------------------------------------------------------ notificaciones del servidor
   function onEvent(ev, world) {

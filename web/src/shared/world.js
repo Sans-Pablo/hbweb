@@ -17,7 +17,7 @@ import * as Companion from "./systems/companion.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
-import { CAST_MS } from "./magic.js";
+import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
 export class World {
   constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [] }) {
@@ -179,9 +179,9 @@ const COMMANDS = {
     w.after(ms * PLAYER.attackHitAt, () => Combat.playerHit(w, p, t));
     return true;
   },
-  prepare: (w, p, cmd) => MagicSys.prepare(w, p, cmd),
-  cast: (w, p, cmd) => MagicSys.cast(w, p, cmd),
-  learn: (w, p, cmd) => MagicSys.learn(w, p, cmd.spell),
+  prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
+  cast: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.cast(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
+  learn: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.learn(w, p, cmd.spell) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   pickup: (w, p) => ItemSys.startPickup(w, p),
   buy: (w, p, cmd) => Shop.buy(w, p, cmd),
   sellreq: (w, p, cmd) => Shop.sellRequest(w, p, cmd),
@@ -193,6 +193,9 @@ const COMMANDS = {
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
+  petname: (w, p, cmd) => Companion.rename(w, p, cmd.name),
+  talent: (w, p, cmd) => Companion.learnTalent(w, p, cmd),
+  talreset: (w, p, cmd) => Companion.resetTalents(w, p, cmd),
   petmode: (w, p, cmd) => Companion.setMode(w, p, cmd.mode),
   pettarget: (w, p, cmd) => Companion.setTarget(w, p, cmd.target),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },
@@ -201,7 +204,7 @@ const COMMANDS = {
   use(w, p, cmd) {
     let uid = cmd.uid;
     if (uid === undefined && cmd.item !== undefined) uid = p.bag.find(i => i.id === cmd.item)?.uid;   // por id de objeto (atajos)
-    return ItemSys.useItem(w, p, uid);
+    return ItemSys.useItem(w, p, uid, cmd.dest);
   },
   // posición del objeto dentro de la mochila (MSGID_REQUEST_SETITEMPOS: x 0..170, y -10..95)
   setpos(w, p, cmd) {

@@ -16,3 +16,12 @@ Invento del port (el original no los tiene). Código: `shared/systems/companion.
 - **Modo y objetivo**: `comp.mode` `attack`|`peace` (`petmode`, clic en el símbolo del compañero junto al de combate); `pettarget` (Ctrl+Q sobre un monstruo) fija `pet.cTarget`, que se ataca aunque esté en paz.
 - **HUD**: `gui.petPanel` (miniatura que se vacía de arriba abajo, símbolo ATQ/PAZ, barra con nombre/nivel/vida). Compañeros más altos que el personaje se dibujan a la mitad de su altura (`renderer.petScale`).
 - Test: `tests/pets.test.mjs` (también cubre los manuales de habilidad, `STUDYSKILL` en `itemsys.js`).
+
+## Talentos y hechizos (v0.13.0) — `shared/systems/talents.js`
+
+Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño medio del dueño, vida hasta 1,5× la del dueño, matan por él (experiencia a medias) y sueltan botín.
+- **Ramas**: Support, Damage, Warrior (tanque). 1 punto por nivel del summon (nivel máx. 50). Una fila (tier) `t` exige `2·t` puntos gastados en su rama. La rama con más puntos (sin empate) es la especialidad: Damage ×1,35 daño ×0,85 vida; Warrior ×0,85 daño ×1,7 vida ×0,8 maná; Support ×0,6 daño ×2 maná.
+- **Hechizos** (ids de `Magic.cfg`): Heal 1, Great Heal 21, Defense Shield 13, Great Defense Shield 44 (Support sobre el dueño; Warrior sobre sí mismo), Fire Ball 20, Lightning 43, Berserk 50, Meteor Strike 81. Dados `v4..v6` del original; coste de maná del original; maná máximo `(20+6·nivel)·factor`, se recupera entera en 60 s. *Taunt* y *Fortitude* son inventos del port.
+- Comandos: `talent {uid, talent}`, `talreset {uid, npc}` (cuesta `50·nivel`, junto a Gail). Diálogo 42 (F10) hecho con `ClassicDialog`.
+- El jugador ya no lanza magia: `MAGIC_MODE.player = false` (los tests de magia lo activan).
+- Test: `tests/talents.test.mjs`.

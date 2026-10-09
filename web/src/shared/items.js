@@ -6,6 +6,8 @@ export const EFFECT = {
   MAGIC: 11, CHANGEATTR: 12, ATTACK_MANASAVE: 13, ADDEFFECT: 14, MAGICDAMAGESAVE: 15, DYE: 17, STUDYMAGIC: 18,
   ATTACK_MAXHPDOWN: 19, ATTACK_DEFENSE: 20, FIRMSTAMINAR: 22, LOTTERY: 23, ATTACK_SPECABLTY: 24, DEFENSE_SPECABLTY: 25,
 };
+// Solo existen las pociones pequeñas (Red/Blue/Green): las grandes, super y power no se venden, no caen y no se pueden comprar.
+export const BANNED_ITEMS = new Set([92, 94, 96, 390, 391, 840, 841, 842]);
 export const GOLD = 90;               // Item.cfg: Gold
 export const MAX_ITEMS = 50;          // DEF_MAXITEMS: casillas de la mochila
 export const GROUND_STACK = 12;       // DEF_TILE_PER_ITEMS: objetos por casilla

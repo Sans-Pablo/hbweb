@@ -11,6 +11,47 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Summons con talentos y hechizos (v0.13.0)",
+        "en": "Summons with talents and spells (v0.13.0)"
+      },
+      "items": [
+        {
+          "es": "Los summons son la parte principal: hacen mucho más daño y tienen más vida, matan por ti (la experiencia se reparte entre tú y él) y dejan botín. Si caen, revivirlos es caro.",
+          "en": "Summons are the core of the game: they deal much more damage, have more health, kill for you (experience is shared) and drop loot. If they fall, reviving is expensive."
+        },
+        {
+          "es": "F10: árbol de talentos del summon con 3 ramas (Support, Damage, Warrior). Un punto por nivel; la rama con más puntos fija la especialidad y las estadísticas de su clase. Reiniciar cuesta oro junto a la enfermera.",
+          "en": "F10: summon talent tree with 3 branches (Support, Damage, Warrior). One point per level; the branch with most points sets the specialty and class stats. Resetting costs gold next to the nurse."
+        },
+        {
+          "es": "Los summons lanzan hechizos (curar, escudos, Fire Ball, Lightning, Berserk, Meteor Strike, provocar) con su propio maná. El personaje ya no tiene magia.",
+          "en": "Summons cast spells (heal, shields, Fire Ball, Lightning, Berserk, Meteor Strike, taunt) with their own mana. The character no longer has magic."
+        },
+        {
+          "es": "Nivel máximo 50. Solo existen las pociones pequeñas. Solo se puede ir a Aresfarm, la cripta de esqueletos y Middle Dungeon.",
+          "en": "Maximum level 50. Only small potions exist. You can only travel to Aresfarm, the skeleton crypt and Middle Dungeon."
+        },
+        {
+          "es": "Rey esqueleto carmesí: cada 20 % de vida perdida enciende un Fire Field a su alrededor (es inmune); siempre suelta un hueso de esqueleto rojo.",
+          "en": "Crimson skeleton king: every 20% of health lost it lights a Fire Field around itself (it is immune); it always drops a red skeleton bone."
+        },
+        {
+          "es": "Pon el nombre que quieras a tu summon (clic en su nombre del panel o /petname Nombre). Solo se muestra su nombre; el personaje lo llama por su nombre y solo le habla si está cerca.",
+          "en": "Name your summon whatever you want (click its name on the panel or /petname Name). Only its name is shown; the character calls it by name and only talks to it when it is near."
+        },
+        {
+          "es": "Los tintes (dye) ya tiñen pelo, ropa, armaduras y armas (arrastra el tinte sobre el objeto). Apilar objetos con Mayús ya no los desplaza.",
+          "en": "Dyes now colour hair, clothes, armour and weapons (drag the dye onto the item). Stacking items with Shift no longer shifts them."
+        },
+        {
+          "es": "Todos los cuadros nuevos usan la clase ClassicDialog (formato clásico). Nuevo documento de cambios: docs/CHANGELOG.md.",
+          "en": "All new dialogs use the ClassicDialog class (classic format). New changelog document: docs/CHANGELOG.md."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Hospital de compañeros y control del summon (v0.12.0)",
         "en": "Companion hospital and summon control (v0.12.0)"
       },
@@ -839,6 +880,94 @@
       "text": {
         "es": "Vende una bola: el cuadro muestra «Slime Ball» (o su especie), no «Green Ball».",
         "en": "Sell a ball: the dialog shows “Slime Ball” (or its species), not “Green Ball”."
+      }
+    },
+    {
+      "id": "tal-open",
+      "group": {
+        "es": "Talentos",
+        "en": "Talents"
+      },
+      "text": {
+        "es": "F10 abre el árbol de talentos; sube el summon a nivel 3 y gasta puntos en una rama.",
+        "en": "F10 opens the talent tree; level the summon to 3 and spend points in a branch."
+      }
+    },
+    {
+      "id": "tal-spells",
+      "group": {
+        "es": "Talentos",
+        "en": "Talents"
+      },
+      "text": {
+        "es": "Aprende Fire Ball (Damage) o Heal (Support): el summon lo lanza solo en combate y gasta maná.",
+        "en": "Learn Fire Ball (Damage) or Heal (Support): the summon casts it by itself in combat and spends mana."
+      }
+    },
+    {
+      "id": "tal-reset",
+      "group": {
+        "es": "Talentos",
+        "en": "Talents"
+      },
+      "text": {
+        "es": "Junto a Gail, pestaña Reset: reinicia los talentos pagando oro.",
+        "en": "Next to Gail, Reset tab: reset talents by paying gold."
+      }
+    },
+    {
+      "id": "nomagic",
+      "group": {
+        "es": "Talentos",
+        "en": "Talents"
+      },
+      "text": {
+        "es": "El personaje no puede lanzar magia (F4/F7 avisan de que es cosa del summon).",
+        "en": "The character cannot cast magic (F4/F7 say it is the summon's job)."
+      }
+    },
+    {
+      "id": "crimson",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Nivel 5 de la cripta: el rey carmesí enciende fuego al 80/60/40/20 % de vida, ataca, y suelta un hueso rojo.",
+        "en": "Crypt level 5: the crimson king lights fire at 80/60/40/20% health, attacks, and drops a red bone."
+      }
+    },
+    {
+      "id": "dye",
+      "group": {
+        "es": "Objetos",
+        "en": "Items"
+      },
+      "text": {
+        "es": "Arrastra un tinte sobre una prenda o arma: cambia de color.",
+        "en": "Drag a dye onto a garment or weapon: it changes colour."
+      }
+    },
+    {
+      "id": "petname",
+      "group": {
+        "es": "Summon",
+        "en": "Summon"
+      },
+      "text": {
+        "es": "Cambia el nombre del summon (clic en su nombre o /petname).",
+        "en": "Rename the summon (click its name or /petname)."
+      }
+    },
+    {
+      "id": "maps",
+      "group": {
+        "es": "Mundo",
+        "en": "World"
+      },
+      "text": {
+        "es": "Solo se puede viajar a Aresfarm, la cripta y Middle Dungeon; no hay pociones grandes en tiendas ni drops; nivel máximo 50.",
+        "en": "You can only travel to Aresfarm, the crypt and Middle Dungeon; no big potions in shops or drops; max level 50."
       }
     }
   ],

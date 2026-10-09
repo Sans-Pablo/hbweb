@@ -41,10 +41,10 @@ w.command(id, { t: "use", uid: ball.uid });
 f = followersOf(w, p).filter(e => e.comp)[0];
 
 // estadísticas compartidas: nunca más de la mitad del daño medio del dueño; crecen con el nivel
-const a1 = C.statsOf(p, { sp: "Giant-Ant", lvl: 1 }), a30 = C.statsOf(p, { sp: "Giant-Ant", lvl: 60 });
-assert.ok(a1.dmg <= Math.ceil(C.avgHit(p) * 0.5) && a30.dmg <= Math.ceil(C.avgHit(p) * 0.5), "cuota <= 0,5");
+const a1 = C.statsOf(p, { sp: "Giant-Ant", lvl: 1 }), a30 = C.statsOf(p, { sp: "Giant-Ant", lvl: 50 });
+assert.ok(a1.dmg <= Math.ceil(C.avgHit(p) * 0.9) && a30.dmg <= Math.ceil(C.avgHit(p) * 0.9), "cuota <= 0,9");
 assert.ok(a30.share > a1.share && a30.hp >= a1.hp);
-assert.ok(C.shareOf(60, "Orge") <= 0.5);
+assert.ok(C.shareOf(50, "Orge") <= 0.9 && C.MAX_COMP_LEVEL === 50);
 assert.equal(f.dmgNow, a1.dmg);
 
 // experiencia: el dueño da el 25 %; sube de nivel; el tope es el nivel del dueño

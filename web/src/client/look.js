@@ -1,5 +1,7 @@
 // Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
 // Tipos de cuerpo (Client/Game.cpp): 1 Bm, 2 Wm, 3 Ym (hombres) y 4 Bw, 5 Ww, 6 Yw (mujeres).
+// Colores de los tintes (índice = tabla m_wR[] de Client/Game.cpp, aclarados para multiplicar el sprite)
+export const DYE_RGB = ["", "#6a6aff", "#c8c8a0", "#ffc83c", "#ff5a2e", "#3caa3c", "#8c8c8c", "#78ccd0", "#ff8cc0", "#c080c0", "#3c8cff", "#e6c296", "#e0d890", "#ffff2a", "#e02a2a", "#505050"];
 export const DEFAULT_LOOK = { skin: 2, hair: 1, hairCol: 0, under: 0 };
 
 // Color del pelo (m_wR/G/B de Game.cpp, 16 tonos). Valores de pantalla aproximados.
@@ -27,6 +29,7 @@ export function apparelOf(e, itemDef) {
     const it = e.bag.find(b => b.uid === uid), d = it && itemDef(it.id), k = ARMOR_OF_POS[pos];
     if (!d || !k || !d.appr) continue;
     ap[k] = k === "armor" && d.appr >= 100 ? d.appr - 100 : d.appr;
+    if (it.color) (ap.col || (ap.col = {}))[k] = it.color;
   }
   return ap;
 }
@@ -52,15 +55,15 @@ export function equipKeys(gender, ap) {
 export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
   const g = gender === 2 ? 1 : 0, dir = d + 1;
   if (group === 7 && !spr.has(bodyKey(gender, look, 7, d))) group = 6;       // sin las hojas de arco (tools/convert_players.py), se usa el gesto normal
-  const piece = (letter, idx) => {                                       // armadura/capa/casco/botas: un sprite por grupo, 8 direcciones
+  const piece = (letter, idx, slot) => {                                       // armadura/capa/casco/botas: un sprite por grupo, 8 direcciones
     if (!idx) return;
     const key = letter + g + "_" + idx + "_" + group;
     if (!spr.has(key)) return;
-    const fpd = spr.frames(key) / 8;
-    spr.put(ctx, key, d * fpd + f, x, y);
+    const fpd = spr.frames(key) / 8, c = ap && ap.col && ap.col[slot];
+    if (c) spr.tintedHair(ctx, key, d * fpd + f, x, y, DYE_RGB[c]); else spr.put(ctx, key, d * fpd + f, x, y);
   };
   const wg = WGROUP[group];
-  const weapon = () => { if (ap && ap.weapon && wg !== undefined) spr.put(ctx, "w" + g + "_" + ap.weapon + "_" + (wg * 8 + d), f, x, y); };
+  const weapon = () => { if (ap && ap.weapon && wg !== undefined) { const k = "w" + g + "_" + ap.weapon + "_" + (wg * 8 + d), c = ap.col && ap.col.weapon; if (c) spr.tintedHair(ctx, k, f, x, y, DYE_RGB[c]); else spr.put(ctx, k, f, x, y); } };
   const shield = () => {
     if (!ap || !ap.shield || wg === undefined) return;
     const key = "s" + g + "_" + ap.shield + "_" + wg;
@@ -70,7 +73,7 @@ export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
   if (WEAPON_FIRST[dir] === 1) weapon();
   const body = bodyKey(gender, look, group, d);
   spr.put(ctx, body, f, x, y);
-  if (ap && ap.mantle && MANTLE_ORDER[dir] === 0) piece("m", ap.mantle);
+  if (ap && ap.mantle && MANTLE_ORDER[dir] === 0) piece("m", ap.mantle, "mantle");
   const uk = underKey(gender, look, group), hk = hairKey(gender, look, group);
   const fpd = spr.frames(uk) / 8, hpd = spr.frames(hk) / 8;
   spr.put(ctx, uk, d * fpd + f, x, y);
@@ -80,15 +83,15 @@ export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
     else spr.put(ctx, hk, d * hpd + f, x, y);
   }
   if (ap) {
-    if (skirt) piece("o", ap.boots);
-    piece("l", ap.pants);
-    piece("b", ap.arms);
-    if (!skirt) piece("o", ap.boots);
-    piece("a", ap.armor);
-    piece("h", ap.helm);
-    if (ap.mantle && MANTLE_ORDER[dir] === 2) piece("m", ap.mantle);
+    if (skirt) piece("o", ap.boots, "boots");
+    piece("l", ap.pants, "pants");
+    piece("b", ap.arms, "arms");
+    if (!skirt) piece("o", ap.boots, "boots");
+    piece("a", ap.armor, "armor");
+    piece("h", ap.helm, "helm");
+    if (ap.mantle && MANTLE_ORDER[dir] === 2) piece("m", ap.mantle, "mantle");
     shield();
-    if (ap.mantle && MANTLE_ORDER[dir] === 1) piece("m", ap.mantle);
+    if (ap.mantle && MANTLE_ORDER[dir] === 1) piece("m", ap.mantle, "mantle");
     if (WEAPON_FIRST[dir] !== 1) weapon();
   }
   return body;

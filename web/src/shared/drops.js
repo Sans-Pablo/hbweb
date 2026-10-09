@@ -1,7 +1,7 @@
 // Botín al morir un monstruo: NpcDeadItemGenerator (HGServer/Game.cpp:47297).
 // Las tasas salen de GameConfigs/Settings.cfg: el servidor original las trae a 1 (primary/secondary-drop-rate).
 import { dice } from "./rules.js";
-import { GOLD } from "./items.js";
+import { GOLD, BANNED_ITEMS } from "./items.js";
 import { rollAttributes } from "./attributes.js";
 
 export const DROP_RATES = { primary: 1, secondary: 1, repModifier: 5 };
@@ -54,7 +54,7 @@ const STANDARD = [
 ];
 
 // Devuelve { id, count } o null. `rating` = reputación del jugador (0 hoy).
-export function rollKillDrop(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0 } = {}) {
+function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0 } = {}) {
   const type = npc.type;
   if (type === 21 || type === 34 || type === 64) return null;          // guardia, maniquí, cultivo
   if (dice(rng, 1, 10000) < rates.primary) return null;                // hay objeto si la tirada >= tasa primaria
@@ -83,4 +83,9 @@ export function rollKillDrop(rng, npc, { rates = DROP_RATES, rating = 0, month =
   if (!id) return null;
   const d = data && data.item(id), ra = d && rollAttributes(rng, d, gen);
   return ra ? { id, count: 1, attr: ra.attr, color: ra.color } : { id, count: 1 };
+}
+
+export function rollKillDrop(rng, npc, opts = {}) {
+  const r = rollKillDropRaw(rng, npc, opts);
+  return r && BANNED_ITEMS.has(r.id) ? null : r;
 }

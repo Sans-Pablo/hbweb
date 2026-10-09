@@ -142,3 +142,21 @@ test("morir en la cripta devuelve a Aresfarm y conserva el nivel alcanzado", () 
   assert.equal(a.worldFor(id), a.farm);
   assert.equal(a.saveOf(id).delve.deepest, 2);
 });
+
+test("rey carmesí: Fire Field cada 20 % de vida perdida, inmune al fuego y hueso rojo seguro", () => {
+  const a = session(), id = a.addPlayer("tres"), p = a.farm.ents.get(id);
+  enter(a, id); p.delve.deepest = 4; clear(a, id); take(a, id, "down"); take(a, id, "return");
+  p.delve.deepest = 5; assert.ok(enter(a, id, false).ok);
+  const w = a.worldFor(id), boss = [...w.ents.values()].find(e => e.boss === 1);
+  p.hp = p.maxHp = 1e6;
+  const fires = () => (w.dyn || []).filter(f => f.type === 1 && f.owner === boss.id).length;
+  assert.equal(fires(), 0);
+  for (const frac of [0.79, 0.59, 0.39, 0.19]) { boss.hp = Math.floor(boss.maxHp * frac); a.tick(50); }
+  assert.ok(fires() > 0, "hay llamas");
+  const hp0 = boss.hp; a.tick(3000); assert.ok(boss.hp >= hp0 || boss.dead === false, "inmune"); assert.ok(!boss.dead);
+  boss.stage = 0;
+  w.killNpc(boss, p); a.tick(3000);
+  const bone = [...(w.ground?.values?.() || [])].flat?.() ;
+  const items = JSON.stringify([...(w.items?.values?.() || [])]) + JSON.stringify(w.ground ? [...w.ground.values()] : []);
+  assert.ok(items.includes('"id":' + data.named("SkeletonBones").id) && items.includes('"color":14'), "hueso rojo en el suelo");
+});

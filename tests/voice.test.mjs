@@ -37,7 +37,7 @@ console.log("voice OK");
 // mascota: invocar -> el personaje habla y el compañero contesta con su sonido
 {
   T += 100000; const v = mk(); bubbles.clear();
-  const pw = { ents: new Map([[1, { id: 1, x: 5, y: 5 }], [9, { id: 9, kind: "npc", comp: true, master: 1, name: "Giant-Ant" }]]), generators: [], map: { id: "farm" } };
+  const pw = { ents: new Map([[1, { id: 1, x: 5, y: 5 }], [9, { id: 9, x: 6, y: 5, kind: "npc", comp: true, master: 1, name: "Giant-Ant" }]]), generators: [], map: { id: "farm" } };
   v.onEvent({ t: "companion", id: 1, on: true, sp: "Giant-Ant" }, pw);
   assert.ok(bubbles.get(1)?.text, "el personaje habla");
   T += 1200; v.update(pw, pw.ents.get(1), {});

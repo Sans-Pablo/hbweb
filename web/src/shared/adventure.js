@@ -10,6 +10,8 @@ import * as Comp from "./systems/companion.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
 
+export const ALLOWED_MAPS = new Set(["arefarm", "middled1n"]);
+
 export class Adventure {
   constructor(options) {
     this.options = options;
@@ -59,7 +61,12 @@ export class Adventure {
 
   // teleport-loc: destino en otro mapa (o en el mismo); -1,-1 = punto de inicio del mapa destino
   teleport(p, w, tp) {
-    const id = tp.map.toLowerCase();
+    let id = tp.map.toLowerCase();
+    if (!ALLOWED_MAPS.has(id)) {                                    // en esta versión solo existen la granja y las criptas: el resto lleva de vuelta a la granja
+      w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "solo existen Aresfarm y las criptas" });
+      if (w === this.farm) return false;
+      return this.transfer(p, w, this.farm, this.farm.start);
+    }
     const to = id === w.map.id ? w : this.staticWorld(id);
     if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: this.maps[id] && !this.maps[id].grid ? "cargando el mapa, vuelve a intentarlo" : "mapa no disponible" }); return false; }
     const init = this.maps[id]?.meta.initial;

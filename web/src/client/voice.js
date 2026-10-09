@@ -96,7 +96,18 @@ export class Voice {
   }
 
   // ---- diálogos con la mascota (data.companion): el compañero habla con el sonido de su especie y el personaje le contesta
-  petOf(world) { for (const e of world.ents?.values() || []) if (e.comp && e.master === this.pid && !e.dead) return e; return null; }
+  // solo se habla con el compañero cuando está cerca del personaje (8 casillas)
+  petOf(world) {
+    const me = world.ents?.get(this.pid);
+    for (const e of world.ents?.values() || []) if (e.comp && e.master === this.pid && !e.dead) return me && Math.max(Math.abs(e.x - me.x), Math.abs(e.y - me.y)) <= 8 ? e : null;
+    return null;
+  }
+  // a veces el personaje llama al compañero por su nombre
+  callName(pet, l) {
+    if (!l || !pet.nick || this.rng() > 0.35) return l;
+    const low = s => s && s[0] ? s[0].toLowerCase() + s.slice(1) : s;
+    return { ...l, es: pet.nick + ", " + low(l.es), en: pet.nick + ", " + low(l.en) };
+  }
   petLine(pet, l) { const n = this.d.companion?.noise?.[pet.name]; return l && n ? { ...l, es: n.es + " " + l.es, en: n.en + " " + l.en } : l; }
   // el personaje dice `me` y el compañero contesta (o al revés si first = "pet"), con probabilidad y pausa propias
   talkPet(world, set, key, { chance = 0.8, cool = 15000, first = "me", gap = 1100 } = {}) {
@@ -104,7 +115,7 @@ export class Voice {
     if (!pet || !c?.[set] || t < (this.cool.get("pet." + key) || 0) || this.rng() > Math.min(1, chance * this.talk)) return false;
     this.cool.set("pet." + key, t + cool);
     const ex = Array.isArray(c[set]) ? c[set][Math.floor(this.rng() * c[set].length)] : c[set];
-    const meL = Array.isArray(ex.me) ? this.pick(ex.me, "pme." + key) : ex.me, petL = this.petLine(pet, Array.isArray(ex.pet) ? this.pick(ex.pet, "ppet." + key) : ex.pet);
+    const meL = this.callName(pet, Array.isArray(ex.me) ? this.pick(ex.me, "pme." + key) : ex.me), petL = this.petLine(pet, Array.isArray(ex.pet) ? this.pick(ex.pet, "ppet." + key) : ex.pet);
     const a = first === "me" ? { id: this.pid, l: meL } : { id: pet.id, l: petL }, b = first === "me" ? { id: pet.id, l: petL } : { id: this.pid, l: meL };
     this.say(a.id, a.l); this.lastAny = t;
     this.queue.push({ at: t + gap, id: b.id, l: b.l });

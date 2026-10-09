@@ -74,11 +74,13 @@ export function wear(w, p, uid, n) {
   if (inst.life === 0) { Inv.unequip(p, w.data, uid); w.recalc(p); w.emit({ t: "broken", id: p.id, uid }); }
 }
 
+export const MAX_LEVEL = 50;
 export function giveExp(w, p, amount) {
   if (amount <= 0) return;
+  if (p.level >= MAX_LEVEL) { p.exp = Math.min(p.exp, p.nextExp - 1); return; }
   p.exp += amount;
   w.emit({ t: "exp", id: p.id, amount });
-  while (p.exp >= p.nextExp && p.level < 180) {              // bCheckLevelUp
+  while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
     p.level++;
     p.pool += R.LEVELUP_POINTS;
     w.recalc(p);

@@ -2,7 +2,7 @@ import { dismissCompanion } from "./npcsys.js";
 // Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 // ReqSellItemConfirmHandler, ReqRepairItemHandler, ReqRepairItemCofirmHandler, bSetItemToBankItem y
 // RequestRetrieveItemHandler. Los precios, los descuentos por carisma y los mensajes son los del servidor.
-import { ITYPE, GOLD, MAX_ITEMS, isStack, itemWeight } from "../items.js";
+import { ITYPE, GOLD, MAX_ITEMS, BANNED_ITEMS, isStack, itemWeight } from "../items.js";
 import * as Inv from "../inventory.js";
 import { realStats, parseAttr } from "../attributes.js";
 import { newInst } from "./itemsys.js";
@@ -88,7 +88,7 @@ export function buy(w, p, cmd) {
   if (name.startsWith("10Arrows")) { name = "Arrow"; units = 10; }
   else if (name.startsWith("100Arrows")) { name = "Arrow"; units = 100; }
   const d = w.data.named(name), n = Math.max(1, Math.min(50, cmd.count | 0));
-  if (!d || !(d.price > 0)) return false;                          // price < 0: no está a la venta
+  if (!d || !(d.price > 0) || BANNED_ITEMS.has(d.id)) return false;                          // price < 0: no está a la venta
   let bought = 0;
   for (let i = 0; i < n; i++) {
     const cost = buyCost(p.stats.chr, d.price, units);

@@ -91,11 +91,11 @@ function loadSave(w, p, s) {
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
-  if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}), ...(i.comp ? { comp: { ...i.comp } } : {}) }));
+  if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: { ...i.comp } } : {}) }));
   if (s.hunt) p.hunt = { ...s.hunt };
   if (s.delve) p.delve = { deepest: Math.max(1, s.delve.deepest | 0) };         // progreso en la cripta de esqueletos
   if (Array.isArray(s.bag)) {
-    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr, color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
+    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
     p.equip = {};
     for (const [pos, old] of Object.entries(s.equip || {})) { const m = p.bag.find(i => i.old === old); if (m) p.equip[pos] = m.uid; }
     for (const i of p.bag) delete i.old;
@@ -111,9 +111,9 @@ export function saveOf(w, id) {
   return {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
-    bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr, color: i.color } : {}) })),
+    bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, delve: { deepest: p.delve?.deepest || 1 },
-    bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr, color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
+    bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
   };
 }
 

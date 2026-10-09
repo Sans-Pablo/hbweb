@@ -2,7 +2,7 @@
 // node tests/maps.test.mjs
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";
-import { Adventure } from "../web/src/shared/adventure.js";
+import { Adventure, ALLOWED_MAPS } from "../web/src/shared/adventure.js";
 import { GameData } from "../web/src/shared/data.js";
 
 const D = new URL("../web/data/", import.meta.url);
@@ -15,6 +15,7 @@ for (const id of Object.keys(j("maps/index.json"))) {
   const mm = j("maps/" + id + ".json");
   maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", D)))) };
 }
+for (const m of Object.keys(maps)) ALLOWED_MAPS.add(m);   // esta prueba recorre las ciudades, que en el juego están cerradas
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL(meta.map + ".bin", D)))), npcDb, data, spawns: [], start: meta.start, maps });
 const id = a.addPlayer("viajero"), p = a.farm.ents.get(id);
 a.tick(1000);
