@@ -1,6 +1,7 @@
 // Fórmulas de combate contra HGServer/Game.cpp iCalculateAttackEffect (jugador -> monstruo).
 import assert from "node:assert/strict";
 import { strikeNpc, playerStrike, absorbOnHit, comboBonus } from "../web/src/shared/combat.js";
+import { knockback } from "../web/src/shared/systems/combatsys.js";
 import { hitChance, dice, absorbOnPlayer } from "../web/src/shared/rules.js";
 
 const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };      // rng determinista: valores en [0,1)
@@ -92,5 +93,14 @@ assert.equal(comboBonus(9, 4), 8);
   assert.ok(r.damage >= 1 && r.damage <= 100);
 }
 assert.equal(absorbOnPlayer(seq(0.999), 10, { vit: 100 }), 1);   // 10 - (1d10 - 1) = 1
+
+
+// retroceso: golpes de 40 o más empujan una casilla en dirección contraria al atacante, sin cambiar hacia dónde mira
+{
+  const ev = [], w = { emit: e => ev.push(e), tryStep: (e, d) => { e.x += 1; e.actStart = 5; return true; } };
+  const n = { x: 3, y: 3 }, t = { x: 4, y: 3, dir: 7, busyUntil: 0, dead: false };
+  knockback(w, n, t, 39); assert.equal(ev.length, 0);
+  knockback(w, n, t, 40); assert.equal(t.x, 5); assert.equal(t.dir, 7); assert.equal(ev[0].dir, 3);
+}
 
 console.log("OK");

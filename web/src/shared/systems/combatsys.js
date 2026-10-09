@@ -80,6 +80,16 @@ export function damagePlayer(w, p, dmg, from) {
   }
 }
 
+// Retroceso (iCalculateAttackEffect, CAE_SKIPDAMAGEMOVE): un golpe físico de 40 o más empuja una casilla al jugador en
+// dirección contraria al atacante (DEF_NOTIFY_DAMAGEMOVE); en zona de lucha hacen falta 60. El cliente anima DEF_OBJECTDAMAGEMOVE (4 x 24 ms).
+export const KNOCK_MS = 96;
+export function knockback(w, n, t, damage) {
+  if (t.dead || damage < 40 || (n.x === t.x && n.y === t.y)) return;
+  const d = dirTo(n.x, n.y, t.x, t.y);
+  const face = t.dir, busy = t.busyUntil;
+  if (w.tryStep(t, d, KNOCK_MS, ACT.DAMAGE)) { t.dir = face; t.busyUntil = Math.max(busy, t.busyUntil); t.knockAt = t.actStart; w.emit({ t: "knock", id: t.id, dir: d }); }
+}
+
 // El monstruo golpea: acierto contra la defensa del jugador, absorción por la parte del cuerpo, desgaste.
 export function npcStrikes(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
@@ -97,6 +107,7 @@ export function npcStrikes(w, n, t) {
   }
   if (a.shielded) gainSSN(t, 11, 1);
   damagePlayer(w, t, a.damage, n);
+  knockback(w, n, t, a.damage);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
   if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) t.superAttack = Math.min(Math.floor(t.level / 10), (t.superAttack || 0) + 1);

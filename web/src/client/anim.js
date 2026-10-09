@@ -15,7 +15,7 @@ const progress = (e, time) => (e.actDur > 0 ? Math.min(1, Math.max(0, (time - e.
 // Centro de la entidad en píxeles del mundo, interpolando el paso
 export function posOf(e, time) {
   let k = 1;
-  if ((e.act === ACT.MOVE || e.act === ACT.RUN) && time < e.actStart + e.actDur) k = progress(e, time);
+  if ((e.act === ACT.MOVE || e.act === ACT.RUN || (e.act === ACT.DAMAGE && e.knockAt === e.actStart)) && time < e.actStart + e.actDur) k = progress(e, time);
   return [(e.fx + (e.x - e.fx) * k) * TILE + 16, (e.fy + (e.y - e.fy) * k) * TILE + 16];
 }
 

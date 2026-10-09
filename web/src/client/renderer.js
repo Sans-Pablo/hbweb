@@ -12,6 +12,9 @@ const CHUNK = 16;                       // casillas por bloque de suelo pregener
 const CLASSIC_W = 800, CLASSIC_H = 600;
 const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 5: "255,120,80" };
 
+// Client/Game.cpp, DrawObject_On*: monstruos sin sombra (Slime, Tigerworm, Plant, Ice-Golem, esfera, Abaddon, puerta...)
+const NO_SHADOW = new Set([10, 35, 50, 51, 60, 65, 81, 91]);
+
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;
@@ -381,7 +384,7 @@ export class Renderer {
       ctx.beginPath(); ctx.ellipse(x, y + 2, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = alpha;
-    if (!e.dead) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);
+    if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
     spr.put(ctx, key, f, x, y);
     ctx.globalAlpha = 1;
     if (!e.dead && sget(s.world, e, "ice")) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);

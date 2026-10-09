@@ -25,7 +25,7 @@ La lluvia reduce el acierto de los arcos (5/10/25 %) y aumenta el desgaste de la
 
 ## Pendiente (no portado)
 - Ataque crítico / super ataque (modos 20–30, `m_bSuperAttackMode`, maestría 100) y ataque en carrera (`bIsDash`).
-- Retroceso por daño ≥ 40 (`DAMAGEMOVE`) en jugadores y monstruos con `actionLimit 4`.
+- Retroceso (≥ 40 de daño físico sobre el jugador) portado: `knockback` en combatsys; falta en monstruos con `actionLimit 4`.
 - Reputación (Kloness), zonas de lucha, PvP, habilidades especiales (`SpecialAbility`).
 
 ## Pruebas
