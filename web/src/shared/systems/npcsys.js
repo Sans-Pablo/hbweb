@@ -7,6 +7,8 @@ import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
 import { sget } from "./status.js";
+import * as Comp from "./companion.js";
+import * as Inv from "../inventory.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -60,6 +62,7 @@ export function killNpc(w, n, p) {
     let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     giveExp(w, p, xp);
+    Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
   const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
@@ -78,7 +81,7 @@ export const SUMMON_MS = 300000;
 export const followersOf = (w, p) => [...w.ents.values()].filter(e => e.master === p.id && !e.dead);
 export function summonFor(w, p, v1, free) {
   const mag = p.skills[4] || 0, limit = Math.max(free ? 1 : 0, Math.floor(mag / 20));
-  if (followersOf(w, p).length >= limit) return null;
+  if (followersOf(w, p).filter(e => !e.comp).length >= limit) return null;
   let name;
   if (v1 > 0) name = SUMMON_BY_V1[v1];
   else {
@@ -97,7 +100,8 @@ export function summonFor(w, p, v1, free) {
 
 function followerThink(w, n) {
   const m = w.ents.get(n.master);
-  if (!m || m.dead || w.time - n.summonedAt > SUMMON_MS) return killNpc(w, n, null);
+  if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
+  if (n.comp) refreshCompanion(w, n, m);
   let best = null, bd = 1e9;
   for (const e of w.ents.values()) {
     if (e.kind !== "npc" || e.dead || e.master || e.cfg.actionLimit) continue;
@@ -121,10 +125,15 @@ function followerAttack(w, n, t) {
   w.after(n.dur.attack * 0.5, () => {
     if (n.dead || t.dead || w.ents.get(t.id) !== t || dist(n, t) > n.cfg.attackRange) return;
     if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return;
-    const dmg = R.npcMelee(w.rng, n).damage;
+    const dmg = n.comp ? Math.max(1, n.dmgNow + R.dice(w.rng, 1, 3) - 2) : R.npcMelee(w.rng, n).damage;
     t.hp -= dmg;
     w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
-    if (t.hp <= 0) { t.noDrop = true; t.noDieRemainExp = 0; return killNpc(w, t, null); }
+    if (t.hp <= 0) {
+      t.noDrop = true; t.noDieRemainExp = 0;
+      const m = w.ents.get(n.master), inst = n.comp && m && Inv.instOf(m, n.ball);
+      if (inst) Comp.addExp(w, m, inst, Math.floor(t.exp / 3 / 2));       // el compañero gana la mitad; el dueño nada
+      return killNpc(w, t, null);
+    }
     const m = w.ents.get(n.master);
     if (m && !t.target) t.target = m.id;
     if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
@@ -167,3 +176,41 @@ function npcAttack(w, n, t) {
   });
 }
 
+
+// ---------------------------------------------------------------- compañeros (companion.js)
+function refreshCompanion(w, n, m) {
+  const inst = Inv.instOf(m, n.ball);
+  if (!inst) return killNpc(w, n, null);
+  const st = Comp.statsOf(m, inst.comp);
+  n.dmgNow = st.dmg; n.clvl = inst.comp.lvl;
+  if (n.maxHp !== st.hp) { n.maxHp = st.hp; n.hp = st.hp; }
+}
+export function dismissCompanion(w, p) {
+  for (const e of followersOf(w, p)) {
+    if (!e.comp) continue;
+    e.dead = true; e.hp = 0; w.grid.release(e.x, e.y, e.id); e.gen.alive--;
+    w.ents.delete(e.id); w.emit({ t: "remove", id: e.id });
+  }
+}
+export function spawnCompanion(w, p) {
+  const inst = Comp.activeBall(p); if (!inst || p.dead) return null;
+  dismissCompanion(w, p);
+  const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
+  if (!w.npcDb[gen.name]) return null;
+  const n = spawnFrom(w, gen); if (!n) return null;
+  Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side, comp: true, ball: inst.uid, exp: 0, noDieRemainExp: 0 });
+  refreshCompanion(w, n, p);
+  return n;
+}
+// Usar una bola: la elige y la invoca (la que estaba elegida se guarda); usar la elegida la guarda. Sin invocación si ya no hay compañero.
+export function toggleCompanion(w, p, inst) {
+  if (p.dead) return false;
+  const c = inst.comp, out = followersOf(w, p).some(e => e.comp && e.ball === inst.uid);
+  if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false }); return true; }
+  if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
+  for (const b of p.bag) if (b.comp) b.comp.on = false;
+  c.on = true;
+  if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
+  w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl });
+  return true;
+}

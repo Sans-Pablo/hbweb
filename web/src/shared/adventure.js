@@ -1,3 +1,5 @@
+import { spawnCompanion } from "./systems/npcsys.js";
+import { activeBall } from "./systems/companion.js";
 // Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
@@ -164,6 +166,7 @@ export class Adventure {
     if (!p.dead) to.grid.occupy(p.x, p.y, p.id);
     this.locations.set(p.id, to);
     to.emit({ t: "mapchange", id: p.id, name: to.map.name, seed: to.map.seed });
+    if (activeBall(p)) spawnCompanion(to, p);                      // el compañero elegido te sigue al nuevo mapa
     return true;
   }
 

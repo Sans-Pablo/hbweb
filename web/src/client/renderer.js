@@ -189,7 +189,7 @@ export class Renderer {
       const d = itemDef(it.id);
       if (d) this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y);
       if (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
-        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr), it.id === 90 ? "#f0d080" : it.attr ? "#9fe39a" : "#e8e2d0"]);
+        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr, it.comp), it.id === 90 ? "#f0d080" : it.attr ? "#9fe39a" : "#e8e2d0"]);
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)
@@ -412,9 +412,9 @@ export class Renderer {
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
     if (say && performance.now() < say.until) overlays.push(() => this.label(x, top - 4, say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8"));
-    if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
+    if (hovered || e.comp || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + e.name;
+        const name = (e.special && remaster ? "★ " : "") + e.name + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";

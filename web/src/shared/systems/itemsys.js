@@ -4,6 +4,7 @@ import { ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack } from "../items.js";
 import { PLAYER, ACT } from "../const.js";
 import * as Inv from "../inventory.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
+import { toggleCompanion, dismissCompanion } from "./npcsys.js";
 
 export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
@@ -39,6 +40,7 @@ function takeItem(w, p) {
 export function dropItem(w, p, uid, amount) {
   const inst = Inv.instOf(p, uid);
   if (!inst) return w.reject(p, { t: "drop" }, "no tienes");
+  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p); }      // soltar la bola guarda al compañero
   const d = w.data.item(inst.id);
   let out;
   if (isStack(d) && amount > 0 && amount < inst.count) { inst.count -= amount; out = { ...inst, uid: w.nextItem++, count: amount }; }
@@ -77,6 +79,7 @@ export function unequipCmd(w, p, uid) {
 export function useItem(w, p, uid) {
   const inst = Inv.instOf(p, uid);
   if (!inst) return w.reject(p, { t: "use" }, "no tienes");
+  if (inst.comp) return toggleCompanion(w, p, inst);                 // bola de compañero (companion.js)
   const d = w.data.item(inst.id);
   if (d.type !== ITYPE.EAT && d.type !== ITYPE.USE_DEPLETE) return w.reject(p, { t: "use" }, "no se puede usar");
   const roll = () => dice(w.rng, d.v1, d.v2) + d.v3;

@@ -4,6 +4,7 @@ import { MAGIC_MODE } from "../shared/magic.js";
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
 import * as R from "../shared/rules.js";
 import { itemDef, itemName, packKey } from "./names.js";
+import { statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
 import { damageRange } from "../shared/combat.js";
@@ -74,6 +75,9 @@ export class Hud {
     const me = this.conn.pid;
     const who = id => world.ents.get(id);
     switch (ev.t) {
+      case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball: úsala para tener a ese compañero.", "gold"); break;
+      case "companion": if (ev.id === me) this.log(ev.on ? ev.sp.replace(/-/g, " ") + " (nivel " + ev.lvl + ") te acompaña." : ev.sp.replace(/-/g, " ") + " vuelve a la bola."); break;
+      case "companion-lvl": if (ev.id === me) this.log("Tu " + ev.sp.replace(/-/g, " ") + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":
         if (ev.id === me) this.log("Has muerto.", "bad");
@@ -124,7 +128,8 @@ export class Hud {
   primary(uid) {
     const me = this.conn.state.ents.get(this.conn.pid), it = me?.bag.find(i => i.uid === uid), d = it && itemDef(it.id);
     if (!d) return;
-    if (d.type === ITYPE.EQUIP) this.act(this.isEquipped(me, uid) ? "unequip" : "equip", uid);
+    if (it.comp) this.act("use", uid);
+    else if (d.type === ITYPE.EQUIP) this.act(this.isEquipped(me, uid) ? "unequip" : "equip", uid);
     else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) this.act("use", uid);
   }
   // atajo F2/F3 de un objeto: equipar/quitar el equipo o usar el consumible
@@ -142,6 +147,7 @@ export class Hud {
 
   describe(it, me) {
     const d = itemDef(it.id), L = [];
+    if (it.comp) return this.describeBall(it, me);
     const pos = ["", "Cabeza", "Cuerpo", "Brazos", "Pantalón", "Calzado", "Cuello", "Mano izquierda", "Mano derecha", "Dos manos", "Anillo dcho.", "Anillo izdo.", "Espalda", "Cuerpo completo"][d.equipPos];
     if (d.type === ITYPE.EQUIP) {
       if (d.effectType === EFFECT.ATTACK || d.effectType === EFFECT.ATTACK_MANASAVE || d.effectType === EFFECT.ATTACK_ARROW) {
@@ -159,8 +165,19 @@ export class Hud {
     return L;
   }
 
+  // bola de compañero (shared/systems/companion.js): especie, nivel, experiencia y daño compartido con el dueño
+  describeBall(it, me) {
+    const c = it.comp, st = companionStats(me, c), nx = companionNeed(c.lvl);
+    return [
+      "Compañero: " + c.sp.replace(/-/g, " ") + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
+      "Experiencia " + c.exp + " / " + nx + (c.lvl >= Math.min(60, me.level) ? " (tope: tu nivel)" : ""),
+      "Daño ≈ " + st.dmg + " por golpe (" + Math.round(st.share * 100) + " % del tuyo) · vida " + st.hp,
+      "Uso: invoca a este compañero y lo guarda al repetir. Hechizo Summon Creature: invoca siempre este.",
+    ];
+  }
+
   renderInv(me) {
-    const key = [me.bag.map(i => i.uid + ":" + i.count + ":" + i.life).join(","), JSON.stringify(me.equip), this.sel, me.weight, me.maxLoad, me.gold, me.bag.map(i => i.attr || 0).join(",")].join("|");
+    const key = [me.bag.map(i => i.uid + ":" + i.count + ":" + i.life).join(","), JSON.stringify(me.equip), this.sel, me.weight, me.maxLoad, me.gold, me.bag.map(i => (i.attr || 0) + (i.comp ? "c" + i.comp.lvl + i.comp.exp + i.comp.on : "")).join(",")].join("|");
     if (this.invKey === key) return;
     this.invKey = key;
     $("#inv .load").textContent = "Peso " + (me.weight / 100).toFixed(1) + " / " + (me.maxLoad / 100).toFixed(0) + " · oro " + me.gold.toLocaleString("es") + " · " + me.bag.length + "/50";
@@ -174,7 +191,7 @@ export class Hud {
         ico = `<span class="ico" style="width:${w}px;height:${h}px;background:url(${imgUrl("data/sprites/" + this.sprites.m[packKey(d)].png)}) -${sx}px -${sy}px;transform:scale(${k})"></span>`;
       }
       const eq = this.isEquipped(me, it.uid), dead = d.type === ITYPE.EQUIP && it.life === 0;
-      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
+      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr, it.comp)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
     }
     $("#inv .grid").innerHTML = html;
     const it = me.bag.find(i => i.uid === this.sel);
@@ -182,9 +199,10 @@ export class Hud {
     const d = itemDef(it.id), eq = this.isEquipped(me, it.uid);
     let acts = "";
     if (d.type === ITYPE.EQUIP) acts += `<button data-act="${eq ? "unequip" : "equip"}">${eq ? "Quitar" : "Equipar"}</button>`;
-    if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) acts += '<button data-act="use">Usar</button>';
+    if (it.comp) acts += `<button data-act="use">${it.comp.on ? "Guardar" : "Invocar"}</button>`;
+    else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) acts += '<button data-act="use">Usar</button>';
     acts += '<button data-act="drop">Tirar</button>';
-    $("#inv .detail").innerHTML = `<h4${it.attr ? ' style="color:#9fe39a"' : ""}>${itemName(it.id, it.attr)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
+    $("#inv .detail").innerHTML = `<h4${it.attr ? ' style="color:#9fe39a"' : ""}>${itemName(it.id, it.attr, it.comp)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
   }
 
   renderBook(me) {

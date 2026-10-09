@@ -23,6 +23,8 @@ import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
+import { setNpcDb } from "./compicon.js";
+import { HUNT } from "../shared/systems/companion.js";
 import { Sky, trackFor } from "./sky.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -131,7 +133,7 @@ async function main() {
   gui.describe = uid => {
     const me = world.ents.get(pid), it = me && me.bag.find(i => i.uid === uid); if (!it) return null;
     const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
-    return { name: itemName(it.id, it.attr) + (it.count > 1 ? " x" + it.count : ""), lines };
+    return { name: itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : ""), lines };
   };
   gui.onSound = n => sound.playRaw("E" + n, 1, 0);
   fx.onSfx = (n, x, y) => sound.playAt(n, x, y);
@@ -398,6 +400,8 @@ async function main() {
   // chat
   const chatBox = document.getElementById("chat"), chatIn = chatBox.querySelector("input");
   const bubbles = new Map();
+  setNpcDb(assets.npcDb);
+  { const k = +new URLSearchParams(location.search).get("hunt"); if (k > 1) HUNT.scale = 1 / k; }   // ?hunt=20: 20 veces menos muertes por bola (pruebas)
   let voice = null;                                 // personalidad: frases (voice.js, data/voice.json)
   fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name); }).catch(() => {});
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }
@@ -461,6 +465,10 @@ async function main() {
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
+      if ((ev.t === "companion" && ev.on || ev.t === "ball") && ev.id === pid) {         // baja las hojas de la especie para el icono y el compañero
+        const sp = assets.npcDb[ev.sp]?.sprite;
+        if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);
+      }
       if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";

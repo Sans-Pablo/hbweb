@@ -1,3 +1,4 @@
+import { dismissCompanion } from "./npcsys.js";
 // Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 // ReqSellItemConfirmHandler, ReqRepairItemHandler, ReqRepairItemCofirmHandler, bSetItemToBankItem y
 // RequestRetrieveItemHandler. Los precios, los descuentos por carisma y los mensajes son los del servidor.
@@ -171,6 +172,7 @@ export function repairConfirm(w, p, cmd) {
 export function deposit(w, p, cmd) {
   const inst = Inv.instOf(p, cmd.uid);
   if (!inst) return false;
+  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p); }
   const d = w.data.item(inst.id);
   const amount = isStack(d) ? Math.max(1, Math.min(inst.count, cmd.count | 0 || inst.count)) : 1;
   if (!p.bank) p.bank = [];

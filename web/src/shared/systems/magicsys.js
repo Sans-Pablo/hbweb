@@ -5,7 +5,8 @@ import { gainSSN } from "../skills.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
 import { damageNpc } from "./combatsys.js";
-import { summonFor } from "./npcsys.js";
+import { summonFor, spawnCompanion } from "./npcsys.js";
+import { activeBall } from "./companion.js";
 import { sget, sset, sclear } from "./status.js";
 import { addField, DYN, iceResisted, poison } from "./fields.js";
 import { newInst } from "./itemsys.js";
@@ -240,7 +241,7 @@ function resolve(w, p, id, sp, x, y, cost) {
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && !w.fightZone) {
-        const n = summonFor(w, p, 0, M.MAGIC_MODE.free);
+        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.MAGIC_MODE.free);   // con bola elegida: siempre esa especie
         if (!n) w.emit({ t: "nomagic", id: p.id });
       }
       break;

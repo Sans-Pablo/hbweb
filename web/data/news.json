@@ -11,6 +11,35 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Cazador: sistema de compañeros (v0.10.0)",
+        "en": "Hunter: companion system (v0.10.0)"
+      },
+      "items": [
+        {
+          "es": "Cómo se consigue: cada cierto número de muertes de una especie invocable (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) recibes una «Bola» de esa especie. 500 hormigas = una Giant Ant Ball (otras especies 500–1000; el contador se guarda).",
+          "en": "How to get one: every so many kills of a summonable species (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) you receive a «Ball» of that species. 500 ants = one Giant Ant Ball (other species 500–1000; the counter is saved)."
+        },
+        {
+          "es": "La bola es un objeto de la mochila (usa las bolas de Item.cfg 651–655) con un sprite pequeño de la especie encima. Pasa el ratón: nivel, experiencia y daño. Doble clic: elige e invoca al compañero (★ = activo); doble clic otra vez lo guarda. Summon Creature invoca siempre ese compañero en vez de uno al azar.",
+          "en": "The ball is a bag item (it reuses Item.cfg balls 651–655) with a small sprite of the species on top. Hover: level, experience and damage. Double-click: selects and summons the companion (★ = active); double-click again stores it. Summon Creature always summons that companion instead of a random one."
+        },
+        {
+          "es": "Estadísticas compartidas: el daño del compañero es una cuota del daño medio de TU arma (15 % + 1 % por nivel, máx. 50 %, según rango de la especie) y su vida un % de la tuya. Así dos atacantes no desequilibran el combate.",
+          "en": "Shared stats: the companion's damage is a share of YOUR weapon's average damage (15 % + 1 % per level, max 50 %, by species rank) and its health a % of yours, so two attackers do not unbalance combat."
+        },
+        {
+          "es": "Experiencia: el compañero recibe el 25 % de lo que ganas tú y el 50 % de sus propias muertes (tú no ganas por ellas). Su nivel no pasa del tuyo (máx. 60). Te sigue al cambiar de mapa y no caduca a los 300 s.",
+          "en": "Experience: the companion gets 25 % of what you earn and 50 % of its own kills (you earn nothing from those). Its level never exceeds yours (max 60). It follows you across maps and does not expire after 300 s."
+        },
+        {
+          "es": "La versión y el nombre de la build se ven arriba a la izquierda, junto a los fps.",
+          "en": "The build version and name are shown at the top left, next to the fps."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Voz del personaje y de los habitantes",
         "en": "Character and townsfolk voice"
       },
@@ -359,6 +388,105 @@
         "es": "Cambia de idioma: las frases nuevas salen en el idioma elegido. Revisa que las burbujas largas se lean bien.",
         "en": "Switch language: new lines appear in the chosen language. Check long bubbles read well."
       }
+    },
+    {
+      "id": "hunt-0",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Añade ?hunt=20 a la URL (por ejemplo index.html?hunt=20): 20 veces menos muertes por bola. Mata 25 hormigas: debe llegar un aviso dorado y una Giant Ant Ball en la mochila.",
+        "en": "Add ?hunt=20 to the URL: 20 times fewer kills per ball. Kill 25 ants: a gold notice and a Giant Ant Ball must appear in the bag."
+      }
+    },
+    {
+      "id": "hunt-1",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "En la mochila (F6) la bola muestra una hormiga pequeña; al pasar el ratón aparecen especie, nivel, experiencia y daño.",
+        "en": "In the bag the ball shows a small ant; hovering shows species, level, experience and damage."
+      }
+    },
+    {
+      "id": "hunt-2",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Doble clic en la bola: aparece la hormiga a tu lado, con ★ en la bola y etiqueta «compañero, nv N». Doble clic otra vez: desaparece.",
+        "en": "Double-click the ball: the ant appears next to you, ★ on the ball and a «companion, lv N» label. Double-click again: it disappears."
+      }
+    },
+    {
+      "id": "hunt-3",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "La hormiga ataca a los monstruos cercanos. Compara tu tiempo para matar con y sin ella: no debe duplicar tu daño (máx. +50 %).",
+        "en": "The ant attacks nearby monsters. Compare your kill time with and without it: it must not double your damage (max +50 %)."
+      }
+    },
+    {
+      "id": "hunt-4",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Mata monstruos con ella fuera: debe subir de nivel (aviso dorado) y su daño en el tooltip crece. Nunca supera tu nivel.",
+        "en": "Kill monsters with it out: it must level up (gold notice) and its tooltip damage grows. Never above your level."
+      }
+    },
+    {
+      "id": "hunt-5",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Cambia de mapa (portal, recall): el compañero te sigue. Muere y revive: usa la bola para volver a invocarlo.",
+        "en": "Change map (portal, recall): the companion follows. Die and respawn: use the ball to summon it again."
+      }
+    },
+    {
+      "id": "hunt-6",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Consigue una segunda bola de otra especie: elegir una guarda la anterior. Summon Creature invoca siempre la elegida.",
+        "en": "Get a second ball of another species: selecting one stores the previous. Summon Creature always summons the chosen one."
+      }
+    },
+    {
+      "id": "hunt-7",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Tira la bola al suelo, recógela, guárdala en el almacén y recupérala: conserva especie, nivel y experiencia. Recarga la página: también.",
+        "en": "Drop the ball, pick it up, store it in the warehouse and take it out: it keeps species, level and experience. Reload the page: same."
+      }
+    },
+    {
+      "id": "hunt-8",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Comprueba que arriba a la izquierda se lee «v0.10.0 Compañeros» junto a los fps.",
+        "en": "Check that the top left reads «v0.10.0 Compañeros» next to the fps."
+      }
     }
   ],
   "notes": [
@@ -381,6 +509,10 @@
     {
       "es": "El arco usa los datos del original; el monstruo grande (wyvern) se golpea desde 2 casillas aunque el servidor original solo daña desde 1.",
       "en": "The bow uses the original data; big monsters (wyvern) can be hit from 2 tiles although the original server only damages from 1."
+    },
+    {
+      "es": "Compañeros: invento del port (el original no los tiene). Reutiliza las bolas 651–655 de Item.cfg y Summon Creature. Los monstruos no atacan al compañero y no cuenta para el límite magery/20.",
+      "en": "Companions: a port invention (the original has none). Reuses Item.cfg balls 651–655 and Summon Creature. Monsters do not attack the companion and it does not count towards the magery/20 limit."
     }
   ]
 }

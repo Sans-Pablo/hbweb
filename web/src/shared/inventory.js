@@ -4,7 +4,7 @@ import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./it
 import { realStats, applyEquipAttr } from "./attributes.js";
 
 // definición del objeto con el peso real de esta unidad (los atributos "Light" lo reducen)
-const real = (d, inst) => (inst && inst.attr ? { ...d, weight: realStats(d, inst).weight } : d);
+const real = (d, inst) => inst && inst.comp ? { ...d, weight: 100 } : (inst && inst.attr ? { ...d, weight: realStats(d, inst).weight } : d);
 
 export const instOf = (p, uid) => p.bag.find(i => i.uid === uid);
 export const isEquipped = (p, uid) => Object.values(p.equip).includes(uid);

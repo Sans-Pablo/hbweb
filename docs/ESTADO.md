@@ -55,3 +55,4 @@ Streaming por mapa (`docs/sistemas/carga.md`): arranque ~39 MB (antes ~131 MB so
 
 ## Arco, mirar con el botón derecho, F1 (oct 2026)
 Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho sobre el suelo gira sin andar, F1 = novedades/pruebas (sin la ayuda original). Pendiente de la fidelidad total: críticos, ataque en carrera, Firebow/Direction-Bow, reputación, zonas de lucha, PvP, Confusion/Inhibition/Resurrection, menús de los NPC restantes.
+- Compañeros (Cazador): ver docs/sistemas/companeros.md
