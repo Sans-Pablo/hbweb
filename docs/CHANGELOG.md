@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.25.1 · Online con ngrok (2026-10-10)
+
+- **Corrección**: ngrok gratis intercala una página de aviso (ERR_NGROK_6024) sin cabeceras CORS, que impedía que el cliente de GitHub Pages detectase el servidor (`findServer`, `/api/info`). Ahora el cliente envía `ngrok-skip-browser-warning` (el servidor ya lo permitía en CORS).
+- Instalador de Windows (`tools/instalar-online.ps1`): ngrok por descarga directa, script solo ASCII.
+
 ## 0.25.0 · Modo online (2026-10-09)
 
 - **Servidor online real** (`server/server.mjs`, protocolo `NET_PROTO` 2): cuentas con usuario + contraseña (`server/accounts.mjs`, scrypt), un personaje por cuenta (nombre único), progreso por cuenta en `server/data/` (escritura atómica), sesión única (la nueva expulsa a la vieja), mundo compartido (granja, ciudad, tiendas, arena en directo; criptas privadas), estado propio completo (`ownState`: tutorial, talentos, compañeros, bolsa…), equipo visible de los demás (`shared/appearance.js`, `ap`), cielo/clima/campos/efectos de jefe sincronizados, eventos privados por defecto (`PUBLIC`).

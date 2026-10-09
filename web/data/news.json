@@ -9,6 +9,19 @@
   },
   "news": [
     {
+      "date": "2026-10-10",
+      "title": {
+        "es": "Online con ngrok (v0.25.1)",
+        "en": "Online via ngrok (v0.25.1)"
+      },
+      "items": [
+        {
+          "es": "Arreglada la conexión al servidor online a través de ngrok: el juego ya detecta el servidor del anfitrión y muestra la pantalla de cuenta.",
+          "en": "Fixed connecting to the online server through ngrok: the game now detects the host's server and shows the account screen."
+        }
+      ]
+    },
+    {
       "date": "2026-10-09",
       "title": {
         "es": "Modo online (v0.25.0)",

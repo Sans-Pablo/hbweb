@@ -566,7 +566,7 @@ async function findServer() {
   if (q.get("offline") === "1") return { base: "", info: null, lost: false };
   let base = (q.get("server") || "").replace(/\/$/, ""), configured = !!base;
   if (!base) { try { const j = await fetch("data/server.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null); base = String(j?.url || "").replace(/\/$/, ""); configured = !!base; } catch {} }
-  const get = async url => { const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000); try { const r = await fetch(url, { cache: "no-store", signal: ctl.signal }); return r.ok ? await r.json() : null; } catch { return null; } finally { clearTimeout(t); } };
+  const get = async url => { const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000); try { const r = await fetch(url, { cache: "no-store", signal: ctl.signal, headers: { "ngrok-skip-browser-warning": "1" } }); /* ngrok gratis intercala una pagina de aviso sin CORS: esta cabecera la omite */ return r.ok ? await r.json() : null; } catch { return null; } finally { clearTimeout(t); } };
   const info = await get(base ? base + "/api/info" : "api/info");
   return { base: info ? base : "", info, lost: configured && !info };
 }
