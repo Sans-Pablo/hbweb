@@ -5,7 +5,7 @@
 import { Grid } from "./grid.js";
 
 export const DUNGEON_LEVELS = 20;
-export const DUNGEON_VERSION = 6;
+export const DUNGEON_VERSION = 7;
 export const BOSS_EVERY = 5;
 // La entrada es el teletransportador de la granja hacia middled1n (Adventure.teleport lo convierte en entrada directa a la cripta).
 export const DUNGEON_ASSETS = Object.freeze([...Array.from({ length: 10 }, (_, i) => "t" + (300 + i)), "t211", ...Array.from({ length: 40 }, (_, i) => "ske" + i)]);
@@ -184,7 +184,15 @@ export function generateLevel(seed, level) {
   let dist = bfs(P, sp[0], sp[1]);
   for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;
   let fin = sp, far = -1;
-  for (const [x, y] of spots) { const d = dist[y * w + x]; if (d > far) { far = d; fin = [x, y]; } }
+  // la bajada (y la salida final) va contra una pared horizontal al norte, con suelo libre al sur: así el hueco con escalera siempre encaja
+  const wallN = [];
+  for (let y = 2; y < h - 3; y++) for (let x = 2; x < w - 2; x++) if (P.at(x, y) && dist[y * w + x] >= 0 && !P.at(x - 1, y - 1) && !P.at(x, y - 1) && !P.at(x + 1, y - 1) && P.at(x - 1, y) && P.at(x + 1, y) && roomy(P, x, y + 2, 1)) wallN.push([x, y]);
+  for (const [x, y] of (wallN.length ? wallN : spots)) { const d = dist[y * w + x]; if (d > far) { far = d; fin = [x, y]; } }
+  if (!wallN.length) {                                       // mapa pequeño sin pared adecuada: se levanta una de tres casillas sobre la bajada
+    for (let i = -1; i <= 1; i++) P.open[(fin[1] - 1) * w + fin[0] + i] = 0;
+    dist = bfs(P, sp[0], sp[1]);
+    for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;
+  }
   const last = level >= DUNGEON_LEVELS;
   const portals = [
     { id: "return", x: sp[0], y: sp[1], label: "Salir de la cripta", target: "origin" },

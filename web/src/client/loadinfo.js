@@ -6,9 +6,8 @@ const L = o => (o && (o[lang] || o.es)) || "";
 export async function showLoadInfo(box, fold = false) {
   try {
     const [v, n] = await Promise.all([fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()), fetch("data/news.json", { cache: "no-cache" }).then(r => r.json())]);
-    let h = `<p class="ver">v${esc(v.version)} · ${esc(v.name)} <small>${esc(v.date || "")}</small></p><div class="log">`;
-    for (const e of (n.news || []).slice(0, 3)) h += `<h4>${esc(L(e.title))}</h4><ul>${e.items.map(i => `<li>${esc(L(i))}</li>`).join("")}</ul>`;
-    box.innerHTML = h + "</div>";
-    if (fold) box.querySelector(".log").setAttribute("tabindex", "0");
+    let h = `<p class="ver">v${esc(v.version)} · ${esc(v.name)} <small>${esc(v.date || "")}</small></p>${fold ? "" : '<div class="log">'}`;
+    if (!fold) for (const e of (n.news || []).slice(0, 3)) h += `<h4>${esc(L(e.title))}</h4><ul>${e.items.map(i => `<li>${esc(L(i))}</li>`).join("")}</ul>`;
+    box.innerHTML = h + (fold ? "" : "</div>");
   } catch {}
 }

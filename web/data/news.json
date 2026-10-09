@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Bajada contra la pared (v0.18.4)",
+        "en": "Descent against the wall (v0.18.4)"
+      },
+      "items": [
+        {
+          "es": "La escalera de bajada de la cripta siempre queda contra una pared horizontal (al norte), con suelo libre delante.",
+          "en": "The crypt descent stairs now always sit against a horizontal (north) wall with free floor in front."
+        },
+        {
+          "es": "La pantalla de acceso ya no muestra el registro de novedades (siguen en F1).",
+          "en": "The login screen no longer shows the changelog (still available with F1)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Salida contra la pared (v0.18.3)",
         "en": "Exit against the wall (v0.18.3)"
       },

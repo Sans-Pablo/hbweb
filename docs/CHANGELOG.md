@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.18.4 · Bajada contra la pared (2026-10-09)
+
+- `generateLevel` (v7): la bajada/final se coloca contra pared al norte (3 casillas de pared, suelo al sur); si el mapa pequeño no tiene, se levanta la pared. Test en `dungeon.test.mjs`.
+- Login: `loadinfo.js` solo muestra la versión (sin registro de novedades).
+
 ## 0.18.3 · Escalera contra la pared (2026-10-09)
 
 - `generateLevel`: la salida se busca entre todas las casillas libres con pared al oeste (antes solo entre las de 3x3 libre, que nunca tocan pared): 573 de 600 niveles de prueba.

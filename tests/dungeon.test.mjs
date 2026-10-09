@@ -61,6 +61,7 @@ test("niveles: todo es alcanzable, 60x60 (36x36 los jefes), portales y enemigos 
     const bosses = d.spawns.filter(s => s.boss);
     assert.equal(bosses.length, isBossLevel(level) ? 1 : 0);
     assert.equal(d.portals[1].id, level === DUNGEON_LEVELS ? "finish" : "down");
+    { const f = d.portals[1]; for (const dx of [-1, 0, 1]) assert.ok(g.blocked(f.x + dx, f.y - 1), `pared al norte de la bajada, run ${run} nivel ${level}`); assert.ok(!g.blocked(f.x, f.y + 1)); }
   }
 });
 
