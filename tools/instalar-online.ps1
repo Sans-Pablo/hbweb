@@ -1,0 +1,53 @@
+# Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
+# en Documents\hbweb-online, configura ngrok + administrador y arranca "Servidor online.bat". Se puede ejecutar las veces que haga falta.
+$ErrorActionPreference = "Stop"
+function Titulo($t) { Write-Host ""; Write-Host "  == $t" -ForegroundColor Yellow }
+function Refrescar { $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User") }
+function Tiene($c) { [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+function Instalar($cmd, $id, $nombre) {
+  if (Tiene $cmd) { Write-Host "  $nombre: ya instalado" -ForegroundColor Green; return }
+  Titulo "Instalando $nombre"
+  winget install --id $id -e --silent --accept-package-agreements --accept-source-agreements
+  Refrescar
+  if (-not (Tiene $cmd)) { Write-Host "  $nombre se instaló pero esta ventana no lo ve: cierra y vuelve a abrir este instalador." -ForegroundColor Red; Read-Host "Intro para salir"; exit 1 }
+}
+Refrescar
+if (-not (Tiene "winget")) { Write-Host "  Falta winget (Instalador de aplicaciones de Microsoft Store). Actualízalo desde la Store y repite." -ForegroundColor Red; Read-Host "Intro"; exit 1 }
+Instalar "git" "Git.Git" "Git"
+Instalar "node" "OpenJS.NodeJS.LTS" "Node.js"
+Instalar "ngrok" "ngrok.ngrok" "ngrok"
+
+Titulo "Descargando el juego"
+$dir = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "hbweb-online"
+if (Test-Path (Join-Path $dir ".git")) { git -C $dir pull --rebase origin main } else { git clone https://github.com/Sans-Pablo/hbweb.git $dir }
+Set-Location $dir
+
+Titulo "Cuenta de ngrok"
+$cfgOk = $false
+try { ngrok config check *> $null; $cfgOk = ($LASTEXITCODE -eq 0) } catch {}
+$hasToken = $false
+foreach ($f in @("$env:LOCALAPPDATA\ngrok\ngrok.yml", "$env:USERPROFILE\.config\ngrok\ngrok.yml", "$env:APPDATA\ngrok\ngrok.yml")) { if ((Test-Path $f) -and (Select-String -Path $f -Pattern "authtoken" -Quiet)) { $hasToken = $true } }
+if (-not $hasToken) {
+  Write-Host "  1) Entra en https://dashboard.ngrok.com/get-started/your-authtoken (crea la cuenta si no la tienes) y copia tu Authtoken."
+  Start-Process "https://dashboard.ngrok.com/get-started/your-authtoken"
+  $tok = (Read-Host "  Pega aquí tu Authtoken").Trim()
+  ngrok config add-authtoken $tok
+} else { Write-Host "  Authtoken de ngrok: ya configurado" -ForegroundColor Green }
+
+$cfgFile = Join-Path $dir "server\config.json"
+$domain = ""
+if (Test-Path $cfgFile) { try { $domain = (Get-Content $cfgFile -Raw | ConvertFrom-Json).ngrokDomain } catch {} }
+if (-not $domain) {
+  Write-Host ""
+  Write-Host "  2) En https://dashboard.ngrok.com/domains pulsa «Create Domain»: te dan un dominio fijo gratis (algo.ngrok-free.app / .ngrok-free.dev)."
+  Start-Process "https://dashboard.ngrok.com/domains"
+  $domain = (Read-Host "  Pega aquí el dominio").Trim() -replace "^https?://", "" -replace "/.*$", ""
+  $admin = (Read-Host "  Tu nombre de usuario en el juego (será administrador)").Trim().ToLower()
+  $cfg = [ordered]@{ port = 8088; maxPlayers = 40; origins = @("https://sans-pablo.github.io"); admins = @($admin); publicUrl = "https://$domain"; tunnel = "ngrok"; ngrokDomain = $domain }
+  $cfg | ConvertTo-Json | Set-Content -Path $cfgFile -Encoding UTF8
+}
+Write-Host ""
+Write-Host "  Listo. Tu dirección fija es: https://$domain" -ForegroundColor Green
+Write-Host "  Dime ese dominio (o deja que lo lea de server\config.json) para publicarlo en la web de GitHub."
+Titulo "Arrancando el servidor online"
+Start-Process -FilePath (Join-Path $dir "Servidor online.bat") -WorkingDirectory $dir
