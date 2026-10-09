@@ -28,15 +28,17 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 
 ## Comandos
 - Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`).
-- Tests: `for t in tests/*.test.mjs; do node $t | tail -1; done`.
 - Regenerar datos: `python3 tools/convert_all.py /root/HelbreathServer/Helbreath /root/HelbreathServer web/data [--only paso,paso] [--dry]` (pasos base, equip, fx, players, ui, maps, npcs; luego `tests/data.test.mjs`).
 - Idiomas: `docs/sistemas/idiomas.md`.
 - Pruebas visuales: Playwright con Chromium en `/opt/pw-browsers/chromium`.
 - `window.hb` expone `world, conn, renderer, ctl, gui, npcUi` para pruebas automáticas.
 
 ## Flujo de trabajo
-Trabajo directo en `main`, commits pequeños, `git pull --rebase origin main` antes de cada `push`.
-Otro agente también empuja a `main`.
+Trabajo directo en `main`; **una versión por petición/bloque** (no por retoque), `git pull --rebase origin main` antes de cada `push`.
+Otro agente también empuja a `main`. Proceso completo y ahorro de tokens: `docs/PROCESO.md`.
+- Mapa del código (no explorar a ciegas): `docs/MAPA.md` (`tools/mapa.sh`).
+- Tests: `tools/test.sh` (paralelo, solo imprime fallos). Pruebas visuales: `python3 tools/e2e.py [--mobile] --eval/--tap/--shot`.
+- Entrega: `tools/release.sh X.Y.Z "Nombre" "mensaje"` (exige CHANGELOG y news con la versión).
 
 ## Para los testers
 F1 muestra `web/data/news.json` (novedades, lista de pruebas, notas). Cada cambio visible se anota ahí en el mismo commit (`docs/sistemas/novedades.md`).

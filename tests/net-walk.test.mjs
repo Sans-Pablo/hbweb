@@ -1,6 +1,6 @@
 // Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 import { spawn } from "node:child_process";
-const PORT = 8123;
+const PORT = 18123;   // no el 8123: es el del servidor estático de pruebas (tools/e2e.py)
 const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80" }, stdio: "ignore" });
 await new Promise(r => setTimeout(r, 1500));
 const { default: WS } = await import("node:module").then(() => ({ default: globalThis.WebSocket }));

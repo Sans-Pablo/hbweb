@@ -19,14 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node tests/sim.test.mjs
-      - run: node tests/magic-prep.test.mjs
-      - run: node tests/magic-types.test.mjs
-      - run: node tests/tutorial.test.mjs
-      - run: node tests/mobile.test.mjs
-      - run: node --test tests/assets.test.mjs tests/dungeon.test.mjs tests/net-dungeon.test.mjs
-      - run: node tests/net-walk.test.mjs
-      - run: python tests/version_web_test.py
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: tools/test.sh
   deploy:
     if: github.event_name != 'pull_request'
     needs: test
