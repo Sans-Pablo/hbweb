@@ -30,6 +30,10 @@
         {
           "es": "Objetos raros y únicos: nombre de color, siempre visible en el suelo, rayo de luz, sonido y aviso en el registro.",
           "en": "Rare and unique items: coloured name always visible on the ground, light beam, sound and log message."
+        },
+        {
+          "es": "El collar de protección contra el fuego (KnecklaceOfFirePro) reduce un 80 % el daño de fuego.",
+          "en": "The fire protection necklace (KnecklaceOfFirePro) now reduces fire damage by 80%."
         }
       ]
     },

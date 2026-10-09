@@ -1,6 +1,6 @@
 // Mochila, equipo y efectos del equipo (CalcTotalItemEffect, bEquipItemHandler...).
 // Un jugador tiene:  p.bag = [{uid, id, count, life}]   p.equip = {posición: uid}
-import { ELEM, PROT_CAP } from "./rarity.js";
+import { ELEM, PROT_CAP, PROT_OVERRIDE } from "./rarity.js";
 import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./items.js";
 import { realStats, applyEquipAttr } from "./attributes.js";
 
@@ -130,7 +130,7 @@ export function recalc(p, data) {
         else if (d.v1 === 3) fx.addPhys += d.v2;
         else if (d.v1 === 4) fx.defense += d.v2;
         else if (d.v1 === 12) fx.addAR += d.v2;
-        else if (ELEM[d.v1]) fx.prot[ELEM[d.v1]] = Math.min(PROT_CAP, fx.prot[ELEM[d.v1]] + d.v2);          // collares/anillos de protección elemental
+        else if (ELEM[d.v1]) fx.prot[ELEM[d.v1]] = Math.min(PROT_CAP, fx.prot[ELEM[d.v1]] + (PROT_OVERRIDE[inst.id] ?? d.v2));          // collares/anillos de protección elemental
         break;
     }
     applyEquipAttr(fx, inst.attr, d, pos);

@@ -48,3 +48,9 @@ test("protección elemental del equipo reduce el daño del elemento", () => {
   const r = mk({ fire: 50 }); damagePlayer(w, r, 100, { id: 2 }); assert.equal(r.hp, 900);
 });
 console.log("OK");
+{
+  const { EQUIP } = await import("../web/src/shared/items.js");
+  const p = { stats: { dex: 10, str: 10 }, skills: {}, bag: [{ uid: 1, id: 638, count: 1 }], equip: { [EQUIP.NECK]: 1 } };
+  assert.equal(recalc(p, data).prot.fire, 80, "collar de fuego = 80 %");
+  console.log("OK");
+}
