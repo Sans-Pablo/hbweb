@@ -43,3 +43,6 @@ F1 muestra `web/data/news.json` (novedades, lista de pruebas, notas). Cada cambi
 
 ## Documentación
 `docs/ESTADO.md` estado y pendientes · `docs/FINDINGS.md` trampas · `docs/sistemas/*.md` una ficha por sistema.
+
+## Versión visible
+`web/data/version.json` ({version, name}) se muestra junto a los fps (arriba a la izquierda). Súbela en cada entrega para que los testers sepan qué build prueban.

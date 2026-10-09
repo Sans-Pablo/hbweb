@@ -426,13 +426,15 @@ async function main() {
 
   let last = performance.now(), fps = 0, frames = 0, fpsT = 0;
   const fpsEl = document.getElementById("fps");
+  let buildTag = "";                                // versión y nombre de la compilación (data/version.json), junto a los fps
+  fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { buildTag = " · v" + v.version + " " + v.name; }).catch(() => {});
   function loop(t) {
     const dt = Math.min(100, t - last);             // si la pestaña estuvo oculta, no saltar
     last = t;
     frames++; fpsT += dt;
     if (fpsT > 500) {
       fps = Math.round(frames * 1000 / fpsT); frames = 0; fpsT = 0;
-      let txt = fps + " fps";
+      let txt = fps + " fps" + buildTag;
       if (online) {
         const n = [...world.ents.values()].filter(e => e.kind === "player").length;
         txt += " · " + n + (n === 1 ? " jugador" : " jugadores") + " · " + conn.ping + " ms";
