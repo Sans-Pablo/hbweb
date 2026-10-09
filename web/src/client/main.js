@@ -20,13 +20,21 @@ import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
 import { Sky, trackFor } from "./sky.js";
+import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem("hbweb." + k, v); } catch {} },
 };
 
+function bindLanguage() {
+  const mark = () => document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === getLang()));
+  document.addEventListener("click", e => { const b = e.target.closest?.("[data-lang]"); if (b) { setLang(b.dataset.lang); mark(); } });
+  onLang(mark); mark();
+}
+
 async function main() {
+  startDomTranslation(); bindLanguage();
   const status = document.getElementById("loading");
   const assets = await loadAssets(k => { status.querySelector("span").textContent = "Cargando gráficos… " + Math.round(100 * k) + "%"; });
   status.querySelector("span").textContent = "Preparando el mapa…";
@@ -126,6 +134,15 @@ async function main() {
         const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
         inst.x = Math.max(0, Math.min(170, nx)); inst.y = Math.max(-10, Math.min(95, ny));
         conn.send({ t: "setpos", uid: inst.uid, x: nx, y: ny });
+        if (ctl.keys.has("shift")) {                              // Mayús + arrastrar: agrupa en la misma casilla todos los objetos del mismo tipo
+          let k = 0;
+          for (const o of me.bag) {
+            if (o === inst || o.id !== inst.id || Object.values(me.equip || {}).includes(o.uid)) continue;
+            k++; o.x = Math.max(0, Math.min(170, nx + k * 2)); o.y = Math.max(-10, Math.min(95, ny + k * 2));
+            conn.send({ t: "setpos", uid: o.uid, x: o.x, y: o.y });
+            dlg.order = dlg.order.filter(u => u !== o.uid); dlg.order.splice(dlg.order.indexOf(inst.uid), 0, o.uid);
+          }
+        }
       }
     } else if (!dlg && y < 548 && it.from === 2) {               // fuera de la interfaz: tirar al suelo
       hud.act("drop", inst.uid);
@@ -184,6 +201,8 @@ async function main() {
   let recent = null;
   const flag = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); };
   const ui = {
+    minimapOpen: () => view.showMinimap && view.mapStyle !== "overlay",
+    closeMinimap: () => { setOpt("map", false); hud.log("Minimapa oculto (se vuelve a activar en Opciones)."); },
     gui,
     get run() { return opts.run; },
     get autoAttack() { return opts.autoAttack; },
@@ -337,7 +356,7 @@ async function main() {
   };
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
-  hud.onLog = (t, cls) => { chatLog.unshift({ t, type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
+  hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
   gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
@@ -434,7 +453,7 @@ async function main() {
       cur = 0;
       if (!ov && ui.pointing != null) cur = foe ? 5 : 4;
       else if (!ov && he) cur = foe ? 3 : 6;
-      else if (!ov && ctl.hover && world.items.get(world.grid.idx(ctl.hover[0], ctl.hover[1]))?.length) cur = 10;
+      if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }
     gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur });
     canvas.style.cursor = opts.classicCursor ? "none" : ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";

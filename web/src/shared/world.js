@@ -10,7 +10,7 @@ import * as Player from "./systems/player.js";
 import * as Combat from "./systems/combatsys.js";
 import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
-import { tickVitals } from "./systems/vitals.js";
+import { tickVitals, RUN_STEPS_PER_SP } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
 import * as Shop from "./systems/shopsys.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
@@ -150,7 +150,7 @@ const COMMANDS = {
     if (w.time - p.lastMove < LIMITS.moveMs) return w.reject(p, cmd, "demasiado rápido");
     const run = !!cmd.run && p.sp >= 1;                       // sin resistencia no se corre
     if (!w.tryStep(p, cmd.dir, run ? PLAYER.runMs : PLAYER.walkMs, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
-    if (run) p.sp -= 1;
+    if (run && (p.runSteps = (p.runSteps || 0) + 1) >= RUN_STEPS_PER_SP) { p.runSteps = 0; p.sp -= 1; }
     p.lastMove = w.time;
     // al llegar a una casilla de teletransporte, el servidor original (RequestTeleportHandler) te manda al destino
     const tp = w.teleports.get(w.grid.idx(p.x, p.y));

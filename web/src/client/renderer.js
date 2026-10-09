@@ -2,6 +2,7 @@
 //   classic    -> 800x600 del original, cámara fija al personaje, sin efectos añadidos
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
+import { t } from "./i18n.js";
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
 import { itemDef, itemName, groundKey } from "./names.js";
@@ -428,6 +429,7 @@ export class Renderer {
 
   label(x, y, text, color) {
     const { ctx } = this;
+    text = t(text);
     ctx.font = "600 11px 'Segoe UI', system-ui, sans-serif";
     ctx.textAlign = "center";
     const w = ctx.measureText(text).width + 10;
@@ -513,6 +515,14 @@ export class Renderer {
     ctx.fillStyle = "#9fe07f";
     ctx.fillRect(cx - 3, cy - 3, 6, 6);
     ctx.restore();
+  }
+
+  // ¿está el puntero (coordenadas de ventana) sobre el minimapa de la esquina?
+  minimapHit(clientX, clientY) {
+    const r = this.canvas.getBoundingClientRect();
+    const vx = ((clientX - r.left) * this.dpr - this.ox) / this.scale, vy = ((clientY - r.top) * this.dpr - this.oy) / this.scale;
+    const size = this.mode === "remastered" ? 170 : 140, pad = 10, x0 = this.viewW - size - pad;
+    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= pad - 3 && vy <= pad + size + 3;
   }
 
   drawMinimap(s, ppx, ppy) {

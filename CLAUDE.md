@@ -21,7 +21,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 3. Los eventos del servidor (`w.emit({t:…})`) llevan `id` del jugador afectado; el cliente solo reacciona a los suyos.
 4. Los cuadros de diálogo nunca se cierran a sí mismos dentro de `gui.draw` (se muta el orden); usar `sweep()` por fotograma.
 5. Entidades: `kind` = `player` | `npc` (monstruo hostil) | `citizen` (NPC de ciudad). La lógica hostil ignora `citizen`.
-6. Textos de interfaz y mensajes de tienda: los del original (en inglés) tal cual. El resto del HUD va en español.
+6. Textos de interfaz y mensajes de tienda: los del original (en inglés) tal cual. El resto va en español y se traduce con `client/i18n.js` (toda cadena nueva en español lleva su entrada en inglés).
 7. Interfaz en coordenadas GUI 800x600 (`gui.mouse`). El mundo en píxeles de mundo (`renderer.toWorld`).
 8. Cada sistema nuevo trae su test en `tests/` y su ficha en `docs/sistemas/`.
 9. Sin credenciales en el repo. No se usa Shift para correr (Ctrl+R alterna).
@@ -30,6 +30,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 - Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`).
 - Tests: `for t in tests/*.test.mjs; do node $t | tail -1; done`.
 - Regenerar datos: `python3 tools/convert_all.py /root/HelbreathServer/Helbreath /root/HelbreathServer web/data [--only paso,paso] [--dry]` (pasos base, equip, fx, players, ui, maps, npcs; luego `tests/data.test.mjs`).
+- Idiomas: `docs/sistemas/idiomas.md`.
 - Pruebas visuales: Playwright con Chromium en `/opt/pw-browsers/chromium`.
 - `window.hb` expone `world, conn, renderer, ctl, gui, npcUi` para pruebas automáticas.
 

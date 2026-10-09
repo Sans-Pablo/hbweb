@@ -215,6 +215,7 @@ body.dialogtrans .panel { opacity: .55; }
 <div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span></div></div>
 
 <div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>
+  <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
   <div class="tabs"><button type="button" data-tab="login" class="on">Entrar</button><button type="button" data-tab="new">Crear cuenta</button></div>
   <label>Nombre<input class="user" maxlength="16" autocomplete="username" spellcheck="false"></label>
   <label class="pw">Contraseña<input class="pass" type="password" autocomplete="current-password"></label>
@@ -228,6 +229,9 @@ body.dialogtrans .panel { opacity: .55; }
   #options .acct { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
   #options .acct b { width: 100%; }
   #options .acct button { padding: 4px 8px; font-size: 12px; background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; cursor: pointer; }
+  #join .langsw, #options .langsw { display: flex; gap: 6px; margin: 4px 0 8px; justify-content: center; }
+  #join .langsw button, #options .langsw button { padding: 3px 10px; background: #1b1810; color: #bba; border: 1px solid #4a3f28; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  #join .langsw button.on, #options .langsw button.on { background: #3a2f18; color: #ffd76a; border-color: #ffd76a; }
   #join .pw2 { display: none; }
   #join.creating .pw2 { display: block; }
   #join .hint { font-size: 11px; color: var(--muted); margin: 10px 0 0; text-align: center; }
@@ -294,6 +298,7 @@ body.dialogtrans .panel { opacity: .55; }
   <div id="options" class="panel">
     <button class="close" data-key="escape">×</button>
     <h3>Opciones</h3>
+    <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
     <label><input type="checkbox" data-opt="run"> Correr (<kbd>Ctrl</kbd>+<kbd>R</kbd>)</label>
     <label><input type="checkbox" data-opt="map"> Mostrar mapa (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</label>
     <label>Estilo del mapa

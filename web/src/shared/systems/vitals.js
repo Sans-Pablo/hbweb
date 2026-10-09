@@ -3,7 +3,10 @@ import { dice } from "../rules.js";
 
 export const HUNGER_MS = 60000;        // DEF_HUNGERTIME
 export const HUNGER_LEVEL = 20;        // DEF_LEVELLIMIT: el hambre solo cuenta a partir de aquí
-export const SP_MS = 10000, HP_MS = 15000, MP_MS = 20000;
+export const HP_MS = 15000, MP_MS = 20000;
+// Resistencia menos restrictiva que el original (TimeStaminarPointsUp: 10 s y 1 SP por casilla corrida) para que los jugadores
+// nuevos puedan recorrer el mapa corriendo: recupera cada 2 s y correr gasta 1 SP cada 4 casillas.
+export const SP_MS = 2000, RUN_STEPS_PER_SP = 4;
 
 export function initVitals(w, p) {
   p.hunger = 100; p.hpStock = 0; p.combo = 0;
@@ -26,6 +29,7 @@ export function tickVitals(w, p) {
       let t = dice(rng, 1, Math.floor(s.vit / 3));
       if (p.eff.addSP) t += Math.floor((p.eff.addSP / 100) * t);
       t += p.level <= 20 ? 15 : p.level <= 40 ? 10 : p.level <= 60 ? 5 : 0;
+      t = Math.max(t, 4);                                          // mínimo de 4 por tic: ~2 SP/s en reposo
       p.sp = Math.min(p.maxSp, p.sp + t);
     }
   }

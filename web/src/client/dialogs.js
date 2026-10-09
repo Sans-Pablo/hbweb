@@ -1,5 +1,6 @@
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
+import { getLang, setLang } from "./i18n.js";
 import { itemDef } from "./names.js";
 import { EQUIP, ITYPE } from "../shared/items.js";
 import { packKey } from "./names.js";
@@ -76,6 +77,18 @@ export function registerDialogs(gui, api) {
       }
       return false;
     },
+    // doble clic sobre una pieza equipada: quitársela (ReleaseItem)
+    dbl(g, lx, ly, me) {
+      const female = me.gender === 2;
+      for (let i = ORDER.length - 1; i >= 0; i--) {
+        const pos = ORDER[i], uid = me.equip && me.equip[pos], it = uid && me.bag.find(b => b.uid === uid), d = it && itemDef(it.id);
+        if (!d) continue;
+        const key = eqKey(female, d.sprite); if (!key) continue;
+        const [x, y] = SLOT_POS[pos][female ? 1 : 0];
+        if (g.hitUi(key, d.spriteFrame, x, y, lx, ly)) { g.item = null; api.primary(uid); return true; }
+      }
+      return false;
+    },
     paperdoll(g, me) {
       const female = me.gender === 2, look = me.look || { skin: 2, hair: 0, hairCol: 0, under: 0 };
       const worn = {};
@@ -126,6 +139,12 @@ export function registerDialogs(gui, api) {
     draw(g, me) {
       this.sync(me);
       g.put("gamedialog_7", 0, 0, 0);
+      // el oro es un objeto más de la mochila en el original (Gold, id 90): aquí se dibuja aparte, abajo a la derecha
+      const gd = me.gold > 0 && itemDef(90);
+      if (gd) {
+        g.putGame(packKey(gd), gd.spriteFrame, 32 + 150, 44 + 95, 1);
+        g.aligned(32 + 110, 32 + 190, 44 + 108, comma(me.gold), "#ffd34d", { shadow: true, size: 11 });
+      }
       for (const uid of this.order) {
         const it = me.bag.find(i => i.uid === uid), d = it && itemDef(it.id);
         if (!d || this.equipped(me, uid) || (g.item && g.item.uid === uid)) continue;
@@ -366,17 +385,20 @@ export function registerDialogs(gui, api) {
   const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
     ["spellFx", "Animaciones de hechizos"], ["freeMagic", "Magia libre (sin MP)"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
   const mods = {
-    id: 60, x: 417, y: 140, w: 258, h: 268,
+    id: 60, x: 417, y: 140, w: 258, h: 290,
     draw(g) {
       const O = api.mods(), c = g.ctx;
       c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);
       const label = (x, y, t, col = "#e8dcc3") => g.text(x, y, t, col);
       label(23, 28, "Mejoras de esta versión", "#f0d080");
       MODS.forEach(([k, n], i) => { label(23, 66 + i * 20, n); O[k] ? g.text(205, 66 + i * 20, "On", "#9fe39a") : g.text(203, 66 + i * 20, "Off", "#9a8f7a"); });
-      label(23, 66 + MODS.length * 20 + 10, "Clic derecho: cerrar", "#9a8f7a");
+      const ly = 66 + MODS.length * 20;
+      label(23, ly, "Idioma / Language"); g.text(190, ly, getLang() === "es" ? "Español" : "English", "#9fe39a");
+      label(23, ly + 30, "Clic derecho: cerrar", "#9a8f7a");
     },
     click(g, lx, ly) {
       const O = api.mods();
+      if (lx >= 20 && lx <= 238 && ly >= 62 + MODS.length * 20 && ly <= 78 + MODS.length * 20) { setLang(getLang() === "es" ? "en" : "es"); return true; }
       for (let i = 0; i < MODS.length; i++) if (lx >= 20 && lx <= 238 && ly >= 62 + i * 20 && ly <= 78 + i * 20) { api.setMod(MODS[i][0], !O[MODS[i][0]]); return true; }
       return false;
     },

@@ -27,6 +27,7 @@ export class Controller {
     canvas.addEventListener("pointerdown", e => {
       e.preventDefault();
       ui.unlockAudio();
+      if (e.button === 2 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { ui.closeMinimap(); return; }   // clic derecho cierra el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
       this.ctrl = e.ctrlKey;

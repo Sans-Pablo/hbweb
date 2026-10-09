@@ -2,6 +2,7 @@
 // GameDialog.pak, GameDialog2.pak, DialogText.pak e interface2.pak; ver tools/convert_ui.py).
 // Las posiciones son las de Client/Game.cpp (DrawDialogBox_IconPannel, DrawDialogBox_GaugePannel...).
 // El panel inferior es el cuadro 30; los demás cuadros se registran en `dialogs` y se pueden arrastrar.
+import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
@@ -144,6 +145,7 @@ export class Gui {
   // texto con la letra del cliente (GDI): sombra de 1 píxel opcional
   text(x, y, s, color = "#fafadc", { align = "left", shadow = false, bold = false, size = 12 } = {}) {
     const c = this.ctx;
+    s = t(s);
     c.font = (bold ? "bold " : "") + size + "px Tahoma, Verdana, sans-serif";
     c.textBaseline = "top";
     c.textAlign = align;

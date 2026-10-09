@@ -1,0 +1,20 @@
+// Idiomas: el texto en español se traduce al inglés cuando se elige "en" y vuelve a español al cambiar.
+import assert from "node:assert/strict";
+globalThis.document = { documentElement: {}, body: null };
+const { t, setLang, getLang } = await import("../web/src/client/i18n.js");
+assert.equal(getLang(), "es");
+assert.equal(t("Has muerto."), "Has muerto.");
+setLang("en");
+assert.equal(getLang(), "en");
+assert.equal(t("Has muerto."), "You died.");
+assert.equal(t("Entras en Herrería."), "You enter Blacksmith.");
+assert.equal(t("No puedes lanzarlo: maná insuficiente."), "You cannot cast it: not enough mana.");
+assert.equal(t("¡Subes al nivel 5! Tienes 3 puntos para repartir (botón Level Up)."), "You reach level 5! You have 3 points to assign (Level Up button).");
+assert.equal(t("Has matado a Slime."), "You killed Slime.");
+assert.equal(t("Recoges 25 de oro."), "You pick up 25 gold.");
+assert.equal(t("Absorción física +9 %"), "Physical absorption +9%");
+assert.equal(t("You bought a Dagger."), "You bought a Dagger.", "los textos del original no cambian");
+assert.equal(t("Texto sin traducir"), "Texto sin traducir");
+setLang("es");
+assert.equal(t("Has muerto."), "Has muerto.");
+console.log("OK");
