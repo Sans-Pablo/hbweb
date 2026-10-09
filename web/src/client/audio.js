@@ -17,6 +17,12 @@ export class Sound {
     this.last = new Map();
   }
 
+  // Carga bajo demanda: sonidos del mapa en el que se entra (monstruos). Si el audio aún no se ha desbloqueado, se guardan para entonces.
+  prefetch(names) {
+    if (!this.ctx) { this.wanted = [...(this.wanted || []), ...names]; return; }
+    for (const n of names) this.buffer(n);
+  }
+
   // los navegadores solo dejan sonar audio después de un gesto del usuario
   unlock() {
     if (this.ctx) return;
@@ -29,6 +35,7 @@ export class Sound {
     // música: la original y la remasterizada suenan a la vez y sincronizadas; el modo
     // gráfico decide cuál se oye (como Diablo II Resurrected al cambiar de modo)
     this.tracks = this.makeTracks(this.track);
+    if (this.wanted) { const w = this.wanted; this.wanted = null; this.prefetch(w); }
     if (this.on) this.startMusic();
     if (this.wantRain) this.rain(true);
   }

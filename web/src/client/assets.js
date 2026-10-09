@@ -4,6 +4,7 @@
 import { GameData } from "../shared/data.js";
 import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
+import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v2";
@@ -54,24 +55,26 @@ export async function loadAssets(onProgress) {
   const shops = await json("data/shops.json").catch(() => ({}));
   const talk = await json("data/talk.json").catch(() => ({}));
   validateDungeonAssets(manifest, npcDb);
-  // mapas de la ciudad (data/maps/<id>.bin + .json): casillas, teleports, NPC y generadores
+  // mapas de la ciudad (data/maps/<id>.json): los metadatos van siempre; la rejilla (.bin, hasta 2,7 MB) se baja al hacer falta
+  // con m.ensure(). Adventure.teleport pide el mapa y, si aún no está, rechaza el salto y se reintenta al llegar.
   const maps = {};
   const index = await json("data/maps/index.json").catch(() => ({}));
   await Promise.all(Object.keys(index).map(async id => {
-    const [bytes, mapMeta] = await Promise.all([response("data/maps/" + id + ".bin").then(r => r.arrayBuffer()), json("data/maps/" + id + ".json")]);
-    maps[id] = { meta: mapMeta, grid: id === "arefarm" ? null : new Grid(mapMeta.w, mapMeta.h, new Uint8Array(bytes)) };
+    const mapMeta = await json("data/maps/" + id + ".json");
+    const m = maps[id] = { meta: mapMeta, grid: null };
+    if (id === "arefarm") return;
+    m.ensure = () => m.loading || (m.loading = response("data/maps/" + id + ".bin").then(r => r.arrayBuffer()).then(bytes => { m.grid = new Grid(mapMeta.w, mapMeta.h, new Uint8Array(bytes)); return m; }).catch(err => { m.loading = null; throw err; }));
   }));
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
-  const keys = Object.keys(manifest), images = {};
-  let done = 0;
-  // Limitar peticiones simultáneas evita saturar la descarga con cientos de hojas.
-  let next = 0;
-  await Promise.all(Array.from({ length: Math.min(12, keys.length) }, async () => {
-    while (next < keys.length) {
-      const k = keys[next++];
+  // Solo se descarga lo común (objetos del suelo, interfaz del mundo); losetas y monstruos llegan por mapa (streaming.js).
+  const images = {}, core = coreKeys(manifest, npcDb);
+  let done = 0, next = 0;
+  await Promise.all(Array.from({ length: Math.min(8, core.length) }, async () => {
+    while (next < core.length) {
+      const k = core[next++];
       images[k] = await loadSpriteImage(manifest[k].png);
-      done++; onProgress?.(done / keys.length);
+      done++; onProgress?.(done / core.length);
     }
   }));
   // sprites de personaje (pieles, peinados, ropa interior): se descargan cuando hacen falta
@@ -83,8 +86,7 @@ export async function loadAssets(onProgress) {
   Object.assign(manifest, equip);
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const sprites = new Sprites(manifest, images, hd);
-  await sprites.preloadHd(Array.from({ length: 8 }, (_, d) => "ske" + (8 + d)));
-  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
+    return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
 }
 
 export class Sprites {

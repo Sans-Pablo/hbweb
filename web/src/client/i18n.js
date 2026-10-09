@@ -9,7 +9,7 @@ const listeners = new Set();
 
 const EN = {
   // ---- pantalla de entrada y creación
-  "Cargando…": "Loading…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
+  "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
   "Repite la contraseña": "Repeat password", "Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.": "Your character is saved only in this browser. You can make a backup in Options.",
   "Conexión perdida": "Connection lost", "El servidor se ha cerrado o se cortó internet.": "The server closed or the internet dropped.", "Volver a entrar": "Log back in",
   "Crear cuenta y entrar": "Create account and log in", "Escribe un nombre.": "Enter a name.", "Las contraseñas no coinciden.": "The passwords do not match.",
@@ -68,7 +68,7 @@ const EN = {
   "Faltan los datos de Skeleton. Recarga la página.": "Skeleton data is missing. Reload the page.", "Cripta de esqueletos": "Skeleton crypt",
   "Para asignar un atajo usa primero un objeto o un hechizo, luego pulsa Ctrl+": "To assign a shortcut, first use an item or a spell, then press Ctrl+",
   // ---- motivos de rechazo (servidor)
-  "demasiado rápido": "too fast", "sin objetivo": "no target", "no tienes": "you do not have it", "sin puntos": "no points", "mapa no disponible": "map not available", "ocupado o muerto": "busy or dead",
+  "demasiado rápido": "too fast", "sin objetivo": "no target", "no tienes": "you do not have it", "sin puntos": "no points", "mapa no disponible": "map not available", "cargando el mapa, vuelve a intentarlo": "loading the map, try again", "ocupado o muerto": "busy or dead",
   "acércate al portal": "get close to the portal", "faltan los datos de los esqueletos; recarga la página": "skeleton data is missing; reload the page", "no se puede equipar": "cannot be equipped",
   "solo para hombres": "males only", "solo para mujeres": "females only", "nada que recoger": "nothing to pick up", "sin oro": "no gold", "no se puede usar": "cannot be used", "no implementado": "not implemented",
   "no existe": "does not exist", "ya la conoces": "you already know it", "no se vende": "not for sale", "oro insuficiente": "not enough gold", "no conoces ese hechizo": "you do not know that spell",

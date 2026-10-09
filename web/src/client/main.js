@@ -19,6 +19,8 @@ import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
+import { DUNGEON_ASSETS } from "../shared/dungeon.js";
+import { Streamer } from "./streaming.js";
 import { Sky, trackFor } from "./sky.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -35,6 +37,7 @@ function bindLanguage() {
 
 async function main() {
   startDomTranslation(); bindLanguage();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});   // caché persistente: la segunda visita no vuelve a bajar nada
   const status = document.getElementById("loading");
   const assets = await loadAssets(k => { status.querySelector("span").textContent = "Cargando gráficos… " + Math.round(100 * k) + "%"; });
   status.querySelector("span").textContent = "Preparando el mapa…";
@@ -47,9 +50,17 @@ async function main() {
   const online = !!(info && info.multiplayer);
   const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps)
     : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps, clock: () => new Date().getMinutes() }));
-  status.remove();
+  if (online) await Promise.all(Object.values(assets.maps).map(m => m.ensure?.()));     // el servidor no espera: las rejillas se bajan antes
+  status.style.display = "none";
   const pid = await askNameAndJoin(conn, online, info, assets.sprites);
   let world = conn.state;
+  // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
+  const stream = new Streamer(assets.sprites);
+  status.style.display = "";
+  const bar = () => { status.querySelector("span").textContent = tr("Cargando el mapa…") + " " + Math.round(100 * stream.progress(world, assets.npcDb)) + "%"; };
+  stream.onChange = bar; bar();
+  await stream.enter(world, assets.npcDb);
+  stream.onChange = null; status.remove();
 
   const canvas = document.getElementById("game");
   const renderer = new Renderer(canvas, assets, grid);
@@ -150,7 +161,18 @@ async function main() {
   };
   hud.magicData = assets.data.magic;
   hud.sprites = assets.sprites;
+  // al cambiar de mapa: pedir lo que falte (urgente) y precalentar los destinos cercanos; mientras llega, se dibujan marcadores
+  const mapStream = w => {
+    stream.enter(w, assets.npcDb);
+    stream.audio?.prefetch?.(stream.bundle(w, assets.npcDb).sounds);
+    const me = w.ents.get(pid);
+    stream.prefetchNeighbours(w, { maps: assets.maps }, assets.npcDb, me?.level || 1, me);
+  };
+  setInterval(() => { const w = conn.state; if (stream.busy < 3) mapStream(w); }, 2000);     // junto a un teleport se calientan sus destinos
+  setTimeout(() => { mapStream(world); fx.sp.warmAll?.(); }, 1500);
+  setTimeout(() => stream.wantAll([...stream.spr.m ? DUNGEON_ASSETS.filter(k => stream.spr.has(k)) : []], 0), 20000);   // la cripta de esqueletos, cuando la cola lleva un rato vacía
   const sound = new Sound(world, pid);
+  stream.audio = sound; sound.prefetch(stream.bundle(world, assets.npcDb).sounds);
   sound.setTrack(trackFor(world));
   const sky = new Sky();
   let raining = false;
@@ -422,6 +444,7 @@ async function main() {
       ctl.hover = ctl.hoverEnt = ctl.clickFx = null;
       fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
       sound.setTrack(trackFor(world));
+      mapStream(world);
     }
     sky.sync(world); sky.update(dt);
     const rainNow = !world.fixedDay && world.weather >= 1 && world.weather <= 3;

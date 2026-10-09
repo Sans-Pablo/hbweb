@@ -35,6 +35,7 @@ export class Adventure {
     if (this.worlds.has(id)) return this.worlds.get(id);
     const m = this.maps[id];
     if (!m) return null;
+    if (!m.grid) { m.ensure?.().catch(() => {}); return null; }          // rejilla aún sin descargar (carga bajo demanda del cliente)
     m.start = m.start || Object.values(m.meta.initial || {})[0] || [Math.floor(m.grid.w / 2), Math.floor(m.grid.h / 2)];
     const { meta } = m, o = this.options;
     const spawns = (meta.spawns || []).filter(s => s.kind === 1 && o.npcDb[s.name]).map(s => ({ ...s }));
@@ -55,7 +56,7 @@ export class Adventure {
   teleport(p, w, tp) {
     const id = tp.map.toLowerCase();
     const to = id === w.map.id ? w : this.staticWorld(id);
-    if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "mapa no disponible" }); return false; }
+    if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: this.maps[id] && !this.maps[id].grid ? "cargando el mapa, vuelve a intentarlo" : "mapa no disponible" }); return false; }
     const init = this.maps[id]?.meta.initial;
     const spot = tp.dx >= 0 ? [tp.dx, tp.dy] : (init && Object.values(init)[0]) || to.start;
     if (to === w) return this.relocate(p, w, spot, tp.dir);
