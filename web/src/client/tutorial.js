@@ -204,31 +204,39 @@ export class Tutorial {
     g.text(x + w / 2, y + 4, label, over ? "#fff" : "#e8dcc3", { align: "center", size: 11 });
     return over;
   }
+  // caja de conversación: en móvil se ajusta al ancho de la pantalla y a lo que mide el texto
+  textLines(c, text, w) { c.font = "13px Tahoma, Verdana, sans-serif"; return this.wrap(c, text, w); }
   boxDialog() {
-    const self = this, W = 600, H = 146;
+    const self = this;
     return {
-      id: BOX_ID, x: 100, y: 392, w: W, h: H, fixed: true,
+      id: BOX_ID, x: 100, y: 392, w: 600, h: 146, fixed: true, mobileFixed: true, face: 96,
+      layout(g) {                                                   // móvil: ancho de pantalla, cara pequeña, alto según el texto, pegado abajo
+        this.w = Math.min(600, g.W - 12); this.face = this.w < 520 ? 64 : 96;
+        const l = self.line(), tw = this.w - (this.face + 32) - 14, n = l ? self.textLines(g.ctx, self.full(l), tw).length : 3;
+        this.h = Math.max(this.face + 56, 40 + n * 17 + 46);
+        this.x = (g.W - this.w) / 2; this.y = g.H - this.h - 6;
+      },
       draw(g) {
         const c = g.ctx, l = self.line(); if (!l) return;
+        if (g.mobile) this.layout(g);
+        const W = this.w, H = this.h, F = this.face, tx = F + 32;
         const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y;
         self.panel(c, W, H);
-        self.drawFace(g, l.w, 16, 16, 96);
+        self.drawFace(g, l.w, 16, 16, F);
         const nm = self.nameOf(l.w);
-        if (nm) g.text(128, 16, nm, "#f0d27a", { bold: true, size: 14, shadow: true });
+        if (nm) g.text(tx, 16, nm, "#f0d27a", { bold: true, size: 14, shadow: true });
         const full = self.full(l), txt = full.slice(0, self.shown());
-        c.font = "13px Tahoma, Verdana, sans-serif";
-        const lines = self.wrap(c, full, W - 128 - 26); let n = 0;
-        lines.forEach((ln, i) => { const part = txt.slice(n, n + ln.length + 1).slice(0, ln.length); n += ln.length + 1; if (part) g.text(128, 38 + i * 17, part, "#f1e8d0", { size: 13 }); });
+        const lines = self.textLines(c, full, W - tx - 14); let n = 0;
+        lines.forEach((ln, i) => { const part = txt.slice(n, n + ln.length + 1).slice(0, ln.length); n += ln.length + 1; if (part) g.text(tx, 38 + i * 17, part, "#f1e8d0", { size: 13 }); });
         const last = self.li + 1 >= self.lines().length, typing = self.typing();
         const pulse = (Math.floor(self.d.now() / 400) % 2) ? "#fff" : "#e0c070";
         g.text(W - 18, H - 24, typing ? "" : self.tx(last && self.i + 1 >= TOTAL ? UI.end : UI.next), pulse, { align: "right", size: 12, bold: true });
-        g.text(W - 18, H - 38, typing ? "" : "[" + self.tx(UI.key) + "]", "#a89868", { align: "right", size: 9 });
+        if (!g.mobile) g.text(W - 18, H - 38, typing ? "" : "[" + self.tx(UI.key) + "]", "#a89868", { align: "right", size: 9 });
         g.text(16, H - 22, `${self.tx(UI.title)} ${Math.min(self.i + 1, TOTAL)}/${TOTAL}`, "#a89868", { size: 10 });
-        const sx = 128, sw = 150;
-        self.btn(g, lx, ly, sx, H - 28, sw, 18, self.tx(self.confirm > self.d.now() ? UI.sure : UI.skip), self.confirm > self.d.now());
+        self.btn(g, lx, ly, tx, H - 28, 150, 18, self.tx(self.confirm > self.d.now() ? UI.sure : UI.skip), self.confirm > self.d.now());
       },
       click(g, lx, ly) {
-        if (lx >= 128 && lx <= 278 && ly >= H - 28 && ly <= H - 10) { self.askSkip(); return true; }
+        if (lx >= this.face + 32 && lx <= this.face + 32 + 150 && ly >= this.h - 28 && ly <= this.h - 10) { self.askSkip(); return true; }
         self.advance(); return true;
       },
     };
@@ -237,11 +245,14 @@ export class Tutorial {
     if (this.confirm > this.d.now()) { this.confirm = 0; this.skipAll(); } else this.confirm = this.d.now() + 3500;
   }
   trackDialog() {
-    const self = this, W = 380, H = 66;
+    const self = this, H = 66;
     return {
-      id: TRACK_ID, x: 210, y: 8, w: W, h: H, fixed: true,
+      id: TRACK_ID, x: 210, y: 8, w: 380, h: H, fixed: true, mobileFixed: true,
+      layout(g) { this.w = Math.min(380, g.W - 12); this.x = (g.W - this.w) / 2; this.y = 52; },       // móvil: debajo de las barras de estado
       draw(g, me, world) {
         const c = g.ctx, s = self.step; if (!s?.goal) return;
+        if (g.mobile) this.layout(g);
+        const W = this.w;
         const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y;
         self.panel(c, W, H);
         g.text(12, 9, `${self.tx(UI.title)} ${self.i + 1}/${TOTAL} · ${self.tx(UI.goal)}`, "#a89868", { size: 10 });
@@ -260,6 +271,7 @@ export class Tutorial {
         self.btn(g, lx, ly, W - 98, H - 22, 90, 16, self.tx(self.confirm > self.d.now() ? UI.sure : UI.skip), self.confirm > self.d.now());
       },
       click(g, lx, ly) {
+        const W = this.w;
         if (ly >= H - 22 && ly <= H - 6) {
           if (lx >= W - 190 && lx <= W - 104) self.skipStep();
           else if (lx >= W - 98) self.askSkip();

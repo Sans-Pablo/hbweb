@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Modo móvil (v0.24.0)",
+        "en": "Mobile mode (v0.24.0)"
+      },
+      "items": [
+        {
+          "es": "En móvil (o con ?mobile=1) la interfaz se adapta a la pantalla: joystick, botones de atacar, recoger, pociones y correr, barras de estado, minimapa pequeño y menú ☰ con todos los cuadros. Cada cuadro se abre centrado y se cierra con ✕.",
+          "en": "On phones (or with ?mobile=1) the interface adapts to the screen: joystick, attack, pick up, potion and run buttons, status bars, a small minimap and a ☰ menu with every dialog. Each dialog opens centered and closes with ✕."
+        },
+        {
+          "es": "Los jugadores móvil empiezan con el ataque automático activado (botón AUTO para cambiarlo). Zoom con dos dedos. Las pantallas de acceso y los paneles se desplazan en pantallas pequeñas.",
+          "en": "Mobile players start with auto attack on (AUTO button to toggle). Pinch to zoom. Login screens and panels scroll on small screens."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Tutorial para jugadores nuevos (v0.23.0)",
         "en": "Tutorial for new players (v0.23.0)"
       },
@@ -2267,6 +2284,17 @@
       "text": {
         "es": "Prueba «Saltar paso» y «Saltar tutorial» (pide confirmar con un segundo clic). Recarga la página: no debe volver a empezar. Repite con /tutorial o el botón de Opciones; las 400 monedas y la recompensa solo se dan una vez.",
         "en": "Try \"Skip step\" and \"Skip tutorial\" (asks to confirm with a second click). Reload the page: it must not start again. Repeat with /tutorial or the Options button; the 400 coins and the reward are only given once."
+      }
+    },
+    {
+      "id": "mobile-hud",
+      "group": {
+        "es": "Móvil",
+        "en": "Mobile"
+      },
+      "text": {
+        "es": "Abre el juego en el móvil (apaisado): mueve con el joystick, ⚔️ ataca al monstruo más cercano, ✋ recoge, ☰ abre el menú y ✕ cierra el cuadro. Comprueba que AUTO está encendido la primera vez y que ningún cuadro se sale de la pantalla.",
+        "en": "Open the game on your phone (landscape): move with the joystick, ⚔️ attacks the nearest monster, ✋ picks up, ☰ opens the menu and ✕ closes the dialog. Check AUTO is on the first time and no dialog goes off screen."
       }
     }
   ],

@@ -26,6 +26,7 @@ export class Gui {
     this.tips = [];
     this.onAction = null;
     this.flags = { combat: false, safe: false };
+    this.mobile = false; this.W = W; this.H = H;     // modo móvil: el lienzo ocupa toda la pantalla (lógica W×H = pantalla / escala) y los cuadros se centran de uno en uno
   }
 
   async load() {
@@ -42,6 +43,18 @@ export class Gui {
   // coloca el lienzo sobre el área visible del juego (rect en píxeles CSS) y fija la escala 800x600
   place(rect, dpr) {
     this.dpr = dpr || 1;
+    if (this.mobile) {                                 // móvil: escala para que los cuadros (≈340 px de alto) quepan y se lean; el lienzo cubre la pantalla
+      const vw = innerWidth, vh = innerHeight;
+      let tall = 350, wide = 340;                      // el cuadro abierto más grande manda: debe caber entero (mín. 0.5)
+      for (const id of this.order) { const d = this.dialogs.get(id); if (!d.mobileFixed) { tall = Math.max(tall, d.h + 8); wide = Math.max(wide, d.w + 8); } }
+      const k = Math.max(0.5, Math.min(1.3, Math.min(vh / tall, vw / wide)));
+      this.scale = k; this.W = vw / k; this.H = vh / k; this.rect = { x: 0, y: 0, w: vw, h: vh };
+      const s = this.cv.style; s.left = "0px"; s.top = "0px"; s.width = vw + "px"; s.height = vh + "px";
+      const pw = Math.round(vw * this.dpr), ph = Math.round(vh * this.dpr);
+      if (this.cv.width !== pw || this.cv.height !== ph) { this.cv.width = pw; this.cv.height = ph; }
+      for (const id of this.order) this.dialogs.get(id).layout?.(this);
+      return;
+    }
     this.scale = Math.min(rect.w / W, rect.h / H);
     const cssW = W * this.scale, cssH = H * this.scale;
     this.rect = { x: rect.x + (rect.w - cssW) / 2, y: rect.y + rect.h - cssH, w: cssW, h: cssH };
@@ -164,7 +177,15 @@ export class Gui {
   // ---------------------------------------------------------------- cuadros de diálogo
   register(d) { this.dialogs.set(d.id, d); }
   isOpen(id) { return this.order.includes(id); }
-  open(id) { if (!this.dialogs.has(id)) return; this.close(id, true); this.order.push(id); this.dialogs.get(id).onOpen?.(this); this.avoidOverlap(id); }
+  open(id) {
+    if (!this.dialogs.has(id)) return;
+    this.close(id, true);
+    const d = this.dialogs.get(id);
+    if (this.mobile && !d.mobileFixed) for (const o of [...this.order]) if (!this.dialogs.get(o).mobileFixed) this.close(o);      // móvil: un cuadro cada vez, centrado
+    this.order.push(id); d.onOpen?.(this);
+    if (this.mobile && this.rect && !d.mobileFixed) this.place(this.rect, this.dpr);   // reescala para que quepa
+    if (this.mobile) { if (d.mobileFixed) d.layout?.(this); else { d.x = Math.max(0, (this.W - d.w) / 2); d.y = Math.max(2, (this.H - d.h) / 2); } } else this.avoidOverlap(id);
+  }
   // Al abrir un cuadro grande, se coloca en el hueco libre más cercano a su sitio si pisaría a otro ya abierto (los pequeños de cantidad/menú/chat se quedan donde el original los pone)
   avoidOverlap(id) {
     if (NO_AVOID.has(id)) return;
@@ -179,7 +200,7 @@ export class Gui {
     }
     if (best) { d.x = best[0]; d.y = best[1]; }
   }
-  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); if (!quiet) this.dialogs.get(id).onClose?.(this); } }
+  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); if (!quiet) this.dialogs.get(id).onClose?.(this); if (this.mobile && !quiet && this.rect) this.place(this.rect, this.dpr); } }
   toggle(id) { if (this.isOpen(id)) this.close(id); else this.open(id); }
   closeAll() { for (const id of [...this.order]) this.close(id); }
   front(id) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); this.order.push(id); } }
@@ -193,7 +214,7 @@ export class Gui {
   // ¿está el puntero sobre la interfaz (y no sobre el mundo)?
   over(cx, cy) {
     const [x, y] = this.toGui(cx, cy);
-    return this.dialogAt(x, y) !== null || y >= 548 - 0 && y < H && x >= 0 && x < W;
+    return this.dialogAt(x, y) !== null || !this.mobile && y >= 548 - 0 && y < H && x >= 0 && x < W;
   }
 
   // ---------------------------------------------------------------- ratón
@@ -202,8 +223,8 @@ export class Gui {
     this.mouse.x = x; this.mouse.y = y;
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
-      d.x = Math.max(0, Math.min(W - d.w, x - this.drag.dx));
-      d.y = Math.max(0, Math.min(H - 52 - 20, y - this.drag.dy));
+      d.x = Math.max(0, Math.min(this.W - d.w, x - this.drag.dx));
+      d.y = Math.max(0, Math.min(this.H - (this.mobile ? 20 : 52 + 20), y - this.drag.dy));
     }
   }
   // devuelve true si la interfaz se queda con el clic
@@ -220,7 +241,7 @@ export class Gui {
       if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
       const used = button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
       if (used) this.onSound?.(14);
-      if (!used && button === 0 && !d.fixed) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
+      if (!used && button === 0 && !d.fixed && !this.mobile) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
     }
     if (me && button === 0 && x >= 720 && x <= 780 && y >= 510 && y <= 525) {      // "Level Up!" / "Restart"
@@ -228,7 +249,7 @@ export class Gui {
       return true;
     }
     if (this.petBall && button === 0 && x >= 103 && x <= 204 && y >= 515 && y <= 538) { this.onAction?.("petname"); return true; }   // clic en el nombre del compañero: renombrar
-    if (y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
+    if (!this.mobile && y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
   // rueda del ratón: la recibe el cuadro de arriba bajo el cursor (p. ej. círculos de magia). true = consumida
@@ -266,11 +287,12 @@ export class Gui {
     if (!this.ready) return;
     const c = this.ctx;
     c.setTransform(this.scale * this.dpr, 0, 0, this.scale * this.dpr, 0, 0);
-    c.clearRect(0, 0, W, H);
+    c.clearRect(0, 0, this.W, this.H);
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
-    if (me) this.gauges(me, world, info);
+    if (me && !this.mobile) this.gauges(me, world, info);          // en móvil las barras y botones son DOM (mobile.js)
+    for (const id of this.order) { const d = this.dialogs.get(id); if (this.mobile && d.mobileFixed) d.layout?.(this); }
     for (const id of this.order) {
       const d = this.dialogs.get(id);
       c.save(); c.translate(d.x, d.y);
@@ -294,8 +316,8 @@ export class Gui {
     c.font = "12px Tahoma, Verdana, sans-serif";
     const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14, h = rows.length * 14 + 10;
     let x = this.mouse.x + 18, y = this.mouse.y + 14;
-    if (x + w > W) x = this.mouse.x - w - 8;
-    if (y + h > H) y = H - h;
+    if (x + w > this.W) x = this.mouse.x - w - 8;
+    if (y + h > this.H) y = this.H - h;
     c.fillStyle = "rgba(10,8,4,.88)"; c.fillRect(x, y, w, h);
     c.strokeStyle = "#8a7a4a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
     rows.forEach((r, i) => this.text(x + 7, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));

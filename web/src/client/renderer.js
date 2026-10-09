@@ -638,14 +638,14 @@ export class Renderer {
   minimapHit(clientX, clientY) {
     const r = this.canvas.getBoundingClientRect();
     const vx = ((clientX - r.left) * this.dpr - this.ox) / this.scale, vy = ((clientY - r.top) * this.dpr - this.oy) / this.scale;
-    const size = this.mode === "remastered" ? 170 : 140, pad = 10, x0 = this.viewW - size - pad;
-    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= pad - 3 && vy <= pad + size + 3;
+    const size = this.miniSize || (this.mode === "remastered" ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, top = this.miniTop ?? pad;
+    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= top - 3 && vy <= top + size + 3;
   }
 
   drawMinimap(s, ppx, ppy) {
     const { ctx } = this;
     const remaster = this.mode === "remastered";
-    const size = remaster ? 170 : 140, pad = 10, x0 = this.viewW - size - pad, y0 = pad;
+    const size = this.miniSize || (remaster ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, y0 = this.miniTop ?? pad;      // en móvil (mobile.js) más pequeño y bajo los botones
     const sc = size / this.grid.w;
     ctx.globalAlpha = remaster ? 0.9 : 1;
     ctx.fillStyle = "#14161a";

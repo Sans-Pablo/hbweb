@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
 <title>Helbreath Web</title>
 <style>
   :root {
@@ -280,6 +283,17 @@ body.dialogtrans .panel { opacity: .55; }
   #create .msg { color: #ff8a7a; font-size: 12px; min-height: 16px; margin: 8px 0 0; text-align: center; }
   #create .btns { text-align: center; margin-top: 6px; }
   #create .ok { padding: 8px 22px; font-size: 15px; border-color: #ffd76a; color: #ffd76a; }
+
+  /* ---------------- pantallas pequeñas / móvil: entrada y creación con desplazamiento, paneles a todo el ancho */
+  #join, #create, #lost { overflow: auto; align-items: safe center; }
+  @media (max-width: 700px), (max-height: 520px) {
+    #create .box { padding: 10px 12px; margin: 6px auto; } #create canvas { width: 150px !important; height: 175px !important; }
+    #create .cols { gap: 10px; } #create h2 { margin: 0 0 6px; font-size: 18px; }
+    #join form { padding: 12px 16px; } #join .where, #join .hint, #joininfo { display: none; } #join .tabs, #join .langsw { margin: 2px 0 6px; }
+    #join input { padding: 7px 9px; margin-top: 2px; } #join button { margin-top: 8px; }
+    #news { width: 96%; } #news .scroll { max-height: 62vh; }
+  }
+  @media (max-width: 700px) { .panel { max-width: 96vw; } #options { width: 94vw; } #inv, #book, #charpanel { width: 94vw; } #inv .grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); } }
 </style>
 <div id="create"></div>
 <div id="lost"><div><h2>Conexión perdida</h2><p>El servidor se ha cerrado o se cortó internet.</p><button onclick="location.reload()">Volver a entrar</button></div></div>

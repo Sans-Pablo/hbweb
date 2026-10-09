@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.24.0 · Modo móvil (2026-10-09)
+
+- Nuevo `client/mobile.js`: detección (`isMobile`, `?mobile=1/0`), auto-ataque activado la primera vez (`initMobileOpts`), capa DOM con barras, joystick, botones de acción, menú ☰, ✕, zoom táctil y aviso de giro. `gui.js` modo `mobile` (lienzo a pantalla completa, escala que ajusta el cuadro abierto, un cuadro cada vez). `index.html` responsive. Tutorial adaptado (`mobileFixed`). Minimapa reducido (`renderer.miniSize/miniTop`). Ficha `docs/sistemas/movil.md`, test `tests/mobile.test.mjs` (en CI).
+
 ## 0.23.0 · Tutorial de bienvenida (2026-10-09)
 
 - Nuevo sistema de tutorial: `shared/systems/tutorial.js` (guion de 18 pasos con lore y mecánicas, es+en; estado `p.tut` en la partida; concesiones: limo de práctica, botín, 400 monedas y recompensa final, estas dos solo una vez) y `client/tutorial.js` (cuadro de conversación con cara + texto, rastreador de objetivos con flecha, saltar tutorial/paso, Espacio/Intro/clic). Orden `tut`, evento `tutorial`. `/tutorial`, `/tutorial off` y botón «Repetir tutorial» en Opciones. Partidas antiguas: terminado. Ficha `docs/sistemas/tutorial.md`, test `tests/tutorial.test.mjs`.

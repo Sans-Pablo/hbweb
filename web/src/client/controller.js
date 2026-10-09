@@ -152,7 +152,7 @@ export class Controller {
     if (this.down && !this.noHold && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
 
     if (world.busy(me)) return;
-    const run = this.ui.run && me.sp >= 1;
+    const run = (this.ui.run || this.forceRun) && me.sp >= 1;
     const it = this.intent;
     if (!it) { this.path = []; return; }
 

@@ -27,6 +27,7 @@ import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
+import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
 const store = {
@@ -41,6 +42,8 @@ function bindLanguage() {
 }
 
 async function main() {
+  const mobile = isMobile();                         // pantalla táctil: controles y menús para móvil (mobile.js)
+  if (mobile) document.body.classList.add("mobile");
   startDomTranslation(); bindLanguage();
   setupNews(document.getElementById("news"));
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});   // caché persistente: la segunda visita no vuelve a bajar nada
@@ -73,6 +76,8 @@ async function main() {
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
+  gui.mobile = mobile;
+  if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
   const logout = { n: null, t: 0 };
@@ -213,6 +218,7 @@ async function main() {
   const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, spellFx: true, freeMagic: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
+  if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
   const optionsEl = document.getElementById("options");
   function applyOpts() {
     view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
@@ -414,6 +420,17 @@ async function main() {
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
+  const mobileMenu = id => ({
+    char: () => gui.onAction("char"), inv: () => gui.onAction("inv"), pets: () => gui.onAction("pets"), skill: () => gui.onAction("skill"), log: () => gui.onAction("chat"),
+    book: () => ui.key("book"), sys: () => ui.key("options"), news: () => ui.key("news"), tutorial: () => tutorial.restart(), recall: () => conn.send({ t: "recall" }),
+    save: () => { conn.save?.(); hud.toast(tr("Partida guardada")); }, full: () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.()),
+    zin: () => renderer.setZoom(renderer.zoom * 1.15), zout: () => renderer.setZoom(renderer.zoom / 1.15),
+  })[id]?.();
+  const mob = mobile ? new Mobile({
+    ctl, gui, canvas, send: c => conn.send(c), lang: getLang, world: () => world, pid, opts: () => opts, setOpt, quick: k => hud.quickUse(k), chat: () => openChat(),
+    zoom: f => renderer.setZoom(renderer.zoom * f), toast: m => hud.toast(m), unlock: () => sound.unlock(), menu: mobileMenu,
+  }) : null;
+  onLang(() => mob?.relabel());
 
   setMode(opts.mode);
   applyOpts();
@@ -508,6 +525,7 @@ async function main() {
     ctl.update();
     voice?.update(world, me, assets.npcDb);
     tutorial.update(me, world);
+    mob?.update(me, world);
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
@@ -534,7 +552,7 @@ async function main() {
 
   // para pruebas automáticas
   window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };
-  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, tutorial };
+  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, tutorial, mob };
   window.hbSound = sound;
 }
 

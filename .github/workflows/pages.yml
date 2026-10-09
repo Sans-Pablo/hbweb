@@ -23,6 +23,7 @@ jobs:
       - run: node tests/magic-prep.test.mjs
       - run: node tests/magic-types.test.mjs
       - run: node tests/tutorial.test.mjs
+      - run: node tests/mobile.test.mjs
       - run: node --test tests/assets.test.mjs tests/dungeon.test.mjs tests/net-dungeon.test.mjs
       - run: node tests/net-walk.test.mjs
       - run: python tests/version_web_test.py
