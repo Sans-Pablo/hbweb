@@ -177,7 +177,8 @@ export function generateLevel(seed, level) {
   const open3 = cells.filter(([x, y]) => roomy(P, x, y, 3)), spots = open3.length > 30 ? open3 : cells;      // la puerta es alta: lejos de las paredes
   // inicio: la esquina más cercana al origen (jefes: la parte baja); meta: lo más lejos posible por el camino
   // la puerta de salida va contra una pared a su izquierda (oeste), con espacio libre al este
-  const wallW = cells.filter(([x, y]) => !P.at(x - 1, y) && !P.at(x - 1, y - 1) && !P.at(x - 1, y + 1) && roomy(P, x + 2, y, 1) && P.at(x + 1, y) && P.at(x, y - 1) && P.at(x, y + 1));
+  const wallW = [];
+  for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) if (P.at(x, y) && !P.at(x - 1, y) && P.at(x + 1, y) && P.at(x, y - 1) && P.at(x, y + 1) && P.at(x + 1, y - 1) && P.at(x + 1, y + 1) && roomy(P, x + 2, y, 1)) wallW.push([x, y]);
   const startSet = wallW.length > 10 ? wallW : spots;
   let sp = boss ? startSet.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), startSet[0]) : startSet.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), startSet[0]);
   let dist = bfs(P, sp[0], sp[1]);

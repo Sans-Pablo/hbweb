@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.18.3 · Escalera contra la pared (2026-10-09)
+
+- `generateLevel`: la salida se busca entre todas las casillas libres con pared al oeste (antes solo entre las de 3x3 libre, que nunca tocan pared): 573 de 600 niveles de prueba.
+
 ## 0.18.2 · Cuevas y puertas (2026-10-09)
 
 - Revertidos los escenarios por rey (v0.18.1): `STAGE_THEMES` todo «cueva» y paleta solo con middled1n/x (630 KB). El código y `tools/convert_theme_maps.py` quedan por si se reactivan.

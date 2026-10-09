@@ -11,6 +11,19 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Salida contra la pared (v0.18.3)",
+        "en": "Exit against the wall (v0.18.3)"
+      },
+      "items": [
+        {
+          "es": "La escalera de salida de la cripta se coloca pegada a la pared de su izquierda.",
+          "en": "The crypt exit stairs are now placed flush against the wall on their left."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Vuelta a las cuevas y puertas de la cripta (v0.18.2)",
         "en": "Back to the caves and new crypt doors (v0.18.2)"
       },
