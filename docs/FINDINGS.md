@@ -1,7 +1,7 @@
 # Trampas encontradas (leer antes de tocar datos o interfaz)
 
 ## Datos y conversores
-- `tools/convert.py` puede **sobrescribir `web/data/npc.json`**. Ejecutar siempre `convert_npcs.py` después.
+- `tools/convert.py` puede **sobrescribir `web/data/npc.json`**. Por eso `tools/convert_all.py` ejecuta `npcs` siempre al final; `tests/data.test.mjs` lo comprueba y lista los NPC y mapas aún sin portar.
   Uso: `cd tools && python3 convert_npcs.py /root/HelbreathServer/Helbreath /root/HelbreathServer ../web/data` (sin `python3 -I`: importa `convert`).
 - Los ficheros del servidor están en cp1252: `iconv -c -f cp1252 -t utf8` (sin `-c` falla con secuencias ilegales).
 - `price < 0` en un objeto = no está a la venta. El oro es `p.gold`, no un objeto de la mochila.

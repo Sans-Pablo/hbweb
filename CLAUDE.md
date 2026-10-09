@@ -29,7 +29,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 ## Comandos
 - Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`).
 - Tests: `for t in tests/*.test.mjs; do node $t | tail -1; done`.
-- Regenerar datos: ver `docs/FINDINGS.md` (orden de los conversores y trampas).
+- Regenerar datos: `python3 tools/convert_all.py /root/HelbreathServer/Helbreath /root/HelbreathServer web/data [--only paso,paso] [--dry]` (pasos base, equip, fx, players, ui, maps, npcs; luego `tests/data.test.mjs`).
 - Pruebas visuales: Playwright con Chromium en `/opt/pw-browsers/chromium`.
 - `window.hb` expone `world, conn, renderer, ctl, gui, npcUi` para pruebas automáticas.
 
