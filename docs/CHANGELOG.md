@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.15.0 · Herramientas de prueba (2026-10-09)
+
+- F1 → Herramientas: panel con órdenes `dbg` (nivel, oro, objetos, enemigos y jefes, ir a mapas/cripta, summons y talentos, cielo). Ficha: `docs/sistemas/herramientas.md`. El servidor las desactiva salvo `HB_DEBUG=1`.
+
 ## 0.14.0 · Cripta fiel al original (2026-10-09)
 
 - Los niveles de la cripta son ventanas recortadas de middled1n/middled1x (paredes, suelos y antorchas originales); sin agua; el sello del corte usa teselas de borde elegidas por máscara y por adyacencia observada en el original. `build_dungeon_palette.py` empaqueta los mapas (v3). Se eliminan los trazados rectangulares inventados.

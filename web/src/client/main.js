@@ -521,6 +521,7 @@ async function main() {
   requestAnimationFrame(loop);
 
   // para pruebas automáticas
+  window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };
   window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi };
   window.hbSound = sound;
 }

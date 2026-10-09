@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 import { Grid } from "../web/src/shared/grid.js";
 import { Adventure } from "../web/src/shared/adventure.js";
 import { setDungeonPalette } from "../web/src/shared/dungeon.js";
+import { DEBUG } from "../web/src/shared/systems/debug.js";
+DEBUG.enabled = process.env.HB_DEBUG === "1";            // las herramientas de prueba (F1) solo con HB_DEBUG=1
 import { GameData } from "../web/src/shared/data.js";
 import { damageRange } from "../web/src/shared/combat.js";
 import { attackMs } from "../web/src/shared/world.js";

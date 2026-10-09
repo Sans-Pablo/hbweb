@@ -14,6 +14,7 @@ import { tickVitals, RUN_STEPS_PER_SP } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
 import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
+import * as Debug from "./systems/debug.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
@@ -127,7 +128,7 @@ export class World {
         }
       }
       for (const e of this.ents.values()) {
-        if (e.kind === "npc") Npc.npcThink(this, e);
+        if (e.kind === "npc") { if (!(this.dbgFreeze && !e.master)) Npc.npcThink(this, e); }
         else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
@@ -194,6 +195,7 @@ const COMMANDS = {
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
   petname: (w, p, cmd) => Companion.rename(w, p, cmd.name),
+  dbg: (w, p, cmd) => Debug.run(w, p, cmd),
   talent: (w, p, cmd) => Companion.learnTalent(w, p, cmd),
   talreset: (w, p, cmd) => Companion.resetTalents(w, p, cmd),
   petmode: (w, p, cmd) => Companion.setMode(w, p, cmd.mode),

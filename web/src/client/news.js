@@ -1,5 +1,6 @@
 // F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
 import { getLang, onLang } from "./i18n.js";
+import { devHtml, devClick } from "./devtools.js";
 
 const KEY = "hbweb.tested";
 const read = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { return new Set(); } };
@@ -13,7 +14,7 @@ export async function setupNews(root) {
   const done = read();
   let tab = "news";
   const body = root.querySelector(".body");
-  const T = { news: { es: "Novedades", en: "News" }, tests: { es: "Para probar", en: "To test" }, notes: { es: "A tener en cuenta", en: "Keep in mind" } };
+  const T = { news: { es: "Novedades", en: "News" }, tests: { es: "Para probar", en: "To test" }, notes: { es: "A tener en cuenta", en: "Keep in mind" }, tools: { es: "Herramientas", en: "Tools" } };
 
   const render = () => {
     const lang = getLang();
@@ -31,6 +32,8 @@ export async function setupNews(root) {
         h += `<li><label><input type="checkbox" data-test="${esc(t.id)}"${done.has(t.id) ? " checked" : ""}> <span>${esc(L(t.text, lang))}</span></label></li>`;
       }
       h += `</ul></section><button class="reset" data-reset>${lang === "en" ? "Clear marks" : "Borrar marcas"}</button>`;
+    } else if (tab === "tools") {
+      h += devHtml(lang);
     } else {
       h += `<ul>${data.notes.map(n => `<li>${esc(L(n, lang))}</li>`).join("")}</ul>`;
     }
@@ -38,6 +41,7 @@ export async function setupNews(root) {
   };
 
   body.addEventListener("click", e => {
+    if (devClick(e)) return;
     const b = e.target.closest("[data-tab]");
     if (b) { tab = b.dataset.tab; render(); return; }
     if (e.target.closest("[data-reset]")) { done.clear(); write(done); render(); }

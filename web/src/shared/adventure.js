@@ -7,6 +7,7 @@ import { DUNGEON_ENTRANCES, FARM_PORTAL, DUNGEON_LEVELS, DUNGEON_VERSION, genera
 import { respawn } from "./systems/player.js";
 import { populate, spawnCitizen } from "./systems/citizens.js";
 import * as Comp from "./systems/companion.js";
+import { DEBUG } from "./systems/debug.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
 
@@ -130,12 +131,32 @@ export class Adventure {
       if (!to || !this.transfer(p, w, to, [o.x, o.y])) return w.reject(p, cmd, "salida ocupada");
       return true;
     }
+    if (cmd.t === "dbg" && DEBUG.enabled && (cmd.op === "goto" || cmd.op === "crypt")) return this.debugTravel(p, w, cmd);
     if (cmd.t === "respawn" && w !== this.farm) {
       if (!p.dead || w.time - p.deadAt < 1500) return false;
       if (!this.transfer(p, w, this.farm, this.farm.start)) return false;
       return respawn(this.farm, p);
     }
     return w.command(id, cmd);
+  }
+
+  // Herramientas de prueba: ir a cualquier mapa exportado o saltar a un nivel de la cripta (sin pasar por las restricciones de viaje)
+  debugTravel(p, w, cmd) {
+    if (p.dead) return w.reject(p, cmd, "muerto");
+    if (cmd.op === "crypt") {
+      const level = Math.max(1, Math.min(DUNGEON_LEVELS, Math.floor(Number(cmd.level)) || 1));
+      if (!w.npcDb.Skeleton || !hasDungeonPalette()) return w.reject(p, cmd, "faltan los datos de la cripta");
+      p.delve = p.delve || { deepest: 1 };
+      this.runs = this.runs || new Map();
+      if (!this.runs.get(p.id)) this.runs.set(p.id, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.kind === "dungeon" ? "arefarm" : w.map.id, x: w.map.kind === "dungeon" ? 134 : p.x, y: w.map.kind === "dungeon" ? 94 : p.y } });
+      else this.runs.get(p.id).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
+      return this.descend(p, w, level, true);
+    }
+    const to = cmd.map === "arefarm" ? this.farm : this.staticWorld(String(cmd.map || "").toLowerCase());
+    if (!to) return w.reject(p, cmd, "mapa no disponible (puede estar cargándose)");
+    if (to === w) return true;
+    const init = this.maps[to.map.id]?.meta.initial;
+    return this.transfer(p, w, to, (init && Object.values(init)[0]) || to.start);
   }
 
   // Entrada a la cripta desde Aresfarm o middled1n. Con progreso guardado se pregunta: reiniciar (nivel 1) o continuar.

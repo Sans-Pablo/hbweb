@@ -9,6 +9,7 @@ export const NIGHT_MINUTE = 40;
 const WEATHER_EVERY_MS = 20000, SKY_EVERY_MS = 5000;
 
 export function tickSky(w) {
+  if (w.dbgSky) { setSky(w, w.dbgSky.day, w.dbgSky.weather); return; }          // herramientas de prueba
   if (w.fixedDay) { setSky(w, 1, 0); return; }
   if (!w.clock) return;
   if (w.time - (w.tSky ?? -1e9) >= SKY_EVERY_MS) {

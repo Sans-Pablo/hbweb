@@ -11,6 +11,19 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Herramientas de prueba (v0.15.0)",
+        "en": "Test tools (v0.15.0)"
+      },
+      "items": [
+        {
+          "es": "F1 → pestaña «Herramientas»: subir nivel, dar oro/experiencia/puntos, curar, inmortalidad, habilidades al máximo, crear cualquier objeto por nombre (y kits de pociones, flechas, tintes, huesos), crear monstruos y jefes con fuerza ajustable, matar o congelar monstruos, ir a cualquier mapa o a un nivel de la cripta, despejar el nivel, teletransportarse, dar bolas de cualquier especie y nivel, subir el nivel del summon, repartir talentos por build, y cambiar día/noche y clima.",
+          "en": "F1 → “Tools” tab: set level, give gold/experience/points, heal, invulnerability, max skills, create any item by name (plus potion, arrow, dye and bone kits), spawn monsters and bosses with adjustable power, kill or freeze monsters, go to any map or crypt level, clear the level, teleport, give balls of any species and level, set the summon level, assign talents by build, and change day/night and weather."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Cripta con el aspecto del original (v0.14.0)",
         "en": "Crypt that looks like the original (v0.14.0)"
       },
@@ -1565,6 +1578,17 @@
       "text": {
         "es": "Compara la cripta con middled1n (portal 100,85): mismas paredes, suelos y antorchas; sin cuadros grises ni costuras raras salvo en los bordes sellados del nivel.",
         "en": "Compare the crypt with middled1n (portal 100,85): same walls, floors and torches; no grey squares or odd seams except at the sealed level borders."
+      }
+    },
+    {
+      "id": "dev-tools",
+      "group": {
+        "es": "Herramientas",
+        "en": "Tools"
+      },
+      "text": {
+        "es": "F1 → Herramientas: prueba cada botón (nivel, objeto, enemigo, bola, ir a mapa/cripta, cielo). Los resultados salen en el chat como [test].",
+        "en": "F1 → Tools: try each button (level, item, enemy, ball, go to map/crypt, sky). Results show in the chat as [test]."
       }
     }
   ],

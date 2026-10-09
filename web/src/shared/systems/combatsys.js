@@ -89,6 +89,7 @@ export function giveExp(w, p, amount) {
 }
 
 export function damagePlayer(w, p, dmg, from) {
+  if (p.god) return;                                                   // herramientas de prueba: inmortal
   p.hp -= dmg;
   p.lastCombat = w.time;
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });
