@@ -295,6 +295,7 @@ async function main() {
         case "escape": {
           const open = document.querySelectorAll(".panel.open");
           for (const p of open) p.classList.remove("open");
+          for (const id of [17, 23, 20, 31, 11, 14, 16]) if (gui.isOpen(id)) { gui.close(id); break; }   // Esc cierra el cuadro de NPC de más arriba
           break;
         }
         case "char": gui.toggle(1); break;
@@ -424,7 +425,7 @@ async function main() {
   requestAnimationFrame(loop);
 
   // para pruebas automáticas
-  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid };
+  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi };
   window.hbSound = sound;
 }
 
