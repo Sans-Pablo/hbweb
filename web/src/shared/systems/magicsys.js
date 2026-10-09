@@ -5,6 +5,7 @@ import { gainSSN } from "../skills.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
 import { damageNpc } from "./combatsys.js";
+import { summonFor } from "./npcsys.js";
 import { sget, sset, sclear } from "./status.js";
 import { addField, DYN, iceResisted, poison } from "./fields.js";
 import { newInst } from "./itemsys.js";
@@ -237,6 +238,13 @@ function resolve(w, p, id, sp, x, y, cost) {
     case 28:                                                           // rompe-armaduras: daño de zona (el desgaste solo afecta a jugadores)
       area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
       break;
+    case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
+      if (target && target.kind === "player" && !w.fightZone) {
+        const n = summonFor(w, p, 0, M.MAGIC_MODE.free);
+        if (!n) w.emit({ t: "nomagic", id: p.id });
+      }
+      break;
+    }
     case 29:                                                           // Cancellation: quita los efectos a un jugador
       if (target && target.kind === "player" && !target.dead) for (const k of ["invis", "ice", "hold", "protect", "berserk", "confuse"]) sclear(w, target, k);
       break;

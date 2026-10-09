@@ -47,15 +47,78 @@ export function killNpc(w, n, p) {
     giveExp(w, p, xp);
   }
   n.noDieRemainExp = 0;
-  const drop = rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
+  const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
-  if (n.gen.respawn !== false) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
+  if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
   w.after(n.dur.dying + CORPSE_MS, () => { w.ents.delete(n.id); w.emit({ t: "remove", id: n.id }); });
+}
+
+// ---------------------------------------------------------------- seguidores (hechizo Summon Creature, DEF_MAGICTYPE_SUMMON)
+// Game.cpp ~18660: sale un monstruo según Magery (iV1 = valor 2 del hechizo; 0 -> 1d(magery/10), mínimo magery/20) y sigue al invocador
+// (bSetNpcFollowMode). Máximo magery/20 seguidores; desaparece a los 300 s (DEF_SUMMONTIME) o si el invocador muere. No da experiencia.
+const SUMMON_BY_MAGERY = ["", "Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Orc-Mage", "Hellbound", "Cyclops"];
+const SUMMON_BY_V1 = ["", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Hellbound", "Cyclops", "Troll", "Orge"];
+export const SUMMON_MS = 300000;
+export const followersOf = (w, p) => [...w.ents.values()].filter(e => e.master === p.id && !e.dead);
+export function summonFor(w, p, v1, free) {
+  const mag = p.skills[4] || 0, limit = Math.max(free ? 1 : 0, Math.floor(mag / 20));
+  if (followersOf(w, p).length >= limit) return null;
+  let name;
+  if (v1 > 0) name = SUMMON_BY_V1[v1];
+  else {
+    let r = R.dice(w.rng, 1, Math.max(1, Math.floor(mag / 10)));
+    if (r < Math.floor(mag / 20)) r = Math.floor(mag / 20);
+    name = SUMMON_BY_MAGERY[Math.max(1, Math.min(10, r))];
+  }
+  if (!w.npcDb[name]) return null;
+  const gen = { name, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
+  const n = spawnFrom(w, gen);
+  if (!n) return null;
+  Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side });
+  n.exp = 0; n.noDieRemainExp = 0;
+  return n;
+}
+
+function followerThink(w, n) {
+  const m = w.ents.get(n.master);
+  if (!m || m.dead || w.time - n.summonedAt > SUMMON_MS) return killNpc(w, n, null);
+  let best = null, bd = 1e9;
+  for (const e of w.ents.values()) {
+    if (e.kind !== "npc" || e.dead || e.master || e.cfg.actionLimit) continue;
+    const d = dist(n, e);
+    if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
+  }
+  if (best) {
+    if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
+    const d = greedyStep(w.grid, n, best.x, best.y, dirTo);
+    if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE);
+    return;
+  }
+  if (dist(n, m) > 2) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+}
+
+function followerAttack(w, n, t) {
+  n.dir = dirTo(n.x, n.y, t.x, t.y);
+  w.setAct(n, ACT.ATTACK, n.dur.attack);
+  n.busyUntil = w.time + n.dur.attack;
+  w.emit({ t: "attack", id: n.id, target: t.id });
+  w.after(n.dur.attack * 0.5, () => {
+    if (n.dead || t.dead || w.ents.get(t.id) !== t || dist(n, t) > n.cfg.attackRange) return;
+    if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return;
+    const dmg = R.npcMelee(w.rng, n).damage;
+    t.hp -= dmg;
+    w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
+    if (t.hp <= 0) { t.noDrop = true; t.noDieRemainExp = 0; return killNpc(w, t, null); }
+    const m = w.ents.get(n.master);
+    if (m && !t.target) t.target = m.id;
+    if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
+  });
 }
 
 export function npcThink(w, n) {
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
+  if (n.master) { n.nextAct = w.time + n.cfg.actionTime; return followerThink(w, n); }
   n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1);       // hielo: un 50 % más lento
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   let t = n.target ? w.ents.get(n.target) : null;
