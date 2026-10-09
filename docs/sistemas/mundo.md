@@ -6,7 +6,7 @@ Código: `shared/adventure.js` (mundos), `shared/world.js` (`safeAt`, cielo), `s
 ## Mapas
 - Un `World` por mapa estático (`staticWorld(id)`), creado al entrar el primer jugador; la granja (`arefarm`) y una cripta procedural por jugador.
 - `meta` de cada mapa: `teleports`, `initial`, `npcs` (con waypoints), `spawns`, `noAttack`, `fixedDay`, `location`.
-- NPC de ciudad: ver [tiendas.md](tiendas.md). Faltan por portar Gail, Kennedy, William, Guard-Aresden, McGaffin, Devlin, Perry y los muñecos de práctica (Dummy, Attack-Dummy).
+- NPC de ciudad: ver [tiendas.md](tiendas.md). Faltan por portar Kennedy, William, Guard-Aresden, Devlin, Perry y los muñecos de práctica (Dummy, Attack-Dummy).
 - Teleports a mapas no exportados todavía: 2ndmiddle, CmdHall_1, dglv2, huntzone2, middled1n, middleland (`tests/data.test.mjs` los lista).
 
 ## Cielo (`Game.cpp`: _CheckDayOrNight, WhetherProcessor)

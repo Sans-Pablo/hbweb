@@ -210,6 +210,7 @@ function crimsonPhase(w, n) {
   for (let ix = n.x - r; ix <= n.x + r; ix++) for (let iy = n.y - r; iy <= n.y + r; iy++) addField(w, DYN.FIRE, ix, iy, ms, 0, n.id);
 }
 export function npcThink(w, n) {
+  if (n.arena) return;                                                         // gladiadores de la arena: los mueve systems/arena.js
   if (n.crystal) return;                                                       // los cristales del jefe glacial no actúan
   if (n.boss === 1 && !n.dead && !n.aux) crimsonPhase(w, n);
   if (n.boss && !n.aux && !n.dead) Boss.bossTick(w, n);

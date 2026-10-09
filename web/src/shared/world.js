@@ -15,6 +15,7 @@ import * as MagicSys from "./systems/magicsys.js";
 import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
 import * as Debug from "./systems/debug.js";
+import * as Arena from "./systems/arena.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
@@ -133,6 +134,7 @@ export class World {
         else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
+      Arena.tickArena(this);
       tickSky(this);
     }
   }
@@ -196,6 +198,8 @@ const COMMANDS = {
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
+  arenainfo: (w, p, cmd) => Arena.info(w, p, cmd),
+  arenabet: (w, p, cmd) => Arena.bet(w, p, cmd),
   petname: (w, p, cmd) => Companion.rename(w, p, cmd.name),
   dbg: (w, p, cmd) => Debug.run(w, p, cmd),
   talent: (w, p, cmd) => Companion.learnTalent(w, p, cmd),

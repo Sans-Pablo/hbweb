@@ -6,6 +6,7 @@ import { ACT, dist } from "./const.js";
 import { DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
 import { populate, spawnCitizen } from "./systems/citizens.js";
+import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
 
@@ -30,6 +31,7 @@ export class Adventure {
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
+    spawnCitizen(this.farm, ARENA.npc, ARENA.npcAt[0], ARENA.npcAt[1], ARENA.role);       // corredor de apuestas junto a la arena
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)

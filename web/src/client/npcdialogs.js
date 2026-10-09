@@ -9,6 +9,8 @@ import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shops
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
 import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
+import { ARENA } from "../shared/systems/arena.js";
+import { BRANCH_NAMES } from "../shared/systems/talents.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
@@ -174,6 +176,7 @@ export function registerNpcDialogs(gui, api) {
 
   // clic en un NPC de ciudad
   function clickNpc(e, mx, my) {
+    if (e.role === ARENA.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; arena.open(); return true; }
     if (e.role === HOSPITAL.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; hospital.tab = 0; hospital.view = 0; gui.open(41); return true; }
     const cfg = MENU[e.type]; if (!cfg) return false;
     trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
@@ -468,12 +471,54 @@ export function registerNpcDialogs(gui, api) {
   }();
   gui.register(hospital);
 
+  // ------------------------------------------------------------ 44: arena de apuestas (invento del port, ver shared/systems/arena.js)
+  const arena = new class extends ClassicDialog {
+    constructor() { super({ id: 44, title: "Apuestas · Arena", tabs: ["Combate", "Historial"], top: 130, rowH: 15, footer: "Solo miras: la casa se queda un 10 %." }); this.o = null; this.amount = 500; this.wait = false; }
+    open() { this.tab = 0; this.view = 0; this.wait = true; this.o = null; api.send({ t: "arenainfo", npc: trade.npc.id }); gui.open(44); }
+    got(ev) { this.o = ev; this.wait = false; this.amount = clamp(this.amount, ev.min, ev.max); }
+    roleName(r) { return r === "none" ? "sin rama" : BRANCH_NAMES[r] || r; }
+    rows(me) {
+      const o = this.o;
+      if (this.tab === 1) return (o?.hist || []).slice().reverse().map(h => ({ text: (h.win ? "Ganada · " : "Perdida · ") + h.a + " vs " + h.b, right: (h.net >= 0 ? "+" : "") + h.net, color: h.win ? "#1a6b1a" : RED, tip: "Apostaste " + h.amount + " por " + (h.side === "a" ? h.a : h.b) }));
+      if (!o || o.none || o.busy || this.wait) return [];
+      const f = (k, side) => ({ side, text: "Apostar por " + k.nm, right: "x" + (side === "a" ? o.oa : o.ob).toFixed(2), tip: "Si gana, cobras " + Math.round(this.amount * (side === "a" ? o.oa : o.ob)) + " de oro" });
+      const rows = [f(o.a, "a"), f(o.b, "b"),
+        { act: "+100", text: "Subir apuesta", right: "+100" }, { act: "+1000", text: "Subir apuesta", right: "+1000" }, { act: "-100", text: "Bajar apuesta", right: "-100" },
+        { act: "max", text: "Apuesta máxima", right: String(o.max) }, { act: "new", text: "Otro retador", tip: "Se genera otro combate" }];
+      if ((o.balls || []).length > 1) rows.push({ act: "ball", text: "Cambiar de compañero", tip: "Elige otro de tus compañeros" });
+      return rows;
+    }
+    drawBody(g, me) {
+      const o = this.o;
+      if (this.tab === 1) { g.text(this.mx, 62, "Últimos combates", INK, { size: 10 }); g.text(this.w - 44, 62, "Neto", INK, { size: 10 }); if (!this.rows(me).length) g.aligned(0, this.w, 120, "Aún no has apostado.", INK); return; }
+      if (this.wait) return g.aligned(0, this.w, 120, "…", INK);
+      if (!o || o.none) return g.aligned(0, this.w, 110, "Necesitas un compañero (bola) sano para combatir.", INK);
+      if (o.busy) return g.aligned(0, this.w, 110, "Hay un combate en curso…", INK);
+      const line = (k, p, y) => { g.text(this.mx, y, k.nm + (k.champion ? " ★" : ""), INK, { size: 11, bold: true }); g.text(this.mx, y + 12, k.sp.replace(/-/g, " ") + " nv " + k.lvl + " · " + this.roleName(k.role) + " · " + Math.round(p * 100) + " %", INK, { size: 10 }); };
+      line(o.a, o.pa, 64); g.text(this.w - 44, 80, "VS", RED, { size: 11, bold: true }); line(o.b, o.pb, 92);
+      g.text(this.mx, 116, "Apuesta: " + this.amount + " de oro  (" + o.min + " – " + o.max + ")", DARK, { size: 10 });
+    }
+    pick(r, me) {
+      const o = this.o; if (!o) return;
+      if (r.side) { api.send({ t: "arenabet", npc: trade.npc.id, offer: o.offer, side: r.side, amount: this.amount }); return; }
+      const step = { "+100": 100, "+1000": 1000, "-100": -100 }[r.act];
+      if (step) this.amount = clamp(this.amount + step, o.min, Math.min(o.max, Math.max(o.min, me.gold ?? o.max)));
+      else if (r.act === "max") this.amount = Math.min(o.max, Math.max(o.min, me.gold ?? o.max));
+      else if (r.act === "new") { this.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: o.uid }); }
+      else if (r.act === "ball") { const bs = o.balls, i = bs.findIndex(b => b.uid === o.uid); this.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: bs[(i + 1) % bs.length].uid }); }
+    }
+  }();
+  gui.register(arena);
+
   // ------------------------------------------------------------ notificaciones del servidor
   function onEvent(ev, world) {
     const me = api.pid;
     if (ev.id !== me) return;
     const mine = api.me(), nm = id => itemName(id);
     switch (ev.t) {
+      case "arenaoffer": arena.got(ev); break;
+      case "arenastart": gui.close(44); api.log("Apuestas " + ev.amount + " de oro por " + (ev.side === "a" ? ev.a.nm : ev.b.nm) + " (x" + ev.odds.toFixed(2) + "). ¡Que empiece el combate!", "gold"); break;
+      case "arenaend": api.log(ev.win ? "¡Has ganado " + ev.net + " de oro! (" + (ev.quiet ? "apuesta pendiente cobrada" : ev.a + " vs " + ev.b) + ")" : "Has perdido " + ev.amount + " de oro. (" + ev.a + " vs " + ev.b + ")", ev.win ? "gold" : "bad"); break;
       case "sellprice": {                                              // NotifyMsg_SellItemPrice
         const it = mine && bagItem(mine, ev.uid); if (!it) break;
         Object.assign(confirm, { mode: 1, uid: ev.uid, life: ev.life, price: ev.price, count: ev.count });

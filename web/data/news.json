@@ -11,6 +11,27 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Arena de apuestas (v0.20.0)",
+        "en": "Betting arena (v0.20.0)"
+      },
+      "items": [
+        {
+          "es": "Nuevo NPC McGaffin junto a la entrada de Aresfarm (125, 88): organiza combates entre tu compañero y un retador en la arena marcada con borde dorado. Tú solo miras y apuestas oro.",
+          "en": "New NPC McGaffin near the Aresfarm entrance (125, 88): he runs fights between your companion and a challenger in the gold-bordered arena. You only watch and bet gold."
+        },
+        {
+          "es": "Eliges por quién apostar (también contra tu compañero), la cantidad y ves las probabilidades y cuotas. El combate es en directo y dura unos 30 s. La casa se queda un 10 %.",
+          "en": "You pick who to bet on (even against your companion) and the amount, and see the odds. The fight is live and lasts about 30 s. The house keeps 10%."
+        },
+        {
+          "es": "Tu compañero no sufre nada. Si cierras el juego a mitad de combate, el resultado ya fijado se cobra al volver.",
+          "en": "Your companion takes no damage. If you close the game mid-fight, the already fixed result is paid when you come back."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Música y color de la cripta (v0.19.4)",
         "en": "Crypt music and colour (v0.19.4)"
       },
@@ -2127,6 +2148,17 @@
       "text": {
         "es": "Mata un rey y comprueba que suelta un único naranja con rayo de luz; equípalo y prueba el daño del elemento correspondiente.",
         "en": "Kill a king and check it drops an orange unique with a light beam; equip it and test the matching element's damage."
+      }
+    },
+    {
+      "id": "arena-bet",
+      "group": {
+        "es": "Arena",
+        "en": "Arena"
+      },
+      "text": {
+        "es": "Ten una bola de compañero, habla con McGaffin (junto a la entrada), apuesta y mira el combate: ¿las cuotas son razonables, el combate dura ~30 s y el oro se paga bien? Prueba también apostar contra tu compañero y «Otro retador».",
+        "en": "Have a companion ball, talk to McGaffin (near the entrance), bet and watch the fight: are the odds reasonable, does it last ~30 s and is gold paid correctly? Also try betting against your companion and 'Another challenger'."
       }
     }
   ],

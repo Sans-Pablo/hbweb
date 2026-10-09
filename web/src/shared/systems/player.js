@@ -6,6 +6,7 @@ import { ACT } from "../const.js";
 import { initVitals } from "./vitals.js";
 import { MAGIC_MODE } from "../magic.js";
 import { newInst } from "./itemsys.js";
+import { restore as restoreArena } from "./arena.js";
 
 const LEGACY = { red: 91, bigred: 92, blue: 93, green: 95 };     // partidas guardadas con el formato antiguo
 
@@ -93,6 +94,7 @@ function loadSave(w, p, s) {
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
   if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: { ...i.comp } } : {}) }));
   if (s.hunt) p.hunt = { ...s.hunt };
+  restoreArena(w, p, s);                                       // historial de la arena y apuesta pendiente (se cobra el resultado fijado)
   if (s.delve) p.delve = { deepest: Math.max(1, s.delve.deepest | 0) };         // progreso en la cripta de esqueletos
   if (Array.isArray(s.bag)) {
     p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
@@ -112,7 +114,7 @@ export function saveOf(w, id) {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
-    hunt: { ...(p.hunt || {}) }, delve: { deepest: p.delve?.deepest || 1 },
+    hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1 },
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
   };
 }
