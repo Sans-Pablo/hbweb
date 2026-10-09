@@ -11,6 +11,27 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Escenarios por rey y ajustes (v0.18.1)",
+        "en": "Per-king scenery and tweaks (v0.18.1)"
+      },
+      "items": [
+        {
+          "es": "Cada rey tiene su escenario original: niveles 1-5 fuego (dungeon 4 con lava), 6-10 Tower of Hell, 11-15 hielo (icebound) y 16-20 laberinto (maze).",
+          "en": "Each king has its own original scenery: levels 1-5 fire (dungeon 4 with lava), 6-10 Tower of Hell, 11-15 ice (icebound) and 16-20 maze."
+        },
+        {
+          "es": "La puerta de salida/bajada ya no sale pegada a una pared.",
+          "en": "The exit/descent door no longer sits against a wall."
+        },
+        {
+          "es": "Los fantasmas dan solo el 20 % de la experiencia y no sueltan oro ni objetos. No se puede bajar con ningún enemigo vivo (fantasmas incluidos).",
+          "en": "Ghosts give only 20 % of the experience and drop no gold or items. You cannot descend with any enemy alive (ghosts included)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Fantasmas, Summons y Recall (v0.18.0)",
         "en": "Ghosts, Summons and Recall (v0.18.0)"
       },
@@ -1963,6 +1984,61 @@
       "text": {
         "es": "El botón de la derecha de la barra: 3 s quieto fuera de combate y vuelves a la granja; moverte o pelear cancela; otro clic cancela; 60 s de recarga.",
         "en": "The button at the right of the bar: 3 s standing still out of combat and you return to the farm; moving or fighting cancels; another click cancels; 60 s cooldown."
+      }
+    },
+    {
+      "id": "theme-fire",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Niveles 1-5: lava y ladrillo del dungeon 4; la puerta de salida no está contra una pared.",
+        "en": "Levels 1-5: dungeon 4 lava and brick; the exit door is not against a wall."
+      }
+    },
+    {
+      "id": "theme-tower",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Niveles 6-10: escenario de la Tower of Hell.",
+        "en": "Levels 6-10: Tower of Hell scenery."
+      }
+    },
+    {
+      "id": "theme-ice",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Niveles 11-15: nieve y hielo (icebound). Nota: las zonas intransitables se parecen a las transitables; se ve el mapa en el minimapa.",
+        "en": "Levels 11-15: snow and ice (icebound). Note: unwalkable areas look like walkable ones; check the minimap."
+      }
+    },
+    {
+      "id": "theme-maze",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Niveles 16-20: piedra del laberinto (maze).",
+        "en": "Levels 16-20: maze stone."
+      }
+    },
+    {
+      "id": "ghost-reward",
+      "group": {
+        "es": "Fantasmas",
+        "en": "Ghosts"
+      },
+      "text": {
+        "es": "Un fantasma da poca experiencia y nada de oro; con uno vivo la bajada sigue cerrada.",
+        "en": "A ghost gives little experience and no gold; with one alive the descent stays closed."
       }
     }
   ],

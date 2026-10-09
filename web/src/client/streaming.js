@@ -49,7 +49,7 @@ export class Streamer {
 
   // lo que necesita un mundo; se calcula una vez por mapa
   bundle(world, npcDb) {
-    const id = world.map?.kind === "dungeon" ? "dungeon" : world.map?.id;
+    const id = world.map?.kind === "dungeon" ? "dungeon:" + world.map.id : world.map?.id;       // cada nivel pide las hojas de su tema (fuego, sombra, hielo, oro)
     let b = this.bundles.get(id);
     if (!b) { b = bundleOfWorld(world, this.spr.m, npcDb, this.index); this.bundles.set(id, b); }
     return b;

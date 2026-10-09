@@ -127,7 +127,7 @@ export class Adventure {
       if (!gate || dist(p, gate) > 1) return w.reject(p, cmd, "acércate al portal");
       if (w.map.kind !== "dungeon") return this.enterCrypt(p, w, gate, cmd);
       // dentro de la cripta: bajar (solo con el nivel despejado) o salir al mapa de origen
-      if (gate.locked && !w.cleared) return w.reject(p, cmd, "mata a todos los esqueletos para continuar");
+      if (gate.locked && (!w.cleared || [...w.ents.values()].some(e => e.kind === "npc" && !e.comp && !e.aux && !e.dead) || w.ghostsPending > 0)) return w.reject(p, cmd, "mata a todos los esqueletos para continuar");
       if (gate.target === "down") return this.descend(p, w, w.map.level + 1);
       const o = w.map.origin, to = this.staticWorld(o.map);
       if (!to || !this.transfer(p, w, to, [o.x, o.y])) return w.reject(p, cmd, "salida ocupada");

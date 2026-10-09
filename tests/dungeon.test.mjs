@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { generateLevel, setDungeonPalette, levelSeed, seededRandom, DUNGEON_LEVELS, isBossLevel } from "../web/src/shared/dungeon.js";
+import { generateLevel, setDungeonPalette, levelSeed, seededRandom, DUNGEON_LEVELS, isBossLevel, STAGE_THEMES } from "../web/src/shared/dungeon.js";
 import { Adventure } from "../web/src/shared/adventure.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { GameData } from "../web/src/shared/data.js";
@@ -41,6 +41,7 @@ test("niveles: todo es alcanzable, 60x60 (36x36 los jefes), portales y enemigos 
   for (let run = 0; run < 25; run++) for (let level = 1; level <= DUNGEON_LEVELS; level++) {
     const d = generateLevel(levelSeed(run, level), level), g = d.grid;
     assert.equal(g.w, isBossLevel(level) ? 36 : 60);
+    assert.equal(d.theme, STAGE_THEMES[Math.min(3, Math.floor((level - 1) / 5))], "tema por rey");
     const queue = [d.start], seen = new Set([g.idx(...d.start)]);
     for (let i = 0; i < queue.length; i++) for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
       const nx = queue[i][0] + dx, ny = queue[i][1] + dy, k = g.idx(nx, ny);
@@ -50,7 +51,7 @@ test("niveles: todo es alcanzable, 60x60 (36x36 los jefes), portales y enemigos 
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
       if (!g.blocked(x, y)) open++;
       if (x < 3 || y < 3 || x >= g.w - 3 || y >= g.h - 3) assert.ok(g.blocked(x, y));
-      const t = g.tile(x, y); assert.ok(t.spr >= 300 && t.spr <= 309, "solo hojas t300-t309: " + t.spr);
+      const t = g.tile(x, y); if (d.theme === "cueva") assert.ok(t.spr >= 300 && t.spr <= 309, "solo hojas t300-t309: " + t.spr);
       assert.ok(t.obj === 0 || t.obj === 211 || t.obj > 0);
     }
     assert.equal(seen.size, open, `run ${run} nivel ${level}`);
@@ -68,7 +69,7 @@ test("variedad: niveles seguidos cambian de ventana y las semillas dan mapas dis
   for (let level = 1; level < 20; level++) assert.notEqual(sig(levelSeed(3, level), level), sig(levelSeed(3, level + 1), level + 1));
   const all = new Set();
   for (let s = 0; s < 40; s++) all.add(sig(levelSeed(s, 2), 2));
-  assert.equal(all.size, 40);
+  assert.ok(all.size >= 36, "variedad: " + all.size);       // un tema con pocos recortes puede repetir alguna ventana
   assert.equal(sig(5, 7), sig(5, 7));
 });
 

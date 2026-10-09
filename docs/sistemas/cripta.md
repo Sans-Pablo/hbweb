@@ -15,3 +15,6 @@ Cada 20 % de vida perdida (80/60/40/20 %) enciende un Fire Field (hechizo 41) de
 - **Fantasma skeleton**: al matar un `Skeleton` común (no jefe, ni auxiliar, ni fantasma) hay un 25 % (`GHOST_CHANCE`, `npcsys.js`) de que, cuando desaparece su cadáver, salga un fantasma en su casilla (misma escala del nivel). `w.ghostsPending` cuenta los pendientes para que el nivel no se dé por limpio antes. Cliente: bit 16 de `bx`, opacidad 0,3, nombre «Fantasma skeleton» / «Ghost skeleton». No resucita dos veces. Test: `tests/ghost.test.mjs`.
 - **Puertas**: `drawPortals` dibuja siempre el sprite `cryptdoor` (ladrillo de la entrada de dungeon de middled1n, `tools/make_crypt_assets.py`, `equip/cryptdoor.webp`); cerrada = apagada, abierta y cerca = brillo.
 - El rey dorado se dibuja ×1,44 (`renderer.drawEntity`).
+
+## Escenarios por rey (v0.18.1)
+`stageTheme(level)`: niveles 1-5 `fuego` (dglv4, lava), 6-10 `sombra` (Toh1-3), 11-15 `hielo` (icebound), 16-20 `oro` (maze). La paleta guarda, por tema, hasta 5 recortes de 90x90 sin agua y con las hojas dominantes del mapa, y sus tablas de suelo/fondo/borde (`themes`); el resto sigue como `cueva` (fallback si un tema no tiene ventana). Las ventanas se copian tal cual del original. Pendiente: en hielo las casillas bloqueadas se parecen a las libres (minimapa). Ghosts: `GHOST_EXP` 0,2 y `noDrop`.

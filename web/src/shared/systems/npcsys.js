@@ -88,10 +88,13 @@ export function killNpc(w, n, p) {
     if (w.cleared) return;
     const g = { ...n.gen, rect: [n.x, n.y, n.x, n.y], alive: 0, max: 0, respawn: false, specialProb: 0, boss: 0 };
     const gh = spawnFrom(w, g) || spawnFrom(w, { ...g, rect: [n.x - 1, n.y - 1, n.x + 1, n.y + 1] });
-    if (gh) { gh.ghost = true; w.emit({ t: "ghost", id: gh.id, x: gh.x, y: gh.y }); }
+    if (gh) {
+      gh.ghost = true; gh.noDrop = true;                                                      // espectral: sin botín y solo el 20 % de la experiencia
+      gh.exp = Math.max(1, Math.ceil(gh.exp * GHOST_EXP)); gh.noDieRemainExp = gh.exp - Math.floor(gh.exp / 3); w.emit({ t: "ghost", id: gh.id, x: gh.x, y: gh.y });
+    }
   });
 }
-export const GHOST_CHANCE = 0.25;
+export const GHOST_CHANCE = 0.25, GHOST_EXP = 0.2;
 
 // ---------------------------------------------------------------- seguidores (hechizo Summon Creature, DEF_MAGICTYPE_SUMMON)
 // Game.cpp ~18660: sale un monstruo según Magery (iV1 = valor 2 del hechizo; 0 -> 1d(magery/10), mínimo magery/20) y sigue al invocador

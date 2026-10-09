@@ -35,6 +35,8 @@ assert.equal(w.ghostsPending, 0);
 const ev = evs.find(e => e.t === "ghost");
 assert.ok(Math.abs(ev.x - x) <= 1 && Math.abs(ev.y - y) <= 1, "en el lugar del cadáver");
 assert.equal(gh.type, sk[0].type);
+assert.ok(gh.noDrop, "el fantasma no suelta botín (ni oro)");
+assert.ok(gh.exp <= Math.ceil(sk[0].exp * 0.2) + 1, "solo el 20 % de la experiencia: " + gh.exp + " vs " + sk[0].exp);
 assert.ok(evs.some(e => e.t === "ghost" && e.id === gh.id), "evento ghost");
 
 // el fantasma no vuelve a levantarse, ni los jefes ni los auxiliares
@@ -48,4 +50,7 @@ w.rng = () => 0.99;
 const other = [...w.ents.values()].find(e => e.kind === "npc" && e.name === "Skeleton" && !e.boss && !e.dead && !e.aux);
 if (other) { killNpc(w, other, p); assert.ok(!w.ghostsPending); }
 w.rng = real;
+// no se puede bajar con un fantasma vivo ni pendiente aunque el nivel figure como limpio
+w.cleared = true; const live = [...w.ents.values()].find(e => e.kind === "npc" && !e.dead && !e.aux);
+if (live) { const g = w.map.portals.find(x => x.id === "down"); assert.ok(g); const [ox, oy] = [p.x, p.y]; w.grid.release(p.x, p.y, p.id); p.x = p.fx = g.x; p.y = p.fy = g.y; w.grid.occupy(p.x, p.y, p.id); assert.equal(a.command(id, { t: "portal", portal: "down" }), false, "con enemigos vivos no se baja"); }
 console.log("OK ghost");

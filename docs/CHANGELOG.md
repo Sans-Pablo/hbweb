@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.18.1 · Escenarios por rey (2026-10-09)
+
+- Cada tramo de 5 niveles usa el escenario de otro dungeon original (`stageTheme`): fuego = dglv4, sombra = Toh1-3, hielo = icebound, oro = maze. `tools/convert_theme_maps.py` convierte los mapas y las hojas; `tools/build_dungeon_palette.py` guarda recortes de 90x90 por mapa y tablas de borde por tema (`themes`).
+- Puerta de salida/bajada en zonas abiertas (r 3). Fantasmas: 20 % de EXP, sin botín; bajar exige no quedar enemigos vivos ni fantasmas pendientes. `streaming.js` pide las hojas por nivel.
+
 ## 0.18.0 · Fantasmas, Summons y Recall (2026-10-09)
 
 - Esqueleto común → «Fantasma skeleton» (25 %, 30 % de opacidad) al desaparecer su cadáver (`npcsys.killNpc`, `w.ghostsPending` retiene la limpieza del nivel). Test: `tests/ghost.test.mjs`.

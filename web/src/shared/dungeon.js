@@ -5,10 +5,14 @@
 import { Grid } from "./grid.js";
 
 export const DUNGEON_LEVELS = 20;
-export const DUNGEON_VERSION = 5;
+export const DUNGEON_VERSION = 6;
 export const BOSS_EVERY = 5;
 // La entrada es el teletransportador de la granja hacia middled1n (Adventure.teleport lo convierte en entrada directa a la cripta).
 export const DUNGEON_ASSETS = Object.freeze([...Array.from({ length: 10 }, (_, i) => "t" + (300 + i)), "t211", ...Array.from({ length: 40 }, (_, i) => "ske" + i)]);
+// Escenario de cada rey (cada tramo de 5 niveles): carmesí = fuego (dglv4, con lava), umbrío = Tower of Hell (Toh1-3), glacial = hielo (icebound)
+// y dorado = laberinto (maze). Los mapas vienen de tools/convert_theme_maps.py y entran recortados en la paleta.
+export const STAGE_THEMES = Object.freeze(["fuego", "sombra", "hielo", "oro"]);
+export const stageTheme = level => STAGE_THEMES[Math.min(3, Math.floor((level - 1) / BOSS_EVERY))];
 export const isBossLevel = level => level % BOSS_EVERY === 0;
 export const BOSS_COLORS = Object.freeze({ 1: "#ff3b2e", 2: "#b052ff", 3: "#22d6c4", 4: "#ffc933" });
 export const BOSS_NAMES = Object.freeze({ 1: "Rey esqueleto carmesí", 2: "Rey esqueleto umbrío", 3: "Rey esqueleto glacial", 4: "Rey esqueleto dorado" });
@@ -30,25 +34,30 @@ export const levelSeed = (run, level) => (((Math.imul((run >>> 0) ^ 0x9E3779B9, 
 let PAL = null;
 const popcount = v => { let c = 0; while (v) { v &= v - 1; c++; } return c; };
 export function setDungeonPalette(raw) {
-  const edge = new Map();
-  for (const [k, v] of Object.entries(raw.edge)) edge.set(parseInt(k, 16), v);
-  const dark = raw.deep.filter(d => d[0] === 300 || d[0] === 302 || d[0] === 301);
   const pairs = l => new Set(l.map(([a, b]) => a * 4096 + b));
-  PAL = { valid: new Set([0, (1 << 25) - 1, ...edge.keys()]), edge, keys: [...edge.keys()], near: new Map(), tiles: raw.tiles,
-    adjH: pairs(raw.adjH), adjV: pairs(raw.adjV), srcTiles: raw.srcTiles, maps: raw.srcMaps, floor: raw.floor.filter(f => f[0] === 300).slice(0, 4), dark: dark.slice(0, 3), decor: raw.decor };
+  const sect = (sec, cave) => {                                    // suelo, fondo y bordes de un tema (la cueva solo usa sus hojas 300-302)
+    const edge = new Map();
+    for (const [k, v] of Object.entries(sec.edge)) edge.set(parseInt(k, 16), v);
+    const dark = cave ? sec.deep.filter(d => d[0] === 300 || d[0] === 302 || d[0] === 301) : sec.deep;
+    const floor = cave ? sec.floor.filter(f => f[0] === 300) : sec.floor;
+    return { edge, keys: [...edge.keys()], near: new Map(), floor: floor.slice(0, 4), dark: dark.slice(0, 3) };
+  };
+  const themes = { cueva: sect(raw, true) };
+  for (const [k, v] of Object.entries(raw.themes || {})) if (v.edge && Object.keys(v.edge).length) themes[k] = sect(v, false);
+  PAL = { themes, tiles: raw.tiles, adjH: pairs(raw.adjH), adjV: pairs(raw.adjV), srcTiles: raw.srcTiles, maps: raw.srcMaps, decor: raw.decor };
 }
 export const hasDungeonPalette = () => !!PAL;
 
 // Teselas posibles para una máscara 5x5: las del original para esa forma exacta o, si no existe, las de las formas más parecidas.
-function edgeCandidates(mask) {
-  const s = PAL.edge.get(mask);
+function edgeCandidates(T, mask) {
+  const s = T.edge.get(mask);
   if (s) return s;
-  let r = PAL.near.get(mask);
+  let r = T.near.get(mask);
   if (r) return r;
   let bd = 99, best = [];
-  for (const k of PAL.keys) { const d = popcount(k ^ mask); if (d < bd) { bd = d; best = [k]; } else if (d === bd) best.push(k); }
-  r = [...new Set(best.slice(0, 6).flatMap(k => PAL.edge.get(k).slice(0, 2)))];
-  PAL.near.set(mask, r);
+  for (const k of T.keys) { const d = popcount(k ^ mask); if (d < bd) { bd = d; best = [k]; } else if (d === bd) best.push(k); }
+  r = [...new Set(best.slice(0, 6).flatMap(k => T.edge.get(k).slice(0, 2)))];
+  T.near.set(mask, r);
   return r;
 }
 // Entre los candidatos se prefiere el que el original dibuja junto a las teselas ya colocadas a la izquierda y arriba
@@ -106,10 +115,13 @@ function keepLargest(P) {
 }
 
 // Busca una ventana válida: sin agua, con una componente grande y despejada y el menor corte posible (así hay menos pared que inventar).
-function pickWindow(rng, n, boss) {
+function pickWindow(rng, n, boss, theme) {
+  const pool = PAL.maps.map((m, i) => i).filter(i => PAL.maps[i].theme === theme);
+  if (!pool.length) return null;
   const found = [];
   for (let t = 0; t < 260; t++) {
-    const mi = Math.floor(rng() * PAL.maps.length), m = srcMap(mi);
+    const mi = pool[Math.floor(rng() * pool.length)], m = srcMap(mi);
+    if (m.w < n || m.h < n) continue;
     const x0 = Math.floor(rng() * (m.w - n)), y0 = Math.floor(rng() * (m.h - n));
     if (badIn(m, x0, y0, n)) continue;
     const P = new Plan(n, n); let cut = 0;
@@ -154,18 +166,21 @@ export function generateLevel(seed, level) {
   if (!PAL) throw new Error("Falta la paleta de la cripta");
   const rng = seededRandom(seed), boss = isBossLevel(level);
   const w = boss ? 36 : 60, h = w;
-  const win = pickWindow(rng, w, boss);
+  let theme = PAL.themes[stageTheme(level)] ? stageTheme(level) : "cueva";
+  let win = pickWindow(rng, w, boss, theme);
+  if (!win && theme !== "cueva") { theme = "cueva"; win = pickWindow(rng, w, boss, theme); }
   if (!win) throw new Error("No hay ventana válida en los mapas originales");
   const { P, m: src, x0, y0 } = win;
-  const theme = boss ? "jefe" : "cueva";
+  const TH = PAL.themes[theme] || PAL.themes.cueva;
   const cells = [];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (roomy(P, x, y, 1)) cells.push([x, y]);
+  const open3 = cells.filter(([x, y]) => roomy(P, x, y, 3)), spots = open3.length > 30 ? open3 : cells;      // la puerta es alta: lejos de las paredes
   // inicio: la esquina más cercana al origen (jefes: la parte baja); meta: lo más lejos posible por el camino
-  let sp = boss ? cells.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), cells[0]) : cells.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), cells[0]);
+  let sp = boss ? spots.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), spots[0]) : spots.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), spots[0]);
   let dist = bfs(P, sp[0], sp[1]);
   for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;
   let fin = sp, far = -1;
-  for (const [x, y] of cells) { const d = dist[y * w + x]; if (d > far && roomy(P, x, y, 1)) { far = d; fin = [x, y]; } }
+  for (const [x, y] of spots) { const d = dist[y * w + x]; if (d > far) { far = d; fin = [x, y]; } }
   const last = level >= DUNGEON_LEVELS;
   const portals = [
     { id: "return", x: sp[0], y: sp[1], label: "Salir de la cripta", target: "origin" },
@@ -175,8 +190,8 @@ export function generateLevel(seed, level) {
 
   // ---- teselas
   const bytes = new Uint8Array(w * h * 10), dv = new DataView(bytes.buffer);
-  const floorT = PAL.floor[Math.floor(rng() * Math.min(3, PAL.floor.length))];
-  const deepAt = () => PAL.dark[0];         // el agua de middled1n se dibuja con hojas animadas: no se reutiliza
+  const floorT = TH.floor[Math.floor(rng() * Math.min(3, TH.floor.length))];
+  const deepAt = () => TH.dark[0];         // el agua de middled1n se dibuja con hojas animadas: no se reutiliza
   const blockedAt = (x, y) => !P.at(x, y);
   // decorado suelto: obstáculos aislados sobre suelo despejado, lejos de portales
   const decor = new Map();                                                    // los obstáculos sueltos ya vienen en las ventanas del original
@@ -190,7 +205,7 @@ export function generateLevel(seed, level) {
       [spr, frame, obj, of] = PAL.srcTiles[src.cells[(y0 + y) * src.w + x0 + x]];
     } else if (m === (1 << 25) - 1) { const t = deepAt(x, y); spr = t[0]; frame = texFrame(t, x, y); }
     else if (m === 0) { spr = floorT[0]; frame = texFrame(floorT, x, y); }
-    else { const ti = pickEdge(edgeCandidates(m), x > 0 ? chosen[y * w + x - 1] : -1, y > 0 ? chosen[(y - 1) * w + x] : -1); chosen[y * w + x] = ti; [spr, frame, obj, of] = PAL.tiles[ti]; }
+    else { const ti = pickEdge(edgeCandidates(TH, m), x > 0 ? chosen[y * w + x - 1] : -1, y > 0 ? chosen[(y - 1) * w + x] : -1); chosen[y * w + x] = ti; [spr, frame, obj, of] = PAL.tiles[ti]; }
     dv.setInt16(o, spr, true); dv.setInt16(o + 2, frame, true); dv.setInt16(o + 4, obj, true); dv.setInt16(o + 6, of, true);
     bytes[o + 8] = self ? 0x80 : 0;
   }
