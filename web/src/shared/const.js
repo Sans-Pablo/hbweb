@@ -1,5 +1,6 @@
 // Constantes del juego compartidas por la simulación (el futuro servidor) y el cliente.
 // Todo lo que viene del código original lleva el archivo de origen.
+import { MOB_FRAMES } from "./mobtiming.gen.js";
 
 export const TILE = 32;
 
@@ -39,25 +40,21 @@ export const PLAYER = {
   combatStanceMs: 4000,       // tras luchar, postura de combate durante 4 s (modernizado)
 };
 
-// Monstruos (Client/MapData.cpp): tiempo por fotograma de cada acción.
-// Andar = 8 fotogramas lógicos; atacar = 4; morir = 8. restar = 20 en el original.
-const R = 20;
-export const MOB_TIMING = {
-  11: { stop: 150, move: 90 - R, attack: 90, damage: 150, dying: 180 }, // Skeleton (MapData.cpp)
-  10: { stop: 240, move: 120 - R - R - R / 1.2, attack: 90, damage: 150, dying: 240 },   // Slime
-  12: { stop: 210, move: 100 - R - R, attack: 120, damage: 150, dying: 180 },           // Stone-Golem
-  16: { stop: 120, move: 60 - R + 15, attack: 120, damage: 150, dying: 180 },           // Giant-Ant
-  17: { stop: 120, move: 45 - R + 15, attack: 120, damage: 150, dying: 180 },           // Scorpion
-  22: { stop: 250, move: 80 - R, attack: 120, damage: 150, dying: 180 },                // Amphis
-};
+// Monstruos (Client/MapData.cpp): tiempo por fotograma y fotogramas lógicos de cada acción, generados en mobtiming.gen.js.
+// Valores por omisión del original: andar 8 fotogramas, atacar 4, daño 8, morir 8.
+export const MOB_DEFAULT_MAX = { stop: 3, move: 7, attack: 3, damage: 7, dying: 7 };
+export function mobFrames(type, act) {
+  const t = (MOB_FRAMES[type] || MOB_FRAMES[10])[act] || {};
+  return { time: t.time ?? MOB_FRAMES[10][act].time, count: (t.max ?? MOB_DEFAULT_MAX[act]) + 1 };
+}
 export function mobDurations(type) {
-  const t = MOB_TIMING[type] || MOB_TIMING[10];
+  const f = a => mobFrames(type, a);
   return {
-    stopFrame: t.stop,
-    move: Math.round(8 * t.move),
-    attack: Math.round(4 * t.attack),
-    damage: Math.round(4 * t.damage),
-    dying: Math.round(8 * t.dying),
+    stopFrame: f("stop").time,
+    move: Math.round(f("move").count * f("move").time),
+    attack: Math.round(f("attack").count * f("attack").time),
+    damage: Math.round(f("damage").count * f("damage").time),
+    dying: Math.round(f("dying").count * f("dying").time),
   };
 }
 

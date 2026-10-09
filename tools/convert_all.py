@@ -25,6 +25,7 @@ STEPS = [
     ("ui", ["convert_ui.py", hb, out]),
     ("maps", ["convert_maps.py", hb, server, out]),
     ("npcs", ["convert_npcs.py", hb, server, out]),
+    ("mobs", ["convert_mobs.py", hb, server, out]),
     ("talk", ["convert_talk.py", hb, out]),
 ]
 for name, cmd in STEPS:

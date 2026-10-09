@@ -69,7 +69,7 @@ export class Controller {
     for (const e of this.world.ents.values()) {
       if (e.kind !== kind || e.dead) continue;
       const [px, py] = posOf(e, time);
-      const { key, f } = mobSprite(e, time);
+      const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k));
       const h = Math.max(30, this.r.mobHeight(key, f));
       if (Math.abs(wx - px) > 20 || wy < py - h || wy > py + 14) continue;
       const d = Math.hypot(wx - px, wy - (py - h / 2));

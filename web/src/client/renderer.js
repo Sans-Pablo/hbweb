@@ -365,7 +365,7 @@ export class Renderer {
     }
 
     // monstruo
-    const { key, f } = mobSprite(e, time);
+    const { key, f } = mobSprite(e, time, k => this.spr.frames(k));
     const act = actionAt(e, time);
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
     if (act === ACT.DEAD) {
