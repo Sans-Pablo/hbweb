@@ -16,8 +16,8 @@
       },
       "items": [
         {
-          "es": "Cómo se consigue: cada cierto número de muertes de una especie invocable (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) recibes una «Bola» de esa especie. 500 hormigas = una Giant Ant Ball (otras especies 500–1000; el contador se guarda).",
-          "en": "How to get one: every so many kills of a summonable species (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) you receive a «Ball» of that species. 500 ants = one Giant Ant Ball (other species 500–1000; the counter is saved)."
+          "es": "Cómo se consigue: cada cierto número de muertes de una especie invocable (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) recibes una «Bola» de esa especie. En esta build de pruebas bastan 10 muertes por bola (en la versión final serán 500–1000; el contador se guarda).",
+          "en": "How to get one: every so many kills of a summonable species (Slime, Giant-Ant, Amphis, Orc, Skeleton, Clay/Stone-Golem, Orc-Mage, Hellbound, Cyclops, Troll, Orge) you receive a «Ball» of that species. In this test build 10 kills per ball are enough (final version: 500–1000; the counter is saved)."
         },
         {
           "es": "La bola es un objeto de la mochila (usa las bolas de Item.cfg 651–655) con un sprite pequeño de la especie encima. Pasa el ratón: nivel, experiencia y daño. Doble clic: elige e invoca al compañero (★ = activo); doble clic otra vez lo guarda. Summon Creature invoca siempre ese compañero en vez de uno al azar.",
@@ -396,8 +396,8 @@
         "en": "Hunter"
       },
       "text": {
-        "es": "Añade ?hunt=20 a la URL (por ejemplo index.html?hunt=20): 20 veces menos muertes por bola. Mata 25 hormigas: debe llegar un aviso dorado y una Giant Ant Ball en la mochila.",
-        "en": "Add ?hunt=20 to the URL: 20 times fewer kills per ball. Kill 25 ants: a gold notice and a Giant Ant Ball must appear in the bag."
+        "es": "Mata 10 hormigas: debe llegar un aviso dorado y una Giant Ant Ball en la mochila (el contador sigue contando al recargar).",
+        "en": "Kill 10 ants: a gold notice and a Giant Ant Ball must appear in the bag (the counter persists after reloading)."
       }
     },
     {
@@ -484,8 +484,8 @@
         "en": "Hunter"
       },
       "text": {
-        "es": "Comprueba que arriba a la izquierda se lee «v0.10.0 Compañeros» junto a los fps.",
-        "en": "Check that the top left reads «v0.10.0 Compañeros» next to the fps."
+        "es": "Comprueba que arriba a la izquierda se lee «v0.10.1 Compañeros» junto a los fps.",
+        "en": "Check that the top left reads «v0.10.1 Compañeros» next to the fps."
       }
     }
   ],

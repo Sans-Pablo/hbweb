@@ -18,7 +18,7 @@ const p = w.ents.get(id); p.level = 30; w.recalc(p);
 import { spawnFrom } from "../web/src/shared/systems/npcsys.js";
 const slay = name => { const n = spawnFrom(w, { name, rect: [p.x + 2, p.y + 2, p.x + 5, p.y + 5], alive: 0, max: 0, respawn: false }); n.noDrop = true; killNpc(w, n, p); };
 
-C.HUNT.scale = 0.01;                                   // 5 muertes por bola de hormiga
+C.HUNT.kills = null; C.HUNT.scale = 0.01;                                   // 5 muertes por bola de hormiga
 assert.equal(C.killsFor("Giant-Ant"), 5);
 for (let i = 0; i < 4; i++) slay("Giant-Ant");
 assert.equal(p.bag.filter(i => i.comp).length, 0, "aún no");
@@ -26,6 +26,7 @@ slay("Giant-Ant");
 const ball = p.bag.find(i => i.comp);
 assert.ok(ball && ball.comp.sp === "Giant-Ant" && ball.comp.lvl === 1, "bola de hormiga");
 assert.equal(p.hunt["Giant-Ant"], 0);
+assert.equal((C.HUNT.kills = 10, C.HUNT.scale = 1, C.killsFor("Cyclops")), 10, "build de pruebas: 10 por bola"); C.HUNT.kills = null; C.HUNT.scale = 0.01;
 slay("Scorpion");                                        // no invocable: sin contador
 assert.ok(!p.hunt.Scorpion);
 

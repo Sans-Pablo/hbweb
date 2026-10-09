@@ -10,7 +10,7 @@ import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
 
-export const HUNT = { scale: 1 };            // ?hunt=20 en la URL: 20 veces menos muertes por bola (pruebas)
+export const HUNT = { scale: 1, kills: 10 };  // build de pruebas: 10 muertes por bola (kills = null usa la tabla SPECIES: 500–1000); ?hunt=N las divide aún más
 export const MAX_COMP_LEVEL = 60;
 // especie -> muertes para una bola, id de Item.cfg de la bola; el orden es el rango (poder de la especie)
 export const SPECIES = {
@@ -20,7 +20,7 @@ export const SPECIES = {
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
 export const need = lvl => Math.floor(30 * Math.pow(lvl, 1.7));              // experiencia para subir desde `lvl`
-export const killsFor = sp => Math.max(1, Math.round(SPECIES[sp][0] * HUNT.scale));
+export const killsFor = sp => Math.max(1, Math.round((HUNT.kills ?? SPECIES[sp][0]) * HUNT.scale));
 export const activeBall = p => p.bag.find(i => i.comp && i.comp.on);
 
 // daño medio de un golpe del jugador (playerStrike sin azar)
