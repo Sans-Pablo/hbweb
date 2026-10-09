@@ -20,3 +20,6 @@ Cada 20 % de vida perdida (80/60/40/20 %) enciende un Fire Field (hechizo 41) de
 `stageTheme(level)`: niveles 1-5 `fuego` (dglv4, lava), 6-10 `sombra` (Toh1-3), 11-15 `hielo` (icebound), 16-20 `oro` (maze). La paleta guarda, por tema, hasta 5 recortes de 90x90 sin agua y con las hojas dominantes del mapa, y sus tablas de suelo/fondo/borde (`themes`); el resto sigue como `cueva` (fallback si un tema no tiene ventana). Las ventanas se copian tal cual del original. Pendiente: en hielo las casillas bloqueadas se parecen a las libres (minimapa). Ghosts: `GHOST_EXP` 0,2 y `noDrop`.
 
 **v0.18.2:** los escenarios por rey se retiraron (`STAGE_THEMES` = cueva; ver `build_dungeon_palette.py` para reactivarlos). La bajada usa `cryptpit` y la salida `cryptdoor`, colocada en una casilla con pared al oeste (`wallW` en `generateLevel`).
+
+## Música y color (v0.19.4)
+La cripta usa `darkloop` (`sky.js trackFor`). Los monstruos llevan un tinte leve (alfa 0.14) del color del rey del tramo, `BOSS_COLORS[ceil(nivel/5)]`; el jefe, 0.5.

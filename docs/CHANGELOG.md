@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.19.4 · Música y color de la cripta (2026-10-09)
+
+- `trackFor`: mapas `dungeon` → pista `darkloop` (`web/data/music/darkloop.mp3`, aportada por el usuario; la `.remaster` es copia idéntica).
+- `renderer.drawEntity`: monstruos de la cripta con tinte 0.14 del color del rey del tramo (`ceil(nivel/5)`); el jefe conserva 0.5.
+
 ## 0.19.3 · Botín usable (2026-10-09)
 
 - `CRYPT_LOOT` (drops.js): tabla de la cripta por tramos de 5 niveles con objetos de Item.cfg usables por un guerrero nivel 50; filtro `usable()` global; variante por sexo. Test en `loot.test.mjs`.

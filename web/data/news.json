@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Música y color de la cripta (v0.19.4)",
+        "en": "Crypt music and colour (v0.19.4)"
+      },
+      "items": [
+        {
+          "es": "La cripta suena con «Dark Loop» (darkloop.mp3).",
+          "en": "The crypt now plays 'Dark Loop' (darkloop.mp3)."
+        },
+        {
+          "es": "Los monstruos de la cripta llevan un tinte leve del color del rey de su tramo (rojo, violeta, turquesa, dorado); el jefe sigue resaltando con el tinte fuerte.",
+          "en": "Crypt monsters get a subtle tint of their stage king's colour (red, violet, turquoise, gold); the boss still stands out with the strong tint."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Botín usable (v0.19.3)",
         "en": "Usable loot (v0.19.3)"
       },

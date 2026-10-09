@@ -7,7 +7,7 @@ const TICK_MS = 30;
 
 // pista según el lugar del mapa (m_cCurLocation)
 export function trackFor(world) {
-  if (world?.map?.kind === "dungeon") return "dungeon";
+  if (world?.map?.kind === "dungeon") return "darkloop";                   // Dark_Loop.mp3 aportada por el usuario para la cripta
   const loc = (world?.meta?.location || "").toLowerCase();
   const rules = [["aresden", "aresden"], ["elvine", "elvine"], ["dglv", "dungeon"], ["middled1", "dungeon"], ["middleland", "middleland"],
     ["druncncity", "druncncity"], ["infernia", "middleland"], ["maze", "dungeon"], ["abaddon", "abaddon"]];

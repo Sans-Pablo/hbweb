@@ -475,6 +475,8 @@ export class Renderer {
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     spr.put(ctx, key, f, x, y);
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
+    else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
+      spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
     if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
     if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
     if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
