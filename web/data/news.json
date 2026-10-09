@@ -11,6 +11,31 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Evolución de summons (v0.26.0)",
+        "en": "Summon evolution (v0.26.0)"
+      },
+      "items": [
+        {
+          "es": "Los summons cambian de tamaño a saltos en los niveles 10, 25, 40 y 50. Al cruzarlo dicen una frase especial y, unos segundos después, se vuelven a invocar con un efecto (anillos, chispas y entrada con rebote) para que veas el cambio. Prueba: sube un summon al nivel 10.",
+          "en": "Summons now change size in steps at levels 10, 25, 40 and 50. When one crosses a step they say a special line and, a few seconds later, are re-summoned with an effect (rings, sparks and a bounce-in) so you can see the change. Test: level a summon to 10."
+        },
+        {
+          "es": "El minimapa ya no aparece dentro de la tienda, la herrería ni el almacén.",
+          "en": "The minimap no longer shows inside the shop, blacksmith or warehouse."
+        },
+        {
+          "es": "Ahora se puede tirar al suelo un objeto que llevas puesto (set Hero, Knight…) arrastrándolo desde el cuadro Personaje hacia fuera. Dime si aún falla con alguno.",
+          "en": "You can now throw an equipped item (Hero set, Knight…) on the ground by dragging it out of the Character window. Tell me if any still fails."
+        },
+        {
+          "es": "Tutorial: los cuadros Personaje y Mochila ya no se superponen con el mensaje de Gandlf.",
+          "en": "Tutorial: the Character and Bag windows no longer overlap Gandlf's message."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Cuentas sin límite en pruebas (v0.25.3)",
         "en": "No account limit while testing (v0.25.3)"
       },

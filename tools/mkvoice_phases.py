@@ -39,6 +39,12 @@ c["milestone"] = {
   "25": X([L("¡Nivel 25! Ya eres un veterano.", "Level 25! You're a veteran now.", "d"), L("Mírate: ya tienes cicatrices de guerra.", "Look at you: war scars already.", "j")], [L("Y las que me faltan.", "And more to come."), L("¡Esto es solo el principio!", "This is only the beginning!")]),
   "40": X([L("¡Nivel 40! Ya eres de élite.", "Level 40! You're elite now.", "d"), L("Cuarenta niveles… increíble.", "Forty levels… incredible.", "w")], [L("Gracias por no dejarme atrás.", "Thanks for not leaving me behind."), L("¡Los jefes que se preparen!", "The bosses had better get ready!")]),
   "50": X([L("¡Nivel 50! Has alcanzado tu tamaño real.", "Level 50! You've reached your full size.", "w"), L("¡Cincuenta! No hay quien te pare.", "Fifty! Nothing can stop you.", "j")], [L("¡Soy imparable!", "I'm unstoppable!"), L("¡Este es mi tamaño de verdad!", "This is my real size!")])}
+# evolve: línea al volver a invocar al compañero tras cambiar de tamaño (niveles 10, 25, 40, 50 = pasos 1..4)
+c["evolve"] = {
+  "1": X([L("¡Mírate! Has crecido de golpe.", "Look at you! You've shot up.", "j"), L("Ese cuerpo ya no es de recién nacido.", "That's no newborn's body anymore.", "w")], [L("¡Me siento enorme! Bueno… más grande.", "I feel huge! Well… bigger."), L("¡Mis patas ya llegan al suelo del todo!", "My legs finally reach the ground!")]),
+  "2": X([L("Te has hecho un veterano de pies a cabeza.", "You've become a veteran from head to toe.", "d"), L("Ahora sí das miedo.", "Now you're scary.", "j")], [L("¡Que se aparten los monstruos!", "Monsters, make way!"), L("¡Hasta mi sombra es más grande!", "Even my shadow is bigger!")]),
+  "3": X([L("Casi no cabes en la granja.", "You barely fit in the farm.", "j"), L("Una bestia de élite. Mi bestia.", "An elite beast. My beast.", "d")], [L("¡Los jefes me van a respetar!", "The bosses will respect me!"), L("Esto ya no es un juego de niños.", "This is no child's play anymore.")]),
+  "4": X([L("Tu forma definitiva. Qué orgullo.", "Your final form. I'm so proud.", "w"), L("Ya eres tan grande como en las leyendas.", "You're as big as the legends say.", "d")], [L("¡Ahora sí soy yo del todo!", "Now I'm truly me!"), L("¡Que tiemble Aresfarm!", "Let Aresfarm tremble!")])}
 S = lambda a, b: X(L(*a), L(*b))
 c["species"] = {
   "Slime": [S(("Dejas un rastro pegajoso por todas partes.", "You leave a sticky trail everywhere."), ("¡Es mi estilo!", "It's my style!"))],

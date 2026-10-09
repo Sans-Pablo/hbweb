@@ -2,6 +2,15 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.26.0 · Evolución de summons (2026-10-10)
+
+- **Summons: tamaño por etapas** (`companion.SIZE_STAGES` 10/25/40/50, `sizeStep`; `renderer.petScale`): el compañero cambia de tamaño a saltos en vez de crecer poco a poco (los pequeños nacen al 70 %).
+- **Cambio de tamaño = evento**: al cruzar el nivel se emite `companion-evolve` (aviso) y 2,5 s después `evolveCompanion` lo vuelve a invocar (`companion-resummon`, público en el servidor) con efecto: anillos, chispas violeta/doradas, «Summon Creature» original (Magic.cfg 31) y entrada con rebote (`fx.popScale`). Frases nuevas por etapa en `voice.json` (`companion.evolve`, `tools/mkvoice_phases.py`).
+- **Minimapa**: oculto dentro de tienda, herrería y almacén (`gshop_1f`, `bsmith_1f`, `wrhus_1f`).
+- **Tirar lo equipado**: se puede arrastrar fuera del cuadro Personaje para soltar un objeto que llevas puesto (set Hero/Knight, etc.); el servidor lo desequipa.
+- **Tutorial**: los cuadros Personaje y Mochila ya no tapan el mensaje de Gandlf ni el objetivo (`gui.avoidOverlap`: 46/47 cuentan como obstáculo y apartan lo ya abierto).
+- Test nuevo: `tests/summon-size.test.mjs`.
+
 ## 0.25.3 · Cuentas sin límite en pruebas (2026-10-10)
 
 - `server/config.json → maxRegistersPerHour` (por defecto 5 por IP y hora; `0` = sin límite). Tras el túnel los jugadores pueden compartir IP, así que en pruebas se pone a 0. Solo servidor.

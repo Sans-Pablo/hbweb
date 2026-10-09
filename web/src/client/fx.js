@@ -16,6 +16,7 @@ export class Fx {
     this.flash = new Map();          // id -> hora del último golpe (destello)
     this.rings = [];
     this.bolts = [];
+    this.pop = new Map();            // id -> hora de la re-invocación (entrada con rebote del compañero que cambia de tamaño)
     this.sp = new SpellFx();         // efectos de hechizos del cliente original
     this.sp.hook = (n, x, y) => this.onSfx?.(n, x, y);
     this.sp.load();
@@ -63,11 +64,33 @@ export class Fx {
         this.burst(ev.id, 40, "rgba(255,214,90,", 2.5);
         break;
       }
+      case "companion-resummon": {                            // cambio de tamaño del compañero: sale con un destello y vuelve más grande
+        const ox = ev.fx * TILE + 16, oy = ev.fy * TILE + 16, nx = ev.x * TILE + 16, ny = ev.y * TILE + 16, now = performance.now();
+        this.rings.push({ x: ox, y: oy, born: now }, { x: nx, y: ny, born: now + 120 });
+        this.sp.spell(31, ev.fx, ev.fy, ev.fx, ev.fy);                       // Summon Creature (Magic.cfg 31): el efecto original de invocar
+        this.sp.spell(31, ev.x, ev.y, ev.x, ev.y);
+        for (let i = 0; i < 46; i++) {                                         // columna de chispas violetas/doradas al aparecer
+          const a = Math.random() * Math.PI * 2, v = (0.4 + Math.random()) * 2.2;
+          this.parts.push({ x: nx, y: ny - 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.4, life: 600 + Math.random() * 700, born: now + 100, rgba: i % 2 ? "rgba(255,214,90," : "rgba(197,138,255," });
+        }
+        this.sparks(ox, oy - 10, 20, "197,138,255");
+        this.pop.set(ev.nid, now + 100);
+        break;
+      }
       case "pickup":
         if (mine) this.text(ev.id, ev.item === 90 ? "+" + ev.count + " oro" : "+" + (ev.count > 1 ? ev.count + " " : "") + itemName(ev.item, ev.attr, ev.comp), "#f0d080");
         break;
       case "use": if (mine && ev.amount) this.text(ev.id, "+" + ev.amount + { hp: " HP", mp: " MP", sp: " SP", food: " comida" }[ev.stat], { hp: "#7fe07f", mp: "#7fb2ff", sp: "#9fe07f", food: "#e0c07f" }[ev.stat] || "#fff"); break;
     }
+  }
+
+  // factor de entrada del compañero recién re-invocado: crece desde 0, se pasa un poco y se asienta (0,75 s)
+  popScale(id) {
+    const t0 = this.pop.get(id); if (t0 === undefined) return 1;
+    const k = (performance.now() - t0) / 750;
+    if (k >= 1) { this.pop.delete(id); return 1; }
+    if (k < 0) return 0.001;
+    return k < 0.6 ? (k / 0.6) * 1.18 : 1.18 - 0.18 * ((k - 0.6) / 0.4);
   }
 
   sparks(x, y, n, col) {
@@ -94,7 +117,7 @@ export class Fx {
     // anillos de subida de nivel
     if (remaster) for (const r of this.rings) {
       const k = (now - r.born) / 900;
-      if (k > 1) continue;
+      if (k > 1 || k < 0) continue;
       ctx.strokeStyle = "rgba(255,214,90," + (1 - k) + ")";
       ctx.lineWidth = 3 * (1 - k) + 0.5;
       ctx.beginPath();

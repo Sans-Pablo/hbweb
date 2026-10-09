@@ -139,7 +139,13 @@ function followerThink(w, n) {
   const m = w.ents.get(n.master);
   if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
   let tc = null;
-  if (n.comp) { refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc); }
+  if (n.comp) {
+    refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
+    if (tc?.evolve) {                                   // cambio de tamaño: tras unos segundos (se lee la frase) se vuelve a invocar con efecto
+      if (!n.evolveAt) n.evolveAt = w.time + EVOLVE_MS;
+      else if (w.time >= n.evolveAt && !m.dead && !w.fightZone) return evolveCompanion(w, n, m, tc);
+    }
+  }
   let best = null, bd = 1e9;
   // Objetivo marcado por el dueño (Alt + clic): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
@@ -267,6 +273,14 @@ function refreshCompanion(w, n, m) {
   else if (n.hp < n.maxHp && w.time - (n.hurtAt || -1e9) > 8000 && w.time - (n.regenAt || 0) > 6000) { n.regenAt = w.time; n.hp = Math.min(n.maxHp, n.hp + Math.ceil(n.maxHp * 0.02)); }   // recuperación lenta fuera de combate
   c.hp = n.hp; c.max = n.maxHp;
 }
+export const EVOLVE_MS = 2500;
+// Re-invocación al cambiar de tamaño: el compañero desaparece con un destello y vuelve (más grande) junto al dueño
+export function evolveCompanion(w, n, m, tc) {
+  const from = { x: n.x, y: n.y }, nm = tc.nm, sp = tc.sp, lvl = tc.lvl;
+  delete tc.evolve;
+  const nn = spawnCompanion(w, m);
+  if (nn) w.emit({ t: "companion-resummon", id: m.id, sp, lvl, nm, fx: from.x, fy: from.y, x: nn.x, y: nn.y, nid: nn.id });
+}
 export function dismissCompanion(w, p) {
   for (const e of followersOf(w, p)) {
     if (!e.comp) continue;
@@ -278,6 +292,7 @@ export function dismissCompanion(w, p) {
 export function spawnCompanion(w, p) {
   const inst = Comp.activeBall(p); if (!inst || p.dead) return null;
   inst.comp.nm = inst.comp.nm || Comp.randomName(w.rng);          // bolas antiguas sin nombre
+  delete inst.comp.evolve;
   dismissCompanion(w, p);
   const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
   if (!w.npcDb[gen.name]) return null;

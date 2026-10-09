@@ -34,3 +34,6 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 - **Alt + clic** (controller → `ui.petOrder` → `pettarget`, evento con `tn`): mensaje «Ordenas a X atacar a Y» y diálogo `companion.attack` (voz). Etapas `stage` (baby 1-9, young 10-24, veteran 25-39, elite 40+), `species` y `milestone` (10/25/40/50) en `voice.json` (`tools/mkvoice_phases.py`).
 - **Recall** (botón a la derecha de la barra, comando `recall`): `RECALL_CHANNEL_MS` 3 s quieto y sin combate, `RECALL_COOLDOWN_MS` 60 s; eventos `recalling/recalled/recallfail`. Test: `tests/recall.test.mjs`.
 - Quitados Ctrl+0..9 (círculos de magia) y Ctrl+Q.
+
+## Evolución por tamaño (v0.26.0)
+`companion.SIZE_STAGES` = [10, 25, 40, 50]; `sizeStep(lvl)` 0..4 (`renderer.petScale`: escala 0 / 0,3 / 0,55 / 0,8 / 1 entre el tamaño de cría y el real; los pequeños nacen al 70 %). Al cruzar un nivel: `addExp` marca `comp.evolve` y emite `companion-evolve` (aviso en el registro); `followerThink` espera `EVOLVE_MS` (2,5 s) y `evolveCompanion` lo re-invoca (`spawnCompanion` limpia la marca) emitiendo `companion-resummon` {fx,fy,x,y,nid} (público). Cliente: `fx.js` (anillos, chispas, hechizo 31, `popScale`) y `voice.js` (`companion.evolve[paso]`, generado por `tools/mkvoice_phases.py`). Si el compañero está guardado no hay re-invocación. Test: `tests/summon-size.test.mjs`.

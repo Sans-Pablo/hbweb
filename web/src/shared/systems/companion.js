@@ -12,6 +12,10 @@ import { MAX_ITEMS } from "../items.js";
 import * as Tal from "./talents.js";
 
 export const MAX_COMP_LEVEL = 50;
+// Tamaño por etapas: el compañero cambia de tamaño al llegar a estos niveles (10 joven, 25 veterano, 40 élite, 50 tamaño real).
+// Al cruzar uno se emite `companion-evolve` y, pasado un momento, se vuelve a invocar con efecto (npcsys.evolveCompanion).
+export const SIZE_STAGES = [10, 25, 40, 50];
+export const sizeStep = lvl => SIZE_STAGES.filter(l => (lvl || 1) >= l).length;
 // Nombres aleatorios (sílabas): cada compañero tiene el suyo, fijado al nacer la bola
 const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "Pip", "Rok", "Sil", "Tor", "Vex", "Zan", "Bol", "Cro", "Dun", "Fiz", "Gor"];
 const SYL_B = ["bo", "ra", "ki", "mo", "tu", "lo", "na", "zi", "ko", "pa", "du", "ri", "so", "ga", "fi"];
@@ -160,6 +164,7 @@ export function addExp(w, p, inst, xp) {
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
+    if (SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }

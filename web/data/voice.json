@@ -2178,6 +2178,120 @@
      }
     }
    ]
+  },
+  "evolve": {
+   "1": {
+    "me": [
+     {
+      "es": "¡Mírate! Has crecido de golpe.",
+      "en": "Look at you! You've shot up.",
+      "tone": [
+       "j"
+      ]
+     },
+     {
+      "es": "Ese cuerpo ya no es de recién nacido.",
+      "en": "That's no newborn's body anymore.",
+      "tone": [
+       "w"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Me siento enorme! Bueno… más grande.",
+      "en": "I feel huge! Well… bigger."
+     },
+     {
+      "es": "¡Mis patas ya llegan al suelo del todo!",
+      "en": "My legs finally reach the ground!"
+     }
+    ]
+   },
+   "2": {
+    "me": [
+     {
+      "es": "Te has hecho un veterano de pies a cabeza.",
+      "en": "You've become a veteran from head to toe.",
+      "tone": [
+       "d"
+      ]
+     },
+     {
+      "es": "Ahora sí das miedo.",
+      "en": "Now you're scary.",
+      "tone": [
+       "j"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Que se aparten los monstruos!",
+      "en": "Monsters, make way!"
+     },
+     {
+      "es": "¡Hasta mi sombra es más grande!",
+      "en": "Even my shadow is bigger!"
+     }
+    ]
+   },
+   "3": {
+    "me": [
+     {
+      "es": "Casi no cabes en la granja.",
+      "en": "You barely fit in the farm.",
+      "tone": [
+       "j"
+      ]
+     },
+     {
+      "es": "Una bestia de élite. Mi bestia.",
+      "en": "An elite beast. My beast.",
+      "tone": [
+       "d"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Los jefes me van a respetar!",
+      "en": "The bosses will respect me!"
+     },
+     {
+      "es": "Esto ya no es un juego de niños.",
+      "en": "This is no child's play anymore."
+     }
+    ]
+   },
+   "4": {
+    "me": [
+     {
+      "es": "Tu forma definitiva. Qué orgullo.",
+      "en": "Your final form. I'm so proud.",
+      "tone": [
+       "w"
+      ]
+     },
+     {
+      "es": "Ya eres tan grande como en las leyendas.",
+      "en": "You're as big as the legends say.",
+      "tone": [
+       "d"
+      ]
+     }
+    ],
+    "pet": [
+     {
+      "es": "¡Ahora sí soy yo del todo!",
+      "en": "Now I'm truly me!"
+     },
+     {
+      "es": "¡Que tiemble Aresfarm!",
+      "en": "Let Aresfarm tremble!"
+     }
+    ]
+   }
   }
  },
  "fear": {

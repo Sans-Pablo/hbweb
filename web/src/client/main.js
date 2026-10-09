@@ -184,7 +184,7 @@ async function main() {
           }
         }
       }
-    } else if (!dlg && y < 548 && it.from === 2) {               // fuera de la interfaz: tirar al suelo
+    } else if (!dlg && y < 548 && (it.from === 2 || it.from === 1)) {   // fuera de la interfaz: tirar al suelo (también lo que llevas puesto, p. ej. set Hero/Knight; el servidor lo desequipa)
       hud.act("drop", inst.uid);
     }
   };
@@ -206,6 +206,8 @@ async function main() {
   const sky = new Sky();
   let raining = false;
   const view = { showGrid: false, showMinimap: true };
+  const INDOOR = new Set(["gshop_1f", "bsmith_1f", "wrhus_1f"]);       // tienda, herrería y almacén: sin minimapa
+  const miniOn = () => view.showMinimap && !INDOOR.has(world.map?.id);
 
   function setMode(m) {
     document.body.classList.toggle("classic", m === "classic");
@@ -253,7 +255,7 @@ async function main() {
   let recent = null;
   const flag = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); };
   const ui = {
-    minimapOpen: () => view.showMinimap && view.mapStyle !== "overlay",
+    minimapOpen: () => miniOn() && view.mapStyle !== "overlay",
     closeMinimap: () => { setOpt("map", false); hud.log("Minimapa oculto (se vuelve a activar en Opciones)."); },
     gui,
     get run() { return opts.run; },
@@ -531,7 +533,7 @@ async function main() {
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: view.showMinimap, mapStyle: view.mapStyle, bubbles, pid,
+      labels: ctl.keys.has("alt"), showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;

@@ -89,6 +89,8 @@ export class Hud {
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
       case "pettarget": if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
+      case "companion-evolve": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " está a punto de cambiar de tamaño…", "gold"); break;
+      case "companion-resummon": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve más grande.", "gold"); break;
       case "companion-lvl": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":

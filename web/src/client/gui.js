@@ -10,6 +10,7 @@ export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
 const DIGIT_SPACE = [6, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6];   // __cSpace2
 
+const NO_OBSTACLE = new Set([10, 17, 20]);                       // pequeños: no cuentan como obstáculo para colocar los demás
 const NO_AVOID = new Set([10, 17, 20, 46, 47]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
 
 export class Gui {
@@ -184,12 +185,15 @@ export class Gui {
     if (this.mobile && !d.mobileFixed) for (const o of [...this.order]) if (!this.dialogs.get(o).mobileFixed) this.close(o);      // móvil: un cuadro cada vez, centrado
     this.order.push(id); d.onOpen?.(this);
     if (this.mobile && this.rect && !d.mobileFixed) this.place(this.rect, this.dpr);   // reescala para que quepa
-    if (this.mobile) { if (d.mobileFixed) d.layout?.(this); else { d.x = Math.max(0, (this.W - d.w) / 2); d.y = Math.max(2, (this.H - d.h) / 2); } } else this.avoidOverlap(id);
+    if (this.mobile) { if (d.mobileFixed) d.layout?.(this); else { d.x = Math.max(0, (this.W - d.w) / 2); d.y = Math.max(2, (this.H - d.h) / 2); } } else {
+      this.avoidOverlap(id);
+      if (id === 46 || id === 47) for (const o of [...this.order]) if (o !== id && !NO_AVOID.has(o)) this.avoidOverlap(o);   // si el mensaje del tutorial aparece con cuadros ya abiertos, estos se apartan
+    }
   }
   // Al abrir un cuadro grande, se coloca en el hueco libre más cercano a su sitio si pisaría a otro ya abierto (los pequeños de cantidad/menú/chat se quedan donde el original los pone)
   avoidOverlap(id) {
     if (NO_AVOID.has(id)) return;
-    const d = this.dialogs.get(id), others = this.order.filter(o => o !== id && !NO_AVOID.has(o)).map(o => this.dialogs.get(o));
+    const d = this.dialogs.get(id), others = this.order.filter(o => o !== id && !NO_OBSTACLE.has(o)).map(o => this.dialogs.get(o));      // el mensaje del tutorial (46) y su objetivo (47) sí son obstáculo: Personaje y Mochila no lo tapan
     const area = (x, y) => others.reduce((t, o) => t + Math.max(0, Math.min(x + d.w, o.x + o.w) - Math.max(x, o.x)) * Math.max(0, Math.min(y + d.h, o.y + o.h) - Math.max(y, o.y)), 0);
     if (!area(d.x, d.y)) return;
     const maxX = Math.max(0, W - d.w), maxY = Math.max(0, 548 - d.h);

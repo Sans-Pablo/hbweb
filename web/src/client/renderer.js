@@ -8,6 +8,7 @@ import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
 const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cuerpo): referencia para reducir a los compañeros altos
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
+import { sizeStep } from "../shared/systems/companion.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
@@ -529,10 +530,11 @@ export class Renderer {
     if (!c.has(e.name)) {
       const fr = this.spr.frame(key, f), h = fr ? fr[3] : 0;
       if (!h || !this.spr.ready(key)) return 1;
-      c.set(e.name, h > CHAR_H ? (CHAR_H / 2) / h : 1);
+      c.set(e.name, h > CHAR_H ? (CHAR_H / 2) / h : 0.7);          // los pequeños nacen al 70 %
     }
-    const base = c.get(e.name), k = Math.max(0, Math.min(1, ((e.clvl || 1) - 1) / 49));       // crece con el nivel: tamaño real al 50
-    return base + (1 - base) * k;
+    // tamaño por etapas (niveles 10, 25, 40 y 50; companion.SIZE_STAGES): crece a saltos hasta el tamaño real al 50
+    const base = c.get(e.name), k = [0, 0.3, 0.55, 0.8, 1][sizeStep(e.clvl)];
+    return (base + (1 - base) * k) * (this.fx?.popScale?.(e.id) ?? 1);
   }
 
   mobHeight(key, f) {
