@@ -60,14 +60,9 @@ test("niveles: todo es alcanzable, 60x60 (36x36 los jefes), portales y enemigos 
   }
 });
 
-test("variedad: niveles seguidos cambian de trazado y las semillas dan mapas distintos", () => {
+test("variedad: niveles seguidos cambian de ventana y las semillas dan mapas distintos", () => {
   const sig = (seed, level) => Buffer.from(generateLevel(seed, level).grid.dv.buffer).toString("base64");
-  const themes = new Set();
-  for (let level = 1; level <= 20; level++) if (!isBossLevel(level)) {
-    themes.add(generateLevel(levelSeed(3, level), level).theme);
-    if (!isBossLevel(level + 1) && level < 20) assert.notEqual(generateLevel(levelSeed(3, level), level).theme, generateLevel(levelSeed(3, level + 1), level + 1).theme);
-  }
-  assert.ok(themes.size >= 5, [...themes].join());
+  for (let level = 1; level < 20; level++) assert.notEqual(sig(levelSeed(3, level), level), sig(levelSeed(3, level + 1), level + 1));
   const all = new Set();
   for (let s = 0; s < 40; s++) all.add(sig(levelSeed(s, 2), 2));
   assert.equal(all.size, 40);

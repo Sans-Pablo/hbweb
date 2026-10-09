@@ -1,11 +1,11 @@
-// Cripta de esqueletos: niveles procedurales que bajan de uno en uno (1..DUNGEON_LEVELS).
-// Todo el dibujo sale de teselas que ya existen en los mapas originales de dungeon (middled1n y middled1x):
-// tools/build_dungeon_palette.py extrae de ellos el suelo, la roca/agua y los bordes (indexados por la
-// máscara 5x5 de casillas bloqueadas alrededor), y aquí se vuelven a colocar según un trazado nuevo.
+// Cripta de esqueletos: niveles que bajan de uno en uno (1..DUNGEON_LEVELS).
+// Cada nivel es una ventana recortada de los mapas originales de dungeon (middled1n y middled1x), con sus acantilados, suelos y antorchas
+// tal cual (tools/build_dungeon_palette.py los empaqueta en dungeon_palette.json). Solo el sello del corte de la ventana se dibuja
+// con teselas de borde elegidas por la máscara 5x5 de casillas bloqueadas y por lo que el original coloca junto a qué.
 import { Grid } from "./grid.js";
 
 export const DUNGEON_LEVELS = 20;
-export const DUNGEON_VERSION = 4;
+export const DUNGEON_VERSION = 5;
 export const BOSS_EVERY = 5;
 export const FARM_PORTAL = Object.freeze({ id: "skeleton-entry", x: 134, y: 94, label: "Cripta de esqueletos", target: "dungeon" });
 // Entrada desde el mapa original middled1n (casilla 100,85).
@@ -36,145 +36,107 @@ export function setDungeonPalette(raw) {
   const edge = new Map();
   for (const [k, v] of Object.entries(raw.edge)) edge.set(parseInt(k, 16), v);
   const dark = raw.deep.filter(d => d[0] === 300 || d[0] === 302 || d[0] === 301);
-  PAL = { edge, keys: [...edge.keys()], near: new Map(), floor: raw.floor.filter(f => f[0] === 300).slice(0, 4), dark: dark.slice(0, 3), decor: raw.decor };
+  const pairs = l => new Set(l.map(([a, b]) => a * 4096 + b));
+  PAL = { valid: new Set([0, (1 << 25) - 1, ...edge.keys()]), edge, keys: [...edge.keys()], near: new Map(), tiles: raw.tiles,
+    adjH: pairs(raw.adjH), adjV: pairs(raw.adjV), srcTiles: raw.srcTiles, maps: raw.srcMaps, floor: raw.floor.filter(f => f[0] === 300).slice(0, 4), dark: dark.slice(0, 3), decor: raw.decor };
 }
 export const hasDungeonPalette = () => !!PAL;
 
-function edgeSample(mask) {
-  let s = PAL.edge.get(mask);
-  if (s) return s[0];
-  if (PAL.near.has(mask)) return PAL.near.get(mask);
-  let best = null, bd = 99;
-  for (const k of PAL.keys) { const d = popcount(k ^ mask); if (d < bd) { bd = d; best = k; } }
-  const r = PAL.edge.get(best)[0];
+// Teselas posibles para una máscara 5x5: las del original para esa forma exacta o, si no existe, las de las formas más parecidas.
+function edgeCandidates(mask) {
+  const s = PAL.edge.get(mask);
+  if (s) return s;
+  let r = PAL.near.get(mask);
+  if (r) return r;
+  let bd = 99, best = [];
+  for (const k of PAL.keys) { const d = popcount(k ^ mask); if (d < bd) { bd = d; best = [k]; } else if (d === bd) best.push(k); }
+  r = [...new Set(best.slice(0, 6).flatMap(k => PAL.edge.get(k).slice(0, 2)))];
   PAL.near.set(mask, r);
   return r;
 }
+// Entre los candidatos se prefiere el que el original dibuja junto a las teselas ya colocadas a la izquierda y arriba
+// (qué sprite va con qué sprite), para que no haya costuras ni piezas ajenas.
+function pickEdge(cands, left, up) {
+  let best = cands[0], bs = -1;
+  for (let i = 0; i < cands.length; i++) {
+    const c = cands[i];
+    const sc = (left >= 0 && PAL.adjH.has(left * 4096 + c) ? 2 : 0) + (up >= 0 && PAL.adjV.has(up * 4096 + c) ? 2 : 0) - i * 0.1;
+    if (sc > bs) { bs = sc; best = c; }
+  }
+  return best;
+}
 const texFrame = (t, x, y) => 20 * (t[1] + ((y + t[4]) % 4)) + 6 * t[2] + ((x + t[3]) % 6);
 
-// ------------------------------------------------------------------ trazados
-const THEMES = ["salas", "laberinto", "anillos", "islas", "pilares", "cruz"];
-
+// ------------------------------------------------------------------ trazado
+// Cada nivel es una ventana (60x60; 36x36 los jefes) recortada de middled1n/middled1x: las paredes, los acantilados y el suelo son los
+// que dibujó el original. Lo que queda fuera de la ventana se sella con roca, y solo ahí se eligen teselas de borde por máscara.
 class Plan {
   constructor(w, h) { this.w = w; this.h = h; this.open = new Uint8Array(w * h); }
   at(x, y) { return x >= 0 && y >= 0 && x < this.w && y < this.h && this.open[y * this.w + x] === 1; }
-  rect(x, y, rw, rh, v = 1) {
-    for (let j = y; j < y + rh; j++) for (let i = x; i < x + rw; i++) if (i > 2 && j > 2 && i < this.w - 3 && j < this.h - 3) this.open[j * this.w + i] = v;
-  }
-  // pasillo de 4 de ancho entre dos puntos, en L
-  link(ax, ay, bx, by, wd = 4, horizFirst = true) {
-    const o = wd >> 1;
-    if (horizFirst) { this.rect(Math.min(ax, bx) - o, ay - o, Math.abs(bx - ax) + wd, wd); this.rect(bx - o, Math.min(ay, by) - o, wd, Math.abs(by - ay) + wd); }
-    else { this.rect(ax - o, Math.min(ay, by) - o, wd, Math.abs(by - ay) + wd); this.rect(Math.min(ax, bx) - o, by - o, Math.abs(bx - ax) + wd, wd); }
-  }
 }
-const even = v => v & ~1;
-
-function themeSalas(P, rng) {
-  const leaves = [];
-  const split = (x, y, w, h, d) => {
-    const vert = w > h ? true : h > w ? false : rng() < .5;
-    if (d > 3 || (vert ? w : h) < 24 || (d >= 2 && rng() < .25)) { leaves.push({ x, y, w, h }); return; }
-    const cut = even(Math.floor((vert ? w : h) * (.4 + rng() * .2)));
-    if (vert) { split(x, y, cut, h, d + 1); split(x + cut, y, w - cut, h, d + 1); } else { split(x, y, w, cut, d + 1); split(x, y + cut, w, h - cut, d + 1); }
-  };
-  const rooms = [];
-  split(3, 3, P.w - 6, P.h - 6, 0);
-  for (const l of leaves) {
-    const rw = even(Math.max(8, l.w - 6 - Math.floor(rng() * 6))), rh = even(Math.max(8, l.h - 6 - Math.floor(rng() * 6)));
-    const x = even(l.x + 2 + Math.floor(rng() * Math.max(1, l.w - rw - 3))), y = even(l.y + 2 + Math.floor(rng() * Math.max(1, l.h - rh - 3)));
-    P.rect(x, y, rw, rh);
-    if (rng() < .4 && rw >= 12 && rh >= 12) { P.rect(x, y, 4, 4, 0); P.rect(x + rw - 4, y + rh - 4, 4, 4, 0); }   // esquinas cortadas
-    rooms.push({ cx: even(x + (rw >> 1)), cy: even(y + (rh >> 1)) });
+const WATER = new Set([305, 306, 307, 308, 309]);
+function srcMap(i) {
+  const m = PAL.maps[i];
+  if (!m.cells) {
+    const cells = new Int32Array(m.w * m.h); let k = 0;
+    for (let j = 0; j < m.rle.length; j += 2) for (let r = 0; r < m.rle[j + 1]; r++) cells[k++] = m.rle[j];
+    m.cells = cells;
+    m.bad = new Uint8Array(m.w * m.h);                                   // agua, puentes y casillas especiales: nunca dentro de un nivel
+    for (let q = 0; q < cells.length; q++) { const t = PAL.srcTiles[cells[q]]; m.bad[q] = WATER.has(t[0]) || t[4] === 2 ? 1 : 0; }
+    m.sum = new Int32Array((m.w + 1) * (m.h + 1));                       // sumas acumuladas de `bad`
+    for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) m.sum[(y + 1) * (m.w + 1) + x + 1] = m.bad[y * m.w + x] + m.sum[y * (m.w + 1) + x + 1] + m.sum[(y + 1) * (m.w + 1) + x] - m.sum[y * (m.w + 1) + x];
   }
-  // cadena + un par de atajos: se puede rodear
-  const order = rooms.map((r, i) => [r, i]).sort((a, b) => a[0].cx + a[0].cy - b[0].cx - b[0].cy).map(a => a[0]);
-  for (let i = 1; i < order.length; i++) P.link(order[i - 1].cx, order[i - 1].cy, order[i].cx, order[i].cy, 4, rng() < .5);
-  for (let k = 0; k < 2 && order.length > 3; k++) { const a = order[Math.floor(rng() * order.length)], b = order[Math.floor(rng() * order.length)]; if (a !== b) P.link(a.cx, a.cy, b.cx, b.cy, 4, rng() < .5); }
+  return m;
 }
+const srcBlocked = (m, x, y) => x < 0 || y < 0 || x >= m.w || y >= m.h || PAL.srcTiles[m.cells[y * m.w + x]][4] !== 0;
+const badIn = (m, x0, y0, n) => m.sum[(y0 + n) * (m.w + 1) + x0 + n] - m.sum[y0 * (m.w + 1) + x0 + n] - m.sum[(y0 + n) * (m.w + 1) + x0] + m.sum[y0 * (m.w + 1) + x0];
 
-function themeLaberinto(P, rng) {
-  const pitch = 7, n = Math.floor((P.w - 4) / pitch), ox = 4, oy = 4;
-  const seen = new Uint8Array(n * n), stack = [[0, 0]];
-  const cell = (i, j) => P.rect(ox + i * pitch, oy + j * pitch, 4, 4);
-  seen[0] = 1; cell(0, 0);
-  while (stack.length) {
-    const [i, j] = stack.at(-1);
-    const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [i + a, j + b, a, b]).filter(([a, b]) => a >= 0 && b >= 0 && a < n && b < n && !seen[b * n + a]);
-    if (!nb.length) { stack.pop(); continue; }
-    const [a, b, da, db] = nb[Math.floor(rng() * nb.length)];
-    seen[b * n + a] = 1; cell(a, b);
-    P.rect(ox + i * pitch + (da > 0 ? 4 : da < 0 ? -3 : 0), oy + j * pitch + (db > 0 ? 4 : db < 0 ? -3 : 0), da ? 3 : 4, db ? 3 : 4);
-    stack.push([a, b]);
+// componentes conexas del plan (4 vecinos): deja solo la mayor y devuelve su tamaño
+function keepLargest(P) {
+  const lab = new Int32Array(P.w * P.h), sizes = [0];
+  for (let i = 0; i < P.open.length; i++) {
+    if (!P.open[i] || lab[i]) continue;
+    const id = sizes.length, q = [i]; lab[i] = id; let n = 0;
+    for (let k = 0; k < q.length; k++) {
+      const c = q[k], x = c % P.w, y = (c / P.w) | 0; n++;
+      for (const j of [x > 0 ? c - 1 : -1, x < P.w - 1 ? c + 1 : -1, y > 0 ? c - P.w : -1, y < P.h - 1 ? c + P.w : -1]) if (j >= 0 && P.open[j] && !lab[j]) { lab[j] = id; q.push(j); }
+    }
+    sizes.push(n);
   }
-  for (let k = 0; k < n; k++) {                                      // bucles extra
-    const i = Math.floor(rng() * (n - 1)), j = Math.floor(rng() * n);
-    if (rng() < .5) P.rect(ox + i * pitch + 4, oy + j * pitch, 3, 4); else P.rect(ox + j * pitch, oy + i * pitch + 4, 4, 3);
-  }
+  let best = 0; for (let i = 1; i < sizes.length; i++) if (sizes[i] > sizes[best]) best = i;
+  for (let i = 0; i < P.open.length; i++) if (P.open[i] && lab[i] !== best) P.open[i] = 0;
+  return sizes[best] || 0;
 }
 
-function themeAnillos(P, rng) {
-  const c = even(P.w >> 1), ring = (d, wd) => { P.rect(c - d, c - d, 2 * d, 2 * d); P.rect(c - d + wd, c - d + wd, 2 * d - 2 * wd, 2 * d - 2 * wd, 0); };
-  ring(26, 6); ring(14, 6); P.rect(c - 6, c - 6, 12, 12);
-  const up = rng() < .5;
-  P.rect(c - 3, up ? c - 21 : c + 13, 6, 9);                                // anillo exterior <-> medio
-  const left = rng() < .5;
-  P.rect(left ? c - 9 : c + 4, c - 3, 5, 6);                                // medio <-> centro
-  if (rng() < .6) P.rect(left ? c + 4 : c - 9, c - 3, 5, 6);
-  if (rng() < .6) P.rect(c - 3, up ? c + 13 : c - 21, 6, 9);                // segundo acceso: se puede rodear
-}
-
-function themeIslas(P, rng) {
-  const pitch = 20, n = 3, islands = [];
-  const start = even((P.w - (n * pitch - 6)) >> 1);
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    const s = 10 + 2 * Math.floor(rng() * 3), x = start + i * pitch + (12 - s >> 1), y = start + j * pitch + (12 - s >> 1);
-    P.rect(even(x), even(y), s, s);
-    if (rng() < .5) P.rect(even(x), even(y), 4, 4, 0);
-    islands.push({ i, j, cx: even(x + (s >> 1)), cy: even(y + (s >> 1)) });
+// Busca una ventana válida: sin agua, con una componente grande y despejada y el menor corte posible (así hay menos pared que inventar).
+function pickWindow(rng, n, boss) {
+  const found = [];
+  for (let t = 0; t < 260; t++) {
+    const mi = Math.floor(rng() * PAL.maps.length), m = srcMap(mi);
+    const x0 = Math.floor(rng() * (m.w - n)), y0 = Math.floor(rng() * (m.h - n));
+    if (badIn(m, x0, y0, n)) continue;
+    const P = new Plan(n, n); let cut = 0;
+    for (let y = 3; y < n - 3; y++) for (let x = 3; x < n - 3; x++) {
+      if (srcBlocked(m, x0 + x, y0 + y)) continue;
+      P.open[y * n + x] = 1;
+      if (x < 5 || y < 5 || x >= n - 5 || y >= n - 5) cut++;
+    }
+    const size = keepLargest(P);
+    if (size < (boss ? 380 : 700)) continue;
+    let roomyN = 0;
+    for (let y = 3; y < n - 3; y++) for (let x = 3; x < n - 3; x++) if (roomy(P, x, y, 1)) roomyN++;
+    if (roomyN < (boss ? 120 : 260)) continue;
+    const d = bfs(P, ...firstRoomy(P)); let ecc = 0; for (let i = 0; i < d.length; i++) if (d[i] > ecc) ecc = d[i];
+    if (ecc < (boss ? 22 : 44)) continue;
+    const score = cut * 3 - Math.min(size, 1500) * 0.02 - Math.min(ecc, 90) + rng() * 60;       // el azar evita que todas las semillas den la misma ventana
+    found.push({ score, P, m, x0, y0, mi });
+    if (found.length >= 14) break;
   }
-  const link = (a, b) => P.link(a.cx, a.cy, b.cx, b.cy, 4, a.j === b.j);
-  const at = (i, j) => islands.find(o => o.i === i && o.j === j);
-  const done = new Set([0]), seen = [at(0, 0)];
-  while (seen.length < islands.length) {
-    const a = seen[Math.floor(rng() * seen.length)], dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([x, y]) => at(a.i + x, a.j + y)).filter(o => o && !seen.includes(o));
-    if (!dirs.length) continue;
-    const b = dirs[Math.floor(rng() * dirs.length)]; link(a, b); seen.push(b);
-  }
-  for (let k = 0; k < 2; k++) { const a = at(Math.floor(rng() * 2), Math.floor(rng() * 3)); if (a) link(a, at(a.i + 1, a.j)); }
+  found.sort((a, b) => a.score - b.score);
+  const best = found.length ? found[Math.floor(rng() * Math.min(5, found.length))] : null;
+  return best;
 }
-
-function themePilares(P, rng) {
-  P.rect(6, 6, P.w - 12, P.h - 12);
-  for (let y = 12; y < P.h - 14; y += 10) for (let x = 12; x < P.w - 14; x += 10) if (rng() < .85) P.rect(x, y, 4, 4, 0);
-  P.rect(3, 26, 4, 8); P.rect(P.w - 7, 26, 4, 8);
-  for (const [x, y] of [[10, 10], [P.w - 14, P.h - 14]]) P.rect(x, y, 4, 4, 0);
-}
-
-function themeCruz(P, rng) {
-  const c = even(P.w >> 1);
-  P.rect(c - 4, 6, 8, P.h - 12); P.rect(6, c - 4, P.w - 12, 8);
-  P.rect(c - 8, c - 8, 16, 16);
-  for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
-    const x = sx > 0 ? P.w - 22 : 8, y = sy > 0 ? P.h - 22 : 8;
-    P.rect(x, y, 14, 14);
-    P.link(x + 6, y + 6, sx > 0 ? c + 4 : c - 4, sy > 0 ? c + 20 : c - 20, 4, rng() < .5);
-    if (rng() < .5) P.rect(x + 4, y + 4, 6, 6, 0);
-  }
-}
-const BUILDERS = { salas: themeSalas, laberinto: themeLaberinto, anillos: themeAnillos, islas: themeIslas, pilares: themePilares, cruz: themeCruz };
-const THEME_NAMES = { salas: "Salas olvidadas", laberinto: "Laberinto de osarios", anillos: "Galerías concéntricas", islas: "Islas sobre el lago", pilares: "Sala de los pilares", cruz: "Cruce de las cuatro criptas" };
-
-function themeJefe(P, rng) {
-  const c = even(P.w >> 1);
-  // sala de entrada pequeña al sur, pasillo, y la arena grande (octógono rectilíneo)
-  P.rect(c - 4, P.h - 14, 8, 8);
-  P.rect(c - 2, P.h - 26, 4, 14);
-  P.rect(c - 10, 6, 20, 20);
-  P.rect(c - 12, 10, 24, 12);
-  P.rect(c - 12, 10, 4, 4, 0); P.rect(c + 8, 10, 4, 4, 0);
-  for (const [dx, dy] of [[-6, 10], [4, 10], [-6, 18], [4, 18]]) P.rect(c + dx, dy, 2, 2, 0);
-}
+const firstRoomy = P => { for (let y = 0; y < P.h; y++) for (let x = 0; x < P.w; x++) if (roomy(P, x, y, 1)) return [x, y]; return [P.w >> 1, P.h >> 1]; };
 
 // ------------------------------------------------------------------ generación
 function bfs(P, sx, sy) {
@@ -195,23 +157,18 @@ export function generateLevel(seed, level) {
   if (!PAL) throw new Error("Falta la paleta de la cripta");
   const rng = seededRandom(seed), boss = isBossLevel(level);
   const w = boss ? 36 : 60, h = w;
-  const P = new Plan(w, h);
-  let theme;
-  if (boss) { theme = "jefe"; themeJefe(P, rng); }
-  else {
-    // la partida (3 bits bajos de la semilla) rota el orden de los temas; dos niveles seguidos nunca repiten trazado
-    theme = THEMES[(level * 5 + (seed & 7)) % THEMES.length];
-    BUILDERS[theme](P, rng);
-  }
-  // inicio / meta: extremos de la componente conexa mayor
+  const win = pickWindow(rng, w, boss);
+  if (!win) throw new Error("No hay ventana válida en los mapas originales");
+  const { P, m: src, x0, y0 } = win;
+  const theme = boss ? "jefe" : "cueva";
   const cells = [];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (roomy(P, x, y, 1)) cells.push([x, y]);
-  let sp = boss ? [w >> 1, h - 10] : cells.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), cells[0]);
-  if (!roomy(P, sp[0], sp[1], 1)) sp = cells[0];
+  // inicio: la esquina más cercana al origen (jefes: la parte baja); meta: lo más lejos posible por el camino
+  let sp = boss ? cells.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), cells[0]) : cells.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), cells[0]);
   let dist = bfs(P, sp[0], sp[1]);
-  for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;      // se tapan las zonas sueltas
-  let fin = boss ? [w >> 1, 12] : sp, far = -1;
-  if (!boss) for (const [x, y] of cells) { const d = dist[y * w + x]; if (d > far && roomy(P, x, y, 1)) { far = d; fin = [x, y]; } }
+  for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;
+  let fin = sp, far = -1;
+  for (const [x, y] of cells) { const d = dist[y * w + x]; if (d > far && roomy(P, x, y, 1)) { far = d; fin = [x, y]; } }
   const last = level >= DUNGEON_LEVELS;
   const portals = [
     { id: "return", x: sp[0], y: sp[1], label: "Salir de la cripta", target: "origin" },
@@ -225,28 +182,29 @@ export function generateLevel(seed, level) {
   const deepAt = () => PAL.dark[0];         // el agua de middled1n se dibuja con hojas animadas: no se reutiliza
   const blockedAt = (x, y) => !P.at(x, y);
   // decorado suelto: obstáculos aislados sobre suelo despejado, lejos de portales
-  const decor = new Map();
-  const far2 = (x, y) => [sp, fin].every(p => Math.max(Math.abs(x - p[0]), Math.abs(y - p[1])) > 6);
-  for (const [x, y] of cells) if (rng() < .012 && far2(x, y) && roomy(P, x, y, 2)) decor.set(y * w + x, PAL.decor[Math.floor(rng() * PAL.decor.length)]);
+  const decor = new Map();                                                    // los obstáculos sueltos ya vienen en las ventanas del original
+  const chosen = new Int16Array(w * h).fill(-1);
+  const maskOf = (blk, x, y) => { let m = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) m = m * 2 + (blk(x + dx, y + dy) ? 1 : 0); return m; };
+  const srcBlk = (x, y) => srcBlocked(src, x0 + x, y0 + y);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    let m = 0;
-    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) m = m * 2 + (blockedAt(x + dx, y + dy) ? 1 : 0);
-    const o = (y * w + x) * 10, self = blockedAt(x, y);
+    const m = maskOf(blockedAt, x, y), o = (y * w + x) * 10, self = blockedAt(x, y);
     let spr, frame, obj = 0, of = 0;
-    if (m === 0) { spr = floorT[0]; frame = texFrame(floorT, x, y); }
-    else if (m === (1 << 25) - 1) { const t = deepAt(x, y); spr = t[0]; frame = texFrame(t, x, y); }
-    else { const s = edgeSample(m); [spr, frame, obj, of] = s; }
-    const dec = decor.get(y * w + x);
-    if (dec) { obj = dec[0]; of = dec[1]; }
+    if (m === maskOf(srcBlk, x, y) && !self === !srcBlk(x, y)) {            // igual que en el original: se copia su tesela tal cual
+      [spr, frame, obj, of] = PAL.srcTiles[src.cells[(y0 + y) * src.w + x0 + x]];
+    } else if (m === (1 << 25) - 1) { const t = deepAt(x, y); spr = t[0]; frame = texFrame(t, x, y); }
+    else if (m === 0) { spr = floorT[0]; frame = texFrame(floorT, x, y); }
+    else { const ti = pickEdge(edgeCandidates(m), x > 0 ? chosen[y * w + x - 1] : -1, y > 0 ? chosen[(y - 1) * w + x] : -1); chosen[y * w + x] = ti; [spr, frame, obj, of] = PAL.tiles[ti]; }
     dv.setInt16(o, spr, true); dv.setInt16(o + 2, frame, true); dv.setInt16(o + 4, obj, true); dv.setInt16(o + 6, of, true);
-    bytes[o + 8] = self || dec ? 0x80 : 0;
+    bytes[o + 8] = self ? 0x80 : 0;
   }
   const grid = new Grid(w, h, bytes);
 
   // ---- enemigos
   const spawns = [];
   const scale = { hp: 1 + .22 * (level - 1), dmg: 1 + .1 * (level - 1), exp: 1 + .15 * (level - 1) };
-  const free = cells.filter(([x, y]) => dist[y * w + x] >= (boss ? 8 : 14) && roomy(P, x, y, 1) && !decor.has(y * w + x) && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3);
+  const minD = d => cells.filter(([x, y]) => dist[y * w + x] >= d && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3).length;
+  const dmin = boss ? 8 : minD(14) >= 40 ? 14 : 6;
+  const free = cells.filter(([x, y]) => dist[y * w + x] >= dmin && roomy(P, x, y, 1) && !decor.has(y * w + x) && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3);
   let want = boss ? 6 : Math.min(26, 8 + level), id = 1;
   const taken = [];
   for (let tries = 0; want > 0 && tries < 600 && free.length; tries++) {
@@ -259,10 +217,12 @@ export function generateLevel(seed, level) {
   let bossTier = 0;
   if (boss) {
     bossTier = Math.min(4, level / BOSS_EVERY);
-    spawns.push({ id: id++, name: "Skeleton", max: 1, rect: [w >> 1, 15, w >> 1, 15], respawn: false, boss: bossTier, scale: { hp: scale.hp * (6 + 2 * bossTier), dmg: scale.dmg * (1.6 + .2 * bossTier), exp: scale.exp * (8 + 3 * bossTier) } });
+    let bc = fin, bdiff = 1e9;                                       // el jefe espera a tres cuartos del camino, antes de la salida
+    for (const [x, y] of cells) { const d = Math.abs(dist[y * w + x] - far * .75); if (d < bdiff && roomy(P, x, y, 1)) { bdiff = d; bc = [x, y]; } }
+    spawns.push({ id: id++, name: "Skeleton", max: 1, rect: [bc[0], bc[1], bc[0], bc[1]], respawn: false, boss: bossTier, scale: { hp: scale.hp * (6 + 2 * bossTier), dmg: scale.dmg * (1.6 + .2 * bossTier), exp: scale.exp * (8 + 3 * bossTier) } });
   }
   return {
     grid, start: sp, portals, spawns, seed: seed >>> 0, level, theme, boss: bossTier, version: DUNGEON_VERSION,
-    name: boss ? "Cámara del " + BOSS_NAMES[bossTier].toLowerCase() : THEME_NAMES[theme],
+    name: boss ? "Cámara del " + BOSS_NAMES[bossTier].toLowerCase() : "Cuevas del osario",
   };
 }

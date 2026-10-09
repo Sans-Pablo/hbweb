@@ -60,7 +60,7 @@ test("las hojas de la paleta de la cripta existen y el suelo no es negro ni tran
       assert.ok(light / (w * h * 3) > 25, "suelo negro: " + spr + "/" + f);
     }
   }
-  for (const k of Object.keys(pal.edge)) for (const [spr, frame] of pal.edge[k]) assert.ok(manifest["t" + spr]?.frames[frame], "borde sin hoja: " + spr + "/" + frame);
+  for (const [spr, frame] of [...pal.tiles, ...pal.srcTiles]) assert.ok(manifest["t" + spr]?.frames[frame], "borde sin hoja: " + spr + "/" + frame);
 });
 
 test("manifiesto o NPC obsoleto produce un error explícito", () => {

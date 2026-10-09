@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Cripta con el aspecto del original (v0.14.0)",
+        "en": "Crypt that looks like the original (v0.14.0)"
+      },
+      "items": [
+        {
+          "es": "Los niveles de la cripta ahora son trozos del propio middled1n/middled1x: acantilados, suelos, rocas y antorchas son los sprites que el original coloca juntos (se acabaron las piezas que no corresponden y los cuadros grises de agua).",
+          "en": "Crypt levels are now slices of the real middled1n/middled1x: cliffs, floors, rocks and torches are the sprites the original places together (no more mismatched pieces or grey water squares)."
+        },
+        {
+          "es": "Cada nivel y cada partida usan una zona distinta del mapa original; los jefes (5/10/15/20) pelean en una zona más pequeña. Mismos 20 niveles, dificultad y portales.",
+          "en": "Each level and run uses a different area of the original map; bosses (5/10/15/20) fight in a smaller area. Same 20 levels, difficulty and portals."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Summons con talentos y hechizos (v0.13.0)",
         "en": "Summons with talents and spells (v0.13.0)"
       },
@@ -1537,6 +1554,17 @@
       "text": {
         "es": "Sube un Stone-Golem o Cyclops de nivel: su sprite crece poco a poco; al nivel 50 tiene el tamaño real.",
         "en": "Level up a Stone-Golem or Cyclops: its sprite slowly grows; at level 50 it is full size."
+      }
+    },
+    {
+      "id": "crypt-orig",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Compara la cripta con middled1n (portal 100,85): mismas paredes, suelos y antorchas; sin cuadros grises ni costuras raras salvo en los bordes sellados del nivel.",
+        "en": "Compare the crypt with middled1n (portal 100,85): same walls, floors and torches; no grey squares or odd seams except at the sealed level borders."
       }
     }
   ],
