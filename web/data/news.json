@@ -11,6 +11,35 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Mecánicas únicas de los jefes (v0.17.0)",
+        "en": "Unique boss mechanics (v0.17.0)"
+      },
+      "items": [
+        {
+          "es": "Rey carmesí: furia por vida perdida, rugido que aturde, brasas en el suelo y huesos que lo curan.",
+          "en": "Crimson King: fury as life drops, stunning roar, floor embers and bones that heal it."
+        },
+        {
+          "es": "Rey umbrío: salto a la espalda, drenaje al summon y clones de sombra.",
+          "en": "Umbral King: backstab blink, summon drain and shadow clones."
+        },
+        {
+          "es": "Rey glacial: suelo helado, congelación del summon y escudo de hielo con cristales (sprite original del mineral de hielo).",
+          "en": "Glacial King: frozen floor, summon freezing and an ice shield with crystals (original ice mineral sprite)."
+        },
+        {
+          "es": "Rey dorado: 3 fases, contador de furia (más daño y más oro) y aura que refleja hechizos.",
+          "en": "Golden King: 3 phases, wrath counter (more damage and more gold) and a spell-reflecting aura."
+        },
+        {
+          "es": "Herramientas: nueva orden «vida del jefe». Las zonas de suelo helado ralentizan también a los jugadores.",
+          "en": "Tools: new “boss life” command. Frozen floor now slows players too."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Summons, tiendas y entrada directa (v0.16.0)",
         "en": "Summons, shops and direct entry (v0.16.0)"
       },
@@ -1706,6 +1735,61 @@
       "text": {
         "es": "En el hospital (Gail) y los demás cuadros clásicos, los textos no se superponen y se puede hacer clic en cada fila con facilidad.",
         "en": "In the hospital (Gail) and the other classic dialogs, texts don't overlap and each row is easy to click."
+      }
+    },
+    {
+      "id": "boss1",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "Rey carmesí (nivel 5): ataca más rápido al perder vida, ruge y aturde al 50 % y 25 %, deja brasas bajo tus pies (aviso rojo) y levanta huesos que lo curan al morir.",
+        "en": "Crimson King (level 5): attacks faster as it loses life, roars and stuns at 50 % and 25 %, leaves embers under your feet (red warning) and raises bones that heal it when they die."
+      }
+    },
+    {
+      "id": "boss2",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "Rey umbrío (nivel 10): salta a tu espalda con aviso violeta, drena a tu summon con un hilo violeta (aléjalo) y crea 2 clones; mata los clones para hacerle daño completo (el real tiene un aro violeta).",
+        "en": "Umbral King (level 10): blinks behind you with a violet warning, drains your summon with a violet thread (move it away) and makes 2 clones; kill the clones to deal full damage (the real one has a violet ring)."
+      }
+    },
+    {
+      "id": "boss3",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "Rey glacial (nivel 15): suelo helado que te ralentiza, congela a tu summon (acércate para liberarlo) y se protege con un escudo hasta que rompas 3 cristales de hielo.",
+        "en": "Glacial King (level 15): frozen floor that slows you, freezes your summon (get close to free it) and shields itself until you break 3 ice crystals."
+      }
+    },
+    {
+      "id": "boss4",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "Rey dorado (nivel 20): 3 fases (brasas, sombra, hielo); cada golpe que te da sube su daño y el oro que suelta; refleja el 30 % del daño de hechizos (salvo a summons Warrior).",
+        "en": "Golden King (level 20): 3 phases (embers, shadow, ice); each hit it lands raises its damage and the gold it drops; reflects 30 % of spell damage (except to Warrior summons)."
+      }
+    },
+    {
+      "id": "boss-tool",
+      "group": {
+        "es": "Jefes",
+        "en": "Bosses"
+      },
+      "text": {
+        "es": "F1 → Herramientas → «vida del jefe»: fija la vida del jefe cercano para ver fases, escudos y clones sin pelear todo el combate.",
+        "en": "F1 → Tools → “boss life”: sets the nearby boss's life to trigger phases, shields and clones without fighting the whole battle."
       }
     }
   ],

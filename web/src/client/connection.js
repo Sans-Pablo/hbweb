@@ -159,7 +159,7 @@ export class NetConnection {
     e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
     if (o.cp) { e.nick = o.nk; e.clvl = o.cl; }
     if (o.k === "npc" || o.k === "citizen") {
-      e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0;
+      e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0; { const bx = o.bx || 0; e.clone = !!(bx & 1); e.crystal = !!(bx & 2); e.shield = !!(bx & 4); e.hasClones = !!(bx & 8); e.wrath = o.wr || 0; e.owner = o.ow || 0; }
       if (isNew) { e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);

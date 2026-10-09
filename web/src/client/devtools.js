@@ -35,7 +35,7 @@ export function devHtml(lang) {
       `x ${num("icount", 1, 1, 10000, 64)} ${b("give", "Give")} | ${b("kit:potions", "Potions")} ${b("kit:arrows", "Arrows")} ${b("kit:dyes", "Dyes")} ${b("kit:bone", "Skeleton bones")} ${b("kit:manuals", "Manual")}`) +
     row(L(lang, "Enemigos", "Enemies"),
       `<select id="dv-mob">${opt(monsters, "Skeleton")}</select> x ${num("mcount", 1, 1, 30, 48)} ${L(lang, "fuerza", "power")} ${num("mmult", 1, 1, 50, 48)} ` +
-      `${L(lang, "jefe", "boss")} <select id="dv-boss">${opt(["0", "1", "2", "3", "4"])}</select> ${b("spawn", "Spawn")} ${b("killall", "Kill all")} ${b("freeze", "Freeze monsters on/off")}`) +
+      `${L(lang, "jefe", "boss")} <select id="dv-boss">${opt(["0", "1", "2", "3", "4"])}</select> ${b("spawn", "Spawn")} ${b("killall", "Kill all")} ${b("freeze", "Freeze monsters on/off")} | ${L(lang, "vida del jefe", "boss life")} ${num("bhp", 50, 1, 100, 48)} % ${b("bosshp", "Set")}`) +
     row("Summons",
       `<select id="dv-sp">${opt(SPECIES, "Orc")}</select> Lv ${num("plv", 1, 1, 50, 48)} ${b("ball", "Give ball")} | ` +
       `Lv ${num("pl", 20, 1, 50, 48)} ${b("petlvl", "Set active summon level")} ${b("petheal", "Heal + mana")} | ` +
@@ -56,6 +56,7 @@ export function devClick(e) {
     case "stat": send({ op, key: val("stat"), n: val("statv") }); break;
     case "heal": case "god": case "clear": case "killall": case "freeze": case "petheal": case "petreset": send({ op }); break;
     case "goto": send({ op, map: val("map") }); break;
+    case "bosshp": send({ op, n: val("bhp") }); break;
     case "crypt": send({ op, level: val("clv") }); break;
     case "teleportxy": send({ op, x: val("tx"), y: val("ty") }); break;
     case "give": send({ op, name: val("item"), count: val("icount") }); break;

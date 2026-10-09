@@ -1,4 +1,5 @@
 // Golpes, daño, experiencia y muerte de jugadores y monstruos.
+import * as Boss from "./bosses.js";
 import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
@@ -134,6 +135,7 @@ export function npcStrikes(w, n, t) {
   }
   if (a.shielded) gainSSN(t, 11, 1);
   damagePlayer(w, t, a.damage, n);
+  if (a.damage > 0) Boss.onBossHit(w, n);
   knockback(w, n, t, a.damage);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
@@ -153,6 +155,8 @@ function retarget(w, n, p) {
 }
 
 export function damageNpc(w, n, dmg, p, skill, half = false) {
+  dmg = Boss.mitigate(w, n, dmg, p, skill == null ? "spell" : "hit");     // jefes: escudo, clones, reflejo
+  if (dmg <= 0) return;
   n.hp -= dmg;
   p.lastCombat = w.time;
   w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp });

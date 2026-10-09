@@ -1,5 +1,6 @@
 // Objetos dinámicos de los hechizos de campo (CheckDynamicObjectList / DynamicObjectEffectProcessor):
 // muro y campo de fuego, nube venenosa, tormenta de hielo y campo de pinchos. Se procesan una vez por segundo.
+import * as Boss from "./bosses.js";
 import { dice } from "../rules.js";
 import { sget, sset, sclear } from "./status.js";
 import { damagePlayer } from "./combatsys.js";
@@ -39,6 +40,7 @@ function hit(w, e, dmg, f) {
   }
   if (e.boss === 1 && f.type === DYN.FIRE) return;                    // el rey carmesí es inmune a sus llamas
   if (e.cfg.actionLimit === 1 || e.cfg.actionLimit === 2 || e.cfg.actionLimit === 4) return;
+  dmg = Boss.mitigate(w, e, dmg, null, "field"); if (dmg <= 0) return;
   e.hp -= dmg;
   w.emit({ t: "damage", id: e.id, from: f.owner || 0, amount: dmg, hp: Math.max(0, e.hp), max: e.maxHp });
   if (e.hp <= 0) return w.killNpc(e, null);

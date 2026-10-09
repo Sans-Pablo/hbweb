@@ -56,6 +56,14 @@ const OPS = {
     }
     say(w, p, made + " × " + name + (c.boss ? " (boss " + c.boss + ")" : ""));
   },
+  // pone la vida del jefe más cercano a un % para provocar sus fases (escudos, clones, rugido, fases del dorado...)
+  bosshp(w, p, c) {
+    let best = null, bd = 1e9;
+    for (const e of w.ents.values()) if (e.boss && e.kind === "npc" && !e.aux && !e.dead) { const d = Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)); if (d < bd) { best = e; bd = d; } }
+    if (!best) return say(w, p, "No boss in this map");
+    best.hp = Math.max(1, Math.floor(best.maxHp * num(c.n, 1, 100, 50) / 100));
+    say(w, p, "Boss " + best.boss + " at " + num(c.n, 1, 100, 50) + " % life");
+  },
   killall(w, p) { let k = 0; for (const e of [...w.ents.values()]) if (e.kind === "npc" && !e.dead && !e.master) { killNpc(w, e, p); k++; } say(w, p, k + " monsters killed"); },
   freeze(w, p) { w.dbgFreeze = !w.dbgFreeze; say(w, p, w.dbgFreeze ? "Monsters frozen" : "Monsters active"); },
   // ---- summons

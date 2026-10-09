@@ -145,6 +145,7 @@ export class Renderer {
 
     this.drawPortals(s, camX, camY);
     this.drawFields(s, camX, camY);
+    this.drawBossFx(s, camX, camY);
 
     // 2) ayudas sobre el suelo (solo remastered): casilla bajo el cursor y ruta prevista
     if (remaster) {
@@ -287,6 +288,78 @@ export class Renderer {
     }
   }
 
+  // Efectos de las mecánicas de los jefes (shared/systems/bosses.js): avisos, brasas, suelo helado, rugido, saltos, drenaje y enlaces del escudo
+  drawBossFx(s, camX, camY) {
+    const w = s.world, sp = s.fx?.sp, ctx = this.ctx;
+    if (!sp) return;
+    const now = w.time, perf = performance.now();
+    const px = t => t * T - camX, py = t => t * T - camY;
+    for (const z of w.bfx || []) {
+      if (z.until <= now) continue;
+      const prog = Math.min(1, (now - z.born) / Math.max(1, z.until - z.born)), r = z.r || 0;
+      switch (z.kind) {
+        case "warn": {                                                       // aviso: casillas que se rellenan antes del golpe
+          ctx.fillStyle = z.col || "#ff5a1a"; ctx.strokeStyle = z.col || "#ff5a1a"; ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.12 + 0.3 * prog;
+          ctx.fillRect(px(z.x - r), py(z.y - r), (2 * r + 1) * T, (2 * r + 1) * T);
+          ctx.globalAlpha = 0.5 + 0.4 * Math.sin(perf / 90);
+          ctx.strokeRect(px(z.x - r) + 1, py(z.y - r) + 1, (2 * r + 1) * T - 2, (2 * r + 1) * T - 2);
+          ctx.globalAlpha = 1;
+          break;
+        }
+        case "ember": {
+          const x = px(z.x), y = py(z.y), fr = Math.floor((now - z.born) / 100) + z.x * 7 + z.y * 3;
+          sp.put(ctx, 0, 1, x + 16, y + 16, "add", [.25, .5, .7][Math.floor(Math.random() * 3)]);
+          sp.put(ctx, 9, Math.floor((fr % 24) / 3), x + 16, y + 16, "add", .8);
+          break;
+        }
+        case "frost": {
+          const fade = Math.min(1, (z.until - now) / 1500, (now - z.born) / 400 + .2);
+          ctx.globalAlpha = 0.2 * fade; ctx.fillStyle = "#9fdcff";
+          ctx.fillRect(px(z.x - r), py(z.y - r), (2 * r + 1) * T, (2 * r + 1) * T);
+          ctx.globalAlpha = 1;
+          for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) {
+            const x = px(z.x + i), y = py(z.y + j);
+            sp.put(ctx, 0, 1, x + 16, y + 16, "add", .18 * fade);
+            if (Math.abs(i) === r && Math.abs(j) === r) sp.put(ctx, 13, Math.floor(perf / 110 + i * 3 + j) % 10, x + 16, y + 16, "over", .45 * fade);        // pinchos de hielo solo en las esquinas
+          }
+          break;
+        }
+        case "roar": {
+          ctx.strokeStyle = "rgba(255,80,40," + (1 - prog) + ")"; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(px(z.x) + 16, py(z.y) + 16, (r + .5) * T * prog + 8, 0, Math.PI * 2); ctx.stroke();
+          break;
+        }
+        case "blink": {
+          const g = ctx.createLinearGradient(0, py(z.y) - 90, 0, py(z.y) + 20);
+          g.addColorStop(0, "rgba(180,100,255,0)"); g.addColorStop(1, "rgba(180,100,255," + (0.7 * (1 - prog)) + ")");
+          ctx.fillStyle = g; ctx.fillRect(px(z.x) + 4, py(z.y) - 90, 24, 110);
+          break;
+        }
+        case "drain": {
+          const a = w.ents.get(z.from), b = w.ents.get(z.to);
+          if (!a || !b) break;
+          ctx.strokeStyle = "rgba(190,90,255,.85)"; ctx.lineWidth = 3; ctx.beginPath();
+          for (let k = 0; k <= 12; k++) {
+            const t = k / 12, x = px(a.x) + 16 + (b.x - a.x) * T * t + Math.sin(perf / 70 + k) * 4, y = py(a.y) - 4 + (b.y - a.y) * T * t + Math.cos(perf / 80 + k) * 4;
+            k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+          }
+          ctx.stroke();
+          break;
+        }
+      }
+    }
+    // el escudo del jefe glacial: hilos de luz desde cada cristal hasta él
+    for (const b of w.ents.values()) {
+      if (!b.shield || b.dead) continue;
+      for (const c of w.ents.values()) {
+        if (!c.crystal || c.dead || c.owner !== b.id) continue;
+        ctx.strokeStyle = "rgba(170,240,255," + (0.65 + 0.3 * Math.sin(perf / 150)) + ")"; ctx.lineWidth = 3; ctx.setLineDash([8, 6]);
+        ctx.beginPath(); ctx.moveTo(px(c.x) + 16, py(c.y) - 6); ctx.lineTo(px(b.x) + 16, py(b.y) - 20); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+  }
+
   drawDungeonInfo(s) {
     const { ctx } = this, map = s.world.map;
     const remaining = map.remainingEnemies ?? [...s.world.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.dead).length;
@@ -328,7 +401,7 @@ export class Renderer {
       const look = e.look || DEFAULT_LOOK, gender = e.gender || 1;
       if (group === 7 && !this.spr.has(bodyKey(gender, look, 7, d))) group = 6;
       const body = bodyKey(gender, look, group, d);
-      const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice"), zerk = sget(w, e, "berserk");
+      const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice") || (e.chillUntil || 0) > w.time, zerk = sget(w, e, "berserk");
       if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
@@ -359,9 +432,15 @@ export class Renderer {
     }
 
     // monstruo
-    const { key, f } = mobSprite(e, time, k => this.spr.frames(k));
+    let { key, f } = mobSprite(e, time, k => this.spr.frames(k));
+    if (e.crystal) { key = "id1"; f = 1; }                                                     // cristal de hielo del jefe glacial: mineral 2 de item-dynamic (Game.cpp, DEF_DYNAMICOBJECT_MINERAL2)
     const act = actionAt(e, time);
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
+    if (e.clone) alpha *= 0.5 + 0.12 * Math.sin(time / 130 + e.id);                           // clon de sombra del rey umbrío: translúcido y parpadeante
+    if (e.boss === 2 && !e.clone && e.hasClones && !e.dead) {                                  // el real: aro violeta bajo los pies
+      ctx.strokeStyle = "rgba(190,120,255," + (0.55 + 0.3 * Math.sin(time / 200)) + ")"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y + 4, 26, 12, 0, 0, Math.PI * 2); ctx.stroke();
+    }
     if (act === ACT.DEAD) {
       const left = e.actStart + e.actDur + CORPSE_MS - time;
       if (remaster && left < 1500) alpha *= Math.max(0, left / 1500);
@@ -379,12 +458,17 @@ export class Renderer {
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
-    if (e.boss) { ctx.save(); ctx.translate(x, y); ctx.scale(1.2, 1.2); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
+    const big = e.crystal ? 1.8 : e.boss ? 1.2 : 1;
+    if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     spr.put(ctx, key, f, x, y);
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
-    if (e.boss) ctx.restore();
+    if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
+    if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
+    if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
+    if (big !== 1) ctx.restore();
+    if (e.shield && !e.dead) { ctx.strokeStyle = "rgba(170,230,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - 20, 30, 40, 0, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
-    if (!e.dead && sget(s.world, e, "ice")) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
+    if (!e.dead && (sget(s.world, e, "ice") || (e.chillUntil || 0) > s.world.time)) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
     if (!e.dead && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
     if (!e.dead) this.auras(e, x, y, s.world, true);
     if (remaster) {
@@ -409,7 +493,7 @@ export class Renderer {
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + (e.comp ? (e.nick || e.name) : e.boss ? BOSS_NAMES[e.boss] : e.name);
+        const name = (e.special && remaster ? "★ " : "") + (e.comp ? (e.nick || e.name) : e.crystal ? "Cristal de hielo" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";

@@ -151,12 +151,13 @@ const COMMANDS = {
     if (sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");
     if (w.time - p.lastMove < LIMITS.moveMs) return w.reject(p, cmd, "demasiado rápido");
     const run = !!cmd.run && p.sp >= 1;                       // sin resistencia no se corre
-    if (!w.tryStep(p, cmd.dir, run ? PLAYER.runMs : PLAYER.walkMs, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
+    const slow = sget(w, p, "ice") || (p.chillUntil || 0) > w.time ? 1.5 : 1;                 // helado (suelo del rey glacial, tormenta de hielo): un 50 % más lento
+    if (!w.tryStep(p, cmd.dir, (run ? PLAYER.runMs : PLAYER.walkMs) * slow, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
     if (run && (p.runSteps = (p.runSteps || 0) + 1) >= RUN_STEPS_PER_SP) { p.runSteps = 0; p.sp -= 1; }
     p.lastMove = w.time;
     // al llegar a una casilla de teletransporte, el servidor original (RequestTeleportHandler) te manda al destino
     const tp = w.teleports.get(w.grid.idx(p.x, p.y));
-    if (tp) { const x = p.x, y = p.y; w.after(run ? PLAYER.runMs : PLAYER.walkMs, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
+    if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
   turn(w, p, cmd) {

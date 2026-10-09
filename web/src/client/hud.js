@@ -105,6 +105,7 @@ export class Hud {
       case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport")) this.log("No se puede: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
+      case "bossmsg": if (ev.id === me) { this.log(ev.text, "gold"); this.toast?.(ev.text); } break;
       case "scan": if (ev.id === me) this.log(ev.text.trim(), "gold"); break;
       case "teleport": if (ev.id === me) this.log("Vuelves al punto de inicio."); break;
       case "status": if (ev.id === me) {

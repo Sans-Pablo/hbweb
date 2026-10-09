@@ -11,6 +11,7 @@ import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Inv from "../inventory.js";
+import * as Boss from "./bosses.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -70,7 +71,8 @@ export function killNpc(w, n, p) {
     Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
-  if (n.boss === 1) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, w.data.named("SkeletonBones").id, 1, { color: CRIMSON_COLOR })));   // 100 % de probabilidad
+  Boss.onDeath(w, n);
+  if (n.boss === 1 && !n.aux) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, w.data.named("SkeletonBones").id, 1, { color: CRIMSON_COLOR })));   // 100 % de probabilidad
   const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
   n.gen.alive--;
@@ -105,6 +107,7 @@ export function summonFor(w, p, v1, free) {
 }
 
 function followerThink(w, n) {
+  if ((n.frozenUntil || 0) > w.time || (n.stunUntil || 0) > w.time) return;     // congelado o aturdido por un jefe
   const m = w.ents.get(n.master);
   if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
   let tc = null;
@@ -117,7 +120,7 @@ function followerThink(w, n) {
     n.cTarget = null;
     const calm = n.comp && Inv.instOf(m, n.ball)?.comp.mode === "peace";
     if (!calm) for (const e of w.ents.values()) {
-      if (e.kind !== "npc" || e.dead || e.master || e.cfg.actionLimit) continue;
+      if (e.kind !== "npc" || e.dead || e.master || (e.cfg.actionLimit && !e.crystal)) continue;
       const d = dist(n, e);
       if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
     }
@@ -125,7 +128,7 @@ function followerThink(w, n) {
   if (tc) {                                                                    // hechizos del compañero (talents.js)
     const hostiles = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && dist(e, m) <= 8);
     if (Tal.support(w, n, m, tc, hostiles.length ? hostiles : null)) return;
-    if (best && bd <= 7 && Tal.hasAttackSpell(tc) && Tal.offense(w, n, tc, best, (t, dmg) => petHurt(w, n, t, dmg))) return;
+    if (best && bd <= 7 && Tal.hasAttackSpell(tc) && Tal.offense(w, n, tc, best, (t, dmg) => petHurt(w, n, t, dmg, "spell"))) return;
   }
   if (best) {
     if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
@@ -150,8 +153,10 @@ function followerAttack(w, n, t) {
 }
 
 // Daño de un seguidor (golpe o hechizo) a un monstruo. El compañero gana la mitad de la experiencia y el dueño la otra mitad; el botín cae.
-function petHurt(w, n, t, dmg) {
+function petHurt(w, n, t, dmg, kind = "hit") {
   if (t.dead) return;
+  dmg = Boss.mitigate(w, t, dmg, n, kind);
+  if (dmg <= 0) return;
   t.hp -= dmg;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp <= 0) {
@@ -177,10 +182,12 @@ function crimsonPhase(w, n) {
   for (let ix = n.x - r; ix <= n.x + r; ix++) for (let iy = n.y - r; iy <= n.y + r; iy++) addField(w, DYN.FIRE, ix, iy, ms, 0, n.id);
 }
 export function npcThink(w, n) {
-  if (n.boss === 1 && !n.dead) crimsonPhase(w, n);
+  if (n.crystal) return;                                                       // los cristales del jefe glacial no actúan
+  if (n.boss === 1 && !n.dead && !n.aux) crimsonPhase(w, n);
+  if (n.boss && !n.aux && !n.dead) Boss.bossTick(w, n);
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
-  if (n.master) { n.nextAct = w.time + n.cfg.actionTime; return followerThink(w, n); }
-  n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1);       // hielo: un 50 % más lento
+  if (n.master) { n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") || (n.chillUntil || 0) > w.time ? 1.5 : 1); return followerThink(w, n); }
+  n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1) * Boss.speedFactor(n);       // hielo: un 50 % más lento; la furia del jefe carmesí acelera
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   let t = n.target ? w.ents.get(n.target) : null;
   if (t && (t.dead || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
@@ -270,6 +277,12 @@ function companionStruck(w, n, t) {
   if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return miss();
   const tc = Inv.instOf(w.ents.get(t.master), t.ball)?.comp;
   const dmg = Math.max(1, Math.round(R.npcMelee(w.rng, n).damage * (tc ? Tal.takenFactor(w, t, tc) : 1)));
+  Boss.onBossHit(w, n);
+  companionHurt(w, n, t, dmg);
+}
+// Daño directo a un compañero (golpe de monstruo, brasas, drenaje, reflejo...). Al caer pierde experiencia y quizá un nivel (companion.penalize)
+export function companionHurt(w, n, t, dmg) {
+  if (t.dead) return;
   t.hp -= dmg; t.hurtAt = w.time;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp > 0) {
