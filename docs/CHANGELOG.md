@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.22.0 · Arena con habilidades (2026-10-09)
+
+- Corredor de apuestas: ahora **Kennedy** en `gshop_1f` (ya no McGaffin ni Aresfarm). Apostar teletransporta al mapa de arena `huntzone1` (`ARENA.field`/`watch`, sin monstruos), el combate se ve allí y se vuelve a la tienda al acabar. Eliminado el cuadro dibujado en el suelo (`renderer.drawArena`).
+- `simulate` usa todas las habilidades aprendidas (curas, escudos, Berserk, Fire Ball/Lightning/Meteor Strike, Fortitude, maná y enfriamientos) para el compañero y el retador; el retador gasta todos sus puntos de talento. Eventos `spell` en directo.
+- Tests: `tests/arena.test.mjs` (habilidades y viaje).
+
 ## 0.21.0 · Miedo en la cripta (2026-10-09)
 
 - Diálogos de miedo en la cripta de esqueletos (`tools/mkvoice_fear.py` → `voice.json` `fear`, 5 etapas por nivel de cripta): entrada, charla, monstruo/jefe/fantasma avistado, kills, poca vida, charla y ataques del compañero. `client/voice.js` (`fearStage`, `fear`). Test en `tests/voice.test.mjs`.

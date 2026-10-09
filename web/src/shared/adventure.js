@@ -10,7 +10,7 @@ import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
 
-const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
+const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
 
 export const ALLOWED_MAPS = new Set(["arefarm", "gshop_1f", "bsmith_1f", "wrhus_1f"]);
 
@@ -31,11 +31,19 @@ export class Adventure {
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
-    spawnCitizen(this.farm, ARENA.npc, ARENA.npcAt[0], ARENA.npcAt[1], ARENA.role);       // corredor de apuestas junto a la arena
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)
-  hooks(w) { return { recall: p => this.recall(p, w), teleport: (p, tp) => this.teleport(p, w, tp) }; }
+  hooks(w) {
+    return {
+      recall: p => this.recall(p, w), teleport: (p, tp) => this.teleport(p, w, tp),
+      // arena de apuestas: mapa de arena compartido (sin monstruos); sin ese mapa (tests sueltos) se pelea donde está el jugador
+      arenaWorld: () => (this.maps[ARENA.map] ? this.staticWorld(ARENA.map) : w),
+      arenaGo: (p, from, to) => { p.arenaBack = { map: from.map.id, x: p.x, y: p.y }; return this.transfer(p, from, to, ARENA.watch); },
+      arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
+      player: id => this.worldFor(id).ents.get(id),
+    };
+  }
 
   // Mundo compartido de un mapa estático (ciudad, tiendas...); se crea al entrar el primer jugador.
   staticWorld(id) {
@@ -46,16 +54,17 @@ export class Adventure {
     if (!m.grid) { m.ensure?.().catch(() => {}); return null; }          // rejilla aún sin descargar (carga bajo demanda del cliente)
     m.start = m.start || Object.values(m.meta.initial || {})[0] || [Math.floor(m.grid.w / 2), Math.floor(m.grid.h / 2)];
     const { meta } = m, o = this.options;
-    const spawns = (meta.spawns || []).filter(s => s.kind === 1 && o.npcDb[s.name]).map(s => ({ ...s }));
-    const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: meta.teleports });
+    const isArena = id === ARENA.map;                              // el mapa de arena no tiene monstruos, teletransportes ni combate
+    const spawns = isArena ? [] : (meta.spawns || []).filter(s => s.kind === 1 && o.npcDb[s.name]).map(s => ({ ...s }));
+    const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: isArena ? [] : meta.teleports });
     w.time = this.time;
     w.hooks = this.hooks(w);
-    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
-    w.meta = meta;
+    w.map = { id, kind: isArena ? "arena" : id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
+    w.meta = isArena ? { ...meta, noAttack: [[0, -10, 0, 0]], npcs: [] } : meta;
     w.fixedDay = !!meta.fixedDay;
     w.clock = o.clock || null;
     for (const n of w.ents.values()) n.nextAct += this.time;
-    populate(w, meta, id);
+    if (!isArena) populate(w, meta, id);
     this.worlds.set(id, w);
     return w;
   }
@@ -219,7 +228,7 @@ export class Adventure {
     if (!p.dead) to.grid.occupy(p.x, p.y, p.id);
     this.locations.set(p.id, to);
     to.emit({ t: "mapchange", id: p.id, name: to.map.name, seed: to.map.seed });
-    if (activeBall(p)) spawnCompanion(to, p);                      // el compañero elegido te sigue al nuevo mapa
+    if (activeBall(p) && to.map.kind !== "arena") spawnCompanion(to, p);                      // el compañero elegido te sigue al nuevo mapa
     return true;
   }
 

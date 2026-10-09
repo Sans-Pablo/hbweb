@@ -9,6 +9,7 @@ import { newInst } from "../web/src/shared/systems/itemsys.js";
 import * as Inv from "../web/src/shared/inventory.js";
 import { ARENA, simulate, oddsFor, maxBet } from "../web/src/shared/systems/arena.js";
 import { saveOf } from "../web/src/shared/systems/player.js";
+import { EXTRA_CITIZENS, spawnCitizen } from "../web/src/shared/systems/citizens.js";
 
 const dir = new URL("../web/data/", import.meta.url);
 const json = n => JSON.parse(readFileSync(new URL(n, dir)));
@@ -18,11 +19,15 @@ setDungeonPalette(json("dungeon_palette.json"));
 const farm = new Uint8Array(readFileSync(new URL("arefarm.bin", dir)));
 const mk = seed => new Adventure({ grid: new Grid(meta.w, meta.h, farm), start: meta.start, npcDb, data, spawns: [], maps: {}, rng: seededRandom(seed) });
 
-// ---- el rectángulo de la arena es suelo despejado y el corredor está en el mapa
+// ---- el campo de la arena es suelo despejado en su mapa y el corredor vive en la tienda general
+const huntBin = new Uint8Array(readFileSync(new URL("maps/huntzone1.bin", dir))), huntMeta = json("maps/huntzone1.json");
+const shopBin = new Uint8Array(readFileSync(new URL("maps/gshop_1f.bin", dir))), shopMeta = json("maps/gshop_1f.json");
 {
-  const g = new Grid(meta.w, meta.h, farm), [x0, y0, x1, y1] = ARENA.rect;
+  const g = new Grid(huntMeta.w, huntMeta.h, huntBin), [x0, y0, x1, y1] = ARENA.field;
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) assert.ok(!g.blocked(x, y), `arena despejada ${x},${y}`);
-  const a = mk(1); assert.ok([...a.farm.ents.values()].some(e => e.kind === "citizen" && e.name === ARENA.npc && e.role === ARENA.role), "McGaffin en la granja");
+  assert.ok(!g.blocked(...ARENA.watch), "sitio del espectador libre");
+  assert.ok(EXTRA_CITIZENS[ARENA.shop].some(c => c.name === ARENA.npc && c.role === ARENA.role), "Kennedy en la tienda");
+  assert.notEqual(ARENA.npc, "McGaffin");
 }
 
 // ---- simulación: determinista, simétrica y con margen de la casa
@@ -44,7 +49,7 @@ const mk = seed => new Adventure({ grid: new Grid(meta.w, meta.h, farm), start: 
 
 // ---- combate completo
 const a = mk(11), id = a.addPlayer("apostador"), p = a.farm.ents.get(id), w = a.farm;
-const npc = [...w.ents.values()].find(e => e.role === ARENA.role);
+const npc = spawnCitizen(w, ARENA.npc, p.x + 2, p.y, ARENA.role);       // sin mapas cargados la pelea ocurre en el mapa actual
 const evs = []; const em = w.emit.bind(w); w.emit = e => { evs.push(e); em(e); };
 p.gold = 100000; p.level = 30; p.hp = p.maxHp = 1e6; p.god = true;
 const say = (t, o = {}) => a.command(id, { t, npc: npc.id, ...o });
@@ -94,6 +99,45 @@ assert.equal(dead.id, loser.id, "muere el perdedor de la simulación");
 for (let i = 0; i < 200; i++) a.tick(50);
 assert.equal([...w.ents.values()].filter(e => e.arena).length, 0, "la arena se limpia");
 assert.equal(p.arenaHist.length, 1);
+
+// ---- habilidades: la simulación usa hechizos, escudos y curas aprendidos (también el retador)
+{
+  const mg = { 1: { mana: 15, v4: 2, v5: 6, v6: 10 }, 13: { mana: 19, v4: 3, v5: 0, v6: 0 }, 20: { mana: 27, v4: 2, v5: 6, v6: 2 }, 43: { mana: 44, v4: 4, v5: 7, v6: 12 }, 44: { mana: 45, v4: 4, v5: 0, v6: 0 }, 50: { mana: 57, v4: 1, v5: 0, v6: 0 } };
+  const f = (key, over = {}) => ({ key, sp: "Orc", nm: key, lvl: 30, role: "none", hp: 400, dmg: 20, period: 1000, hit: 100, def: 40, tal: {}, fx: { dmg: 1, spell: 1, heal: 1, taken: 1 }, mpMax: 400, mg, ...over });
+  const mage = f("a", { tal: { fireball: 1, lightning: 1, heal: 1, shield: 1, berserk: 1 } });
+  const sim = simulate(mage, f("b"), seededRandom(5));
+  const ids = new Set(sim.events.filter(e => e.spell).map(e => e.spell));
+  assert.ok(ids.has(20) || ids.has(43), "lanza hechizos de ataque"); assert.ok(ids.has(13) && ids.has(50), "usa escudo y furia");
+  assert.ok(sim.events.filter(e => e.spell && e.who === "b").length === 0, "sin talentos no hay hechizos");
+  assert.ok(oddsFor(mage, f("b"), 2).pa > 0.8, "las habilidades dan ventaja real");
+  const sh = simulate(f("a", { tal: { gshield: 1 } }), f("b"), seededRandom(5));
+  assert.ok(sh.events.some(e => e.spell === 44), "usa Great Defense Shield");
+}
+
+// ---- viaje: el apostador va al mapa de arena, mira el combate y vuelve a la tienda
+{
+  const rngSeed = seededRandom(31);
+  const mkMaps = () => ({ gshop_1f: { grid: new Grid(shopMeta.w, shopMeta.h, shopBin), meta: shopMeta }, huntzone1: { grid: new Grid(huntMeta.w, huntMeta.h, huntBin), meta: huntMeta } });
+  const adv = new Adventure({ grid: new Grid(meta.w, meta.h, farm), start: meta.start, npcDb, data, spawns: [], maps: mkMaps(), rng: rngSeed });
+  const pid = adv.addPlayer("espectador"), pl = adv.farm.ents.get(pid); pl.gold = 50000; pl.level = 20;
+  const shop = adv.staticWorld("gshop_1f"); assert.ok(shop, "tienda cargada");
+  assert.ok(adv.transfer(pl, adv.farm, shop, [51, 41]));
+  const k = [...shop.ents.values()].find(e => e.role === ARENA.role); assert.ok(k && k.name === "Kennedy");
+  const bl = newInst(shop, 653); bl.comp = { sp: "Skeleton", lvl: 12, exp: 0, on: false, nm: "Bruboto", mode: "attack", tal: { hide: 2, fireball: 1 } };
+  Inv.addToBag(pl, data, bl);
+  const log = []; for (const wd of [shop, adv.staticWorld("huntzone1")]) { const e0 = wd.emit.bind(wd); wd.emit = e => { log.push(e); e0(e); }; }
+  adv.command(pid, { t: "arenainfo", npc: k.id }); const of = log.find(e => e.t === "arenaoffer"); assert.ok(of && of.offer);
+  adv.command(pid, { t: "arenabet", npc: k.id, offer: of.offer, side: "a", amount: 500 });
+  const arenaW = adv.worldFor(pid);
+  assert.equal(arenaW.map.kind, "arena", "viaja al mapa de arena"); assert.equal(arenaW.map.id, ARENA.map);
+  assert.equal([...arenaW.ents.values()].filter(e => e.arena).length, 2, "dos gladiadores");
+  assert.equal([...arenaW.ents.values()].filter(e => e.comp).length, 0, "el compañero no viene");
+  let n = 0; while (!log.some(e => e.t === "arenaend") && n++ < 3000) adv.tick(50);
+  assert.ok(log.some(e => e.t === "arenaend"), "el combate termina");
+  assert.ok(log.some(e => e.t === "attack" || e.t === "spell"), "se vieron golpes o hechizos");
+  for (let i = 0; i < 400 && adv.worldFor(pid) !== shop; i++) adv.tick(50);
+  assert.equal(adv.worldFor(pid), shop, "vuelve a la tienda"); assert.equal(pl.bet, null);
+}
 
 // ---- apuesta pendiente + recarga: el resultado fijado se cobra igual
 {

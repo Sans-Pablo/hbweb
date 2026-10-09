@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Arena en su propio mapa y habilidades (v0.22.0)",
+        "en": "Arena in its own map and skills (v0.22.0)"
+      },
+      "items": [
+        {
+          "es": "El corredor de apuestas ahora es Kennedy y vive en la tienda general. Al apostar te teletransporta a un mapa de arena (sin cuadrado en el suelo), ves pelear a los summons y vuelves solo a la tienda.",
+          "en": "The bookmaker is now Kennedy, in the General Shop. Betting teleports you to an arena map (no floor square), you watch the summons fight and return to the shop by yourself."
+        },
+        {
+          "es": "Los summons (el tuyo y el retador) usan todas las habilidades aprendidas: curas, escudos, Berserk, Fire Ball, Lightning y Meteor Strike; el retador aprende un árbol completo. Se ven los hechizos en el combate.",
+          "en": "Summons (yours and the challenger) use every learned skill: heals, shields, Berserk, Fire Ball, Lightning and Meteor Strike; the challenger learns a full tree. Spells show in the fight."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Miedo en la cripta y bolas solo en la tienda (v0.21.0)",
         "en": "Fear in the crypt and balls only from the shop (v0.21.0)"
       },
@@ -46,8 +63,8 @@
       },
       "items": [
         {
-          "es": "Nuevo NPC McGaffin junto a la entrada de Aresfarm (125, 88): organiza combates entre tu compañero y un retador en la arena marcada con borde dorado. Tú solo miras y apuestas oro.",
-          "en": "New NPC McGaffin near the Aresfarm entrance (125, 88): he runs fights between your companion and a challenger in the gold-bordered arena. You only watch and bet gold."
+          "es": "Nuevo NPC Kennedy en la tienda general: organiza combates entre tu compañero y un retador en la arena marcada con borde dorado. Tú solo miras y apuestas oro.",
+          "en": "New NPC Kennedy in the General Shop: he runs fights between your companion and a challenger in the gold-bordered arena. You only watch and bet gold."
         },
         {
           "es": "Eliges por quién apostar (también contra tu compañero), la cantidad y ves las probabilidades y cuotas. El combate es en directo y dura unos 30 s. La casa se queda un 10 %.",
@@ -2187,8 +2204,8 @@
         "en": "Arena"
       },
       "text": {
-        "es": "Ten una bola de compañero, habla con McGaffin (junto a la entrada), apuesta y mira el combate: ¿las cuotas son razonables, el combate dura ~30 s y el oro se paga bien? Prueba también apostar contra tu compañero y «Otro retador».",
-        "en": "Have a companion ball, talk to McGaffin (near the entrance), bet and watch the fight: are the odds reasonable, does it last ~30 s and is gold paid correctly? Also try betting against your companion and 'Another challenger'."
+        "es": "Ten una bola de compañero, habla con Kennedy (en la tienda), apuesta y mira el combate: ¿las cuotas son razonables, el combate dura ~30 s y el oro se paga bien? Prueba también apostar contra tu compañero y «Otro retador».",
+        "en": "Have a companion ball, talk to Kennedy (in the shop), bet and watch the fight: are the odds reasonable, does it last ~30 s and is gold paid correctly? Also try betting against your companion and 'Another challenger'."
       }
     },
     {

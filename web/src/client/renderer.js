@@ -3,7 +3,6 @@
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
 import { rarityOf, RARITY_COLOR } from "../shared/rarity.js";
-import { ARENA } from "../shared/systems/arena.js";
 import { t } from "./i18n.js";
 import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
 const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cuerpo): referencia para reducir a los compañeros altos
@@ -167,7 +166,6 @@ export class Renderer {
       }
     }
 
-    if (s.world.map?.id === "arefarm") this.drawArena(camX, camY);
 
     // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
     ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = "high";
@@ -383,14 +381,6 @@ export class Renderer {
   }
 
   // arena de apuestas (systems/arena.js): arena de arena con borde discontinuo dorado sobre el suelo de Aresfarm
-  drawArena(camX, camY) {
-    const { ctx } = this, [x0, y0, x1, y1] = ARENA.rect, X = x0 * T - camX, Y = y0 * T - camY, W = (x1 - x0 + 1) * T, H = (y1 - y0 + 1) * T;
-    if (X > this.viewW || Y > this.viewH || X + W < 0 || Y + H < 0) return;
-    ctx.save();
-    ctx.fillStyle = "rgba(214,176,98,.14)"; ctx.fillRect(X, Y, W, H);
-    ctx.strokeStyle = "rgba(240,208,128,.75)"; ctx.lineWidth = 2; ctx.setLineDash([10, 6]); ctx.strokeRect(X + 1, Y + 1, W - 2, H - 2);
-    ctx.restore();
-  }
 
   drawPortals(s, camX, camY) {
     const { ctx } = this;
