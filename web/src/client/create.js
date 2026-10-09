@@ -6,10 +6,16 @@ import { PRESETS, sanitizeCreate, validCharName } from "../shared/systems/player
 const STATS = [["str", "Fuerza"], ["vit", "Vitalidad"], ["dex", "Destreza"], ["int", "Inteligencia"], ["mag", "Magia"], ["chr", "Carisma"]];
 const rnd = n => Math.floor(Math.random() * n);
 
+// Personalidad: decide el tono de las frases del personaje y de su mascota (voice.js). Invento del port.
+export const PERSONAS = [
+  { id: "w", name: "Prudente", desc: "Cauto y reflexivo: avisa de los peligros y habla con calma." },
+  { id: "j", name: "Bromista", desc: "Charlatán y socarrón: comenta todo con humor." },
+  { id: "d", name: "Decidido", desc: "Directo y valiente: pocas palabras y mucha acción." },
+];
 export function createCharacter(spr, defaultName) {
   const root = document.getElementById("create");
   const st = { ...PRESETS.warrior };
-  const c = { name: validCharName(defaultName) ? defaultName : "", gender: 1 + rnd(2), skin: 1 + rnd(3), hair: rnd(8), hairCol: rnd(16), under: rnd(8) };
+  const c = { name: validCharName(defaultName) ? defaultName : "", gender: 1 + rnd(2), skin: 1 + rnd(3), hair: rnd(8), hairCol: rnd(16), under: rnd(8), persona: rnd(3) };
   const left = () => 70 - STATS.reduce((a, [k]) => a + st[k], 0);
 
   root.innerHTML = `<div class="box">
@@ -24,6 +30,7 @@ export function createCharacter(spr, defaultName) {
       <div class="col">
         <canvas width="520" height="600" style="width:260px;height:300px"></canvas>
         <div class="opts"></div>
+        <p class="pdesc"></p>
       </div>
     </div>
     <p class="msg"></p>
@@ -38,6 +45,7 @@ export function createCharacter(spr, defaultName) {
     ["skin", "Piel", () => SKIN_NAMES[c.skin], v => (c.skin = v < 1 ? 3 : v > 3 ? 1 : v)],
     ["hair", "Peinado", () => "Estilo " + (c.hair + 1), v => (c.hair = (v + 8) % 8)],
     ["hairCol", "Color de pelo", () => HAIR_COLORS[c.hairCol][0], v => (c.hairCol = (v + 16) % 16)],
+    ["persona", "Personalidad", () => PERSONAS[c.persona].name, v => (c.persona = (v + 3) % 3)],
     ["under", "Ropa interior", () => UNDER_NAMES[c.under], v => (c.under = (v + 8) % 8)],
   ];
   const look = () => ({ skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under });
@@ -72,6 +80,7 @@ export function createCharacter(spr, defaultName) {
     root.querySelector(".left").textContent = left() ? "Puntos por repartir: " + left() : "Todos los puntos repartidos";
     root.querySelector(".opts").innerHTML = OPTS.map(([k, n, txt]) =>
       `<div class="row"><span>${n}</span><button data-o="${k}" data-d="-1">◀</button><b>${txt()}</b><button data-o="${k}" data-d="1">▶</button></div>`).join("");
+    root.querySelector(".pdesc").textContent = PERSONAS[c.persona].desc;
   }
   render(); need(); warm();
 
@@ -109,7 +118,7 @@ export function createCharacter(spr, defaultName) {
         if (!validCharName(name)) { msg.textContent = "Nombre no válido: hasta 10 letras o números, sin espacios ni símbolos."; return; }
         cancelAnimationFrame(raf);
         root.style.display = "none"; root.innerHTML = "";
-        resolve({ name, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under });
+        resolve({ name, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under, persona: PERSONAS[c.persona].id });
       }
     };
     root.onkeydown = e => e.stopPropagation();

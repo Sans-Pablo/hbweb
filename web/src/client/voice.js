@@ -18,7 +18,11 @@ export class Voice {
     this.lastAny = -1e9; this.pitSeen = new Map(); this.map = null; this.idleAt = 0; this.tone = "w";
     this.talk = 1;                // 0..2: charlatanería (un parámetro por personaje)
   }
-  setPlayer(name) { this.tone = personaOf(name || "x"); this.talk = 0.7 + (hashStr(name || "x") >>> 3) % 7 / 10; }
+  // la personalidad se elige al crear el personaje (create.js); sin ella (partidas antiguas) se deduce del nombre
+  setPlayer(name, persona = null) {
+    this.tone = persona && "wjd".includes(persona) ? persona : personaOf(name || "x");
+    this.talk = { w: 1, j: 1.3, d: 0.8 }[this.tone];       // bromista habla más, decidido menos
+  }
 
   text(l) { return this.lang() === "en" ? l.en : l.es; }
 

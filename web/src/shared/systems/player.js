@@ -33,6 +33,7 @@ export function sanitizeCreate(c) {
   return {
     stats,
     gender: clampInt(c.gender, 1, 2, 1),
+    persona: "wjd".includes(c.persona) && c.persona.length === 1 ? c.persona : null,      // personalidad (tono de las frases)
     look: { skin: clampInt(c.skin, 1, 3, 2), hair: clampInt(c.hair, 0, 7, 1), hairCol: clampInt(c.hairCol, 0, 15, 0), under: clampInt(c.under, 0, 7, 0) },
   };
 }
@@ -48,7 +49,7 @@ function allSpells(w) {
 function newCharacter(w, p, create) {
   const c = sanitizeCreate(create);
   Object.assign(p, {
-    gender: c.gender, look: c.look,
+    gender: c.gender, look: c.look, persona: c.persona,
     stats: c.stats,
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
     bag: [], equip: {}, bank: [], gold: 0, ssn: {}, magic: allSpells(w),
@@ -85,6 +86,7 @@ function loadSave(w, p, s) {
   for (const k of ["level", "exp", "pool", "gold", "kills", "gender", "side"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
   if (s.look) p.look = { ...p.look, ...s.look };
+  if (typeof s.persona === "string" && "wjd".includes(s.persona) && s.persona.length === 1) p.persona = s.persona;
   if (typeof s.charName === "string" && validCharName(s.charName)) p.name = s.charName;
   if (s.skills) p.skills = { ...s.skills };
   if (s.ssn) p.ssn = { ...s.ssn };
@@ -106,7 +108,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name,
+    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr, color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) },

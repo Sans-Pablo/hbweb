@@ -3,7 +3,7 @@ import { Voice, personaOf } from "../web/src/client/voice.js";
 import assert from "node:assert/strict";
 const data = JSON.parse(readFileSync(new URL("../web/data/voice.json", import.meta.url)));
 let T = 0; const bubbles = new Map();
-const mk = (rng = () => 0.01) => { bubbles.clear(); const v = new Voice({ data, bubbles, pid: 1, rng, now: () => T }); v.setPlayer("Pablo"); return v; };
+const mk = (rng = () => 0.01) => { bubbles.clear(); const v = new Voice({ data, bubbles, pid: 1, rng, now: () => T }); v.setPlayer("Pablo", "j"); return v; };
 const world = { ents: new Map([[1, { id: 1, x: 10, y: 10 }]]), generators: [{ name: "Slime", rect: [20, 10, 25, 15] }], map: { id: "farm" } };
 // determinista por nombre
 assert.equal(personaOf("Pablo"), personaOf("Pablo"));
@@ -45,3 +45,5 @@ console.log("voice OK");
   assert.equal(v.talkPet({ ents: new Map() }, "chat", "x"), false, "sin mascota no hay diálogo");
 }
 console.log("voice+pet OK");
+{ const v = mk(); v.setPlayer("Pablo", "d"); assert.equal(v.tone, "d"); v.setPlayer("Pablo", "j"); assert.equal(v.tone, "j", "manda la personalidad, no el nombre"); v.setPlayer("Pablo"); assert.equal(v.tone, personaOf("Pablo"), "sin personalidad, el nombre"); }
+console.log("persona OK");

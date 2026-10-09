@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Personalidad al crear el personaje (v0.10.4)",
+        "en": "Personality chosen at character creation (v0.10.4)"
+      },
+      "items": [
+        {
+          "es": "Al crear el personaje eliges su personalidad: Prudente, Bromista o Decidido (con una descripción). Ella decide el tono de las frases del personaje y de su mascota, ya no el nombre. El Bromista habla más y el Decidido menos.",
+          "en": "When creating a character you choose its personality: Cautious, Joker or Bold (with a description). It sets the tone of the character's and pet's lines, no longer the name. The Joker talks more and the Bold less."
+        },
+        {
+          "es": "La personalidad se guarda con el personaje. Los personajes antiguos sin personalidad siguen usando una deducida del nombre.",
+          "en": "The personality is saved with the character. Older characters without one keep using one derived from the name."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Compañeros: ajustes y diálogos (v0.10.3)",
         "en": "Companions: tweaks and dialogue (v0.10.3)"
       },
@@ -538,8 +555,8 @@
         "en": "Hunter"
       },
       "text": {
-        "es": "Comprueba que arriba a la izquierda se lee «v0.10.3 Compañeros» junto a los fps.",
-        "en": "Check that the top left reads «v0.10.3 Compañeros» next to the fps."
+        "es": "Comprueba que arriba a la izquierda se lee «v0.10.4 Compañeros» junto a los fps.",
+        "en": "Check that the top left reads «v0.10.4 Compañeros» next to the fps."
       }
     },
     {
@@ -628,6 +645,17 @@
       "text": {
         "es": "Al invocar, subir de nivel o pelear, el personaje y la mascota se hablan (burbujas); de vez en cuando charlan sin motivo.",
         "en": "On summon, level up or fighting, the character and pet talk (bubbles); now and then they chat for no reason."
+      }
+    },
+    {
+      "id": "persona-1",
+      "group": {
+        "es": "Voz",
+        "en": "Voice"
+      },
+      "text": {
+        "es": "Crea personajes nuevos con cada personalidad: las frases (saludos, compras, pits, mascota) cambian de tono según la elegida. Recarga y comprueba que se conserva.",
+        "en": "Create new characters with each personality: the lines (greetings, purchases, pits, pet) change tone with the chosen one. Reload and check it is kept."
       }
     }
   ],

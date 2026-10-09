@@ -403,7 +403,7 @@ async function main() {
   setNpcDb(assets.npcDb);
   { const k = +new URLSearchParams(location.search).get("hunt"); if (k > 1) HUNT.scale = 1 / k; }   // ?hunt=20: 20 veces menos muertes por bola (pruebas)
   let voice = null;                                 // personalidad: frases (voice.js, data/voice.json)
-  fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name); }).catch(() => {});
+  fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name, world.ents.get(pid)?.persona); }).catch(() => {});
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
