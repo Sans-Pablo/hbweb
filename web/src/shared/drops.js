@@ -54,11 +54,11 @@ const STANDARD = [
 ];
 
 // Devuelve { id, count } o null. `rating` = reputación del jugador (0 hoy).
-function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0 } = {}) {
+function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0, depth = 0 } = {}) {
   const type = npc.type;
   if (type === 21 || type === 34 || type === 64) return null;          // guardia, maniquí, cultivo
   if (dice(rng, 1, 10000) < rates.primary) return null;                // hay objeto si la tirada >= tasa primaria
-  if (dice(rng, 1, 10000) <= 6000) {
+  if (dice(rng, 1, 10000) <= Math.max(3500, 6000 - 100 * depth)) {     // en la cripta, cuanto más hondo menos oro y más equipo
     let count = dice(rng, 1, npc.cfg.goldMax - npc.cfg.goldMin) + npc.cfg.goldMin;
     if (addGold) count += Math.floor((addGold / 100) * count);                // atributo "Oro +%" del equipo
     return { id: GOLD, count };
@@ -75,13 +75,14 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
     if (month === 12) return { id: pick(rng, [780, 781, 782]), count: 1 };
     return null;
   }
-  const gen = GEN_LEVEL[type];
+  let gen = GEN_LEVEL[type];
   if (!gen) return null;
+  if (depth) gen = Math.min(10, Math.max(gen, 1 + Math.ceil(depth / 2.2)));     // nivel de generación mínimo según el piso
   let id;
   if (dice(rng, 1, 10000) <= 6000) id = dice(rng, 1, 10000) <= 8000 ? pick(rng, MELEE[gen]) : WAND[gen];
   else id = resolve(rng, ARMOR[gen]);
   if (!id) return null;
-  const d = data && data.item(id), ra = d && rollAttributes(rng, d, gen);
+  const d = data && data.item(id), ra = d && rollAttributes(rng, d, gen, Math.floor(depth / 5));
   return ra ? { id, count: 1, attr: ra.attr, color: ra.color } : { id, count: 1 };
 }
 

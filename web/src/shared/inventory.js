@@ -1,5 +1,6 @@
 // Mochila, equipo y efectos del equipo (CalcTotalItemEffect, bEquipItemHandler...).
 // Un jugador tiene:  p.bag = [{uid, id, count, life}]   p.equip = {posición: uid}
+import { ELEM, PROT_CAP } from "./rarity.js";
 import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./items.js";
 import { realStats, applyEquipAttr } from "./attributes.js";
 
@@ -99,7 +100,7 @@ export function recalc(p, data) {
     sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
     defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, resistMagic: 0,
     addDR: 0, addHP: 0, addSP: 0, addMP: 0, addMR: 0, addPR: 0, addAbsMD: 0, addCD: 0, addExp: 0, addGold: 0,
-    castBonus: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0,
+    castBonus: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0, prot: { light: 0, fire: 0, ice: 0, poison: 0 },
   };
   if (p.equip[EQUIP.TWOHAND] !== undefined) delete p.equip[EQUIP.RHAND];        // el arma a dos manos manda
   for (const [ps, uid] of Object.entries(p.equip)) {
@@ -129,6 +130,7 @@ export function recalc(p, data) {
         else if (d.v1 === 3) fx.addPhys += d.v2;
         else if (d.v1 === 4) fx.defense += d.v2;
         else if (d.v1 === 12) fx.addAR += d.v2;
+        else if (ELEM[d.v1]) fx.prot[ELEM[d.v1]] = Math.min(PROT_CAP, fx.prot[ELEM[d.v1]] + d.v2);          // collares/anillos de protección elemental
         break;
     }
     applyEquipAttr(fx, inst.attr, d, pos);

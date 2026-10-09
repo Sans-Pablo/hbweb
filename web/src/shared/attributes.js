@@ -8,8 +8,11 @@ const pack = (t1, v1, t2 = 0, v2 = 0) => ((t1 << 20) | (v1 << 16) | (t2 << 12) |
 
 // tabla de valores: 1d30000, con el mismo reparto que el servidor
 const VALUE_CUTS = [10000, 17400, 22400, 25400, 27400, 28400, 28900, 29300, 29600, 29800, 29900, 29970];
+// `bonus` (profundidad de la cripta): el valor es la mejor de 1+bonus tiradas
+let BONUS = 0;
 function rollValue(rng) {
-  const r = dice(rng, 1, 30000);
+  let r = dice(rng, 1, 30000);
+  for (let i = 0; i < BONUS; i++) r = Math.max(r, dice(rng, 1, 30000));
   for (let i = 0; i < VALUE_CUTS.length; i++) if (r < VALUE_CUTS[i]) return i + 1;
   return r >= 29970 ? 13 : 1;
 }
@@ -17,7 +20,12 @@ function rollValue(rng) {
 const band = (rng, table) => { const r = dice(rng, 1, 10000); for (const [lim, v] of table) if (r <= lim) return v; return table[table.length - 1][1]; };
 
 // Devuelve { attr, color } o null si el objeto no admite atributos.
-export function rollAttributes(rng, d, gen) {
+export function rollAttributes(rng, d, gen, bonus = 0) {
+  BONUS = bonus;
+  try { return rollAttributesRaw(rng, d, gen, bonus); } finally { BONUS = 0; }
+}
+function rollAttributesRaw(rng, d, gen, bonus) {
+  const second = 6000 - 400 * bonus;                         // el segundo atributo sale más a menudo
   const low = v => (gen <= 2 && v > 7 ? 7 : v);
   if (d.effectType === EFFECT.ATTACK) {
     const [t, color] = band(rng, [[299, [6, 2]], [999, [8, 3]], [2499, [1, 5]], [4499, [5, 1]], [6499, [3, 7]], [8099, [2, 4]], [9699, [7, 6]], [10000, [9, 8]]]);
@@ -27,13 +35,13 @@ export function rollAttributes(rng, d, gen) {
     else if (t === 8 && v <= 2) v = 2;
     v = low(v);
     let t2 = 0, v2 = 0;
-    if (dice(rng, 1, 10000) >= 6000) [t2, v2] = subWeapon(rng, low);
+    if (dice(rng, 1, 10000) >= second) [t2, v2] = subWeapon(rng, low);
     return { attr: pack(t, v, t2, v2), color };
   }
   if (d.effectType === EFFECT.ATTACK_MANASAVE) {
     const v = low(rollValue(rng));
     let t2 = 0, v2 = 0;
-    if (dice(rng, 1, 10000) >= 6000) [t2, v2] = subWeapon(rng, low);
+    if (dice(rng, 1, 10000) >= second) [t2, v2] = subWeapon(rng, low);
     return { attr: pack(10, v, t2, v2), color: 5 };
   }
   if (d.effectType === EFFECT.DEFENSE) {
@@ -44,7 +52,7 @@ export function rollAttributes(rng, d, gen) {
     else if (t === 11 || t === 12) { v = Math.max(1, Math.floor((v + 1) / 2)); if (gen <= 3 && v > 2) v = 2; }
     v = low(v);
     let t2 = 0, v2 = 0;
-    if (dice(rng, 1, 10000) >= 6000) {
+    if (dice(rng, 1, 10000) >= second) {
       t2 = band(rng, [[999, 3], [3999, 1], [5499, 5], [6499, 4], [7499, 6], [9399, 7], [9799, 8], [10000, 9]]);
       v2 = rollValue(rng);
       if ([1, 3, 7, 8, 9].includes(t2) && v2 <= 3) v2 = 3;

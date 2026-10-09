@@ -2,6 +2,7 @@
 //   classic    -> 800x600 del original, cámara fija al personaje, sin efectos añadidos
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
+import { rarityOf, RARITY_COLOR } from "../shared/rarity.js";
 import { t } from "./i18n.js";
 import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
 const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cuerpo): referencia para reducir a los compañeros altos
@@ -175,8 +176,14 @@ export class Renderer {
       if (x < -40 || y < -40 || x > VW + 40 || y > VH + 40) continue;
       const d = itemDef(it.id);
       if (d) this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y);
-      if (s.labels || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
-        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr, it.comp), it.id === 90 ? "#f0d080" : it.attr ? "#9fe39a" : "#e8e2d0"]);
+      const rar = it.id === 90 ? 0 : rarityOf(it.id, it.attr);
+      if (rar >= 2) {                                                   // rayo de luz sobre el botín raro/único
+        const g = ctx.createLinearGradient(0, y - 70, 0, y);
+        g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, RARITY_COLOR[rar] + (rar === 3 ? "cc" : "88"));
+        ctx.fillStyle = g; ctx.fillRect(x - 2, y - 70, 4, 70);
+      }
+      if (s.labels || rar >= 2 || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
+        labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr, it.comp), it.id === 90 ? "#f0d080" : rar ? RARITY_COLOR[rar] : "#e8e2d0"]);
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)

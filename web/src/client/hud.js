@@ -96,6 +96,10 @@ export class Hud {
         if (ev.id === me) this.log("Has muerto.", "bad");
         else if (ev.by === me) this.log("Has matado a " + (who(ev.id)?.name || "un monstruo") + ".");
         break;
+      case "drop": if (ev.r >= 2) {                                       // aviso del botín raro/único cercano
+        const m = this.conn.state.ents.get(me);
+        if (m && Math.max(Math.abs(m.x - ev.x), Math.abs(m.y - ev.y)) <= 14) this.log((ev.r === 3 ? "¡Objeto único! " : "¡Objeto raro! ") + itemName(ev.item, ev.attr) + ".");
+      } break;
       case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item, ev.attr, ev.comp) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
       case "skilllearn": if (ev.id === me) this.log("Aprendes la habilidad " + (SKILL_NAMES[ev.skill] || ev.skill) + " (" + ev.level + "%).", "gold"); break;
       case "use": if (ev.id === me) this.log("Usas " + itemName(ev.item) + (ev.amount ? " (+" + ev.amount + ")" : "") + "."); break;

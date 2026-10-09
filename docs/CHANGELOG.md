@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.19.0 · Botín que importa (2026-10-09)
+
+- Botín escalado por nivel de cripta, único garantizado por rey (Item.cfg), protección elemental (ADDEFFECT 7/9/10/11) y rareza visible. Ficha: `docs/sistemas/botin.md`. Tests `loot` y `bossloot`.
+
 ## 0.18.4 · Bajada contra la pared (2026-10-09)
 
 - `generateLevel` (v7): la bajada/final se coloca contra pared al norte (3 casillas de pared, suelo al sur); si el mapa pequeño no tiene, se levanta la pared. Test en `dungeon.test.mjs`.

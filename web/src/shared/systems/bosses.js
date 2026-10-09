@@ -41,9 +41,9 @@ const due = (b, k, w, every, first = 3000) => {                          // temp
 };
 
 // daño a un aliado del jugador (jugador o compañero)
-export function hurtFoe(w, n, e, dmg) {
+export function hurtFoe(w, n, e, dmg, elem) {
   if (e.dead || dmg <= 0) return;
-  if (e.kind === "player") damagePlayer(w, e, dmg, n);
+  if (e.kind === "player") damagePlayer(w, e, dmg, n, elem);
   else if (e.comp) companionHurt(w, n, e, dmg);
 }
 const cellsAround = (w, x, y, r) => { const out = []; for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (w.grid.inside(x + i, y + j) && !w.grid.blocked(x + i, y + j)) out.push([x + i, y + j]); return out; };
@@ -161,6 +161,7 @@ function tickFrost(w, n) {
     if (z.kind !== "frost" || z.owner !== n.id) continue;
     for (const e of w.ents.values()) {
       if (e.dead || !(e.kind === "player" || e.comp) || Math.abs(e.x - z.x) > z.r || Math.abs(e.y - z.y) > z.r) continue;
+      if (e.kind === "player" && (e.eff?.prot?.ice || 0) >= 50) continue;     // protección al hielo >= 50: inmune a la ralentización
       e.chillUntil = w.time + 700;                                       // ralentizado (sin evento de estado: no llena el registro)
     }
   }
@@ -187,7 +188,7 @@ export function bossTick(w, n) {
     if (z.kind === "ember" && z.owner === n.id && w.time >= z.next) {
       z.next += 1000;
       const oid = w.grid.occupant(z.x, z.y), e = oid === undefined ? null : w.ents.get(oid);
-      if (e && !e.dead && (e.kind === "player" || e.comp)) hurtFoe(w, n, e, z.dmg);
+      if (e && !e.dead && (e.kind === "player" || e.comp)) hurtFoe(w, n, e, z.dmg, "fire");
     }
   }
   tickDrain(w, n, b); tickFrost(w, n); tickThaw(w, n);

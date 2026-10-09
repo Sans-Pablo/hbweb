@@ -179,6 +179,7 @@ export class Sound {
     switch (ev.t) {
       case "equip": if (ev.id === this.me) this.playRaw("E28", 1, 0); break;
       case "unequip": if (ev.id === this.me) this.playRaw("E29", 1, 0); break;
+      case "drop": if (ev.r >= 2) { const m = this.world.ents.get(this.me); if (m && Math.max(Math.abs(m.x - ev.x), Math.abs(m.y - ev.y)) <= 14) this.playRaw(ev.r === 3 ? "E30" : "E12", 1, 0); } break;
       case "pickup": if (ev.id === this.me) this.playRaw(ev.item === 90 ? "E12" : "E20", 1, 0); break;
       case "levelup": if (ev.id === this.me) this.playRaw("E30", 1, 0); break;
       case "attack":

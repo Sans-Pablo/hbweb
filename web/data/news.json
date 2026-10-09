@@ -11,6 +11,31 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Botín que importa (v0.19.0)",
+        "en": "Loot that matters (v0.19.0)"
+      },
+      "items": [
+        {
+          "es": "En la cripta, cuanto más hondo: menos oro, equipo de nivel más alto y mejores atributos.",
+          "en": "In the crypt, the deeper you go: less gold, higher-tier gear and better attributes."
+        },
+        {
+          "es": "Cada rey suelta siempre un objeto único (collares/anillos reales del juego): carmesí fuego, umbrío Demonpower/Liche, glacial hielo, dorado Abaddon/Dragonpower/Xelima.",
+          "en": "Each king always drops a unique item (real game necklaces/rings): crimson fire, umbral Demonpower/Liche, glacial ice, golden Abaddon/Dragonpower/Xelima."
+        },
+        {
+          "es": "Los collares de fuego/hielo (y luz/veneno) reducen el daño de ese elemento; con hielo ≥50 la escarcha del rey glacial no te ralentiza.",
+          "en": "Fire/ice (and light/poison) necklaces reduce that element's damage; with ice >=50 the glacial king's frost no longer slows you."
+        },
+        {
+          "es": "Objetos raros y únicos: nombre de color, siempre visible en el suelo, rayo de luz, sonido y aviso en el registro.",
+          "en": "Rare and unique items: coloured name always visible on the ground, light beam, sound and log message."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Bajada contra la pared (v0.18.4)",
         "en": "Descent against the wall (v0.18.4)"
       },
@@ -2053,6 +2078,17 @@
       "text": {
         "es": "La bajada se ve como el hueco con escalera y losa de la entrada de la granja (apagado hasta limpiar el nivel); la salida es la puerta de ladrillo.",
         "en": "The way down looks like the stair pit and slab of the farm entrance (dimmed until the level is cleared); the exit is the brick door."
+      }
+    },
+    {
+      "id": "king-unique",
+      "group": {
+        "es": "Botín",
+        "en": "Loot"
+      },
+      "text": {
+        "es": "Mata un rey y comprueba que suelta un único naranja con rayo de luz; equípalo y prueba el daño del elemento correspondiente.",
+        "en": "Kill a king and check it drops an orange unique with a light beam; equip it and test the matching element's damage."
       }
     }
   ],

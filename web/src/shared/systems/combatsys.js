@@ -89,8 +89,9 @@ export function giveExp(w, p, amount) {
   }
 }
 
-export function damagePlayer(w, p, dmg, from) {
+export function damagePlayer(w, p, dmg, from, elem) {
   if (p.god) return;                                                   // herramientas de prueba: inmortal
+  if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
   p.hp -= dmg;
   p.lastCombat = w.time;
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });

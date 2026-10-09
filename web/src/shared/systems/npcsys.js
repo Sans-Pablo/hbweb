@@ -5,6 +5,7 @@ import { greedyStep } from "../path.js";
 import { rollKillDrop } from "../drops.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
+import { BOSS_UNIQUE } from "../rarity.js";
 import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
 import { sget } from "./status.js";
 import { addField, DYN } from "./fields.js";
@@ -53,8 +54,14 @@ function explode(w, n, spell) {
     const centre = e.x === n.x && e.y === n.y;
     let dmg = centre ? R.dice(w.rng, sp.v4, sp.v5) + sp.v6 : R.dice(w.rng, sp.v7, sp.v8) + sp.v9;
     if (pr === 2) dmg = Math.floor(dmg / 2);
-    damagePlayer(w, e, Math.max(0, dmg), n);
+    damagePlayer(w, e, Math.max(0, dmg), n, "fire");
   }
+}
+
+// casilla libre junto al cadáver para el único (no se apila con el botín normal)
+function uniqueSpot(w, n) {
+  for (let r = 1; r <= 3; r++) for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) { const x = n.x + i, y = n.y + j; if (w.grid.inside(x, y) && !w.grid.blocked(x, y) && !w.items.get(w.grid.idx(x, y))) return [x, y]; }
+  return [n.x, n.y];
 }
 
 export function killNpc(w, n, p) {
@@ -73,8 +80,13 @@ export function killNpc(w, n, p) {
   n.noDieRemainExp = 0;
   Boss.onDeath(w, n);
   if (n.boss === 1 && !n.aux) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, w.data.named("SkeletonBones").id, 1, { color: CRIMSON_COLOR })));   // 100 % de probabilidad
-  const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0 });
-  if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop)));
+  const depth = w.map?.kind === "dungeon" ? w.map.level || 0 : 0;
+  const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0, depth });
+  if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop), true));
+  if (n.boss && !n.aux && !n.clone && BOSS_UNIQUE[n.boss]) {      // cada rey suelta siempre un objeto único (de Item.cfg) ligado a su mecánica
+    const list = BOSS_UNIQUE[n.boss], id = list[R.dice(w.rng, 1, list.length) - 1];
+    if (w.data.item(id)) w.after(n.dur.dying * 0.6 + 200, () => { const [ux, uy] = uniqueSpot(w, n); groundPush(w, ux, uy, newInst(w, id, 1), true); });
+  }
   n.gen.alive--;
   if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
   // Esqueleto común (no jefe, ni auxiliar, ni fantasma): con GHOST_CHANCE se levanta como fantasma cuando desaparece su cadáver. Se decide al

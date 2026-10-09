@@ -121,6 +121,8 @@ const PATTERNS = [
   [/^Has matado a (.+)\.$/, m => `You killed ${m[1] === "un monstruo" ? "a monster" : m[1]}.`],
   [/^Recoges (\d+) de oro\.$/, m => `You pick up ${m[1]} gold.`],
   [/^Recoges: (.+)\.$/, m => `You pick up: ${m[1]}.`],
+  [/^¡Objeto único! (.+)\.$/, m => `Unique item! ${m[1]}.`],
+  [/^¡Objeto raro! (.+)\.$/, m => `Rare item! ${m[1]}.`],
   [/^Usas (.+)\.$/, m => `You use ${m[1]}.`],
   [/^Equipas (.+)\.$/, m => `You equip ${m[1]}.`],
   [/^Te quitas (.+)\.$/, m => `You take off ${m[1]}.`],

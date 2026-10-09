@@ -1,14 +1,16 @@
 // Objetos en el suelo: hasta 12 por casilla, el último en caer queda encima (Map.cpp bSetItem / pGetItem).
 import { GROUND_STACK } from "../items.js";
+import { rarityOf } from "../rarity.js";
 
-export function groundPush(w, x, y, inst) {
+// `announce`: botín de un monstruo; solo entonces el evento lleva la rareza (aviso y sonido en el cliente)
+export function groundPush(w, x, y, inst, announce = false) {
   const k = w.grid.idx(x, y);
   let list = w.items.get(k);
   if (!list) w.items.set(k, (list = []));
   inst.x = x; inst.y = y;
   list.push(inst);
   if (list.length > GROUND_STACK) list.shift();              // se borra el más antiguo
-  w.emit({ t: "drop", x, y, item: inst.id, count: inst.count });
+  w.emit({ t: "drop", x, y, item: inst.id, count: inst.count, r: announce ? rarityOf(inst.id, inst.attr) : 0, attr: announce ? inst.attr : undefined });
 }
 
 export function groundTop(w, x, y) {

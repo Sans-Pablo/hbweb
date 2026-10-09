@@ -35,7 +35,7 @@ function hit(w, e, dmg, f) {
   if (e.dead) return;
   if (e.kind === "player") {
     if (e.st && sget(w, e, "hold")) sclear(w, e, "hold");
-    damagePlayer(w, e, dmg, { id: f.owner || 0 });
+    damagePlayer(w, e, dmg, { id: f.owner || 0 }, f.type === DYN.FIRE || f.type === DYN.FIRE3 ? "fire" : f.type === DYN.ICESTORM ? "ice" : f.type === DYN.PCLOUD ? "poison" : undefined);
     return;
   }
   if (e.boss === 1 && f.type === DYN.FIRE) return;                    // el rey carmesí es inmune a sus llamas
