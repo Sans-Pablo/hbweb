@@ -2179,5 +2179,1135 @@
     }
    ]
   }
+ },
+ "fear": {
+  "enter": [
+   [
+    {
+     "es": "Qué silencio… demasiado silencio.",
+     "en": "So quiet… too quiet.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Bonito sitio. Si te gusta el moho.",
+     "en": "Nice place. If you like mold.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Despacio. Los ojos bien abiertos.",
+     "en": "Slowly. Eyes wide open.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Huele a cerrado… y a algo peor.",
+     "en": "It smells stale… and worse.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Seguro que abajo hay mejor ambiente. Seguro.",
+     "en": "I'm sure it's livelier further down. Sure.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Sigo adelante. Aunque no me guste.",
+     "en": "I keep going. Even if I don't like it.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "No debería estar aquí. Lo siento en los huesos.",
+     "en": "I shouldn't be here. I feel it in my bones.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Ya no tiene gracia… ¿o la tenía?",
+     "en": "It's not funny anymore… was it ever?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Adelante. Aunque me tiemblen las piernas.",
+     "en": "Forward. Even if my legs shake.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Cada nivel es peor. Cada nivel.",
+     "en": "Every level is worse. Every one.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Ya no hago chistes. Fíjate en lo grave que es.",
+     "en": "I've stopped joking. Notice how bad it is.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Respira. Un paso. Otro paso.",
+     "en": "Breathe. One step. Another step.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Por favor, que sea el último nivel. Por favor.",
+     "en": "Please let this be the last level. Please.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Si salgo de esta, me hago granjero.",
+     "en": "If I get out of this, I'm becoming a farmer.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No pienso morir aquí. No pienso morir aquí.",
+     "en": "I won't die here. I won't die here.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "idle": [
+   [
+    {
+     "es": "Algo gotea en algún sitio.",
+     "en": "Something is dripping somewhere.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Juraría que esa sombra se movió.",
+     "en": "I swear that shadow moved.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Solo son huesos. Solo huesos.",
+     "en": "Just bones. Just bones.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No me gusta cómo suena mi respiración aquí.",
+     "en": "I don't like how my breathing sounds here.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¿Has oído eso? …No, nada.",
+     "en": "Did you hear that? …No, nothing.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Las paredes crujen. Seguro que es la humedad.",
+     "en": "The walls creak. Surely the damp.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Si no miro atrás, no me siguen.",
+     "en": "If I don't look back, they won't follow.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Mantén la calma. Mantén la calma.",
+     "en": "Stay calm. Stay calm.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Hay susurros. Hay susurros entre las piedras.",
+     "en": "There are whispers. Whispers between the stones.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Quiero volver a la granja. Quiero ver una gallina.",
+     "en": "I want to go back to the farm. I want to see a chicken.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Siento ojos en la nuca.",
+     "en": "I feel eyes on the back of my neck.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Esta oscuridad me aprieta el pecho.",
+     "en": "This darkness squeezes my chest.",
+     "tone": [
+      "w"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Todo me mira. Las paredes, el techo, todo.",
+     "en": "Everything is watching me. The walls, the ceiling, everything.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Me tiemblan las manos. No puedo parar.",
+     "en": "My hands are shaking. I can't stop them.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "¿Y si no hay salida? No, hay salida. ¿Verdad?",
+     "en": "What if there's no way out? No, there is. Right?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Cada sombra tiene dientes.",
+     "en": "Every shadow has teeth.",
+     "tone": [
+      "w"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "No puedo más. No puedo más.",
+     "en": "I can't take any more. I can't.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Se ríen. Los huesos se ríen de mí.",
+     "en": "They're laughing. The bones are laughing at me.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Un paso más. Solo uno más. Siempre uno más.",
+     "en": "One more step. Just one more. Always one more.",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Mamá, quiero salir.",
+     "en": "Mom, I want out.",
+     "tone": [
+      "j"
+     ]
+    }
+   ]
+  ],
+  "monster": [
+   [
+    {
+     "es": "Hay un {t} ahí delante…",
+     "en": "There's a {t} ahead…",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Vaya, un {t}. Qué ilusión.",
+     "en": "Well, a {t}. How thrilling.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "{t} a la vista. Calma.",
+     "en": "{t} in sight. Stay calm.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¿Eso es un {t}? Sí… es un {t}.",
+     "en": "Is that a {t}? Yes… it's a {t}.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Un {t}. Seguro que es tímido.",
+     "en": "A {t}. I bet it's shy.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "{t}. Sin pánico. Sin pánico.",
+     "en": "{t}. No panic. No panic.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡Un {t}! ¡Y se acerca!",
+     "en": "A {t}! And it's coming closer!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Hola, {t}. Yo no he sido.",
+     "en": "Hello, {t}. It wasn't me.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "{t}… agarra bien el arma.",
+     "en": "{t}… grip your weapon.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡Otro {t}! ¿Cuántos más hay?",
+     "en": "Another {t}! How many more are there?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Por favor, {t}, hoy no.",
+     "en": "Please, {t}, not today.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "{t}. Me tiemblan las rodillas, pero voy.",
+     "en": "{t}. My knees shake, but I'm going.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡{t}! ¡No, no, no!",
+     "en": "{t}! No, no, no!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Si me quedo muy quieto, {t} no me ve. Funciona.",
+     "en": "If I stay very still, the {t} can't see me. It works.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "¡{t}! ¡Que venga! ¡Que venga ya!",
+     "en": "{t}! Let it come! Let it come now!",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "boss": [
+   [
+    {
+     "es": "Eso es… mucho más grande que los demás.",
+     "en": "That's… much bigger than the others.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Un jefe. Claro, siempre hay un jefe.",
+     "en": "A boss. Of course there's always a boss.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "El rey. Tiene que caer.",
+     "en": "The king. He has to fall.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Es enorme. Es enorme y nos ha visto.",
+     "en": "He's huge. He's huge and he's seen us.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¿Podemos pedir cita para otro día?",
+     "en": "Can we book another day?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Piensa. Todo jefe tiene un punto débil.",
+     "en": "Think. Every boss has a weak spot.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Los huesos del rey crujen como una tormenta.",
+     "en": "The king's bones crack like a storm.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Si nos mata, ¿cobramos el seguro?",
+     "en": "If he kills us, do we get the insurance?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No retrocedas. No retrocedas ahora.",
+     "en": "Don't back off. Don't back off now.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Su sola mirada me paraliza.",
+     "en": "His mere gaze paralyses me.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Es el momento de rezar. A quien sea.",
+     "en": "Time to pray. To anyone.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Es él o nosotros. Es él o nosotros.",
+     "en": "It's him or us. It's him or us.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "No… no… es peor de lo que imaginaba.",
+     "en": "No… no… it's worse than I imagined.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Adiós, mundo cruel. Adiós, gallinas.",
+     "en": "Goodbye, cruel world. Goodbye, chickens.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Si caigo, que sea de frente.",
+     "en": "If I fall, let it be facing him.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "ghost": [
+   [
+    {
+     "es": "¿Eso… se ha levantado?",
+     "en": "Did that… just get back up?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Los muertos no deberían volver. Es de mala educación.",
+     "en": "The dead shouldn't come back. It's rude.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No se queda muerto. Vale.",
+     "en": "It won't stay dead. Fine.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡Se ha levantado! ¡Es transparente!",
+     "en": "It got up! It's see-through!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Un fantasma. Lo que faltaba.",
+     "en": "A ghost. Just what we needed.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Cuidado: lo que parece muerto no lo está.",
+     "en": "Careful: what looks dead isn't.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Los muertos vuelven. Los muertos vuelven.",
+     "en": "The dead are coming back. The dead are coming back.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Hasta los fantasmas me ponen nervioso ya.",
+     "en": "Even ghosts make me nervous now.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Hay que matarlo dos veces. Pues dos veces.",
+     "en": "We have to kill it twice. So, twice.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡No acaban nunca! ¡Se levantan y se levantan!",
+     "en": "They never end! They keep getting up!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Si hasta la muerte falla, ¿en qué confiar?",
+     "en": "If even death fails, what can you trust?",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Una vez más. Caerá una vez más.",
+     "en": "Once more. It will fall once more.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡Los fantasmas! ¡Me atraviesan! ¡Me atraviesan!",
+     "en": "The ghosts! They're passing through me!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Soy un fantasma más. Estoy muerto de miedo.",
+     "en": "I'm a ghost too. I'm scared to death.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No miro. No miro. Solo golpeo.",
+     "en": "I don't look. I don't look. I just strike.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "kill": [
+   [
+    {
+     "es": "Uno menos. ¿Cuántos quedan?",
+     "en": "One less. How many are left?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Ja… sigo vivo.",
+     "en": "Ha… still alive.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Bien. El siguiente.",
+     "en": "Good. Next.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Uno menos. Me tiemblan las manos.",
+     "en": "One less. My hands are shaking.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Está muerto. ¿Está muerto? Está muerto.",
+     "en": "He's dead. Is he dead? He's dead.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Cae. Respira. Otro.",
+     "en": "He falls. Breathe. Another.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Lo he matado… y aun así no me siento a salvo.",
+     "en": "I killed it… and I still don't feel safe.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Uno menos. Quedan cien. Genial.",
+     "en": "One less. A hundred to go. Great.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Sigue en pie. Sigue en pie.",
+     "en": "Keep standing. Keep standing.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Cae uno y aparecen tres. Siempre.",
+     "en": "One falls and three appear. Always.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "No lo celebro: me da miedo celebrar.",
+     "en": "I'm not celebrating: I'm afraid to.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No pares. Si paras, piensas.",
+     "en": "Don't stop. If you stop, you think.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡Muerto! ¿Y los demás? ¿Dónde están los demás?",
+     "en": "Dead! And the others? Where are the others?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Ja, ja… ja… no me queda risa.",
+     "en": "Ha, ha… ha… I've no laugh left.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Sigo vivo. Sigo vivo. Sigo vivo.",
+     "en": "Still alive. Still alive. Still alive.",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "lowhp": [
+   [
+    {
+     "es": "Estoy herido… no puedo seguir así.",
+     "en": "I'm hurt… I can't go on like this.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Esto no estaba en el folleto.",
+     "en": "This wasn't in the brochure.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Aguanta… aguanta.",
+     "en": "Hold on… hold on.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Sangro. ¿Me han visto sangrar?",
+     "en": "I'm bleeding. Did they see me bleed?",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Me duele. Y todavía quedan niveles. Genial.",
+     "en": "It hurts. And there are still levels left. Great.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "No es nada. Vendajes. Calma.",
+     "en": "It's nothing. Bandages. Calm.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Voy a morir aquí abajo, lo sé.",
+     "en": "I'm going to die down here, I know it.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Si muero, que alguien cuide mis gallinas.",
+     "en": "If I die, someone look after my chickens.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Solo es un arañazo. Solo un arañazo…",
+     "en": "Just a scratch. Just a scratch…",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "Veo borroso… las sombras se acercan.",
+     "en": "My vision blurs… the shadows are closing in.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Qué manera tan tonta de acabar.",
+     "en": "What a silly way to end.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "De pie. De pie. Levántate.",
+     "en": "On your feet. On your feet. Get up.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   [
+    {
+     "es": "¡No quiero morir aquí! ¡No quiero!",
+     "en": "I don't want to die here! I don't!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Adiós. Si alguien me oye: adiós.",
+     "en": "Goodbye. If anyone hears me: goodbye.",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Un golpe más… solo uno más…",
+     "en": "One more blow… just one more…",
+     "tone": [
+      "d"
+     ]
+    }
+   ]
+  ],
+  "chat": [
+   [
+    {
+     "me": {
+      "es": "¿Lo oyes?",
+      "en": "Do you hear that?"
+     },
+     "pet": {
+      "es": "Solo el viento… creo.",
+      "en": "Only the wind… I think."
+     }
+    },
+    {
+     "me": {
+      "es": "No te alejes de mí.",
+      "en": "Don't stray from me."
+     },
+     "pet": {
+      "es": "No pienso moverme de aquí.",
+      "en": "I'm not moving from here."
+     }
+    },
+    {
+     "me": {
+      "es": "Si pasa algo, me avisas.",
+      "en": "If anything happens, tell me."
+     },
+     "pet": {
+      "es": "Tú grita primero.",
+      "en": "You scream first."
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "Estás temblando.",
+      "en": "You're trembling."
+     },
+     "pet": {
+      "es": "Es el frío. Solo el frío.",
+      "en": "It's the cold. Just the cold."
+     }
+    },
+    {
+     "me": {
+      "es": "Quédate pegado a mí.",
+      "en": "Stay close to me."
+     },
+     "pet": {
+      "es": "Más pegado imposible.",
+      "en": "Closer is impossible."
+     }
+    },
+    {
+     "me": {
+      "es": "Me ha parecido ver algo.",
+      "en": "I thought I saw something."
+     },
+     "pet": {
+      "es": "Mejor no me lo cuentes.",
+      "en": "Better not tell me."
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "¿Tú también quieres irte?",
+      "en": "Do you want to leave too?"
+     },
+     "pet": {
+      "es": "Hace rato.",
+      "en": "Ages ago."
+     }
+    },
+    {
+     "me": {
+      "es": "Dime que todo va a salir bien.",
+      "en": "Tell me everything will be fine."
+     },
+     "pet": {
+      "es": "Todo va a salir bien… eso espero.",
+      "en": "Everything will be fine… I hope."
+     }
+    },
+    {
+     "me": {
+      "es": "Las paredes se mueven.",
+      "en": "The walls are moving."
+     },
+     "pet": {
+      "es": "No mires las paredes.",
+      "en": "Don't look at the walls."
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "No me sueltes, por favor.",
+      "en": "Don't let go of me, please."
+     },
+     "pet": {
+      "es": "No pienso soltarte. Jamás.",
+      "en": "I won't let go. Ever."
+     }
+    },
+    {
+     "me": {
+      "es": "Estoy muerto de miedo.",
+      "en": "I'm scared to death."
+     },
+     "pet": {
+      "es": "Yo también… pero estoy contigo.",
+      "en": "Me too… but I'm with you."
+     }
+    },
+    {
+     "me": {
+      "es": "Hay algo detrás de nosotros.",
+      "en": "There's something behind us."
+     },
+     "pet": {
+      "es": "No me digas eso. No me lo digas.",
+      "en": "Don't say that. Don't."
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "Prométeme que salimos de esta.",
+      "en": "Promise me we get out of this."
+     },
+     "pet": {
+      "es": "Lo prometo. Lo prometo. Lo prometo.",
+      "en": "I promise. I promise. I promise."
+     }
+    },
+    {
+     "me": {
+      "es": "No te separes ni un paso.",
+      "en": "Not one step apart."
+     },
+     "pet": {
+      "es": "¡Ni aunque me empujen!",
+      "en": "Not even if they push me!"
+     }
+    },
+    {
+     "me": {
+      "es": "Si me pasa algo, corre.",
+      "en": "If something happens to me, run."
+     },
+     "pet": {
+      "es": "No. Tú no me dejarías.",
+      "en": "No. You wouldn't leave me."
+     }
+    }
+   ]
+  ],
+  "attack": [
+   [
+    {
+     "me": {
+      "es": "Ve a por {t}… despacio.",
+      "en": "Go for {t}… slowly."
+     },
+     "pet": {
+      "es": "¿Yo primero? Está bien…",
+      "en": "Me first? All right…"
+     }
+    },
+    {
+     "me": {
+      "es": "¡Ataca a {t}!",
+      "en": "Attack {t}!"
+     },
+     "pet": {
+      "es": "¡Allá voy! … ¿Tú vienes, no?",
+      "en": "Here I go! … You're coming, right?"
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "{t}. Ataca. Yo te cubro… de cerca.",
+      "en": "{t}. Attack. I've got your back… from close by."
+     },
+     "pet": {
+      "es": "Cúbreme bien, ¿eh?",
+      "en": "Cover me well, okay?"
+     }
+    },
+    {
+     "me": {
+      "es": "Venga, a por {t}.",
+      "en": "Come on, get {t}."
+     },
+     "pet": {
+      "es": "Voy… voy… ya voy…",
+      "en": "I'm going… going… on my way…"
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "Ataca a {t}… por favor.",
+      "en": "Attack {t}… please."
+     },
+     "pet": {
+      "es": "¿Tiene que ser {t}?",
+      "en": "Does it have to be {t}?"
+     }
+    },
+    {
+     "me": {
+      "es": "¡Contra {t}! ¡Con todo!",
+      "en": "Against {t}! Everything you've got!"
+     },
+     "pet": {
+      "es": "¡Con todo! ¡Y con los ojos cerrados!",
+      "en": "Everything! And eyes closed!"
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "{t}… no hay otra opción. Ataca.",
+      "en": "{t}… there's no other way. Attack."
+     },
+     "pet": {
+      "es": "Lo haré. Pero me tiembla todo.",
+      "en": "I will. But I'm shaking all over."
+     }
+    },
+    {
+     "me": {
+      "es": "¡A por {t}! ¡Por los dos!",
+      "en": "Get {t}! For both of us!"
+     },
+     "pet": {
+      "es": "¡Por los dos! ¡Mamá!",
+      "en": "For both of us! Mommy!"
+     }
+    }
+   ],
+   [
+    {
+     "me": {
+      "es": "¡{t}! ¡Acaba con {t}!",
+      "en": "{t}! Finish {t}!"
+     },
+     "pet": {
+      "es": "¡No quiero! ¡Pero lo haré!",
+      "en": "I don't want to! But I'll do it!"
+     }
+    },
+    {
+     "me": {
+      "es": "¡Ahora o nunca contra {t}!",
+      "en": "Now or never against {t}!"
+     },
+     "pet": {
+      "es": "¡Ahora! ¡O nunca! ¡Ahora!",
+      "en": "Now! Or never! Now!"
+     }
+    }
+   ]
+  ]
  }
 }

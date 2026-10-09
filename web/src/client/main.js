@@ -25,7 +25,6 @@ import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
-import { HUNT } from "../shared/systems/companion.js";
 import { Sky, trackFor } from "./sky.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -418,7 +417,6 @@ async function main() {
   const chatBox = document.getElementById("chat"), chatIn = chatBox.querySelector("input");
   const bubbles = new Map();
   setNpcDb(assets.npcDb);
-  { const k = +new URLSearchParams(location.search).get("hunt"); if (k > 1) HUNT.scale = 1 / k; }   // ?hunt=20: 20 veces menos muertes por bola (pruebas)
   let voice = null;                                 // personalidad: frases (voice.js, data/voice.json)
   fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name, world.ents.get(pid)?.persona); }).catch(() => {});
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }

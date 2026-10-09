@@ -47,3 +47,19 @@ console.log("voice OK");
 console.log("voice+pet OK");
 { const v = mk(); v.setPlayer("Pablo", "d"); assert.equal(v.tone, "d"); v.setPlayer("Pablo", "j"); assert.equal(v.tone, "j", "manda la personalidad, no el nombre"); v.setPlayer("Pablo"); assert.equal(v.tone, personaOf("Pablo"), "sin personalidad, el nombre"); }
 console.log("persona OK");
+// miedo en la cripta de esqueletos: etapa según nivel, frases de ambiente, monstruos, fantasmas; todo con es+en
+{
+  const cw = lvl => ({ ents: new Map([[1, { id: 1, x: 10, y: 10 }], [5, { id: 5, kind: "npc", name: "Skeleton", x: 12, y: 10 }]]), generators: [], map: { id: "crypt", kind: "dungeon", level: lvl } });
+  const vf = mk();
+  assert.deepEqual([1, 3, 4, 8, 13, 18, 30].map(l => vf.fearStage(cw(l))), [0, 0, 1, 2, 3, 4, 4]);
+  assert.equal(vf.fearStage(world), -1, "fuera de la cripta no hay miedo");
+  for (const k of ["enter", "idle", "monster", "boss", "ghost", "kill", "lowhp", "chat", "attack"]) assert.equal(data.fear[k].length, 5, k + " tiene 5 etapas");
+  T += 100000; let v2 = mk(); const w2 = cw(20);
+  v2.update(w2, w2.ents.get(1), {});
+  assert.ok(bubbles.get(1)?.text, "ve un esqueleto cerca y habla");
+  assert.ok(!/\{t\}/.test(bubbles.get(1).text), "el nombre del monstruo se rellena");
+  bubbles.clear(); T += 20000; v2.update(w2, w2.ents.get(1), {});
+  assert.equal(v2.fearSeen.has(5), true, "cada monstruo se comenta una sola vez");
+  T += 100000; v2 = mk(); v2.onEvent({ t: "ghost", x: 12, y: 10 }, w2); assert.ok(bubbles.get(1)?.text, "fantasma cerca");
+}
+console.log("fear OK");

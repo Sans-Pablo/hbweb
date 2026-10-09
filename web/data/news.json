@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Miedo en la cripta y bolas solo en la tienda (v0.21.0)",
+        "en": "Fear in the crypt and balls only from the shop (v0.21.0)"
+      },
+      "items": [
+        {
+          "es": "En la cripta de esqueletos el personaje y el compañero hablan asustados, y el miedo crece con la profundidad (5 etapas: niveles 1-3, 4-7, 8-12, 13-17, 18+). Reaccionan al ver monstruos, jefes y esqueletos que se levantan.",
+          "en": "In the skeleton crypt the character and companion speak in fear, growing with depth (5 stages: levels 1-3, 4-7, 8-12, 13-17, 18+). They react to monsters, bosses and rising skeletons."
+        },
+        {
+          "es": "Las bolas de compañero ya NO se obtienen matando monstruos: solo se compran en la tienda (Gail, pestaña Bolas).",
+          "en": "Companion balls are NO longer won by kills: they are only sold in the shop (Gail, Balls tab)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Publicación estable (v0.20.1)",
         "en": "Stable publishing (v0.20.1)"
       },
@@ -2172,6 +2189,28 @@
       "text": {
         "es": "Ten una bola de compañero, habla con McGaffin (junto a la entrada), apuesta y mira el combate: ¿las cuotas son razonables, el combate dura ~30 s y el oro se paga bien? Prueba también apostar contra tu compañero y «Otro retador».",
         "en": "Have a companion ball, talk to McGaffin (near the entrance), bet and watch the fight: are the odds reasonable, does it last ~30 s and is gold paid correctly? Also try betting against your companion and 'Another challenger'."
+      }
+    },
+    {
+      "id": "fear-crypt",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Entra en la cripta de esqueletos: el personaje habla asustado, más cuanto más profundo; comenta cada monstruo/jefe que ve y los esqueletos que se levantan.",
+        "en": "Enter the skeleton crypt: the character speaks fearfully, more so the deeper you go; comments on each monster/boss seen and rising skeletons."
+      }
+    },
+    {
+      "id": "balls-shop-only",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Mata monstruos de una especie invocable: ya no cae ninguna bola. Las bolas se compran en Gail (pestaña Bolas).",
+        "en": "Kill monsters of a summonable species: no ball drops any more. Balls are bought from Gail (Balls tab)."
       }
     }
   ],

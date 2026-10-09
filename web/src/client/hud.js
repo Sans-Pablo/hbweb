@@ -77,7 +77,6 @@ export class Hud {
     const me = this.conn.pid;
     const who = id => world.ents.get(id);
     switch (ev.t) {
-      case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball (" + (ev.nm || "") + "): úsala para tener a ese compañero.", "gold"); break;
       case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
       case "dbg": if (ev.id === me) this.log("[test] " + ev.msg, "gold"); break;

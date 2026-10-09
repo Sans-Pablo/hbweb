@@ -1,6 +1,6 @@
 // Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 // el hechizo Summon Creature (npcsys.summonFor) y los objetos GreenBall..PearlBall de Item.cfg (651..655) como "bola" contenedora.
-//  - Cada N muertes de una especie invocable, el jugador recibe una Bola de esa especie (nivel 1). Usarla la elige como compañero
+//  - Las bolas SOLO se consiguen en la tienda (Gail, hospital de compañeros): matar monstruos no las da. Usarla la elige como compañero
 //    (siempre esa especie) y lo invoca; volver a usarla lo guarda. La bola guarda especie, nivel y experiencia (inst.comp).
 //  - Estadísticas COMPARTIDAS: el daño y la vida del compañero salen del daño medio y la vida del dueño, multiplicados por una
 //    cuota que crece con el nivel del compañero; así sumar su daño al del jugador nunca desequilibra (cuota máxima 0,5).
@@ -11,7 +11,6 @@ import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
 import * as Tal from "./talents.js";
 
-export const HUNT = { scale: 1, kills: 10 };  // build de pruebas: 10 muertes por bola (kills = null usa la tabla SPECIES: 500–1000); ?hunt=N las divide aún más
 export const MAX_COMP_LEVEL = 50;
 // Nombres aleatorios (sílabas): cada compañero tiene el suyo, fijado al nacer la bola
 const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "Pip", "Rok", "Sil", "Tor", "Vex", "Zan", "Bol", "Cro", "Dun", "Fiz", "Gor"];
@@ -26,7 +25,6 @@ export const SPECIES = {
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
 export const need = lvl => Math.floor(30 * Math.pow(lvl, 1.7));              // experiencia para subir desde `lvl`
-export const killsFor = sp => Math.max(1, Math.round((HUNT.kills ?? SPECIES[sp][0]) * HUNT.scale));
 export const activeBall = p => p.bag.find(i => i.comp && i.comp.on);
 
 // daño medio de un golpe del jugador (playerStrike sin azar)
@@ -44,22 +42,10 @@ export function statsOf(p, c) {
   return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg)), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp)), mp: Tal.maxMp(c) };
 }
 
-// Muerte de un monstruo a manos del jugador: contador de especie (bola) y experiencia del compañero
+// Muerte de un monstruo a manos del jugador: experiencia del compañero (las bolas ya no se consiguen cazando)
 export function onKill(w, p, n, xp) {
   const act = activeBall(p);
   if (act) addExp(w, p, act, Math.floor(xp * 0.25));
-  const sp = n.name;
-  if (n.master || !SPECIES[sp]) return;
-  p.hunt = p.hunt || {};
-  p.hunt[sp] = (p.hunt[sp] || 0) + 1;
-  if (p.hunt[sp] < killsFor(sp)) return;
-  p.hunt[sp] = 0;
-  const ball = newInst(w, SPECIES[sp][1]);
-  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng) };
-  const d = w.data.item(ball.id);
-  if (d && p.bag.length < MAX_ITEMS && Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) Inv.addToBag(p, w.data, ball);
-  else if (d) groundPush(w, p.x, p.y, ball);
-  w.emit({ t: "ball", id: p.id, sp, uid: ball.uid, nm: ball.comp.nm });
 }
 
 // Muerte del compañero: pierde el 25 % de la experiencia de su nivel y, si no le alcanza, un nivel

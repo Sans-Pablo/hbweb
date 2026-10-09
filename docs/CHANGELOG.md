@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.21.0 · Miedo en la cripta (2026-10-09)
+
+- Diálogos de miedo en la cripta de esqueletos (`tools/mkvoice_fear.py` → `voice.json` `fear`, 5 etapas por nivel de cripta): entrada, charla, monstruo/jefe/fantasma avistado, kills, poca vida, charla y ataques del compañero. `client/voice.js` (`fearStage`, `fear`). Test en `tests/voice.test.mjs`.
+- Las bolas de compañero ya no se consiguen por muertes: solo en la tienda (Gail). Eliminados `HUNT`, `killsFor`, el contador `p.hunt` en `onKill`, `?hunt=N` y el aviso del HUD.
+
 ## 0.20.1 · Publicación estable (2026-10-09)
 
 - `net-dungeon.test.mjs`: la aserción de «A ve esqueletos» dependía del trazado del nivel (radio de interés) y el límite de 30 s rozaba la duración real (~29 s): ahora comprueba que todo npc visible es esqueleto y el límite es 90 s. Fallaba en CI (v0.19.2 y v0.20.0 no se publicaron).

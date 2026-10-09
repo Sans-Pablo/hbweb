@@ -15,13 +15,41 @@ export class Voice {
     this.recent = new Map();      // clave -> últimas frases dichas
     this.cool = new Map();        // clave -> instante libre
     this.queue = [];              // respuestas diferidas { at, id, text }
-    this.lastAny = -1e9; this.pitSeen = new Map(); this.map = null; this.idleAt = 0; this.tone = "w";
+    this.lastAny = -1e9; this.fearSeen = new Set(); this.pitSeen = new Map(); this.map = null; this.idleAt = 0; this.tone = "w";
     this.talk = 1;                // 0..2: charlatanería (un parámetro por personaje)
   }
   // la personalidad se elige al crear el personaje (create.js); sin ella (partidas antiguas) se deduce del nombre
   setPlayer(name, persona = null) {
     this.tone = persona && "wjd".includes(persona) ? persona : personaOf(name || "x");
     this.talk = { w: 1, j: 1.3, d: 0.8 }[this.tone];       // bromista habla más, decidido menos
+  }
+
+  // miedo en la cripta (data.fear, tools/mkvoice_fear.py): etapa 0..4 según el nivel de la cripta; -1 fuera de ella
+  fearStage(world) {
+    if (world.map?.kind !== "dungeon" || !this.d.fear) return -1;
+    const lv = world.map.level || 1;
+    return lv <= 3 ? 0 : lv <= 7 ? 1 : lv <= 12 ? 2 : lv <= 17 ? 3 : 4;
+  }
+  fearLines(world, key, fallback) { const s = this.fearStage(world); return s < 0 ? fallback : this.d.fear[key][s]; }
+  // cada ~0,4 s dentro de la cripta: charla de fondo y reacción ante lo que aparece cerca (cada monstruo se comenta una sola vez)
+  fear(world, me, fs, t) {
+    if (t < (this.fearScan || 0)) return;
+    this.fearScan = t + 400;
+    const F = this.d.fear;
+    if (!this.fearIdleAt) this.fearIdleAt = t + 12000;
+    if (t > this.fearIdleAt) { this.fearIdleAt = t + 22000 - 2500 * fs + this.rng() * 20000; this.me(F.idle[fs], "fidle", 0.9, 8000); }
+    let boss = null, mon = null, md = 1e9;
+    for (const e of world.ents?.values() || []) {
+      if (e.kind !== "npc" || e.dead || e.comp || e.arena || e.crystal || e.master || this.fearSeen.has(e.id)) continue;
+      const d = Math.max(Math.abs(e.x - me.x), Math.abs(e.y - me.y));
+      if (e.boss && !e.aux && d <= 10) boss = e; else if (d <= 6 && d < md) { mon = e; md = d; }
+    }
+    if (boss) { this.fearSeen.add(boss.id); this.me(F.boss[fs], "fboss", 1, 20000); }
+    else if (mon) {
+      this.fearSeen.add(mon.id);
+      const nm = mon.ghost ? { es: "Fantasma skeleton", en: "Ghost skeleton" } : { es: String(mon.name).replace(/-/g, " "), en: String(mon.name).replace(/-/g, " ") };
+      this.me(F.monster[fs], "fmon", 0.9, 14000 - 2000 * fs, nm);
+    }
   }
 
   text(l) { return this.lang() === "en" ? l.en : l.es; }
@@ -45,11 +73,12 @@ export class Voice {
     return true;
   }
   // frase del jugador con probabilidad y enfriamiento
-  me(list, key, chance = 1, cool = 8000) {
+  me(list, key, chance = 1, cool = 8000, fill = null) {
     const t = this.now();
     if (t < (this.cool.get(key) || 0) || t - this.lastAny < 1500) return false;
     if (this.rng() > Math.min(1, chance * this.talk)) return false;
-    if (!this.say(this.pid, this.pick(list, "me." + key))) return false;
+    const l = this.pick(list, "me." + key);
+    if (!this.say(this.pid, l && fill ? { ...l, es: l.es.replaceAll("{t}", fill.es), en: l.en.replaceAll("{t}", fill.en) } : l)) return false;
     this.cool.set(key, t + cool); this.lastAny = t;
     return true;
   }
@@ -85,11 +114,16 @@ export class Voice {
       case "levelup": if (mine) this.me(this.d.me.levelup, "levelup", 1, 1000); break;
       case "death":
         if (mine) this.me(this.d.me.death, "death", 1, 1000);
-        else if (ev.by === this.pid) this.me(this.d.me.kill, "kill", 0.12, 20000);
+        else if (ev.by === this.pid) this.me(this.fearLines(world, "kill", this.d.me.kill), "kill", this.fearStage(world) >= 0 ? 0.3 : 0.12, 20000);
         break;
       case "damage":
-        if (mine && ev.max && ev.hp / ev.max < 0.25 && ev.hp > 0) this.me(this.d.me.lowhp, "lowhp", 0.8, 25000);
+        if (mine && ev.max && ev.hp / ev.max < 0.25 && ev.hp > 0) this.me(this.fearLines(world, "lowhp", this.d.me.lowhp), "lowhp", 0.8, 25000);
         break;
+      case "ghost": {                                                                       // un esqueleto se levanta cerca
+        const fs = this.fearStage(world);
+        if (fs >= 0 && me && Math.max(Math.abs(ev.x - me.x), Math.abs(ev.y - me.y)) <= 9) this.me(this.d.fear.ghost[fs], "fghost", 0.9, 12000);
+        break;
+      }
       case "time": if (me) this.me(ev.v === 2 ? this.d.me.night : this.d.me.dawn, "time", 0.5, 60000); break;
       case "weather": if (me && ev.v >= 1) this.me(this.d.me.rain, "rain", 0.5, 90000); break;
     }
@@ -137,7 +171,8 @@ export class Voice {
       } break;
       case "pettarget": if (ev.id === this.pid) {                                        // Alt + clic: el personaje da la orden y el compañero responde
         const tn = ev.tn || "", nm = tn === "Fantasma skeleton" ? { es: "Fantasma skeleton", en: "Ghost skeleton" } : { es: tn.replace(/-/g, " "), en: tn.replace(/-/g, " ") };
-        this.talkPet(world, "attack", "patk", { chance: 1, cool: 1500, fill: nm });
+        const fs = this.fearStage(world);
+        this.talkPet(world, "attack", "patk", { chance: 1, cool: 1500, fill: nm, list: fs >= 0 ? this.d.fear.attack[fs] : null });
       } break;
       case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
       case "damage": if (pet && ev.id === pet.id) {
@@ -170,8 +205,8 @@ export class Voice {
     const mid = world.map?.id || world.map?.name || "?";
     if (mid !== this.map) {
       const dungeon = world.map?.kind === "dungeon";
-      this.map = mid; this.pitSeen.clear();
-      if (dungeon) setTimeout?.(() => this.me(this.d.me.crypt, "crypt", 0.6, 30000), 1200);
+      this.map = mid; this.pitSeen.clear(); this.fearSeen.clear(); this.fearIdleAt = 0;
+      if (dungeon) setTimeout?.(() => this.me(this.fearLines(world, "enter", this.d.me.crypt), "crypt", 0.9, 3000), 1200);
     }
     // pit: entrar en el radio de un generador (rect ampliado) con cierta probabilidad, una vez por visita
     for (const g of world.generators || []) {
@@ -187,10 +222,13 @@ export class Voice {
       if (this.say(this.pid, l)) { this.cool.set("pit", t + 25000); this.lastAny = t; }
       break;
     }
-    // charla con la mascota cada 35–80 s si está cerca
+    const fs = this.fearStage(world);
+    if (fs >= 0) this.fear(world, me, fs, t);
+    // charla con la mascota cada 35–80 s si está cerca (en la cripta, cada 22–47 s y asustados)
     if (!this.petChatAt) this.petChatAt = t + 30000;
     if (t > this.petChatAt) {
-      this.petChatAt = t + 35000 + this.rng() * 45000;
+      this.petChatAt = t + (fs >= 0 ? 22000 + this.rng() * 25000 : 35000 + this.rng() * 45000);
+      if (fs >= 0 && this.rng() < 0.75) { this.talkPet(world, "fear", "pfear", { chance: 0.95, cool: 12000, list: this.d.fear.chat[fs] }); return; }
       // charla general, según la etapa (baby 1-9, young 10-24, veteran 25-39, elite 40+) o según la especie
       const pet = this.petOf(world), c = this.d.companion, r = this.rng();
       const lv = pet && pet.clvl || 1, st = lv >= 40 ? "elite" : lv >= 25 ? "veteran" : lv >= 10 ? "young" : "baby";

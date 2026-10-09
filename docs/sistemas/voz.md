@@ -6,3 +6,4 @@ Invento del port: el original no habla. No toca reglas, solo pinta burbujas de c
 - Pit: frase por nombre de monstruo (60%) o por peligro `hitDice / max(20, maxHp/2.5)`: <0.6 fácil, <1.3 parejo, resto mortal.
 - Habitantes: respuesta diferida (~0,9 s) por rol (shop/blacksmith/warehouse/mage/town) y murmullo si estás a ≤6 casillas. Burbuja `#ffe9a8` (renderer, rama mobs).
 - Añadir frases: editar el generador y regenerar; toda frase lleva `es` y `en`.
+- **Miedo en la cripta** (`data.fear`, `tools/mkvoice_fear.py`): `fearStage` 0..4 según nivel (≤3, ≤7, ≤12, ≤17, resto); categorías enter/idle/monster({t})/boss/ghost/kill/lowhp/chat/attack con 5 etapas cada una. Charla de fondo más frecuente cuanto más miedo; cada monstruo se comenta una vez (`fearSeen`, se vacía al cambiar de mapa); el compañero también habla asustado.

@@ -16,20 +16,16 @@ const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
 const id = w.addPlayer("Cazador", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
 const p = w.ents.get(id); p.level = 30; w.recalc(p);
+import { spawnCitizen } from "../web/src/shared/systems/citizens.js";
 import { spawnFrom } from "../web/src/shared/systems/npcsys.js";
 const slay = name => { const n = spawnFrom(w, { name, rect: [p.x + 2, p.y + 2, p.x + 5, p.y + 5], alive: 0, max: 0, respawn: false }); n.noDrop = true; killNpc(w, n, p); };
 
-C.HUNT.kills = null; C.HUNT.scale = 0.01;                                   // 5 muertes por bola de hormiga
-assert.equal(C.killsFor("Giant-Ant"), 5);
-for (let i = 0; i < 4; i++) slay("Giant-Ant");
-assert.equal(p.bag.filter(i => i.comp).length, 0, "aún no");
-slay("Giant-Ant");
+for (let i = 0; i < 30; i++) slay("Giant-Ant");
+assert.equal(p.bag.filter(i => i.comp).length, 0, "matar no da bolas");
+const nurse = spawnCitizen(w, C.HOSPITAL.npc, p.x + 2, p.y, C.HOSPITAL.role);
+p.gold = 100; w.command(id, { t: "petbuy", npc: nurse.id, sp: "Giant-Ant" });         // la bola se compra en la tienda
 const ball = p.bag.find(i => i.comp);
 assert.ok(ball && ball.comp.sp === "Giant-Ant" && ball.comp.lvl === 1, "bola de hormiga");
-assert.equal(p.hunt["Giant-Ant"], 0);
-assert.equal((C.HUNT.kills = 10, C.HUNT.scale = 1, C.killsFor("Cyclops")), 10, "build de pruebas: 10 por bola"); C.HUNT.kills = null; C.HUNT.scale = 0.01;
-slay("Scorpion");                                        // no invocable: sin contador
-assert.ok(!p.hunt.Scorpion);
 
 // usar la bola invoca siempre una hormiga; usarla otra vez la guarda
 w.command(id, { t: "use", uid: ball.uid });
@@ -57,7 +53,7 @@ assert.ok(ball.comp.exp < C.need(ball.comp.lvl));
 
 // guardado: la bola conserva especie, nivel y estado
 const sv = JSON.parse(JSON.stringify(saveOf(w, id)));
-assert.deepEqual(sv.bag.find(i => i.comp).comp, ball.comp); assert.equal(sv.hunt["Giant-Ant"], 0);
+assert.deepEqual(sv.bag.find(i => i.comp).comp, ball.comp);
 // tirar la bola guarda al compañero
 w.command(id, { t: "drop", uid: ball.uid, count: 0 });
 assert.equal(followersOf(w, p).filter(e => e.comp).length, 0);
