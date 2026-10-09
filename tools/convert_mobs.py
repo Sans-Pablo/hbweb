@@ -21,6 +21,8 @@ for m in re.finditer(r"spriteName:\s*'(\w+)',(.*?)corpseDecayTime", ref, re.S):
     mv = re.search(r"move:\s*\{\s*sound:\s*'M(\d+)\.mp3'", m.group(2))
     if mv: SND[m.group(1).lower()] = int(mv.group(1))
 
+# NPC de ciudad con solo reposo (8 hojas: una por dirección; los de 16 traen además otra acción que no se usa)
+TOWN = {25: "william", 26: "kennedy", 67: "mcgaffin", 68: "perry", 69: "devlin", 90: "gail"}
 pak = PakFolder(os.path.join(hb, "SPRITES"))
 sdir = os.path.join(out, "sprites")
 man_path, npc_path = os.path.join(out, "sprites.json"), os.path.join(out, "npc.json")
@@ -45,6 +47,11 @@ for t, key in sorted(MOBS.items()):
         if real: shutil.copy(os.path.join(hb, "SOUNDS", real), os.path.join(snd_dir, "M%d.wav" % (base + i)))
     old = npcs.get(name, {})
     npcs[name] = dict(cfg[name], sprite=key, sound=base, **({"town": True} if old.get("town") else {}))
+for t, key in TOWN.items():
+    name = by_type.get(t)
+    if not name: print("  sin ficha en NPC.cfg:", t, key); continue
+    for d in range(8): export(pak, key, d, sdir, "%s%d" % (key, d), manifest)
+    npcs[name] = dict(cfg[name], sprite=key, sound=0, town=True)
 json.dump(manifest, open(man_path, "w"), separators=(",", ":"))
 json.dump(npcs, open(npc_path, "w"), indent=1)
 print("monstruos:", len(done), "sprites; fichas NPC:", len(npcs))
