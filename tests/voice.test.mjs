@@ -31,6 +31,17 @@ bubbles.clear(); T += 2000; v.update(world, me, { Slime: { hitDice: 2 } }); asse
 const ven = new Voice({ data, bubbles, pid: 1, lang: () => "en", rng: () => 0.01, now: () => T }); bubbles.clear();
 ven.onEvent({ t: "levelup", id: 1 }, world); assert.match(bubbles.get(1).text, /[a-z]/i);
 // todas las frases tienen es y en
-const walk = o => Array.isArray(o) ? o.forEach(l => { assert.ok(l.es && l.en, JSON.stringify(l)); }) : Object.values(o).forEach(walk);
+const walk = o => { if (typeof o.es === "string") assert.ok(o.en, JSON.stringify(o)); else Object.values(o).forEach(walk); };
 walk(data);
 console.log("voice OK");
+// mascota: invocar -> el personaje habla y el compañero contesta con su sonido
+{
+  T += 100000; const v = mk(); bubbles.clear();
+  const pw = { ents: new Map([[1, { id: 1, x: 5, y: 5 }], [9, { id: 9, kind: "npc", comp: true, master: 1, name: "Giant-Ant" }]]), generators: [], map: { id: "farm" } };
+  v.onEvent({ t: "companion", id: 1, on: true, sp: "Giant-Ant" }, pw);
+  assert.ok(bubbles.get(1)?.text, "el personaje habla");
+  T += 1200; v.update(pw, pw.ents.get(1), {});
+  assert.match(bubbles.get(9).text, /^¡Clic clic!/, "la hormiga contesta con su sonido");
+  assert.equal(v.talkPet({ ents: new Map() }, "chat", "x"), false, "sin mascota no hay diálogo");
+}
+console.log("voice+pet OK");

@@ -33,7 +33,7 @@ function takeItem(w, p) {
   groundPop(w, p.x, p.y);
   Inv.addToBag(p, w.data, it);
   w.recalc(p);
-  w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0 });
+  w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0, ...(it.comp ? { comp: { sp: it.comp.sp, lvl: it.comp.lvl } } : {}) });
 }
 
 // tirar un objeto de la mochila a la casilla propia (amount < count divide una pila)

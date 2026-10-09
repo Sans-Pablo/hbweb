@@ -70,6 +70,7 @@ export class Voice {
   // eventos del servidor; `trader` = último habitante con el que se comerció
   onEvent(ev, world, trader = null) {
     const mine = ev.id === this.pid, me = world.ents?.get(this.pid);
+    this.onPetEvent(ev, world);
     switch (ev.t) {
       case "purchased": if (mine && this.me(this.d.me.thanks, "thanks", 0.7)) this.reply(trader, this.npcLines("thanks", trader), "thanks"); break;
       case "nogold": if (mine && this.me(this.d.me.nogold, "nogold", 0.9, 5000)) this.reply(trader, this.npcLines("nogold", trader), "nogold"); break;
@@ -87,6 +88,38 @@ export class Voice {
         break;
       case "time": if (me) this.me(ev.v === 2 ? this.d.me.night : this.d.me.dawn, "time", 0.5, 60000); break;
       case "weather": if (me && ev.v >= 1) this.me(this.d.me.rain, "rain", 0.5, 90000); break;
+    }
+  }
+
+  // ---- diálogos con la mascota (data.companion): el compañero habla con el sonido de su especie y el personaje le contesta
+  petOf(world) { for (const e of world.ents?.values() || []) if (e.comp && e.master === this.pid && !e.dead) return e; return null; }
+  petLine(pet, l) { const n = this.d.companion?.noise?.[pet.name]; return l && n ? { ...l, es: n.es + " " + l.es, en: n.en + " " + l.en } : l; }
+  // el personaje dice `me` y el compañero contesta (o al revés si first = "pet"), con probabilidad y pausa propias
+  talkPet(world, set, key, { chance = 0.8, cool = 15000, first = "me", gap = 1100 } = {}) {
+    const pet = this.petOf(world), t = this.now(), c = this.d.companion;
+    if (!pet || !c?.[set] || t < (this.cool.get("pet." + key) || 0) || this.rng() > Math.min(1, chance * this.talk)) return false;
+    this.cool.set("pet." + key, t + cool);
+    const ex = Array.isArray(c[set]) ? c[set][Math.floor(this.rng() * c[set].length)] : c[set];
+    const meL = Array.isArray(ex.me) ? this.pick(ex.me, "pme." + key) : ex.me, petL = this.petLine(pet, Array.isArray(ex.pet) ? this.pick(ex.pet, "ppet." + key) : ex.pet);
+    const a = first === "me" ? { id: this.pid, l: meL } : { id: pet.id, l: petL }, b = first === "me" ? { id: pet.id, l: petL } : { id: this.pid, l: meL };
+    this.say(a.id, a.l); this.lastAny = t;
+    this.queue.push({ at: t + gap, id: b.id, l: b.l });
+    return true;
+  }
+  onPetEvent(ev, world) {
+    const pet = this.petOf(world);
+    switch (ev.t) {
+      case "companion": if (ev.id !== this.pid) break;
+        if (ev.on) this.talkPet(world, "summon", "summon", { chance: 0.85, cool: 4000 });
+        else if (ev.fainted) this.me(this.d.companion.faint.me, "pfaint", 0.9, 4000);
+        else this.me(this.d.companion.dismiss.me, "pdismiss", 0.6, 4000);
+        break;
+      case "companion-lvl": if (ev.id === this.pid) this.talkPet(world, "levelup", "plvl", { chance: 1, cool: 2000, first: "pet" }); break;
+      case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
+      case "damage": if (pet && ev.id === pet.id) {
+        if (ev.max && ev.hp / ev.max < 0.3 && ev.hp > 0) this.talkPet(world, "lowhp", "plow", { chance: 0.8, cool: 20000, first: "pet" });
+        else if (this.rng() < 0.08) this.talkPet(world, "hurt", "phurt", { chance: 1, cool: 30000, first: "me" });
+      } break;
     }
   }
 
@@ -130,6 +163,9 @@ export class Voice {
       if (this.say(this.pid, l)) { this.cool.set("pit", t + 25000); this.lastAny = t; }
       break;
     }
+    // charla con la mascota cada 35–80 s si está cerca
+    if (!this.petChatAt) this.petChatAt = t + 30000;
+    if (t > this.petChatAt) { this.petChatAt = t + 35000 + this.rng() * 45000; this.talkPet(world, "chat", "pchat", { chance: 0.8, cool: 20000 }); }
     // charla de fondo
     if (!this.idleAt) this.idleAt = t + 40000;
     if (t > this.idleAt) {

@@ -77,13 +77,15 @@ export class Hud {
     switch (ev.t) {
       case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball: úsala para tener a ese compañero.", "gold"); break;
       case "companion": if (ev.id === me) this.log(ev.on ? ev.sp.replace(/-/g, " ") + " (nivel " + ev.lvl + ") te acompaña." : ev.sp.replace(/-/g, " ") + " vuelve a la bola."); break;
+      case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
+      case "companion-lost": if (ev.id === me) this.log("Tu " + ev.sp.replace(/-/g, " ") + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-lvl": if (ev.id === me) this.log("Tu " + ev.sp.replace(/-/g, " ") + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":
         if (ev.id === me) this.log("Has muerto.", "bad");
         else if (ev.by === me) this.log("Has matado a " + (who(ev.id)?.name || "un monstruo") + ".");
         break;
-      case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item, ev.attr) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
+      case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item, ev.attr, ev.comp) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
       case "use": if (ev.id === me) this.log("Usas " + itemName(ev.item) + (ev.amount ? " (+" + ev.amount + ")" : "") + "."); break;
       case "equip": if (ev.id === me) this.log("Equipas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;
       case "unequip": if (ev.id === me) this.log("Te quitas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;
@@ -172,7 +174,6 @@ export class Hud {
       "Compañero: " + c.sp.replace(/-/g, " ") + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
       "Experiencia " + c.exp + " / " + nx + (c.lvl >= Math.min(60, me.level) ? " (tope: tu nivel)" : ""),
       "Daño ≈ " + st.dmg + " por golpe (" + Math.round(st.share * 100) + " % del tuyo) · vida " + st.hp,
-      "Uso: invoca a este compañero y lo guarda al repetir. Hechizo Summon Creature: invoca siempre este.",
     ];
   }
 

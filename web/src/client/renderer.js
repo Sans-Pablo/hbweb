@@ -414,7 +414,7 @@ export class Renderer {
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
-    if (hovered || e.comp || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
+    if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + e.name + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");

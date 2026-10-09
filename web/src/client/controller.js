@@ -69,7 +69,7 @@ export class Controller {
     let best = null, bestD = 1e9;
     const time = this.world.time;
     for (const e of this.world.ents.values()) {
-      if (e.kind !== kind || e.dead) continue;
+      if (e.kind !== kind || e.dead || e.master) continue;                  // un seguidor (compañero) no se ataca
       const [px, py] = posOf(e, time);
       const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k));
       const h = Math.max(30, this.r.mobHeight(key, f));

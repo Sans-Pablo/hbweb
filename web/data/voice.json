@@ -1289,5 +1289,367 @@
     ]
    }
   ]
+ },
+ "companion": {
+  "noise": {
+   "Slime": {
+    "es": "¡Splash!",
+    "en": "Splash!"
+   },
+   "Giant-Ant": {
+    "es": "¡Clic clic!",
+    "en": "Click click!"
+   },
+   "Amphis": {
+    "es": "¡Sssss!",
+    "en": "Sssss!"
+   },
+   "Orc": {
+    "es": "¡Grrr!",
+    "en": "Grrr!"
+   },
+   "Skeleton": {
+    "es": "*cric cric*",
+    "en": "*clack clack*"
+   },
+   "Clay-Golem": {
+    "es": "*ruuum*",
+    "en": "*rumble*"
+   },
+   "Stone-Golem": {
+    "es": "*ruuum*",
+    "en": "*rumble*"
+   },
+   "Orc-Mage": {
+    "es": "¡Hmpf!",
+    "en": "Hmpf!"
+   },
+   "Hellbound": {
+    "es": "¡Grraaah!",
+    "en": "Grraaah!"
+   },
+   "Cyclops": {
+    "es": "¡Uuuargh!",
+    "en": "Uuuargh!"
+   },
+   "Troll": {
+    "es": "¡Grunt!",
+    "en": "Grunt!"
+   },
+   "Orge": {
+    "es": "¡Ugh!",
+    "en": "Ugh!"
+   }
+  },
+  "summon": {
+   "me": [
+    {
+     "es": "¡Ven aquí, compañero!",
+     "en": "Come here, partner!",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Es hora de cazar juntos.",
+     "en": "Time to hunt together.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¡A trabajar, equipo!",
+     "en": "Let's get to work, team!",
+     "tone": [
+      "j"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡Listo para pelear!",
+     "en": "Ready to fight!"
+    },
+    {
+     "es": "¡Aquí estoy!",
+     "en": "Here I am!"
+    },
+    {
+     "es": "¿A quién machacamos hoy?",
+     "en": "Who are we smashing today?"
+    }
+   ]
+  },
+  "dismiss": {
+   "me": [
+    {
+     "es": "Descansa un rato.",
+     "en": "Take a rest.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Vuelve a la bola, buen trabajo.",
+     "en": "Back to the ball, good work.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "Vale… ¡avísame cuando haya pelea!",
+     "en": "Okay… call me when there's a fight!"
+    },
+    {
+     "es": "Me echaré una siesta.",
+     "en": "I'll take a nap."
+    }
+   ]
+  },
+  "levelup": {
+   "me": [
+    {
+     "es": "¡Qué fuerte te estás poniendo!",
+     "en": "You're getting so strong!",
+     "tone": [
+      "j"
+     ]
+    },
+    {
+     "es": "Buen trabajo, sigue así.",
+     "en": "Good job, keep it up.",
+     "tone": [
+      "w"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡He subido de nivel!",
+     "en": "I leveled up!"
+    },
+    {
+     "es": "¡Ahora pego más fuerte!",
+     "en": "Now I hit harder!"
+    },
+    {
+     "es": "¡Gracias por entrenarme!",
+     "en": "Thanks for training me!"
+    }
+   ]
+  },
+  "faint": {
+   "me": [
+    {
+     "es": "¡No! Aguanta… te recupero enseguida.",
+     "en": "No! Hang in there… I'll get you back soon.",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "Perdona, me pasé de valiente.",
+     "en": "Sorry, I got too brave.",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "Auch… me han dado fuerte.",
+     "en": "Ouch… they hit me hard."
+    },
+    {
+     "es": "No me sueltes…",
+     "en": "Don't leave me…"
+    }
+   ]
+  },
+  "lowhp": {
+   "me": [
+    {
+     "es": "¡Cuidado, retírate un poco!",
+     "en": "Careful, fall back a bit!",
+     "tone": [
+      "w"
+     ]
+    },
+    {
+     "es": "¡Aguanta, voy a por ellos!",
+     "en": "Hold on, I'll get them!",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡Me están dando duro!",
+     "en": "They're hitting me hard!"
+    },
+    {
+     "es": "Me queda poca vida…",
+     "en": "I'm low on health…"
+    }
+   ]
+  },
+  "kill": {
+   "me": [
+    {
+     "es": "¡Bien hecho!",
+     "en": "Well done!",
+     "tone": [
+      "d"
+     ]
+    },
+    {
+     "es": "Esa fue buena.",
+     "en": "That was a good one.",
+     "tone": [
+      "j"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡Otro menos!",
+     "en": "One less!"
+    },
+    {
+     "es": "¡Fácil!",
+     "en": "Easy!"
+    },
+    {
+     "es": "¿Viste eso?",
+     "en": "Did you see that?"
+    }
+   ]
+  },
+  "hurt": {
+   "me": [
+    {
+     "es": "¡Eh! ¡Con mi compañero no os metáis!",
+     "en": "Hey! Leave my partner alone!",
+     "tone": [
+      "d"
+     ]
+    }
+   ],
+   "pet": [
+    {
+     "es": "¡Eso dolió!",
+     "en": "That hurt!"
+    }
+   ]
+  },
+  "chat": [
+   {
+    "me": {
+     "es": "¿Todo bien por ahí?",
+     "en": "All good over there?",
+     "tone": [
+      "w"
+     ]
+    },
+    "pet": {
+     "es": "Todo bien, jefe.",
+     "en": "All good, boss."
+    }
+   },
+   {
+    "me": {
+     "es": "¿Tienes hambre?",
+     "en": "Are you hungry?",
+     "tone": [
+      "j"
+     ]
+    },
+    "pet": {
+     "es": "¡Siempre!",
+     "en": "Always!"
+    }
+   },
+   {
+    "me": {
+     "es": "¿Qué opinas de este sitio?",
+     "en": "What do you think of this place?",
+     "tone": [
+      "w"
+     ]
+    },
+    "pet": {
+     "es": "Huele a pelea. Me gusta.",
+     "en": "Smells like a fight. I like it."
+    }
+   },
+   {
+    "me": {
+     "es": "Eres el mejor compañero.",
+     "en": "You're the best partner.",
+     "tone": [
+      "j"
+     ]
+    },
+    "pet": {
+     "es": "¡Y tú el mejor entrenador!",
+     "en": "And you're the best trainer!"
+    }
+   },
+   {
+    "me": {
+     "es": "¿Listo para lo que venga?",
+     "en": "Ready for whatever comes?",
+     "tone": [
+      "d"
+     ]
+    },
+    "pet": {
+     "es": "¡Siempre listo!",
+     "en": "Always ready!"
+    }
+   },
+   {
+    "me": {
+     "es": "No te alejes mucho.",
+     "en": "Don't wander off.",
+     "tone": [
+      "w"
+     ]
+    },
+    "pet": {
+     "es": "Voy pegado a ti.",
+     "en": "I'm right behind you."
+    }
+   },
+   {
+    "me": {
+     "es": "¿Cansado?",
+     "en": "Tired?",
+     "tone": [
+      "j"
+     ]
+    },
+    "pet": {
+     "es": "Solo si tú lo estás.",
+     "en": "Only if you are."
+    }
+   },
+   {
+    "me": {
+     "es": "Un día seremos leyendas.",
+     "en": "One day we'll be legends.",
+     "tone": [
+      "d"
+     ]
+    },
+    "pet": {
+     "es": "¡Con estadísticas compartidas!",
+     "en": "With shared stats!"
+    }
+   }
+  ]
  }
 }

@@ -11,6 +11,43 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Compañeros: ajustes y diálogos (v0.10.3)",
+        "en": "Companions: tweaks and dialogue (v0.10.3)"
+      },
+      "items": [
+        {
+          "es": "Arreglado: al recoger un objeto del suelo ahora aparece en la mochila (conservaba la posición del suelo y quedaba fuera del cuadro).",
+          "en": "Fixed: an item picked up from the ground now shows in the bag (it kept its ground position and ended outside the dialog)."
+        },
+        {
+          "es": "Al recoger una bola se llama «Slime Ball», «Giant Ant Ball»... según la especie.",
+          "en": "A picked-up ball is named «Slime Ball», «Giant Ant Ball»... by species."
+        },
+        {
+          "es": "Las bolas de la mochila son un 15 % más grandes, con el sprite justo en el centro y un color propio por especie (el complementario al del sprite, para que contraste).",
+          "en": "Bag balls are 15 % bigger, with the sprite exactly centred and a colour per species (the complement of the sprite's colour, for contrast)."
+        },
+        {
+          "es": "El nombre del compañero solo se ve al pasar el ratón. Quitada la línea «Uso» del tooltip. No se puede atacar al propio compañero.",
+          "en": "The companion's name only shows on hover. Removed the «Use» line from the tooltip. You can no longer attack your own companion."
+        },
+        {
+          "es": "Los monstruos también se fijan en el compañero (el más cercano entre tú y él) y el compañero hace que se vuelvan contra él. Si cae, pierde el 25 % de la experiencia de su nivel y quizá un nivel, y vuelve a la bola.",
+          "en": "Monsters now also target the companion (nearest of you and it), and the companion draws their aggro. If it falls it loses 25 % of its level's experience and maybe a level, and returns to its ball."
+        },
+        {
+          "es": "Morir tiene penalización: pierdes el 25 % de la experiencia de tu nivel y, si no te alcanza, bajas de nivel (con sus puntos sin repartir). Sin penalización en zonas de lucha.",
+          "en": "Dying has a penalty: you lose 25 % of your level's experience and, if that is not enough, drop a level (and its unspent points). No penalty in fight zones."
+        },
+        {
+          "es": "Diálogos entre el personaje y su mascota: al invocarla, subir de nivel, caer, poca vida, matar y charla ocasional; la mascota habla con el sonido de su especie.",
+          "en": "Character–pet dialogue: on summon, level up, faint, low health, kills and occasional chat; the pet speaks with its species' sound."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Interfaces sin solaparse (v0.10.2)",
         "en": "Overlapping interfaces fixed (v0.10.2)"
       },
@@ -501,8 +538,8 @@
         "en": "Hunter"
       },
       "text": {
-        "es": "Comprueba que arriba a la izquierda se lee «v0.10.2 Compañeros» junto a los fps.",
-        "en": "Check that the top left reads «v0.10.2 Compañeros» next to the fps."
+        "es": "Comprueba que arriba a la izquierda se lee «v0.10.3 Compañeros» junto a los fps.",
+        "en": "Check that the top left reads «v0.10.3 Compañeros» next to the fps."
       }
     },
     {
@@ -525,6 +562,72 @@
       "text": {
         "es": "Habla con un tendero con el ratón encima de él (se ve su nombre): su frase no debe pisar el nombre ni la frase del personaje.",
         "en": "Talk to a shopkeeper with the mouse over them (name shown): their line must not overlap the name or the character's line."
+      }
+    },
+    {
+      "id": "hunt2-0",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Tira una bola y recógela: debe aparecer en la mochila, llamarse «<Especie> Ball» y conservar nivel y color.",
+        "en": "Drop a ball and pick it up: it must show in the bag, be named «<Species> Ball» and keep its level and colour."
+      }
+    },
+    {
+      "id": "hunt2-1",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Mochila: cada bola tiene un color distinto que contrasta con su sprite, algo más grande, y el sprite está centrado.",
+        "en": "Bag: each ball has a different colour contrasting with its sprite, slightly bigger, sprite centred."
+      }
+    },
+    {
+      "id": "hunt2-2",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "El nombre del compañero solo aparece al pasar el ratón por encima.",
+        "en": "The companion's name only appears on hover."
+      }
+    },
+    {
+      "id": "hunt2-3",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Los monstruos atacan también al compañero. Déjalo caer: pierde experiencia/nivel (aviso rojo) y vuelve a la bola. No puedes atacarlo con el ratón.",
+        "en": "Monsters attack the companion too. Let it fall: it loses experience/level (red notice) and returns to its ball. You cannot attack it with the mouse."
+      }
+    },
+    {
+      "id": "hunt2-4",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Muere con tu personaje (fuera de zona de lucha): pierdes experiencia y, si tenías poca en ese nivel, bajas de nivel.",
+        "en": "Die with your character (outside fight zones): you lose experience and, if you had little in that level, drop a level."
+      }
+    },
+    {
+      "id": "hunt2-5",
+      "group": {
+        "es": "Cazador",
+        "en": "Hunter"
+      },
+      "text": {
+        "es": "Al invocar, subir de nivel o pelear, el personaje y la mascota se hablan (burbujas); de vez en cuando charlan sin motivo.",
+        "en": "On summon, level up or fighting, the character and pet talk (bubbles); now and then they chat for no reason."
       }
     }
   ],

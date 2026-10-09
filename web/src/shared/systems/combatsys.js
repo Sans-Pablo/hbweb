@@ -95,6 +95,7 @@ export function damagePlayer(w, p, dmg, from) {
     w.setAct(p, ACT.DYING, PLAYER.dyingMs);
     w.grid.release(p.x, p.y, p.id);
     w.emit({ t: "death", id: p.id, by: from.id });
+    deathPenalty(w, p);
     return;
   }
   if (!w.busy(p) || p.act === ACT.DAMAGE) {
@@ -173,4 +174,16 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
     w.setAct(n, ACT.DAMAGE, n.dur.damage);
     n.busyUntil = w.time + n.dur.damage;
   }
+}
+
+// Penalización por morir (invento del port para dificultar): pierdes el 25 % de la experiencia que cuesta tu nivel y,
+// si no te alcanza, bajas de nivel (con sus puntos sin repartir). Sin penalización en zonas de lucha.
+export function deathPenalty(w, p) {
+  if (w.fightZone) return;
+  const loss = Math.floor((R.expForLevel(p.level + 1) - R.expForLevel(p.level)) * 0.25);
+  const before = p.level;
+  p.exp = Math.max(R.expForLevel(1), p.exp - loss);
+  while (p.level > 1 && p.exp < R.expForLevel(p.level)) { p.level--; p.pool = Math.max(0, p.pool - R.LEVELUP_POINTS); }
+  w.recalc(p);
+  w.emit({ t: "penalty", id: p.id, loss, level: p.level, lost: before - p.level });
 }

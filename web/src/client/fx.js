@@ -64,7 +64,7 @@ export class Fx {
         break;
       }
       case "pickup":
-        if (mine) this.text(ev.id, ev.item === 90 ? "+" + ev.count + " oro" : "+" + (ev.count > 1 ? ev.count + " " : "") + itemName(ev.item, ev.attr), "#f0d080");
+        if (mine) this.text(ev.id, ev.item === 90 ? "+" + ev.count + " oro" : "+" + (ev.count > 1 ? ev.count + " " : "") + itemName(ev.item, ev.attr, ev.comp), "#f0d080");
         break;
       case "use": if (mine && ev.amount) this.text(ev.id, "+" + ev.amount + { hp: " HP", mp: " MP", sp: " SP", food: " comida" }[ev.stat], { hp: "#7fe07f", mp: "#7fb2ff", sp: "#9fe07f", food: "#e0c07f" }[ev.stat] || "#fff"); break;
     }

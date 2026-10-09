@@ -202,7 +202,7 @@ function resolve(w, p, id, sp, x, y, cost) {
       groundPop(w, x, y);
       Inv.addToBag(p, w.data, it);
       w.recalc(p);
-      w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0 });
+      w.emit({ t: "pickup", id: p.id, item: it.id, count: it.count, x: p.x, y: p.y, attr: it.attr || 0, ...(it.comp ? { comp: { sp: it.comp.sp, lvl: it.comp.lvl } } : {}) });
       break;
     }
     case 17:                                                           // veneno (1) / curar (0)

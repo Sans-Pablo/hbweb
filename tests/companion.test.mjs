@@ -6,6 +6,7 @@ import { GameData } from "../web/src/shared/data.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { killNpc, followersOf } from "../web/src/shared/systems/npcsys.js";
 import * as C from "../web/src/shared/systems/companion.js";
+import { damagePlayer } from "../web/src/shared/systems/combatsys.js";
 import { saveOf } from "../web/src/shared/systems/player.js";
 const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
 const npcDb = J("npc.json");
@@ -60,4 +61,29 @@ assert.deepEqual(sv.bag.find(i => i.comp).comp, ball.comp); assert.equal(sv.hunt
 // tirar la bola guarda al compañero
 w.command(id, { t: "drop", uid: ball.uid, count: 0 });
 assert.equal(followersOf(w, p).filter(e => e.comp).length, 0);
+
+// aggro: un monstruo cercano al compañero (y lejos del jugador) lo ataca; al caer, el compañero pierde experiencia/nivel
+{
+  const ball2 = p.bag.find(i => i.comp) || ball; ball2.comp.lvl = 5; ball2.comp.exp = 0; ball2.comp.on = false;
+  p.bag.includes(ball2) || p.bag.push(ball2);
+  w.command(id, { t: "use", uid: ball2.uid });
+  const pet = followersOf(w, p).find(e => e.comp); assert.ok(pet);
+  const orc = spawnFrom(w, { name: "Orc", rect: [pet.x + 1, pet.y, pet.x + 1, pet.y], alive: 0, max: 0, respawn: false });
+  p.x = p.fx = Math.min(58, pet.x + 25); w.grid.occupy(p.x, p.y, p.id);
+  for (let i = 0; i < 40 && orc.target !== pet.id; i++) w.tick(100);
+  assert.equal(orc.target, pet.id, "el monstruo se fija en el compañero");
+  pet.hp = 1; orc.dmgBoost = 1;
+  let lost = null; w.events.length = 0;
+  for (let i = 0; i < 400 && !lost; i++) { w.tick(100); lost = w.events.find(e => e.t === "companion-lost"); }
+  assert.ok(lost, "el compañero cae y se penaliza"); assert.ok(lost.lvl <= 5);
+  assert.ok(!ball2.comp.on, "vuelve a la bola");
+}
+// muerte del jugador: pierde experiencia y, si no alcanza, un nivel
+{
+  const before = { lvl: p.level, exp: p.exp };
+  p.exp = p.prevExp + 1; w.recalc(p);
+  const L = p.level, orc = spawnFrom(w, { name: "Orc", rect: [p.x + 1, p.y, p.x + 1, p.y], alive: 0, max: 0, respawn: false });
+  damagePlayer(w, p, 10 ** 6, orc);
+  assert.ok(p.dead && p.level === L - 1, "baja un nivel");
+}
 console.log("OK");

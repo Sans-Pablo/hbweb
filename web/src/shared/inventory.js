@@ -28,6 +28,7 @@ export function addToBag(p, data, inst) {
     if (same) { same.count += inst.count; return true; }
   }
   if (p.bag.length >= MAX_ITEMS) return false;
+  delete inst.x; delete inst.y;                       // la posición del suelo no es la de la mochila (si no, el objeto recogido quedaba fuera del cuadro)
   p.bag.push(inst);
   return true;
 }

@@ -6,4 +6,8 @@ Invento del port (el original no los tiene). Código: `shared/systems/companion.
 - **Stats compartidas**: daño = `avgHit(dueño) × share`, `share = min(0,5, (0,15 + 0,01·nv) × (0,85 + 0,03·rango))`; vida = `maxHp × min(0,8, 0,3 + 0,01·nv)`. Se refresca cada decisión (`refreshCompanion`).
 - **Experiencia**: 25 % de la del dueño en cada muerte propia; 50 % de `exp/3` del monstruo en las suyas. Curva `30·nv^1,7`. Tope: nivel del dueño (máx. 60).
 - Cliente: `compicon.js` (sprite pequeño sobre la bola), `hud.describeBall` (tooltip), eventos `ball`, `companion`, `companion-lvl`.
-- Pendiente: que los monstruos puedan atacar al compañero; habilidades por especie; compañero en multijugador (snapshot).
+- **Aggro**: los monstruos eligen el más cercano entre jugador y compañero (`npcThink`); el compañero hiere y atrae al monstruo (`followerAttack`). `companionStruck`: vida y defensa del compañero; al caer, `penalize` (25 % de `need(lvl)`, baja de nivel si no alcanza) y vuelve a la bola. Los demás seguidores (hechizo) siguen sin ser objetivo.
+- **Muerte del jugador**: `combatsys.deathPenalty` (25 % de la exp. del nivel; baja nivel y puntos; no en zona de lucha).
+- **Voz**: `voice.json` sección `companion` (generada por `tools/mkvoice_companion.py`); `voice.js talkPet/onPetEvent`.
+- **Bola**: color por especie = complementario del sprite (`compicon.drawBall`), 15 % más grande; al recogerla conserva `comp` (evento `pickup.comp`); `addToBag` borra la x,y del suelo.
+- Pendiente: habilidades por especie; compañero en multijugador (snapshot).

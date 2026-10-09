@@ -1,4 +1,4 @@
-import { drawMini } from "./compicon.js";
+import { drawBall } from "./compicon.js";
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
 import { getLang, setLang } from "./i18n.js";
@@ -150,8 +150,8 @@ export function registerDialogs(gui, api) {
         const it = me.bag.find(i => i.uid === uid), d = it && itemDef(it.id);
         if (!d || this.equipped(me, uid) || (g.item && g.item.uid === uid)) continue;
         const [x, y] = this.pos(it);
-        g.putGame(packKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
-        if (it.comp) { drawMini(g, it, x, y, g.spr.frame(packKey(d), d.spriteFrame)); if (it.comp.on) g.text(x + 2, y + 10, "★", "#ffd34d", { shadow: true, size: 11 }); }
+        if (it.comp) drawBall(g, it, d, packKey(d), x, y, api.disabled?.(uid) ? 0.5 : 1);
+        else g.putGame(packKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
         if (d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
@@ -175,7 +175,7 @@ export function registerDialogs(gui, api) {
       if (api.disabled?.(h.it.uid)) return true;                     // esperando una operación de tienda (m_bIsItemDisabled)
       this.order = this.order.filter(u => u !== h.it.uid); this.order.push(h.it.uid);
       const fr = g.spr.frame(packKey(h.d), h.d.spriteFrame);
-      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => gg.putGame(packKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
+      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => h.it.comp ? drawBall(gg, h.it, h.d, packKey(h.d), mx - (lx - h.x), my - (ly - h.y), 0.9) : gg.putGame(packKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
       return true;
     },
     dbl(g, lx, ly, me) {

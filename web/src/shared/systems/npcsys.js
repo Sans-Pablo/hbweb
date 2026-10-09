@@ -135,7 +135,7 @@ function followerAttack(w, n, t) {
       return killNpc(w, t, null);
     }
     const m = w.ents.get(n.master);
-    if (m && !t.target) t.target = m.id;
+    if (n.comp ? (!t.target || R.dice(w.rng, 1, 3) === 1) : (m && !t.target)) t.target = n.comp ? n.id : m.id;   // el monstruo herido por el compañero se vuelve contra él
     if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
   });
 }
@@ -147,9 +147,13 @@ export function npcThink(w, n) {
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   let t = n.target ? w.ents.get(n.target) : null;
   if (t && (t.dead || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
-  if (!t) {
-    for (const e of w.ents.values())
-      if (e.kind === "player" && !e.dead && !sget(w, e, "invis") && dist(n, e) <= n.cfg.searchRange) { t = e; n.target = e.id; break; }
+  if (!t) {                                                                    // el más cercano entre jugadores y compañeros (los demás seguidores no atraen)
+    let bd = 1e9;
+    for (const e of w.ents.values()) {
+      if (e.dead || !(e.kind === "player" ? !sget(w, e, "invis") : e.comp)) continue;
+      const d = dist(n, e);
+      if (d <= n.cfg.searchRange && d < bd) { t = e; bd = d; n.target = e.id; }
+    }
   }
   if (t) {
     if (dist(n, t) <= n.cfg.attackRange) return npcAttack(w, n, t);
@@ -172,6 +176,7 @@ function npcAttack(w, n, t) {
   w.emit({ t: "attack", id: n.id, target: t.id });
   w.after(n.dur.attack * 0.5, () => {
     if (w.ents.get(t.id) !== t || n.dead || t.dead || dist(n, t) > n.cfg.attackRange) { w.emit({ t: "miss", id: t.id, from: n.id }); return; }
+    if (t.comp) return companionStruck(w, n, t);
     npcStrikes(w, n, t);
   });
 }
@@ -213,4 +218,22 @@ export function toggleCompanion(w, p, inst) {
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
   w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl });
   return true;
+}
+
+// Un monstruo golpea a un compañero: vida y defensa del compañero; al caer pierde experiencia y quizá un nivel (companion.penalize)
+function companionStruck(w, n, t) {
+  const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
+  if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return miss();
+  const dmg = R.npcMelee(w.rng, n).damage;
+  t.hp -= dmg;
+  w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
+  if (t.hp > 0) {
+    if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
+    return;
+  }
+  const m = w.ents.get(t.master), inst = m && Inv.instOf(m, t.ball);
+  if (inst) { inst.comp.on = false; Comp.penalize(w, m, inst); w.emit({ t: "companion", id: m.id, sp: inst.comp.sp, on: false, fainted: true }); }
+  t.noDrop = true; t.noDieRemainExp = 0;
+  for (const e of w.ents.values()) if (e.target === t.id) e.target = null;
+  killNpc(w, t, null);
 }

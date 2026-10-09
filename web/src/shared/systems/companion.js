@@ -55,6 +55,15 @@ export function onKill(w, p, n, xp) {
   w.emit({ t: "ball", id: p.id, sp, uid: ball.uid });
 }
 
+// Muerte del compañero: pierde el 25 % de la experiencia de su nivel y, si no le alcanza, un nivel
+export function penalize(w, p, inst) {
+  const c = inst.comp, loss = Math.floor(need(c.lvl) * 0.25);
+  c.exp -= loss;
+  while (c.exp < 0 && c.lvl > 1) { c.lvl--; c.exp += need(c.lvl); }
+  c.exp = Math.max(0, c.exp);
+  w.emit({ t: "companion-lost", id: p.id, sp: c.sp, lvl: c.lvl, loss });
+}
+
 export function addExp(w, p, inst, xp) {
   const c = inst.comp, cap = Math.min(MAX_COMP_LEVEL, p.level);
   if (xp <= 0 || c.lvl >= cap) return;

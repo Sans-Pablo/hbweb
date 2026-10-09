@@ -9,15 +9,52 @@ export function miniOf(sp, frames) {
   const e = { kind: "npc", type: cfg.type, cfg, dir: 5, act: ACT.STOP, actStart: 0, actDur: 0, phase: 0, dur: { stopFrame: 200 } };
   return mobSprite(e, 0, frames);
 }
-// dibuja el sprite pequeño; (x, y) = origen del fotograma de la bola, fr = su fotograma [sx,sy,w,h,px,py]
-export function drawMini(g, it, x, y, fr, size = 24) {
-  if (!it.comp || !g.spr) return;
-  let m = cache.get(it.comp.sp);
-  if (!m) { m = miniOf(it.comp.sp, k => g.spr.frames(k)); cache.set(it.comp.sp, m); }
-  if (!m) return;
-  const f = g.spr.frame(m.key, m.f); if (!f) { g.spr.want?.(m.key); return; }
-  if (!g.spr.ready(m.key)) { g.spr.has(m.key) && g.spr.img[m.key]; return; }
-  const [sx, sy, w, h, px, py] = f, k = Math.min(1, size / Math.max(w, h));
-  const cx = x + (fr ? fr[4] + fr[2] / 2 : 0), cy = y + (fr ? fr[5] + fr[3] / 2 : 0);
-  g.ctx.drawImage(g.spr.img[m.key], sx, sy, w, h, cx - w * k / 2, cy - h * k / 2, w * k, h * k);
+// Color de la bola de cada especie: el complementario del color medio de su sprite (contraste), o uno fijo si el sprite es gris/blanco/negro
+const tints = new Map();
+function tintOf(g, sp, m) {
+  if (tints.has(sp)) return tints.get(sp);
+  const f = g.spr.frame(m.key, m.f); if (!f || !g.spr.ready(m.key)) return null;
+  const [sx, sy, w, h] = f, c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(g.spr.img[m.key], sx, sy, w, h, 0, 0, w, h);
+  let r = 0, gg = 0, b = 0, n = 0;
+  try { const d = x.getImageData(0, 0, w, h).data; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++; } } catch { return null; }
+  if (!n) return null;
+  r /= n; gg /= n; b /= n;
+  const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), l = (mx + mn) / 510, s = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+  let hue = 0;
+  if (mx !== mn) { const dlt = mx - mn; hue = mx === r ? ((gg - b) / dlt) % 6 : mx === gg ? (b - r) / dlt + 2 : (r - gg) / dlt + 4; hue = (hue * 60 + 360) % 360; }
+  const col = s < 0.18 ? (l < 0.5 ? "#ffd23a" : "#e0302a") : "hsl(" + Math.round((hue + 180) % 360) + ",95%,55%)";
+  tints.set(sp, col); return col;
+}
+const ballCache = new Map();
+// bola de la mochila: un 15 % más grande, con el color de su especie y el sprite pequeño justo en el centro
+export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
+  const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;
+  const [sx, sy, w, h, px, py] = fr, sp = it.comp.sp;
+  let m = cache.get(sp); if (!m) { m = miniOf(sp, k => g.spr.frames(k)); cache.set(sp, m); }
+  const tint = m && tintOf(g, sp, m);
+  let src = g.spr.img[key], ox = sx, oy = sy;
+  if (tint) {
+    const ck = key + ":" + d.spriteFrame + ":" + sp;
+    let c = ballCache.get(ck);
+    if (!c) {
+      c = document.createElement("canvas"); c.width = w; c.height = h;
+      const x2 = c.getContext("2d"); x2.drawImage(g.spr.img[key], sx, sy, w, h, 0, 0, w, h);
+      x2.globalCompositeOperation = "source-atop"; x2.globalAlpha = 0.6; x2.fillStyle = tint; x2.fillRect(0, 0, w, h);
+      ballCache.set(ck, c);
+    }
+    src = c; ox = 0; oy = 0;
+  }
+  const cx = x + px + w / 2, cy = y + py + h / 2;
+  if (alpha !== 1) g.ctx.globalAlpha = alpha;
+  g.ctx.drawImage(src, ox, oy, w, h, cx - w * scale / 2, cy - h * scale / 2, w * scale, h * scale);
+  if (alpha !== 1) g.ctx.globalAlpha = 1;
+  if (m) {
+    const f = g.spr.frame(m.key, m.f);
+    if (!f) return;
+    if (!g.spr.ready(m.key)) { g.spr.img[m.key]; return; }
+    const [mx, my, mw, mh] = f, k = Math.min(1, 24 / Math.max(mw, mh));
+    g.ctx.drawImage(g.spr.img[m.key], mx, my, mw, mh, cx - mw * k / 2, cy - mh * k / 2, mw * k, mh * k);
+  }
+  if (it.comp.on) g.text(x + px, y + py + 10, "★", "#ffd34d", { shadow: true, size: 11 });
 }
