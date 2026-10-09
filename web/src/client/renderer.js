@@ -380,13 +380,15 @@ export class Renderer {
       ctx.save();
       const near = Math.max(Math.abs(gate.x - s.me.x), Math.abs(gate.y - s.me.y)) <= 1;
       const closed = gate.locked && (s.world.map.remainingEnemies ?? 1) > 0;
-      // siempre el sprite de la entrada de dungeon del original (tools/make_crypt_assets.py: ladrillo de middled1n); cerrada = apagada
-      ctx.globalAlpha = closed ? 0.55 : 1;
-      this.spr.put(ctx, "cryptdoor", 0, x, y + 16);
+      // salida = puerta de la entrada de dungeon del original, pegada a la pared izquierda; bajada = el hueco con escalera de la granja
+      // (tools/make_crypt_assets.py); cerrada = apagada
+      const pit = gate.target === "down", key = pit ? "cryptpit" : "cryptdoor", oy = pit ? 0 : 16;
+      ctx.globalAlpha = closed ? 0.6 : 1;
+      this.spr.put(ctx, key, 0, x, y + oy);
       ctx.globalAlpha = 1;
-      if (closed) this.spr.tinted(ctx, "cryptdoor", 0, x, y + 16, "#000000", 0.35);
-      else if (near) this.spr.tinted(ctx, "cryptdoor", 0, x, y + 16, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
-      this.label(x, y - 72, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
+      else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
+      this.label(x, y - (pit ? 40 : 72), gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }

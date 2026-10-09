@@ -11,7 +11,7 @@ export const BOSS_EVERY = 5;
 export const DUNGEON_ASSETS = Object.freeze([...Array.from({ length: 10 }, (_, i) => "t" + (300 + i)), "t211", ...Array.from({ length: 40 }, (_, i) => "ske" + i)]);
 // Escenario de cada rey (cada tramo de 5 niveles): carmesí = fuego (dglv4, con lava), umbrío = Tower of Hell (Toh1-3), glacial = hielo (icebound)
 // y dorado = laberinto (maze). Los mapas vienen de tools/convert_theme_maps.py y entran recortados en la paleta.
-export const STAGE_THEMES = Object.freeze(["fuego", "sombra", "hielo", "oro"]);
+export const STAGE_THEMES = Object.freeze(["cueva", "cueva", "cueva", "cueva"]);      // v0.18.2: solo las cuevas de middled1n/x; el resto de temas quedó desactivado (se veían mal)
 export const stageTheme = level => STAGE_THEMES[Math.min(3, Math.floor((level - 1) / BOSS_EVERY))];
 export const isBossLevel = level => level % BOSS_EVERY === 0;
 export const BOSS_COLORS = Object.freeze({ 1: "#ff3b2e", 2: "#b052ff", 3: "#22d6c4", 4: "#ffc933" });
@@ -176,7 +176,10 @@ export function generateLevel(seed, level) {
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (roomy(P, x, y, 1)) cells.push([x, y]);
   const open3 = cells.filter(([x, y]) => roomy(P, x, y, 3)), spots = open3.length > 30 ? open3 : cells;      // la puerta es alta: lejos de las paredes
   // inicio: la esquina más cercana al origen (jefes: la parte baja); meta: lo más lejos posible por el camino
-  let sp = boss ? spots.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), spots[0]) : spots.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), spots[0]);
+  // la puerta de salida va contra una pared a su izquierda (oeste), con espacio libre al este
+  const wallW = cells.filter(([x, y]) => !P.at(x - 1, y) && !P.at(x - 1, y - 1) && !P.at(x - 1, y + 1) && roomy(P, x + 2, y, 1) && P.at(x + 1, y) && P.at(x, y - 1) && P.at(x, y + 1));
+  const startSet = wallW.length > 10 ? wallW : spots;
+  let sp = boss ? startSet.reduce((a, c) => (c[1] - c[0] * .01 > a[1] - a[0] * .01 ? c : a), startSet[0]) : startSet.reduce((a, c) => (c[0] + c[1] < a[0] + a[1] ? c : a), startSet[0]);
   let dist = bfs(P, sp[0], sp[1]);
   for (let i = 0; i < P.open.length; i++) if (P.open[i] && dist[i] < 0) P.open[i] = 0;
   let fin = sp, far = -1;
@@ -219,9 +222,9 @@ export function generateLevel(seed, level) {
   const free = cells.filter(([x, y]) => dist[y * w + x] >= dmin && roomy(P, x, y, 1) && !decor.has(y * w + x) && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3);
   let want = boss ? 6 : Math.min(26, 8 + level), id = 1;
   const taken = [];
-  for (let tries = 0; want > 0 && tries < 600 && free.length; tries++) {
+  for (let tries = 0; want > 0 && tries < 1200 && free.length; tries++) {
     const [x, y] = free[Math.floor(rng() * free.length)];
-    if (taken.some(t => Math.abs(t[0] - x) + Math.abs(t[1] - y) < (boss ? 5 : 9))) continue;
+    if (taken.some(t => Math.abs(t[0] - x) + Math.abs(t[1] - y) < (boss ? 5 : tries < 600 ? 9 : 5))) continue;       // si no caben, grupos más juntos
     const max = Math.min(want, 2 + Math.floor(rng() * 2));
     taken.push([x, y]); want -= max;
     spawns.push({ id: id++, name: "Skeleton", max, rect: [x - 2, y - 2, x + 2, y + 2], respawn: false, scale, specialProb: Math.min(60, 4 + 3 * level), specialKind: 1 });

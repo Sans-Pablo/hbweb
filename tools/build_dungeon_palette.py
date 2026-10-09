@@ -8,7 +8,9 @@ Sin agua ni puentes (hojas 305-309) en los bordes. Para sellar el corte usa:
 import json, struct, os, collections
 HERE = os.path.dirname(os.path.abspath(__file__)); DATA = os.path.join(HERE, "..", "web", "data")
 # (mapa, tema): las cámaras de cada rey usan el escenario de otro dungeon del original (ver convert_theme_maps.py)
-SRC = [("middled1n", "cueva"), ("middled1x", "cueva"), ("dglv4", "fuego"), ("toh1", "sombra"), ("toh2", "sombra"), ("toh3", "sombra"), ("icebound", "hielo"), ("maze", "oro")]
+SRC = [("middled1n", "cueva"), ("middled1x", "cueva")]
+# Escenarios por rey (probados en v0.18.1 y retirados: se veían mal). Para reactivarlos: añadir aquí ("dglv4","fuego"), ("toh1","sombra"),
+# ("toh2","sombra"), ("toh3","sombra"), ("icebound","hielo"), ("maze","oro") (tools/convert_theme_maps.py) y poner STAGE_THEMES en dungeon.js.
 LIMIT = {"fuego": 5, "oro": 5, "sombra": 2, "hielo": 3}       # recortes por mapa (las hojas con un solo mapa necesitan más variedad)
 THEMES = ["cueva", "fuego", "sombra", "hielo", "oro"]
 edgeT = {t: collections.defaultdict(collections.Counter) for t in THEMES}

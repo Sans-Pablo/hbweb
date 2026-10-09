@@ -95,6 +95,40 @@ def build(mask, name):
     json.dump(ui, open(os.path.join(D, "ui.json"), "w"), separators=(",", ":"))
 
 
+# ---------------------------------------------------------------- hueco de bajada (la entrada de la granja)
+# La entrada original de la cripta en Aresfarm (arefarm, casillas 78-86 x 68-73 de la hoja t301): escalera de ladrillo y losa de piedra. Se compone con
+# el mapa, se quita la hierba (pixeles verdes) y se difumina el borde. La bajada de cada nivel la dibuja con este sprite (renderer.drawPortals).
+import struct
+from PIL import ImageFilter
+sp301 = json.load(open(os.path.join(D, "sprites.json")))["t301"]
+sh301 = Image.open(os.path.join(D, "sprites", sp301["png"])).convert("RGBA")
+fm = json.load(open(os.path.join(D, "maps", "arefarm.json"))); fb = open(os.path.join(D, "maps", "arefarm.bin"), "rb").read()
+X0, Y0, X1, Y1 = 76, 68, 88, 75
+pit = Image.new("RGBA", ((X1 - X0) * 32 + 64, (Y1 - Y0) * 32 + 64), (0, 0, 0, 0))
+for yy in range(Y0, Y1):
+    for xx in range(X0, X1):
+        s_, f_, o_, of_, fl_ = struct.unpack_from("<hhhhB", fb, (yy * fm["w"] + xx) * 10)
+        if s_ != 301 or not (xx >= 78): continue
+        sx, sy, w, h, px, py = sp301["frames"][f_]
+        pit.alpha_composite(sh301.crop((sx, sy, sx + w, sy + h)), ((xx - X0) * 32 + px + 32, (yy - Y0) * 32 + py + 32))
+pa = pit.load(); PW, PH = pit.size
+mk = Image.new("L", pit.size, 0); mp = mk.load()
+for yy in range(PH):
+    for xx in range(PW):
+        r_, g_, b_, a_ = pa[xx, yy]
+        mp[xx, yy] = 255 if a_ and not (g_ > r_ + 6 and g_ > b_ + 8) else 0              # piedra, ladrillo y sombra; fuera la hierba
+mk = mk.filter(ImageFilter.MedianFilter(5)).filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MinFilter(3))
+mk = mk.filter(ImageFilter.GaussianBlur(1.2))
+pit.putalpha(ImageChops.multiply(pit.getchannel("A"), mk))
+bb = pit.getchannel("A").point(lambda v: 255 if v > 40 else 0).getbbox()
+pit = pit.crop(bb)
+cxp, cyp = 193 - bb[0], 158 - bb[1]                       # centro del hueco en la imagen recortada
+pit.save(os.path.join(D, "equip", "cryptpit.webp"), "WEBP", lossless=True, quality=100, method=6)
+eq = json.load(open(os.path.join(D, "equip.json")))
+eq["cryptpit"] = {"png": "cryptpit.webp", "frames": [[0, 0, pit.width, pit.height, -cxp, -cyp]]}
+json.dump(eq, open(os.path.join(D, "equip.json"), "w"), separators=(",", ":"))
+print("pit", pit.size, bb)
+
 import random
 def ring_arrow(size, scale=6):
     """Recall: flecha circular de retorno (arco casi completo con punta)."""

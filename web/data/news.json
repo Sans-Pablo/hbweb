@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Vuelta a las cuevas y puertas de la cripta (v0.18.2)",
+        "en": "Back to the caves and new crypt doors (v0.18.2)"
+      },
+      "items": [
+        {
+          "es": "Los niveles vuelven a ser solo las cuevas de dungeon (middled1n/x); los escenarios por rey quedan desactivados.",
+          "en": "Levels are back to only the dungeon caves (middled1n/x); the per-king scenery is disabled."
+        },
+        {
+          "es": "La bajada es el hueco con escalera de la entrada de la granja; la salida es la puerta, junto a una pared a su izquierda cuando el mapa lo permite.",
+          "en": "The way down is the stair pit from the farm entrance; the exit is the door, next to a wall on its left when the map allows it."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Escenarios por rey y ajustes (v0.18.1)",
         "en": "Per-king scenery and tweaks (v0.18.1)"
       },
@@ -1987,50 +2004,6 @@
       }
     },
     {
-      "id": "theme-fire",
-      "group": {
-        "es": "Cripta",
-        "en": "Crypt"
-      },
-      "text": {
-        "es": "Niveles 1-5: lava y ladrillo del dungeon 4; la puerta de salida no está contra una pared.",
-        "en": "Levels 1-5: dungeon 4 lava and brick; the exit door is not against a wall."
-      }
-    },
-    {
-      "id": "theme-tower",
-      "group": {
-        "es": "Cripta",
-        "en": "Crypt"
-      },
-      "text": {
-        "es": "Niveles 6-10: escenario de la Tower of Hell.",
-        "en": "Levels 6-10: Tower of Hell scenery."
-      }
-    },
-    {
-      "id": "theme-ice",
-      "group": {
-        "es": "Cripta",
-        "en": "Crypt"
-      },
-      "text": {
-        "es": "Niveles 11-15: nieve y hielo (icebound). Nota: las zonas intransitables se parecen a las transitables; se ve el mapa en el minimapa.",
-        "en": "Levels 11-15: snow and ice (icebound). Note: unwalkable areas look like walkable ones; check the minimap."
-      }
-    },
-    {
-      "id": "theme-maze",
-      "group": {
-        "es": "Cripta",
-        "en": "Crypt"
-      },
-      "text": {
-        "es": "Niveles 16-20: piedra del laberinto (maze).",
-        "en": "Levels 16-20: maze stone."
-      }
-    },
-    {
       "id": "ghost-reward",
       "group": {
         "es": "Fantasmas",
@@ -2039,6 +2012,17 @@
       "text": {
         "es": "Un fantasma da poca experiencia y nada de oro; con uno vivo la bajada sigue cerrada.",
         "en": "A ghost gives little experience and no gold; with one alive the descent stays closed."
+      }
+    },
+    {
+      "id": "crypt-pit",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "La bajada se ve como el hueco con escalera y losa de la entrada de la granja (apagado hasta limpiar el nivel); la salida es la puerta de ladrillo.",
+        "en": "The way down looks like the stair pit and slab of the farm entrance (dimmed until the level is cleared); the exit is the brick door."
       }
     }
   ],

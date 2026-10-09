@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.18.2 · Cuevas y puertas (2026-10-09)
+
+- Revertidos los escenarios por rey (v0.18.1): `STAGE_THEMES` todo «cueva» y paleta solo con middled1n/x (630 KB). El código y `tools/convert_theme_maps.py` quedan por si se reactivan.
+- Bajada = sprite `cryptpit` (hueco con escalera y losa de arefarm, `tools/make_crypt_assets.py`); salida = `cryptdoor` en una casilla con pared al oeste. Reparto de esqueletos más tolerante.
+
 ## 0.18.1 · Escenarios por rey (2026-10-09)
 
 - Cada tramo de 5 niveles usa el escenario de otro dungeon original (`stageTheme`): fuego = dglv4, sombra = Toh1-3, hielo = icebound, oro = maze. `tools/convert_theme_maps.py` convierte los mapas y las hojas; `tools/build_dungeon_palette.py` guarda recortes de 90x90 por mapa y tablas de borde por tema (`themes`).
