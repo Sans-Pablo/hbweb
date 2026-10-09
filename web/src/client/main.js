@@ -280,7 +280,7 @@ async function main() {
       voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmqrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
@@ -309,6 +309,13 @@ async function main() {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
           case "h": e.preventDefault(); ui.key("news"); return;
+          case "q": {                                                       // Ctrl+Q: el compañero ataca el monstruo bajo el cursor
+            e.preventDefault();
+            const he = ctl.hoverEnt;
+            if (he && he.kind === "npc" && !he.master) conn.send({ t: "pettarget", target: he.id });
+            else hud.log("Apunta con el ratón a un monstruo y pulsa Ctrl+Q para que tu compañero lo ataque.");
+            return;
+          }
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
           case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
           case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
@@ -385,7 +392,7 @@ async function main() {
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });

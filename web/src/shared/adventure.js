@@ -5,7 +5,8 @@ import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
 import { DUNGEON_ENTRANCES, FARM_PORTAL, DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
-import { populate } from "./systems/citizens.js";
+import { populate, spawnCitizen } from "./systems/citizens.js";
+import * as Comp from "./systems/companion.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando" };
 
@@ -26,6 +27,8 @@ export class Adventure {
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
+    const fs = this.farm.start;                                     // enfermera del hospital de compañeros junto al inicio de la granja
+    if (fs) spawnCitizen(this.farm, Comp.HOSPITAL.npc, fs[0] + 3, fs[1] + 1, Comp.HOSPITAL.role);
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)

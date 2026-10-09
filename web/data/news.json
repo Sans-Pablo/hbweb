@@ -11,6 +11,39 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Hospital de compañeros y control del summon (v0.12.0)",
+        "en": "Companion hospital and summon control (v0.12.0)"
+      },
+      "items": [
+        {
+          "es": "Nueva enfermera «Gail» (junto al inicio de Aresfarm y en Aresden, 142,52): clic en ella abre el hospital de compañeros. Pestaña «Bolas»: compra bolas de cualquier especie por 1 de oro (solo para pruebas). Pestaña «Cuidados»: cura o revive a tus compañeros.",
+          "en": "New nurse “Gail” (next to the Aresfarm start and in Aresden, 142,52): clicking her opens the companion hospital. “Balls” tab: buy balls of any species for 1 gold (testing only). “Care” tab: heal or revive your companions."
+        },
+        {
+          "es": "Si el compañero cae queda inconsciente y no se puede invocar hasta revivirlo; revivir cuesta mucho (1500 + 400 por nivel, más según la especie). Curar heridas cuesta 2 de oro por punto de vida. La vida del compañero se conserva en la bola y se recupera despacio fuera de combate.",
+          "en": "If the companion falls it is unconscious and cannot be summoned until revived; reviving is expensive (1500 + 400 per level, more by species). Healing wounds costs 2 gold per hit point. Its health is kept in the ball and recovers slowly out of combat."
+        },
+        {
+          "es": "Junto al símbolo de paz/ataque hay uno del compañero (ATQ/PAZ): clic para alternar. Lleva su miniatura, que se vacía de arriba abajo al perder vida, y sobre la barra de vida del personaje hay una barra con su nombre, nivel y vida. En paz solo te sigue; en ataque ataca todo lo que ve.",
+          "en": "Next to the peace/attack symbol there is one for the companion (ATK/PCE): click to toggle. It shows its miniature, which empties top to bottom as it loses health, and above the character's health bar there is a bar with its name, level and health. At peace it only follows you; in attack mode it attacks everything it sees."
+        },
+        {
+          "es": "Ctrl+Q con el ratón sobre un monstruo: el compañero lo ataca (también en paz).",
+          "en": "Ctrl+Q with the mouse over a monster: the companion attacks it (even at peace)."
+        },
+        {
+          "es": "Los compañeros más altos que el personaje se dibujan a la mitad de su altura (un golem es un mini golem).",
+          "en": "Companions taller than the character are drawn at half their height (a golem is a mini golem)."
+        },
+        {
+          "es": "Arreglado: el cuadro de venta mostraba «Green Ball» en vez del nombre real; los manuales de habilidad (Manual) ahora enseñan la habilidad y se gastan.",
+          "en": "Fixed: the sell dialog showed “Green Ball” instead of the real name; skill manuals now teach the skill and are consumed."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Cripta de esqueletos de 20 niveles (v0.11.0)",
         "en": "20-level skeleton crypt (v0.11.0)"
       },
@@ -740,6 +773,72 @@
       "text": {
         "es": "Cada bola nueva trae un nombre aleatorio que se ve al pasar el ratón y en los mensajes.",
         "en": "Each new ball gets a random name shown on hover and in messages."
+      }
+    },
+    {
+      "id": "pet-hospital",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Clic en la enfermera Gail: compra una bola (1 de oro), úsala, y mira el hospital. Con poco oro, revivir/curar avisa de que falta oro.",
+        "en": "Click nurse Gail: buy a ball (1 gold), use it, and look at the hospital. With little gold, reviving/healing says you lack gold."
+      }
+    },
+    {
+      "id": "pet-down",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Deja que el compañero muera: no se puede invocar hasta revivirlo en el hospital (caro).",
+        "en": "Let the companion die: it cannot be summoned until revived at the hospital (expensive)."
+      }
+    },
+    {
+      "id": "pet-hud",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Junto al símbolo de combate sale el del compañero (clic = paz/ataque), con miniatura que se vacía y barra de vida con nombre. En paz no ataca; Ctrl+Q sobre un monstruo lo marca.",
+        "en": "Next to the combat symbol the companion's appears (click = peace/attack), with a draining miniature and a named health bar. At peace it does not attack; Ctrl+Q over a monster marks it."
+      }
+    },
+    {
+      "id": "pet-size",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Invoca un Stone-Golem o un Cyclops: se ve a la mitad de la altura del personaje.",
+        "en": "Summon a Stone-Golem or a Cyclops: it is drawn at half the character's height."
+      }
+    },
+    {
+      "id": "manuals",
+      "group": {
+        "es": "Objetos",
+        "en": "Items"
+      },
+      "text": {
+        "es": "Usa un manual de habilidad (p. ej. ArcheryManual): aprendes la habilidad al 20 % y el manual se gasta; si ya la tienes, no se gasta.",
+        "en": "Use a skill manual (e.g. ArcheryManual): you learn the skill at 20% and the manual is consumed; if you already have it, it is not consumed."
+      }
+    },
+    {
+      "id": "sell-ball",
+      "group": {
+        "es": "Tiendas",
+        "en": "Shops"
+      },
+      "text": {
+        "es": "Vende una bola: el cuadro muestra «Slime Ball» (o su especie), no «Green Ball».",
+        "en": "Sell a ball: the dialog shows “Slime Ball” (or its species), not “Green Ball”."
       }
     }
   ],

@@ -7,6 +7,7 @@ import { itemDef, itemName, itemSet, packKey } from "./names.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
+import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
@@ -54,7 +55,7 @@ export function registerNpcDialogs(gui, api) {
       g.put("gamedialog_1", 5, 0, 0);
       const it = this.ask && bagItem(me, this.ask.uid);
       if (!it) return;
-      const name = itemName(it.id, it.attr), a = this.ask;
+      const name = itemName(it.id, it.attr, it.comp), a = this.ask;
       if (a.kind !== "list" && a.kind !== "deposit") g.text(30, 20, a.target ? name + ": give to " + a.target + "." : " Dropping " + name + ".", INK);
       g.text(30, 35, "Decide the quantity.", INK);
       g.text(40, 52, this.text, WHITE, { bold: true });
@@ -125,7 +126,7 @@ export function registerNpcDialogs(gui, api) {
       } else if (m === 2 || m === 3) {
         const it = bagItem(me, this.uid);
         if (!it) return;
-        g.aligned(0, this.w, 20, this.count + " " + itemName(it.id, it.attr) + " to", INK);
+        g.aligned(0, this.w, 20, this.count + " " + itemName(it.id, it.attr, it.comp) + " to", INK);
         g.aligned(0, this.w, 35, this.who, INK);
         if (m === 3) link(g, lx, ly, 28, 55, "Deposit", 25, 105);
         else {
@@ -172,6 +173,7 @@ export function registerNpcDialogs(gui, api) {
 
   // clic en un NPC de ciudad
   function clickNpc(e, mx, my) {
+    if (e.role === HOSPITAL.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; hospital.tab = 0; hospital.view = 0; gui.open(41); return true; }
     const cfg = MENU[e.type]; if (!cfg) return false;
     trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
     Object.assign(query, { mode: cfg.mode, npcType: e.type, link: cfg.link, shop: cfg.shop || 0, w: cfg.mode === 5 ? 252 : 215 });
@@ -319,7 +321,7 @@ export function registerNpcDialogs(gui, api) {
       g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", this.mode === 1 ? 11 : 10, 0, 0);
       if (!d) return;
       g.putGame(packKey(d), d.spriteFrame, 77, 114);
-      const nm = itemName(it.id, it.attr), title = this.mode === 1 && this.count > 1 ? this.count + " " + nm : nm;
+      const nm = itemName(it.id, it.attr, it.comp), title = this.mode === 1 && this.count > 1 ? this.count + " " + nm : nm;
       const tc = it.attr ? "#00ff32" : INK;
       g.aligned(25, 240, 60, title, tc); g.aligned(26, 241, 60, title, tc);
       g.text(110, 113, "Endurance: " + this.life, INK);
@@ -348,7 +350,7 @@ export function registerNpcDialogs(gui, api) {
       g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", 11, 0, 0);
       trade.sellList = trade.sellList.filter(e => bagItem(me, e.uid));
       trade.sellList.forEach((e, i) => {
-        const it = bagItem(me, e.uid), nm = itemName(it.id, it.attr), s = e.count > 1 ? e.count + " " + nm : nm;
+        const it = bagItem(me, e.uid), nm = itemName(it.id, it.attr, it.comp), s = e.count > 1 ? e.count + " " + nm : nm;
         const over = inside(lx, ly, 25, 250, 55 + i * 15, 55 + 14 + i * 15);
         g.aligned(0, this.w, 55 + i * 15, s, over ? WHITE : it.attr ? "#00ff32" : INK);
       });
@@ -377,7 +379,7 @@ export function registerNpcDialogs(gui, api) {
       const me = api.me(), it = me && bagItem(me, uid), d = it && itemDef(it.id);
       if (!d || trade.busy.has(uid)) return;
       if (trade.sellList.some(e => e.uid === uid)) { api.log("That is already on the list."); return; }
-      if (!(it.life > 0)) { api.log("Item " + itemName(it.id, it.attr) + ": You can't sell an exhausted item."); return; }
+      if (!(it.life > 0)) { api.log("Item " + itemName(it.id, it.attr, it.comp) + ": You can't sell an exhausted item."); return; }
       if (trade.sellList.length >= MAX_SELL_LIST) { api.log("You cannot sell more than 12 items at the same time."); return; }
       const add = count => { trade.sellList.push({ uid, count }); trade.busy.add(uid); };
       if (isStack(d) && it.count > 1) quantity.open({ uid, kind: "list", then: add }, mx, my); else add(1);
@@ -397,7 +399,7 @@ export function registerNpcDialogs(gui, api) {
       let hovered = false, y = 45;
       for (let i = 0; i < BANK_ROWS; i++) {
         const it = list[i + this.view]; if (!it) break;
-        const d = itemDef(it.id), nm = itemName(it.id, it.attr) + (it.count > 1 ? " x" + it.count : "");
+        const d = itemDef(it.id), nm = itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : "");
         if (inside(lx, ly, 30, 210, 110 + i * BANK_ROW_H, 124 + i * BANK_ROW_H + 1)) {
           hovered = true;
           g.aligned(0, 253, 110 + i * BANK_ROW_H, nm, WHITE);
@@ -444,6 +446,48 @@ export function registerNpcDialogs(gui, api) {
   };
   gui.register(bank);
 
+  // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
+  const hospital = {
+    id: 41, x: 150, y: 110, w: 258, h: 339, tab: 0, view: 0,
+    rows(me) {
+      if (this.tab === 1) return Object.keys(SPECIES).map(sp => ({ sp, text: sp.replace(/-/g, " "), price: HOSPITAL.ballPrice }));
+      return me.bag.filter(i => i.comp).map(i => {
+        const c = i.comp, cost = treatCost(me, c), st = c.down ? "Inconsciente" : hpOf(me, c) < maxOf(me, c) ? "Herido" : "Sano";
+        return { uid: i.uid, text: (c.nm || c.sp) + " (" + c.sp.replace(/-/g, " ") + " nv " + c.lvl + ") · " + st, price: cost, down: !!c.down };
+      });
+    },
+    draw(g, me) {
+      const [lx, ly] = rel(g, this), rows = this.rows(me), ROWS = 13;
+      g.put("gamedialog_1", 2, 0, 0);
+      button(g, lx, ly, BTN.right, 0, 1);
+      g.aligned(0, this.w, 22, "Hospital de compañeros", INK, { bold: true });
+      for (const [i, name] of ["Cuidados", "Bolas"].entries()) shadowed(g, 40 + i * 110, 42, name, this.tab === i ? RED : inside(lx, ly, 35 + i * 110, 130 + i * 110, 38, 58) ? WHITE : DARK);
+      g.text(14, 62, this.tab ? "Bolas de prueba (nivel 1)" : "Curar: por punto de vida · Revivir: caro", INK, { size: 10 });
+      g.text(205, 62, "Oro", INK, { size: 10 });
+      if (!rows.length) g.aligned(0, this.w, 120, this.tab ? "" : "No llevas ninguna bola de compañero.", INK);
+      this.view = clamp(this.view, 0, Math.max(0, rows.length - ROWS));
+      for (let i = 0; i < ROWS; i++) {
+        const r = rows[i + this.view]; if (!r) break;
+        const y = 80 + i * 17, over = within(lx, ly, 12, 246, y, y + 15), col = over ? WHITE : r.down ? RED : DARK;
+        g.text(14, y, r.text, col, { size: 11 }); g.text(214, y, String(r.price), col, { size: 11 });
+      }
+      g.text(14, 308, "Un caído no se invoca hasta revivirlo.", INK, { size: 9 });
+    },
+    click(g, lx, ly) {
+      const me = api.me(); if (!me) return true;
+      if (onButton(lx, ly, BTN.right)) { g.close(41); return true; }
+      for (const i of [0, 1]) if (inside(lx, ly, 35 + i * 110, 130 + i * 110, 38, 58)) { this.tab = i; this.view = 0; return true; }
+      const rows = this.rows(me), i = Math.floor((ly - 80) / 17), r = rows[i + this.view];
+      if (r && ly >= 80 && ly < 80 + 13 * 17 && lx > 12 && lx < 246) {
+        if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
+        else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
+      }
+      return true;
+    },
+    wheel(g, d) { this.view -= d; },
+  };
+  gui.register(hospital);
+
   // ------------------------------------------------------------ notificaciones del servidor
   function onEvent(ev, world) {
     const me = api.pid;
@@ -467,9 +511,11 @@ export function registerNpcDialogs(gui, api) {
       case "cantcarry": api.log("You can't carry anymore items."); api.log(" Your bag is full."); break;
       case "sold": gui.close(23); break;
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
+      case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
+      case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
       case "cantsell": {
-        const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr) : nm(ev.item);
+        const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr, it.comp) : nm(ev.item);
         if (ev.why === 1) api.log("Item " + name + ": You can't sell this item here.");
         else if (ev.why === 2) api.log("Item " + name + ": You can't sell an exhausted item.");
         else if (ev.why === 3) { api.log("Item " + name + ": You can't sell this item."); api.log("You should get a citizenship to sell this item."); }
@@ -478,7 +524,7 @@ export function registerNpcDialogs(gui, api) {
         break;
       }
       case "cantrepair": {
-        const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr) : nm(ev.item);
+        const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr, it.comp) : nm(ev.item);
         api.log("Item " + name + (ev.why === 1 ? ": You don't have to repair this item." : ": You can't repair this item here."));
         trade.busy.delete(ev.uid);
         break;

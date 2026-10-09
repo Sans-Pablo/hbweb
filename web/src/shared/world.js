@@ -13,6 +13,7 @@ import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals, RUN_STEPS_PER_SP } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
 import * as Shop from "./systems/shopsys.js";
+import * as Companion from "./systems/companion.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
@@ -190,6 +191,10 @@ const COMMANDS = {
   repairconfirm: (w, p, cmd) => Shop.repairConfirm(w, p, cmd),
   deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
+  petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
+  petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
+  petmode: (w, p, cmd) => Companion.setMode(w, p, cmd.mode),
+  pettarget: (w, p, cmd) => Companion.setTarget(w, p, cmd.target),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },
   equip: (w, p, cmd) => ItemSys.equipCmd(w, p, cmd.uid),
   unequip: (w, p, cmd) => ItemSys.unequipCmd(w, p, cmd.uid),

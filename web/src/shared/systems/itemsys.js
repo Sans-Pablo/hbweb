@@ -93,6 +93,18 @@ export function useItem(w, p, uid) {
       p.hpStock = Math.min(500, p.hpStock + amount);
       p.hunger = Math.max(0, Math.min(100, p.hunger + roll()));
       break;
+    case EFFECT.STUDYSKILL: {
+      // Manuales (HGServer/Game.cpp ~27249, TrainSkillResponse): v1 = habilidad, v2 = nivel inicial; solo si aún no se tiene (nivel 0).
+      // Diferencia con el original, que gasta el manual aunque ya se conozca la habilidad: aquí no se gasta.
+      const sk = d.v1, lvl = d.specialEffect > 0 ? d.specialEffect : d.v2;
+      if (!(sk >= 0 && sk <= 100)) return w.reject(p, { t: "use" }, "no se puede usar");
+      if ((p.skills[sk] || 0) !== 0) return w.reject(p, { t: "use" }, "ya conoces esa habilidad");
+      p.skills[sk] = lvl;
+      Inv.removeFromBag(p, uid);
+      w.recalc(p);
+      w.emit({ t: "skilllearn", id: p.id, skill: sk, level: lvl, item: d.id });
+      return true;
+    }
     default: return w.reject(p, { t: "use" }, "no implementado");
   }
   Inv.removeFromBag(p, uid);

@@ -11,3 +11,8 @@ Invento del port (el original no los tiene). Código: `shared/systems/companion.
 - **Voz**: `voice.json` sección `companion` (generada por `tools/mkvoice_companion.py`); `voice.js talkPet/onPetEvent`.
 - **Bola**: color por especie = complementario del sprite (`compicon.drawBall`), 15 % más grande; al recogerla conserva `comp` (evento `pickup.comp`); `addToBag` borra la x,y del suelo.
 - Pendiente: habilidades por especie; compañero en multijugador (snapshot).
+- **Hospital** (v0.12.0): NPC «Gail» (`role "pethospital"`, junto al inicio de Aresfarm y en Aresden 142,52; ficha y sprite originales sin uso). Órdenes `petbuy` (bola de cualquier especie, 1 de oro, solo pruebas), `petheal` (cura 2 de oro por punto de vida; revivir `reviveCost` = (1500+400·nv)·(1+0,15·rango)). Cliente: cuadro 41 en `npcdialogs.js`.
+- **Caído**: `inst.comp.down` (no se puede invocar); la vida viaja en `comp.hp` y se recupera 2 % cada 6 s a los 8 s sin recibir daño.
+- **Modo y objetivo**: `comp.mode` `attack`|`peace` (`petmode`, clic en el símbolo del compañero junto al de combate); `pettarget` (Ctrl+Q sobre un monstruo) fija `pet.cTarget`, que se ataca aunque esté en paz.
+- **HUD**: `gui.petPanel` (miniatura que se vacía de arriba abajo, símbolo ATQ/PAZ, barra con nombre/nivel/vida). Compañeros más altos que el personaje se dibujan a la mitad de su altura (`renderer.petScale`).
+- Test: `tests/pets.test.mjs` (también cubre los manuales de habilidad, `STUDYSKILL` en `itemsys.js`).

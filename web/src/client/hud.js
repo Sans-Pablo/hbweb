@@ -78,6 +78,8 @@ export class Hud {
       case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball (" + (ev.nm || "") + "): úsala para tener a ese compañero.", "gold"); break;
       case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " (" + ev.sp.replace(/-/g, " ") + ", nivel " + ev.lvl + ") te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
+      case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
+      case "pettarget": if (ev.id === me) this.log((ev.nm || "Tu compañero") + " ataca el objetivo marcado."); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-lvl": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
@@ -86,6 +88,7 @@ export class Hud {
         else if (ev.by === me) this.log("Has matado a " + (who(ev.id)?.name || "un monstruo") + ".");
         break;
       case "pickup": if (ev.id === me) this.log(ev.item === 90 ? "Recoges " + ev.count + " de oro." : "Recoges: " + itemName(ev.item, ev.attr, ev.comp) + (ev.count > 1 ? " x" + ev.count : "") + "."); break;
+      case "skilllearn": if (ev.id === me) this.log("Aprendes la habilidad " + (SKILL_NAMES[ev.skill] || ev.skill) + " (" + ev.level + "%).", "gold"); break;
       case "use": if (ev.id === me) this.log("Usas " + itemName(ev.item) + (ev.amount ? " (+" + ev.amount + ")" : "") + "."); break;
       case "equip": if (ev.id === me) this.log("Equipas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;
       case "unequip": if (ev.id === me) this.log("Te quitas " + itemName(world.ents.get(me)?.bag?.find(i => i.uid === ev.uid)?.id) + "."); break;

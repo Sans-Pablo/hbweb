@@ -106,10 +106,17 @@ function followerThink(w, n) {
   if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
   if (n.comp) refreshCompanion(w, n, m);
   let best = null, bd = 1e9;
-  for (const e of w.ents.values()) {
-    if (e.kind !== "npc" || e.dead || e.master || e.cfg.actionLimit) continue;
-    const d = dist(n, e);
-    if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
+  // Objetivo marcado por el dueño (Ctrl+Q): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
+  const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
+  if (ct && !ct.dead && ct.kind === "npc" && dist(m, ct) <= 18) { best = ct; bd = dist(n, ct); }
+  else {
+    n.cTarget = null;
+    const calm = n.comp && Inv.instOf(m, n.ball)?.comp.mode === "peace";
+    if (!calm) for (const e of w.ents.values()) {
+      if (e.kind !== "npc" || e.dead || e.master || e.cfg.actionLimit) continue;
+      const d = dist(n, e);
+      if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
+    }
   }
   if (best) {
     if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
@@ -189,13 +196,18 @@ function npcAttack(w, n, t) {
 function refreshCompanion(w, n, m) {
   const inst = Inv.instOf(m, n.ball);
   if (!inst) return killNpc(w, n, null);
-  const st = Comp.statsOf(m, inst.comp);
-  n.dmgNow = st.dmg; n.clvl = inst.comp.lvl; n.nick = inst.comp.nm;
-  if (n.maxHp !== st.hp) { n.maxHp = st.hp; n.hp = st.hp; }
+  const c = inst.comp, st = Comp.statsOf(m, c);
+  n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
+  // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
+  if (!n.hpInit) { n.hpInit = true; n.maxHp = st.hp; n.hp = Math.max(1, Math.min(st.hp, c.hp ?? st.hp)); }
+  else if (n.maxHp !== st.hp) { const k = n.hp / n.maxHp; n.maxHp = st.hp; n.hp = Math.max(1, Math.round(st.hp * k)); }
+  else if (n.hp < n.maxHp && w.time - (n.hurtAt || -1e9) > 8000 && w.time - (n.regenAt || 0) > 6000) { n.regenAt = w.time; n.hp = Math.min(n.maxHp, n.hp + Math.ceil(n.maxHp * 0.02)); }   // recuperación lenta fuera de combate
+  c.hp = n.hp; c.max = n.maxHp;
 }
 export function dismissCompanion(w, p) {
   for (const e of followersOf(w, p)) {
     if (!e.comp) continue;
+    const inst = Inv.instOf(p, e.ball); if (inst) inst.comp.hp = e.hp;
     e.dead = true; e.hp = 0; w.grid.release(e.x, e.y, e.id); e.gen.alive--;
     w.ents.delete(e.id); w.emit({ t: "remove", id: e.id });
   }
@@ -215,6 +227,7 @@ export function spawnCompanion(w, p) {
 export function toggleCompanion(w, p, inst) {
   if (p.dead) return false;
   const c = inst.comp, out = followersOf(w, p).some(e => e.comp && e.ball === inst.uid);
+  if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: llévalo al hospital de compañeros");
   if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
   for (const b of p.bag) if (b.comp) b.comp.on = false;
@@ -229,14 +242,14 @@ function companionStruck(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
   if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return miss();
   const dmg = R.npcMelee(w.rng, n).damage;
-  t.hp -= dmg;
+  t.hp -= dmg; t.hurtAt = w.time;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp > 0) {
     if (!w.busy(t) || t.act === ACT.DAMAGE) { w.setAct(t, ACT.DAMAGE, t.dur.damage); t.busyUntil = w.time + t.dur.damage; }
     return;
   }
   const m = w.ents.get(t.master), inst = m && Inv.instOf(m, t.ball);
-  if (inst) { inst.comp.on = false; Comp.penalize(w, m, inst); w.emit({ t: "companion", id: m.id, sp: inst.comp.sp, on: false, fainted: true, nm: inst.comp.nm }); }
+  if (inst) { inst.comp.on = false; inst.comp.down = true; inst.comp.hp = 0; Comp.penalize(w, m, inst); w.emit({ t: "companion", id: m.id, sp: inst.comp.sp, on: false, fainted: true, nm: inst.comp.nm }); }
   t.noDrop = true; t.noDieRemainExp = 0;
   for (const e of w.ents.values()) if (e.target === t.id) e.target = null;
   killNpc(w, t, null);

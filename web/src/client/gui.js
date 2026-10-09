@@ -2,6 +2,7 @@
 // GameDialog.pak, GameDialog2.pak, DialogText.pak e interface2.pak; ver tools/convert_ui.py).
 // Las posiciones son las de Client/Game.cpp (DrawDialogBox_IconPannel, DrawDialogBox_GaugePannel...).
 // El panel inferior es el cuadro 30; los demás cuadros se registran en `dialogs` y se pueden arrastrar.
+import { miniOf } from "./compicon.js";
 import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
@@ -247,7 +248,8 @@ export class Gui {
   panelClick(x, y) {
     const a = ADDX + RESX;
     if (y <= 434 + RESY || y >= 475 + RESY) return;
-    if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
+    if (this.petBall && x > 411 && x < 449) this.onAction?.("petmode");
+    else if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
     else if (x > 413 + a && x < 447 + a) this.onAction?.("char");
     else if (x > 447 + a && x < 484 + a) this.onAction?.("inv");
     else if (x > 484 + a && x < 521 + a) this.onAction?.("book");
@@ -297,6 +299,35 @@ export class Gui {
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)
+  // Compañero (invento del port): símbolo de paz/ataque junto al del personaje (clic = cambiar), miniatura que se vacía de arriba abajo
+  // con su vida y una barra con su nombre y vida.
+  petPanel(me, world, a) {
+    const ball = me.bag && me.bag.find(i => i.comp && i.comp.on);
+    this.petBall = ball || null;
+    if (!ball) return;
+    const c = ball.comp, pet = [...world.ents.values()].find(e => e.comp && e.master === me.id && !e.dead);
+    const hp = pet ? pet.hp : Math.max(0, c.hp || 0), max = pet ? pet.maxHp : Math.max(1, c.max || 1), k = Math.max(0, Math.min(1, hp / Math.max(1, max)));
+    const bx = 411, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
+    cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(bx, by, 38, 38);
+    cx.strokeStyle = atk ? "#c85a3c" : "#6fae5a"; cx.lineWidth = 1; cx.strokeRect(bx + .5, by + .5, 37, 37);
+    const mi = this.spr && miniOf(c.sp, kk => this.spr.frames(kk));
+    const fr = mi && this.spr.frame(mi.key, mi.f);
+    if (fr && this.spr.ready(mi.key)) {
+      const [sx, sy, w, h] = fr, s = Math.min(1, 32 / Math.max(w, h)), dw = w * s, dh = h * s, dx = bx + 19 - dw / 2, dy = by + 19 - dh / 2;
+      cx.globalAlpha = .28; cx.drawImage(this.spr.img[mi.key], sx, sy, w, h, dx, dy, dw, dh); cx.globalAlpha = 1;
+      cx.save(); cx.beginPath(); cx.rect(dx, dy + dh * (1 - k), dw, dh * k + 1); cx.clip();      // lo que queda de vida: se pierde desde arriba
+      cx.drawImage(this.spr.img[mi.key], sx, sy, w, h, dx, dy, dw, dh); cx.restore();
+    }
+    this.text(bx + 36, by + 25, atk ? "ATQ" : "PAZ", atk ? "#ff9a7a" : "#9fe07f", { align: "right", shadow: true, size: 9 });
+    // barra de vida del compañero, sobre la del personaje
+    const x0 = 23 + RESX, y0 = 531, wd = 101;
+    cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 - 1, wd + 2, 8);
+    cx.fillStyle = k > .5 ? "#6fcf4f" : k > .25 ? "#e3b341" : "#e0493b"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
+    this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
+    if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
+    else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max);
+  }
+
   gauges(me, world, info) {
     const m = this.mouse, a = RESX + ADDX;
     this.put("gamedialog2_6", 14, 0, 548);
@@ -315,6 +346,7 @@ export class Gui {
     if (me.dead) this.blink(725, 510, "Restart");
     else if (me.pool > 0 && !this.isOpen(12)) this.blink(725, 510, "Level Up!");
 
+    this.petPanel(me, world, a);
     if (this.flags.safe) this.put("gamedialog2_6", 4, 368 + a - 2, 440 + RESY);
     else if (this.flags.combat) this.put("gamedialog2_6", 5, 368 + a - 1, 440 + RESY);
     if (m.x > 362 + a && m.x < 404 + a && m.y > 434 + RESY && m.y < 475 + RESY) {

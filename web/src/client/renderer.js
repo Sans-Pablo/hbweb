@@ -4,6 +4,7 @@
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
 import { t } from "./i18n.js";
 import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
+const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cuerpo): referencia para reducir a los compañeros altos
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
 import { itemDef, itemName, groundKey } from "./names.js";
@@ -373,6 +374,9 @@ export class Renderer {
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.ellipse(x, y + 2, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
     }
+    // Compañeros más altos que el personaje: se dibujan a la mitad de su altura (un golem se ve como un mini golem)
+    const sc = e.comp ? this.petScale(e, key, f) : 1;
+    if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
     if (e.boss) { ctx.save(); ctx.translate(x, y); ctx.scale(1.2, 1.2); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
@@ -387,10 +391,11 @@ export class Renderer {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
       else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
     }
+    if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida
     if (e.dead) return;
-    const top = y - this.mobHeight(key, f) - 6;
+    const top = y - this.mobHeight(key, f) * sc - 6;
     if (remaster && e.kind !== "citizen" && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
@@ -414,6 +419,17 @@ export class Renderer {
         }
       });
     }
+  }
+
+  // Escala fija por especie (altura del fotograma de reposo la primera vez que se ve): solo se reducen los más altos que el personaje
+  petScale(e, key, f) {
+    const c = this.petScales || (this.petScales = new Map());
+    if (!c.has(e.name)) {
+      const fr = this.spr.frame(key, f), h = fr ? fr[3] : 0;
+      if (!h || !this.spr.ready(key)) return 1;
+      c.set(e.name, h > CHAR_H ? (CHAR_H / 2) / h : 1);
+    }
+    return c.get(e.name);
   }
 
   mobHeight(key, f) {

@@ -156,7 +156,9 @@ export class NetConnection {
       }
     }
     e.dead = !!o.dead; e.hp = o.hp; e.maxHp = o.mh; e.name = o.name;
-    if (o.k === "npc") {
+    e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
+    if (o.cp) { e.nick = o.nk; e.clvl = o.cl; }
+    if (o.k === "npc" || o.k === "citizen") {
       e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0;
       if (isNew) { e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }
     } else {

@@ -69,6 +69,68 @@ export function penalize(w, p, inst) {
   w.emit({ t: "companion-lost", id: p.id, sp: c.sp, lvl: c.lvl, loss, nm: c.nm });
 }
 
+// ---------------------------------------------------------------- hospital de compañeros (NPC "Gail" con role "pethospital")
+// INVENTO del port. Un compañero que cae queda inconsciente (comp.down) y no se puede invocar hasta que se revive; revivirlo es caro.
+export const HOSPITAL = { npc: "Gail", role: "pethospital", reach: 8, ballPrice: 1, healPerHp: 2 };
+export const maxOf = (p, c) => statsOf(p, c).hp;
+export const hpOf = (p, c) => (c.down ? 0 : Math.min(maxOf(p, c), c.hp ?? maxOf(p, c)));
+export const reviveCost = c => Math.round((1500 + 400 * c.lvl) * (1 + 0.15 * rankOf(c.sp)));
+export const healCost = (p, c) => Math.max(0, Math.ceil((maxOf(p, c) - hpOf(p, c)) * HOSPITAL.healPerHp));
+export const treatCost = (p, c) => (c.down ? reviveCost(c) : healCost(p, c));
+
+const nearHospital = (w, p, id) => { const e = w.ents.get(id); return !!e && e.role === HOSPITAL.role && Math.max(Math.abs(e.x - p.x), Math.abs(e.y - p.y)) <= HOSPITAL.reach; };
+
+export function treat(w, p, cmd) {
+  const inst = Inv.instOf(p, cmd.uid);
+  if (!inst?.comp) return false;
+  if (!nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "acércate a la enfermera");
+  const c = inst.comp, cost = treatCost(p, c);
+  if (cost <= 0) return w.reject(p, cmd, "no necesita cuidados");
+  if (p.gold < cost) { w.emit({ t: "nogold", id: p.id }); return false; }
+  p.gold -= cost;
+  const revived = !!c.down;
+  c.down = false; c.hp = maxOf(p, c);
+  for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) e.hp = e.maxHp;          // si estaba fuera, se cura en el acto
+  w.recalc(p);
+  w.emit({ t: "pettreated", id: p.id, nm: c.nm, sp: c.sp, cost, revived });
+  return true;
+}
+
+// Bolas para probar: 1 de oro cada una, de cualquier especie
+export function buyBall(w, p, cmd) {
+  const sp = String(cmd.sp || "");
+  if (!SPECIES[sp] || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
+  if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
+  const ball = newInst(w, SPECIES[sp][1]);
+  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack" };
+  const d = w.data.item(ball.id);
+  if (!d || p.bag.length >= MAX_ITEMS || !Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); return false; }
+  p.gold -= HOSPITAL.ballPrice;
+  Inv.addToBag(p, w.data, ball);
+  w.recalc(p);
+  w.emit({ t: "petbought", id: p.id, sp, nm: ball.comp.nm, uid: ball.uid, price: HOSPITAL.ballPrice });
+  return true;
+}
+
+// Modo del compañero: "attack" ataca todo lo que ve; "peace" solo sigue (salvo el objetivo marcado con Ctrl+Q)
+export function setMode(w, p, mode) {
+  const inst = activeBall(p);
+  if (!inst) return w.reject(p, { t: "petmode" }, "no tienes compañero");
+  inst.comp.mode = mode === "peace" ? "peace" : "attack";
+  if (inst.comp.mode === "peace") for (const e of w.ents.values()) if (e.comp && e.master === p.id) e.cTarget = null;
+  w.emit({ t: "petmode", id: p.id, mode: inst.comp.mode, nm: inst.comp.nm });
+  return true;
+}
+export function setTarget(w, p, targetId) {
+  const t = w.ents.get(targetId);
+  const pet = [...w.ents.values()].find(e => e.comp && e.master === p.id && !e.dead);
+  if (!pet) return w.reject(p, { t: "pettarget" }, "no tienes compañero fuera");
+  if (!t || t.dead || t.kind !== "npc" || t.master || Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) > 16) return w.reject(p, { t: "pettarget" }, "objetivo no válido");
+  pet.cTarget = t.id;
+  w.emit({ t: "pettarget", id: p.id, target: t.id, nm: pet.nick });
+  return true;
+}
+
 export function addExp(w, p, inst, xp) {
   const c = inst.comp, cap = Math.min(MAX_COMP_LEVEL, p.level);
   if (xp <= 0 || c.lvl >= cap) return;
