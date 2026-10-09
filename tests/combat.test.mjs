@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { strikeNpc, playerStrike, absorbOnHit, comboBonus } from "../web/src/shared/combat.js";
 import { knockback } from "../web/src/shared/systems/combatsys.js";
-import { hitChance, dice, absorbOnPlayer } from "../web/src/shared/rules.js";
+import { hitChance, dice, absorbOnPlayer, applySpecial } from "../web/src/shared/rules.js";
 
 const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };      // rng determinista: valores en [0,1)
 const player = (over = {}) => ({
@@ -101,6 +101,15 @@ assert.equal(absorbOnPlayer(seq(0.999), 10, { vit: 100 }), 1);   // 10 - (1d10 -
   const n = { x: 3, y: 3 }, t = { x: 4, y: 3, dir: 7, busyUntil: 0, dead: false };
   knockback(w, n, t, 39); assert.equal(ev.length, 0);
   knockback(w, n, t, 40); assert.equal(t.x, 5); assert.equal(t.dir, 7); assert.equal(ev[0].dir, 3);
+}
+
+// habilidades especiales de monstruo (bCreateNewNpc): bonus de experiencia y absorciones
+{
+  const r = () => 0.5, a = { exp: 100, absDamage: 0 };
+  assert.equal(applySpecial(r, a, 3), 3); assert.equal(a.absDamage, -51); assert.equal(a.exp, 151);
+  const b = { exp: 100, absDamage: 10 }; assert.equal(applySpecial(r, b, 3), 0); assert.equal(b.exp, 100);
+  const c = { exp: 100, absDamage: 0 }; assert.equal(applySpecial(r, c, 4), 4); assert.equal(c.absDamage, 51);
+  const d = { exp: 100, absDamage: 0 }; applySpecial(r, d, 8); assert.equal(d.exp, 125);
 }
 
 console.log("OK");

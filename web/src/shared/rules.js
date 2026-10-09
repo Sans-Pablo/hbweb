@@ -63,11 +63,20 @@ export function npcExp(rng, cfg) {
   return dice(rng, 1, cfg.expMax - cfg.expMin) + cfg.expMin;
 }
 // Monstruos especiales: tipo 1 = +25 % exp, 2 = +30 % exp, 3 = absorbe daño físico.
+// bCreateNewNpc (Game.cpp ~16418): habilidad especial del monstruo y su bonus de experiencia.
+// 1 (+25 %, ve invisibles), 2 (+30 %), 3 absorbe daño físico, 4 absorbe daño mágico, 5 (+15 %), 6 (+20 %), 7 explota al morir (Fire Strike, +20 %), 8 explota al morir (Mass Fire Strike, +25 %).
+// Devuelve la habilidad que queda (3 y 4 se anulan si el monstruo ya absorbe del otro tipo).
+const SPECIAL_EXP = { 1: 25, 2: 30, 5: 15, 6: 20, 7: 20, 8: 25 };
 export function applySpecial(rng, npc, kind) {
-  if (kind === 1) npc.exp += Math.floor(npc.exp * 0.25);
-  else if (kind === 2) npc.exp += Math.floor(npc.exp * 0.30);
+  if (SPECIAL_EXP[kind]) npc.exp += Math.floor(npc.exp * SPECIAL_EXP[kind] / 100);
   else if (kind === 3) {
-    npc.absDamage = -Math.min(90, 20 + dice(rng, 1, 60));
+    if (npc.absDamage > 0) return 0;
+    npc.absDamage = Math.max(-90, npc.absDamage - (20 + dice(rng, 1, 60)));
     npc.exp += Math.floor(npc.exp * Math.abs(npc.absDamage) / 100);
+  } else if (kind === 4) {
+    if (npc.absDamage < 0) return 0;
+    npc.absDamage = Math.min(90, npc.absDamage + 20 + dice(rng, 1, 60));
+    npc.exp += Math.floor(npc.exp * npc.absDamage / 100);
   }
+  return kind;
 }

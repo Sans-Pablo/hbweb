@@ -43,7 +43,7 @@ let missingNpc = new Set(), missingMap = new Set();
 for (const id of Object.keys(maps)) {
   const m = J("maps/" + id + ".json");
   assert.equal(m.id, id);
-  for (const t of m.teleports || []) if (!maps[t.map] && t.map !== "arefarm") missingMap.add(t.map);
+  for (const t of m.teleports || []) if (!maps[t.map.toLowerCase()] && t.map !== "arefarm") missingMap.add(t.map);
   for (const n of m.npcs || []) if (!npc[n.name]) missingNpc.add(n.name);
 }
 console.log("datos: mapas", Object.keys(maps).length, "| NPC sin portar:", [...missingNpc].sort().join(", ") || "-", "| teleports a mapas no exportados:", [...missingMap].sort().join(", ") || "-");

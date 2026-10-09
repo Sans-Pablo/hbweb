@@ -10,7 +10,7 @@ import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
-const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 5: "255,120,80" };
+const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 4: "120,160,255", 5: "255,120,80", 6: "120,255,140", 7: "255,150,40", 8: "255,60,60" };
 
 // Client/Game.cpp, DrawObject_On*: monstruos sin sombra (Slime, Tigerworm, Plant, Ice-Golem, esfera, Abaddon, puerta...)
 const NO_SHADOW = new Set([10, 35, 50, 51, 60, 65, 81, 91]);

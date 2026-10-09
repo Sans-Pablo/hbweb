@@ -42,4 +42,13 @@ put(inw, out.x, out.y + 1);
 assert(step(1), "andar hacia la salida");
 a.tick(800);
 assert(a.worldFor(id).map.id === out.map, "la salida lleva a " + out.map + ": " + a.worldFor(id).map.id);
+
+// los mapas de campo (Middleland, Dungeons, Huntzones) se construyen, tienen monstruos y avanzan sin fallos
+for (const mid of ["middleland", "2ndmiddle", "dglv2"]) {
+  const sw = a.staticWorld(mid);
+  assert(sw && sw.ents.size > 0, mid + " sin monstruos");
+  const t0 = [...sw.ents.values()].filter(e => e.kind === "npc").length;
+  for (let i = 0; i < 20; i++) sw.tick(100);
+  assert(t0 > 0, mid + ": hay monstruos (" + t0 + ")");
+}
 console.log("OK");

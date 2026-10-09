@@ -8,9 +8,7 @@ from convert import PakFolder, export, read_npc_cfg
 from tile_table import locate
 
 hb, repo, out = sys.argv[1], sys.argv[2], sys.argv[3]
-server = sys.argv[sys.argv.index("--server") + 1] if "--server" in sys.argv else "Aresden"
-gdir = os.path.join(repo, "Files", "GameServers", server)
-mdir = os.path.join(gdir, "MAPDATA")
+servers = (sys.argv[sys.argv.index("--server") + 1] if "--server" in sys.argv else "Aresden").split(",")   # varios: Aresden,Middleland,...
 os.makedirs(os.path.join(out, "maps"), exist_ok=True)
 
 
@@ -20,15 +18,17 @@ SPOT = {10: ('Slime', 5, 1), 16: ('Giant-Ant', 10, 2), 14: ('Orc', 15, 1), 18: (
 
 def names():
     res = []
-    for line in open(os.path.join(gdir, "GServer.cfg"), encoding="latin-1"):
-        m = re.match(r"\s*game-server-map\s*=\s*(\S+)", line.split("//")[0])
-        if m:
-            res.append(m.group(1))
+    for srv in servers:
+        for line in open(os.path.join(repo, "Files", "GameServers", srv, "GServer.cfg"), encoding="latin-1"):
+            m = re.match(r"\s*game-server-map\s*=\s*(\S+)", line.split("//")[0])
+            if m:
+                res.append((srv, m.group(1)))
     return res
 
 
-def info(name):
+def info(name, srv):
     """Interpreta mapa.txt (MAPDATA del servidor)."""
+    mdir = os.path.join(repo, "Files", "GameServers", srv, "MAPDATA")
     f = next((x for x in os.listdir(mdir) if x.lower() == name.lower() + ".txt"), None)
     r = {"teleports": [], "initial": {}, "npcs": [], "waypoints": {}, "spawns": [], "noAttack": [], "fixedDay": None,
          "maxObjects": None, "levelLimit": 0, "upperLevelLimit": 0, "avoid": None, "location": ""}
@@ -73,9 +73,10 @@ os.makedirs(sdir, exist_ok=True)
 man_path = os.path.join(out, "sprites.json")
 manifest = json.load(open(man_path))
 amds = {f.lower(): f for f in os.listdir(os.path.join(hb, "MAPDATA"))}
-index = {}
+ip = os.path.join(out, "maps", "index.json")
+index = json.load(open(ip)) if os.path.exists(ip) and "--server" in sys.argv else {}
 used = set()
-for name in names():
+for srv, name in names():
     f = amds.get(name.lower() + ".amd")
     if not f:
         print("sin .amd:", name)
@@ -87,7 +88,7 @@ for name in names():
     body = raw[256:256 + w * h * 10]
     key = name.lower()
     open(os.path.join(out, "maps", key + ".bin"), "wb").write(body)
-    meta = dict(info(name), id=key, w=w, h=h)
+    meta = dict(info(name, srv), id=key, w=w, h=h)
     json.dump(meta, open(os.path.join(out, "maps", key + ".json"), "w"), separators=(",", ":"))
     index[key] = {"w": w, "h": h}
     for i in range(w * h):

@@ -5,7 +5,7 @@ import { greedyStep } from "../path.js";
 import { rollKillDrop } from "../drops.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
-import { giveExp, npcStrikes } from "./combatsys.js";
+import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
 import { sget } from "./status.js";
 
 export function spawnFrom(w, g) {
@@ -23,8 +23,7 @@ export function spawnFrom(w, g) {
       target: null, nextAct: w.time + w.rng() * cfg.actionTime, phase: w.rng() * 1000, special: 0,
     });
     if (g.specialProb && R.dice(w.rng, 1, 100) <= g.specialProb) {
-      n.special = g.specialKind;
-      R.applySpecial(w.rng, n, g.specialKind);
+      n.special = R.applySpecial(w.rng, n, g.specialKind);
     }
     n.maxHp = n.hp;
     n.noDieRemainExp = n.exp - Math.floor(n.exp / 3);
@@ -35,11 +34,27 @@ export function spawnFrom(w, g) {
   return null;
 }
 
+// Explosivos (Game.cpp ~10919, NpcMagicHandler): al morir lanzan Fire Strike (30) o Mass Fire Strike (61) sobre su casilla, con acierto 100.
+function explode(w, n, spell) {
+  const sp = w.magic?.[spell]; if (!sp) return;
+  w.emit({ t: "explode", id: n.id, x: n.x, y: n.y, spell });
+  for (const e of [...w.ents.values()]) {
+    if (e.kind !== "player" || e.dead || Math.abs(e.x - n.x) > sp.v2 || Math.abs(e.y - n.y) > sp.v3) continue;
+    const pr = sget(w, e, "protect");
+    if (pr === 5 || (pr === 2 && R.dice(w.rng, 1, 2) === 1)) continue;
+    const centre = e.x === n.x && e.y === n.y;
+    let dmg = centre ? R.dice(w.rng, sp.v4, sp.v5) + sp.v6 : R.dice(w.rng, sp.v7, sp.v8) + sp.v9;
+    if (pr === 2) dmg = Math.floor(dmg / 2);
+    damagePlayer(w, e, Math.max(0, dmg), n);
+  }
+}
+
 export function killNpc(w, n, p) {
   n.hp = 0; n.dead = true;
   w.setAct(n, ACT.DYING, n.dur.dying);
   w.grid.release(n.x, n.y, n.id);
   w.emit({ t: "death", id: n.id, by: p ? p.id : 0 });
+  if (n.special === 7 || n.special === 8) explode(w, n, n.special === 7 ? 30 : 61);
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
     let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
