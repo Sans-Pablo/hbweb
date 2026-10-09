@@ -52,6 +52,7 @@ export async function loadAssets(onProgress) {
     json("data/magic.json"),
   ]);
   const shops = await json("data/shops.json").catch(() => ({}));
+  const talk = await json("data/talk.json").catch(() => ({}));
   validateDungeonAssets(manifest, npcDb);
   // mapas de la ciudad (data/maps/<id>.bin + .json): casillas, teleports, NPC y generadores
   const maps = {};
@@ -83,7 +84,7 @@ export async function loadAssets(onProgress) {
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const sprites = new Sprites(manifest, images, hd);
   await sprites.preloadHd(Array.from({ length: 8 }, (_, d) => "ske" + (8 + d)));
-  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops };
+  return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
 }
 
 export class Sprites {

@@ -89,7 +89,7 @@ async function main() {
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
   const npcUi = registerNpcDialogs(gui, {
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
-    shops: assets.shops, itemByName: n => assets.data.named(n),
+    shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
   // objeto soltado sobre un NPC de ciudad del mundo (a menos de 8 casillas)
   const dropOnCitizen = (uid, mx, my, cx, cy) => {

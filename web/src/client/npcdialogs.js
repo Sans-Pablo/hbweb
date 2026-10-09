@@ -11,7 +11,8 @@ import { attrLines } from "../shared/attributes.js";
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
 const NPC_NAMES = { [NPC.SHOP]: "Shop Keeper", [NPC.MAGE]: "Sorcerer", [NPC.WAREHOUSE]: "Warehouse Keeper", [NPC.BLACKSMITH]: "BlackSmith Keeper" };
-const TALK_LOG = { [NPC.SHOP]: "Talking to Shop Keeper...", [NPC.BLACKSMITH]: "Talking to Blacksmith Keeper...", [NPC.WAREHOUSE]: "Talking to Warehouse Keeper...", [NPC.MAGE]: "Talking to Sorcerer..." };
+// NpcTalkHandler: iWho 2 tienda, 3 herrería, 5 almacén, 6 mago -> texto contents{iWho+150}
+const TALK_ID = { [NPC.SHOP]: 152, [NPC.BLACKSMITH]: 153, [NPC.WAREHOUSE]: 155, [NPC.MAGE]: 156 };
 const SHOP_ROWS = 13, SHOP_ROW_H = 18, BANK_ROWS = 13, BANK_ROW_H = 15;
 const MAX_ITEMS = 50;
 
@@ -78,6 +79,29 @@ export function registerNpcDialogs(gui, api) {
   };
   gui.register(quantity);
 
+  // ------------------------------------------------------------ 21: conversación (DrawDialogBox_NpcTalk)
+  const talkText = {
+    id: 21, x: 200, y: 100, w: 258, h: 339, lines: [], view: 0, drag: false,
+    begin(n) { this.lines = (api.talk || {})[n] || []; this.view = 0; gui.open(21); },
+    draw(g) {
+      const [lx, ly] = rel(g, this), n = this.lines.length;
+      g.put("gamedialog_1", 2, 0, 0);
+      button(g, lx, ly, BTN.right, 0, 1);
+      if (n > 17) {
+        g.put("gamedialog_1", 3, 0, 0);
+        g.put("gamedialog_1", 7, 242, Math.floor((274 * this.view) / (n - 17)) + 35);
+        if (this.drag && g.mouse.down) this.view = clamp(Math.floor(((ly - 40) * (n - 17)) / 274), 0, n - 17); else this.drag = false;
+      }
+      for (let i = 0; i < 17; i++) { const s = this.lines[i + this.view]; if (s != null) g.aligned(0, this.w, 57 + i * 15, s, INK); }
+    },
+    click(g, lx, ly) {
+      if (onButton(lx, ly, BTN.right)) { g.close(21); return true; }
+      if (this.lines.length > 17 && within(lx, ly, 240, 260, 40, 320)) { this.drag = true; return true; }
+      return false;
+    },
+  };
+  gui.register(talkText);
+
   // ------------------------------------------------------------ 20: menú del NPC
   // modo 0: Learn / Withdraw / Offer / Trade + Talk · 2: objeto a la tienda o herrería · 3: objeto al almacén · 5: Trade / Sell / Talk
   const query = {
@@ -120,7 +144,7 @@ export function registerNpcDialogs(gui, api) {
         }
         if (m === 5 && inside(lx, ly, 104, 155, 55, 70)) { g.open(31); g.close(20); return true; }
         const talk = m === 5 ? [155, 210] : [125, 180];
-        if (inside(lx, ly, talk[0], talk[1], 55, 70)) { api.log(TALK_LOG[this.npcType] || "Talking..."); g.close(20); return true; }
+        if (inside(lx, ly, talk[0], talk[1], 55, 70)) { talkText.begin(TALK_ID[this.npcType]); g.close(20); return true; }
       } else if (m === 2) {
         if (inside(lx, ly, 25, 100, 55, 70)) { api.send({ t: "sellreq", uid: this.uid, count: this.count, whom: this.npcType }); g.close(20); return true; }
         const it = bagItem(me, this.uid), d = it && itemDef(it.id);
