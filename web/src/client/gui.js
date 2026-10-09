@@ -8,6 +8,8 @@ export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
 const DIGIT_SPACE = [6, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6];   // __cSpace2
 
+const NO_AVOID = new Set([10, 17, 20]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
+
 export class Gui {
   constructor(canvas) {
     this.cv = canvas;
@@ -160,7 +162,21 @@ export class Gui {
   // ---------------------------------------------------------------- cuadros de diálogo
   register(d) { this.dialogs.set(d.id, d); }
   isOpen(id) { return this.order.includes(id); }
-  open(id) { if (!this.dialogs.has(id)) return; this.close(id, true); this.order.push(id); this.dialogs.get(id).onOpen?.(this); }
+  open(id) { if (!this.dialogs.has(id)) return; this.close(id, true); this.order.push(id); this.dialogs.get(id).onOpen?.(this); this.avoidOverlap(id); }
+  // Al abrir un cuadro grande, se coloca en el hueco libre más cercano a su sitio si pisaría a otro ya abierto (los pequeños de cantidad/menú/chat se quedan donde el original los pone)
+  avoidOverlap(id) {
+    if (NO_AVOID.has(id)) return;
+    const d = this.dialogs.get(id), others = this.order.filter(o => o !== id && !NO_AVOID.has(o)).map(o => this.dialogs.get(o));
+    const area = (x, y) => others.reduce((t, o) => t + Math.max(0, Math.min(x + d.w, o.x + o.w) - Math.max(x, o.x)) * Math.max(0, Math.min(y + d.h, o.y + o.h) - Math.max(y, o.y)), 0);
+    if (!area(d.x, d.y)) return;
+    const maxX = Math.max(0, W - d.w), maxY = Math.max(0, 548 - d.h);
+    let best = null, bd = 1e18;                                   // menos superficie tapada; a igualdad, el más cercano (sin hueco libre, el que menos pisa)
+    for (let x = 0; x <= maxX; x += 10) for (let y = 0; y <= maxY; y += 10) {
+      const k = area(x, y) * 1e6 + (x - d.x) ** 2 + (y - d.y) ** 2;
+      if (k < bd) { bd = k; best = [x, y]; }
+    }
+    if (best) { d.x = best[0]; d.y = best[1]; }
+  }
   close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); if (!quiet) this.dialogs.get(id).onClose?.(this); } }
   toggle(id) { if (this.isOpen(id)) this.close(id); else this.open(id); }
   closeAll() { for (const id of [...this.order]) this.close(id); }

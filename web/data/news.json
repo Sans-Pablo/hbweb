@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Interfaces sin solaparse (v0.10.2)",
+        "en": "Overlapping interfaces fixed (v0.10.2)"
+      },
+      "items": [
+        {
+          "es": "Los cuadros grandes (personaje, mochila, magia, tienda, almacén, habilidades...) buscan al abrirse el hueco libre más cercano si pisarían a otro ya abierto. Si la pantalla no da para todos, se coloca donde menos tape.",
+          "en": "Large dialogs (character, bag, magic, shop, warehouse, skills...) look for the nearest free spot when opened if they would cover another open one. If the screen cannot fit them all, they go where they cover least."
+        },
+        {
+          "es": "Los bocadillos de voz (jugador y habitantes) se dibujan encima de nombres y etiquetas y se apartan unos de otros en vez de pisarse.",
+          "en": "Voice bubbles (player and townsfolk) are drawn above names and labels and move away from each other instead of overlapping."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Cazador: sistema de compañeros (v0.10.0)",
         "en": "Hunter: companion system (v0.10.0)"
       },
@@ -484,8 +501,30 @@
         "en": "Hunter"
       },
       "text": {
-        "es": "Comprueba que arriba a la izquierda se lee «v0.10.1 Compañeros» junto a los fps.",
-        "en": "Check that the top left reads «v0.10.1 Compañeros» next to the fps."
+        "es": "Comprueba que arriba a la izquierda se lee «v0.10.2 Compañeros» junto a los fps.",
+        "en": "Check that the top left reads «v0.10.2 Compañeros» next to the fps."
+      }
+    },
+    {
+      "id": "ui-overlap-1",
+      "group": {
+        "es": "Interfaz",
+        "en": "Interface"
+      },
+      "text": {
+        "es": "Abre varios cuadros a la vez (F5, F6, F7, tienda de Tom): no deben taparse unos a otros mientras haya sitio. Arrástralos y ábrelos de nuevo.",
+        "en": "Open several dialogs at once (F5, F6, F7, Tom's shop): they must not cover each other while there is room. Drag them around and reopen them."
+      }
+    },
+    {
+      "id": "ui-overlap-2",
+      "group": {
+        "es": "Interfaz",
+        "en": "Interface"
+      },
+      "text": {
+        "es": "Habla con un tendero con el ratón encima de él (se ve su nombre): su frase no debe pisar el nombre ni la frase del personaje.",
+        "en": "Talk to a shopkeeper with the mouse over them (name shown): their line must not overlap the name or the character's line."
       }
     }
   ],

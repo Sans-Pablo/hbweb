@@ -205,6 +205,7 @@ export class Renderer {
       buckets.get(k).push([e, px - camX, py - camY]);
     }
     const overlays = [];
+    this.bq = [];
     for (let j = -2; j <= rows + 8; j++) {
       const ty = ty0 + j;
       for (let i = -7; i <= cols + 7; i++) {
@@ -243,8 +244,11 @@ export class Renderer {
     if (s.sky) s.sky.draw(ctx, VW, VH, s.fx?.sp);
 
     // 6) barras de vida, nombres, etiquetas, efectos
+    this.rects = [];
     for (const o of overlays) o();
     for (const [x, y, text, color] of labels) this.label(x, y, text, color);
+    for (const o of this.bq) o();                       // bocadillos: encima de nombres y etiquetas, sin pisarse entre sí
+    this.bq = [];
     s.fx.draw(ctx, camX, camY, this.mode);
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
@@ -352,12 +356,10 @@ export class Renderer {
       // nombre de los demás jugadores y bocadillo de chat
       const other = s.pid !== undefined && e.id !== s.pid;
       const bubble = s.bubbles && s.bubbles.get(e.id);
+      const talking = bubble && performance.now() < bubble.until;
+      if (talking) this.bq.push(() => this.label(x, y - 78 - (other && !e.dead ? 17 : 0), bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff", true));   // los bocadillos se dibujan al final y esquivan lo ya escrito
       overlays.push(() => {
-        let yy = y - 78;
-        if (bubble && performance.now() < bubble.until) {
-          this.label(x, yy, bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff");
-          yy -= 17;
-        }
+        const yy = y - 78;
         if (other && !e.dead) {
           if (remaster) this.label(x, yy, e.name, "#9fd2ff");
           else {
@@ -411,7 +413,7 @@ export class Renderer {
       });
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
-    if (say && performance.now() < say.until) overlays.push(() => this.label(x, top - 4, say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8"));
+    if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || e.comp || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + e.name + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
@@ -431,12 +433,16 @@ export class Renderer {
     return fr ? -fr[5] : 40;
   }
 
-  label(x, y, text, color) {
+  label(x, y, text, color, avoid = false) {
     const { ctx } = this;
     text = t(text);
     ctx.font = "600 11px 'Segoe UI', system-ui, sans-serif";
     ctx.textAlign = "center";
     const w = ctx.measureText(text).width + 10;
+    const rects = this.rects || (this.rects = []);
+    const hit = yy => rects.some(r => x - w / 2 < r[2] && x + w / 2 > r[0] && yy - 11 < r[3] && yy + 4 > r[1]);
+    if (avoid) for (let i = 0; i < 8 && hit(y); i++) y -= 16;                // sube hasta no pisar otra etiqueta
+    rects.push([x - w / 2, y - 11, x + w / 2, y + 4]);
     ctx.fillStyle = "rgba(12,12,16,.78)";
     ctx.fillRect(Math.round(x - w / 2), Math.round(y - 11), Math.round(w), 15);
     ctx.fillStyle = color;
