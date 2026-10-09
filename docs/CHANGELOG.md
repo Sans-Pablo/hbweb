@@ -2,6 +2,15 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.25.0 · Modo online (2026-10-09)
+
+- **Servidor online real** (`server/server.mjs`, protocolo `NET_PROTO` 2): cuentas con usuario + contraseña (`server/accounts.mjs`, scrypt), un personaje por cuenta (nombre único), progreso por cuenta en `server/data/` (escritura atómica), sesión única (la nueva expulsa a la vieja), mundo compartido (granja, ciudad, tiendas, arena en directo; criptas privadas), estado propio completo (`ownState`: tutorial, talentos, compañeros, bolsa…), equipo visible de los demás (`shared/appearance.js`, `ap`), cielo/clima/campos/efectos de jefe sincronizados, eventos privados por defecto (`PUBLIC`).
+- **Seguridad**: límites de intentos, cuentas, conexiones, mensajes y chat; orígenes permitidos (CORS y WebSocket); inactividad; el panel solo desde el propio PC.
+- **Administración**: comandos de chat para cuentas `admins`, consola del servidor y panel `/admin` (jugadores, expulsar, silenciar, bloquear, anunciar, guardar, reiniciar).
+- **Cliente** (`NetConnection`, `findServer`): se conecta a la dirección de `web/data/server.json` (o `?server=`), pantalla de entrada con cuenta y creación de personaje online, aviso de desconexión con motivo, vuelta a modo local si el servidor está apagado (`?offline=1` lo fuerza).
+- **Alojamiento**: `Servidor online.bat` + `tools/servidor-online.ps1` (ngrok o Tailscale Funnel con dirección fija), guía `docs/ONLINE.md`, ficha `docs/sistemas/online.md`, `server/config.example.json`.
+- Tests: `tests/online.test.mjs` (en CI vía `tools/test.sh`); `net-walk` y `net-dungeon` adaptados a las cuentas. `net-walk` usa el puerto 18123.
+
 ## 0.24.0 · Modo móvil (2026-10-09)
 
 - Nuevo `client/mobile.js`: detección (`isMobile`, `?mobile=1/0`), auto-ataque activado la primera vez (`initMobileOpts`), capa DOM con barras, joystick, botones de acción, menú ☰, ✕, zoom táctil y aviso de giro. `gui.js` modo `mobile` (lienzo a pantalla completa, escala que ajusta el cuadro abierto, un cuadro cada vez). `index.html` responsive. Tutorial adaptado (`mobileFixed`). Minimapa reducido (`renderer.miniSize/miniTop`). Ficha `docs/sistemas/movil.md`, test `tests/mobile.test.mjs` (en CI).

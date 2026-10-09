@@ -1,0 +1,9 @@
+{
+  "port": 8088,
+  "maxPlayers": 40,
+  "origins": ["https://sans-pablo.github.io"],
+  "admins": ["tu_usuario"],
+  "publicUrl": "https://tu-dominio.ngrok-free.app",
+  "tunnel": "ngrok",
+  "ngrokDomain": "tu-dominio.ngrok-free.app"
+}

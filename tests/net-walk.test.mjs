@@ -1,14 +1,18 @@
 // Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 import { spawn } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 const PORT = 18123;   // no el 8123: es el del servidor estático de pruebas (tools/e2e.py)
-const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80" }, stdio: "ignore" });
+const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbwalk-")) }, stdio: "ignore" });
 await new Promise(r => setTimeout(r, 1500));
 const { default: WS } = await import("node:module").then(() => ({ default: globalThis.WebSocket }));
 const ws = new WS(`ws://localhost:${PORT}/ws`);
 let me, seq = 0, rejects = 0, steps = 0, pos = null;
-ws.onopen = () => ws.send(JSON.stringify({ t: "join", name: "tester" + Date.now() % 1000 }));
+ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "tester" + Date.now() % 1000, pass: "secret1", proto: 2 }));
 ws.onmessage = e => {
   const m = JSON.parse(e.data);
+  if (m.t === "authok") ws.send(JSON.stringify({ t: "join", create: { name: "walker" } }));
   if (m.t === "welcome") me = m.id;
   if (m.t === "s") {
     for (const o of m.e || []) if (o.id === me) pos = [o.x, o.y];

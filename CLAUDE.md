@@ -13,7 +13,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 - `web/src/client/*` — dibujado, HUD, audio, diálogos (`gui.js` + `dialogs.js` + `npcdialogs.js`). No decide reglas: manda órdenes (`conn.send`) y pinta eventos.
 - `tools/*.py` — convierten los recursos originales a `web/data/`. Los datos generados (JSON y hojas PNG) se versionan siempre, también los nuevos; no se editan a mano. Única excepción: los `.webp` de `tools/to_webp.py` (copias derivadas, en `.gitignore`).
 - `tests/*.test.mjs` — `node tests/<x>.test.mjs`, todos deben imprimir OK. Sin dependencias.
-- Guardado en `localStorage` (prueba local). El multijugador (`server/`) está aparcado pero debe seguir compilando y pasando `net-*.test.mjs`.
+- Guardado en `localStorage` (prueba local) o, en el modo online, en `server/data/` (cuentas y partidas por usuario). El servidor online (`server/`) está activo: cualquier cambio en la simulación o en el estado del jugador debe seguir pasando `online.test.mjs` y `net-*.test.mjs`; un cambio de protocolo sube `NET_PROTO` (`shared/const.js`). Estado propio nuevo no necesita código de red: `ownState` manda toda la entidad; solo lo visible para los demás va en `pub()` (`server/server.mjs`) y los eventos visibles en `PUBLIC`. Guía: `docs/ONLINE.md`, ficha `docs/sistemas/online.md`.
 
 ## Reglas de oro
 1. Los IDs y nombres de `Item.cfg`/`NPC.cfg`/`Magic.cfg` son autoritativos. No se inventan ni se renumeran.
@@ -27,7 +27,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 9. Sin credenciales en el repo. No se usa Shift para correr (Ctrl+R alterna).
 
 ## Comandos
-- Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`).
+- Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`). Servidor online: `node server/server.mjs 8088` (`HB_NO_LIMITS=1 HB_DEBUG=1 HB_DATA=/tmp/x` para pruebas) y `tools/e2e.py --query "server=http://localhost:8088"` (`players(n)` para varios jugadores).
 - Regenerar datos: `python3 tools/convert_all.py /root/HelbreathServer/Helbreath /root/HelbreathServer web/data [--only paso,paso] [--dry]` (pasos base, equip, fx, players, ui, maps, npcs; luego `tests/data.test.mjs`).
 - Idiomas: `docs/sistemas/idiomas.md`.
 - Pruebas visuales: Playwright con Chromium en `/opt/pw-browsers/chromium`.

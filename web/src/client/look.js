@@ -21,18 +21,8 @@ const hairKey = (gender, look, group) => "ph" + (gender === 2 ? 1 : 0) + "_" + l
 // ---- equipo visible (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4) ----
 // Ropa y armas dibujadas sobre el cuerpo. ap = {armor, arms, pants, boots, mantle, helm, shield, weapon}: cada una es el
 // valor "Appr" del objeto equipado (0 = nada). Orden y grupos de animación como el cliente original.
-const ARMOR_OF_POS = { 1: "helm", 2: "armor", 3: "arms", 4: "pants", 5: "boots", 7: "shield", 8: "weapon", 9: "weapon", 12: "mantle", 13: "armor" };
-export function apparelOf(e, itemDef) {
-  if (!e.equip || !e.bag) return e.ap || null;
-  const ap = {};
-  for (const [pos, uid] of Object.entries(e.equip)) {
-    const it = e.bag.find(b => b.uid === uid), d = it && itemDef(it.id), k = ARMOR_OF_POS[pos];
-    if (!d || !k || !d.appr) continue;
-    ap[k] = k === "armor" && d.appr >= 100 ? d.appr - 100 : d.appr;
-    if (it.color) (ap.col || (ap.col = {}))[k] = it.color;
-  }
-  return ap;
-}
+import { apparelOf } from "../shared/appearance.js";
+export { apparelOf };                  // el cálculo vive en shared/appearance.js (el servidor lo manda a los demás jugadores)
 const WGROUP = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 6, 6: 4, 7: 4, 10: 5 };          // grupo del cuerpo -> grupo de arma y escudo
 const WEAPON_FIRST = [0, 1, 0, 0, 0, 0, 0, 1, 1];                      // _cDrawingOrder (índice = dirección 1..8)
 const MANTLE_ORDER = [0, 1, 1, 1, 0, 0, 0, 2, 2];                      // _cMantleDrawingOrder

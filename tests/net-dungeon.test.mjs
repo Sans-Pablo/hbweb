@@ -9,6 +9,7 @@ import { Grid } from "../web/src/shared/grid.js";
 import { readFileSync } from "node:fs";
 import { GameData } from "../web/src/shared/data.js";
 import { NetConnection } from "../web/src/client/connection.js";
+import { NET_PROTO } from "../web/src/shared/const.js";
 import { generateLevel, setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { findPath } from "../web/src/shared/path.js";
 
@@ -26,7 +27,7 @@ async function until(fn, why) {
 
 test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Aresfarm", { timeout: 90000 }, async () => {
   const folder = mkdtempSync(path.resolve("tests/.dungeon-"));
-  const srv = spawn(process.execPath, ["server/server.mjs", "8125"], { env: { ...process.env, LAG_MS: "80", SAVE_FILE: path.join(folder, "saves.json") }, stdio: ["ignore", "pipe", "pipe"] });
+  const srv = spawn(process.execPath, ["server/server.mjs", "8125"], { env: { ...process.env, LAG_MS: "80", HB_DATA: folder }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "", exited = false;
   srv.stdout.on("data", b => output += b); srv.stderr.on("data", b => output += b);
   srv.on("exit", () => exited = true);
@@ -38,9 +39,10 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
       const conn = new NetConnection(new Grid(meta.w, meta.h, bytes), npcDb, data);
       const ws = new WebSocket("ws://localhost:8125/ws"); conn.ws = ws; sockets.push(ws);
       const packets = [];
-      ws.onopen = () => ws.send(JSON.stringify({ t: "join", name }));
+      ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name, pass: "secret1", proto: NET_PROTO }));
       ws.onmessage = e => {
         const m = JSON.parse(e.data); packets.push(m);
+        if (m.t === "authok") ws.send(JSON.stringify({ t: "join", create: { name } }));
         if (m.t === "welcome") conn.pid = m.id;
         if (m.t === "s") { conn.onState(m); conn.world.time = m.time; }
       };
@@ -61,7 +63,7 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
       }
       await until(() => w.time >= w.ents.get(conn.pid).busyUntil + 60, "llegada");
     }
-    const a = await connect("cripta-a"), b = await connect("cripta-b");
+    const a = await connect("criptaa"), b = await connect("criptab");
     await walk(a.conn, 79, 70);                               // el teletransportador de la granja a middled1n entra directo
     await until(() => a.conn.state.map.kind === "dungeon", "entrada A");
     const mapA = a.conn.state.map;

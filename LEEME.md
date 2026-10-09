@@ -6,7 +6,11 @@ Prueba en línea (un jugador): ver `SUBIR A GITHUB.md`.
 
 Doble clic en **`Abrir prueba web.bat`**. Arranca un servidor local y abre `http://localhost:8080`. La ventana muestra también la dirección para entrar desde el móvil en tu misma Wi-Fi. Al cerrarla se apaga el servidor.
 
-## Jugar con otra persona (multijugador)
+## Jugar online con cuentas (servidor propio + web de GitHub)
+
+Doble clic en **`Servidor online.bat`** y sigue **[docs/ONLINE.md](docs/ONLINE.md)**: cuentas con usuario y contraseña, mundo compartido, panel de administración y dirección fija para que los jugadores entren desde el enlace de GitHub.
+
+## Jugar con otra persona (multijugador rápido, enlace temporal)
 
 Doble clic en **`Jugar con mi hermano (multijugador).bat`**. La primera vez descarga Node.js portátil y `cloudflared` (unos 80 MB en total, dentro de `tools/`). Después:
 

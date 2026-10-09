@@ -6,6 +6,7 @@ import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
+import { NET_PROTO } from "../shared/const.js";
 import { Renderer } from "./renderer.js";
 import { Controller } from "./controller.js";
 import { Fx } from "./fx.js";
@@ -55,13 +56,14 @@ async function main() {
   const { meta } = assets;
   const grid = new Grid(meta.w, meta.h, assets.mapBytes);
   // ¿estamos en el servidor multijugador (server/server.mjs) o en la prueba local?
-  const info = await fetch("api/info").then(r => r.ok ? r.json() : null).catch(() => null);
-  const online = !!(info && info.multiplayer);
-  const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps)
+  const { base, info, lost } = await findServer();
+  const online = !!(info && info.multiplayer && info.proto === NET_PROTO);
+  const protoClash = !!(info && info.multiplayer && info.proto !== NET_PROTO);      // el servidor es de otra versión del protocolo
+  const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps, base, assets.spawns)
     : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps, clock: () => new Date().getMinutes() }));
   if (online) await Promise.all(Object.values(assets.maps).map(m => m.ensure?.()));     // el servidor no espera: las rejillas se bajan antes
   status.style.display = "none";
-  const pid = await askNameAndJoin(conn, online, info, assets.sprites);
+  const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   let world = conn.state;
   // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
   const stream = new Streamer(assets.sprites);
@@ -518,7 +520,7 @@ async function main() {
       }
       if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
       if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
-      if (ev.t === "disconnected") document.getElementById("lost").style.display = "grid";
+      if (ev.t === "disconnected") { const l = document.getElementById("lost"); if (ev.reason) l.querySelector("p").textContent = ev.reason; l.style.display = "grid"; }
     }
     const me = world.ents.get(pid);
     if (!me) { requestAnimationFrame(loop); return; }      // aún no ha llegado el primer estado
@@ -557,12 +559,26 @@ async function main() {
 }
 
 // pantalla de entrada: cuenta (nombre + contraseña) en la prueba local; solo nombre en línea
-function askNameAndJoin(conn, online, info, spr) {
+// ¿Hay un servidor online? Dirección: ?server=URL (pruebas) > data/server.json {"url"} (el de GitHub Pages apunta al PC que aloja) > el mismo origen
+// (la web servida por server/server.mjs). ?offline=1 fuerza la prueba local. Si el servidor configurado no responde, se juega en local.
+async function findServer() {
+  const q = new URLSearchParams(location.search);
+  if (q.get("offline") === "1") return { base: "", info: null, lost: false };
+  let base = (q.get("server") || "").replace(/\/$/, ""), configured = !!base;
+  if (!base) { try { const j = await fetch("data/server.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null); base = String(j?.url || "").replace(/\/$/, ""); configured = !!base; } catch {} }
+  const get = async url => { const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000); try { const r = await fetch(url, { cache: "no-store", signal: ctl.signal }); return r.ok ? await r.json() : null; } catch { return null; } finally { clearTimeout(t); } };
+  const info = await get(base ? base + "/api/info" : "api/info");
+  return { base: info ? base : "", info, lost: configured && !info };
+}
+
+function askNameAndJoin(conn, online, info, spr, flags = {}) {
   const box = document.getElementById("join"), msg = box.querySelector(".msg");
   const user = box.querySelector(".user"), pass = box.querySelector(".pass"), pass2 = box.querySelector(".pass2"), go = box.querySelector(".go");
-  box.querySelector(".where").textContent = online
-    ? "Partida en línea" + (info.players.length ? " · conectados: " + info.players.join(", ") : " · aún no hay nadie")
-    : "Prueba local (un jugador)";
+  const where = box.querySelector(".where");
+  where.textContent = online
+    ? tr("Partida en línea") + " · v" + info.version + (info.players.length ? tr(" · conectados: ") + info.players.join(", ") : tr(" · aún no hay nadie"))
+    : flags.protoClash ? tr("El servidor es de otra versión del juego. Recarga la página (Ctrl+F5) o espera a que se actualice.") + " (v" + info.version + ")"
+    : flags.lost ? tr("El servidor no está disponible ahora mismo: prueba local (un jugador, se guarda en este navegador).") : tr("Prueba local (un jugador)");
   let creating = false;
   const setTab = c => {
     creating = c;
@@ -572,33 +588,38 @@ function askNameAndJoin(conn, online, info, spr) {
     msg.textContent = "";
     pass.autocomplete = c ? "new-password" : "current-password";
   };
-  if (online) { box.querySelector(".tabs").style.display = "none"; box.querySelector(".pw").style.display = "none"; }
+  if (online) fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { if (v.version !== info.version) where.textContent += " · " + tr("tu cliente es la v") + v.version; }).catch(() => {});
+  const hint = box.querySelector(".hint");
+  if (online && hint) hint.textContent = tr("Tu cuenta y tu personaje se guardan en el servidor: puedes entrar desde cualquier dispositivo.");
   for (const t of box.querySelectorAll(".tabs button")) t.onclick = () => setTab(t.dataset.tab === "new");
   user.value = store.get("name", "");
   const known = Accounts.listAccounts();
   if (!online && !known.length && !user.value) setTab(true);
+  if (online && !user.value) setTab(true);
   box.style.display = "grid";
-  (user.value && !online ? pass : user).focus();
+  (user.value ? pass : user).focus();
   return new Promise(resolve => {
     const submit = async () => {
-      const name = user.value.trim().slice(0, 16) || (online ? "Aventurero" : "");
+      let name = user.value.trim().slice(0, 16);
       msg.textContent = "…";
       try {
-        if (!online) {
-          if (!name) throw new Error("Escribe un nombre.");
-          if (creating) {
-            if (pass.value !== pass2.value) throw new Error("Las contraseñas no coinciden.");
-            await Accounts.createAccount(name, pass.value);   // una partida guardada antes con ese nombre se conserva
-          } else await Accounts.login(name, pass.value);
-        }
+        if (!name) throw new Error("Escribe un nombre.");
+        if (creating && pass.value !== pass2.value) throw new Error("Las contraseñas no coinciden.");
+        let hasChar = false;
+        if (online) {
+          const r = await conn.login(creating ? "register" : "login", name, pass.value);
+          name = r.name; hasChar = r.hasChar;
+        } else if (creating) await Accounts.createAccount(name, pass.value);   // una partida guardada antes con ese nombre se conserva
+        else await Accounts.login(name, pass.value);
         store.set("name", name);
         msg.textContent = "Entrando…";
         let create = null;
-        if (!online && !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
+        if (online ? !hasChar : !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
           box.style.display = "none";
           create = await createCharacter(spr, name);
         }
-        const id = await conn.join(name, create);
+        let id;
+        try { id = await conn.join(name, create); } catch (e) { box.style.display = "grid"; throw e; }
         if (!online) {                                         // descargar el aspecto antes de empezar
           const me = conn.state.ents.get(id);
           if (me) { const lk = spr.lookKeys(me.gender, me.look); await Promise.all([spr.preload(lk), spr.preloadHd(lk)]); }

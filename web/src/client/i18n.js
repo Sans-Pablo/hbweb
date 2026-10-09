@@ -8,6 +8,19 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  // ---- modo online (server/server.mjs, connection.js, main.js)
+  " · conectados: ": " · online: ", "El servidor es de otra versión del juego. Recarga la página (Ctrl+F5) o espera a que se actualice.": "The server runs a different version of the game. Reload the page (Ctrl+F5) or wait for the update.",
+  "El servidor no está disponible ahora mismo: prueba local (un jugador, se guarda en este navegador).": "The server is not available right now: local test (single player, saved in this browser).",
+  "Tu cuenta y tu personaje se guardan en el servidor: puedes entrar desde cualquier dispositivo.": "Your account and character are saved on the server: you can log in from any device.",
+  "Usuario o contraseña incorrectos.": "Wrong username or password.", "Ese usuario ya existe.": "That username already exists.", "El usuario debe tener de 3 a 16 letras, números, _ o -.": "The username must have 3 to 16 letters, numbers, _ or -.",
+  "La contraseña debe tener de 6 a 64 caracteres.": "The password must have 6 to 64 characters.", "Demasiados intentos. Espera unos minutos.": "Too many attempts. Wait a few minutes.",
+  "Demasiadas cuentas creadas desde tu conexión. Inténtalo más tarde.": "Too many accounts created from your connection. Try again later.", "El servidor está lleno.": "The server is full.",
+  "Crea tu personaje.": "Create your character.", "Has entrado desde otro sitio.": "You logged in from somewhere else.", "Estás silenciado.": "You are muted.", "Sin respuesta.": "No response.",
+  "El servidor se apaga.": "The server is shutting down.", "El servidor se reinicia. Vuelve a entrar en un minuto.": "The server is restarting. Log back in in a minute.", "Cuenta bloqueada.": "Account blocked.", "Bloqueado.": "Blocked.",
+  "Nombre de personaje no válido.": "Invalid character name.", "Ese nombre de personaje ya está en uso.": "That character name is already in use.",
+  "tu cliente es la v": "your client is v",
+  "Inicia sesión primero.": "Log in first.",
+  "Se cortó la conexión con el servidor.": "The connection to the server was lost.", "Dirección del servidor no válida.": "Invalid server address.", "Error del servidor.": "Server error.",
   // ---- pantalla de entrada y creación
   "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
   "Repite la contraseña": "Repeat password", "Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.": "Your character is saved only in this browser. You can make a backup in Options.",

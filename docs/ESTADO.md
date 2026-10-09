@@ -48,7 +48,7 @@ Se trabaja en `main` con commits pequeños: `git pull --rebase origin main` ante
 - **Monstruos**: 45 tipos con sprites, sonidos y fichas (`tools/convert_mobs.py`; tabla tipo→sprite de ErkoKnoll/helbreath-base-game y juanrossi/helbreath, `tools/ref/Monsters.ts`). Tiempos y fotogramas por tipo desde `MapData.cpp` (`tools/convert_frames.py` → `shared/mobtiming.gen.js`). Hoja por acción según `DrawObject_On*`.
 - **Mundo**: mapas de Middleland, Dungeons y Huntzones (`convert_maps.py --server Aresden,Middleland,...`); ciudad con NPC de tienda, herrería, almacén, mago y conversación (diálogo 21, `contents15x`); día/noche, lluvia, música por lugar, zonas sin ataque.
 - **Combate**: auditado contra `iCalculateAttackEffect`; retroceso ≥ 40; habilidades especiales de monstruo 1–8 (explosivos); Summon Creature con seguidores.
-- **Pendiente**: ver [sistemas/](sistemas/README.md) (cada ficha lista lo que falta); pruebas de interfaz con Playwright dentro del repo; nieve; mapas de Elvine; multijugador y persistencia aparcados a petición.
+- **Pendiente**: ver [sistemas/](sistemas/README.md) (cada ficha lista lo que falta); pruebas de interfaz con Playwright dentro del repo; nieve; mapas de Elvine; modo online activo desde la 0.25.0 (ver [ONLINE.md](ONLINE.md) y [sistemas/online.md](sistemas/online.md)).
 
 ## Carga bajo demanda (oct 2026)
 Streaming por mapa (`docs/sistemas/carga.md`): arranque ~39 MB (antes ~131 MB solo de sprites + 17 MB de mapas), cambio a Aresden ~18 MB, service worker para la segunda visita. Pendiente: WebP, HD por bundle, espacio de `.git`.

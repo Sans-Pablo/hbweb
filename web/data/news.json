@@ -11,6 +11,27 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Modo online (v0.25.0)",
+        "en": "Online mode (v0.25.0)"
+      },
+      "items": [
+        {
+          "es": "El juego ya se puede jugar online: el servidor corre en el PC del anfitrión y todos entran desde el enlace de GitHub. Cada jugador crea una cuenta (usuario + contraseña) y su personaje, que se guardan en el servidor: puedes entrar desde el móvil o el PC con el mismo personaje.",
+          "en": "The game can now be played online: the server runs on the host's PC and everyone joins from the GitHub link. Each player creates an account (username + password) and a character, saved on the server: you can log in from your phone or PC with the same character."
+        },
+        {
+          "es": "Todos comparten la granja, la ciudad, las tiendas y la arena de apuestas (se ven los combates en directo); las criptas siguen siendo privadas. Ves el equipo de los demás y el chat llega a quien esté en tu mapa. Si el servidor está apagado, la web arranca en modo local.",
+          "en": "Everyone shares the farm, the town, the shops and the betting arena (fights are seen live); crypts stay private. You see other players' gear and chat reaches everyone on your map. If the server is off, the page starts in local mode."
+        },
+        {
+          "es": "Administradores: comandos /who, /kick, /mute, /ban, /say… en el chat, consola del servidor y panel web (solo desde el PC del servidor). Guía de instalación: docs/ONLINE.md.",
+          "en": "Admins: /who, /kick, /mute, /ban, /say… commands in chat, server console and a web panel (only from the server PC). Setup guide: docs/ONLINE.md."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Modo móvil (v0.24.0)",
         "en": "Mobile mode (v0.24.0)"
       },
@@ -2295,6 +2316,28 @@
       "text": {
         "es": "Abre el juego en el móvil (apaisado): mueve con el joystick, ⚔️ ataca al monstruo más cercano, ✋ recoge, ☰ abre el menú y ✕ cierra el cuadro. Comprueba que AUTO está encendido la primera vez y que ningún cuadro se sale de la pantalla.",
         "en": "Open the game on your phone (landscape): move with the joystick, ⚔️ attacks the nearest monster, ✋ picks up, ☰ opens the menu and ✕ closes the dialog. Check AUTO is on the first time and no dialog goes off screen."
+      }
+    },
+    {
+      "id": "online-2p",
+      "group": {
+        "es": "Online",
+        "en": "Online"
+      },
+      "text": {
+        "es": "Con el servidor encendido, entra desde dos dispositivos con cuentas distintas: os veis, el chat llega al otro, el equipo del otro se ve, y si una cuenta entra dos veces la primera sesión se cierra. Cierra el servidor: debe salir «Conexión perdida» con el motivo.",
+        "en": "With the server on, log in from two devices with different accounts: you see each other, chat reaches the other, the other's gear is visible, and logging in twice kicks the first session. Stop the server: «Connection lost» should appear with the reason."
+      }
+    },
+    {
+      "id": "online-admin",
+      "group": {
+        "es": "Online",
+        "en": "Online"
+      },
+      "text": {
+        "es": "Como administrador: /who lista a los jugadores; /mute silencia a uno; /kick lo expulsa; /ban bloquea su cuenta y /unban la libera; el panel http://localhost:8088/admin?token=… funciona en el PC del servidor y da 403 por el túnel.",
+        "en": "As admin: /who lists players; /mute silences one; /kick removes them; /ban blocks the account and /unban frees it; the panel http://localhost:8088/admin?token=… works on the server PC and returns 403 through the tunnel."
       }
     }
   ],

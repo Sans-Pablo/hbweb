@@ -5,9 +5,10 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 ## web/src/shared
 
 - `adventure.js` · 253 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
+- `appearance.js` · 15 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `combat.js` · 98 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
-- `const.js` · 66 · Constantes del juego compartidas por la simulación (el futuro servidor) y el cliente.
+- `const.js` · 67 · Constantes del juego compartidas por la simulación (el futuro servidor) y el cliente.
 - `data.js` · 16 · Datos del juego (generados por tools/convert.py a partir de los .cfg del servidor).
 - `drops.js` · 113 · Botín al morir un monstruo: NpcDeadItemGenerator (HGServer/Game.cpp:47297).
 - `dungeon.js` · 252 · Cripta de esqueletos: niveles que bajan de uno en uno (1..DUNGEON_LEVELS).
@@ -52,7 +53,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 76 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 60 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
-- `connection.js` · 230 · Conexión con el "servidor". Dos implementaciones con la misma forma:
+- `connection.js` · 265 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 188 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 71 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
@@ -61,11 +62,11 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `fx.js` · 146 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 - `gui.js` · 432 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `hud.js` · 304 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 258 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `i18n.js` · 271 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
-- `look.js` · 98 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 620 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
+- `main.js` · 641 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -80,7 +81,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## server
 
-- `server.mjs` · 306 · Servidor multijugador de Helbreath Web (Node.js, sin dependencias).
+- `accounts.mjs` · 56 · Cuentas del servidor online: usuario + contraseña (scrypt con sal propia). Nada de contraseñas en claro, nunca.
+- `admin.mjs` · 38 · Texto de ayuda de administración y página del panel (/admin, solo desde el PC del servidor).
+- `server.mjs` · 495 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 
 ## tests
 
@@ -101,8 +104,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `magic-types.test.mjs` · 65 · Tipos de hechizo con estados: paralizar, hielo, escudo, invisibilidad, campos, veneno, línea.
 - `maps.test.mjs` · 59 · Ciudad de Aresden: teletransportes entre mapas (teleport-loc del servidor original).
 - `mobile.test.mjs` · 35 · Modo móvil: funciones puras (detección, auto-ataque inicial, joystick, objetivos cercanos). node tests/mobile.test.mjs
-- `net-dungeon.test.mjs` · 101 · Dos clientes reales: transición, aislamiento y reconexión, con 80 ms de latencia.
-- `net-walk.test.mjs` · 29 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
+- `net-dungeon.test.mjs` · 103 · Dos clientes reales: transición, aislamiento y reconexión, con 80 ms de latencia.
+- `net-walk.test.mjs` · 33 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
+- `online.test.mjs` · 146 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `shop.test.mjs` · 81 · Tienda, herrero y almacén: compra, venta, reparación y depósito con las reglas del servidor original.
@@ -130,7 +134,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `convert_talk.py` · 18 · 
 - `convert_theme_maps.py` · 42 · 
 - `convert_ui.py` · 27 · paperdoll del diálogo de personaje: item-equipM / item-equipW (15 hojas cada una) y colgantes de item-pack
-- `e2e.py` · 67 · 
+- `e2e.py` · 75 · 
 - `export_skeleton.py` · 31 · 
 - `hdup.py` · 38 · 
 - `make_crypt_assets.py` · 164 · ---------------------------------------------------------------- puerta

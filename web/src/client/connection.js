@@ -3,7 +3,7 @@
 //   LocalConnection: la simulación corre dentro de la página (un jugador).
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
 import { generateLevel } from "../shared/dungeon.js";
-import { ACT, DX, DY, PLAYER, LIMITS, mobDurations } from "../shared/const.js";
+import { ACT, DX, DY, PLAYER, LIMITS, NET_PROTO, mobDurations } from "../shared/const.js";
 
 export class LocalConnection {
   constructor(adventure) {
@@ -50,6 +50,7 @@ class MirrorWorld {
     this.time = 0;
     this.ents = new Map();
     this.items = new Map();
+    this.dayOrNight = 1; this.weather = 0; this.fixedDay = false; this.dyn = []; this.bfx = []; this.generators = []; this.meta = null;
   }
   busy(e) { return this.time < e.busyUntil; }
   rebuildOccupancy() {
@@ -59,9 +60,13 @@ class MirrorWorld {
 }
 
 export class NetConnection {
-  constructor(grid, npcDb, data, maps = {}) {
+  // base: dirección del servidor ("" = el mismo que sirve la web; si no, p. ej. https://mi-pc.ngrok-free.app); spawns: generadores de la granja (para cargar sus monstruos)
+  constructor(grid, npcDb, data, maps = {}, base = "", spawns = []) {
     this.maps = maps;
+    this.base = base;
+    this.farmSpawns = spawns;
     this.world = new MirrorWorld(grid, npcDb, data);
+    this.world.generators = spawns;
     this.pid = null;
     this.online = true;
     this.events = [];
@@ -72,33 +77,65 @@ export class NetConnection {
     this.resync = false;
     this.status = "conectando";
     this.ping = 0;
+    this.waiting = null;
+    this.admin = false;
   }
 
-  join(name) {
+  // dirección del WebSocket: http(s)://host -> ws(s)://host/ws
+  get wsUrl() {
+    const b = this.base || location.origin;
+    return b.replace(/^http/, "ws").replace(/\/$/, "") + "/ws";
+  }
+
+  // abre la conexión (si no está abierta) y espera un mensaje concreto del servidor
+  open() {
+    if (this.ws && this.ws.readyState === 1) return Promise.resolve();
     return new Promise((resolve, reject) => {
-      const url = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
-      const ws = this.ws = new WebSocket(url);
-      ws.onopen = () => { ws.send(JSON.stringify({ t: "join", name })); };
-      ws.onmessage = e => {
-        const m = JSON.parse(e.data);
-        if (m.t === "welcome") {
-          this.pid = m.id;
-          this.serverTime = this.world.time = m.time;
-          this.recvAt = performance.now();
-          this.status = "conectado";
-          this.returning = m.returning;
-          resolve(m.id);
-        } else if (m.t === "error") { reject(new Error(m.msg)); ws.close(); }
-        else if (m.t === "s") this.onState(m);
-        else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
-      };
+      let ws;
+      try { ws = this.ws = new WebSocket(this.wsUrl); } catch (e) { reject(new Error("Dirección del servidor no válida.")); return; }
+      let opened = false;
+      ws.onopen = () => { opened = true; resolve(); };
+      ws.onmessage = e => this.onMessage(JSON.parse(e.data));
       ws.onclose = () => {
+        clearInterval(this.pinger);
+        if (!opened) { reject(new Error("No se pudo conectar con el servidor.")); return; }
         this.status = "desconectado";
-        this.events.push({ t: "disconnected" });
-        reject(new Error("No se pudo conectar con el servidor."));
+        if (this.waiting) { this.waiting.reject(new Error(this.kickMsg || "Se cortó la conexión con el servidor.")); this.waiting = null; }
+        this.events.push({ t: "disconnected", reason: this.kickMsg || "" });
       };
-      setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now() })); }, 2000);
+      this.pinger = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now(), p: this.ping })); }, 2000);
     });
+  }
+  request(msg, okType) {
+    return new Promise((resolve, reject) => { this.waiting = { okType, resolve, reject }; this.ws.send(JSON.stringify(msg)); });
+  }
+  // usuario + contraseña: mode "login" o "register". Devuelve { name, hasChar, admin, version }
+  async login(mode, name, pass) {
+    await this.open();
+    const r = await this.request({ t: "auth", mode, name, pass, proto: NET_PROTO }, "authok");
+    this.admin = !!r.admin; this.account = r.name; this.serverVersion = r.version;
+    return r;
+  }
+  // entra en el mundo (create: personaje nuevo si la cuenta aún no tiene)
+  async join(name, create = null) {
+    await this.open();
+    const m = await this.request({ t: "join", create }, "welcome");
+    this.pid = m.id;
+    this.serverTime = this.world.time = m.time;
+    this.recvAt = performance.now();
+    this.status = "conectado";
+    this.returning = m.returning;
+    this.admin = !!m.admin;
+    return m.id;
+  }
+  onMessage(m) {
+    if (this.waiting && (m.t === this.waiting.okType || m.t === "error")) {
+      const w = this.waiting; this.waiting = null;
+      if (m.t === "error") { const e = new Error(m.msg); e.code = m.code; w.reject(e); } else w.resolve(m);
+    } else if (m.t === "s") this.onState(m);
+    else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
+    else if (m.t === "msg") this.events.push({ t: "chat", system: true, text: m.text, id: this.pid });
+    else if (m.t === "kicked") this.kickMsg = m.msg;
   }
 
   onState(m) {
@@ -111,7 +148,9 @@ export class NetConnection {
       w.ents.clear(); w.items.clear();
       this.resync = true;
     }
-    if (m.map) w.map = m.map;
+    if (m.map) { w.map = m.map; w.meta = this.maps[m.map.id]?.meta || null; w.generators = m.map.kind === "farm" ? this.farmSpawns : []; }
+    if (m.sk) { const was = w.dayOrNight; w.fixedDay = !!m.sk[0]; w.dayOrNight = m.sk[1]; w.weather = m.sk[2]; if (was !== m.sk[1] && this.pid && !w.fixedDay && this.sawSky) this.events.push({ t: "time", v: m.sk[1] }); this.sawSky = true; }
+    if (m.fx) { w.dyn = m.fx[0]; w.bfx = m.fx[1]; }
     for (const o of m.e || []) this.applyEnt(o);
     for (const id of m.g || []) w.ents.delete(id);
     if (m.it) {
@@ -165,12 +204,8 @@ export class NetConnection {
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
       if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }
-      if (own) Object.assign(e, {
-        mp: o.mp, maxMp: o.mm, level: o.lv, exp: o.xp, prevExp: o.px, nextExp: o.nx, pool: o.pool, gold: o.gold,
-        sp: o.sp, maxSp: o.ms, hunger: o.hu, weight: o.wt, maxLoad: o.ml, atkMs: o.am, dmg: o.dmg,
-        bag: o.bag.map(([uid, id, count, life, attr, color, x, y]) => ({ uid, id, count, life, x, y, ...(attr ? { attr, color } : {}) })), equip: o.eq, magic: o.mg,
-        stats: o.stats, defense: o.def, kills: o.kills, skills: o.skills, deadAt: o.deadAt,
-      });
+      if (own) Object.assign(e, o.o);                    // estado completo del propio jugador (server/server.mjs: ownState)
+      else e.ap = o.ap;                                  // equipo visible de los demás
       if (e.busyUntil === undefined) e.busyUntil = 0;
       if (e.lastAttack === undefined) e.lastAttack = -1e9;
       if (e.lastMove === undefined) e.lastMove = -1e9;
