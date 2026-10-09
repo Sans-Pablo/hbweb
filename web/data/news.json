@@ -11,6 +11,23 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Botín usable (v0.19.3)",
+        "en": "Usable loot (v0.19.3)"
+      },
+      "items": [
+        {
+          "es": "La cripta tiene tabla de botín propia por tramos (1-5, 6-10, 11-15, 16-20): solo objetos reales que un guerrero nivel 50 puede usar (sin nivel >50 ni fuerza >161). Antes podían caer cosas inutilizables (Devastator, GiantSword…).",
+          "en": "The crypt has its own loot table per band (1-5, 6-10, 11-15, 16-20): only real items a level-50 warrior can use (no level >50 nor strength >161). Before, unusable things could drop (Devastator, GiantSword...)."
+        },
+        {
+          "es": "Reparto 70 % común / 25 % poco común / 5 % codiciado; Excaliber, set Dark Knight, set de héroe de Aresden y SangAh en los tramos altos. Cae la variante de tu sexo.",
+          "en": "70% common / 25% uncommon / 5% chase; Excaliber, Dark Knight set, Aresden hero set and SangAh in the high bands. Your gender's variant drops."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Botín que importa (v0.19.0)",
         "en": "Loot that matters (v0.19.0)"
       },

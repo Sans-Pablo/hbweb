@@ -19,6 +19,19 @@ lv(8, 31, 32, 49, 50, 52);
 lv(9, 58);
 lv(10, 77, 59, 75);
 
+// Botín de la cripta (propio del port): objetos REALES de Item.cfg que un guerrero de nivel 50 puede usar
+// (nivel exigido <= 50, peso <= 161 de fuerza). Un array [h, m] = variante de hombre / mujer. Ver docs/sistemas/botin.md.
+export const MAX_LEVEL = 50, MAX_STR = 161;
+export const CRYPT_LOOT = [
+  { common: [15, 23, 25, 28, 31, 34, 62, 65, [454, 472], [455, 475], [457, 477], [461, 482], 79, 80, 81, 82, 83], uncommon: [16, [456, 476], 632], rare: [32] },             // 1-5
+  { common: [18, 26, 35, 66, 39, 46, 71, [456, 476], [462, 483], [600, 602], 84, 85, 451, 402], uncommon: [29, 43, 632, 300, 1098], rare: [[458, 478]] },                   // 6-10
+  { common: [47, 69, 50, 54, 560, 760, [458, 478], [601, 603], 86, 87], uncommon: [[712, 730], [711, 729], [713, 731], 717, 718, 630, 1099, 1100], rare: [700, 701, 702, 703, 704] },   // 11-15
+  { common: [51, 19, 54, 87, [458, 478]], uncommon: [709, 727, [710, 728], [707, 725], [706, 724], [708, 726], 311, 1101, 630],
+    rare: [20, [411, 412], [403, 404], [419, 420], [423, 424], 848, 850] },                                                                                                  // 16-20
+];
+export const cryptBand = depth => Math.min(3, Math.max(0, Math.ceil(depth / 5) - 1));
+export const usable = d => !!d && d.levelLimit <= MAX_LEVEL && d.weight <= MAX_STR * 100;
+
 const pick = (rng, list) => list[dice(rng, 1, list.length) - 1];
 
 const MELEE = {
@@ -54,7 +67,7 @@ const STANDARD = [
 ];
 
 // Devuelve { id, count } o null. `rating` = reputación del jugador (0 hoy).
-function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0, depth = 0 } = {}) {
+function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new Date().getMonth() + 1, data = null, addGold = 0, depth = 0, gender = 1 } = {}) {
   const type = npc.type;
   if (type === 21 || type === 34 || type === 64) return null;          // guardia, maniquí, cultivo
   if (dice(rng, 1, 10000) < rates.primary) return null;                // hay objeto si la tirada >= tasa primaria
@@ -77,9 +90,15 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
   }
   let gen = GEN_LEVEL[type];
   if (!gen) return null;
-  if (depth) gen = Math.min(10, Math.max(gen, 1 + Math.ceil(depth / 2.2)));     // nivel de generación mínimo según el piso
+  if (depth) gen = Math.min(10, Math.max(gen, 1 + Math.ceil(depth / 2.2)));     // nivel de generación mínimo según el piso (calidad de atributos)
   let id;
-  if (dice(rng, 1, 10000) <= 6000) id = dice(rng, 1, 10000) <= 8000 ? pick(rng, MELEE[gen]) : WAND[gen];
+  if (depth) {                                                                    // cripta: tabla propia, 70 % común / 25 % poco común / 5 % codiciado
+    const t = CRYPT_LOOT[cryptBand(depth)], r = dice(rng, 1, 100);
+    const e = pick(rng, r <= 70 ? t.common : r <= 95 ? t.uncommon : t.rare);
+    id = Array.isArray(e) ? e[gender === 2 ? 1 : 0] : e;
+    const g = data && data.item(id)?.gender;
+    if (g && g !== gender) { const c = pick(rng, t.common); id = Array.isArray(c) ? c[gender === 2 ? 1 : 0] : c; }      // objeto del otro sexo (p. ej. SangAh, solo hombre): cae uno común
+  } else if (dice(rng, 1, 10000) <= 6000) id = dice(rng, 1, 10000) <= 8000 ? pick(rng, MELEE[gen]) : WAND[gen];
   else id = resolve(rng, ARMOR[gen]);
   if (!id) return null;
   const d = data && data.item(id), ra = d && rollAttributes(rng, d, gen, Math.floor(depth / 5));
@@ -88,5 +107,7 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
 
 export function rollKillDrop(rng, npc, opts = {}) {
   const r = rollKillDropRaw(rng, npc, opts);
-  return r && BANNED_ITEMS.has(r.id) ? null : r;
+  if (!r || BANNED_ITEMS.has(r.id)) return null;
+  const d = opts.data && opts.data.item(r.id);
+  return r.id !== GOLD && d && !usable(d) ? null : r;                         // red de seguridad: nada que un nivel 50 no pueda usar
 }

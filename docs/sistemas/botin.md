@@ -22,3 +22,6 @@ Caen junto al cadáver (`uniqueSpot`) a los 0,6·morir + 200 ms. Fuente: `shared
 
 ## Rareza visible
 `rarityOf(id, attr)`: 0 normal, 1 mágico (algún atributo), 2 raro (dos atributos con suma ≥12 o valor ≥10), 3 único. Colores `RARITY_COLOR` (blanco, azul, dorado, naranja). Objetos raros/únicos en el suelo: etiqueta siempre visible + rayo de luz; el evento `drop` de botín lleva `r` y `attr` (solo del botín de monstruos) → registro «¡Objeto único!/raro!» y sonido (E12 / E30) si estás a ≤14 casillas.
+
+## Tabla de la cripta (v0.19.3)
+`CRYPT_LOOT` en `shared/drops.js`: 4 tramos (niveles 1-5, 6-10, 11-15, 16-20) × común 70 % / poco común 25 % / codiciado 5 %. Solo objetos con nivel exigido ≤ 50 y peso ≤ 16100 (fuerza 161 = 14 + 3×49 de un guerrero); `usable()` filtra además cualquier otro botín. Las variantes de sexo se eligen por `p.gender`; si el objeto es del otro sexo (SangAh, solo hombre) cae uno común.
