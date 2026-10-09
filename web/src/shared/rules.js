@@ -43,7 +43,7 @@ export function hitChance(attackRatio, defense, fromBehind) {
 
 // Ataque de un monstruo: dados de ataque del NPC.cfg y su "HR".
 export function npcMelee(rng, npc) {
-  return { damage: dice(rng, npc.cfg.attackDiceThrow, npc.cfg.attackDiceRange), hitRatio: npc.cfg.hitRatio };
+  return { damage: Math.ceil(dice(rng, npc.cfg.attackDiceThrow, npc.cfg.attackDiceRange) * (npc.dmgMul || 1)), hitRatio: npc.cfg.hitRatio };
 }
 
 // Daño que recibe un jugador: se resta 1d(vitalidad/10) - 1.

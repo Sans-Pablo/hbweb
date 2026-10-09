@@ -3,6 +3,7 @@
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
 import { t } from "./i18n.js";
+import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
 import { itemDef, itemName, groundKey } from "./names.js";
@@ -91,25 +92,9 @@ export class Renderer {
     for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
       if (t) {
-        if (this.grid.procedural) {
-          g.fillStyle = t.blocked ? "#302c28" : "#71675b";
-          g.fillRect(i * T, j * T, T, T);
-        }
         if (!this.spr.ready("t" + t.spr)) ready = false;
         else if (hd && this.spr.hdm["t" + t.spr] && this.spr.src("t" + t.spr)[1] === 1) ready = false;   // espera a la hoja HD
         this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
-        if (this.grid.procedural && !t.blocked) {
-          g.fillStyle = "rgba(24,21,29,.35)"; g.fillRect(i * T, j * T, T, T);
-        }
-        if (this.grid.procedural && t.blocked) {
-          const x = cx * CHUNK + i, y = cy * CHUNK + j;
-          const edge = !this.grid.blocked(x - 1, y) || !this.grid.blocked(x + 1, y) || !this.grid.blocked(x, y - 1) || !this.grid.blocked(x, y + 1);
-          g.fillStyle = edge ? "rgba(0,0,0,.18)" : "rgba(0,0,0,.5)"; g.fillRect(i * T, j * T, T, T);
-          if (!this.grid.blocked(x, y + 1)) {
-            g.fillStyle = "#65564a"; g.fillRect(i * T, j * T + T - 6, T, 2);
-            g.fillStyle = "rgba(0,0,0,.5)"; g.fillRect(i * T, j * T + T - 4, T, 4);
-          }
-        }
       }
     }
     // Una hoja pendiente no debe dejar un bloque vacío guardado para toda la partida.
@@ -303,14 +288,13 @@ export class Renderer {
 
   drawDungeonInfo(s) {
     const { ctx } = this, map = s.world.map;
-    const room = this.grid.rooms?.find(r => s.me.x >= r.x && s.me.x < r.x + r.w && s.me.y >= r.y && s.me.y < r.y + r.h);
-    const remaining = map.remainingEnemies ?? [...s.world.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
+    const remaining = map.remainingEnemies ?? [...s.world.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.dead).length;
     ctx.save();
-    ctx.fillStyle = "rgba(15,14,19,.85)"; ctx.fillRect(10, 10, 290, 48);
+    ctx.fillStyle = "rgba(15,14,19,.85)"; ctx.fillRect(10, 10, 330, 48);
     ctx.textAlign = "left"; ctx.font = "bold 13px Tahoma, sans-serif";
-    ctx.fillStyle = "#e8dcc3"; ctx.fillText(room?.name || "Galerías de la cripta", 20, 29);
+    ctx.fillStyle = "#e8dcc3"; ctx.fillText("Nivel " + map.level + " / " + map.total + (map.boss ? " · JEFE" : ""), 20, 29);
     ctx.font = "12px Tahoma, sans-serif"; ctx.fillStyle = remaining ? "#e5bca0" : "#9fe07f";
-    ctx.fillText(remaining ? "Esqueletos restantes: " + remaining + " / " + map.totalEnemies : "¡Cripta despejada! Recoge el botín y regresa (E).", 20, 47);
+    ctx.fillText(remaining ? "Esqueletos restantes: " + remaining + " / " + map.totalEnemies : (map.level >= map.total ? "¡Cripta despejada! Busca la salida (E)." : "¡Nivel despejado! Baja por el portal (E)."), 20, 47);
     ctx.restore();
   }
 
@@ -324,7 +308,8 @@ export class Renderer {
       ctx.beginPath(); ctx.ellipse(x, y + 5, 15, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.strokeStyle = "rgba(140,205,232,.65)"; ctx.beginPath(); ctx.ellipse(x, y - 10, 10, 19, 0, 0, Math.PI * 2); ctx.stroke();
       const near = Math.max(Math.abs(gate.x - s.me.x), Math.abs(gate.y - s.me.y)) <= 1;
-      this.label(x, y - 36, gate.label + (near ? " · E" : ""), "#bde8ff");
+      const closed = gate.locked && (s.world.map.remainingEnemies ?? 1) > 0;
+      this.label(x, y - 36, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }
@@ -390,7 +375,10 @@ export class Renderer {
     }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
+    if (e.boss) { ctx.save(); ctx.translate(x, y); ctx.scale(1.2, 1.2); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     spr.put(ctx, key, f, x, y);
+    if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
+    if (e.boss) ctx.restore();
     ctx.globalAlpha = 1;
     if (!e.dead && sget(s.world, e, "ice")) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
     if (!e.dead && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
@@ -416,7 +404,7 @@ export class Renderer {
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + e.name + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
+        const name = (e.special && remaster ? "★ " : "") + (e.comp && e.nick ? e.nick + " · " : "") + (e.boss ? BOSS_NAMES[e.boss] : e.name) + (e.comp ? " (compañero, nv " + e.clvl + ")" : "");
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";

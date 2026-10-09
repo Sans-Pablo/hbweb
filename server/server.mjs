@@ -14,6 +14,7 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Grid } from "../web/src/shared/grid.js";
 import { Adventure } from "../web/src/shared/adventure.js";
+import { setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { GameData } from "../web/src/shared/data.js";
 import { damageRange } from "../web/src/shared/combat.js";
 import { attackMs } from "../web/src/shared/world.js";
@@ -35,6 +36,7 @@ const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
 const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
+setDungeonPalette(JSON.parse(fs.readFileSync(path.join(DATA, "dungeon_palette.json"))));
 const maps = {};
 try {
   for (const id of Object.keys(JSON.parse(fs.readFileSync(path.join(DATA, "maps", "index.json"))))) {
@@ -221,7 +223,7 @@ const r1 = v => Math.round(v * 10) / 10;
 function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
-  if (e.kind === "npc") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); }
+  if (e.kind === "npc") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; }
   else {
     o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
     if (own) Object.assign(o, {

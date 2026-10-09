@@ -17,9 +17,9 @@ Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`,
 - Limitación: todo vive en el navegador (no hay sincronización entre dispositivos; haría falta un servidor).
 
 
-## Cripta procedural — entrega 1
+## Cripta de esqueletos — 20 niveles
 
-Entrada en Aresfarm (134, 94) con E, nueve salas conectadas, esqueletos originales, instancias privadas en local y servidor, portales de regreso, finalización y limpieza. Pruebas y límites en [DUNGEON_V1.md](DUNGEON_V1.md).
+Sustituye a la entrega 1 (nueve salas). Ver [sistemas/cripta.md](sistemas/cripta.md). Pendiente: probar el aspecto de los bordes con los testers y afinar la dificultad.
 
 ## Creación de personaje
 - Pantalla de creación (`client/create.js`) tras crear la cuenta: nombre (≤10, reglas del original), 10 puntos entre atributos de 10 a 14, plantillas Guerrero/Mago/Sacerdote, género, 3 pieles, 8 peinados, 16 colores de pelo y 8 de ropa interior, con vista previa que gira.

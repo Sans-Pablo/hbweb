@@ -2,7 +2,7 @@
 //   join(nombre) -> id   send(orden) -> bool   update(dt) -> eventos   state -> vista del mundo
 //   LocalConnection: la simulación corre dentro de la página (un jugador).
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
-import { generateDungeon, FARM_PORTAL } from "../shared/dungeon.js";
+import { generateLevel, FARM_PORTAL } from "../shared/dungeon.js";
 import { ACT, DX, DY, PLAYER, LIMITS, mobDurations } from "../shared/const.js";
 
 export class LocalConnection {
@@ -107,7 +107,7 @@ export class NetConnection {
     this.recvAt = performance.now();
     this.ack = m.ack;
     if (m.map && m.map.id !== w.map.id) {
-      w.grid = m.map.kind === "dungeon" ? generateDungeon(m.map.seed).grid : (this.maps[m.map.id]?.grid || w.farmGrid);
+      w.grid = m.map.kind === "dungeon" ? generateLevel(m.map.seed, m.map.level).grid : (this.maps[m.map.id]?.grid || w.farmGrid);
       w.ents.clear(); w.items.clear();
       this.resync = true;
     }
@@ -157,7 +157,7 @@ export class NetConnection {
     }
     e.dead = !!o.dead; e.hp = o.hp; e.maxHp = o.mh; e.name = o.name;
     if (o.k === "npc") {
-      e.type = o.type; e.special = o.sp; e.phase = o.ph;
+      e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0;
       if (isNew) { e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);

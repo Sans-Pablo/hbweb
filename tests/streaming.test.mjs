@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";
 import { bundleOfWorld, coreKeys, tileKeysOfGrid, isTileKey, mobPrefixes } from "../web/src/client/bundles.js";
+import { generateLevel, setDungeonPalette, levelSeed } from "../web/src/shared/dungeon.js";
 import { Streamer } from "../web/src/client/streaming.js";
 
 const root = new URL("../web/data/", import.meta.url);
@@ -41,7 +42,8 @@ assert.ok(ares.tiles.length < Object.keys(manifest).filter(isTileKey).length);
 assert.ok(tileKeysOfGrid(mid.grid) === tileKeysOfGrid(mid.grid), "se cachea por rejilla");
 
 // criptas: activos fijos
-const crypt = bundleOfWorld({ grid: { procedural: true }, generators: [], ents: new Map(), map: { id: "x", kind: "dungeon" } }, manifest, npcDb);
+setDungeonPalette(J("dungeon_palette.json"));
+const crypt = bundleOfWorld({ grid: generateLevel(levelSeed(1, 1), 1).grid, generators: [], ents: new Map(), map: { id: "x", kind: "dungeon" } }, manifest, npcDb);
 assert.ok(crypt.tiles.length >= 4 && crypt.mobs.filter(k => /^ske/.test(k)).length === 40);
 
 // cola: prioridad, sin duplicados, máximo simultáneo

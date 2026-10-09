@@ -75,11 +75,11 @@ export class Hud {
     const me = this.conn.pid;
     const who = id => world.ents.get(id);
     switch (ev.t) {
-      case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball: úsala para tener a ese compañero.", "gold"); break;
-      case "companion": if (ev.id === me) this.log(ev.on ? ev.sp.replace(/-/g, " ") + " (nivel " + ev.lvl + ") te acompaña." : ev.sp.replace(/-/g, " ") + " vuelve a la bola."); break;
+      case "ball": if (ev.id === me) this.log("¡Has cazado suficientes " + ev.sp.replace(/-/g, " ") + "! Recibes una " + ev.sp.replace(/-/g, " ") + " Ball (" + (ev.nm || "") + "): úsala para tener a ese compañero.", "gold"); break;
+      case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " (" + ev.sp.replace(/-/g, " ") + ", nivel " + ev.lvl + ") te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
-      case "companion-lost": if (ev.id === me) this.log("Tu " + ev.sp.replace(/-/g, " ") + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
-      case "companion-lvl": if (ev.id === me) this.log("Tu " + ev.sp.replace(/-/g, " ") + " sube al nivel " + ev.lvl + ".", "gold"); break;
+      case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
+      case "companion-lvl": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":
         if (ev.id === me) this.log("Has muerto.", "bad");
@@ -95,7 +95,7 @@ export class Hud {
       case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
       case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
-      case "dungeon-cleared": if (ev.id === me) { this.log("¡Cripta completada! Recoge el botín y regresa por un portal (E).", "gold"); this.toast("¡Cripta completada!"); } break;
+      case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
       case "scan": if (ev.id === me) this.log(ev.text.trim(), "gold"); break;
       case "teleport": if (ev.id === me) this.log("Vuelves al punto de inicio."); break;
       case "status": if (ev.id === me) {
@@ -171,7 +171,7 @@ export class Hud {
   describeBall(it, me) {
     const c = it.comp, st = companionStats(me, c), nx = companionNeed(c.lvl);
     return [
-      "Compañero: " + c.sp.replace(/-/g, " ") + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
+      "Compañero: " + (c.nm ? c.nm + " (" + c.sp.replace(/-/g, " ") + ")" : c.sp.replace(/-/g, " ")) + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
       "Experiencia " + c.exp + " / " + nx + (c.lvl >= Math.min(60, me.level) ? " (tope: tu nivel)" : ""),
       "Daño ≈ " + st.dmg + " por golpe (" + Math.round(st.share * 100) + " % del tuyo) · vida " + st.hp,
     ];

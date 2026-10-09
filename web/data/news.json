@@ -11,6 +11,35 @@
     {
       "date": "2026-10-09",
       "title": {
+        "es": "Cripta de esqueletos de 20 niveles (v0.11.0)",
+        "en": "20-level skeleton crypt (v0.11.0)"
+      },
+      "items": [
+        {
+          "es": "La cripta ahora baja por niveles (1 a 20). Mata a todos los esqueletos y el portal del fondo se abre para bajar al siguiente; cada nivel es un mapa nuevo y más pequeño (60x60), con otro trazado: salas, laberinto, anillos, islas, pilares o cruz.",
+          "en": "The crypt now goes down level by level (1 to 20). Kill every skeleton and the portal at the far end opens to go down; each level is a new, smaller map (60x60) with a different layout: rooms, maze, rings, islands, pillars or cross."
+        },
+        {
+          "es": "Cada nivel sube la vida, el daño y la experiencia de los esqueletos. Cada 5 niveles hay un mapa pequeño con un jefe: un esqueleto un 20 % mayor y teñido (rojo, morado, turquesa, dorado).",
+          "en": "Each level raises the skeletons' health, damage and experience. Every 5 levels there is a small map with a boss: a skeleton 20% bigger and tinted (red, purple, teal, gold)."
+        },
+        {
+          "es": "Solo se usan teselas de los mapas originales middled1n y middled1x, recolocadas con sus bordes (tools/build_dungeon_palette.py). Los mapas originales no se tocan.",
+          "en": "Only tiles from the original middled1n and middled1x maps are used, re-placed with their edges (tools/build_dungeon_palette.py). The original maps are untouched."
+        },
+        {
+          "es": "Nueva entrada en middled1n (100, 85), además de la de Aresfarm (134, 94). Al volver con progreso, pregunta si continuar en el último nivel alcanzado o reiniciar desde el 1.",
+          "en": "New entrance in middled1n (100, 85), besides the Aresfarm one (134, 94). Coming back with progress asks whether to continue at the deepest level reached or restart from 1."
+        },
+        {
+          "es": "Cada compañero invocado recibe un nombre aleatorio. El esqueleto vuelve a su sprite original (se quitó la caminata remaster).",
+          "en": "Every summoned companion gets a random name. The skeleton is back to its original sprite (the remaster walk was removed)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "title": {
         "es": "Personalidad al crear el personaje (v0.10.4)",
         "en": "Personality chosen at character creation (v0.10.4)"
       },
@@ -656,6 +685,61 @@
       "text": {
         "es": "Crea personajes nuevos con cada personalidad: las frases (saludos, compras, pits, mascota) cambian de tono según la elegida. Recarga y comprueba que se conserva.",
         "en": "Create new characters with each personality: the lines (greetings, purchases, pits, pet) change tone with the chosen one. Reload and check it is kept."
+      }
+    },
+    {
+      "id": "crypt-down",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Entra por Aresfarm (134,94) y por middled1n (100,85). Con esqueletos vivos el portal de bajada dice «cerrado»; al matarlos todos se abre y baja al nivel 2.",
+        "en": "Enter via Aresfarm (134,94) and via middled1n (100,85). With skeletons alive the down portal says “closed”; once all are dead it opens and takes you to level 2."
+      }
+    },
+    {
+      "id": "crypt-look",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "El aspecto parece el de los dungeons originales (suelo, bordes y rocas) y cada nivel tiene un trazado distinto. Anota si ves casillas con bordes raros.",
+        "en": "The look matches the original dungeons (floor, edges and rocks) and each level has a different layout. Note any tiles with odd edges."
+      }
+    },
+    {
+      "id": "crypt-diff",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "La dificultad sube por nivel; en el 5, 10, 15 y 20 hay un jefe más grande y teñido, en un mapa pequeño.",
+        "en": "Difficulty rises per level; on 5, 10, 15 and 20 there is a bigger tinted boss in a small map."
+      }
+    },
+    {
+      "id": "crypt-resume",
+      "group": {
+        "es": "Cripta",
+        "en": "Crypt"
+      },
+      "text": {
+        "es": "Sal con progreso y vuelve a entrar: pregunta «Continuar en el nivel N» o «Reiniciar (nivel 1)». Al morir vuelves a Aresfarm y el progreso se conserva.",
+        "en": "Leave with progress and enter again: it asks “Continue at level N” or “Restart (level 1)”. On death you return to Aresfarm and progress is kept."
+      }
+    },
+    {
+      "id": "summon-names",
+      "group": {
+        "es": "Compañeros",
+        "en": "Companions"
+      },
+      "text": {
+        "es": "Cada bola nueva trae un nombre aleatorio que se ve al pasar el ratón y en los mensajes.",
+        "en": "Each new ball gets a random name shown on hover and in messages."
       }
     }
   ],

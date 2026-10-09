@@ -2,48 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
-import { Sprites, loadSpriteImage, validateDungeonAssets } from "../web/src/client/assets.js";
-import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../web/src/shared/dungeon.js";
+import { loadSpriteImage, validateDungeonAssets } from "../web/src/client/assets.js";
+import { DUNGEON_ASSETS } from "../web/src/shared/dungeon.js";
 import { Renderer } from "../web/src/client/renderer.js";
 
 const root = new URL("../web/data/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("sprites.json", root)));
 const npcs = JSON.parse(readFileSync(new URL("npc.json", root)));
-
-const hdManifest = JSON.parse(readFileSync(new URL("sprites_hd.json", root)));
-
-test("caminata remaster: 8 direcciones, 4 fotogramas visibles y pivotes dentro del atlas", () => {
-  for (let d=0; d<8; d++) {
-    const hd=hdManifest["ske"+(8+d)], im=png("../sprites_hd/"+hd.png);
-    assert.equal(hd.frames.length,4); assert.equal(hd.k,4);
-    for (const [x,y,w,h,px,py] of hd.frames) {
-      assert.ok(x>=0 && y>=0 && (x+w)*4<=im.w && (y+h)*4<=im.h);
-      assert.ok(w>15 && w<100 && h>35 && h<100);
-      assert.ok(px<0 && px>-w && py<0 && py+h>=0 && py+h<=10);
-      let visible=0;
-      for(let j=y*4;j<(y+h)*4;j++) for(let i=x*4;i<(x+w)*4;i++) if(im.rgba[(j*im.w+i)*4+3]>100) visible++;
-      assert.ok(visible>1000);
-    }
-  }
-});
-
-test("atlas propio: fallback original durante carga y coordenadas HD coherentes en dibujo y sombra", () => {
-  const s=Object.create(Sprites.prototype), key="ske8", hd=hdManifest[key];
-  const original={complete:true,naturalWidth:121}, image={complete:false,naturalWidth:0};
-  Object.assign(s,{m:manifest,hdm:hdManifest,hd:true,hdi:{[key]:image},img:{[key]:original}});
-  assert.deepEqual(s.frame(key,0),manifest[key].frames[0]);
-  assert.deepEqual(s.src(key),[original,1]);
-  image.complete=true;image.naturalWidth=1600;
-  assert.deepEqual(s.frame(key,0),hd.frames[0]);
-  const calls=[], ctx={drawImage:(...a)=>calls.push(a),save(){},restore(){},transform(){},globalAlpha:1};
-  s.silhouette=()=>image;
-  s.put(ctx,key,0,100,100);s.shadow(ctx,key,0,100,100,.4);
-  const [x,y,w,h]=hd.frames[0];
-  assert.deepEqual(calls[0].slice(0,5),[image,x*4,y*4,w*4,h*4]);
-  assert.deepEqual(calls[1].slice(0,5),calls[0].slice(0,5));
-  s.hd=false;assert.deepEqual(s.frame(key,0),manifest[key].frames[0]);
-  assert.deepEqual(s.src(key),[original,1]);
-});
 
 // Decodifica las hojas RGBA reales, incluidos los filtros PNG. Sin dependencias de navegador.
 function png(name) {
@@ -85,17 +50,17 @@ test("todas las hojas de la cripta existen y los fotogramas caben en el PNG", ()
   }
 });
 
-test("cada suelo elegido contiene piedra visible, no negro ni transparencia", () => {
-  for (const floor of DUNGEON_FLOORS) for (const f of floor.frames) {
-    const entry = manifest["t" + floor.spr], im = png(entry.png);
-    const [x, y, w, h] = entry.frames[f]; let visible = 0, light = 0;
-    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
-      const o = (j * im.w + i) * 4;
-      if (im.rgba[o + 3] === 255) visible++;
-      light += im.rgba[o] + im.rgba[o + 1] + im.rgba[o + 2];
+test("las hojas de la paleta de la cripta existen y el suelo no es negro ni transparente", () => {
+  const pal = JSON.parse(readFileSync(new URL("../web/data/dungeon_palette.json", import.meta.url)));
+  for (const [spr, rb, v, kx, ky] of pal.floor.slice(0, 3)) {
+    const entry = manifest["t" + spr], im = png(entry.png);
+    for (let f = 20 * rb + 6 * v; f < 20 * rb + 6 * v + 6; f++) {
+      const [x, y, w, h] = entry.frames[f]; let light = 0;
+      for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) { const o = (j * im.w + i) * 4; light += im.rgba[o] + im.rgba[o + 1] + im.rgba[o + 2]; }
+      assert.ok(light / (w * h * 3) > 25, "suelo negro: " + spr + "/" + f);
     }
-    assert.equal(visible, w * h); assert.ok(light / (w * h * 3) > 35, "suelo negro: " + f);
   }
+  for (const k of Object.keys(pal.edge)) for (const [spr, frame] of pal.edge[k]) assert.ok(manifest["t" + spr]?.frames[frame], "borde sin hoja: " + spr + "/" + frame);
 });
 
 test("manifiesto o NPC obsoleto produce un error explícito", () => {

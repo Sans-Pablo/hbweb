@@ -9,7 +9,7 @@ import { Grid } from "../web/src/shared/grid.js";
 import { readFileSync } from "node:fs";
 import { GameData } from "../web/src/shared/data.js";
 import { NetConnection } from "../web/src/client/connection.js";
-import { FARM_PORTAL, generateDungeon } from "../web/src/shared/dungeon.js";
+import { FARM_PORTAL, generateLevel, setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { findPath } from "../web/src/shared/path.js";
 
 const D = new URL("../web/data/", import.meta.url);
@@ -17,6 +17,7 @@ const json = name => JSON.parse(readFileSync(new URL(name, D)));
 const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 const bytes = new Uint8Array(readFileSync(new URL("arefarm.bin", D)));
+setDungeonPalette(json("dungeon_palette.json"));
 async function until(fn, why) {
   const end = Date.now() + 8000;
   while (Date.now() < end) { if (fn()) return; await delay(20); }
@@ -64,9 +65,13 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));
     await until(() => a.conn.state.map.kind === "dungeon", "entrada A");
     const mapA = a.conn.state.map;
-    assert.equal(a.conn.state.grid.w, 112);
-    assert.ok(mapA.totalEnemies >= 29 && mapA.remainingEnemies === mapA.totalEnemies);
-    assert.deepEqual(new Uint8Array(a.conn.state.grid.dv.buffer), new Uint8Array(generateDungeon(mapA.seed).grid.dv.buffer));
+    assert.equal(mapA.level, 1);
+    assert.equal(a.conn.state.grid.w, 60);
+    assert.ok(mapA.totalEnemies >= 9 && mapA.remainingEnemies === mapA.totalEnemies);
+    assert.deepEqual(new Uint8Array(a.conn.state.grid.dv.buffer), new Uint8Array(generateLevel(mapA.seed, mapA.level).grid.dv.buffer));
+    a.conn.send({ t: "portal", portal: "down" });             // con enemigos vivos el portal de bajada rechaza
+    await until(() => a.packets.some(m => m.ev?.some(e => e.t === "reject" && e.cmd === "portal")), "bajada cerrada");
+    assert.equal(a.conn.state.map.level, 1);
     await until(() => !b.conn.state.ents.has(a.conn.pid), "A sale de vista de B");
     assert.equal(b.conn.state.map.kind, "farm");
     assert.ok(!a.conn.state.ents.has(b.conn.pid));
@@ -83,20 +88,11 @@ test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Are
     assert.ok(!a.conn.state.ents.has(b.conn.pid));
     b.conn.send({ t: "portal", portal: "return" });
     await until(() => b.conn.state.map.kind === "farm" && a.conn.state.ents.has(b.conn.pid), "salida B");
-    assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));
-    await until(() => a.packets.some(m => m.ev?.some(e => e.t === "dungeon-choice" && e.id === a.conn.pid)), "elección de instancia existente");
-    assert.equal(a.conn.state.map.kind, "farm");
-    assert.ok(!b.packets.some(m => m.ev?.some(e => e.t === "dungeon-choice" && e.id === a.conn.pid)), "elección privada");
-    a.conn.send({ t: "portal", portal: FARM_PORTAL.id, restart: false });
-    await until(() => a.conn.state.map.id === mapA.id, "continuar instancia A");
-    assert.equal(a.conn.state.map.seed, mapA.seed);
-    a.conn.send({ t: "portal", portal: "return" });
-    await until(() => a.conn.state.map.kind === "farm", "salida para reiniciar");
-    a.conn.send({ t: "portal", portal: FARM_PORTAL.id, restart: true });
-    await until(() => a.conn.state.map.kind === "dungeon" && a.conn.state.map.id !== mapA.id, "reiniciar explícitamente");
-    assert.notEqual(a.conn.state.map.seed, mapA.seed);
+    assert.ok(a.conn.send({ t: "portal", portal: FARM_PORTAL.id }));        // sin progreso (nivel 1) no pregunta: entra directo
+    await until(() => a.conn.state.map.kind === "dungeon", "reentrada A");
+    assert.notEqual(a.conn.state.map.id, mapA.id);
     assert.ok(!exited, output);
-    assert.ok(![...a.packets, ...b.packets].some(m => (m.ev || []).some(e => e.t === "reject" && e.cmd === "portal")));
+    assert.ok(![...b.packets].some(m => (m.ev || []).some(e => e.t === "reject" && e.cmd === "portal")));
   } finally {
     for (const ws of sockets) ws.close();
     await delay(100); srv.kill(); await delay(100);

@@ -3,7 +3,7 @@ import { activeBall } from "./systems/companion.js";
 // Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
-import { FARM_PORTAL, generateDungeon, DUNGEON_VERSION } from "./dungeon.js";
+import { DUNGEON_ENTRANCES, FARM_PORTAL, DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
 import { populate } from "./systems/citizens.js";
 
@@ -44,7 +44,7 @@ export class Adventure {
     const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: meta.teleports });
     w.time = this.time;
     w.hooks = this.hooks(w);
-    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
+    w.map = { id, kind: id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: DUNGEON_ENTRANCES[id] ? [DUNGEON_ENTRANCES[id]] : [] };
     w.meta = meta;
     w.fixedDay = !!meta.fixedDay;
     w.clock = o.clock || null;
@@ -102,9 +102,7 @@ export class Adventure {
     const w = this.worldFor(id);
     w.removePlayer(id);
     this.locations.delete(id);
-    const instance = this.instances.get(id);
-    if (instance) this.worlds.delete(instance.map.id);
-    this.instances.delete(id);
+    this.dropInstance(id);
   }
 
   command(id, cmd) {
@@ -114,34 +112,12 @@ export class Adventure {
       const gate = w.map.portals.find(g => g.id === cmd.portal);
       if (p.dead || w.busy(p)) return w.reject(p, cmd, "ocupado o muerto");
       if (!gate || dist(p, gate) > 1) return w.reject(p, cmd, "acércate al portal");
-      if (w === this.farm) {
-        if (!w.npcDb.Skeleton) return w.reject(p, cmd, "faltan los datos de los esqueletos; recarga la página");
-        const previous = this.instances.get(id);
-        if (previous && typeof cmd.restart !== "boolean") {
-          w.emit({ t: "dungeon-choice", id, remaining: previous.map.remainingEnemies, total: previous.map.totalEnemies });
-          return false;
-        }
-        if (previous && cmd.restart === false) {
-          if (!this.transfer(p, w, previous, previous.start)) return w.reject(p, cmd, "entrada ocupada");
-          return true;
-        }
-        const seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
-        const layout = generateDungeon(seed);
-        const d = new World({ grid: layout.grid, npcDb: w.npcDb, data: w.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
-        d.time = this.time;
-        d.hooks = this.hooks(d);
-        d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta de esqueletos", seed, version: DUNGEON_VERSION, portals: layout.portals };
-        d.map.totalEnemies = d.map.remainingEnemies = d.ents.size;
-        // Los temporizadores del mundo recién creado usan el reloj de la sesión.
-        for (const n of d.ents.values()) n.nextAct += this.time;
-        this.worlds.set(d.map.id, d);
-        if (!this.transfer(p, w, d, layout.start)) { this.worlds.delete(d.map.id); return w.reject(p, cmd, "entrada ocupada"); }
-        if (previous) this.worlds.delete(previous.map.id);
-        this.instances.set(id, d);
-        return true;
-      }
-      const ok = this.transfer(p, w, this.farm, [FARM_PORTAL.x, FARM_PORTAL.y]);
-      if (!ok) return w.reject(p, cmd, "salida ocupada");
+      if (w.map.kind !== "dungeon") return this.enterCrypt(p, w, gate, cmd);
+      // dentro de la cripta: bajar (solo con el nivel despejado) o salir al mapa de origen
+      if (gate.locked && !w.cleared) return w.reject(p, cmd, "mata a todos los esqueletos para continuar");
+      if (gate.target === "down") return this.descend(p, w, w.map.level + 1);
+      const o = w.map.origin, to = this.staticWorld(o.map);
+      if (!to || !this.transfer(p, w, to, [o.x, o.y])) return w.reject(p, cmd, "salida ocupada");
       return true;
     }
     if (cmd.t === "respawn" && w !== this.farm) {
@@ -152,10 +128,52 @@ export class Adventure {
     return w.command(id, cmd);
   }
 
+  // Entrada a la cripta desde Aresfarm o middled1n. Con progreso guardado se pregunta: reiniciar (nivel 1) o continuar.
+  enterCrypt(p, w, gate, cmd) {
+    if (!w.npcDb.Skeleton || !hasDungeonPalette()) return w.reject(p, cmd, "faltan los datos de la cripta; recarga la página");
+    const dv = p.delve || (p.delve = { deepest: 1 });
+    if (dv.deepest > 1 && typeof cmd.restart !== "boolean") {
+      w.emit({ t: "dungeon-choice", id: p.id, deepest: dv.deepest, total: DUNGEON_LEVELS, portal: gate.id });
+      return false;
+    }
+    if (cmd.restart === true) dv.deepest = 1;
+    this.runs = this.runs || new Map();
+    this.runs.set(p.id, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.id, x: gate.x, y: gate.y } });
+    return this.descend(p, w, Math.min(dv.deepest, DUNGEON_LEVELS), true);
+  }
+
+  // Crea el nivel `level` de la partida del jugador y lo traslada allí. El nivel anterior se descarta.
+  descend(p, from, level, entering = false) {
+    const run = this.runs?.get(p.id);
+    if (!run || level > DUNGEON_LEVELS) { if (run && level > DUNGEON_LEVELS) return this.reject(p, from, "no hay más niveles"); return false; }
+    const seed = levelSeed(run.seed, level), layout = generateLevel(seed, level);
+    const d = new World({ grid: layout.grid, npcDb: from.npcDb, data: from.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
+    d.time = this.time;
+    d.hooks = this.hooks(d);
+    d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta · nivel " + level + " · " + layout.name, level, total: DUNGEON_LEVELS, boss: layout.boss, theme: layout.theme, seed, version: DUNGEON_VERSION, origin: run.origin, portals: layout.portals };
+    d.map.totalEnemies = d.map.remainingEnemies = [...d.ents.values()].filter(e => e.kind === "npc" && !e.comp).length;
+    for (const n of d.ents.values()) n.nextAct += this.time;            // los temporizadores usan el reloj de la sesión
+    this.worlds.set(d.map.id, d);
+    if (!this.transfer(p, from, d, layout.start)) { this.worlds.delete(d.map.id); return from.reject(p, { t: "portal" }, "entrada ocupada"); }
+    const previous = this.instances.get(p.id);
+    if (previous) this.worlds.delete(previous.map.id);
+    this.instances.set(p.id, d);
+    p.delve.deepest = Math.max(p.delve.deepest, level);
+    return true;
+  }
+  dropInstance(id) {
+    const d = this.instances.get(id);
+    if (d) this.worlds.delete(d.map.id);
+    this.instances.delete(id);
+    this.runs?.delete(id);
+  }
+  reject(p, w, why) { return w.reject(p, { t: "portal" }, why); }
+
   transfer(p, from, to, near) {
     const spot = to.freeSpotNear(...near);
     if (!spot) return false;
     from.grid.release(p.x, p.y, p.id);
+    if (from.map.kind === "dungeon" && to.map.kind !== "dungeon") this.dropInstance(p.id);        // fuera de la cripta: se descarta el nivel
     for (const n of from.ents.values()) if (n.target === p.id) n.target = null;
     from.ents.delete(p.id);
     from.emit({ t: "remove", id: p.id });
@@ -174,7 +192,7 @@ export class Adventure {
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";
-      if (dungeon) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead).length;
+      if (dungeon) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.dead).length;
       if (dungeon && !w.cleared && w.map.remainingEnemies === 0) {
         w.cleared = true;
         for (const p of w.ents.values()) if (p.kind === "player") w.emit({ t: "dungeon-cleared", id: p.id });

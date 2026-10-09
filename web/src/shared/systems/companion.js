@@ -12,6 +12,11 @@ import { MAX_ITEMS } from "../items.js";
 
 export const HUNT = { scale: 1, kills: 10 };  // build de pruebas: 10 muertes por bola (kills = null usa la tabla SPECIES: 500–1000); ?hunt=N las divide aún más
 export const MAX_COMP_LEVEL = 60;
+// Nombres aleatorios (sílabas): cada compañero tiene el suyo, fijado al nacer la bola
+const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "Pip", "Rok", "Sil", "Tor", "Vex", "Zan", "Bol", "Cro", "Dun", "Fiz", "Gor"];
+const SYL_B = ["bo", "ra", "ki", "mo", "tu", "lo", "na", "zi", "ko", "pa", "du", "ri", "so", "ga", "fi"];
+const SYL_C = ["", "", "x", "n", "k", "s", "z", "to", "ly", "ko"];
+export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)]; return p(SYL_A) + p(SYL_B) + p(SYL_C); };
 // especie -> muertes para una bola, id de Item.cfg de la bola; el orden es el rango (poder de la especie)
 export const SPECIES = {
   "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
@@ -48,11 +53,11 @@ export function onKill(w, p, n, xp) {
   if (p.hunt[sp] < killsFor(sp)) return;
   p.hunt[sp] = 0;
   const ball = newInst(w, SPECIES[sp][1]);
-  ball.comp = { sp, lvl: 1, exp: 0, on: false };
+  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng) };
   const d = w.data.item(ball.id);
   if (d && p.bag.length < MAX_ITEMS && Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) Inv.addToBag(p, w.data, ball);
   else if (d) groundPush(w, p.x, p.y, ball);
-  w.emit({ t: "ball", id: p.id, sp, uid: ball.uid });
+  w.emit({ t: "ball", id: p.id, sp, uid: ball.uid, nm: ball.comp.nm });
 }
 
 // Muerte del compañero: pierde el 25 % de la experiencia de su nivel y, si no le alcanza, un nivel
@@ -61,7 +66,7 @@ export function penalize(w, p, inst) {
   c.exp -= loss;
   while (c.exp < 0 && c.lvl > 1) { c.lvl--; c.exp += need(c.lvl); }
   c.exp = Math.max(0, c.exp);
-  w.emit({ t: "companion-lost", id: p.id, sp: c.sp, lvl: c.lvl, loss });
+  w.emit({ t: "companion-lost", id: p.id, sp: c.sp, lvl: c.lvl, loss, nm: c.nm });
 }
 
 export function addExp(w, p, inst, xp) {
@@ -70,7 +75,7 @@ export function addExp(w, p, inst, xp) {
   c.exp += xp;
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
-    w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl });
+    w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }

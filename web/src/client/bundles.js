@@ -41,8 +41,7 @@ const tileCache = new WeakMap();
 export function tileKeysOfGrid(grid) {
   if (tileCache.has(grid)) return tileCache.get(grid);
   const keys = new Set();
-  if (grid.procedural) { for (const k of DUNGEON_ASSETS) if (isTileKey(k)) keys.add(k); }
-  else {
+  {
     const seen = new Set(), n = grid.w * grid.h;
     for (let i = 0; i < n; i++) {
       const o = i * 10, spr = grid.dv.getInt16(o, true), obj = grid.dv.getInt16(o + 4, true);

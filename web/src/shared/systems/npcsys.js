@@ -27,6 +27,9 @@ export function spawnFrom(w, g) {
     if (g.specialProb && R.dice(w.rng, 1, 100) <= g.specialProb) {
       n.special = R.applySpecial(w.rng, n, g.specialKind);
     }
+    // Cripta de esqueletos: cada nivel multiplica vida, daño y experiencia (g.scale); los jefes llevan además g.boss (1..4).
+    if (g.scale) { n.hp = Math.ceil(n.hp * g.scale.hp); n.exp = Math.ceil(n.exp * g.scale.exp); n.dmgMul = g.scale.dmg; }
+    if (g.boss) n.boss = g.boss;
     n.maxHp = n.hp;
     n.noDieRemainExp = n.exp - Math.floor(n.exp / 3);
     g.alive++;
@@ -187,7 +190,7 @@ function refreshCompanion(w, n, m) {
   const inst = Inv.instOf(m, n.ball);
   if (!inst) return killNpc(w, n, null);
   const st = Comp.statsOf(m, inst.comp);
-  n.dmgNow = st.dmg; n.clvl = inst.comp.lvl;
+  n.dmgNow = st.dmg; n.clvl = inst.comp.lvl; n.nick = inst.comp.nm;
   if (n.maxHp !== st.hp) { n.maxHp = st.hp; n.hp = st.hp; }
 }
 export function dismissCompanion(w, p) {
@@ -199,6 +202,7 @@ export function dismissCompanion(w, p) {
 }
 export function spawnCompanion(w, p) {
   const inst = Comp.activeBall(p); if (!inst || p.dead) return null;
+  inst.comp.nm = inst.comp.nm || Comp.randomName(w.rng);          // bolas antiguas sin nombre
   dismissCompanion(w, p);
   const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
   if (!w.npcDb[gen.name]) return null;
@@ -211,12 +215,12 @@ export function spawnCompanion(w, p) {
 export function toggleCompanion(w, p, inst) {
   if (p.dead) return false;
   const c = inst.comp, out = followersOf(w, p).some(e => e.comp && e.ball === inst.uid);
-  if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false }); return true; }
+  if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
   for (const b of p.bag) if (b.comp) b.comp.on = false;
   c.on = true;
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
-  w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl });
+  w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl, nm: c.nm });
   return true;
 }
 
@@ -232,7 +236,7 @@ function companionStruck(w, n, t) {
     return;
   }
   const m = w.ents.get(t.master), inst = m && Inv.instOf(m, t.ball);
-  if (inst) { inst.comp.on = false; Comp.penalize(w, m, inst); w.emit({ t: "companion", id: m.id, sp: inst.comp.sp, on: false, fainted: true }); }
+  if (inst) { inst.comp.on = false; Comp.penalize(w, m, inst); w.emit({ t: "companion", id: m.id, sp: inst.comp.sp, on: false, fainted: true, nm: inst.comp.nm }); }
   t.noDrop = true; t.noDieRemainExp = 0;
   for (const e of w.ents.values()) if (e.target === t.id) e.target = null;
   killNpc(w, t, null);

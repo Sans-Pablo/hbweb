@@ -6,7 +6,7 @@ import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
 import { imgUrl, detectWebp } from "./imgurl.js";
 import { coreKeys } from "./bundles.js";
-import { DUNGEON_ASSETS, DUNGEON_FLOORS } from "../shared/dungeon.js";
+import { DUNGEON_ASSETS, setDungeonPalette } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v2";
 const spriteUrl = png => imgUrl("data/sprites/" + png) + "?v=" + ASSET_VERSION;
@@ -34,7 +34,6 @@ export function validateDungeonAssets(manifest, npcDb) {
     if (!manifest[k]?.png || !manifest[k]?.frames?.length) throw new Error("Falta el gráfico " + k + ". Recarga la página.");
     if (k.startsWith("ske") && manifest[k].frames.length < 4) throw new Error("Animación incompleta: " + k);
   }
-  for (const floor of DUNGEON_FLOORS) for (const f of floor.frames) if (!manifest["t" + floor.spr].frames[f]) throw new Error("Falta el suelo de la cripta: " + floor.spr + "/" + f);
 }
 
 export async function loadAssets(onProgress) {
@@ -86,6 +85,7 @@ export async function loadAssets(onProgress) {
   const equip = await json("data/equip.json").catch(() => ({}));
   for (const k of Object.keys(equip)) equip[k].png = "../equip/" + equip[k].png;
   Object.assign(manifest, equip);
+    setDungeonPalette(await json("data/dungeon_palette.json"));          // teselas de middled1n/middled1x para la cripta
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const sprites = new Sprites(manifest, images, hd);
     return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
