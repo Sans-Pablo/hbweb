@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.25.2 · Movimiento online suave (2026-10-10)
+
+- **Otros jugadores online se mueven con fluidez**: los estados llegan a 20 Hz con jitter (túnel ngrok, wifi) y cada paso arrancaba al llegar, lo que producía paradas y saltos. Ahora los pasos de los demás se muestran con un retardo fijo de 120 ms (`REMOTE_DELAY`), se encadenan entre sí y un «parado» que llega antes de acabar el paso visible no lo corta (`smoothRemote` en `client/connection.js`). Mi propio personaje no cambia (predicción). Test: `tests/remote-smooth.test.mjs`.
+
 ## 0.25.1 · Online con ngrok (2026-10-10)
 
 - **Corrección**: ngrok gratis intercala una página de aviso (ERR_NGROK_6024) sin cabeceras CORS, que impedía que el cliente de GitHub Pages detectase el servidor (`findServer`, `/api/info`). Ahora el cliente envía `ngrok-skip-browser-warning` (el servidor ya lo permitía en CORS).

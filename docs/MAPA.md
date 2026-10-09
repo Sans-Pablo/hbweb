@@ -53,7 +53,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 76 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 60 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
-- `connection.js` · 265 · Conexión con el "servidor". Dos implementaciones con la misma forma:
+- `connection.js` · 291 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 188 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 71 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
@@ -109,6 +109,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `online.test.mjs` · 146 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
+- `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
 - `shop.test.mjs` · 81 · Tienda, herrero y almacén: compra, venta, reparación y depósito con las reglas del servidor original.
 - `sim.test.mjs` · 159 · Prueba de la simulación sin navegador: un "jugador" automático caza en la granja.
 - `sky.test.mjs` · 72 · Hora del día, clima y zonas sin ataque (HGServer/Game.cpp: _CheckDayOrNight, WhetherProcessor, _SetupNoAttackArea).

@@ -18,3 +18,6 @@ Código: `server/server.mjs` (servidor), `server/accounts.mjs` (cuentas y límit
 - El chat es del mapa (como en local); no hay susurros ni gremios.
 - PvP no existe todavía: la simulación local no lo tiene.
 - Los scripts de Windows (`tools/servidor-online.ps1`) y los túneles ngrok/Tailscale no se han podido probar en el entorno de desarrollo.
+
+## Suavizado de movimiento remoto (0.25.2)
+`smoothRemote` (client/connection.js): los pasos de otros jugadores se muestran `REMOTE_DELAY` (120 ms) tarde y encadenados; un «parado» en el destino no corta el paso visible. Solo afecta a la vista de los demás; el propio personaje sigue con predicción. Test: `tests/remote-smooth.test.mjs`.

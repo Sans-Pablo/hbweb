@@ -11,6 +11,19 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Movimiento online suave (v0.25.2)",
+        "en": "Smooth online movement (v0.25.2)"
+      },
+      "items": [
+        {
+          "es": "Los demás jugadores se ven correr con más fluidez en el modo online: ya no se paran un instante ni dan saltos cuando la conexión tiene pequeños retrasos (a cambio de verlos ~0,1 s detrás). Prueba: entra con dos cuentas y observa al otro correr.",
+          "en": "Other players now run more smoothly online: they no longer pause or jump when the connection has small delays (at the cost of seeing them ~0.1 s behind). Test: log in with two accounts and watch the other run."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Online con ngrok (v0.25.1)",
         "en": "Online via ngrok (v0.25.1)"
       },

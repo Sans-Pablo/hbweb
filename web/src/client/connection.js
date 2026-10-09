@@ -59,6 +59,26 @@ class MirrorWorld {
   }
 }
 
+// Suavizado de los pasos de OTROS jugadores/monstruos online. Los estados llegan a 20 Hz y con jitter (túnel, wifi): si cada paso
+// arrancase al llegar, el personaje se pararía un instante cuando el siguiente llega tarde y daría un salto al llegar. Se muestra
+// con un pequeño retardo fijo (REMOTE_DELAY) y los pasos se encadenan: el siguiente empieza donde acaba el anterior, y un
+// "parado" que llega antes de acabar el paso visible no lo corta (anim.js lo pasa a STOP solo al terminar).
+export const REMOTE_DELAY = 120;
+const isStep = a => a === ACT.MOVE || a === ACT.RUN;
+// devuelve true si el estado `o` debe dejar intacta la animación actual de `e` (no sobrescribir posición/acto)
+export function smoothRemote(e, o, time) {
+  const curEnd = e.actStart + e.actDur;
+  const inStep = isStep(e.act) && time < curEnd;
+  if (isStep(o.act)) {
+    let start = o.s + REMOTE_DELAY;
+    if (inStep && e.x === o.fx && e.y === o.fy && start < curEnd) start = curEnd;   // encadenar con el paso en curso
+    return { keep: false, start };
+  }
+  // parado en el mismo sitio al que ya voy: dejar acabar el paso
+  if (inStep && o.act === ACT.STOP && o.x === e.x && o.y === e.y) return { keep: true };
+  return { keep: false, start: o.s };
+}
+
 export class NetConnection {
   // base: dirección del servidor ("" = el mismo que sirve la web; si no, p. ej. https://mi-pc.ngrok-free.app); spawns: generadores de la granja (para cargar sus monstruos)
   constructor(grid, npcDb, data, maps = {}, base = "", spawns = []) {
@@ -178,6 +198,12 @@ export class NetConnection {
     // posición y animación: para mi personaje, solo si el servidor ya procesó todo lo que
     // mandé y no coincide con lo que predije (paso rechazado), o al aparecer/morir
     const posFields = () => {
+      if (!isNew && !own && o.k !== "citizen") {
+        const sm = smoothRemote(e, o, this.world.time);
+        if (sm.keep) { e.dir = o.dir; return; }
+        e.x = o.x; e.y = o.y; e.fx = o.fx; e.fy = o.fy; e.dir = o.dir; e.act = o.act; e.actStart = sm.start; e.actDur = o.d;
+        return;
+      }
       e.x = o.x; e.y = o.y; e.fx = o.fx; e.fy = o.fy; e.dir = o.dir; e.act = o.act; e.actStart = o.s; e.actDur = o.d;
       if (own) { e.busyUntil = o.bu; e.lastAttack = o.la; e.lastMove = o.lm; }
     };
