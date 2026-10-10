@@ -11,6 +11,27 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Fosos y cripta (v0.43.0)",
+        "en": "Pits and crypt (v0.43.0)"
+      },
+      "items": [
+        {
+          "es": "Los habitantes bajan a la cripta de esqueletos (entrando desde Aresfarm o Elvine Farm), la despejan nivel a nivel y salen con Recall.",
+          "en": "Residents go down into the skeleton crypt (from Aresfarm or Elvine Farm), clear it level by level and leave with Recall."
+        },
+        {
+          "es": "Todos son combatientes siempre en Promise Land: también los viajeros sin bando pelean y pueden ser atacados (no entre el mismo bando ni la misma party).",
+          "en": "Everyone is a combatant in Promise Land: travellers without a side fight and can be attacked too (not same side or same party)."
+        },
+        {
+          "es": "Nuevas metas de los habitantes: abatir enemigos, dominar un foso de Promise Land (una zona de monstruos que controla el bando que la ocupa en solitario) y llegar a un nivel de la cripta.",
+          "en": "New resident goals: kill enemies, dominate a Promise Land pit (a monster zone held by the side that occupies it alone) and reach a crypt level."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Dos bandos (v0.42.0)",
         "en": "Two sides (v0.42.0)"
       },

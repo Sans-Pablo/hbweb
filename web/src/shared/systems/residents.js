@@ -6,7 +6,7 @@
 // Todo es determinista salvo `adv.llm` (solo existe en el servidor). El estado (`p.res`) se guarda en el save del habitante.
 import { dist } from "../const.js";
 import * as Party from "./party.js";
-import { blog } from "./bot.js";
+import { blog, tooStrong } from "./bot.js";
 import { canFight } from "./combatsys.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
@@ -51,19 +51,24 @@ function befriend(p, who, n = 1) {
 }
 
 // ---------------------------------------------------------------- objetivos de vida
+// Metas de combate: bajas de enemigos en Promise Land (pvp), dominar un foso de Promise Land (pit: aguantar su zona con el bando dueño) y bajar en la cripta (crypt).
 function newGoal(w, p) {
-  const r = p.res, kind = ["level", "gold", "kills", "friend"][Math.floor(w.rng() * 4)];
+  const r = p.res, kind = ["level", "gold", "kills", "friend", "pvp", "pvp", "pit", "crypt"][Math.floor(w.rng() * 8)];
   if (kind === "level") r.goal = { k: "level", n: p.level + 2 };
   else if (kind === "gold") r.goal = { k: "gold", n: p.gold + 800 + p.level * 300 };
   else if (kind === "kills") r.goal = { k: "kills", n: (p.kills || 0) + 25 };
+  else if (kind === "pvp") r.goal = { k: "pvp", n: (p.ek || 0) + 3 + Math.floor(w.rng() * 3) };
+  else if (kind === "pit") r.goal = { k: "pit", n: (r.qa.pvp.held || 0) + 180, zone: 1 + Math.floor(w.rng() * 12) };           // 180 s dominando el foso
+  else if (kind === "crypt") r.goal = { k: "crypt", n: Math.min(10, (p.delve?.deepest || 1) + 1) };
   else r.goal = { k: "friend", n: Object.keys(r.rel).length + 2 };
 }
 export const goalText = (g, lang) => !g ? "" : lang === "en"
-  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends" }[g.k]
-  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos" }[g.k];
+  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, crypt: `reach crypt level ${g.n}` }[g.k]
+  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, crypt: `llegar al nivel ${g.n} de la cripta` }[g.k];
 function goalDone(p) {
   const g = p.res.goal;
-  return !g ? false : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : Object.keys(p.res.rel).length >= g.n;
+  return !g ? false : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
+    : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (p.delve?.deepest || 1) >= g.n : Object.keys(p.res.rel).length >= g.n;
 }
 
 // ---------------------------------------------------------------- frases
@@ -217,12 +222,13 @@ export function think(adv, p) {
   }
   qaTick(adv, w, p, r);
   // fuera de la granja (entró a una tienda o a la cripta pisando un teletransporte mientras paseaba): se queda un rato probando y vuelve
-  if (w !== home && !p.bot.owner && !r._trip) {
+  if (w !== home && !p.bot.owner && !r._trip && !r._delve) {
     r._away ??= w.time;
     if (w.time - r._away > 45000 && !p.dead) { r._away = null; remember(p, "Entré en " + (w.map.name || w.map.id) + " y volví.", "I went into " + (w.map.name || w.map.id) + " and came back."); adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   } else r._away = null;
   const tg = p.bot.target;                                                         // se burla del enemigo al que va a atacar
   if (tg?.kind === "player" && r._tauntId !== tg.id) { r._tauntId = tg.id; if (w.rng() < 0.5) speak(adv, p, fmt(p, "taunt", r.lang, tg.name, w)); }
+  pits(adv, w, p, r);
   expedition(adv, w, p, r, home);
   social(adv, w, p, r);
   // saludar a quien llega
@@ -306,37 +312,125 @@ function worldChanged(adv, w, p, r, home) {
   p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; p.bot.travel = null;
   blog(w, p, `Cambio de mapa: ${w.map.name || w.map.id}${w.pvp ? " (zona de lucha entre bandos)" : ""}.`);
   if (w.pvp) remember(p, "Entré en Promise Land.", "Entered Promise Land.");
+  else if (r._delve && w.map.kind === "dungeon") { r._delve.go = false; r._delve.lv = w.map.level; remember(p, "Bajé a la cripta (nivel " + w.map.level + ").", "Went down into the crypt (level " + w.map.level + ")."); }
+  else if (r._delve && w === home) { r._delve = null; r._tripAt = w.time + 120000 + Math.floor(w.rng() * 240000); blog(w, p, "Expedición a la cripta terminada: de vuelta en casa."); }
   else if (r._trip && w === home) { r._trip = null; r._tripAt = w.time + 240000 + Math.floor(w.rng() * 360000); blog(w, p, "Expedición terminada: de vuelta en casa."); }
 }
-// Los líderes (sin jefe) salen de vez en cuando a Promise Land por el teletransportador normal de su granja, cazan y combaten allí y vuelven con Recall.
+// Los líderes (sin jefe) salen de vez en cuando de su granja: a Promise Land por el teletransportador normal (cazan, combaten y dominan fosos; vuelven con Recall)
+// o a la cripta de esqueletos (bajan niveles despejándolos). Lo que toca lo decide la meta (pvp/pit → Promise Land, crypt → cripta) o el azar.
+const FOSOS = adv => adv.maps["2ndmiddle"]?.meta.spawns || [];
+const pitCenter = z => ({ x: (z.rect[0] + z.rect[2]) >> 1, y: (z.rect[1] + z.rect[3]) >> 1 });
+// Elige foso: los que tiene el enemigo o nadie atraen; los propios y los lejanos, menos.
+function pickPit(adv, w, p, zones) {
+  let best = null, bs = 1e9;
+  for (const z of zones) { const st = adv.pits?.get(z.id), s = dist(p, pitCenter(z)) * 0.5 - (st && st.side !== p.side ? 70 : 0) + (st && st.side === p.side ? 140 : 0) + w.rng() * 50; if (s < bs) { best = z; bs = s; } }
+  return best;
+}
 function expedition(adv, w, p, r, home) {
   const b = p.bot;
   if (b.owner != null) return;                                                   // los miembros de un grupo van donde va su líder
+  if (r._delve) return delve(adv, w, p, r, home);
   if (r._trip) {
     if (w === home && r._trip.go && w.time > r._trip.goUntil) { r._trip = null; r._tripAt = w.time + 120000; blog(w, p, "No llegué al teletransportador: cancelo la expedición."); return; }
     if (w.pvp && w.time > r._trip.until && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, "Fin de la expedición: uso Recall."); adv.command(p.id, { t: "recall" }); }
     if (w.pvp) {
       r._trip.go = false;
-      // en Promise Land va a buscar al enemigo más cercano (cualquier distancia: Promise Land es grande y cada bando entra por un extremo) si está sano; el combate lo resuelve el cerebro del bot (pickTarget)
+      if (r._trip.pit && r.goal?.k !== "pit" && w.time > (r._reassignAt || 0)) {                      // el foso ya es nuestro desde hace rato: va a por otro que tenga el enemigo
+        r._reassignAt = w.time + 15000; const st = adv.pits?.get(r._trip.pit.id);
+        if (st && st.side === p.side && w.time - st.since > 90000) { const z = pickPit(adv, w, p, FOSOS(adv).filter(q => q.id !== r._trip.pit.id)); if (z) { r._trip.pit = { id: z.id, name: z.name, rect: z.rect }; b.travel = null; blog(w, p, `El foso es nuestro: me voy a por el foso ${z.id} (${z.name}).`); } }
+      }
+      const pit = r._trip.pit, pc = pit && pitCenter(pit);
+      // en Promise Land va a buscar al enemigo más cercano (cualquier distancia; con foso asignado, solo los que estén cerca de él) si está sano; el combate lo resuelve el cerebro del bot (pickTarget)
       if (w.time > (r._seekAt || 0) && !p.dead && b.target?.kind !== "player" && !b.rest && p.hp > p.maxHp * 0.6) {
         r._seekAt = w.time + 8000;
-        let foe = null, fd = 320;
-        for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 6 && e.hp <= p.hp * 2.2) { const d = dist(p, e); if (d < fd) { foe = e; fd = d; } }
-        if (foe && fd > 10) { b.travel = { x: foe.x, y: foe.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${foe.name} (${foe.side === 1 ? "Aresden" : "Elvine"}, nv ${foe.level}) a ${fd} casillas.`); }
+        let foe = null, fd = pit ? 40 : 320;
+        for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 6 && e.hp <= p.hp * 2.2) { const d = pit ? dist(pc, e) : dist(p, e); if (d < fd) { foe = e; fd = d; } }
+        if (foe && dist(p, foe) > 10) { b.travel = { x: foe.x, y: foe.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${foe.name} (${foe.side === 1 ? "Aresden" : foe.side === 2 ? "Elvine" : "viajero"}, nv ${foe.level}) a ${dist(p, foe)} casillas.`); }
+        else if (pit && !foe && dist(p, pc) > 14) { b.travel = { x: pc.x, y: pc.y, w, until: w.time + 40000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Voy al foso ${pit.id} (${pit.name}) en (${pc.x},${pc.y}) para dominarlo.`); }
+        else if (pit && dist(p, pc) <= 14) b.home = { x: pc.x, y: pc.y };       // en el foso: pasea por él esperando enemigos
       }
     }
     return;
   }
-  if (!r._tripAt) r._tripAt = w.time + 60000 + Math.floor(w.rng() * 180000);
-  if (w !== home || w.time < r._tripAt || p.dead || p.hp < p.maxHp * 0.7 || p.level < 3 || b.rest || b.target) return;
+  if (!r._tripAt) r._tripAt = w.time + 60000 + Math.floor(w.rng() * 120000);
+  if (w !== home || w.time < r._tripAt || p.dead || p.hp < p.maxHp * 0.7 || p.level < 2 || b.rest || b.travel) return;
+  const g = r.goal?.k, wantsPL = g === "pvp" || g === "pit", wantsCrypt = g === "crypt";
+  const pl = p.level >= 3 && !wantsCrypt && (wantsPL || w.rng() < 0.5);
+  if (!pl) return startDelve(adv, w, p, r, home);
   const tps = (adv.maps[home.map.id]?.meta.teleports || []).filter(t => t.map === "2ndmiddle");
-  if (!tps.length) return;
-  const tp = tps[tps.length >> 1];
-  r._trip = { go: true, goUntil: w.time + 120000, until: w.time + 240000 + Math.floor(w.rng() * 180000) };
+  if (!tps.length) return startDelve(adv, w, p, r, home);
+  const tp = tps[tps.length >> 1], zones = FOSOS(adv);
+  const pit = g === "pit" ? zones.find(z => z.id === r.goal.zone) : (p.level >= 6 && zones.length && w.rng() < 0.7 ? pickPit(adv, w, p, zones) : null);
+  r._trip = { go: true, goUntil: w.time + 120000, until: w.time + (pit ? 480000 : 240000) + Math.floor(w.rng() * 180000), pit: pit ? { id: pit.id, name: pit.name, rect: pit.rect } : null };
   b.travel = { x: tp.x, y: tp.y, w, until: w.time + 120000 };
-  blog(w, p, `Planeo una expedición a Promise Land: voy al teletransportador (${tp.x},${tp.y}).`);
+  blog(w, p, `Planeo una expedición a Promise Land${pit ? " para dominar el foso " + pit.id + " (" + pit.name + ")" : ""}: voy al teletransportador (${tp.x},${tp.y}).`);
   remember(p, "Salí hacia Promise Land.", "Set out for Promise Land.");
   if (w.rng() < 0.7) speak(adv, p, fmt(p, "trip", r.lang, "", w));
+}
+// ---- cripta de esqueletos: se anda hasta la entrada (el teletransportador de Aresfarm, o el punto de inicio en Elvine Farm) y se usa la orden de portal
+function startDelve(adv, w, p, r, home) {
+  const b = p.bot, tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "middled1n");
+  let spot = tp ? w.freeSpotNear(tp.x, tp.y + 2) : null;
+  if (!spot || w.teleports.has(w.grid.idx(spot[0], spot[1]))) spot = w.freeSpotNear(...(home.home || [b.home.x, b.home.y]));
+  if (!spot) { r._tripAt = w.time + 60000; return; }
+  r._delve = { go: true, goUntil: w.time + 150000, until: w.time + 420000 + Math.floor(w.rng() * 300000), spot, tries: 0, lv: 0 };
+  b.travel = { x: spot[0], y: spot[1], w, until: w.time + 150000 };
+  blog(w, p, `Planeo bajar a la cripta de esqueletos${r.goal?.k === "crypt" ? " (mi meta: nivel " + r.goal.n + ")" : ""}: voy a la entrada (${spot[0]},${spot[1]}).`);
+  remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
+  if (w.rng() < 0.6) speak(adv, p, r.lang === "en" ? "Time to clear some skeletons in the crypt." : "Toca limpiar esqueletos en la cripta.");
+}
+function delve(adv, w, p, r, home) {
+  const b = p.bot, d = r._delve;
+  if (w === home) {
+    if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
+    if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; d.tries++; adv.command(p.id, { t: "portal", portal: "mid-entry", restart: false }); }
+    return;
+  }
+  if (w.map.kind !== "dungeon") return;
+  d.go = false;
+  const left = w.time > d.until || p.level < 2;
+  if (p.dead) return;
+  if ((left || (b.rest && !b.target)) && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, left ? "Fin de la bajada: salgo de la cripta (Recall)." : "Voy mal: salgo de la cripta (Recall)."); adv.command(p.id, { t: "recall" }); return; }
+  if (b.rest || w.time < (r._delveAt || 0)) return;
+  r._delveAt = w.time + 1500;
+  // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
+  if (w.cleared) {
+    const gate = w.map.portals.find(g => g.target === "down"), deeper = !!gate && p.level >= 3 + 2 * (w.map.level - 1) && w.time < d.until - 60000;
+    const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
+    if (!exit) return;
+    if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
+    else if (!b.travel || b.travel.x !== exit.x) { b.travel = { x: exit.x, y: exit.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; }
+    return;
+  }
+  // caza: los esqueletos cercanos los pelea el cerebro del bot; si no hay ninguno a la vista, va a por el más cercano
+  if (b.target) return;
+  let best = null, bd = 1e9;
+  for (const e of w.ents.values()) if (e.kind === "npc" && !e.dead && !e.comp && !e.aux && !e.master && !tooStrong(w, p, e)) { const dd = dist(p, e); if (dd < bd) { best = e; bd = dd; } }
+  if (best && bd > 9) { b.travel = { x: best.x, y: best.y, w, until: w.time + 12000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${best.name} a ${bd} casillas.`); }
+  else if (best) b.travel = null;
+}
+// ---- fosos de Promise Land (INVENTO): cada zona de aparición de monstruos es un foso. Lo controla el bando con jugadores dentro (rect + 6 casillas) mientras el otro no tenga ninguno.
+// `adv.pits` (no se guarda): id → { side, since }. Los habitantes que lo aguantan suman tiempo (`qa.pvp.held`, meta «pit»).
+function pits(adv, w, p, r) {
+  if (!w.pvp || p.dead) return;
+  if (w.time - (adv._pitAt ?? -1e9) >= 2000) {                                    // el primero que llega cada 2 s recalcula quién domina cada foso
+    adv._pitAt = w.time; adv.pits ||= new Map();
+    const inside = (e, z) => e.x >= z.rect[0] - 6 && e.x <= z.rect[2] + 6 && e.y >= z.rect[1] - 6 && e.y <= z.rect[3] + 6;
+    for (const z of FOSOS(adv)) {
+      const n = { 1: 0, 2: 0 };
+      for (const e of w.ents.values()) if (e.kind === "player" && !e.dead && (e.side === 1 || e.side === 2) && inside(e, z)) n[e.side]++;
+      const owner = n[1] && !n[2] ? 1 : n[2] && !n[1] ? 2 : 0, old = adv.pits.get(z.id);
+      if (owner && (!old || old.side !== owner)) { adv.pits.set(z.id, { side: owner, since: w.time }); for (const e of w.ents.values()) if (e.res && e.side === owner && inside(e, z)) blog(w, e, `${owner === 1 ? "Aresden" : "Elvine"} domina el foso ${z.id} (${z.name}).`); }
+      else if (!owner && old && n[old.side] === 0) adv.pits.delete(z.id);
+    }
+  }
+  const dt = w.time - (r._heldAt ?? w.time); r._heldAt = w.time;
+  if (dt > 0 && dt <= 5000) {
+    const z = FOSOS(adv).find(q => p.x >= q.rect[0] - 6 && p.x <= q.rect[2] + 6 && p.y >= q.rect[1] - 6 && p.y <= q.rect[3] + 6), st = z && adv.pits?.get(z.id);
+    if (st && st.side === p.side) r.qa.pvp.held = (r.qa.pvp.held || 0) + dt / 1000;
+  }
 }
 // Grupos de hasta 4 del mismo bando: el de más nivel lidera, los demás lo siguen (party real) y se disuelven al cabo de un rato para mezclarse.
 function social(adv, w, p, r) {

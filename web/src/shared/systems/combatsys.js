@@ -47,9 +47,12 @@ export function playerHit(w, p, t) {
 }
 
 // ---- PvP (INVENTO del port: el original calcula el golpe contra jugadores en iCalculateAttackEffect con las mismas piezas que contra monstruos).
-// Solo entre bandos distintos (Aresden 1 / Elvine 2), en mapas con `w.pvp` (Promise Land) y fuera de las zonas sin ataque.
+// Solo en mapas con `w.pvp` (Promise Land) y fuera de las zonas sin ataque. Todos los jugadores son combatientes siempre: pelean los de bandos
+// distintos y también los viajeros (bando 0, sin bando) contra cualquiera; no se golpean entre sí los del mismo bando (1 o 2) ni los de la misma party.
 export function canFight(w, p, t) {
-  return !!w.pvp && t !== p && t.kind === "player" && p.side > 0 && t.side > 0 && p.side !== t.side && !p.dead && !t.dead && !w.safeAt(p.x, p.y) && !w.safeAt(t.x, t.y);
+  if (!w.pvp || t === p || t.kind !== "player" || p.dead || t.dead || w.safeAt(p.x, p.y) || w.safeAt(t.x, t.y)) return false;
+  if (p.side > 0 && p.side === t.side) return false;
+  return !(p.party && t.party && p.party.id === t.party.id);
 }
 export function hitPlayer(w, p, t) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }

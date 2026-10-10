@@ -31,10 +31,10 @@ assert.ok(a.worldFor(V.id) === pl, "el teletransportador de la granja lleva a Pr
 assert.ok(a.command(A.id, { t: "attack", target: E.id }) !== false || true);
 const rej = [];
 A.hp = A.maxHp; E.hp = E.maxHp;
-a.relocate(A, pl, [100, 100]); a.relocate(E, pl, [101, 100]); a.relocate(T, pl, [103, 100]);
+a.relocate(A, pl, [100, 100]); a.relocate(E, pl, [101, 100]); a.relocate(T, pl, [A.x + 1, A.y]);
 const ev = () => pl.drainEvents();
 pl.drainEvents();
-a.command(A.id, { t: "attack", target: T.id }); assert.ok(pl.drainEvents().some(e => e.t === "reject" && e.id === A.id), "no se ataca a un viajero (sin bando)");
+a.command(A.id, { t: "attack", target: T.id }); { const rj = pl.drainEvents().filter(e => e.t === "reject" && e.id === A.id); assert.ok(!rj.length, JSON.stringify(rj) + " todos son combatientes: también se ataca a un viajero (sin bando)"); }
 let killed = false;
 for (let i = 0; i < 400 && !E.dead; i++) { if (Math.max(Math.abs(A.x - E.x), Math.abs(A.y - E.y)) > 1) a.relocate(A, pl, [E.x - 1, E.y]); a.command(A.id, { t: "attack", target: E.id }); tick(300); if (E.dead) killed = true; }
 assert.ok(killed && A.ek >= 1, "un bando mata al otro en Promise Land");

@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.43.0 · Fosos y cripta (2026-10-10)
+
+- Habitantes: bajan a la cripta (`residents.startDelve/delve`: entrada por `portal mid-entry`, caza, baja con el nivel despejado y Recall al terminar), metas `pvp` / `pit` / `crypt`, y fosos de Promise Land (cada zona de aparición de `2ndmiddle` es un foso; `adv.pits`, dominio por presencia en solitario, tiempo aguantado en `qa.pvp.held`). Eligen fosos del enemigo o libres y cambian de foso al dominarlo. `bot.js`: llegada a destino con espera (`b.hold`) y de viaje solo pelea lo que está a 2 casillas.
+- `combatsys.canFight`: todos son combatientes en Promise Land (viajeros incluidos), salvo mismo bando y misma party. Test nuevo `residents-crypt.test.mjs`.
+
 ## 0.42.0 · Dos bandos (2026-10-10)
 
 - Elvine Farm (`elvfarm`, `tools/convert_maps.py --only`) y Promise Land (`2ndmiddle`) abiertos con sus teletransportadores normales; PvP entre bandos solo en Promise Land (`combatsys.canFight/hitPlayer`, `world.pvp`). 40 habitantes: 20 Aresden y 20 Elvine, con auto-run, grupos de hasta 4 (el líder lleva), expediciones a Promise Land, burlas y charla entre ellos. Modo observar desde el login (`observer.js`, mensajes `bots`/`watch`, `NET_PROTO` 5) con su log en el chat (`bot.blog`). Cartel de nombre con bando (`sd`).
