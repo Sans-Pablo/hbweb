@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Modo observar fiable (v0.46.2)",
+        "en": "Reliable observer mode (v0.46.2)"
+      },
+      "items": [
+        {
+          "es": "Si el túnel de internet falla (el plan gratis de ngrok se queda sin ancho de banda: ERR_NGROK_725), la página usa el servidor del propio PC cuando se abre desde http://localhost:8088/ y aparece «👁 Observar habitantes». El servidor manda menos datos cuando no pasa nada y repone habitantes si falta alguno.",
+          "en": "If the internet tunnel fails (ngrok's free plan runs out of bandwidth: ERR_NGROK_725), the page uses the PC's own server when opened from http://localhost:8088/ and «👁 Observe residents» shows. The server sends less data when nothing happens and tops residents back up if any is missing."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Subir de nivel cuesta más (v0.46.1)",
         "en": "Leveling is harder (v0.46.1)"
       },

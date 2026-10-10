@@ -110,6 +110,7 @@ function resetResidents() {
 const informe = openReport(STORE, { version: VERSION.version, log });
 adventure.report = r => informe.add(r);               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 spawnResidents(RESIDENTS);
+setInterval(() => { try { if (adventure.residents().length < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
 persist(true);                                          // sus nombres quedan reservados desde el primer momento
 const saveTimer = setInterval(persist, 5000);          // solo se escriben los personajes que cambiaron; WAL: sobrevive a cerrar la ventana
 
@@ -558,6 +559,9 @@ setInterval(() => {
     if (gone.length) msg.g = gone;
     if (ev.length) msg.ev = ev;
     if (c.itemsKey !== sh.itemsKey) { msg.it = sh.items; c.itemsKey = sh.itemsKey; }
+    const quiet = !(msg.map || msg.sk || msg.fx || msg.e || msg.g || msg.ev || msg.it) && msg.ack === c.lastAck;
+    if (quiet && now - (c.lastSentAt || 0) < 400) { for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l); continue; }     // tick sin novedades: se manda el reloj solo cada 0,4 s (ahorra ancho de banda del túnel)
+    c.lastAck = msg.ack; c.lastSentAt = now;
     send(c, msg);
     for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l);              // lo que piensa y hace el habitante observado, en el chat
   }

@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.46.2 · Modo observar fiable (2026-10-11)
+
+- Causa de «no veo Observar»: el túnel ngrok respondía ERR_NGROK_725 (ancho de banda mensual agotado) → `findServer` caía a prueba local. Ahora, si el servidor configurado no responde, prueba el mismo origen (`api/info`), lo que funciona abriendo `http://localhost:8088/`.
+- Servidor: los ticks sin novedades solo mandan el reloj cada 0,4 s; cada 60 s repone habitantes hasta `RESIDENTS` (los bots siempre arrancan y se mantienen).
+
 ## 0.46.1 · Arreglo del almacén (2026-10-11)
 
 - `server/store.mjs`: el volcado usa una marca de tiempo estrictamente creciente; con volcados en el mismo milisegundo la poda del historial (`at NOT IN …`) guardaba más de 24 copias y `store.test.mjs` fallaba a ratos (tumbó el CI de la 0.46.0).
