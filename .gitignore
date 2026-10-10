@@ -12,3 +12,4 @@ web/data/webp.json
 # servidor online: cuentas, partidas y configuración local (no se suben)
 server/data/
 server/config.json
+server/data/

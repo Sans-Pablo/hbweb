@@ -27,6 +27,7 @@ import { attackMs } from "../web/src/shared/world.js";
 import { LIMITS, PLAYER, NET_PROTO } from "../web/src/shared/const.js";
 import { apparelOf } from "../web/src/shared/appearance.js";
 import { validCharName } from "../web/src/shared/systems/player.js";
+import { openStore } from "./store.mjs";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
 
@@ -41,8 +42,8 @@ const MAX_PLAYERS = Number(env.HB_MAX || CFG.maxPlayers);
 const ORIGINS = (env.HB_ORIGINS ? env.HB_ORIGINS.split(",") : CFG.origins).map(o => o.trim().replace(/\/$/, "")).filter(Boolean);
 const ADMINS = new Set((env.HB_ADMINS ? env.HB_ADMINS.split(",") : CFG.admins).map(n => n.trim().toLowerCase()).filter(Boolean));
 const STORE = env.HB_DATA || path.join(HERE, "data");                  // cuentas, partidas, bloqueos (no se versionan)
-const SAVES = env.SAVE_FILE || path.join(STORE, "saves.json");
-const accounts = new Accounts(env.ACCOUNTS_FILE || path.join(STORE, "accounts.json"));
+const store = await openStore(STORE, { accountsFile: env.ACCOUNTS_FILE, savesFile: env.SAVE_FILE, log: (...a) => console.log(...a) });    // SQLite (store.mjs)
+const accounts = new Accounts("", store);
 const BANS = path.join(STORE, "bans.json");
 const bans = readJson(BANS, { accounts: {}, ips: {} });
 const TOKEN_FILE = path.join(STORE, "admin-token.txt");
@@ -73,12 +74,12 @@ try {
 } catch {}
 const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, maps, clock: () => new Date().getMinutes() });   // día y noche como el cliente local
 
-let saves = readJson(SAVES, {});
-function persist() {
+const saves = store.saves;
+function persist(force = false) {
   for (const c of clients) if (c.pid) saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
-  try { writeJson(SAVES, saves); } catch (e) { console.error("No se pudo guardar:", e.message); }
+  try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
-const saveTimer = setInterval(persist, 30000);
+const saveTimer = setInterval(persist, 5000);          // solo se escriben los personajes que cambiaron; WAL: sobrevive a cerrar la ventana
 
 // ------------------------------------------------------------------ web estática
 const MIME = {
@@ -227,7 +228,7 @@ function drop(c, why) {
     adventure.worldFor(c.pid).emit({ t: "chat", id: c.pid, name: "Servidor", text: c.name + " ha salido.", system: true });
     adventure.removePlayer(c.pid);
     log(`[-] ${c.name} se ha ido (${online()} conectados)`);
-    persist();
+    persist(true);                                   // al salir: copia al historial
     c.pid = null;
   }
 }
@@ -318,7 +319,7 @@ function onMessage(c, text) {
 const muted = new Map();                                   // cuenta -> instante en que acaba el silencio
 const byName = n => [...clients].find(c => c.pid && (c.name.toLowerCase() === n.toLowerCase() || c.key === n.toLowerCase()));
 const saveBans = () => { try { writeJson(BANS, bans); } catch {} };
-let onExit = code => { persist(); process.exit(code); };
+let onExit = code => { persist(true); store.close(); process.exit(code); };
 
 function adminState() {
   return {
@@ -347,7 +348,12 @@ function adminCmd(line, by) {
     case "resetpass": case "clave": {
       const a = accounts.get(rest[0] || ""); if (!a || !rest[1] || rest[1].length < 6) return "Uso: resetpass <usuario> <nueva clave de 6+ caracteres>";
       const salt = crypto.randomBytes(16); a.salt = salt.toString("hex"); a.hash = crypto.scryptSync(rest[1], salt, 32, { N: 16384, r: 8, p: 1 }).toString("hex"); accounts.save(); return "Clave cambiada para " + a.name; }
-    case "save": case "guardar": persist(); return "Guardado.";
+    case "save": case "guardar": persist(true); return "Guardado (" + store.kind + ").";
+    case "versions": case "versiones": { const k = (rest[0] || "").toLowerCase(); const v = store.versions(k); return v.length ? v.map((t, i) => i + ": " + new Date(t).toLocaleString("es")).join("\n") : "Sin copias para " + k; }
+    case "restore": case "restaurar": {            // restaurar <usuario> <n>: devuelve una versión anterior del personaje (el jugador debe estar desconectado)
+      const k = (rest[0] || "").toLowerCase(), v = store.versions(k), at = v[Number(rest[1] || 0)];
+      if (byName(k)) return "Desconecta primero a " + k;
+      return at && store.restore(k, at) ? "Personaje " + k + " restaurado a " + new Date(at).toLocaleString("es") : "No hay esa copia (usa: versions " + k + ")"; }
     case "restart": case "reiniciar": case "stop": case "parar": {
       const restart = /^(restart|reiniciar)$/i.test(cmd);
       for (const c of [...clients]) drop(c, restart ? "El servidor se reinicia. Vuelve a entrar en un minuto." : "El servidor se apaga.");
@@ -492,4 +498,4 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 // consola del servidor: los mismos comandos que el chat de un admin
 if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("line", l => console.log(adminCmd(l, "consola")));
-for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(); setTimeout(() => process.exit(0), 150); });
+for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); store.close(); setTimeout(() => process.exit(0), 150); });

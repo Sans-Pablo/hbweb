@@ -6,10 +6,10 @@ const STOP_MS = { 15: 180, 19: 250, 20: 250, 24: 150 };
 
 // NPC de la tienda general que el servidor original pone en otros mapas (el mago está en la torre): aquí, junto al tendero.
 // "Gail" hace de enfermera del hospital de compañeros (invento del port: usa una ficha y un sprite originales sin función en el juego base).
-export const EXTRA_CITIZENS = { gshop_1f: [{ name: "Gail", x: 57, y: 41, role: "pethospital" }, { name: "Kennedy", x: 55, y: 43, role: "arena" }] };
+export const EXTRA_CITIZENS = { gshop_1f: [{ name: "Gail", x: 57, y: 41, role: "pethospital" }, { name: "Gandlf", x: 49, y: 44 }, { name: "Kennedy", x: 55, y: 43, role: "arena", skin: "William" }] };
 
-export function spawnCitizen(w, name, x, y, role = null) {
-  const cfg = w.npcDb[name];
+export function spawnCitizen(w, name, x, y, role = null, skin = null) {
+  const cfg = w.npcDb[skin && w.npcDb[skin]?.town ? skin : name];            // skin: aspecto de otro habitante (el Arena Master se ve como William, del Ayuntamiento)
   if (!cfg || !cfg.town) return null;
   const spot = w.grid.free(x, y) ? [x, y] : w.freeSpotNear(x, y, 3);
   if (!spot) return null;
@@ -25,5 +25,5 @@ export function populate(w, meta, id) {
     const wp = meta.waypoints?.[String(npc.wp[0])];
     if (wp) spawnCitizen(w, npc.name, wp[0], wp[1]);
   }
-  for (const c of EXTRA_CITIZENS[id] || []) spawnCitizen(w, c.name, c.x, c.y, c.role);
+  for (const c of EXTRA_CITIZENS[id] || []) spawnCitizen(w, c.name, c.x, c.y, c.role, c.skin);
 }

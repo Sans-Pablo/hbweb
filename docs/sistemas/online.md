@@ -9,7 +9,7 @@ Código: `server/server.mjs` (servidor), `server/accounts.mjs` (cuentas y límit
   `auth{mode,name,pass,proto}` → `authok{hasChar,admin}` · `join{create?}` → `welcome{id,time,returning}` · `cmd{seq,cmd}` · `ping` · servidor: `s` (estado), `msg`, `error{code}`, `kicked`.
 - **Estado `s`**: entidades que cambian (`e`), las que desaparecen (`g`), eventos (`ev`), objetos del suelo (`it`), mapa (`map`), cielo/clima (`sk`), campos mágicos y efectos de jefe (`fx`). Para el propio jugador `o` lleva su estado completo (mochila, magia, talentos, tutorial, compañeros…: `ownState`); para los demás `ap` (equipo visible, `shared/appearance.js`) y `lk` (aspecto).
 - **Privacidad**: solo los eventos de `PUBLIC` (efectos y sonidos) llegan a quien está cerca; el resto con `id` es de su dueño. Un evento nuevo es privado por defecto.
-- **Cuentas**: usuario 3–16 (`[\p{L}\p{N}_-]`), clave 6–64, scrypt; personaje único por cuenta (nombre único del servidor, mismas reglas que local). Progreso en `server/data/saves.json` (escritura atómica, cada 30 s y al salir).
+- **Cuentas**: usuario 3–16 (`[\p{L}\p{N}_-]`), clave 6–64, scrypt; personaje único por cuenta (nombre único del servidor, mismas reglas que local). Cuentas y progreso en SQLite (`server/store.mjs`, `server/data/hb.sqlite`, WAL): guardado cada 5 s (solo lo cambiado) y al salir, con historial de 24 copias por personaje (`versions`/`restore` en la consola de admin). Migra solo los JSON antiguos. Requiere Node ≥ 22.5; si no, JSON con aviso.
 - **Límites**: ver `docs/ONLINE.md` (intentos, cuentas, conexiones, mensajes, chat, inactividad, orígenes).
 - **Administración**: comandos de chat (cuentas `admins`), consola y panel `/admin` (solo loopback y sin cabeceras de túnel).
 

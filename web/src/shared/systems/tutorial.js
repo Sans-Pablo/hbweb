@@ -22,7 +22,7 @@ export const SPEAKERS = {
   g: { npc: "Gandlf", es: "Gandlf", en: "Gandlf" },
   s: { npc: "ShopKeeper-W", es: "Tendero", en: "Shopkeeper" },
   p: { npc: "Gail", es: "Gail", en: "Gail" },
-  k: { npc: "Kennedy", es: "Kennedy", en: "Kennedy" },
+  k: { npc: "William", es: "Kennedy", en: "Kennedy" },
   n: { npc: null, es: "", en: "" },
 };
 export const GOAL_KINDS = new Set(["move", "run", "panel", "equip", "kill", "pickup", "use", "map", "talk", "buy", "pet", "petuse"]);

@@ -2,7 +2,7 @@
 export const helpText = () => [
   "Comandos de administración (en el chat con /, en la consola del servidor o en el panel):",
   "who · kick <jugador> [motivo] · mute <jugador> [min] · unmute <jugador> · ban <cuenta> [motivo] · unban <cuenta> · banip <ip>",
-  "say <texto> · resetpass <cuenta> <clave> · save · restart · stop",
+  "say <texto> · resetpass <cuenta> <clave> · save · versions <cuenta> · restore <cuenta> <n> · restart · stop",
 ].join("\n");
 
 export const ADMIN_PAGE = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

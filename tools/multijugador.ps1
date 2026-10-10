@@ -77,7 +77,7 @@ if ($url) {
 }
 Write-Host ""
 Write-Host "  El enlace cambia cada vez que abres este programa. Quien lo tenga puede entrar."
-Write-Host "  El progreso de cada personaje se guarda por nombre en server\saves.json."
+Write-Host "  El progreso de cada personaje se guarda por nombre en server\data\hb.sqlite (base de datos SQLite)."
 Write-Host ""
 Start-Process "http://localhost:$port/"
 Read-Host "  Pulsa Intro aquí para APAGAR el servidor y el enlace"

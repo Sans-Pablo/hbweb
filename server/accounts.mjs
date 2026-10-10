@@ -19,8 +19,9 @@ export function writeJson(file, obj) {
 export function readJson(file, dflt) { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return dflt; } }
 
 export class Accounts {
-  constructor(file) { this.file = file; this.db = readJson(file, {}); }
-  save() { writeJson(this.file, this.db); }
+  // `store` (store.mjs) aporta el objeto de cuentas y el guardado; sin él, un JSON suelto (tests)
+  constructor(file, store = null) { this.file = file; this.store = store; this.db = store ? store.accounts : readJson(file, {}); }
+  save() { if (this.store) this.store.flush(); else writeJson(this.file, this.db); }
   has(name) { return !!this.db[name.toLowerCase()]; }
   get(name) { return this.db[name.toLowerCase()] || null; }
   async register(name, pass, ip = "") {

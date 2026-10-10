@@ -190,7 +190,7 @@ export class Renderer {
       }
       if (s.labels || rar >= 2 || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y)) {
         labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr, it.comp), it.id === 90 ? "#f0d080" : rar ? RARITY_COLOR[rar] : "#e8e2d0"]);
-        if (it.id !== 90 && d && !it.comp) {                            // atributos y precio de venta: para saber qué conviene recoger
+        if (s.groundInfo !== false && it.id !== 90 && d && !it.comp) {                            // atributos y precio de venta: para saber qué conviene recoger
           const info = attrLines(it.attr).join(" · "), price = sellPriceOf(d, it, isStack(d) ? it.count : 1);
           if (info) labels.push([x, y - 1, info, "#9fe39a"]);
           if (price) labels.push([x, y - 1 + (info ? 13 : 0), "Venta " + price.toLocaleString("en") + " oro", "#f0d080"]);
@@ -390,13 +390,13 @@ export class Renderer {
       const closed = gate.locked && (s.world.map.remainingEnemies ?? 1) > 0;
       // salida = puerta de la entrada de dungeon del original, pegada a la pared izquierda; bajada = el hueco con escalera de la granja
       // (tools/make_crypt_assets.py); cerrada = apagada
-      const pit = gate.target === "down", key = pit ? "cryptpit" : "cryptdoor", oy = pit ? 0 : 16;
+      const pit = true, key = "cryptpit", oy = 0;          // hueco con escalera de teselas originales para bajada y salida
       ctx.globalAlpha = closed ? 0.6 : 1;
       this.spr.put(ctx, key, 0, x, y + oy);
       ctx.globalAlpha = 1;
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
-      this.label(x, y - (pit ? 40 : 140), gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }
@@ -508,9 +508,9 @@ export class Renderer {
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
-    if (hovered || e.arena || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
+    if (hovered || e.arena || e.comp || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
+        const name = (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
         else {
           ctx.font = "12px 'Courier New', monospace";

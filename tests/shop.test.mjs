@@ -21,7 +21,7 @@ const pid = A.addPlayer("tester");
 let w = A.staticWorld("gshop_1f"), p = A.worldFor(pid).ents.get(pid);
 assert(A.transfer(p, A.farm, w, [51, 41]), "entrar en la tienda");
 assert([...w.ents.values()].some(e => e.kind === "citizen" && e.name === "ShopKeeper-W"), "hay tendero");
-assert(![...w.ents.values()].some(e => e.kind === "citizen" && e.name === "Gandlf"), "sin mago en la tienda de la granja");
+assert([...w.ents.values()].some(e => e.kind === "citizen" && e.name === "Gandlf"), "Gandlf (mago) está en la tienda general");
 const ev = []; const emit = w.emit.bind(w); w.emit = e => { ev.push(e); emit(e); };
 const cmd = c => A.command(pid, c);
 const id = n => data.named(n).id;

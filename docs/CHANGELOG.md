@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.29.0 · Personajes persistentes (2026-10-10)
+
+- Servidor online: cuentas y partidas en SQLite (`server/store.mjs`, `server/data/hb.sqlite`, WAL + `synchronous=FULL`). Guardado cada 5 s solo de lo que cambió y al desconectarse; copias en `history` (24 por personaje, cada 10 min como mucho y al salir). Admin: `versions <cuenta>` y `restore <cuenta> <n>`. Importa solos los `accounts.json`/`saves.json` antiguos (quedan como `*.migrated`). Sin `node:sqlite` (Node < 22.5) cae al JSON con aviso. Test `tests/store.test.mjs`.
+
+- Inicio siempre en Aresfarm (65,75) (`player.addPlayer` usa `w.home`). Arena Master con la skin de William (`citizens.skin`). Mascotas con nombre y nivel (`renderer`). Opción `groundInfo` (info y precio del suelo). Gandlf en la tienda general (`EXTRA_CITIZENS`). Eliminada la puerta dibujada de la cripta (`cryptdoor`): se usa `cryptpit`.
+
 ## 0.28.0 · Party y magia (2026-10-10)
 
 - **Party** (`shared/systems/party.js`, `client/party.js`, diálogo 32): invitación por clic, aceptar/rechazar/cancelar, retirarse, lista, máx. 8, reparto de experiencia entre miembros vivos del mismo mapa (`GetExp`; con 8 el doble), chat `$`, «, Party Member», disolución con 1 miembro, salida al desconectar. Grupo compartido entre mapas (`hooks.party`). Test `tests/party.test.mjs`. Sin fuego amigo que filtrar: PvP aún no existe.

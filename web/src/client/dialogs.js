@@ -385,7 +385,7 @@ export function registerDialogs(gui, api) {
 
   // ------------------------------------------------------------ 20: mejoras de esta versión (activables)
   const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
-    ["spellFx", "Animaciones de hechizos"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
+    ["spellFx", "Animaciones de hechizos"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"], ["groundInfo", "Info de objetos del suelo"]];
   const mods = {
     id: 60, x: 417, y: 140, w: 258, h: 290,
     draw(g) {

@@ -71,7 +71,8 @@ try {
     const d = await mk(); assert.match((await d.auth("register", "MARIA", "otra123")).msg, /ya existe/, "usuario repetido sin distinguir mayúsculas");
     assert.match((await d.auth("login", "maria", "equivocada")).msg, /incorrectos/); assert.match((await d.auth("login", "nadie", "secret1")).msg, /incorrectos/, "no revela si existe");
     assert.equal((await d.ask({ t: "join", create: { name: "x" } }, "welcome")).t === "welcome", false, "sin autenticar no se entra");
-    const accs = readFileSync(path.join(dir, "accounts.json"), "utf8"); assert.ok(!accs.includes("secret1"), "la clave no se guarda en claro"); assert.match(accs, /"hash"/);
+    const { openStore } = await import("../server/store.mjs"); const st0 = await openStore(dir, { log() {} }); const accs = JSON.stringify(st0.accounts); st0.close();   // cuentas en SQLite
+    assert.ok(!accs.includes("secret1"), "la clave no se guarda en claro"); assert.match(accs, /"hash"/);
     c.close(); d.close(); }
   // fuerza bruta: tras 8 fallos el origen queda bloqueado
   { const c = await mk(); let last; for (let i = 0; i < 10; i++) last = await c.auth("login", "maria", "mala" + i); assert.match(last.msg, /Demasiados intentos/); c.close(); }

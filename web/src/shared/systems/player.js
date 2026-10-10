@@ -71,7 +71,7 @@ function newCharacter(w, p, create) {
 }
 
 export function addPlayer(w, name, save = null, create = null) {
-  const [x, y] = w.freeSpotNear(w.start[0], w.start[1]);
+  const home = w.home || w.start, [x, y] = w.freeSpotNear(home[0], home[1]);          // siempre se entra por Aresfarm (65,75)
   const p = w.makeEnt("player", x, y);
   Object.assign(p, { name, lastMove: -1e9, lastAttack: -1e9, lastCombat: -1e9, lastVitals: w.time, kills: 0, deadAt: 0 });
   newCharacter(w, p, create);
