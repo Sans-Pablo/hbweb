@@ -11,6 +11,31 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Reparaciones tras el informe de bots (v0.45.0)",
+        "en": "Fixes after the bot report (v0.45.0)"
+      },
+      "items": [
+        {
+          "es": "Tu summon ya no se queda atrás: si te alejas más de 22 casillas aparece junto a ti. Además recibe el 40 % de tu experiencia (antes 25 %) y sube de nivel más deprisa.",
+          "en": "Your summon no longer lags behind: if you get more than 22 tiles away it appears next to you. It also gets 40% of your experience (was 25%) and levels faster."
+        },
+        {
+          "es": "Avisos en el registro cuando vas casi al límite de peso o con la mochila casi llena (el peso se pone en rojo en el inventario).",
+          "en": "Log warnings when you are near the weight limit or your bag is almost full (the load line turns red in the inventory)."
+        },
+        {
+          "es": "Arreglado: si el dueño de un summon cambiaba de mapa mientras un monstruo lo golpeaba, el servidor podía fallar.",
+          "en": "Fixed: if a summon's owner changed map while a monster was hitting it, the server could crash."
+        },
+        {
+          "es": "Los habitantes: ya no se amontonan en la puerta de la tienda ni persiguen monstruos inalcanzables, reparten mejor sus puntos (más vida) y las bajas de sus summons se cuentan bien.",
+          "en": "Residents no longer pile up at the shop door or chase unreachable monsters, spend their points better (more health), and their summons' kills are counted correctly."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Bots con summons (v0.44.0)",
         "en": "Bots with summons (v0.44.0)"
       },

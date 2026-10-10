@@ -70,7 +70,7 @@ export function killNpc(w, n, p) {
   n.hp = 0; n.dead = true;
   w.setAct(n, ACT.DYING, n.dur.dying);
   w.grid.release(n.x, n.y, n.id);
-  w.emit({ t: "death", id: n.id, by: p ? p.id : 0 });
+  w.emit({ t: "death", id: n.id, by: p ? p.id : 0, ...(n.petOwner ? { pet: n.petOwner } : {}) });
   if (n.special === 7 || n.special === 8) explode(w, n, n.special === 7 ? 30 : 61);
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
@@ -159,6 +159,10 @@ function followerThink(w, n) {
     }
   }
   if (n.comp && n.holdAt && dist(n, m) > 14) n.holdAt = null;                  // el dueño se aleja demasiado: vuelve a seguirlo
+  if (n.comp && !n.goTo && !n.holdAt && dist(n, m) > 22 && !w.busy(n)) {         // se ha quedado atrás (el dueño corre, o cruzó una zona): lo alcanza junto a él
+    const sp = w.freeSpotNear(m.x, m.y);
+    if (sp) { w.grid.release(n.x, n.y, n.id); n.x = n.fx = sp[0]; n.y = n.fy = sp[1]; w.grid.occupy(n.x, n.y, n.id); n.act = ACT.STOP; n.actStart = w.time; n.actDur = 0; n.busyUntil = w.time; w.emit({ t: "teleport", id: n.id, x: n.x, y: n.y }); return; }
+  }
   const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); return !!d; };
   if (n.comp && n.goTo) {                                                     // Alt + clic derecho: ir a esa casilla y quedarse allí
     const g = n.goTo;
@@ -220,6 +224,7 @@ function petHurt(w, n, t, dmg, kind = "hit") {
     t.noDrop = !n.comp; t.noDieRemainExp = 0;
     const m = w.ents.get(n.master), inst = n.comp && m && Inv.instOf(m, n.ball);
     if (inst) { const xp = Math.floor(t.exp / 3 / 2); Comp.addExp(w, m, inst, xp); giveExp(w, m, xp); }
+    if (n.comp && m) t.petOwner = m.id;                         // la baja es del summon: el evento «death» lo dice (métrica de los habitantes)
     return killNpc(w, t, null);
   }
   const m = w.ents.get(n.master);
@@ -345,7 +350,9 @@ export function toggleCompanion(w, p, inst) {
 function companionStruck(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
   if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return miss();
-  const tc = Inv.instOf(w.ents.get(t.master), t.ball)?.comp;
+  const mo = w.ents.get(t.master);
+  if (!mo) return killNpc(w, t, null);                            // el dueño ya no está en este mundo (cambió de mapa): el summon se disuelve
+  const tc = Inv.instOf(mo, t.ball)?.comp;
   const dmg = Math.max(1, Math.round(R.npcMelee(w.rng, n).damage * (tc ? Tal.takenFactor(w, t, tc) : 1)));
   Boss.onBossHit(w, n);
   companionHurt(w, n, t, dmg);

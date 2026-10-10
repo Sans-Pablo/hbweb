@@ -71,7 +71,7 @@ const countOf = (p, id) => p.bag.reduce((a, i) => a + (i.id === id ? i.count || 
 
 function spendPoints(w, p) {
   if (p.pool <= 0) return;
-  const total = p.pool, str = Math.ceil(total * 0.5), vit = Math.ceil(total * 0.3);
+  const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
   for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n });
   if (p.pool > 0) w.command(p.id, { t: "stat", stat: "str", n: p.pool });
 }
@@ -142,7 +142,7 @@ export const tooStrong = (w, p, e) => {
   if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
   if (e.boss && p.level < 40) return true;
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
-  return hit * 3 > p.maxHp;
+  return hit * 4 > p.maxHp;
 };
 const hostile = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
 function pickTarget(w, p, owner) {
@@ -157,6 +157,7 @@ function pickTarget(w, p, owner) {
       continue;
     }
     if (!hostile(e)) continue;
+    if (p.bot.ignore?.has(e.id) && e.target !== p.id) continue;                                         // inalcanzable hace un momento
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
     const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0);
@@ -264,6 +265,8 @@ function run(adv, w, p, b) {
   }
   if (b.rest && hpf > 0.75) { b.rest = false; blog(w, p, "Recuperado, sigo."); think_(w, p, b, "rested"); }
   // objetivo
+  if (b.travel && w.time > b.travel.until) { if (!b.travel.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; b.path = null; }       // caduca aunque esté peleando por el camino
+  if (b.ignore) for (const [id, until] of b.ignore) if (w.time > until) b.ignore.delete(id);
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
   if (!b.rest && w.time >= b.tgtAt) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = b.rest || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
@@ -271,7 +274,9 @@ function run(adv, w, p, b) {
     if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (dist(p, t) <= reachOf(w, p, t)) {
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }
-    } else step(adv, w, p, b, t.x, t.y, dist(p, t) > 5);
+    } else if (!step(adv, w, p, b, t.x, t.y, dist(p, t) > 5) && b.fails > 8) {          // no hay camino hasta él (vallado, otra zona): lo descarta un rato
+      (b.ignore ||= new Map()).set(t.id, w.time + 20000); b.target = null; b.fails = 0; b.path = null;
+    }
     return;
   }
   // botín cercano (solo si no hay peligro a la vista)
@@ -294,6 +299,9 @@ function run(adv, w, p, b) {
     else { step(adv, w, p, b, tr.x, tr.y, true); return; }
   }
   // seguir al dueño o vagar por la zona
+  if (!b.travel && w.teleports.has(w.grid.idx(p.x, p.y))) {                                // de pie sobre un teletransportador (acaba de llegar): se aparta para no taparlo ni quedarse esperando
+    const o = w.freeSpotNear(p.x + 2, p.y + 2); if (o && !w.teleports.has(w.grid.idx(o[0], o[1]))) { step(adv, w, p, b, o[0], o[1], false); return; }
+  }
   if (owner) { if (dist(p, owner) > 8) think_(w, p, b, "follow"); if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
   if (b.rest || b.hold > w.time) return;
   if (!b.wander || (p.x === b.wander.x && p.y === b.wander.y) || w.time > b.wander.until || b.fails > 4) {

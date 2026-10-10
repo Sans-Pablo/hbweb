@@ -30,8 +30,8 @@ export function openLlm(cfg = {}, env = process.env, log = console.log) {
   const prompt = ({ who, lang, system, task }) => {
     const es = lang !== "en";
     if (task === "feedback") return es
-      ? `Eres ${who}, un jugador-probador de un RPG online de fantasía (port web de Helbreath). ${system} A partir de tus estadísticas, da UNA opinión concreta de diseño o balance (qué falla, qué es incómodo o qué mejorarías), en español, máximo 180 caracteres, sin emojis ni comillas.`
-      : `You are ${who}, a playtester of a fantasy online RPG (a web port of Helbreath). ${system} From your stats, give ONE concrete design or balance remark (what is wrong, awkward, or what you'd improve), in English, max 180 characters, no emojis or quotes.`;
+      ? `Eres un jugador-probador de un RPG online de fantasía (port web de Helbreath). Te paso tus estadísticas de las últimas partidas. Da UNA sugerencia concreta de diseño o balance que se apoye en una cifra de esas estadísticas (qué falla o qué cambiarías y por qué), en español, máximo 180 caracteres. No menciones nombres de personajes, ni emojis ni comillas.`
+      : `You are a playtester of a fantasy online RPG (a web port of Helbreath). I give you your stats from recent play. Give ONE concrete design or balance suggestion that cites a number from those stats (what is wrong or what you would change, and why), in English, max 180 characters. No character names, no emojis or quotes.`;
     return es
       ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Responde en español con UNA sola frase corta (máximo 90 caracteres), en personaje, sin emojis ni comillas. Si alguien te pregunta sinceramente si eres una IA o un bot, admítelo con naturalidad.`
       : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} Reply in English with ONE short sentence (max 90 characters), in character, no emojis or quotes. If someone sincerely asks whether you are an AI or a bot, admit it naturally.`;

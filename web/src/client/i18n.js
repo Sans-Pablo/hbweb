@@ -161,6 +161,8 @@ const PATTERNS = [
   [/^No puedes lanzarlo: (.+)\.$/, m => `You cannot cast it: ${t(m[1])}.`],
   [/^No puedes usar el portal: (.+)\.$/, m => `You cannot use the portal: ${t(m[1])}.`],
   [/^No puedes aprenderlo: (.+)\.$/, m => `You cannot learn it: ${t(m[1])}.`],
+  [/^Vas casi al límite de peso \((.+)\): vende o tira lo que no uses\.$/, m => `You are close to your weight limit (${m[1]}): sell or drop what you don't use.`],
+  [/^Tu mochila está casi llena \((.+)\): vende o tira lo que no uses\.$/, m => `Your bag is almost full (${m[1]}): sell or drop what you don't use.`],
   [/^Aprendes (.+)\.$/, m => `You learn ${m[1]}.`],
   [/^(.+) aprende ([^()]+)\.$/, m => `${m[1]} learns ${m[2]}.`], [/^Int (\d+) necesaria$/, m => `Int ${m[1]} needed`], [/^tu summon necesita nivel (\d+)$/, m => `your summon needs level ${m[1]}`],
   [/^Entras en (.+)\.$/, m => `You enter ${t(m[1])}.`],

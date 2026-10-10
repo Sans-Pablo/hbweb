@@ -43,7 +43,7 @@ assert.ok(a30.share > a1.share && a30.hp >= a1.hp);
 assert.ok(C.shareOf(50, "Orge") <= 0.9 && C.MAX_COMP_LEVEL === 50);
 assert.equal(f.dmgNow, a1.dmg);
 
-// experiencia: el dueño da el 25 %; sube de nivel; el tope es el nivel del dueño
+// experiencia: el dueño da el 40 %; sube de nivel; el tope es el nivel del dueño
 const before = ball.comp.exp + 0;
 C.addExp(w, p, ball, C.need(1));
 assert.equal(ball.comp.lvl, 2);

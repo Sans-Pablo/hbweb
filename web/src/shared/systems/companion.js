@@ -4,7 +4,7 @@
 //    (siempre esa especie) y lo invoca; volver a usarla lo guarda. La bola guarda especie, nivel y experiencia (inst.comp).
 //  - Estadísticas COMPARTIDAS: el daño y la vida del compañero salen del daño medio y la vida del dueño, multiplicados por una
 //    cuota que crece con el nivel del compañero; así sumar su daño al del jugador nunca desequilibra (cuota máxima 0,5).
-//  - Experiencia: el compañero recibe el 25 % de lo que gana el dueño y el 50 % de la de sus propias muertes (el dueño no gana por ellas).
+//  - Experiencia: el compañero recibe el 40 % de lo que gana el dueño y el 50 % de la de sus propias muertes (el dueño no gana por ellas).
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
@@ -50,10 +50,11 @@ export function statsOf(p, c) {
   return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))), mp: Tal.maxMp(c) };
 }
 
+export const OWNER_SHARE = 0.4;                                              // parte de la experiencia del dueño que recibe su compañero (0.25 hasta v0.44: los habitantes lo veían subir demasiado despacio)
 // Muerte de un monstruo a manos del jugador: experiencia del compañero (las bolas ya no se consiguen cazando)
 export function onKill(w, p, n, xp) {
   const act = activeBall(p);
-  if (act) addExp(w, p, act, Math.floor(xp * 0.25));
+  if (act) addExp(w, p, act, Math.floor(xp * OWNER_SHARE));
 }
 
 // Muerte del compañero: pierde el 25 % de la experiencia de su nivel y, si no le alcanza, un nivel

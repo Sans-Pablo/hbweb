@@ -279,6 +279,10 @@ export class Hud {
       this.set("q" + k, $("[data-use=" + k + "] b"), "text", String(me.bag.filter(i => { const d = itemDef(i.id); return d && d.type === ITYPE.EAT && d.effectType === eff; }).length));
     }
     this.set("spf", $("#sp .fill"), "--k", pct(me.sp, me.maxSp));
+    // avisos de carga (QA de los habitantes: 26 de 26 no vieron nunca avisos de peso ni de mochila llena); se repiten solo tras bajar de la marca
+    if (me.weight > me.maxLoad * 0.9) { if (!this.warnLoad) { this.warnLoad = true; this.log("Vas casi al límite de peso (" + (me.weight / 100).toFixed(1) + " / " + (me.maxLoad / 100).toFixed(0) + "): vende o tira lo que no uses.", "bad"); } } else if (me.weight < me.maxLoad * 0.8) this.warnLoad = false;
+    if (me.bag.length >= 46) { if (!this.warnBag) { this.warnBag = true; this.log("Tu mochila está casi llena (" + me.bag.length + "/50): vende o tira lo que no uses.", "bad"); } } else if (me.bag.length < 42) this.warnBag = false;
+    this.set("loadwarn", $("#inv .load"), "color", me.weight > me.maxLoad * 0.9 || me.bag.length >= 46 ? "#ff8a7a" : "");
     if ($("#inv").classList.contains("open")) this.renderInv(me);
     if ($("#book").classList.contains("open")) this.renderBook(me);
     this.set("pool", $("#poolbadge"), "text", me.pool ? String(me.pool) : "");

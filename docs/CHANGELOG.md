@@ -2,6 +2,16 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.45.0 · Reparaciones del informe de bots (2026-10-10)
+
+- Corregido (crash): `companionStruck` leía la mochila de un dueño que ya no estaba en el mundo (cambio de mapa) y tumbaba el servidor; ahora el summon se disuelve.
+- Métrica: el evento `death` de un monstruo muerto por un summon lleva `pet` (id del dueño); `residents` cuenta esas bajas.
+- Atascos: el viaje al hospital ya no repite la ida a la tienda (`_pet.in`); quien aparece sobre un teletransportador se aparta; el viaje caduca aunque el bot esté peleando; los objetivos sin camino se descartan 20 s (`bot.ignore`); un seguidor junto a su líder no cuenta como atascado.
+- Summons: si quedan a más de 22 casillas del dueño se teletransportan a su lado (`followerThink`); `Comp.OWNER_SHARE` = 0.4 (antes 0.25).
+- Cliente: aviso de peso (>90 %) y de mochila (≥46/50) en el registro, con la línea de carga en rojo; entradas en inglés en `i18n.js`.
+- Habitantes: puntos 40 % Fuerza / 40 % Vitalidad; `tooStrong` exige 4 golpes de margen; el viaje a Gail ya no espera a estar sin grupo; las ideas del LLM se piden sin nombre de personaje, con cifra, y se filtran duplicados y nombres.
+- Descartado: el aviso «learn desde cualquier sitio» (en el port se enseña desde el libro, no hay Mago al que acercarse). Sin tocar: curva de experiencia y penalización de muerte (vienen del original).
+
 ## 0.44.0 · Bots con summons (2026-10-10)
 
 - Habitantes (`residents.pets`): compran bola en el hospital (Aresden: Gail en `gshop_1f`; Elvine Farm: Gail al aire libre, `EXTRA_CITIZENS.elvfarm`), invocan, gastan talentos según su arquetipo, enseñan y lanzan hechizos de escuela, usan `pettarget`/`petmode`/caramelos, y curan o reviven. Informan al informe de probadores (`pet-missing`, `pet-far`, `pet-slow`, `pet-dies`, `learn-anywhere`, `revive-cost`…).

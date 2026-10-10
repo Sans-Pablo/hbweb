@@ -48,3 +48,20 @@ for (const n of ["Aldric", "Cora"]) {                                           
   assert.ok(live(), "al reaparecer vuelve el summon");
 }
 console.log("OK residents-pets");
+
+// v0.45: el summon alcanza a su dueño si se queda atrás, y la baja del summon se acredita al dueño
+{
+  const id = a.addPlayer("Corredor", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }), p = a.farm.ents.get(id);
+  p.level = 20; a.farm.recalc(p);
+  const sh = a.staticWorld("gshop_1f"), gail = [...sh.ents.values()].find(e => e.role === "pethospital");
+  a.transfer(p, a.farm, sh, [gail.x, gail.y + 1]); p.gold = 5000;
+  a.command(id, { t: "petbuy", npc: gail.id, sp: "Troll" });
+  a.transfer(p, sh, a.farm, a.farm.home);
+  const ball = p.bag.find(i => i.comp); a.command(id, { t: "use", uid: ball.uid }); tick(1000);
+  const pet = [...a.farm.ents.values()].find(e => e.comp && e.master === id);
+  assert.ok(pet, "summon fuera");
+  const far = a.farm.freeSpotNear(pet.x + 40, pet.y + 40) || a.farm.freeSpotNear(pet.x - 40, pet.y - 40);
+  a.relocate(p, a.farm, far); tick(3000);
+  const pet2 = [...a.farm.ents.values()].find(e => e.comp && e.master === id);
+  assert.ok(pet2 && Math.max(Math.abs(pet2.x - p.x), Math.abs(pet2.y - p.y)) <= 22, "el summon alcanza al dueño");
+}
