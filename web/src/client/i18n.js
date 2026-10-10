@@ -103,7 +103,7 @@ const EN = {
   "¡Nivel despejado! Recoge el botín y baja por el portal (E).": "Level cleared! Collect the loot and take the portal down (E).", "¡Nivel despejado!": "Level cleared!",
   "¡Nivel despejado! Baja por el portal (E).": "Level cleared! Take the portal down (E).", "¡Cripta despejada! Busca la salida (E).": "Crypt cleared! Find the exit (E).",
   "mata a todos los esqueletos para continuar": "kill all the skeletons to continue", "no hay más niveles": "there are no more levels", "faltan los datos de la cripta; recarga la página": "crypt data is missing; reload the page",
-  "no estás en un grupo": "you are not in a party", "los hechizos están cerrados": "spells are closed", "Los hechizos están cerrados.": "Spells are closed.",
+  "en la arena solo se mira": "in the arena you can only watch", "no estás en un grupo": "you are not in a party", "los hechizos están cerrados": "spells are closed", "Los hechizos están cerrados.": "Spells are closed.",
   "Info de objetos del suelo": "Ground item info", "Info de objetos del suelo (atributos y precio)": "Ground item info (stats and price)",
   "Salir de la cripta": "Leave the crypt", "Salida de la cripta · ¡victoria!": "Crypt exit · victory!", "Reiniciar (nivel 1)": "Restart (level 1)",
   "Salas olvidadas": "Forgotten Halls", "Laberinto de osarios": "Ossuary Maze", "Galerías concéntricas": "Concentric Galleries", "Islas sobre el lago": "Islands on the Lake", "Sala de los pilares": "Pillar Hall", "Cruce de las cuatro criptas": "Crossing of the Four Crypts",

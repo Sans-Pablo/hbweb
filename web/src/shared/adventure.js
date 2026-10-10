@@ -17,6 +17,7 @@ const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de
 export const FARM_HOME = [65, 75];
 export const ALLOWED_MAPS = new Set(["arefarm", "gshop_1f", "bsmith_1f", "wrhus_1f"]);
 
+const gkey = p => p.party ? "g" + p.party.id : p.id;   // clave de la cripta: la party comparte una
 export class Adventure {
   constructor(options) {
     this.options = options;
@@ -132,7 +133,7 @@ export class Adventure {
     const w = this.worldFor(id);
     w.removePlayer(id);
     this.locations.delete(id);
-    this.dropInstance(id);
+    if (w.map.kind === "dungeon") this.dropIfEmpty(w);
   }
 
   command(id, cmd) {
@@ -167,8 +168,8 @@ export class Adventure {
       if (!w.npcDb.Skeleton || !hasDungeonPalette()) return w.reject(p, cmd, "faltan los datos de la cripta");
       p.delve = p.delve || { deepest: 1 };
       this.runs = this.runs || new Map();
-      if (!this.runs.get(p.id)) this.runs.set(p.id, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.kind === "dungeon" ? "arefarm" : w.map.id, x: w.map.kind === "dungeon" ? 134 : p.x, y: w.map.kind === "dungeon" ? 94 : p.y } });
-      else this.runs.get(p.id).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
+      if (!this.runs.get(gkey(p))) this.runs.set(gkey(p), { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.kind === "dungeon" ? "arefarm" : w.map.id, x: w.map.kind === "dungeon" ? 134 : p.x, y: w.map.kind === "dungeon" ? 94 : p.y } });
+      else this.runs.get(gkey(p)).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
       return this.descend(p, w, level, true);
     }
     const to = cmd.map === "arefarm" ? this.farm : this.staticWorld(String(cmd.map || "").toLowerCase());
@@ -188,13 +189,20 @@ export class Adventure {
     }
     if (cmd.restart === true) dv.deepest = 1;
     this.runs = this.runs || new Map();
-    this.runs.set(p.id, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.id, x: gate.x, y: gate.y } });
+    const key = gkey(p), live = this.instances.get(key);
+    if (live && p.party && cmd.restart !== true) {                  // la party entra siempre a la misma cripta
+      const near = live.start || live.map.portals?.[0] || [p.x, p.y];
+      if (!this.transfer(p, w, live, Array.isArray(near) ? near : [near.x, near.y])) return w.reject(p, cmd, "entrada ocupada");
+      return true;
+    }
+    this.runs.set(key, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.id, x: gate.x, y: gate.y } });
     return this.descend(p, w, Math.min(dv.deepest, DUNGEON_LEVELS), true);
   }
 
   // Crea el nivel `level` de la partida del jugador y lo traslada allí. El nivel anterior se descarta.
   descend(p, from, level, entering = false) {
-    const run = this.runs?.get(p.id);
+    const key = from.map.kind === "dungeon" && from.runKey ? from.runKey : gkey(p);
+    const run = this.runs?.get(key);
     if (!run || level > DUNGEON_LEVELS) { if (run && level > DUNGEON_LEVELS) return this.reject(p, from, "no hay más niveles"); return false; }
     const seed = levelSeed(run.seed, level), layout = generateLevel(seed, level);
     const d = new World({ grid: layout.grid, npcDb: from.npcDb, data: from.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
@@ -204,18 +212,22 @@ export class Adventure {
     d.map.totalEnemies = d.map.remainingEnemies = [...d.ents.values()].filter(e => e.kind === "npc" && !e.comp).length;
     for (const n of d.ents.values()) n.nextAct += this.time;            // los temporizadores usan el reloj de la sesión
     this.worlds.set(d.map.id, d);
+    d.runKey = key;
+    const group = from.map.kind === "dungeon" ? [...from.ents.values()].filter(e => e.kind === "player") : [p];
+    if (!group.includes(p)) group.unshift(p);
     if (!this.transfer(p, from, d, layout.start)) { this.worlds.delete(d.map.id); return from.reject(p, { t: "portal" }, "entrada ocupada"); }
-    const previous = this.instances.get(p.id);
-    if (previous) this.worlds.delete(previous.map.id);
-    this.instances.set(p.id, d);
+    for (const q of group) if (q !== p) this.transfer(q, from, d, layout.start);
+    const previous = this.instances.get(key);
+    if (previous && previous !== d) this.worlds.delete(previous.map.id);
+    this.instances.set(key, d);
     p.delve.deepest = Math.max(p.delve.deepest, level);
     return true;
   }
-  dropInstance(id) {
-    const d = this.instances.get(id);
-    if (d) this.worlds.delete(d.map.id);
-    this.instances.delete(id);
-    this.runs?.delete(id);
+  // Una cripta se descarta cuando no queda ningún jugador dentro (la comparte toda la party).
+  dropIfEmpty(d) {
+    if (!d.runKey || [...d.ents.values()].some(e => e.kind === "player")) return;
+    this.worlds.delete(d.map.id);
+    if (this.instances.get(d.runKey) === d) { this.instances.delete(d.runKey); this.runs?.delete(d.runKey); }
   }
   reject(p, w, why) { return w.reject(p, { t: "portal" }, why); }
 
@@ -223,10 +235,10 @@ export class Adventure {
     const spot = to.freeSpotNear(...near);
     if (!spot) return false;
     from.grid.release(p.x, p.y, p.id);
-    if (from.map.kind === "dungeon" && to.map.kind !== "dungeon") this.dropInstance(p.id);        // fuera de la cripta: se descarta el nivel
     for (const n of from.ents.values()) if (n.target === p.id) n.target = null;
     from.ents.delete(p.id);
     from.emit({ t: "remove", id: p.id });
+    if (from.map.kind === "dungeon" && to.map.kind !== "dungeon") this.dropIfEmpty(from);         // fuera de la cripta: se descarta el nivel si nadie más queda
     p.x = p.fx = spot[0]; p.y = p.fy = spot[1];
     p.act = ACT.STOP; p.actStart = to.time; p.actDur = 0; p.busyUntil = to.time;
     // Mantener el tiempo de acciones/vitales: todos los mundos comparten reloj.

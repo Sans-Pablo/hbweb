@@ -433,13 +433,10 @@ export class Renderer {
       overlays.push(() => {
         const yy = y - 78;
         if (other && !e.dead) {
-          const nm = e.name + (s.me?.party?.names?.includes(e.name) ? ", Party Member" : "");          // BGET_NPC_NAME23
-          if (remaster) this.label(x, yy, nm, s.me?.party?.names?.includes(e.name) ? "#9fe39a" : "#9fd2ff");
-          else {
-            ctx.font = "12px 'Courier New', monospace"; ctx.textAlign = "center";
-            ctx.fillStyle = "#000"; ctx.fillText(nm, x + 1, yy + 1);
-            ctx.fillStyle = "#b8dcff"; ctx.fillText(nm, x, yy);
-          }
+          const party = s.me?.party?.names?.includes(e.name);
+          const nm = e.name + (party ? ", Party Member" : "");          // BGET_NPC_NAME23
+          const foe = e.arena || (e.pk > 0);                              // _iGetFOE: rojo enemigo / verde aliado
+          this.origName(x, y, [[nm, "255,255,255"], [foe ? "Criminal" : "Traveller", foe ? "255,0,0" : "30,200,30"]]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
       return;
@@ -508,16 +505,11 @@ export class Renderer {
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
-    if (hovered || e.arena || e.comp || remaster && e.kind !== "citizen" && s.world.map?.kind === "dungeon") {
+    if (hovered || e.arena || e.comp) {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
-        if (remaster) this.label(x, top - 8, name, e.special ? "rgb(" + AURA[e.special] + ")" : "#f2e6c8");
-        else {
-          ctx.font = "12px 'Courier New', monospace";
-          ctx.textAlign = "center";
-          ctx.fillStyle = "#000"; ctx.fillText(name, x + 1, y + 21);
-          ctx.fillStyle = "#fff"; ctx.fillText(name, x, y + 20);
-        }
+        const side = e.kind === "citizen" || e.comp ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // DRAW_OBJECT_NAME89 / 90
+        this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }
   }
@@ -538,6 +530,19 @@ export class Renderer {
   mobHeight(key, f) {
     const fr = this.spr.frame(key, f);
     return fr ? -fr[5] : 40;
+  }
+
+  // Nombre como DrawObjectName/DrawNpcName del cliente original (Game.cpp): PutString2 en el origen de la casilla (alineado a la izquierda),
+  // sombra de 1 px, nombre en blanco y debajo (+14) la condición en su color. Líneas: [[texto, "r,g,b"], ...].
+  origName(x, y, lines) {
+    const { ctx } = this;
+    ctx.font = "12px Tahoma, Verdana, sans-serif"; ctx.textAlign = "left";
+    lines.forEach(([text, rgb], i) => {
+      text = t(text);
+      const lx = Math.round(x - 16), ly = Math.round(y + 4 + i * 14);
+      ctx.fillStyle = "#000"; ctx.fillText(text, lx + 1, ly); ctx.fillText(text, lx, ly + 1); ctx.fillText(text, lx + 1, ly + 1);
+      ctx.fillStyle = "rgb(" + rgb + ")"; ctx.fillText(text, lx, ly);
+    });
   }
 
   label(x, y, text, color, avoid = false) {

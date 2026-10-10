@@ -159,3 +159,27 @@ test("rey carmesí: Fire Field cada 20 % de vida perdida, inmune al fuego y hues
   const items = JSON.stringify([...(w.items?.values?.() || [])]) + JSON.stringify(w.ground ? [...w.ground.values()] : []);
   assert.ok(items.includes('"id":' + data.named("SkeletonBones").id) && items.includes('"color":14'), "hueso rojo en el suelo");
 });
+
+test("party: todos entran a la misma cripta, bajan juntos y la cripta sobrevive hasta que sale el último", () => {
+  const a = session();
+  const i1 = a.addPlayer("Uno", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
+  const i2 = a.addPlayer("Dos", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
+  const party = { id: 77, names: ["Uno", "Dos"] };
+  a.worldFor(i1).ents.get(i1).party = party; a.worldFor(i2).ents.get(i2).party = party;
+  assert.ok(enter(a, i1).ok);
+  const d1 = a.worldFor(i1);
+  assert.equal(d1.map.kind, "dungeon");
+  assert.ok(enter(a, i2).ok);
+  assert.equal(a.worldFor(i2), d1, "misma cripta");
+  clear(a, i1);
+  assert.ok(take(a, i1, "down"));
+  const d2 = a.worldFor(i1);
+  assert.notEqual(d2, d1);
+  assert.equal(a.worldFor(i2), d2, "bajan juntos");
+  // sale uno: la cripta sigue viva para el otro
+  const o = d2.map.origin, to = a.staticWorld(o.map);
+  assert.ok(a.transfer(d2.ents.get(i1), d2, to, [o.x, o.y]));
+  assert.ok(a.worlds.has(d2.map.id));
+  a.removePlayer(i2);
+  assert.ok(!a.worlds.has(d2.map.id), "sin jugadores se descarta");
+});

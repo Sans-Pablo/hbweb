@@ -114,6 +114,7 @@ export class World {
     const fn = COMMANDS[cmd.t];
     if (!fn) return false;
     if (p.dead && !FOR_DEAD.has(cmd.t)) return this.reject(p, cmd, "muerto");
+    if (this.map?.kind === "arena" && ARENA_BLOCKED.has(cmd.t)) return this.reject(p, cmd, "en la arena solo se mira");      // el público no pelea: solo pelean los summons
     return fn(this, p, cmd);
   }
 
@@ -142,6 +143,7 @@ export class World {
   }
 }
 
+const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode"]);
 const FOR_DEAD = new Set(["respawn", "say"]);
 
 const COMMANDS = {

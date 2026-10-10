@@ -242,6 +242,7 @@ export class NetConnection {
   send(cmd) {
     const w = this.world, me = w.ents.get(this.pid);
     if (!me || this.ws.readyState !== 1) return false;
+    if (w.map?.kind === "arena" && (cmd.t === "attack" || cmd.t === "cast" || cmd.t === "prepare")) return false;       // en la arena solo se mira
     if (cmd.t === "move" && !me.dead) {
       if (w.busy(me) || w.time - me.lastMove < LIMITS.moveMs) return false;
       const nx = me.x + DX[cmd.dir], ny = me.y + DY[cmd.dir];
@@ -255,6 +256,8 @@ export class NetConnection {
       me.act = run ? ACT.RUN : ACT.MOVE; me.actStart = w.time; me.actDur = dur;
       me.busyUntil = w.time + dur; me.lastMove = w.time;
       this.events.push({ t: "step", id: me.id });
+    } else if (cmd.t === "turn" && !me.dead) {
+      if (!w.busy(me) && cmd.dir >= 1 && cmd.dir <= 8) me.dir = cmd.dir;      // girar sin andar (clic derecho): se predice, el servidor no manda `dir` de mi personaje si no cambia nada más
     } else if (cmd.t === "attack" && !me.dead) {
       if (w.busy(me) || w.time - me.lastAttack < PLAYER.attackCooldownMs) return false;
       const t = w.ents.get(cmd.target);

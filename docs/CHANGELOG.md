@@ -2,6 +2,13 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.30.0 · Party en la cripta (2026-10-10)
+
+- Cripta compartida: los miembros de una party entran a la misma cripta, bajan de nivel juntos y la cripta se descarta cuando sale el último (`adventure.js`, clave de grupo). Test en `tests/dungeon.test.mjs`.
+- Arena: en los duelos no se puede atacar, lanzar magia, recoger ni dar órdenes a mascotas (cliente y servidor).
+- Girar con el botón derecho vuelve a funcionar en el modo online (giro predicho en `NetConnection`).
+- Nombres como el cliente original (`DrawObjectName`/`DrawNpcName`): nombre en blanco con sombra y debajo la condición (Traveller, Criminal, (Enemy), (Friendly)); los monstruos solo al pasar el ratón.
+
 ## 0.29.1 · Arreglo de guardado (2026-10-10)
 
 - Servidor: el personaje nuevo se vuelca a SQLite al crearlo (`persist(true)`); antes esperaba al temporizador de 5 s y un cierre brusco lo perdía. Test `tests/net-persist.test.mjs`.
