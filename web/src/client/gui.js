@@ -235,6 +235,7 @@ export class Gui {
   down(cx, cy, button, me) {
     const [x, y] = this.toGui(cx, cy);
     this.mouse.x = x; this.mouse.y = y; this.mouse.down = true;
+    if (this.item) this.item = null;                                // por si quedó uno pegado
     const d = this.dialogAt(x, y);
     if (d) {
       if (button === 2) { if (!d.fixed) this.close(d.id); return true; }      // clic derecho: cierra el cuadro
@@ -262,6 +263,7 @@ export class Gui {
     if (d && d.wheel) { d.wheel(this, dy < 0 ? 1 : -1); return true; }
     return !!d;
   }
+  cancelDrag() { this.mouse.down = false; this.drag = null; this.item = null; }
   up(cx, cy) {
     this.mouse.down = false; this.drag = null;
     if (this.item) {
@@ -330,6 +332,14 @@ export class Gui {
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)
   // Compañero (invento del port): símbolo de paz/ataque junto al del personaje (clic = cambiar), miniatura que se vacía de arriba abajo
   // con su vida y una barra con su nombre y vida.
+  // estado de la cripta, en letra del cliente (texto amarillo con sombra, como "Level Up!"/"Restart")
+  dungeonInfo(world) {
+    const map = world.map; if (!map || map.kind !== "dungeon") return;
+    const remaining = map.remainingEnemies ?? [...world.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.dead).length;
+    this.text(8, 26, "Crypt level " + map.level + " / " + map.total + (map.boss ? " - BOSS" : ""), "#fafadc", { shadow: true, bold: true });
+    this.text(8, 40, remaining ? "Skeletons left: " + remaining + " / " + map.totalEnemies : (map.level >= map.total ? "Crypt cleared! Find the exit (E)." : "Level cleared! Take the portal down (E)."), remaining ? "#e5bca0" : "#9fe07f", { shadow: true });
+  }
+
   petPanel(me, world, a) {
     const ball = me.bag && me.bag.find(i => i.comp && i.comp.on);
     this.petBall = ball || null;
@@ -400,6 +410,7 @@ export class Gui {
     else if (me.pool > 0 && !this.isOpen(12)) this.blink(725, 510, "Level Up!");
 
     this.petPanel(me, world, a);
+    this.dungeonInfo(world);
     this.swapSlots(447 + a, 484 + a);
     if (this.flags.safe) this.put("gamedialog2_6", 4, 368 + a - 2, 440 + RESY);
     else if (this.flags.combat) this.put("gamedialog2_6", 5, 368 + a - 1, 440 + RESY);

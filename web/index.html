@@ -49,8 +49,8 @@
   #target .bar { height: 6px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.15); margin-top: 3px; }
   #target .fill { height: 100%; width: var(--k, 100%); background: var(--blood); transition: width .15s; }
 
-  #toast { position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%); font: 700 34px Georgia, serif; color: #ffd76a;
-    text-shadow: 0 2px 0 #000, 0 0 24px rgba(255,190,60,.6); opacity: 0; white-space: nowrap; }
+  #toast { position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%); font: 700 15px Tahoma, Verdana, sans-serif; color: #fafadc;
+    text-shadow: 1px 1px 0 #000; opacity: 0; white-space: nowrap; }
   #toast.show { animation: toast 2.2s ease-out; }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.8); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
     70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -70%); } }
@@ -214,7 +214,7 @@
   body.classic #log { bottom: 62px; font-size: 12px; }
   body.classic .panel { border-radius: 0; background: #2a2724; border: 2px solid #8a8173; box-shadow: none; }
   body.classic .panel h3 { font-family: "Courier New", monospace; }
-  body.classic #toast { font-family: "Courier New", monospace; font-size: 24px; text-shadow: 1px 1px 0 #000; }
+  
   body.classic .slot kbd { display: none; }
   body.classic #target { top: 6px; }
 

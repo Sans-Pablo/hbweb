@@ -30,6 +30,7 @@ export function registerNpcDialogs(gui, api) {
   const trade = {                     // lo que se está comprando / vendiendo ahora mismo
     npc: null,                        // { id, type, x, y } del NPC con el que se habla
     sellList: [],                     // [{ uid, count }] (hasta 12)
+    stamp: new Map(),                 // desde cuándo está desactivado cada objeto (para liberar los que se quedan colgados)
     busy: new Set(),                  // objetos "desactivados" mientras esperan una operación (m_bIsItemDisabled)
   };
   const bagCount = me => me.bag.length;
@@ -568,6 +569,14 @@ export function registerNpcDialogs(gui, api) {
       if (gui.isOpen(23) && gone(confirm.uid)) gui.close(23);
       if (gui.isOpen(20) && (query.mode === 2 || query.mode === 3) && gone(query.uid)) gui.close(20);
       for (const u of [...trade.busy]) if (gone(u) && !(gui.isOpen(17) && quantity.ask?.uid === u)) trade.busy.delete(u);
+      // objetos que se quedaron «desactivados» sin ningún cuadro que los espere (cierre silencioso, respuesta perdida): se liberan
+      if (!gui.isOpen(31) && trade.sellList.length) trade.sellList = [];
+      const waiting = gui.isOpen(17) || gui.isOpen(20) || gui.isOpen(23) || gui.isOpen(31), now = performance.now();
+      for (const u of [...trade.busy]) {
+        const t = trade.stamp.get(u) ?? (trade.stamp.set(u, now), now);
+        if (!waiting && now - t > 2500) { trade.busy.delete(u); trade.stamp.delete(u); }
+      }
+      for (const u of [...trade.stamp.keys()]) if (!trade.busy.has(u)) trade.stamp.delete(u);
     },
     dropOn(dlg, uid, mx, my) {                                          // objeto soltado sobre un cuadro de NPC
       if (dlg.id === 31) { sellList.drop(uid, mx, my); return true; }

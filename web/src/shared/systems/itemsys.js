@@ -124,7 +124,7 @@ export function useItem(w, p, uid, destUid) {
     }
     default: return w.reject(p, { t: "use" }, "no implementado");
   }
-  Inv.removeFromBag(p, uid);
+  if (isStack(d) && (inst.count || 1) > 1) inst.count--; else Inv.removeFromBag(p, uid);
   w.recalc(p);
   w.emit({ t: "use", id: p.id, item: d.id, amount, stat });
   return true;

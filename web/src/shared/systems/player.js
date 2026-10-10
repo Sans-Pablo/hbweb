@@ -2,7 +2,7 @@
 import * as Tut from "./tutorial.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
-import { EQUIP } from "../items.js";
+import { EQUIP, isStack } from "../items.js";
 import { ACT } from "../const.js";
 import { initVitals } from "./vitals.js";
 import { MAGIC_MODE } from "../magic.js";
@@ -103,6 +103,14 @@ function loadSave(w, p, s) {
     p.equip = {};
     for (const [pos, old] of Object.entries(s.equip || {})) { const m = p.bag.find(i => i.old === old); if (m) p.equip[pos] = m.uid; }
     for (const i of p.bag) delete i.old;
+    // partidas antiguas: las pociones sueltas se juntan en una sola pila
+    const seen = new Map();
+    p.bag = p.bag.filter(i => {
+      if (!isStack(w.data.item(i.id)) || i.comp || i.attr) return true;
+      const f = seen.get(i.id);
+      if (!f) { seen.set(i.id, i); return true; }
+      f.count += i.count; return false;
+    });
   } else if (s.inv) {                                        // formato antiguo: contadores de pociones
     p.bag = p.bag.filter(i => w.data.item(i.id).type !== 7);
     for (const [k, n] of Object.entries(s.inv)) for (let i = 0; i < n; i++) if (LEGACY[k]) p.bag.push(newInst(w, LEGACY[k]));
@@ -136,7 +144,7 @@ export function recalc(w, p) {
 
 export function respawn(w, p) {
   if (!p.dead || w.time - p.deadAt < 1500) return false;
-  const [x, y] = w.freeSpotNear(w.start[0], w.start[1]);
+  const home = w.home || w.start, [x, y] = w.freeSpotNear(home[0], home[1]);
   p.x = p.fx = x; p.y = p.fy = y;
   w.grid.occupy(x, y, p.id);
   p.dead = false;

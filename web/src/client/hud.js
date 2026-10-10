@@ -9,6 +9,7 @@ import { itemDef, itemName, packKey } from "./names.js";
 import { statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
+import { PROT_CAP, PROT_OVERRIDE } from "../shared/rarity.js";
 import { damageRange } from "../shared/combat.js";
 import { realStats, attrLines } from "../shared/attributes.js";
 
@@ -180,9 +181,25 @@ export class Hud {
       const rs = realStats(d, it);
       L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
+      const fxl = this.effectLine(d, it); if (fxl) L.push('<span style="color:#9fe39a">' + fxl + "</span>");
     } else L.push(d.type === ITYPE.EAT ? "Consumible" : "Objeto");
     L.push("Peso " + (realStats(d, it).weight / 100).toFixed(2) + (isStack(d) ? " c/u" : ""));
     return L;
+  }
+
+  // efecto especial de collares y anillos (ADDEFFECT de Item.cfg; mismos casos que shared/inventory.js recalc)
+  effectLine(d, it) {
+    if (d.effectType !== EFFECT.ADDEFFECT) return "";
+    const v = d.v2, E = { 7: "luz", 9: "fuego", 10: "hielo", 11: "veneno" };
+    switch (d.v1) {
+      case 1: return "Resistencia mágica +" + v + " %";
+      case 2: return "Ahorro de maná " + v + " %";
+      case 3: return "Daño físico +" + v;
+      case 4: return "Defensa +" + v;
+      case 12: return "Probabilidad de acierto +" + v;
+    }
+    if (E[d.v1]) return "Protección contra " + E[d.v1] + " " + Math.min(PROT_CAP, PROT_OVERRIDE[d.id] ?? v) + " %";
+    return "";
   }
 
   // bola de compañero (shared/systems/companion.js): especie, nivel, experiencia y daño compartido con el dueño

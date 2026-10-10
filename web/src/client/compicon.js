@@ -46,15 +46,18 @@ export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
     src = c; ox = 0; oy = 0;
   }
   const cx = x + px + w / 2, cy = y + py + h / 2;
+  const gray = !!it.comp.down;                       // compañero caído: la bola se ve en escala de grises hasta revivirlo
+  if (gray) g.ctx.filter = "grayscale(1) brightness(.8)";
   if (alpha !== 1) g.ctx.globalAlpha = alpha;
   g.ctx.drawImage(src, ox, oy, w, h, cx - w * scale / 2, cy - h * scale / 2, w * scale, h * scale);
   if (alpha !== 1) g.ctx.globalAlpha = 1;
   if (m) {
     const f = g.spr.frame(m.key, m.f);
-    if (!f) return;
-    if (!g.spr.ready(m.key)) { g.spr.img[m.key]; return; }
+    if (!f) { if (gray) g.ctx.filter = "none"; return; }
+    if (!g.spr.ready(m.key)) { g.spr.img[m.key]; if (gray) g.ctx.filter = "none"; return; }
     const [mx, my, mw, mh] = f, k = Math.min(1, 24 / Math.max(mw, mh));
     g.ctx.drawImage(g.spr.img[m.key], mx, my, mw, mh, cx - mw * k / 2, cy - mh * k / 2, mw * k, mh * k);
   }
+  if (gray) g.ctx.filter = "none";
   if (it.comp.on) g.text(x + px, y + py + 10, "★", "#ffd34d", { shadow: true, size: 11 });
 }

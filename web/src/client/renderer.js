@@ -10,6 +10,10 @@ import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/c
 import { sget } from "../shared/systems/status.js";
 import { sizeStep } from "../shared/systems/companion.js";
 import { itemDef, itemName, groundKey } from "./names.js";
+import { attrLines } from "../shared/attributes.js";
+import { sellPriceOf } from "../shared/systems/shopsys.js";
+import { isStack } from "../shared/items.js";
+import { miniOf } from "./compicon.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
 
@@ -184,8 +188,14 @@ export class Renderer {
         g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, RARITY_COLOR[rar] + (rar === 3 ? "cc" : "88"));
         ctx.fillStyle = g; ctx.fillRect(x - 2, y - 70, 4, 70);
       }
-      if (s.labels || rar >= 2 || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y))
+      if (s.labels || rar >= 2 || (s.hover && s.hover[0] === it.x && s.hover[1] === it.y)) {
         labels.push([x, y - 14, it.id === 90 ? it.count + " oro" : itemName(it.id, it.attr, it.comp), it.id === 90 ? "#f0d080" : rar ? RARITY_COLOR[rar] : "#e8e2d0"]);
+        if (it.id !== 90 && d && !it.comp) {                            // atributos y precio de venta: para saber qué conviene recoger
+          const info = attrLines(it.attr).join(" · "), price = sellPriceOf(d, it, isStack(d) ? it.count : 1);
+          if (info) labels.push([x, y - 1, info, "#9fe39a"]);
+          if (price) labels.push([x, y - 1 + (info ? 13 : 0), "Venta " + price.toLocaleString("en") + " oro", "#f0d080"]);
+        }
+      }
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)
@@ -248,7 +258,6 @@ export class Renderer {
     s.fx.draw(ctx, camX, camY, this.mode);
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
-    if (s.world.map?.kind === "dungeon") this.drawDungeonInfo(s);
     ctx.restore();
   }
 
@@ -369,18 +378,6 @@ export class Renderer {
     }
   }
 
-  drawDungeonInfo(s) {
-    const { ctx } = this, map = s.world.map;
-    const remaining = map.remainingEnemies ?? [...s.world.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.dead).length;
-    ctx.save();
-    ctx.fillStyle = "rgba(15,14,19,.85)"; ctx.fillRect(10, 10, 330, 48);
-    ctx.textAlign = "left"; ctx.font = "bold 13px Tahoma, sans-serif";
-    ctx.fillStyle = "#e8dcc3"; ctx.fillText("Nivel " + map.level + " / " + map.total + (map.boss ? " · JEFE" : ""), 20, 29);
-    ctx.font = "12px Tahoma, sans-serif"; ctx.fillStyle = remaining ? "#e5bca0" : "#9fe07f";
-    ctx.fillText(remaining ? "Esqueletos restantes: " + remaining + " / " + map.totalEnemies : (map.level >= map.total ? "¡Cripta despejada! Busca la salida (E)." : "¡Nivel despejado! Baja por el portal (E)."), 20, 47);
-    ctx.restore();
-  }
-
   // arena de apuestas (systems/arena.js): arena de arena con borde discontinuo dorado sobre el suelo de Aresfarm
 
   drawPortals(s, camX, camY) {
@@ -399,7 +396,7 @@ export class Renderer {
       ctx.globalAlpha = 1;
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
-      this.label(x, y - (pit ? 40 : 72), gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      this.label(x, y - (pit ? 40 : 140), gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }
@@ -479,7 +476,7 @@ export class Renderer {
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     spr.put(ctx, key, f, x, y);
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
-    else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
+    else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
     if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
     if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
@@ -545,15 +542,14 @@ export class Renderer {
   label(x, y, text, color, avoid = false) {
     const { ctx } = this;
     text = t(text);
-    ctx.font = "600 11px 'Segoe UI', system-ui, sans-serif";
+    ctx.font = "12px Tahoma, Verdana, sans-serif";                            // letra del cliente original: texto con sombra de 1 píxel, sin caja
     ctx.textAlign = "center";
     const w = ctx.measureText(text).width + 10;
     const rects = this.rects || (this.rects = []);
     const hit = yy => rects.some(r => x - w / 2 < r[2] && x + w / 2 > r[0] && yy - 11 < r[3] && yy + 4 > r[1]);
     if (avoid) for (let i = 0; i < 8 && hit(y); i++) y -= 16;                // sube hasta no pisar otra etiqueta
     rects.push([x - w / 2, y - 11, x + w / 2, y + 4]);
-    ctx.fillStyle = "rgba(12,12,16,.78)";
-    ctx.fillRect(Math.round(x - w / 2), Math.round(y - 11), Math.round(w), 15);
+    ctx.fillStyle = "#000"; ctx.fillText(text, x + 1, y + 1);
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
   }
@@ -611,6 +607,15 @@ export class Renderer {
     this.overlayImg = o;
   }
 
+  // sprite pequeño (reposo, de frente) de mi summon sobre el minimapa; false si su hoja aún no está cargada
+  miniPet(e, x, y, h) {
+    const m = miniOf(e.name, k => this.spr.frames(k)); if (!m || !this.spr.ready(m.key)) return false;
+    const fr = this.spr.frame(m.key, m.f); if (!fr) return false;
+    const [sx, sy, w, hh] = fr, k = h / Math.max(w, hh, 1);
+    this.ctx.drawImage(this.spr.img[m.key], sx, sy, w, hh, x - w * k / 2, y - hh * k / 2, w * k, hh * k);
+    return true;
+  }
+
   // Mapa superpuesto (estilo Diablo II): translúcido sobre toda la vista, centrado en el jugador
   drawOverlayMap(s, ppx, ppy) {
     const { ctx } = this;
@@ -623,6 +628,7 @@ export class Renderer {
     ctx.drawImage(this.overlayImg, ox, oy, this.grid.w * sc, this.grid.h * sc);
     for (const e of s.world.ents.values()) {
       if (e.kind !== "npc" || e.dead) continue;
+      if (e.comp || e.master) { if (e.master === s.me.id && !this.miniPet(e, ox + e.x * sc + 1, oy + e.y * sc + 1, 18)) { ctx.fillStyle = "#9fe07f"; ctx.fillRect(ox + e.x * sc, oy + e.y * sc, 3, 3); } continue; }
       ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
       ctx.fillRect(ox + e.x * sc, oy + e.y * sc, 3, 3);
     }
@@ -661,6 +667,7 @@ export class Renderer {
     ctx.strokeRect(x0 + this.camX / T * sc, y0 + this.camY / T * sc, this.viewW / T * sc, this.viewH / T * sc);
     for (const e of s.world.ents.values()) {
       if (e.kind !== "npc" || e.dead) continue;
+      if (e.comp || e.master) { if (e.master === s.me.id && !this.miniPet(e, x0 + e.x * sc, y0 + e.y * sc, 14)) { ctx.fillStyle = "#9fe07f"; ctx.fillRect(x0 + e.x * sc - 1, y0 + e.y * sc - 1, 3, 3); } continue; }      // mi summon: su sprite; no es un enemigo (punto rojo)
       ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
       ctx.fillRect(x0 + e.x * sc - 1, y0 + e.y * sc - 1, 2, 2);
     }

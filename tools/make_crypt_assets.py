@@ -10,26 +10,52 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 HERE = os.path.dirname(os.path.abspath(__file__)); D = os.path.join(HERE, "..", "web", "data")
 
 # ---------------------------------------------------------------- puerta
-sp = json.load(open(os.path.join(D, "sprites.json")))["t303"]
-sheet = Image.open(os.path.join(D, "sprites", sp["png"])).convert("RGBA")
-ROWS = [[160, 161, 162, 163, 164], [180, 181, 182, 183, 184], [200, 201, 202, 203, 204], [220, 221, 222, 223, 224], [240, 241, 242, 243, 244], [260, 261, 262, 263, 264]]
-W, H = 5 * 32, 6 * 32
-door = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-for r, fs in enumerate(ROWS):
-    for c, f in enumerate(fs):
-        sx, sy, w, h, px, py = sp["frames"][f]
-        door.alpha_composite(sheet.crop((sx, sy, sx + w, sy + h)), (c * 32 + px, r * 32 + py))
-mask = Image.new("L", (W, H), 0)
-px_ = mask.load()
-for y in range(H):
-    for x in range(W):
-        d = math.hypot((x - 80) / 82, (y - 96) / 98)
-        px_[x, y] = int(255 * max(0, min(1, (1 - d) / 0.28)))
-door.putalpha(ImageChops.multiply(door.getchannel("A"), mask))
+# Puerta de salida dibujada a mano (el recorte de las teselas del original quedaba como una escalera rota): arco de ladrillo con escalera.
+import random
+S = 3; W, H = 128, 160
+rnd = random.Random(7)
+im = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0)); dr = ImageDraw.Draw(im)
+def R(x0, y0, x1, y1, c): dr.rectangle([x0 * S, y0 * S, x1 * S, y1 * S], fill=c)
+# muro de ladrillo
+wx0, wx1, wy0, wy1 = 8, 120, 14, 142
+for row, y in enumerate(range(wy0, wy1, 8)):
+    off = 0 if row % 2 else 8
+    for x in range(wx0 - off, wx1, 16):
+        k = rnd.randint(-14, 14); c = (92 + k, 52 + k // 2, 44 + k // 2, 255)
+        R(max(wx0, x), y, min(wx1, x + 15), y + 6, c)
+# arco: hueco oscuro con medio punto
+ax0, ax1, ay0, ay1 = 36, 92, 52, 142
+dr.rectangle([ax0 * S, (ay0 + 28) * S, ax1 * S, ay1 * S], fill=(6, 4, 4, 255))
+dr.pieslice([ax0 * S, ay0 * S, ax1 * S, (ay0 + 56) * S], 180, 360, fill=(6, 4, 4, 255))
+# dovelas claras alrededor del arco
+for i in range(15):
+    a0 = math.pi + i * math.pi / 14; a1 = a0 + math.pi / 14 * .86
+    cx, cy, r0, r1 = 64, ay0 + 28, 28, 38
+    pts = [(cx + r0 * math.cos(a0), cy + r0 * math.sin(a0)), (cx + r1 * math.cos(a0), cy + r1 * math.sin(a0)), (cx + r1 * math.cos(a1), cy + r1 * math.sin(a1)), (cx + r0 * math.cos(a1), cy + r0 * math.sin(a1))]
+    k = rnd.randint(-10, 10); dr.polygon([(x * S, y * S) for x, y in pts], fill=(138 + k, 124 + k, 108 + k, 255))
+for y in range(ay0 + 28, ay1, 9):                                  # jambas de piedra
+    k = rnd.randint(-8, 8)
+    R(ax0 - 9, y, ax0 - 1, y + 7, (132 + k, 118 + k, 102 + k, 255)); R(ax1 + 1, y, ax1 + 9, y + 7, (132 + k, 118 + k, 102 + k, 255))
+# interior: sombra y brillo cálido al fondo
+inner = Image.new("RGBA", im.size, (0, 0, 0, 0)); idr = ImageDraw.Draw(inner)
+for y in range(ay0 + 30, ay1 - 22):                                 # brillo cálido que sube desde el fondo
+    t = (y - ay0 - 30) / (ay1 - 22 - ay0 - 30)
+    idr.rectangle([(ax0 + 2) * S, y * S, (ax1 - 2) * S, (y + 1) * S], fill=(int(70 * t * t), int(34 * t * t), int(12 * t * t), int(150 * t * t)))
+im.alpha_composite(inner)
+# escalera hacia fuera (4 peldaños)
+for i in range(4):
+    y0 = ay1 - 22 + i * 6; x0, x1 = ax0 - 4 - i * 4, ax1 + 4 + i * 4; k = 70 + i * 22
+    R(x0, y0, x1, y0 + 4, (k + 40, k + 30, k + 18, 255)); R(x0, y0 + 4, x1, y0 + 6, (k - 30, k - 36, k - 40, 255))
+im = im.resize((W, H), Image.LANCZOS)
+al = im.getchannel("A")
+glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))                    # sombra de contacto en el suelo
+ImageDraw.Draw(glow).ellipse([2, H - 26, W - 2, H - 2], fill=(0, 0, 0, 110))
+door = glow.filter(ImageFilter.GaussianBlur(4)); door.alpha_composite(im)
+PX, PY = 64, 146
 os.makedirs(os.path.join(D, "equip"), exist_ok=True)
 door.save(os.path.join(D, "equip", "cryptdoor.webp"), "WEBP", lossless=True, quality=100, method=6)      # equip/ va siempre en WebP versionado (imgUrl lo exige)
 eq = json.load(open(os.path.join(D, "equip.json")))
-eq["cryptdoor"] = {"png": "cryptdoor.webp", "frames": [[0, 0, W, H, -80, -150]]}      # el suelo bajo la puerta (80,150 de la imagen) cae en el centro de la casilla
+eq["cryptdoor"] = {"png": "cryptdoor.webp", "frames": [[0, 0, W, H, -PX, -PY]]}      # el suelo bajo la puerta cae en el centro de la casilla
 json.dump(eq, open(os.path.join(D, "equip.json"), "w"), separators=(",", ":"))
 
 # ---------------------------------------------------------------- icono Summons

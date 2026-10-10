@@ -3,7 +3,7 @@ import { drawBall } from "./compicon.js";
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
 import { getLang, setLang } from "./i18n.js";
 import { itemDef } from "./names.js";
-import { EQUIP, ITYPE } from "../shared/items.js";
+import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { packKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
 import { castChance, manaCost } from "../shared/magic.js";
@@ -152,7 +152,7 @@ export function registerDialogs(gui, api) {
         const [x, y] = this.pos(it);
         if (it.comp) drawBall(g, it, d, packKey(d), x, y, api.disabled?.(uid) ? 0.5 : 1);
         else g.putGame(packKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
-        if (d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
+        if (isStack(d)) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
       if (!g.item && g.dialogAt(m.x, m.y) === this) { const h = this.pick(g, lx, ly, me); if (h) g.hoverUid = h.it.uid; }

@@ -107,7 +107,7 @@ body.mobile #options button, body.mobile #news button { min-height: 40px; } body
 body.mobile #options kbd, body.mobile #news kbd { display: none; }
 body.mobile #log { left: max(8px, env(safe-area-inset-left)); bottom: 150px; width: min(46vw, 360px); font-size: 12px; }
 body.mobile #chat { left: 8px; right: 8px; width: auto; bottom: 8px; z-index: 12; } body.mobile #chat input { font-size: 16px; }
-body.mobile #toast { font-size: 24px; }
+body.mobile #toast { font-size: 18px; }
 `;
 
 // ---------------------------------------------------------------- capa DOM

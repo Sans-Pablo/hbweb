@@ -55,6 +55,16 @@ function wearPrice(inst, d, count) {
   return price + (add1 - Math.trunc(add1 / 3)) + (add2 - Math.trunc(add2 / 3));
 }
 
+// Precio de venta de una unidad sin comprobar el peso (para mostrarlo en el suelo). 0 = no se vende.
+export function sellPriceOf(d, inst, count = 1) {
+  const cat = d.category;
+  let price;
+  if (cat >= 11 && cat <= 50) price = Math.trunc(d.price / 2) * count;
+  else if (cat >= 1 && cat <= 10) { if (!(inst.life > 0 || inst.life === undefined)) return 0; price = wearPrice(inst, d, count); }
+  else return 0;
+  return Math.min(Math.max(price, 1), MAX_PRICE);
+}
+
 // Cuánto pagan por `count` unidades de este objeto. Devuelve { price } o { cannot: motivo } (1 aquí no, 2 gastado, 4 pesa demasiado)
 export function sellValue(w, p, inst, count) {
   const d = w.data.item(inst.id);

@@ -12,6 +12,8 @@ import { DEBUG } from "./systems/debug.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
 
+// Punto de retorno de Aresfarm (Recall, muerte, salidas de cripta/arena/tienda): lo pidió el diseño; el original usa el punto de reaparición de cada mapa (Map.cfg initial)
+export const FARM_HOME = [65, 75];
 export const ALLOWED_MAPS = new Set(["arefarm", "gshop_1f", "bsmith_1f", "wrhus_1f"]);
 
 export class Adventure {
@@ -27,6 +29,7 @@ export class Adventure {
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [] };
     this.farm.meta = this.maps.arefarm?.meta;
+    this.farm.home = FARM_HOME;              // Recall, resurrección, volver de la cripta/arena/tienda: siempre aquí
     this.farm.fixedDay = !!this.farm.meta?.fixedDay;
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
@@ -79,7 +82,7 @@ export class Adventure {
     if (!ALLOWED_MAPS.has(id)) {                                    // en esta versión solo existen la granja y las criptas: el resto lleva de vuelta a la granja
       w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "solo existen Aresfarm, sus tiendas y la cripta" });
       if (w === this.farm) return false;
-      return this.transfer(p, w, this.farm, this.farm.start);
+      return this.transfer(p, w, this.farm, this.farm.home);
     }
     const to = id === w.map.id ? w : this.staticWorld(id);
     if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: this.maps[id] && !this.maps[id].grid ? "cargando el mapa, vuelve a intentarlo" : "mapa no disponible" }); return false; }
@@ -104,8 +107,8 @@ export class Adventure {
   }
   recall(p, w) {
     if (p.dead) return;
-    if (w !== this.farm) { this.transfer(p, w, this.farm, this.farm.start); return; }
-    const spot = w.freeSpotNear(...w.start);
+    if (w !== this.farm) { this.transfer(p, w, this.farm, this.farm.home); return; }
+    const spot = w.freeSpotNear(...(w.home || w.start));
     if (!spot) return;
     w.grid.release(p.x, p.y, p.id);
     p.x = p.fx = spot[0]; p.y = p.fy = spot[1];
@@ -147,7 +150,7 @@ export class Adventure {
     if (cmd.t === "dbg" && DEBUG.enabled && (cmd.op === "goto" || cmd.op === "crypt")) return this.debugTravel(p, w, cmd);
     if (cmd.t === "respawn" && w !== this.farm) {
       if (!p.dead || w.time - p.deadAt < 1500) return false;
-      if (!this.transfer(p, w, this.farm, this.farm.start)) return false;
+      if (!this.transfer(p, w, this.farm, this.farm.home)) return false;
       return respawn(this.farm, p);
     }
     return w.command(id, cmd);

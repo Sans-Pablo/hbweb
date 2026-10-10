@@ -12,7 +12,9 @@ export const GOLD = 90;               // Item.cfg: Gold
 export const MAX_ITEMS = 50;          // DEF_MAXITEMS: casillas de la mochila
 export const GROUND_STACK = 12;       // DEF_TILE_PER_ITEMS: objetos por casilla
 
-export const isStack = d => d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW;
+// Las pociones (EAT con efecto HP/MP/SP) también se apilan: pedido de los testers (en el original salen sueltas).
+export const isStack = d => d.type === ITYPE.CONSUME || d.type === ITYPE.ARROW ||
+  (d.type === ITYPE.EAT && (d.effectType === EFFECT.HP || d.effectType === EFFECT.MP || d.effectType === EFFECT.SP));
 
 // iGetItemWeight: el peso va en centésimas de "stone". El oro pesa count/20.
 export function itemWeight(d, count = 1) {

@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.27.0 · Bolsa y clásico (2026-10-10)
+
+- Recall y muerte: `w.home` = Aresfarm (65,75) (`adventure.js`, `player.respawn`).
+- Pociones HP/MP/SP apilables (`items.isStack`), uso gasta una unidad, fusión de partidas antiguas al cargar; test `tests/bag-stack.test.mjs`.
+- Arrastre robusto: `pointerup` global, cancelación al perder foco, liberación de objetos «desactivados» colgados (`npcdialogs.sweep`).
+- `hud.effectLine`: descripción de ADDEFFECT (protección elemental, ahorro de maná…); etiquetas del suelo con atributos y precio (`shopsys.sellPriceOf`).
+- Cripta: puerta de salida nueva (`tools/make_crypt_assets.py`), info de nivel como texto clásico en inglés (`gui.dungeonInfo`), summon sin tinte y con sprite en el minimapa; bola de summon caído en grises.
+
 ## 0.26.0 · Evolución de summons (2026-10-10)
 
 - **Summons: tamaño por etapas** (`companion.SIZE_STAGES` 10/25/40/50, `sizeStep`; `renderer.petScale`): el compañero cambia de tamaño a saltos en vez de crecer poco a poco (los pequeños nacen al 70 %).
