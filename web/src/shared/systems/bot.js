@@ -153,9 +153,14 @@ function pickTarget(w, p, owner) {
 }
 function step(adv, w, p, b, tx, ty, run) {
   if (w.time - p.lastMove < LIMITS.moveMs || w.busy(p)) return true;
-  if (!b.path?.length || !b.goal || b.goal.w !== w || Math.max(Math.abs(b.goal.x - tx), Math.abs(b.goal.y - ty)) > 1) {
-    b.path = dist(p, { x: tx, y: ty }) <= 1 ? [] : findPath(w.grid, p.x, p.y, tx, ty, p.id, 2500);
-    b.goal = { x: tx, y: ty, w };
+  const moved = !b.goal || b.goal.w !== w || Math.max(Math.abs(b.goal.x - tx), Math.abs(b.goal.y - ty)) > 1;
+  if (!b.path?.length || moved) {
+    // Rutas A*: no más de una cada 600 ms por bot (el objetivo se mueve sin parar) y, si no hay camino, se anda "a ojo" 2 s antes de reintentar
+    if (w.time >= (b.pathAt || 0) && dist(p, { x: tx, y: ty }) > 1) {
+      b.path = dist(p, { x: tx, y: ty }) <= 3 ? [] : findPath(w.grid, p.x, p.y, tx, ty, p.id, 2500);
+      b.pathAt = w.time + (b.path.length ? 600 : 2000);
+      b.goal = { x: tx, y: ty, w };
+    } else if (!b.path?.length) b.path = [];
   }
   let d = b.path.shift();
   if (!d) d = greedyStep(w.grid, p, tx, ty, dirTo);

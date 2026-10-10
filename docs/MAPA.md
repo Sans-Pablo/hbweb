@@ -17,7 +17,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `items.js` · 27 · Constantes y reglas puras de los objetos (HGServer/Item.h, Game.cpp).
 - `magic.js` · 96 · Magia: fórmulas del servidor original (PlayerMagicHandler, Effect_Damage_Spot, bCheckResistingMagicSuccess).
 - `mobtiming.gen.js` · 3 · Generado por tools/convert_frames.py desde Client/MapData.cpp: no editar a mano.
-- `path.js` · 71 · A* en 8 direcciones con montículo binario.
+- `path.js` · 76 · A* en 8 direcciones con montículo binario.
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
@@ -27,7 +27,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 271 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bot.js` · 276 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `citizens.js` · 29 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 203 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 249 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
@@ -88,7 +88,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `accounts.mjs` · 57 · Cuentas del servidor online: usuario + contraseña (scrypt con sal propia). Nada de contraseñas en claro, nunca.
 - `admin.mjs` · 38 · Texto de ayuda de administración y página del panel (/admin, solo desde el PC del servidor).
-- `server.mjs` · 513 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `server.mjs` · 517 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
@@ -119,6 +119,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `net-walk.test.mjs` · 35 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `party.test.mjs` · 88 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
+- `path.test.mjs` · 41 · A* con arrays tipados: caminos válidos, de coste óptimo (frente a Dijkstra), reutilizables entre búsquedas y rodeando ocupados. node test
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
@@ -138,6 +139,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## tools
 
+- `bench.mjs` · 23 · Banco de pruebas de la simulación: N jugadores + N bots cazando en la granja con los generadores reales. node tools/bench.mjs [jugadores=20
 - `build_dungeon_palette.py` · 122 · (mapa, tema): las cámaras de cada rey usan el escenario de otro dungeon del original (ver convert_theme_maps.py)
 - `convert.py` · 291 · número de monstruo de "spot-mob-generator" -> nombre en NPC.cfg (HGServer/Game.cpp)
 - `convert_all.py` · 43 · 

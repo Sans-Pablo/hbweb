@@ -8,11 +8,11 @@ Doble clic en **`Abrir prueba web.bat`**. Arranca un servidor local y abre `http
 
 ## Jugar online con cuentas (servidor propio + web de GitHub)
 
-Doble clic en **`Servidor online.bat`** y sigue **[docs/ONLINE.md](docs/ONLINE.md)**: cuentas con usuario y contraseña, mundo compartido, panel de administración y dirección fija para que los jugadores entren desde el enlace de GitHub.
+Doble clic en **`Iniciar servidor.bat`** (instala Node si falta, se actualiza solo, arranca el servidor, abre el navegador y lo reinicia si se cae; la primera vez te pregunta solo tu usuario) y sigue **[docs/ONLINE.md](docs/ONLINE.md)**: cuentas con usuario y contraseña, mundo compartido, panel de administración y dirección fija para que los jugadores entren desde el enlace de GitHub.
 
 ## Jugar con otra persona (multijugador rápido, enlace temporal)
 
-Doble clic en **`Jugar con mi hermano (multijugador).bat`**. La primera vez descarga Node.js portátil y `cloudflared` (unos 80 MB en total, dentro de `tools/`). Después:
+Doble clic en **`Jugar con mi hermano (multijugador).bat`** (o `Iniciar servidor.bat rapido`). La primera vez descarga Node.js portátil y `cloudflared` (unos 80 MB en total, dentro de `tools/`). Después:
 
 1. Arranca el servidor del juego y te abre el navegador.
 2. Crea un **enlace público** (`https://algo.trycloudflare.com`) y lo copia al portapapeles. Pásaselo a tu hermano: lo abre en su navegador, escribe un nombre y entra en tu misma granja.
@@ -78,7 +78,7 @@ tools/convert.py        .pak/.amd/.wav del cliente + NPC.cfg y mapas del servido
 tools/remaster_music.py remasterización de la música (python tools/remaster_music.py <carpeta MUSIC> web/data/music)
 tools/serve.py          servidor local (lo usa el .bat; permite saltar dentro de la música)
 server/server.mjs       servidor multijugador (Node, sin dependencias): web + WebSocket + la misma simulación
-tools/multijugador.ps1  lo usa el .bat de multijugador (Node portátil, servidor y enlace de Cloudflare)
+tools/iniciar.ps1  lanzador único (modos online y rápido): Node portátil, actualización, servidor con reinicio automático, túnel
 tests/sim.test.mjs      prueba de la simulación sin navegador: node tests/sim.test.mjs
 ```
 

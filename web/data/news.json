@@ -11,6 +11,27 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Servidor más fácil y rápido (v0.40.0)",
+    "en": "Easier and faster server (v0.40.0)"
+   },
+   "items": [
+    {
+     "es": "Un solo lanzador, «Iniciar servidor.bat»: se actualiza solo, instala Node si falta, abre el navegador, muestra y copia el enlace, y reinicia el servidor si se cae.",
+     "en": "One launcher, “Iniciar servidor.bat”: it updates itself, installs Node if missing, opens the browser, shows and copies the link, and restarts the server if it crashes."
+    },
+    {
+     "es": "Búsqueda de rutas ~10 veces más rápida: con 40 bots el servidor pasa de 4 ms a 0,5 ms por tick.",
+     "en": "Pathfinding ~10x faster: with 40 bots the server goes from 4 ms to 0.5 ms per tick."
+    },
+    {
+     "es": "Menos tráfico: el estado completo del jugador solo se envía cuando cambia.",
+     "en": "Less traffic: the player's full state is only sent when it changes."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "El libro es del summon (v0.39.0)",
     "en": "The spellbook belongs to the summon (v0.39.0)"
    },

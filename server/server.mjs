@@ -462,13 +462,17 @@ setInterval(() => {
     const sh = shared(world);
     if (c.socket.writableLength > 1 << 20) continue;     // conexión atascada: saltar este envío
     const mapChanged = c.mapId !== world.map.id;
-    if (mapChanged) { c.sent.clear(); c.itemsKey = null; c.mapId = world.map.id; }
+    if (mapChanged) { c.sent.clear(); c.ownJs = null; c.itemsKey = null; c.mapId = world.map.id; }
     const changed = [], seen = new Set();
     for (const e of world.ents.values()) {
       if (e !== me && e.kind === "npc" && (Math.abs(e.x - me.x) > VIEW || Math.abs(e.y - me.y) > VIEW)) continue;
       seen.add(e.id);
       let o, js;
-      if (e === me) { o = pub(e, true); js = JSON.stringify(o); }
+      if (e === me) {                                       // el estado completo del propio jugador (~1 KB) solo viaja cuando cambia; el resto, cada tick
+        o = pub(e, true); const oo = o.o; delete o.o; js = JSON.stringify(o);
+        const oj = JSON.stringify(oo);
+        if (c.ownJs !== oj) { c.ownJs = oj; o = { ...o, o: oo }; if (c.sent.get(e.id) === js) c.sent.delete(e.id); }
+      }
       else { let pj = sh.pubs.get(e); if (!pj) { o = pub(e, false); pj = [o, JSON.stringify(o)]; sh.pubs.set(e, pj); } [o, js] = pj; }
       if (c.sent.get(e.id) !== js) { c.sent.set(e.id, js); changed.push(o); }
     }

@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.40.0 · Servidor más fácil y rápido (2026-10-10)
+
+- `Iniciar servidor.bat` + `tools/iniciar.ps1` (modos online y rápido, sustituye a servidor-online.ps1 y multijugador.ps1; los .bat antiguos lo llaman). A* con arrays tipados (`path.js`, `tests/path.test.mjs`), recálculo de rutas de bots limitado, estado propio solo si cambia (`server.mjs`), `tools/bench.mjs`.
+
 ## 0.39.0 · El libro es del summon (2026-10-10)
 
 - `learn` enseña al summon elegido (comp.spells); coste de Int/oro/maná normalizado por nivel de hechizo (`schools.js`); acierto por nivel del summon. Sin documentación nueva hasta una versión estable.

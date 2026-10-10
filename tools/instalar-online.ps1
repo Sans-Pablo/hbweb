@@ -1,5 +1,5 @@
 # Instalador de un solo paso del servidor online (Windows). Instala lo que falte (Git, Node.js, ngrok con winget), descarga/actualiza el juego
-# en Documents\hbweb-online, configura ngrok + administrador y arranca "Servidor online.bat". Se puede ejecutar las veces que haga falta.
+# en Documents\hbweb-online, configura ngrok + administrador y arranca "Iniciar servidor.bat". Se puede ejecutar las veces que haga falta.
 $ErrorActionPreference = "Stop"
 function Titulo($t) { Write-Host ""; Write-Host "  == $t" -ForegroundColor Yellow }
 function Refrescar { $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User") }
@@ -62,4 +62,4 @@ Write-Host ""
 Write-Host "  Listo. Tu direccion fija es: https://$domain" -ForegroundColor Green
 Write-Host "  Dime ese dominio (o deja que lo lea de server\config.json) para publicarlo en la web de GitHub."
 Titulo "Arrancando el servidor online"
-Start-Process -FilePath (Join-Path $dir "Servidor online.bat") -WorkingDirectory $dir
+Start-Process -FilePath (Join-Path $dir "Iniciar servidor.bat") -WorkingDirectory $dir
