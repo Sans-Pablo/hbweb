@@ -8,7 +8,7 @@ import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
 import { extraWeaponWear } from "./weather.js";
-import { auraDefense, auraExp } from "./dummy.js";
+import { auraDefense, auraExp, auraVamp } from "./dummy.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
 // Flechas (iCalculateAttackEffect, HGServer/Game.cpp ~52836): cada disparo con un blanco gasta una flecha del primer montón
@@ -164,6 +164,8 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   if (dmg <= 0) return;
   n.hp -= dmg;
   p.lastCombat = w.time;
+  const vamp = auraVamp(w, p);                                          // Vampiric Aura del Dummy: parte del daño vuelve como vida
+  if (vamp > 0 && p.hp < p.maxHp && !p.dead) { const heal = Math.max(1, Math.round(dmg * vamp / 100)); p.hp = Math.min(p.maxHp, p.hp + heal); w.emit({ t: "heal", id: p.id, amount: heal, by: p.id }); }
   w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp });
   // experiencia por golpe: el daño hecho, hasta agotar los 2/3 de la experiencia del monstruo
   if (n.noDieRemainExp > 0) {

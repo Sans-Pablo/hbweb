@@ -27,3 +27,23 @@ export function activeSchoolSummon(w, p, school) {
   for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead && SCHOOL_OF[e.name] === school) return e;
   return null;
 }
+
+// ---- nivel mínimo del summon para cada hechizo de su escuela: los hechizos que se pueden comprar de la escuela, ordenados por maná,
+// se reparten entre el nivel 1 y el 50; la especie superior los desbloquea antes (80 %). Un summon al nivel máximo lanza los mejores.
+const unlockCache = new WeakMap();
+export function unlockLevels(magic, school) {
+  let m = unlockCache.get(magic);
+  if (!m) unlockCache.set(magic, (m = {}));
+  if (m[school]) return m[school];
+  const list = Object.entries(magic).filter(([, sp]) => spellSchool(sp) === school && sp.cost >= 0).sort((a, b) => a[1].mana - b[1].mana || a[0] - b[0]);
+  const out = {};
+  list.forEach(([id], i) => { out[id] = list.length < 2 ? 1 : Math.round(1 + 49 * i / (list.length - 1)); });
+  return (m[school] = out);
+}
+export const spellLevel = (magic, school, id, species) => {
+  const base = unlockLevels(magic, school)[id];
+  if (base === undefined) return null;                                     // hechizo de la escuela que no se vende: no lo lanza el summon
+  return isTier2(species) ? Math.max(1, Math.round(base * 0.8)) : base;
+};
+// daño del summon: crece con su nivel (0,6 al nivel 1 → 1,4 al 50)
+export const levelPower = lvl => 0.6 + 0.8 * Math.min(50, Math.max(1, lvl)) / 50;

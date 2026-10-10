@@ -19,7 +19,7 @@ const data = new GameData({ items: J("items.json"), magic, npcs: npcDb });
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
 const id = w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 90, mag: 90, chr: 10 } });
 const A = w.ents.get(id); A.stats.str = 400; A.level = 50; w.recalc(A); A.hp = A.maxHp; A.mp = A.maxMp = 500; A.gold = 1e6;
-for (const k of [1, 13, 20, 45, 43]) A.magic[k] = 1;                     // Heal, Defense Shield, Fire Ball, Chill Wind, Lightning
+A.magic = {};                                                               // las magias de escuela las da el summon: no hace falta aprenderlas
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);
 const buy = sp => { const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, A.x, A.y, A.dead); assert.ok(ok, sp); return A.bag.find(i => i.comp?.sp === sp); };
@@ -84,6 +84,22 @@ assert.equal(w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Demon" }), false
 assert.equal(S.TIER2.Orc, "Demon"); assert.equal(S.TIER2.Tentocle, "Frost"); assert.equal(S.TIER2["Cannibal-Plant"], "Liche");
 // los talentos de hechizo de los summons normales ya no existen
 assert.equal(T.TALENTS.filter(t => t.spell != null && !t.dummy).length, 0);
+// nivel mínimo del summon por hechizo, y solo magia de escuela
+assert.equal(S.spellLevel(magic, "fire", 20, "Orc"), 1); assert.equal(S.spellLevel(magic, "fire", 81, "Orc"), 50); assert.ok(S.spellLevel(magic, "fire", 81, "Demon") < 50);
+const lowOrc = A.bag.find(i => i.comp?.sp === "Demon"); lowOrc.comp.lvl = 50; lowOrc.comp.on = false;
+{ const b = buy("Orc"); b.comp.lvl = 5; for (const x of A.bag) if (x.comp) x.comp.on = false; assert.ok(w.command(A.id, { t: "use", uid: b.uid }));
+  tgt = mob(); const n2 = [...w.ents.values()].find(e => e.comp && e.master === A.id); n2.mp = 400; tick(2500); w.events.length = 0;
+  assert.equal(w.command(A.id, { t: "cast", spell: 30, x: tgt.x, y: tgt.y }), false, "Fire Strike pide nivel 13");
+  assert.ok(w.events.some(e => e.t === "reject" && /nivel 13/.test(e.why)));
+  assert.equal(w.command(A.id, { t: "cast", spell: 3, x: tgt.x, y: tgt.y }), false);        // sin escuela (utilidad/otro): no se lanza
+  b.comp.lvl = 20; w.events.length = 0; n2.dir = 1;
+  assert.ok(w.command(A.id, { t: "cast", spell: 30, x: tgt.x, y: tgt.y }));
+  assert.ok(w.events.some(e => e.t === "dummy-cast" && e.nid === n2.id && /Fire Strike/.test(e.txt)), "el summon dice el nombre de la magia");
+  { const dx = Math.sign(tgt.x - n2.x), dy = Math.sign(tgt.y - n2.y); const want = { "0,-1": 1, "1,-1": 2, "1,0": 3, "1,1": 4, "0,1": 5, "-1,1": 6, "-1,0": 7, "-1,-1": 8 }[dx + "," + dy]; assert.equal(n2.dir, want, "el summon mira hacia el objetivo"); }
+  // más nivel, más daño
+  assert.ok(S.levelPower(50) > S.levelPower(1) * 2);
+  assert.ok(T.maxMp({ sp: "Orc", lvl: 50, tal: {} }) > T.maxMp({ sp: "Orc", lvl: 5, tal: {} }) * 5);
+  tick(2000); }
 // caramelos en el hospital
 const g0 = A.gold;
 assert.ok(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 781, count: 3 }));

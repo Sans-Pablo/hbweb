@@ -100,3 +100,30 @@ console.log("OK dummy");
   assert.ok(Math.abs(dm.x - gx) <= 1 && Math.abs(dm.y - (A.y + 2)) <= 1 && dm.holdAt, "el compañero llegó y se queda");
   console.log("OK dummy candy/petgo");
 }
+// Vampiric Aura y Resurrection (Dummy de aura)
+{
+  assert.ok(D.auraPct({ sp: "Dummy", lvl: 50, tal: { dvamp: 5 } }, "dvamp") <= 8 + 1e-9);
+  assert.equal(T.canLearn({ sp: "Dummy", lvl: 20, tal: {}, cls: "aura" }, "dvamp"), "necesita nivel 25");
+  assert.equal(T.canLearn({ sp: "Dummy", lvl: 39, tal: {}, cls: "aura" }, "dres"), "necesita nivel 40");
+  c.lvl = 50; c.cls = "aura"; c.tal = { dvamp: 5, dres: 2, dregen: 1 }; dm.maxHp = dm.hp = 9999; dm.mp = 900; dm.cd = {}; dm.castAt = 0; dm.dcls = "aura";
+  w.grid.release(dm.x, dm.y, dm.id); dm.x = dm.fx = 21; dm.y = dm.fy = 20; w.grid.occupy(21, 20, dm.id);
+  // vampiro: Beta (en el grupo) cura al golpear
+  const m3 = spawnFrom(w, { name: "Slime", rect: [24, 18, 26, 22], alive: 0, max: 0, respawn: false }); m3.hp = m3.maxHp = 5000; m3.nextAct = 1e12;
+  tick(1500);
+  B.hp = Math.floor(B.maxHp * 0.5); const hb = B.hp;
+  const { damageNpc } = await import("../web/src/shared/systems/combatsys.js");
+  damageNpc(w, m3, 100, B, null);
+  assert.ok(B.hp > hb, "Vampiric Aura devuelve vida");
+  // Zeta (fuera del grupo) no
+  Z.hp = Math.floor(Z.maxHp * 0.5); const hz = Z.hp; damageNpc(w, m3, 100, Z, null); assert.equal(Z.hp, hz);
+  // resurrección: Beta cae y el Dummy lo levanta
+  B.hp = 0; B.dead = true; B.deadAt = w.time; w.grid.release(B.x, B.y, B.id);
+  w.events.length = 0; tick(4000);
+  assert.ok(!B.dead && B.hp > 0, "Resurrection levanta al aliado");
+  assert.ok(w.events.some(e => e.t === "resurrected" && e.id === B.id));
+  // recarga: no vuelve a levantarlo enseguida
+  B.hp = 0; B.dead = true; w.grid.release(B.x, B.y, B.id); tick(3000);
+  assert.ok(B.dead, "recarga de Resurrection");
+  B.dead = false; B.hp = B.maxHp; w.grid.occupy(B.x, B.y, B.id);
+  console.log("OK dummy vamp/res");
+}

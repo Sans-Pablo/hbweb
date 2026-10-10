@@ -11,6 +11,35 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Summons al estilo Pokémon (v0.36.0)",
+    "en": "Pokémon-style summons (v0.36.0)"
+   },
+   "items": [
+    {
+     "es": "El libro de magias solo muestra las magias de la escuela de tu summon, con el nivel que necesita para cada una.",
+     "en": "The spellbook only shows your summon school's spells, with the summon level each one needs."
+    },
+    {
+     "es": "Maná del summon junto a su vida, y marcos de grupo con vida y maná de cada miembro y de su summon (raza, nivel, tipo).",
+     "en": "Summon mana next to its life, and party frames with life and mana for each member and their summon (species, level, type)."
+    },
+    {
+     "es": "Al lanzar una magia, el summon se gira hacia el objetivo y dice su nombre.",
+     "en": "When you cast, the summon turns toward the target and calls out the spell."
+    },
+    {
+     "es": "Más nivel, más maná y más daño: un summon al 50 lanza las mejores magias.",
+     "en": "More level, more mana and damage: a level-50 summon casts the best spells."
+    },
+    {
+     "es": "Dummy de aura: Vampiric Aura y Resurrection.",
+     "en": "Aura Dummy: Vampiric Aura and Resurrection."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Bots, caramelos y manual (v0.35.0)",
     "en": "Bots, candies and manual (v0.35.0)"
    },

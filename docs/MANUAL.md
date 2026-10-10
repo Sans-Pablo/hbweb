@@ -774,3 +774,12 @@ Lo pide el propio juego en sus notas de F1:
 
 Para saber más: [ESTADO.md](ESTADO.md) (estado y pendientes), [ONLINE.md](ONLINE.md) (montar el servidor), [CHANGELOG.md](CHANGELOG.md) (historial de versiones)
 y las fichas por sistema en [sistemas/](sistemas/README.md).
+
+
+---
+## Anexo 0.36.0 — Summons al estilo Pokémon
+- **Libro de magias (F7)**: vacío salvo las magias de la escuela del summon elegido; las que el summon aún no domina salen en gris con «(Lv N)». El servidor rechaza cualquier magia que no sea de esa escuela. **[INVENTO]**
+- **Maná**: la barra azul bajo la vida del summon (barra inferior) y los marcos de grupo (izquierda) muestran vida y maná de ti, tus compañeros de grupo y los summons de todos, con apodo, raza, nivel y tipo (escuela, Healer/Buffer/Aura Dummy o combate).
+- **Nivel y poder**: más nivel del summon = más maná, más daño (×0,6 al nivel 1, ×1,4 al 50) y más magias desbloqueadas; la especie superior (Demon, Frost, Liche) las desbloquea al 80 % de nivel y tiene más maná, vida y daño.
+- **Comando**: eliges la magia y el objetivo como siempre; el summon se gira, hace el gesto y dice el nombre sobre su cabeza, y es él quien paga y lanza.
+- **Dummy de aura**: *Vampiric Aura* (nivel 25) y *Resurrection* (nivel 40, levanta a un aliado caído de tu grupo en su radio; recarga de 3 min).

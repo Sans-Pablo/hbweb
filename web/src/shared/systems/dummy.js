@@ -12,8 +12,9 @@ import * as Tal from "./talents.js";
 export const radiusOf = (lvl, cls) => 1 + Math.round((Math.max(1, lvl) - 1) * 5 / 49) + (cls === "aura" ? 1 : 0);       // el Dummy de aura cubre una casilla más
 const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const rank = (c, id) => Tal.rankOf(c, id);
+// Vampiric Aura (invento): devuelve a quien la recibe ese % del daño que hace (hasta 8 % al nivel 50 con rango 5).
 // Porcentajes de aura: crecen con el nivel del Dummy; el rango (1..5) los lleva del 60 % al 100 % del máximo del nivel
-const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08 };            // al nivel 50 con rango 5: 5 %/s de vida, 40 % de exp, 30 % menos daño, 4 %/s de maná
+const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08, dvamp: 0.16 };            // al nivel 50 con rango 5: 5 %/s de vida, 40 % de exp, 30 % menos daño, 4 %/s de maná
 export const auraPct = (c, id) => { const r = rank(c, id); return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.1 * r) * 100) / 100 : 0; };
 const MASS_CD = 60000, MASS_AURA_MS = 20000;
 
@@ -59,6 +60,23 @@ function applyBuff(w, n, c, b, who) {
   Tal.emitCast(w, n, b.spell, who.x, who.y);
 }
 
+export const RES_CD = rk => 180000 - 40000 * (rk - 1);
+function raise(w, n, c, who) {
+  const rk = rank(c, "dres"), spot = w.grid.free(who.x, who.y, who.id) ? [who.x, who.y] : w.freeSpotNear(who.x, who.y);
+  if (!spot) return;
+  Tal.pay(w, n, 94, RES_CD(rk));
+  n.cd.res = w.time + RES_CD(rk);
+  say(w, n, "Resurrection");
+  Tal.emitCast(w, n, 94, who.x, who.y);
+  who.x = who.fx = spot[0]; who.y = who.fy = spot[1];
+  w.grid.occupy(who.x, who.y, who.id);
+  who.dead = false; who.st = {};
+  who.hp = Math.max(1, Math.round(who.maxHp * (0.4 + 0.1 * rk)));
+  w.setAct(who, 0, 0); who.busyUntil = 0;
+  w.emit({ t: "respawn", id: who.id, by: n.id });
+  w.emit({ t: "resurrected", id: who.id, by: n.id });
+}
+
 export function think(w, n, m, c) {
   n.dummy = true;
   n.dcls = c.cls || null;
@@ -71,19 +89,25 @@ export function think(w, n, m, c) {
   if (c.cls === "aura" && w.time >= (n.auraAt || 0)) {
     n.auraAt = w.time + 1000;
     const k = w.time < (n.massUntil || 0) ? 2 : 1;
-    const hp = auraPct(c, "dregen") * k, mp = auraPct(c, "dmana") * k, ex = auraPct(c, "dexp") * k, df = Math.min(60, auraPct(c, "ddef") * k);
+    const vp = auraPct(c, "dvamp") * k, hp = auraPct(c, "dregen") * k, mp = auraPct(c, "dmana") * k, ex = auraPct(c, "dexp") * k, df = Math.min(60, auraPct(c, "ddef") * k);
     if (w.time >= (n.auraSayAt || 0)) {
       n.auraSayAt = w.time + 8000;
-      const names = [hp > 0 && "Regeneration", ex > 0 && "Wisdom", df > 0 && "Defense", mp > 0 && "Mana"].filter(Boolean);
+      const names = [vp > 0 && "Vampiric", hp > 0 && "Regeneration", ex > 0 && "Wisdom", df > 0 && "Defense", mp > 0 && "Mana"].filter(Boolean);
       if (names.length) say(w, n, names.join(" + ") + " Aura" + (k > 1 ? " x2" : ""));
     }
     for (const e of near) {
       if (hp > 0 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + Math.max(1, Math.round(e.maxHp * hp / 100)));
       if (mp > 0 && e.kind === "player" && e.mp < e.maxMp) e.mp = Math.min(e.maxMp, e.mp + Math.max(1, Math.round(e.maxMp * mp / 100)));
-      if (ex > 0 || df > 0) e.aura = { exp: ex, def: df, until: w.time + 2500 };
+      if (ex > 0 || df > 0 || vp > 0) e.aura = { exp: ex, def: df, vamp: vp, until: w.time + 2500 };
     }
   }
   if (w.time - (n.castAt || 0) < Tal.GCD) return;
+
+  // Resurrection (solo el Dummy de aura): levanta a un jugador caído del grupo dentro del radio; la recarga baja con el rango
+  if (c.cls === "aura" && rank(c, "dres") && w.time >= (n.cd.res || 0) && n.mp >= Tal.manaOf(w, 94)) {
+    const gid = m.party?.id, down = [...w.ents.values()].find(e => e.kind === "player" && e.dead && cheb(n, e) <= r + 2 && (e === m || (gid && e.party?.id === gid)));
+    if (down) { raise(w, n, c, down); return; }
+  }
 
   // MASS (60 s de recarga, a todo el grupo del mapa; cuesta el triple del hechizo base)
   if (w.time >= (n.cd.mass || 0)) {
@@ -142,4 +166,5 @@ export function agroWarn(w, n, monster) {
 export const AGRO_FACTOR = 0.5;
 // Daño que recibe quien está bajo el aura de defensa (damagePlayer / companionHurt)
 export const auraDefense = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.def : 0);
+export const auraVamp = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.vamp || 0 : 0);
 export const auraExp = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.exp : 0);

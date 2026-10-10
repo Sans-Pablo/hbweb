@@ -10,7 +10,7 @@ for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new
 const { default: WS } = await import("node:module").then(() => ({ default: globalThis.WebSocket }));
 const ws = new WS(`ws://localhost:${PORT}/ws`);
 let me, seq = 0, rejects = 0, steps = 0, pos = null;
-ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "tester" + Date.now() % 1000, pass: "secret1", proto: 3 }));
+ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "tester" + Date.now() % 1000, pass: "secret1", proto: 4 }));
 ws.onmessage = e => {
   const m = JSON.parse(e.data);
   if (m.t === "authok") ws.send(JSON.stringify({ t: "join", create: { name: "walker" } }));

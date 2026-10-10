@@ -34,15 +34,20 @@ export function learn(w, p, id) {
 function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
   if (sp && M.MAGIC_MODE.free) p.magic[cmd.spell] = 1;
-  if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
+  const granted = !!sp && M.MAGIC_MODE.schools && !!Sch.spellSchool(sp);        // las magias de escuela las da el summon: no hay que aprenderlas
+  if (!sp || (!p.magic[cmd.spell] && !granted)) return w.reject(p, cmd, "no conoces ese hechizo");
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (M.MAGIC_MODE.free) return sp;
   if (M.MAGIC_MODE.schools && Sch.isSupportSpell(sp)) return w.reject(p, cmd, "esa magia es de los Dummy");
   const school = M.MAGIC_MODE.schools ? Sch.spellSchool(sp) : null;
+  if (M.MAGIC_MODE.schools && !school) return w.reject(p, cmd, "solo se lanza la magia de la escuela de tu summon");
   if (school) {                                                       // magia de escuela: la lanza el summon de esa escuela, con su maná
     const n = Sch.activeSchoolSummon(w, p, school);
     if (!n) return w.reject(p, cmd, "necesitas un summon de la escuela " + Sch.SCHOOL_NAMES[school]);
+    const comp = Inv.instOf(p, n.ball)?.comp, need = comp && Sch.spellLevel(w.magic, school, cmd.spell, comp.sp);
+    if (need == null) return w.reject(p, cmd, "tu summon no domina esa magia");
+    if (comp.lvl < need) return w.reject(p, cmd, "tu summon necesita nivel " + need);
     if ((n.mp ?? 0) < Tal.manaOf(w, cmd.spell)) return w.reject(p, cmd, "tu summon no tiene maná");
     return sp;                                                        // lo lanza el summon: no importan las manos del jugador
   }
@@ -82,8 +87,18 @@ export function cast(w, p, cmd) {
   p.prep = null;
   if (!pre || !wait) { w.setAct(p, ACT.MAGIC, ms); p.busyUntil = w.time + ms; }
   w.emit({ t: "cast", id: p.id, spell: cmd.spell, x, y, attr: sp.attr, type: sp.type });
+  command(w, p, sp, cmd.spell, x, y);
   w.after(pre ? wait + 80 : ms, () => resolve(w, p, cmd.spell, sp, x, y, cost));
   return true;
+}
+
+// Estilo «comando»: el summon de la escuela se gira hacia el objetivo, hace el gesto y dice el nombre de la magia sobre su cabeza
+function command(w, p, sp, id, x, y) {
+  const school = M.MAGIC_MODE.schools ? Sch.spellSchool(sp) : null, n = school && Sch.activeSchoolSummon(w, p, school);
+  if (!n) return;
+  if (x !== n.x || y !== n.y) n.dir = dirTo(n.x, n.y, x, y) || n.dir;
+  if (n.dur && !(n.frozenUntil > w.time)) { w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack; }
+  w.emit({ t: "dummy-cast", id: p.id, nid: n.id, txt: sp.name.replace(/-/g, " ") + "!" });
 }
 
 const occ = (w, x, y) => { const oid = w.grid.occupant(x, y); return oid === undefined ? null : w.ents.get(oid) || null; };
@@ -106,17 +121,17 @@ function resist(w, tgt, power) {
 function resolve(w, p, id, sp, x, y, cost) {
   if (p.dead) return;
   // ¿sale el hechizo?
-  const chance = M.castChance(p, id);
-  if (!M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
-  if (!M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   const sch = M.MAGIC_MODE.free || !M.MAGIC_MODE.schools ? null : Sch.spellSchool(sp), sm = sch && Sch.activeSchoolSummon(w, p, sch);
+  const chance = M.castChance(p, id);                                  // las magias de escuela las lanza el summon: no fallan por la habilidad del jugador
+  if (!sch && !M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!sch && !M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   let schoolMult = 1;
   if (sch) {                                                          // paga y lanza el summon de la escuela
     const mana = Tal.manaOf(w, id);
     if (!sm || (sm.mp ?? 0) < mana) { w.emit({ t: "nomagic", id: p.id }); return; }
     sm.mp -= mana;
     const comp = Inv.instOf(p, sm.ball)?.comp;
-    if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * (1 + 0.01 * comp.lvl); }
+    if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * Sch.levelPower(comp.lvl); }
     sm.castAt = w.time;
   } else p.mp = Math.max(0, p.mp - cost);
   gainSSN(p, 4, 1);

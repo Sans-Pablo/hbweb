@@ -4,6 +4,7 @@
 // El panel inferior es el cuadro 30; los demás cuadros se registran en `dialogs` y se pueden arrastrar.
 import { miniOf } from "./compicon.js";
 import { need } from "../shared/systems/companion.js";
+import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
@@ -369,6 +370,12 @@ export class Gui {
     const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 8, wd + 2, 5);
     cx.fillStyle = "#6aa8ff"; cx.fillRect(x0, y0 + 9, Math.round(wd * ek), 3);
+    const mpMax = pet?.maxMp ?? pet?.maxMpC ?? c.mpMax ?? 0, mp = pet ? pet.mp ?? 0 : c.mp ?? 0;
+    if (mpMax > 0) {                                                       // maná del compañero (las escuelas dependen de él)
+      cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 14, wd + 2, 6);
+      cx.fillStyle = "#3f7fe0"; cx.fillRect(x0, y0 + 15, Math.round(wd * Math.max(0, Math.min(1, mp / mpMax))), 4);
+      if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 13 && m.y < y0 + 21) this.tip((c.nm || c.sp) + " MP " + Math.floor(mp) + "/" + mpMax);
+    }
     const expTxt = c.lvl >= 50 ? "EXP MAX" : "EXP " + (c.exp || 0) + "/" + nd + " (" + Math.floor(ek * 100) + "%)";
     if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 6 && m.y < y0 + 14) this.tip((c.nm || c.sp) + " lv " + c.lvl + "  " + expTxt);
     else if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
@@ -403,16 +410,25 @@ export class Gui {
       c.fillStyle = "rgba(0,0,0,.7)"; c.fillRect(x - 1, y - 1, w + 2, h + 2);
       c.fillStyle = col(k); c.fillRect(x, y, Math.round(w * k), h);
     };
-    const hpCol = k => k > 0.5 ? "#4caf3a" : k > 0.25 ? "#d9a62e" : "#d6382b";
-    for (const name of me.party.names) {
-      if (name === me.name) continue;
-      const m = ents.find(e => e.kind === "player" && e.name === name);
-      this.text(10, y, name, m ? "#fafadc" : "#8a8a8a", { shadow: true });
-      if (m) { bar(10, y + 14, 96, 8, m.dead ? 0 : m.hp, m.maxHp, hpCol); this.text(112, y + 11, m.dead ? "dead" : m.hp + "/" + m.maxHp, "#e8e8d0", { shadow: true, size: 10 }); }
-      else this.text(10, y + 14, "(otro mapa)", "#8a8a8a", { shadow: true, size: 10 });
-      y += 28;
+    const hpCol = k => k > 0.5 ? "#4caf3a" : k > 0.25 ? "#d9a62e" : "#d6382b", mpCol = () => "#3f7fe0";
+    const kindOf = pet => pet.dcls ? ({ healer: "Healer", buffer: "Buffer", aura: "Aura" })[pet.dcls] + " Dummy" : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : pet.name === "Dummy" ? "Dummy" : "Combat";
+    for (const name of [me.name, ...me.party.names.filter(n => n !== me.name)]) {
+      const m = name === me.name ? me : ents.find(e => e.kind === "player" && e.name === name);
+      this.text(10, y, name + (m === me ? "  Lv " + me.level : ""), m ? "#fafadc" : "#8a8a8a", { shadow: true });
+      if (m) {
+        bar(10, y + 14, 96, 8, m.dead ? 0 : m.hp, m.maxHp, hpCol); this.text(112, y + 11, m.dead ? "dead" : m.hp + "/" + m.maxHp, "#e8e8d0", { shadow: true, size: 10 });
+        if (m.maxMp) { bar(10, y + 25, 96, 5, m.mp, m.maxMp, mpCol); this.text(112, y + 23, Math.floor(m.mp) + "/" + m.maxMp, "#9fc2ff", { shadow: true, size: 9 }); }
+      } else this.text(10, y + 14, "(otro mapa)", "#8a8a8a", { shadow: true, size: 10 });
+      y += m && m.maxMp ? 38 : 28;
       const pet = m && ents.find(e => e.comp && e.master === m.id && !e.dead);
-      if (pet) { this.text(16, y - 3, pet.nick || pet.name, "#c9d8ff", { shadow: true, size: 10 }); bar(16, y + 9, 70, 5, pet.hp, pet.maxHp, hpCol); y += 20; }
+      if (pet) {
+        const pm = pet.maxMp ?? pet.maxMpC ?? 0;
+        this.text(16, y - 3, (pet.nick || pet.name) + "  " + pet.name.replace(/-/g, " ") + " Lv " + (pet.clvl || 1), "#c9d8ff", { shadow: true, size: 10 });
+        this.text(16, y + 8, kindOf(pet), "#8fa6d8", { shadow: true, size: 9 });
+        bar(16, y + 19, 70, 5, pet.hp, pet.maxHp, hpCol); this.text(92, y + 18, Math.ceil(pet.hp) + "/" + pet.maxHp, "#e8e8d0", { shadow: true, size: 9 });
+        if (pm) { bar(16, y + 27, 70, 4, pet.mp ?? 0, pm, mpCol); this.text(92, y + 26, Math.floor(pet.mp ?? 0) + "/" + pm, "#9fc2ff", { shadow: true, size: 9 }); }
+        y += pm ? 40 : 32;
+      }
       y += 8;
     }
   }

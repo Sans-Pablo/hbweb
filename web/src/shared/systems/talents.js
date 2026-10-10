@@ -39,6 +39,8 @@ TALENTS.push(
   { id: "dexp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 10, name: "Wisdom Aura", desc: "% extra experience" },
   { id: "ddef", br: "aura", tier: 0, max: 5, dummy: true, lvl: 15, name: "Defense Aura", desc: "% less damage taken" },
   { id: "dmana", br: "aura", tier: 0, max: 5, dummy: true, lvl: 20, name: "Mana Aura", desc: "% of max MP regenerated per second" },
+  { id: "dvamp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 25, name: "Vampiric Aura", desc: "% of the damage dealt by allies returns to them as life" },
+  { id: "dres", br: "aura", tier: 0, max: 3, dummy: true, lvl: 40, name: "Resurrection", spell: 94, desc: "Raises a fallen ally in range (3 min cooldown, less per rank)" },
   { id: "dmassa", br: "aura", tier: 0, max: 1, dummy: true, lvl: 30, name: "Mass Aura", desc: "MASS: doubles every aura for 20 s (60 s)" },
 );
 export const isDummy = c => c.sp === "Dummy";
@@ -123,7 +125,7 @@ export function regen(w, n, c) {
   if (!isSchool(c)) n.mp = Math.min(mx, n.mp + mx / 60 * ((w.time - (n.mpAt ?? w.time)) / 1000));
   else n.mp = Math.min(mx, n.mp);
   n.mpAt = w.time;
-  c.mp = Math.floor(n.mp); c.mpMax = mx;
+  c.mp = Math.floor(n.mp); c.mpMax = mx; n.maxMpC = mx;
   if (rankOf(c, "regen") && n.hp < n.maxHp) { const k = (w.time - (n.hpAt ?? w.time)) / 1000; n.hpAcc = (n.hpAcc || 0) + n.maxHp * 0.01 * k; const g = Math.floor(n.hpAcc); if (g > 0) { n.hp = Math.min(n.maxHp, n.hp + g); n.hpAcc -= g; } }
   n.hpAt = w.time;
 }

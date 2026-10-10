@@ -2,6 +2,16 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.36.0 · Summons al estilo Pokémon (2026-10-10)
+
+- **Protocolo 4** (`NET_PROTO`): los jugadores y summons envían su maná (`mp`, `mm`) para los marcos de grupo.
+- **Libro de magias**: solo muestra las magias de la escuela del summon elegido (vacío sin summon de escuela). Cada magia lleva el nivel que necesita el summon (las compradas de la escuela, ordenadas por maná, se reparten del nivel 1 al 50; la especie superior las desbloquea al 80 %) y el servidor rechaza cualquier magia que no sea de la escuela.
+- Las magias de escuela las da el summon: no hay que aprenderlas en la torre del mago y no fallan por la habilidad del jugador (probabilidad 100 %).
+- **Maná visible**: barra de maná del summon junto a su vida (barra inferior) y marcos de grupo con tu personaje, cada miembro (vida y maná) y su summon (apodo, raza, nivel, tipo —escuela, clase de Dummy o combate—, vida y maná).
+- **Poder por nivel**: el daño de las magias del summon crece con su nivel (×0,6 al 1 → ×1,4 al 50) y su maná también; al nivel 50 lanza las mejores.
+- **Comando**: al lanzar, el summon se gira hacia el objetivo, hace el gesto y dice el nombre de la magia sobre su cabeza.
+- **Dummy de aura**: nuevas **Vampiric Aura** (nivel 25: parte del daño de los aliados vuelve como vida, hasta 8 %) y **Resurrection** (nivel 40: levanta a un aliado caído en su radio, Magic.cfg 94; recarga 3 min, menos por rango).
+
 ## 0.35.0 · Bots, caramelos y manual (2026-10-10)
 
 - **Bots** (`systems/bot.js`, F1 → Bots): jugadores simulados que entran en tu grupo (o cazan sueltos), siguen al dueño por mapas y criptas, atacan con A*, beben pociones, comen, recogen botín, reparten puntos, se equipan por catálogo y suben de nivel. Funcionan igual en local y en el servidor online. Ficha `docs/sistemas/bots.md`.

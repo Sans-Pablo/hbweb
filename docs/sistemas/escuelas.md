@@ -15,3 +15,9 @@ Código: `shared/systems/schools.js`; integración en `magicsys.js` (`usable`, `
 - Cambio (`petup`, hospital): nivel 50, vivo y guardado → bola nueva nivel 1 de la especie superior con el mismo nombre. Stats ×1,5 vida, ×1,25 daño, ×1,6 maná. Demon/Frost/Liche no se compran (`buyBall`).
 - `MAGIC_MODE.schools` (true en el juego) lo apagan las pruebas del sistema base.
 - Test: `tests/schools.test.mjs`.
+
+## 0.36.0 — estilo comando y nivel
+- `unlockLevels/spellLevel` (schools.js): nivel del summon que pide cada magia (reparto 1–50 por maná; ×0,8 en la especie superior). `levelPower`: ×0,6 → ×1,4.
+- `usable`: solo magias de escuela (cualquier otra se rechaza) y con nivel suficiente. `cast` → `command()`: el summon se gira, hace el gesto de ataque y emite `dummy-cast` con el nombre.
+- Libro (`dialogs.js`): filtra por la escuela de la bola elegida; gris «(Lv N)» si el summon aún no la domina.
+- Maná en pantalla: `petPanel` (barra azul), `partyFrames` (miembros y summons). Red: `pub()` envía `mp`/`mm` (NET_PROTO 4).

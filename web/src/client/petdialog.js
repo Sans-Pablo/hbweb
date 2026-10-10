@@ -8,7 +8,7 @@ import { mobSprite } from "./anim.js";
 import { ACT, mobDurations } from "../shared/const.js";
 
 const BUTTONS = [["summons_icon", "Info", "Name, mode, spells and talent reset."], ["pet_support", "Support", "Support talents: healing and protection."], ["pet_damage", "Damage", "Damage talents: more attack power."], ["pet_warrior", "Warrior", "Warrior talents: more health and defence."]];
-const DUMMY_HINTS = ["Healer (green): Heal, Great Heal. The first spell you learn fixes the class.", "Buffer (yellow): shields, Protection From Magic, Berserk.", "Aura (blue): regeneration, experience, defence and mana auras."];
+const DUMMY_HINTS = ["Healer (green): Heal, Great Heal. The first spell you learn fixes the class.", "Buffer (yellow): shields, Protection From Magic, Berserk.", "Aura (blue): regeneration, experience, defence, mana and Vampiric auras; Resurrection (lv 40) raises a fallen ally."];
 const BX = 14, BY = 108, BPITCH = 52;
 
 export function registerPetDialog(gui, api) {

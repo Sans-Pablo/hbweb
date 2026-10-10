@@ -222,6 +222,7 @@ export class NetConnection {
     }
     e.dead = !!o.dead; e.hp = o.hp; e.maxHp = o.mh; e.name = o.name;
     e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
+    if (o.mm !== undefined) { e.mp = o.mp; e.maxMp = o.mm; }
     if (o.cp) { e.nick = o.nk; e.clvl = o.cl; e.evoK = (o.ek || 0) / 100; e.dcls = o.dc || null; }
     if (o.ar) { e.arena = true; e.nick = o.nk; e.clvl = o.cl; }
     if (o.k === "npc" || o.k === "citizen") {

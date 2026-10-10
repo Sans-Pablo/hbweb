@@ -413,10 +413,11 @@ function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
   if (e.role) o.rl = e.role;
-  if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); if (e.dcls) o.dc = e.dcls; }
+  if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); if (e.dcls) o.dc = e.dcls; if (e.maxMpC) { o.mp = Math.floor(e.mp ?? 0); o.mm = e.maxMpC; } }
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }
   if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; }
   else {
+    o.mp = e.mp; o.mm = e.maxMp;                                                // maná visible para el grupo (marcos de grupo)
     o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
     o.ap = apparelOf(e, id => data.item(id));                                  // equipo visible para los demás jugadores
     if (own) { Object.assign(o, { bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove) }); o.o = ownState(e); }

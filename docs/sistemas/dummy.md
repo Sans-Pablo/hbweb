@@ -11,3 +11,8 @@ INVENTO del port (no existe en el original). Usa el NPC `Dummy` de NPC.cfg y los
 - **MASS** (talento de nivel 30, 60 s de recarga): Healer = Great Heal a todo el grupo; Buffer = todos sus buffs a todo el grupo; Aura = auras x2 durante 20 s. Ignora el radio (mismo mapa).
 - Estado `pfm` (Protection From Magic): reduce el daño elemental/mágico recibido.
 - Test: `tests/dummy.test.mjs`.
+
+## 0.36.0 — Vampiric Aura y Resurrection (Dummy de aura)
+- `dvamp` (nivel 25, 5 rangos): `AURA_PER_LEVEL.dvamp = 0,16` → hasta 8 % del daño que hace el aliado (dentro del radio) vuelve como vida (`damageNpc`, `auraVamp`).
+- `dres` (nivel 40, 3 rangos, Magic.cfg 94): si un jugador del grupo está caído a ≤ radio+2, el Dummy gasta 200 de maná, lo levanta con 40 % + 10 %/rango de vida y emite `respawn`/`resurrected`. Recarga 180 s − 40 s por rango extra.
+- Test: `tests/dummy.test.mjs` («OK dummy vamp/res»).
