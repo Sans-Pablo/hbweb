@@ -10,6 +10,8 @@ import * as C from "../web/src/shared/systems/companion.js";
 import * as T from "../web/src/shared/systems/talents.js";
 import * as D from "../web/src/shared/systems/dummy.js";
 import * as Party from "../web/src/shared/systems/party.js";
+import { newInst } from "../web/src/shared/systems/itemsys.js";
+import * as Inv from "../web/src/shared/inventory.js";
 import { sget } from "../web/src/shared/systems/status.js";
 const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
 const npcDb = J("npc.json");
@@ -18,6 +20,7 @@ let seed = 11; const rng = () => (seed = (seed * 16807) % 2147483647) / 21474836
 const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
 const mk = n => { const id = w.addPlayer(n, null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }); const e = w.ents.get(id); e.stats.str = 400; e.level = 50; w.recalc(e); e.hp = e.maxHp; return e; };
+const wand = (e) => { const i = newInst(w, 256); Inv.addToBag(e, data, i); assert.ok(Inv.equip(e, data, i.uid).ok); w.recalc(e); return i; };
 const A = mk("Alfa"), B = mk("Beta"), Z = mk("Zeta");
 const tick = (ms) => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 // grupo Alfa+Beta (Zeta fuera)
@@ -42,9 +45,12 @@ assert.equal(w.command(A.id, { t: "talent", uid: ball.uid, talent: "might" }), f
 for (let i = 0; i < 3; i++) w.command(A.id, { t: "talent", uid: ball.uid, talent: "dheal" });
 assert.equal(T.rankOf(c, "dheal"), 4);
 
+// sin báculo en la mano no se invoca un Dummy; con él sí, y quitárselo lo guarda
+assert.equal(w.command(A.id, { t: "use", uid: ball.uid }), false, "sin báculo no hay Dummy");
+const staff = wand(A); assert.equal(A.eff.wtype, 36);
 // invocarlo y dejarlo quieto cerca de Alfa, Beta dentro del radio, Zeta fuera
 assert.ok(w.command(A.id, { t: "use", uid: ball.uid }));
-const dm = [...w.ents.values()].find(e => e.comp && e.master === A.id);
+let dm = [...w.ents.values()].find(e => e.comp && e.master === A.id);
 assert.ok(dm && dm.name === "Dummy");
 w.command(A.id, { t: "petmode", mode: "peace" });
 w.grid.release(dm.x, dm.y, dm.id); dm.x = dm.fx = 21; dm.y = dm.fy = 20; w.grid.occupy(21, 20, dm.id);
@@ -83,6 +89,14 @@ mob.dead = true; w.ents.delete(mob.id);
   assert.equal(D.auraPct({ sp: "Dummy", lvl: 50, tal: {} }, "dregen"), 0);
   assert.ok(D.auraPct(hi, "dexp") <= 40 + 1e-9);
 }
+{ // quitar el báculo guarda al Dummy
+  const hold = Inv.release(A, 8); w.recalc(A); const dmx = [...w.ents.values()].find(e => e.comp && e.master === A.id);
+  assert.ok(dmx); tick(3000);
+  assert.ok(![...w.ents.values()].some(e => e.comp && e.master === A.id && !e.dead), "sin báculo el Dummy se guarda");
+  assert.ok(!c.on, "la bola queda guardada"); Inv.equip(A, data, staff.uid); w.recalc(A); assert.ok(w.command(A.id, { t: "use", uid: ball.uid }), "con el báculo vuelve");
+  dm = [...w.ents.values()].find(e => e.comp && e.master === A.id && !e.dead); const dm2 = dm; assert.ok(dm2); dm.hp = dm.maxHp; dm.mp = 500;
+  w.grid.release(dm2.x, dm2.y, dm2.id); dm2.x = dm2.fx = 21; dm2.y = dm2.fy = 20; w.grid.occupy(21, 20, dm2.id); w.command(A.id, { t: "petmode", mode: "peace" });
+}
 console.log("OK dummy");
 // Caramelos: rojo cura, verde revive, azul da maná; Alt+clic derecho (petgo) lleva al compañero a una casilla
 {
@@ -104,12 +118,12 @@ console.log("OK dummy");
 {
   assert.ok(D.auraPct({ sp: "Dummy", lvl: 50, tal: { dvamp: 5 } }, "dvamp") <= 8 + 1e-9);
   assert.equal(T.canLearn({ sp: "Dummy", lvl: 20, tal: {}, cls: "aura" }, "dvamp"), "necesita nivel 25");
-  assert.equal(T.canLearn({ sp: "Dummy", lvl: 39, tal: {}, cls: "aura" }, "dres"), "necesita nivel 40");
+  assert.equal(T.canLearn({ sp: "Dummy", lvl: 49, tal: {}, cls: "aura" }, "dres"), "necesita nivel 50");
   c.lvl = 50; c.cls = "aura"; c.tal = { dvamp: 5, dres: 2, dregen: 1 }; dm.maxHp = dm.hp = 9999; dm.mp = 900; dm.cd = {}; dm.castAt = 0; dm.dcls = "aura";
   w.grid.release(dm.x, dm.y, dm.id); dm.x = dm.fx = 21; dm.y = dm.fy = 20; w.grid.occupy(21, 20, dm.id);
   // vampiro: Beta (en el grupo) cura al golpear
   const m3 = spawnFrom(w, { name: "Slime", rect: [24, 18, 26, 22], alive: 0, max: 0, respawn: false }); m3.hp = m3.maxHp = 5000; m3.nextAct = 1e12;
-  tick(1500);
+  tick(3500);
   B.hp = Math.floor(B.maxHp * 0.5); const hb = B.hp;
   const { damageNpc } = await import("../web/src/shared/systems/combatsys.js");
   damageNpc(w, m3, 100, B, null);
@@ -126,4 +140,16 @@ console.log("OK dummy");
   assert.ok(B.dead, "recarga de Resurrection");
   B.dead = false; B.hp = B.maxHp; w.grid.occupy(B.x, B.y, B.id);
   console.log("OK dummy vamp/res");
+  // la curación escala con el carisma del dueño; el alcance es un círculo
+  assert.ok(D.chrFactor(100) > D.chrFactor(10) * 1.8 && D.chrFactor(500) <= 2);
+  // aura de estamina: devuelve aguante a los del radio
+  c.tal = { dstam: 5 }; dm.cd = {}; dm.auraAt = 0; A.sp = 1; B.sp = 1; tick(2500);
+  assert.ok(A.sp > 10 && B.sp > 10, "Stamina Aura recupera aguante");
+  // el dueño cae: el Dummy con Resurrection se queda y lo levanta
+  c.tal = { dres: 3 }; dm.cd = {}; dm.mp = 900; dm.castAt = 0;
+  w.grid.release(A.x, A.y, A.id); A.dead = true; A.hp = 0; A.deadAt = w.time; w.events.length = 0;
+  tick(6000);
+  assert.ok(!A.dead && A.hp > 0, "el Dummy resucita al dueño"); assert.ok([...w.ents.values()].some(e => e === dm && !e.dead), "el Dummy sigue en pie");
+  assert.ok(w.events.some(e => e.t === "dummy-cast" && /Resurrection/.test(e.en)), "habla con personalidad");
+  console.log("OK dummy chr/stamina/self-res");
 }

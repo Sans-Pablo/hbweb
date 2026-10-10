@@ -11,6 +11,35 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Arena emocionante y Dummies con carácter (v0.37.0)",
+    "en": "Thrilling arena and Dummies with character (v0.37.0)"
+   },
+   "items": [
+    {
+     "es": "Arena: combates de ~14 s con críticos, Power Strike, Guard, Second Wind y Frenzy; las especies de escuela lanzan sus hechizos; comentarios en vivo.",
+     "en": "Arena: ~14 s fights with crits, Power Strike, Guard, Second Wind and Frenzy; school species cast their spells; live commentary."
+    },
+    {
+     "es": "Apostar por tu compañero lo entrena (experiencia) y, si gana, la casa da un premio extra de oro.",
+     "en": "Betting on your companion trains it (experience) and, if it wins, the house pays an extra gold prize."
+    },
+    {
+     "es": "Dummy: curación según tu carisma, alcance circular, Resurrection / Stamina / Vampiric Aura, y solo se invoca con un báculo en la mano.",
+     "en": "Dummy: healing scales with your charisma, circular range, Resurrection / Stamina / Vampiric Aura, and it can only be summoned with a staff in hand."
+    },
+    {
+     "es": "Los Dummies y los bots hablan: dicen lo que hacen, avisan del peligro y comentan lo que ven.",
+     "en": "Dummies and bots talk: they say what they do, warn of danger and comment on what they see."
+    },
+    {
+     "es": "Estamina como en el original (más fácil hasta el nivel 10); marco de grupo bajo el rótulo superior; Kennedy ya no se parece a Gail.",
+     "en": "Stamina as in the original (easier until level 10); party frame under the top label; Kennedy no longer looks like Gail."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Summons al estilo Pokémon (v0.36.0)",
     "en": "Pokémon-style summons (v0.36.0)"
    },

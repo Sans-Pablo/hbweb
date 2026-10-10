@@ -100,18 +100,20 @@ for (let i = 0; i < 200; i++) a.tick(50);
 assert.equal([...w.ents.values()].filter(e => e.arena).length, 0, "la arena se limpia");
 assert.equal(p.arenaHist.length, 1);
 
-// ---- habilidades: la simulación usa hechizos, escudos y curas aprendidos (también el retador)
+// ---- movimientos: críticos, Power Strike, Guard, Second Wind, Frenzy y hechizos de escuela; el combate es corto
 {
-  const mg = { 1: { mana: 15, v4: 2, v5: 6, v6: 10 }, 13: { mana: 19, v4: 3, v5: 0, v6: 0 }, 20: { mana: 27, v4: 2, v5: 6, v6: 2 }, 43: { mana: 44, v4: 4, v5: 7, v6: 12 }, 44: { mana: 45, v4: 4, v5: 0, v6: 0 }, 50: { mana: 57, v4: 1, v5: 0, v6: 0 } };
-  const f = (key, over = {}) => ({ key, sp: "Orc", nm: key, lvl: 30, role: "none", hp: 400, dmg: 20, period: 1000, hit: 100, def: 40, tal: {}, fx: { dmg: 1, spell: 1, heal: 1, taken: 1 }, mpMax: 400, mg, ...over });
-  const mage = f("a", { tal: { fireball: 1, lightning: 1, heal: 1, shield: 1, berserk: 1 } });
-  const sim = simulate(mage, f("b"), seededRandom(5));
-  const ids = new Set(sim.events.filter(e => e.spell).map(e => e.spell));
-  assert.ok(ids.has(20) || ids.has(43), "lanza hechizos de ataque"); assert.ok(ids.has(13) && ids.has(50), "usa escudo y furia");
-  assert.ok(sim.events.filter(e => e.spell && e.who === "b").length === 0, "sin talentos no hay hechizos");
-  assert.ok(oddsFor(mage, f("b"), 2).pa > 0.8, "las habilidades dan ventaja real");
-  const sh = simulate(f("a", { tal: { gshield: 1 } }), f("b"), seededRandom(5));
-  assert.ok(sh.events.some(e => e.spell === 44), "usa Great Defense Shield");
+  const mg = { 20: { mana: 27, v4: 2, v5: 6, v6: 2 }, 43: { mana: 44, v4: 4, v5: 7, v6: 12 } };
+  const f = (key, over = {}) => ({ key, sp: "Orc", nm: key, lvl: 30, role: "none", hp: 400, dmg: 20, period: 1000, hit: 100, def: 40, tal: {}, fx: { dmg: 1, spell: 1, heal: 1, taken: 1 }, mpMax: 0, mg: {}, ...over });
+  const mage = f("a", { mpMax: 300, mg }), seen = new Set(); let spells = 0, crits = 0, ms = 0, n = 40;
+  for (let i = 0; i < n; i++) {
+    const sim = simulate(mage, f("b"), seededRandom(100 + i)); ms += sim.ms;
+    for (const e of sim.events) { if (e.mv) seen.add(e.mv); if (e.spell && e.who === "a") spells++; if (e.crit) crits++; if (e.spell && e.who === "b") assert.fail("sin escuela no hay hechizos"); }
+  }
+  assert.ok(spells > 20, "el mago de escuela lanza hechizos"); assert.ok(crits > 0, "hay críticos");
+  for (const m of ["power", "guard", "wind", "frenzy"]) assert.ok(seen.has(m), "usa " + m);
+  assert.ok(oddsFor(mage, f("b"), 2).pa > 0.7, "la magia da ventaja real");
+  const base = f("a", { hp: 4000, dmg: 20 }), long = simulate(base, f("b", { hp: 4000 }), seededRandom(3));
+  assert.ok(long.ms <= ARENA.maxMs, "la furia final acaba con los combates eternos");
 }
 
 // ---- viaje: el apostador va al mapa de arena, mira el combate y vuelve a la tienda
@@ -147,7 +149,25 @@ assert.equal(p.arenaHist.length, 1);
   assert.ok(save.bet && save.bet.payout === pend.payout, "la apuesta pendiente se guarda");
   const b = mk(12), id2 = b.addPlayer("apostador2", save), p2 = b.farm.ents.get(id2);
   assert.equal(p2.bet, null);
-  assert.equal(p2.gold, g0 - 500 + pend.payout, "se cobra el resultado fijado al cargar");
+  assert.equal(p2.gold, g0 - 500 + pend.payout + (pend.bonus || 0), "se cobra el resultado fijado al cargar");
   assert.equal(p2.arenaHist.length, 2);
+}
+// ---- entrenamiento: apostar por el propio compañero le da experiencia (y premio si gana); por el rival, nada
+{
+  const ballI = p.bag.find(i => i.comp), exp0 = ballI.comp.exp + ballI.comp.lvl * 1e6;
+  evs.length = 0; say("arenainfo"); let o = evs.find(e => e.t === "arenaoffer");
+  say("arenabet", { offer: o.offer, side: "a", amount: 500 });
+  assert.ok(p.bet.xp > 0, "la experiencia se fija al apostar");
+  const bonus = p.bet.bonus, win = p.bet.win, g0 = p.gold;
+  for (let i = 0; i < 4000 && p.bet; i++) a.tick(50);
+  const end = evs.filter(e => e.t === "arenaend").pop();
+  assert.ok(end.xp > 0 && ballI.comp.exp + ballI.comp.lvl * 1e6 > exp0, "el compañero entrena");
+  assert.equal(end.bonus, win ? bonus : 0); if (win) assert.ok(bonus > 0, "premio de la casa");
+  assert.ok(evs.some(e => e.t === "arenamsg" && e.es && e.en), "comentarios para el espectador");
+  assert.equal(p.gold, g0 + end.payout + end.bonus);
+  for (let i = 0; i < 300; i++) a.tick(50);
+  evs.length = 0; say("arenainfo"); o = evs.find(e => e.t === "arenaoffer");
+  say("arenabet", { offer: o.offer, side: "b", amount: 200 }); assert.equal(p.bet.xp, 0); assert.equal(p.bet.bonus, 0);
+  for (let i = 0; i < 4000 && p.bet; i++) a.tick(50);
 }
 console.log("OK arena");

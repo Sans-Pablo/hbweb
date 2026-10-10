@@ -15,12 +15,13 @@ import * as Tal from "./talents.js";
 import { ACT, dirTo, dist, mobDurations } from "../const.js";
 import { spawnFrom } from "./npcsys.js";
 import { greedyStep } from "../path.js";
+import * as Sch from "./schools.js";
 
 export const ARENA = {
   npc: "Kennedy", role: "arena", reach: 10,        // ficha de NPC.cfg sin función en el juego base; vive en la tienda general (gshop_1f)
   shop: "gshop_1f", npcAt: [55, 43],
   map: "huntzone1", field: [28, 24, 44, 34], watch: [36, 36],   // mapa de arena (huntzone1, sin monstruos): suelo despejado donde pelean y sitio del espectador
-  minBet: 100, edge: 0.10, fightMs: 28000, sims: 600, maxMs: 90000, minOdds: 1.05, maxOdds: 15, history: 8,
+  minBet: 100, edge: 0.10, fightMs: 14000, sims: 600, maxMs: 40000, rageAt: 18000, minOdds: 1.05, maxOdds: 15, history: 8,
 };
 export const maxBet = p => 500 + 250 * (p.level || 1);
 
@@ -29,17 +30,25 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const roleOf = c => Tal.spec(c) || "none";
 
 // ---------------------------------------------------------------- luchadores
-// Mismo cálculo que un compañero de verdad (companion.statsOf): el equipo del dueño y los talentos importan.
-const SPELL_IDS = [1, 21, 13, 44, 50, 20, 43, 81];
+// Mismo cálculo que un compañero de verdad (companion.statsOf). Los gladiadores pelean con "movimientos":
+//  - todos: Golpe crítico (14 %), Power Strike (x2,2), Guard (reduce el daño), Second Wind (cura una vez) y Frenzy (doble ritmo con poca vida);
+//  - las especies de escuela (Orc/Demon fuego, Tentocle/Frost hielo, Cannibal-Plant/Liche rayo) lanzan los hechizos de Magic.cfg de su escuela
+//    que su nivel desbloquea (Sch.spellLevel), pagando maná; el maná del combate se recupera deprisa para que el espectáculo no se apague.
+const MOVES = { power: { lvl: 1, cd: 5500, mul: 2.2 }, guard: { lvl: 8, cd: 13000, ms: 3200, taken: 0.45 }, wind: { lvl: 15, heal: 0.25 }, frenzy: { lvl: 20, cd: 24000, ms: 5000 } };
 function fighterOf(w, p, c, key, extra = {}) {
   const st = Comp.statsOf(p, c), cfg = w.npcDb[c.sp], dur = mobDurations(cfg.type);
-  const mul = extra.boost || 1, mg = {};
-  for (const id of SPELL_IDS) { const m = w.magic?.[id]; if (m) mg[id] = { mana: m.mana, v4: m.v4, v5: m.v5, v6: m.v6 }; }
+  const mul = extra.boost || 1, mg = {}, school = Sch.SCHOOL_OF[c.sp];
+  if (school && w.magic) {                                          // los 3 mejores hechizos de su escuela que ya puede lanzar
+    const ids = Object.keys(Sch.unlockLevels(w.magic, school)).map(Number).filter(id => Sch.spellLevel(w.magic, school, id, c.sp) <= c.lvl)
+      .sort((x, y) => w.magic[y].mana - w.magic[x].mana).slice(0, 3);
+    for (const id of ids) { const m = w.magic[id]; mg[id] = { mana: m.mana, v4: m.v4, v5: m.v5, v6: m.v6 }; }
+  }
+  const spellMul = Sch.levelPower(c.lvl) * (Sch.isTier2(c.sp) ? Sch.TIER_MULT.dmg : 1);
   return {
     key, sp: c.sp, nm: extra.nm || c.nm || c.sp, lvl: c.lvl, role: roleOf(c), champion: !!extra.champion,
     hp: Math.max(5, Math.round(st.hp * mul)), dmg: Math.max(1, Math.round(st.dmg * mul)),
     period: Math.max(cfg.actionTime, dur.attack, 50), hit: cfg.hitRatio, def: cfg.defenseRatio,
-    tal: { ...(c.tal || {}) }, fx: Tal.factors(c), mpMax: Tal.maxMp(c), mg,       // habilidades aprendidas: la simulación las usa todas
+    tal: { ...(c.tal || {}) }, fx: { ...Tal.factors(c), spell: spellMul }, mpMax: Object.keys(mg).length ? Math.max(Tal.maxMp(c), 3 * Math.max(...Object.values(mg).map(m => m.mana))) : 0, mg, school: school || null,
   };
 }
 
@@ -63,60 +72,59 @@ function foeOf(w, p, mine) {
 }
 
 // ---------------------------------------------------------------- simulación (sin estado del mundo)
-// Devuelve { winner: "a"|"b", ms, events }. events: golpe { t, who, hit, dmg }; hechizo { t, who, spell, dmg } (ataque), { t, who, spell, heal } (cura),
-// { t, who, spell } (escudo / furia); regeneración { t, who, heal }.
-// Los dos luchadores usan TODAS las habilidades aprendidas con las mismas reglas que el compañero de verdad (talents.support / talents.offense):
-// curas, escudos, Berserk, bolas de fuego, relámpago y meteoro, con maná, enfriamientos y 1,8 s entre hechizos.
-const GCD = 1800, rank = (f, id) => (f.tal && f.tal[id]) || 0;
+// Devuelve { winner: "a"|"b", ms, events }. Eventos: golpe { t, who, hit, dmg, crit }; Power Strike { t, who, mv:"power", hit, dmg };
+// hechizo { t, who, spell, dmg } (ataque); movimientos de apoyo { t, who, mv:"guard"|"frenzy" } y { t, who, mv:"wind", heal }; regeneración { t, who, heal }.
+const GCD = 1500, CRIT = 0.14, CRIT_MUL = 1.8;
 export function simulate(a, b, rng) {
-  const mk = x => ({ ...x, cur: x.hp, mp: x.mpMax || 0, next: Math.floor(rng() * x.period), castAt: -1e9, cd: {}, prot: 0, protUntil: 0, zerk: 0 });
+  const mk = x => ({ ...x, cur: x.hp, mp: x.mpMax || 0, next: Math.floor(rng() * x.period), castAt: -1e9, cd: {}, protUntil: 0, zerk: 0, wind: false });
   const f = { a: mk(a), b: mk(b) };
   const events = [];
   let nextSec = 1000;
-  const taken = (m, t) => (m.fx?.taken ?? 1) * (t < m.protUntil ? (m.prot === 2 ? 0.35 : 0.5) : 1);
-  const ready = (m, id, t) => m.mg?.[id] && m.mp >= m.mg[id].mana && t >= (m.cd[id] || 0);
-  const pay = (m, id, t, cd) => { m.mp -= m.mg[id].mana; m.cd[id] = t + cd; m.castAt = t; };
-  const healAmt = (m, id) => { const sp = m.mg[id]; return Math.round((R.dice(rng, sp.v4, sp.v5) + sp.v6 + m.lvl) * (m.fx?.heal ?? 1)); };
+  const rage = t => t > ARENA.rageAt ? 1 + (t - ARENA.rageAt) / 8000 : 1;                 // si se alarga, los golpes crecen: nadie se escabulle
+  const taken = (m, t) => (m.fx?.taken ?? 1) * (t < m.protUntil ? MOVES.guard.taken : 1);
   for (let t = 0; t <= ARENA.maxMs; t += 50) {
     for (const k of ["a", "b"]) {
       const me = f[k], foe = f[k === "a" ? "b" : "a"];
       if (t < me.next) continue;
-      me.next += me.period;
-      const twice = me.zerk > t ? 2 : 1;
-      if (t - me.castAt >= GCD && me.mg) {
-        let id = 0, ev = null;
-        if (rank(me, "gheal") && me.cur < me.hp * 0.4 && ready(me, 21, t)) { id = 21; const amt = Math.min(me.hp - me.cur, healAmt(me, 21)); me.cur += amt; ev = { heal: amt }; pay(me, 21, t, 2500); }
-        else if (rank(me, "heal") && me.cur < me.hp * 0.5 && ready(me, 1, t)) { id = 1; const amt = Math.min(me.hp - me.cur, healAmt(me, 1)); me.cur += amt; ev = { heal: amt }; pay(me, 1, t, 2500); }
-        else if (rank(me, "gshield") && !(me.prot === 2 && t < me.protUntil) && ready(me, 44, t)) { id = 44; me.prot = 2; me.protUntil = t + 30000; ev = {}; pay(me, 44, t, 30000); }
-        else if (rank(me, "shield") && t >= me.protUntil && ready(me, 13, t)) { id = 13; me.prot = 1; me.protUntil = t + 30000; ev = {}; pay(me, 13, t, 30000); }
-        else if (rank(me, "berserk") && me.zerk <= t && ready(me, 50, t)) { id = 50; me.zerk = t + 20000; ev = {}; pay(me, 50, t, 40000); }
-        else for (const [sid, key] of [[81, "strike"], [43, "lightning"], [20, "fireball"]]) {
-          if (!rank(me, key) || !ready(me, sid, t)) continue;
-          const sp = me.mg[sid], base = R.dice(rng, sp.v4, sp.v5) + sp.v6 + Math.floor(me.lvl / 2);
-          const dmg = Math.max(1, Math.round(base * (me.fx?.spell ?? 1) * (me.fx?.dmg ?? 1) * twice * taken(foe, t)));
-          id = sid; ev = { dmg }; pay(me, sid, t, 3500); foe.cur -= dmg; break;
-        }
-        if (id) {
-          events.push({ t, who: k, spell: id, ...ev });
-          if (ev.dmg && foe.cur <= 0) return { winner: k, ms: t, events };
+      me.next += me.zerk > t ? Math.round(me.period * 0.55) : me.period;
+      const lowHp = me.cur / me.hp;
+      // 1) apoyo
+      if (!me.wind && me.lvl >= MOVES.wind.lvl && lowHp < 0.35) {
+        me.wind = true; const amt = Math.min(me.hp - me.cur, Math.max(1, Math.round(me.hp * MOVES.wind.heal * (me.fx?.heal ?? 1)))); me.cur += amt;
+        events.push({ t, who: k, mv: "wind", heal: amt }); continue;
+      }
+      if (me.lvl >= MOVES.guard.lvl && lowHp < 0.6 && t >= (me.cd.guard || 0) && t >= me.protUntil) {
+        me.protUntil = t + MOVES.guard.ms; me.cd.guard = t + MOVES.guard.cd; events.push({ t, who: k, mv: "guard" }); continue;
+      }
+      if (me.lvl >= MOVES.frenzy.lvl && lowHp < 0.5 && me.zerk <= t && t >= (me.cd.frenzy || 0)) {
+        me.zerk = t + MOVES.frenzy.ms; me.cd.frenzy = t + MOVES.frenzy.cd; events.push({ t, who: k, mv: "frenzy" }); continue;
+      }
+      // 2) hechizo de su escuela (el más fuerte que pueda pagar)
+      if (me.mg && t - me.castAt >= GCD) {
+        let best = 0;
+        for (const id of Object.keys(me.mg)) { const m = me.mg[id]; if (me.mp >= m.mana && t >= (me.cd[id] || 0) && (!best || m.mana > me.mg[best].mana)) best = +id; }
+        if (best) {
+          const sp = me.mg[best], base = R.dice(rng, sp.v4, sp.v5) + sp.v6 + Math.floor(me.lvl / 2);
+          const dmg = Math.max(1, Math.round(base * (me.fx?.spell ?? 1) * (me.fx?.dmg ?? 1) * rage(t) * taken(foe, t)));
+          me.mp -= sp.mana; me.cd[best] = t + 3000; me.castAt = t; foe.cur -= dmg;
+          events.push({ t, who: k, spell: best, dmg });
+          if (foe.cur <= 0) return { winner: k, ms: t, events };
           continue;
         }
       }
-      const hit = R.dice(rng, 1, 100) <= R.hitChance(me.hit, foe.def, false);
-      const dmg = hit ? Math.max(1, Math.round((me.dmg + R.dice(rng, 1, 3) - 2) * twice * taken(foe, t))) : 0;
-      events.push({ t, who: k, hit, dmg });
+      // 3) Power Strike o golpe normal (con crítico)
+      const power = t >= (me.cd.power || 0) && me.lvl >= MOVES.power.lvl && rng() < 0.55;
+      const hit = R.dice(rng, 1, 100) <= R.hitChance(me.hit, foe.def, false) + (power ? 15 : 0);
+      const crit = hit && !power && rng() < CRIT;
+      const dmg = hit ? Math.max(1, Math.round((me.dmg + R.dice(rng, 1, 3) - 2) * (power ? MOVES.power.mul : crit ? CRIT_MUL : 1) * rage(t) * taken(foe, t))) : 0;
+      if (power) { me.cd.power = t + MOVES.power.cd; events.push({ t, who: k, mv: "power", hit, dmg }); }
+      else events.push({ t, who: k, hit, dmg, ...(crit ? { crit: true } : {}) });
       foe.cur -= dmg;
       if (foe.cur <= 0) return { winner: k, ms: t, events };
     }
-    if (t >= nextSec) {                                             // cada segundo: maná y Fortitude (1 % de vida por segundo)
+    if (t >= nextSec) {                                             // cada segundo: maná (se recupera en ~12 s)
       nextSec += 1000;
-      for (const k of ["a", "b"]) {
-        const me = f[k];
-        me.mp = Math.min(me.mpMax || 0, me.mp + (me.mpMax || 0) / 60);
-        if (!rank(me, "regen") || me.cur >= me.hp) continue;
-        const amt = Math.min(me.hp - me.cur, Math.max(1, Math.round(me.hp * 0.01)));
-        me.cur += amt; events.push({ t, who: k, heal: amt });
-      }
+      for (const k of ["a", "b"]) { const me = f[k]; if (me.mpMax) me.mp = Math.min(me.mpMax, me.mp + me.mpMax / 12); }
     }
   }
   const ra = f.a.cur / f.a.hp, rb = f.b.cur / f.b.hp;               // tablas por tiempo: gana quien conserva más vida
@@ -201,7 +209,8 @@ export function bet(w, p, cmd) {
   const sim = simulate(o.mine, o.foe, lcg(seed));                   // el resultado queda fijado aquí
   const win = sim.winner === side, odds = side === "a" ? o.oa : o.ob;
   p.gold -= amount;
-  p.bet = { amount, side, win, payout: win ? Math.round(amount * odds) : 0, odds, mine: o.mine.nm, foe: o.foe.nm, ms: sim.ms };
+  const rw = rewardOf(o, side, win);
+  p.bet = { amount, side, win, payout: win ? Math.round(amount * odds) : 0, odds, mine: o.mine.nm, foe: o.foe.nm, ms: sim.ms, xp: rw.xp, bonus: rw.bonus, uid: o.uid };
   p.offer = null;
   w.recalc(p);
   w.emit({ t: "arenastart", id: p.id, side, amount, odds, a: view(o.mine), b: view(o.foe) });
@@ -210,15 +219,25 @@ export function bet(w, p, cmd) {
   return true;
 }
 
+// Entrenamiento: si el espectador apuesta por SU compañero, éste gana experiencia por el combate (más si vence y si el rival era fuerte) y la casa
+// paga un premio de campeón por su victoria (por encima de la cuota). Todo se fija al apostar, como el resultado.
+function rewardOf(o, side, win) {
+  if (side !== "a") return { xp: 0, bonus: 0 };
+  const f = o.foe, k = (win ? 1 : 0.4) * (f.champion ? 2 : 1) * clamp(f.lvl / Math.max(1, o.mine.lvl), 0.6, 1.6);
+  return { xp: Math.round((20 + 6 * o.mine.lvl) * k), bonus: win ? Math.round((40 + 12 * f.lvl) * (f.champion ? 3 : 1)) : 0 };
+}
+
 // Cobro: sale de la apuesta fijada (también tras recargar la partida, ver loadSave)
 export function settle(w, p, quiet = false) {
   const b = p.bet; if (!b) return;
   p.bet = null;
-  p.gold += b.payout;
-  (p.arenaHist = p.arenaHist || []).push({ win: b.win, side: b.side, amount: b.amount, net: b.payout - b.amount, a: b.mine, b: b.foe });
+  p.gold += b.payout + (b.bonus || 0);
+  const ball = b.xp && b.uid ? Inv.instOf(p, b.uid) : null;
+  if (ball?.comp) Comp.addExp(w, p, ball, b.xp);                    // el compañero real entrena (sin heridas: peleó una copia)
+  (p.arenaHist = p.arenaHist || []).push({ win: b.win, side: b.side, amount: b.amount, net: b.payout + (b.bonus || 0) - b.amount, a: b.mine, b: b.foe });
   if (p.arenaHist.length > 20) p.arenaHist.shift();
   w.recalc(p);
-  w.emit({ t: "arenaend", id: p.id, win: b.win, amount: b.amount, payout: b.payout, net: b.payout - b.amount, a: b.mine, b: b.foe, quiet });
+  w.emit({ t: "arenaend", id: p.id, win: b.win, amount: b.amount, payout: b.payout, bonus: b.bonus || 0, xp: ball?.comp ? b.xp : 0, nm: ball?.comp?.nm, net: b.payout + (b.bonus || 0) - b.amount, a: b.mine, b: b.foe, quiet });
 }
 
 // ---------------------------------------------------------------- combate en directo
@@ -236,7 +255,29 @@ function startBout(w, p, o, sim) {
   const [x0, y0, x1, y1] = w.map?.kind === "arena" ? ARENA.field : [p.x - 7, p.y - 4, p.x + 7, p.y + 4], my = Math.floor((y0 + y1) / 2);
   const a = spawnGladiator(w, o.mine, x0 + 4, my, 3), b = spawnGladiator(w, o.foe, x1 - 4, my, 7);
   if (!a || !b) { remove(w, a); remove(w, b); w.bouts.delete(p.id); settle(w, p); return; }       // sin sitio: cobro directo
-  w.bouts.set(p.id, { pid: p.id, a, b, f: { a: o.mine, b: o.foe }, sim, ei: 0, phase: "walk", since: w.time, hp: { a: o.mine.hp, b: o.foe.hp } });
+  w.bouts.set(p.id, { pid: p.id, a, b, f: { a: o.mine, b: o.foe }, sim, ei: 0, low: {}, phase: "walk", since: w.time, hp: { a: o.mine.hp, b: o.foe.hp } });
+}
+
+// Comentario para el espectador (privado): línea en el chat y burbuja sobre el gladiador. `who` = "a" | "b" | null
+const LINES = {
+  start: [["¡Empieza el combate! {a} contra {b}.", "The fight begins! {a} versus {b}."], ["¡Se abre el telón! {a} y {b} se miden.", "Curtain up! {a} and {b} size each other up."]],
+  first: [["¡Primera sangre para {x}!", "First blood to {x}!"], ["¡{x} golpea primero!", "{x} strikes first!"]],
+  crit: [["¡Golpe crítico de {x}!", "Critical hit by {x}!"], ["¡Qué golpe de {x}!", "What a blow from {x}!"]],
+  power: [["¡{x} suelta un Power Strike!", "{x} unleashes a Power Strike!"]],
+  spell: [["¡{x} lanza {s}!", "{x} casts {s}!"]],
+  guard: [["¡{x} se cubre con Guard!", "{x} braces with Guard!"]],
+  frenzy: [["¡{x} entra en Frenzy!", "{x} goes into a Frenzy!"]],
+  wind: [["¡{x} recupera el aliento!", "{x} catches a second wind!"]],
+  low: [["¡{x} está al límite!", "{x} is on the ropes!"], ["¡{x} tambalea, le queda muy poca vida!", "{x} is staggering, barely any health left!"]],
+  turn: [["¡Remontada! {x} le da la vuelta al combate.", "A comeback! {x} turns the fight around."]],
+  rage: [["¡Se acaba la paciencia, los golpes duelen cada vez más!", "Patience runs out, every blow hurts more now!"]],
+  win: [["¡{x} gana el combate!", "{x} wins the fight!"], ["¡Victoria de {x}!", "Victory for {x}!"]],
+};
+function narrate(w, bout, key, who, ms = 3000, vars = {}) {
+  const l = LINES[key]; if (!l) return;
+  const [es, en] = l[Math.floor(w.rng() * l.length)];
+  const x = who ? bout.f[who].nm : "", fill = t => t.replace("{x}", x).replace("{a}", bout.f.a.nm).replace("{b}", bout.f.b.nm).replace("{s}", vars.s || "");
+  w.emit({ t: "arenamsg", id: bout.pid, nid: who ? (who === "a" ? bout.a : bout.b)?.id : 0, es: fill(es), en: fill(en), ms, big: key === "win" || key === "start" });
 }
 
 function strike(w, bout, ev) {
@@ -245,34 +286,45 @@ function strike(w, bout, ev) {
   att.dir = dirTo(att.x, att.y, def.x, def.y);
   w.setAct(att, ACT.ATTACK, att.dur.attack); att.busyUntil = w.time + att.dur.attack;
   w.emit({ t: "attack", id: att.id, target: def.id });
+  if (ev.mv === "power") narrate(w, bout, "power", ev.who, 2200);
+  else if (ev.crit) narrate(w, bout, "crit", ev.who, 2200);
   w.after(att.dur.attack * 0.5, () => {
     if (def.dead || att.dead) return;
     if (!ev.hit) return void w.emit({ t: "miss", id: def.id, from: att.id });
-    hurt(w, bout, ev.who, att, def, ev.dmg);
+    hurt(w, bout, ev.who, att, def, ev.dmg, ev.crit || ev.mv === "power");
   });
 }
-function hurt(w, bout, who, att, def, dmg) {
+function hurt(w, bout, who, att, def, dmg, big = false) {
   const k = who === "a" ? "b" : "a";
   bout.hp[k] -= dmg;
   def.hp = Math.max(0, bout.hp[k]);
-  w.emit({ t: "damage", id: def.id, from: att.id, amount: dmg, hp: def.hp, max: def.maxHp });
+  w.emit({ t: "damage", id: def.id, from: att.id, amount: dmg, hp: def.hp, max: def.maxHp, ...(big ? { crit: true } : {}) });
   if (def.hp > 0 && (!w.busy(def) || def.act === ACT.DAMAGE)) { w.setAct(def, ACT.DAMAGE, def.dur.damage); def.busyUntil = w.time + def.dur.damage; }
+  // comentarios: primera sangre, a punto de caer, remontada
+  if (!bout.first) { bout.first = true; narrate(w, bout, "first", who, 2400); }
+  if (def.hp > 0 && def.hp / def.maxHp < 0.25 && !bout.low[k]) { bout.low[k] = true; narrate(w, bout, "low", k, 3000); }
+  if (bout.lead && bout.lead !== who && bout.hp[who === "a" ? "b" : "a"] < bout.hp[who] * 0.7 && !bout.turned) { bout.turned = true; narrate(w, bout, "turn", who, 3200); }
+  bout.lead = bout.hp.a / bout.f.a.hp >= bout.hp.b / bout.f.b.hp ? "a" : "b";
 }
-// Hechizo de la línea de tiempo: ataque (daño 0,45 s después, como talents.offense), cura o refuerzo sobre sí mismo
+// Hechizo o movimiento de la línea de tiempo: ataque (daño 0,45 s después), cura o refuerzo sobre sí mismo
+const MV_FX = { guard: 13, frenzy: 50, wind: 1 };                        // efectos de Magic.cfg que se dibujan sobre el gladiador
 function cast(w, bout, e) {
-  const att = e.who === "a" ? bout.a : bout.b, def = e.who === "a" ? bout.b : bout.a, sp = w.magic?.[e.spell];
+  const att = e.who === "a" ? bout.a : bout.b, def = e.who === "a" ? bout.b : bout.a, id = e.spell || MV_FX[e.mv], sp = w.magic?.[id];
   if (!att || !def || att.dead || def.dead) return;
   const at = e.dmg ? def : att;
   att.dir = dirTo(att.x, att.y, def.x, def.y);
-  w.emit({ t: "spell", id: att.id, spell: e.spell, x: at.x, y: at.y, attr: sp?.attr, type: sp?.type });
+  if (e.spell) { w.setAct(att, ACT.ATTACK, att.dur.attack); att.busyUntil = w.time + att.dur.attack; }
+  if (e.spell) narrate(w, bout, "spell", e.who, 2400, { s: (sp?.name || "").replace(/-/g, " ") });
+  else narrate(w, bout, e.mv, e.who, 2400);
+  w.emit({ t: "spell", id: att.id, spell: id, x: at.x, y: at.y, attr: sp?.attr, type: sp?.type });
   if (e.heal) {
     bout.hp[e.who] = Math.min(bout.f[e.who].hp, bout.hp[e.who] + e.heal); att.hp = bout.hp[e.who];
     w.emit({ t: "heal", id: att.id, amount: e.heal, hp: att.hp, max: att.maxHp, by: att.id });
-  } else if (e.dmg) w.after(450, () => { if (!def.dead && !att.dead && bout.phase !== "end") hurt(w, bout, e.who, att, def, e.dmg); });
+  } else if (e.dmg) w.after(450, () => { if (!def.dead && !att.dead && bout.phase !== "end") hurt(w, bout, e.who, att, def, e.dmg, true); });
 }
 
 function finish(w, bout) {
-  bout.phase = "end"; bout.endAt = w.time;
+  bout.phase = "end"; bout.endAt = w.time; narrate(w, bout, "win", bout.sim.winner, 4000);
   const lose = bout.sim.winner === "a" ? bout.b : bout.a;
   if (lose) { lose.hp = 0; w.setAct(lose, ACT.DYING, lose.dur.dying); w.emit({ t: "death", id: lose.id, by: 0 }); }
   const p = w.ents.get(bout.pid) || w.hooks?.player?.(bout.pid);   // si el espectador ya se fue del mapa, se le cobra igualmente
@@ -292,7 +344,7 @@ export function tickArena(w) {
       const gap = dist(a, b), reach = Math.max(1, Math.min(a.cfg.attackRange, b.cfg.attackRange));
       if (gap <= reach || w.time - bout.since > 9000) {
         if (gap > reach) for (const n of [b]) { const s = w.freeSpotNear(a.x + 1, a.y, 2); if (s) { w.grid.release(n.x, n.y, n.id); n.x = n.fx = s[0]; n.y = n.fy = s[1]; w.grid.occupy(n.x, n.y, n.id); } }
-        bout.phase = "fight"; bout.t0 = w.time; continue;
+        bout.phase = "fight"; bout.t0 = w.time; narrate(w, bout, "start", null, 3000); continue;
       }
       for (const [n, o] of [[a, b], [b, a]]) {
         if (w.busy(n) || w.time < (n.nextAct || 0)) continue;
@@ -303,9 +355,10 @@ export function tickArena(w) {
       continue;
     }
     const el = w.time - bout.t0, ev = bout.sim.events;
+    if (el > ARENA.rageAt && !bout.raged) { bout.raged = true; narrate(w, bout, "rage", null, 3000); }
     while (bout.ei < ev.length && ev[bout.ei].t - 0 <= el) {
       const e = ev[bout.ei++];
-      if (e.spell) cast(w, bout, e);
+      if (e.spell || (e.mv && e.mv !== "power")) cast(w, bout, e);
       else if (e.heal) {
         const k = e.who; bout.hp[k] = Math.min(bout.f[k].hp, bout.hp[k] + e.heal);
         const n = k === "a" ? a : b; n.hp = bout.hp[k];
@@ -321,7 +374,7 @@ export function restore(w, p, s) {
   if (Array.isArray(s.arenaHist)) p.arenaHist = s.arenaHist.slice(-20).map(h => ({ win: !!h.win, side: h.side === "b" ? "b" : "a", amount: h.amount | 0, net: h.net | 0, a: String(h.a || "").slice(0, 16), b: String(h.b || "").slice(0, 16) }));
   const b = s.bet;
   if (b && Number.isFinite(b.amount) && Number.isFinite(b.payout)) {
-    p.bet = { amount: b.amount | 0, side: b.side === "b" ? "b" : "a", win: !!b.win, payout: Math.max(0, b.payout | 0), odds: +b.odds || 1, mine: String(b.mine || "").slice(0, 16), foe: String(b.foe || "").slice(0, 16), ms: 0 };
+    p.bet = { amount: b.amount | 0, side: b.side === "b" ? "b" : "a", win: !!b.win, payout: Math.max(0, b.payout | 0), odds: +b.odds || 1, mine: String(b.mine || "").slice(0, 16), foe: String(b.foe || "").slice(0, 16), ms: 0, xp: Math.max(0, b.xp | 0), bonus: Math.max(0, b.bonus | 0), uid: b.uid };
     settle(w, p, true);
   }
 }

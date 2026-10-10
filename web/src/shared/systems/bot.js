@@ -126,6 +126,7 @@ export function errands(w, p, b, first = false) {
     const inst = buy(w, p, d);
     if (!inst) continue;
     if (!tryEquip(w, p, b, inst)) { p.gold += d.price; Inv.removeFromBag(p, inst.uid); continue; }
+    b.bought = 1;
     if (++bought >= (first ? 7 : 1)) break;
   }
   sellExtra(w, p);
@@ -163,6 +164,30 @@ function step(adv, w, p, b, tx, ty, run) {
   b.fails = 0;
   return true;
 }
+// Pensamientos en voz alta (burbuja pública `botsay`): el bot cuenta qué ve y qué va a hacer. Personalidad inventada del port.
+const THOUGHTS = {
+  target: [["¡Un {m}! Voy a por él.", "A {m}! I'm going in."], ["Veo un {m}… me lo quedo.", "I see a {m}… that one's mine."], ["Ahí hay un {m}, ¡al ataque!", "There's a {m}, attack!"]],
+  hurt: [["Me duele, me curo un poco.", "Ouch, let me heal up."], ["Cuidado, voy flojo de vida.", "Careful, my health is low."]],
+  rest: [["Sin pociones: descanso un rato.", "No potions left: resting a bit."], ["Voy a recuperar el aliento.", "I'll catch my breath."]],
+  rested: [["Ya estoy mejor, seguimos.", "Feeling better, let's go on."]],
+  loot: [["Algo brilla por ahí, voy a cogerlo.", "Something's shining over there, grabbing it."], ["Botín a la vista.", "Loot in sight."]],
+  shop: [["Toca ir de compras: equipo nuevo.", "Shopping time: new gear."], ["Gasto oro en equiparme mejor.", "Spending gold on better gear."]],
+  follow: [["Te sigo, jefe.", "Right behind you, boss."], ["Esperadme, que voy.", "Wait up, I'm coming."]],
+  wander: [["Voy a ver qué hay por aquí.", "Let's see what's around here."], ["Todo tranquilo… busco monstruos.", "All quiet… looking for monsters."]],
+  danger: [["Eso es demasiado fuerte para mí.", "That one's too strong for me."]],
+  dead: [["¡Ay! Me han matado… vuelvo enseguida.", "Argh! I died… be right back."]],
+  level: [["¡He subido al nivel {l}!", "I reached level {l}!"]],
+  party: [["Gracias por la invitación al grupo.", "Thanks for the party invite."]],
+};
+function think_(w, p, b, key, vars = {}, gap = 9000) {
+  const now = w.time;
+  if (now - (b.thAt || -1e9) < gap || now - ((b.thKey ||= {})[key] || -1e9) < 25000) return false;
+  const l = THOUGHTS[key]; if (!l) return false;
+  const [es, en] = l[Math.floor(w.rng() * l.length)], fill = t => t.replace("{m}", (vars.m || "").replace(/-/g, " ")).replace("{l}", vars.l ?? "");
+  b.thAt = now; b.thKey[key] = now;
+  w.emit({ t: "botsay", id: p.id, es: fill(es), en: fill(en) });
+  return true;
+}
 function say(adv, p, b, text) { if (adv.time - b.said > 20000) { b.said = adv.time; adv.command(p.id, { t: "say", text }); } }
 
 // ---------------------------------------------------------------- bucle
@@ -174,10 +199,11 @@ export function think(adv, p) {
 }
 function run(adv, w, p, b) {
   if (p.dead) {
-    if (w.time - p.deadAt > 3000) { adv.command(p.id, { t: "respawn" }); b.target = null; b.path = null; }
+    if (!b.deadSaid) { b.deadSaid = true; think_(w, p, b, "dead", {}, 0); }
+    if (w.time - p.deadAt > 3000) { adv.command(p.id, { t: "respawn" }); b.target = null; b.path = null; b.deadSaid = false; }
     return;
   }
-  if (p.level > b.lvl) { say(adv, p, b, "Level " + p.level + "!"); b.lvl = p.level; b.errand = 0; }
+  if (p.level > b.lvl) { say(adv, p, b, "Level " + p.level + "!"); think_(w, p, b, "level", { l: p.level }, 0); b.lvl = p.level; b.errand = 0; }
   if (w.busy(p)) return;
   // dueño: debe seguir conectado
   let owner = null;
@@ -190,24 +216,26 @@ function run(adv, w, p, b) {
       if (w.time - b.lost > 1500 && !owner.dead) { adv.transfer(p, w, ow, [owner.x, owner.y]); b.lost = 0; b.path = null; b.target = null; }
       return;
     } else b.lost = 0;
-    if (owner && !p.party && w.time > (b.partyAt || 0)) { b.partyAt = w.time + 5000; Party.request(w, p, owner.name, true); }
+    if (owner && !p.party && w.time > (b.partyAt || 0)) { b.partyAt = w.time + 5000; Party.request(w, p, owner.name, true); think_(w, p, b, "party", {}, 0); }
   }
   // recados
-  if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); }
+  if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp;
   if (hpf < 0.45 && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
-    if (pot) { b.potionAt = w.time; adv.command(p.id, { t: "use", uid: pot.uid }); return; }
+    if (pot) { b.potionAt = w.time; think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
+    if (!b.rest) think_(w, p, b, "rest", {}, 0);
     b.rest = true;
   }
-  if (b.rest && hpf > 0.75) b.rest = false;
+  if (b.rest && hpf > 0.75) { b.rest = false; think_(w, p, b, "rested"); }
   // objetivo
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
   if (!b.rest && w.time >= b.tgtAt) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = b.rest ? null : b.target;
   if (t) {
+    if (b.seen !== t.id) { b.seen = t.id; think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (dist(p, t) <= reachOf(w, p, t)) {
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }
     } else step(adv, w, p, b, t.x, t.y, dist(p, t) > 5);
@@ -222,15 +250,16 @@ function run(adv, w, p, b) {
       const it = w.grid.inside(x, y) && groundTop(w, x, y);
       if (it && wanted(w, p, it)) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)); if (d < bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = d; } }
     }
-    if (best) { if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
+    if (best) { think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
   }
   // seguir al dueño o vagar por la zona
-  if (owner) { if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
+  if (owner) { if (dist(p, owner) > 8) think_(w, p, b, "follow"); if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
   if (b.rest) return;
   if (!b.wander || (p.x === b.wander.x && p.y === b.wander.y) || w.time > b.wander.until || b.fails > 4) {
     const r = () => Math.floor(w.rng() * 21) - 10, s = w.freeSpotNear(b.home.x + r(), b.home.y + r());
     b.wander = s ? { x: s[0], y: s[1], until: w.time + 12000 } : null; b.fails = 0;
   }
+  if (b.wander && b.wander.until - w.time > 11000) think_(w, p, b, "wander", {}, 20000);
   if (b.wander) step(adv, w, p, b, b.wander.x, b.wander.y, false);
 }
 function wanted(w, p, it) {

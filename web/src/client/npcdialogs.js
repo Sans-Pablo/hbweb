@@ -12,6 +12,7 @@ import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../share
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
 import { BRANCH_NAMES } from "../shared/systems/talents.js";
+import { getLang } from "./i18n.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
@@ -524,7 +525,12 @@ export function registerNpcDialogs(gui, api) {
     switch (ev.t) {
       case "arenaoffer": arena.got(ev); break;
       case "arenastart": gui.close(44); api.log("Apuestas " + ev.amount + " de oro por " + (ev.side === "a" ? ev.a.nm : ev.b.nm) + " (x" + ev.odds.toFixed(2) + "). ¡Que empiece el combate!", "gold"); break;
-      case "arenaend": api.log(ev.win ? "¡Has ganado " + ev.net + " de oro! (" + (ev.quiet ? "apuesta pendiente cobrada" : ev.a + " vs " + ev.b) + ")" : "Has perdido " + ev.amount + " de oro. (" + ev.a + " vs " + ev.b + ")", ev.win ? "gold" : "bad"); break;
+      case "arenamsg": api.log(getLang() === "en" ? ev.en : ev.es, ev.big ? "gold" : ""); break;
+      case "arenaend":
+        api.log(ev.win ? "¡Has ganado " + ev.net + " de oro! (" + (ev.quiet ? "apuesta pendiente cobrada" : ev.a + " vs " + ev.b) + ")" : "Has perdido " + ev.amount + " de oro. (" + ev.a + " vs " + ev.b + ")", ev.win ? "gold" : "bad");
+        if (ev.bonus) api.log("Premio de la casa por la victoria de tu compañero: +" + ev.bonus + " de oro.", "gold");
+        if (ev.xp) api.log((ev.nm || "Tu compañero") + " entrena en la arena: +" + ev.xp + " de experiencia.", "gold");
+        break;
       case "sellprice": {                                              // NotifyMsg_SellItemPrice
         const it = mine && bagItem(mine, ev.uid); if (!it) break;
         Object.assign(confirm, { mode: 1, uid: ev.uid, life: ev.life, price: ev.price, count: ev.count });

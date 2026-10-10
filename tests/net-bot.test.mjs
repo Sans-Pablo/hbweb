@@ -18,9 +18,12 @@ ws.onmessage = e => {
 for (let i = 0; i < 100 && me === undefined; i++) await new Promise(r => setTimeout(r, 100));
 await new Promise(r => setTimeout(r, 300));
 ws.send(JSON.stringify({ t: "cmd", seq: ++seq, cmd: { t: "dbg", op: "bot", n: 1, level: 15 } }));
-await new Promise(r => setTimeout(r, 3000));
-const bot = [...seen.values()].find(o => o.id !== me);
-const ok = !!bot && Math.max(Math.abs(bot.x - seen.get(me).x), Math.abs(bot.y - seen.get(me).y)) <= 16 && !!bot.ap;
+let bot, ok = false;
+for (let i = 0; i < 80 && !ok; i++) {                                  // hasta 16 s: en un runner lento el servidor tarda en crear al bot
+  await new Promise(r => setTimeout(r, 200));
+  bot = [...seen.values()].find(o => o.id !== me); const mine = seen.get(me);
+  ok = !!bot && !!mine && !!bot.ap && Math.max(Math.abs(bot.x - mine.x), Math.abs(bot.y - mine.y)) <= 16;
+}
 console.log(ok ? "OK net-bot" : "FALLO net-bot", bot && { name: bot.name, x: bot.x, y: bot.y });
 ws.close(); srv.kill();
 process.exit(ok ? 0 : 1);

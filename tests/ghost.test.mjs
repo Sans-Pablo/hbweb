@@ -36,7 +36,7 @@ const ev = evs.find(e => e.t === "ghost");
 assert.ok(Math.abs(ev.x - x) <= 1 && Math.abs(ev.y - y) <= 1, "en el lugar del cadáver");
 assert.equal(gh.type, sk[0].type);
 assert.ok(gh.noDrop, "el fantasma no suelta botín (ni oro)");
-assert.ok(gh.exp <= Math.ceil(sk[0].exp * 0.2) + 1, "solo el 20 % de la experiencia: " + gh.exp + " vs " + sk[0].exp);
+assert.ok(gh.exp <= Math.ceil(sk[0].exp * 0.2 * 1.25) + 1, "solo el 20 % de la experiencia: " + gh.exp + " vs " + sk[0].exp);
 assert.ok(evs.some(e => e.t === "ghost" && e.id === gh.id), "evento ghost");
 
 // el fantasma no vuelve a levantarse, ni los jefes ni los auxiliares

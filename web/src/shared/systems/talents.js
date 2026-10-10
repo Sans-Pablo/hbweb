@@ -39,8 +39,9 @@ TALENTS.push(
   { id: "dexp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 10, name: "Wisdom Aura", desc: "% extra experience" },
   { id: "ddef", br: "aura", tier: 0, max: 5, dummy: true, lvl: 15, name: "Defense Aura", desc: "% less damage taken" },
   { id: "dmana", br: "aura", tier: 0, max: 5, dummy: true, lvl: 20, name: "Mana Aura", desc: "% of max MP regenerated per second" },
+  { id: "dstam", br: "aura", tier: 0, max: 5, dummy: true, lvl: 12, name: "Stamina Aura", desc: "% of max stamina regained per second" },
   { id: "dvamp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 25, name: "Vampiric Aura", desc: "% of the damage dealt by allies returns to them as life" },
-  { id: "dres", br: "aura", tier: 0, max: 3, dummy: true, lvl: 40, name: "Resurrection", spell: 94, desc: "Raises a fallen ally in range (3 min cooldown, less per rank)" },
+  { id: "dres", br: "aura", tier: 0, max: 3, dummy: true, lvl: 50, name: "Resurrection", spell: 94, desc: "Max level: raises a fallen ally or you (3 min cooldown, less per rank)" },
   { id: "dmassa", br: "aura", tier: 0, max: 1, dummy: true, lvl: 30, name: "Mass Aura", desc: "MASS: doubles every aura for 20 s (60 s)" },
 );
 export const isDummy = c => c.sp === "Dummy";

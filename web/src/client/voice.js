@@ -182,7 +182,9 @@ export class Voice {
       } break;
       case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
       case "dummy-agro": if (ev.id === this.pid && pet) this.say(pet.id, { es: "¡Me atacan!", en: "I'm targeted!" }, 2500); break;
-      case "dummy-cast": if (ev.id === this.pid) this.say(ev.nid, { es: ev.txt, en: ev.txt }, 1800); break;
+      case "dummy-cast": if (ev.id === this.pid) this.say(ev.nid, { es: ev.es || ev.txt, en: ev.en || ev.txt }, ev.es ? 3200 : 1800); break;
+      case "arenamsg": if (ev.id === this.pid && ev.nid) this.say(ev.nid, { es: ev.es, en: ev.en }, ev.ms || 2500); break;   // comentario de la arena: burbuja sobre el gladiador
+      case "botsay": this.say(ev.id, { es: ev.es, en: ev.en }, 3400); break;                                                  // pensamiento de un bot (público)
       case "damage": if (pet && ev.id === pet.id) {
         if (ev.max && ev.hp / ev.max < 0.3 && ev.hp > 0) this.talkPet(world, "lowhp", "plow", { chance: 0.8, cool: 20000, first: "pet" });
         else if (this.rng() < 0.08) this.talkPet(world, "hurt", "phurt", { chance: 1, cool: 30000, first: "me" });

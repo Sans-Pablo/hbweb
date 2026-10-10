@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.37.0 · Arena y Dummies con carácter (2026-10-10)
+
+- Arena rehecha (combates cortos, críticos, movimientos, hechizos de escuela, comentarios, experiencia y premio), Dummy con carisma/báculo/auras/resurrección, voz de Dummies y bots, estamina original, marco de grupo reubicado. Documentación pendiente hasta una versión estable.
+
 ## 0.36.0 · Summons al estilo Pokémon (2026-10-10)
 
 - **Protocolo 4** (`NET_PROTO`): los jugadores y summons envían su maná (`mp`, `mm`) para los marcos de grupo.

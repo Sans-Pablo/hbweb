@@ -139,10 +139,20 @@ export function summonFor(w, p, v1, free) {
 function followerThink(w, n) {
   if ((n.frozenUntil || 0) > w.time || (n.stunUntil || 0) > w.time) return;     // congelado o aturdido por un jefe
   const m = w.ents.get(n.master);
-  if (!m || m.dead || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
+  if (!m || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
+  if (m.dead) {                                                                 // el dueño ha caído: solo se queda un Dummy de aura con Resurrection (dummy.js rescue)
+    const dc = n.comp && Inv.instOf(m, n.ball)?.comp;
+    if (!(dc && dc.sp === "Dummy" && Dummy.rescue(w, n, m, dc))) return killNpc(w, n, null);
+    Tal.regen(w, n, dc);
+    if (dist(n, m) > 1) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+    return;
+  }
   let tc = null;
   if (n.comp) {
     refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
+    if (tc?.sp === "Dummy" && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
+      tc.on = false; dismissCompanion(w, m); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
+    }
     if (tc?.evolve) {                                   // cambio de tamaño: tras unos segundos (se lee la frase) se vuelve a invocar con efecto
       if (!n.evolveAt) n.evolveAt = w.time + EVOLVE_MS;
       else if (w.time >= n.evolveAt && !m.dead && !w.fightZone) return evolveCompanion(w, n, m, tc);
@@ -323,6 +333,7 @@ export function toggleCompanion(w, p, inst) {
   if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: llévalo al hospital de compañeros");
   if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
+  if (c.sp === "Dummy" && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
   for (const b of p.bag) if (b.comp) b.comp.on = false;
   c.on = true;
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }

@@ -144,6 +144,8 @@ const PATTERNS = [
   [/^Apuesta: (\d+) de oro {2}\((\d+) – (\d+)\)$/, m => `Bet: ${m[1]} gold (${m[2]} – ${m[3]})`],
   [/^(.+) nv (\d+) · (.+) · (\d+) %$/, m => `${m[1]} lv ${m[2]} · ${m[3] === "sin rama" ? "no branch" : m[3]} · ${m[4]} %`],
   [/^Ganada · (.+) vs (.+)$/, m => `Won · ${m[1]} vs ${m[2]}`], [/^Perdida · (.+) vs (.+)$/, m => `Lost · ${m[1]} vs ${m[2]}`], [/^Apostaste (\d+) por (.+)$/, m => `You bet ${m[1]} on ${m[2]}`],
+  [/^Premio de la casa por la victoria de tu compañero: \+(\d+) de oro\.$/, m => `House prize for your companion's victory: +${m[1]} gold.`],
+  [/^(.+) entrena en la arena: \+(\d+) de experiencia\.$/, m => `${m[1]} trains in the arena: +${m[2]} experience.`],
   [/^Apuestas (\d+) de oro por (.+) \(x([\d.]+)\)\. ¡Que empiece el combate!$/, m => `You bet ${m[1]} gold on ${m[2]} (x${m[3]}). Let the fight begin!`],
   [/^¡Has ganado (\d+) de oro! \((.+)\)$/, m => `You won ${m[1]} gold! (${m[2].replace("apuesta pendiente cobrada", "pending bet collected")})`],
   [/^Has perdido (\d+) de oro\. \((.+)\)$/, m => `You lost ${m[1]} gold. (${m[2]})`],

@@ -404,7 +404,7 @@ export class Gui {
   partyFrames(me, world) {
     if (!me.party || !world) return;
     const c = this.ctx, ents = [...world.ents.values()];
-    let y = 150;
+    let y = world.map?.kind === "dungeon" ? 58 : 30;                          // justo debajo del rótulo "Remastered · fps · versión" (y≈14); en las criptas, bajo el contador
     const bar = (x, y, w, h, cur, max, col) => {
       const k = Math.max(0, Math.min(1, cur / Math.max(1, max)));
       c.fillStyle = "rgba(0,0,0,.7)"; c.fillRect(x - 1, y - 1, w + 2, h + 2);

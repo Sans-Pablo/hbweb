@@ -206,7 +206,7 @@ export class Renderer {
       const [px, py] = posOf(e, time), x = px - camX, y = py - camY;
       const R = (radiusOf(e.clvl || 1, e.dcls) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff", pulse = 0.5 + 0.2 * Math.sin(performance.now() / 500);
       ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = col; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(x, y + 4, R, R / 2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y + 4, R, 0, Math.PI * 2); ctx.stroke(); ctx.restore();       // alcance euclídeo (dummy.inRange): círculo
     }
     const buckets = new Map();
     // compañeros que desaparecen (guardados en la bola, cambio de mapa...): se desvanecen en vez de borrarse de golpe
