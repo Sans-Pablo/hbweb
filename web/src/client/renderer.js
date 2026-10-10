@@ -200,7 +200,19 @@ export class Renderer {
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)
     const buckets = new Map();
-    for (const e of s.world.ents.values()) {
+    // compañeros que desaparecen (guardados en la bola, cambio de mapa...): se desvanecen en vez de borrarse de golpe
+    const nowMs = performance.now(), mapId = s.world.map?.id, seen = this.seenComp || (this.seenComp = new Map()), fades = this.fades || (this.fades = new Map());
+    for (const [id, o] of seen) if (!s.world.ents.has(id)) {
+      seen.delete(id);
+      if (!o.e.dead && o.map === mapId) fades.set(id, { e: o.e, t0: nowMs });
+    }
+    for (const e of s.world.ents.values()) if (e.comp && !e.dead) seen.set(e.id, { e, map: mapId });
+    for (const [id, f] of fades) {
+      const k = (nowMs - f.t0) / 600;
+      if (k >= 1 || s.world.ents.has(id)) { fades.delete(id); continue; }
+      f.e.fadeAlpha = 1 - k;
+    }
+    for (const e of [...s.world.ents.values(), ...[...fades.values()].map(f => f.e)]) {
       const [px, py] = posOf(e, time);
       if (px < camX - 120 || px > camX + VW + 120 || py < camY - 120 || py > camY + VH + 200) continue;
       const moving = (e.act === ACT.MOVE || e.act === ACT.RUN) && time < e.actStart + e.actDur;
@@ -447,6 +459,7 @@ export class Renderer {
     if (e.crystal) { key = "id1"; f = 1; }                                                     // cristal de hielo del jefe glacial: mineral 2 de item-dynamic (Game.cpp, DEF_DYNAMICOBJECT_MINERAL2)
     const act = actionAt(e, time);
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
+    if (e.fadeAlpha != null) alpha *= e.fadeAlpha;                                             // compañero guardado: se desvanece
     if (e.ghost) alpha *= 0.3;                                                                 // esqueleto fantasma: 30 % de opacidad
     if (e.clone) alpha *= 0.5 + 0.12 * Math.sin(time / 130 + e.id);                           // clon de sombra del rey umbrío: translúcido y parpadeante
     if (e.boss === 2 && !e.clone && e.hasClones && !e.dead) {                                  // el real: aro violeta bajo los pies
@@ -489,6 +502,8 @@ export class Renderer {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
       else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
     }
+    { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
+      if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
     if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida
@@ -524,7 +539,10 @@ export class Renderer {
     }
     // tamaño por etapas (niveles 10, 25, 40 y 50; companion.SIZE_STAGES): crece a saltos hasta el tamaño real al 50
     const base = c.get(e.name), k = [0, 0.3, 0.55, 0.8, 1][sizeStep(e.clvl)];
-    return (base + (1 - base) * k) * (this.fx?.popScale?.(e.id) ?? 1);
+    const K = [0, 0.3, 0.55, 0.8, 1], st = sizeStep(e.clvl), size = base + (1 - base) * k;
+    const ratio = st > 0 ? (base + (1 - base) * K[st - 1]) / size : 1;                  // tamaño de la etapa anterior / actual (para la animación de evolución)
+    const pulse = e.evoK > 0 ? 1 + 0.05 * Math.sin(performance.now() / 1000 * (2 + 14 * e.evoK) * Math.PI) * (0.4 + e.evoK) : 1;     // último nivel antes de evolucionar: late cada vez más rápido
+    return size * (this.fx?.popScale?.(e.id, ratio) ?? 1) * pulse;
   }
 
   mobHeight(key, f) {

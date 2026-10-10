@@ -268,6 +268,7 @@ function refreshCompanion(w, n, m) {
   if (!inst) return killNpc(w, n, null);
   const c = inst.comp, st = Comp.statsOf(m, c);
   n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
+  n.evoK = Comp.SIZE_STAGES.includes(c.lvl + 1) ? Math.max(0.01, Math.min(1, (c.exp || 0) / Comp.need(c.lvl))) : 0;          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
   // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
   if (!n.hpInit) { n.hpInit = true; n.maxHp = st.hp; n.hp = Math.max(1, Math.min(st.hp, c.hp ?? st.hp)); }
   else if (n.maxHp !== st.hp) { const k = n.hp / n.maxHp; n.maxHp = st.hp; n.hp = Math.max(1, Math.round(st.hp * k)); }

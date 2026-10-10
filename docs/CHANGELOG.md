@@ -2,6 +2,15 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.31.0 · Grupo en acción (2026-10-10)
+
+- Ctrl+P invita al jugador bajo el cursor (o al más cercano) y entra al grupo sin preguntar ni mirar el modo de paz (`partyreq` con `auto`).
+- Al elegir a quién invitar, los cuadros Personaje y Grupo se ocultan hasta el clic (`gui` admite `hidden`).
+- Marcos de grupo a la izquierda estilo WoW: barra de vida de cada miembro y, debajo, la de su compañero (`gui.partyFrames`).
+- Los compañeros que desaparecen (guardados en la bola, cambio de mapa) se desvanecen en vez de borrarse de golpe.
+- Último nivel antes de evolucionar: el compañero late y brilla cada vez más rápido según su progreso (`evoK`, protocolo `ek`). Al evolucionar: animación estilo Pokémon (crece, encoge, crece, encoge con brillo blanco y queda grande).
+- Herramientas de administración/pruebas (F1 → Herramientas) abiertas a todos en el servidor (`HB_DEBUG=0` las apaga).
+
 ## 0.30.1 · Atributos, círculos y respawn (2026-10-10)
 
 - Repartir muchos puntos de atributo a la vez ya funciona: el cliente manda una sola orden `stat` con `n` (antes eran decenas de mensajes y el límite por segundo del servidor descartaba el resto). `NET_PROTO` = 3.

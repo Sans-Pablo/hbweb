@@ -33,7 +33,7 @@ function sync(reg, party) {
 }
 
 // JOINPARTY v1=1: p pide formar grupo con el jugador `name`
-export function request(w, p, name) {
+export function request(w, p, name, auto = false) {
   const reg = regOf(w);
   if (p.party || p.partyReq) { fail(reg, p.id); return false; }
   const key = String(name || "").toLowerCase();
@@ -42,6 +42,7 @@ export function request(w, p, name) {
   if (t.party && t.party.names.length >= MAX_MEMBERS) { fail(reg, p.id); return false; }
   p.partyReq = { to: t.id };
   t.partyQuery = { from: p.id };
+  if (auto) return answer(w, t, 1);                                  // Ctrl+P: el invitado acepta solo (sin tener en cuenta el modo de paz)
   note(reg, t.id, { t: "partyquery", from: p.name });
   return true;
 }

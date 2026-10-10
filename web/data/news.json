@@ -11,6 +11,35 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Grupo en acción (v0.31.0)",
+    "en": "Party in action (v0.31.0)"
+   },
+   "items": [
+    {
+     "es": "Ctrl+P: invita al jugador bajo el cursor y entra al grupo sin preguntar.",
+     "en": "Ctrl+P: invites the player under the cursor and joins the party without asking."
+    },
+    {
+     "es": "Marcos de grupo a la izquierda con la vida de cada miembro y de su compañero.",
+     "en": "Party frames on the left with each member's and companion's health."
+    },
+    {
+     "es": "El compañero guardado se desvanece. En el último nivel antes de evolucionar late y brilla más rápido; al evolucionar hace la animación de crecer y encoger.",
+     "en": "A stored companion fades out. On the last level before evolving it pulses and glows faster; evolving plays a grow/shrink animation."
+    },
+    {
+     "es": "Al elegir a quién invitar, los cuadros Personaje y Grupo se ocultan hasta el clic.",
+     "en": "While picking whom to invite, the Character and Party dialogs hide until the click."
+    },
+    {
+     "es": "F1 → Herramientas disponible para todos los jugadores online.",
+     "en": "F1 → Tools available to every online player."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Atributos, círculos y respawn (v0.30.1)",
     "en": "Stats, circles and respawn (v0.30.1)"
    },

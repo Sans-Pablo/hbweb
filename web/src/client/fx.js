@@ -7,6 +7,7 @@ import { SpellFx } from "./spellfx.js";
 
 const SPELL_COLORS = { 0: "197,138,255", 1: "176,138,74", 2: "207,230,255", 3: "255,122,42", 4: "74,168,255" };
 
+const FX_EVO_MS = 3000;
 export class Fx {
   constructor(world, me) {
     this.world = world;
@@ -16,6 +17,7 @@ export class Fx {
     this.flash = new Map();          // id -> hora del último golpe (destello)
     this.rings = [];
     this.bolts = [];
+    this.evo = new Map();            // id -> inicio de la animación de evolución (crece, encoge, crece, encoge y queda grande, con brillo)
     this.pop = new Map();            // id -> hora de la re-invocación (entrada con rebote del compañero que cambia de tamaño)
     this.sp = new SpellFx();         // efectos de hechizos del cliente original
     this.sp.hook = (n, x, y) => this.onSfx?.(n, x, y);
@@ -74,7 +76,7 @@ export class Fx {
           this.parts.push({ x: nx, y: ny - 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.4, life: 600 + Math.random() * 700, born: now + 100, rgba: i % 2 ? "rgba(255,214,90," : "rgba(197,138,255," });
         }
         this.sparks(ox, oy - 10, 20, "197,138,255");
-        this.pop.set(ev.nid, now + 100);
+        this.evo.set(ev.nid, now + 100);
         break;
       }
       case "pickup":
@@ -85,7 +87,16 @@ export class Fx {
   }
 
   // factor de entrada del compañero recién re-invocado: crece desde 0, se pasa un poco y se asienta (0,75 s)
-  popScale(id) {
+  // Evolución estilo Pokémon: parte del tamaño anterior (ratio < 1), late dos veces (grande/pequeño) con brillo blanco y se queda en el nuevo.
+  evoK(id) { const t0 = this.evo.get(id); if (t0 === undefined) return null; const k = (performance.now() - t0) / FX_EVO_MS; if (k >= 1) { this.evo.delete(id); return null; } return Math.max(0, k); }
+  evoGlow(id) { const k = this.evoK(id); return k === null ? 0 : k < 0.85 ? 0.55 + 0.4 * Math.abs(Math.sin(k * Math.PI * 4)) : 0.9 * (1 - (k - 0.85) / 0.15); }
+  popScale(id, ratio = 1) {
+    const ek = this.evoK(id);
+    if (ek !== null) {
+      const ease = ek < 0.75 ? 0 : (ek - 0.75) / 0.25;                                  // el cambio de tamaño llega al final
+      const osc = Math.sin(ek * Math.PI * 4) * (ek < 0.75 ? 0.4 : 0.4 * (1 - ease));     // crece, encoge, crece, encoge
+      return Math.max(0.05, ratio + (1 - ratio) * ease * ease * (3 - 2 * ease) + osc * (ratio + (1 - ratio) * ease) * 0.9);
+    }
     const t0 = this.pop.get(id); if (t0 === undefined) return 1;
     const k = (performance.now() - t0) / 750;
     if (k >= 1) { this.pop.delete(id); return 1; }

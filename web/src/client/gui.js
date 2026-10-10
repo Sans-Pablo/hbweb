@@ -211,6 +211,7 @@ export class Gui {
   dialogAt(x, y) {
     for (let i = this.order.length - 1; i >= 0; i--) {
       const d = this.dialogs.get(this.order[i]);
+      if (d.hidden) continue;
       if (x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h) return d;
     }
     return null;
@@ -297,10 +298,11 @@ export class Gui {
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
-    if (me && !this.mobile) this.gauges(me, world, info);          // en móvil las barras y botones son DOM (mobile.js)
+    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
     for (const id of this.order) { const d = this.dialogs.get(id); if (this.mobile && d.mobileFixed) d.layout?.(this); }
     for (const id of this.order) {
       const d = this.dialogs.get(id);
+      if (d.hidden) continue;
       c.save(); c.translate(d.x, d.y);
       c.beginPath(); c.rect(0, 0, d.w, d.h); c.clip();
       d.draw(this, me, world);
@@ -389,6 +391,30 @@ export class Gui {
     if (ev.t === "recalling") { r.ch = n + ev.ms; r.chMs = ev.ms; }
     else if (ev.t === "recalled") { r.ch = 0; r.cd = n + 60000; }
     else if (ev.t === "recallfail") r.ch = 0;
+  }
+
+  // Marcos de grupo a la izquierda (como en WoW): nombre y barra de vida de cada miembro y, debajo, la de su compañero
+  partyFrames(me, world) {
+    if (!me.party || !world) return;
+    const c = this.ctx, ents = [...world.ents.values()];
+    let y = 150;
+    const bar = (x, y, w, h, cur, max, col) => {
+      const k = Math.max(0, Math.min(1, cur / Math.max(1, max)));
+      c.fillStyle = "rgba(0,0,0,.7)"; c.fillRect(x - 1, y - 1, w + 2, h + 2);
+      c.fillStyle = col(k); c.fillRect(x, y, Math.round(w * k), h);
+    };
+    const hpCol = k => k > 0.5 ? "#4caf3a" : k > 0.25 ? "#d9a62e" : "#d6382b";
+    for (const name of me.party.names) {
+      if (name === me.name) continue;
+      const m = ents.find(e => e.kind === "player" && e.name === name);
+      this.text(10, y, name, m ? "#fafadc" : "#8a8a8a", { shadow: true });
+      if (m) { bar(10, y + 14, 96, 8, m.dead ? 0 : m.hp, m.maxHp, hpCol); this.text(112, y + 11, m.dead ? "dead" : m.hp + "/" + m.maxHp, "#e8e8d0", { shadow: true, size: 10 }); }
+      else this.text(10, y + 14, "(otro mapa)", "#8a8a8a", { shadow: true, size: 10 });
+      y += 28;
+      const pet = m && ents.find(e => e.comp && e.master === m.id && !e.dead);
+      if (pet) { this.text(16, y - 3, pet.nick || pet.name, "#c9d8ff", { shadow: true, size: 10 }); bar(16, y + 9, 70, 5, pet.hp, pet.maxHp, hpCol); y += 20; }
+      y += 8;
+    }
   }
 
   gauges(me, world, info) {

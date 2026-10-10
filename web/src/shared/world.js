@@ -193,7 +193,7 @@ const COMMANDS = {
   cast: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.cast(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   learn: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.learn(w, p, cmd.spell) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   pickup: (w, p) => ItemSys.startPickup(w, p),
-  partyreq: (w, p, cmd) => Party.request(w, p, String(cmd.name || "").slice(0, 12)),
+  partyreq: (w, p, cmd) => Party.request(w, p, String(cmd.name || "").slice(0, 12), cmd.auto === true),
   partyaccept: (w, p, cmd) => Party.answer(w, p, cmd.r | 0),
   partyleave: (w, p) => Party.leave(w, p),
   buy: (w, p, cmd) => Shop.buy(w, p, cmd),

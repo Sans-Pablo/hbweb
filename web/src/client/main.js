@@ -272,8 +272,16 @@ async function main() {
     get spell() { return hud.spell; },
     pointing: null,
     partyCb: null,
-    partyPick(cb) { ui.partyCb = cb; document.body.classList.add("pointing"); },
-    cancelPick() { if (!ui.partyCb) return; ui.partyCb = null; document.body.classList.remove("pointing"); },
+    // mientras se elige a quién invitar, Personaje y Grupo se ocultan para no tapar a nadie
+    partyPick(cb) { ui.partyCb = cb; document.body.classList.add("pointing"); for (const id of [1, 32]) { const d = gui.dialogs.get(id); if (d) d.hidden = true; } },
+    cancelPick() { if (!ui.partyCb) return; ui.partyCb = null; document.body.classList.remove("pointing"); for (const id of [1, 32]) { const d = gui.dialogs.get(id); if (d) d.hidden = false; } },
+    // Ctrl+P: invita al jugador bajo el cursor (o al más cercano); el invitado acepta solo
+    autoParty() {
+      const me = world.ents.get(pid); if (!me || me.dead) return;
+      const e = ctl.pickPlayer() || [...world.ents.values()].filter(o => o.kind === "player" && !o.dead && o.id !== pid).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
+      if (!e || Math.hypot(e.x - me.x, e.y - me.y) > 20) { hud.log("No hay ningún jugador cerca."); return; }
+      conn.send({ t: "partyreq", name: e.name, auto: true });
+    },
     say: m => hud.log(m, "bad"),
     // UseMagic: prepara el hechizo; el siguiente clic izquierdo elige el objetivo, el derecho cancela
     useMagic(id) {
@@ -324,7 +332,7 @@ async function main() {
       if (ent && ent.kind === "npc" && !ent.master) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
     },
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
@@ -359,6 +367,7 @@ async function main() {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
           case "h": e.preventDefault(); ui.key("news"); return;
+          case "p": e.preventDefault(); ui.autoParty(); return;
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
           case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
           case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;

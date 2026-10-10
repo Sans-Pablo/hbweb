@@ -20,7 +20,7 @@ import { Grid } from "../web/src/shared/grid.js";
 import { Adventure } from "../web/src/shared/adventure.js";
 import { setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { DEBUG } from "../web/src/shared/systems/debug.js";
-DEBUG.enabled = process.env.HB_DEBUG === "1";            // las herramientas de prueba (F1) solo con HB_DEBUG=1
+DEBUG.enabled = process.env.HB_DEBUG !== "0";            // las herramientas de prueba (F1) abiertas a todos; HB_DEBUG=0 las apaga
 import { GameData } from "../web/src/shared/data.js";
 import { damageRange } from "../web/src/shared/combat.js";
 import { attackMs } from "../web/src/shared/world.js";
@@ -413,7 +413,7 @@ function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
   if (e.role) o.rl = e.role;
-  if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; }
+  if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); }
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }
   if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; }
   else {

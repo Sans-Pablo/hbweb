@@ -41,7 +41,7 @@ Tres sitios, mismos comandos (`help` los lista):
 - Solo acepta WebSocket desde `https://sans-pablo.github.io` (configurable en `origins`), localhost y el propio servidor.
 - Una sola sesión por cuenta (la nueva expulsa a la vieja). Nombres de personaje únicos.
 - El servidor es quien decide todo (daño, botín, oro): el cliente solo manda órdenes.
-- Herramientas de depuración (F1 → Herramientas) apagadas salvo `HB_DEBUG=1`.
+- Herramientas de depuración (F1 → Herramientas) abiertas a todos los jugadores; `HB_DEBUG=0` las apaga.
 - Recuerda: abrir un servidor a internet siempre tiene riesgo. Mantén Node al día y no compartas el token del panel.
 
 ## Pruebas rápidas sin túnel

@@ -77,3 +77,12 @@ assert.ok(!many[8].party, "el noveno no entra");
 w.removePlayer(many[1].id);
 assert.equal(A.party.names.length, 7);
 console.log("OK");
+
+// Ctrl+P: invitación automática, sin preguntar al invitado
+{
+  const X = mk("Delta"), Y = mk("Eco"); evs();
+  assert.ok(w.command(X.id, { t: "partyreq", name: "Eco", auto: true }));
+  assert.ok(X.party && Y.party && X.party.id === Y.party.id, "grupo creado sin respuesta");
+  assert.ok(!Y.partyQuery && !X.partyReq);
+  console.log("OK party auto");
+}

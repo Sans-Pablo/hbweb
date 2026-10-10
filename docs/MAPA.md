@@ -35,8 +35,8 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `ground.js` · 27 · Objetos en el suelo: hasta 12 por casilla, el último en caer queda encima (Map.cpp bSetItem / pGetItem).
 - `itemsys.js` · 131 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
 - `magicsys.js` · 273 · Lanzar y aprender hechizos.
-- `npcsys.js` · 342 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
-- `party.js` · 115 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
+- `npcsys.js` · 343 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
+- `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 167 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 - `status.js` · 24 · Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
@@ -60,21 +60,21 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `devtools.js` · 71 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 470 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
-- `fx.js` · 169 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
-- `gui.js` · 447 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
+- `fx.js` · 180 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
+- `gui.js` · 473 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `hud.js` · 323 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
 - `i18n.js` · 278 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 660 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 669 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
 - `npcdialogs.js` · 589 · Cuadros de diálogo de los NPC de ciudad, como en el cliente original (Game.cpp):
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 84 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
-- `renderer.js` · 692 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+- `renderer.js` · 710 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
@@ -112,7 +112,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `net-persist.test.mjs` · 22 · Cuenta y personaje nuevos sobreviven a matar el servidor de golpe (SIGKILL) nada más entrar.
 - `net-walk.test.mjs` · 35 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
-- `party.test.mjs` · 79 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
+- `party.test.mjs` · 88 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
