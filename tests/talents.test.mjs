@@ -30,42 +30,32 @@ w.command(id, { t: "petbuy", npc: nurse.id, sp: "Orc" });
 const ball = p.bag.find(i => i.comp), c = ball.comp; c.lvl = 20;
 assert.equal(T.pointsFree(c), 19);
 // requisitos de fila: sin puntos en la rama no se abre la fila 1
-assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "fireball" }), false);
+assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "iron" }), false, "iron necesita 4 puntos en Warrior");
+assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "heal" }), false, "los hechizos de apoyo ya no son del summon normal");
 for (let i = 0; i < 5; i++) assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "might" }), true);
 assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "might" }), false, "máximo 5 rangos");
-assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "fireball" }), true);
-assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "heal" }), false, "otra rama: necesita 2 puntos en ella");
+assert.equal(w.command(id, { t: "talent", uid: ball.uid, talent: "frenzy" }), true);
 assert.equal(T.spec(c), "damage");
 // estadísticas de clase: daño sube, vida baja respecto al tanque
 const dmgSpec = C.statsOf(p, c);
-const tank = { ...c, tal: { hide: 5, shield: 1 } }, sup = { ...c, tal: { mind: 5, heal: 1 } };
+const tank = { ...c, tal: { hide: 5, iron: 1 } }, sup = { ...c, tal: { mind: 5 } };
 assert.ok(dmgSpec.dmg > C.statsOf(p, tank).dmg && C.statsOf(p, tank).hp > dmgSpec.hp, "tanque más vida, daño más daño");
 assert.ok(T.maxMp(sup) > T.maxMp(c) && C.statsOf(p, sup).dmg < dmgSpec.dmg, "apoyo: más maná, menos daño");
 // reiniciar cuesta oro y hay que estar en el hospital
 const g0 = p.gold; assert.equal(w.command(id, { t: "talreset", uid: ball.uid, npc: nurse.id }), true);
 assert.equal(p.gold, g0 - T.resetCost(c)); assert.equal(T.spentAll(c), 0);
 
-// lanza Fire Ball a un monstruo
-c.tal = { might: 2, fireball: 1 };
+// los summons normales no lanzan magia: ni siquiera con talentos antiguos guardados
+c.tal = { might: 2, fireball: 1, heal: 1 };
 w.command(id, { t: "use", uid: ball.uid });
 const pet = followersOf(w, p).find(e => e.comp);
 const orc = spawnFrom(w, { name: "Orc", rect: [p.x + 5, p.y, p.x + 5, p.y], alive: 0, max: 0, respawn: false });
-orc.maxHp = orc.hp = 100000;
+orc.maxHp = orc.hp = 100000; p.hp = Math.floor(p.maxHp * 0.3);
 for (let i = 0; i < 80; i++) w.tick(100);
-assert.ok(evs("spell").some(e => e.id === pet.id && e.spell === 20), "el compañero lanza Fire Ball");
-assert.ok(orc.hp < 100000 && pet.mp < T.maxMp(c), "gasta maná y hace daño");
-
-// apoyo: cura al dueño y lo protege
-c.tal = { mind: 2, heal: 1, ward: 1 }; c.tal.harmony = 0;
-c.tal.mind = 2;
-orc.hp = 0; w.killNpc(orc, null);
-p.hp = Math.floor(p.maxHp * 0.3);
-const orc2 = spawnFrom(w, { name: "Orc", rect: [p.x + 6, p.y, p.x + 6, p.y], alive: 0, max: 0, respawn: false });
-orc2.maxHp = orc2.hp = 100000; pet.mp = T.maxMp(c);
-w.events.length = 0;
-for (let i = 0; i < 40; i++) w.tick(100);
-assert.ok(evs("heal").some(e => e.id === p.id), "cura al dueño");
+assert.ok(!evs("spell").some(e => e.id === pet.id), "no lanza hechizos");
+assert.ok(!evs("heal").some(e => e.id === p.id), "no cura");
+assert.equal(T.pointsFree(c), 19 - 2, "los talentos retirados no gastan puntos");
 // tanque: se escuda y recibe menos daño
-c.tal = { hide: 2, shield: 1, iron: 3 };
+c.tal = { hide: 2, iron: 3 };
 assert.ok(T.takenFactor(w, pet, c) < 0.9);
 console.log("OK");

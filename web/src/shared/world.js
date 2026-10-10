@@ -206,6 +206,7 @@ const COMMANDS = {
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
+  petup: (w, p, cmd) => Companion.tradeUp(w, p, cmd),
   tut: (w, p, cmd) => Tutorial.command(w, p, cmd),
   arenainfo: (w, p, cmd) => Arena.info(w, p, cmd),
   arenabet: (w, p, cmd) => Arena.bet(w, p, cmd),

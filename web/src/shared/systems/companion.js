@@ -10,6 +10,7 @@ import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
 import * as Tal from "./talents.js";
+import * as Sch from "./schools.js";
 
 export const MAX_COMP_LEVEL = 50;
 // Tamaño por etapas: el compañero cambia de tamaño al llegar a estos niveles (10 joven, 25 veterano, 40 élite, 50 tamaño real).
@@ -24,7 +25,8 @@ export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)
 // especie -> muertes para una bola, id de Item.cfg de la bola; el orden es el rango (poder de la especie)
 export const SPECIES = {
   "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
-  "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655], "Dummy": [500, 652],
+  "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655],
+  "Tentocle": [900, 654], "Cannibal-Plant": [900, 655], "Demon": [0, 652], "Frost": [0, 654], "Liche": [0, 655], "Dummy": [500, 652],     // escuelas (schools.js); Demon/Frost/Liche solo por cambio al nivel 50
 };
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
@@ -44,7 +46,8 @@ export const shareOf = (lvl, sp) => Math.min(0.9, (0.3 + 0.012 * lvl) * (0.85 + 
 export function statsOf(p, c) {
   if (c.sp === "Dummy") return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
   const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
-  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg)), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp)), mp: Tal.maxMp(c) };
+  const t2 = Sch.isTier2(c.sp);                                              // especie superior de escuela: más vida y daño
+  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))), mp: Tal.maxMp(c) };
 }
 
 // Muerte de un monstruo a manos del jugador: experiencia del compañero (las bolas ya no se consiguen cazando)
@@ -92,7 +95,7 @@ export function treat(w, p, cmd) {
 // Bolas para probar: 1 de oro cada una, de cualquier especie
 export function buyBall(w, p, cmd) {
   const sp = String(cmd.sp || "");
-  if (!SPECIES[sp] || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
+  if (!SPECIES[sp] || Sch.isTier2(sp) || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
   if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
   const ball = newInst(w, SPECIES[sp][1]);
   ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack" };
@@ -102,6 +105,25 @@ export function buyBall(w, p, cmd) {
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);
   w.emit({ t: "petbought", id: p.id, sp, nm: ball.comp.nm, uid: ball.uid, price: HOSPITAL.ballPrice });
+  return true;
+}
+
+// Cambio de escuela (hospital): un summon de escuela de nivel 50 se cambia por otro de nivel 1 de la especie superior (mismo nombre)
+export function tradeUp(w, p, cmd) {
+  const inst = Inv.instOf(p, cmd.uid);
+  if (!inst?.comp) return w.reject(p, cmd, "no tienes compañero");
+  if (!nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "acércate a la enfermera");
+  const c = inst.comp, to = Sch.TIER2[c.sp];
+  if (!to) return w.reject(p, cmd, "esta especie no tiene versión superior");
+  if (c.lvl < Sch.TRADE_LEVEL) return w.reject(p, cmd, "necesita nivel " + Sch.TRADE_LEVEL);
+  if (c.down) return w.reject(p, cmd, "primero hay que revivirlo");
+  for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) return w.reject(p, cmd, "guárdalo antes");
+  const from = c.sp, ball = newInst(w, SPECIES[to][1]);
+  ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack" };
+  Inv.removeFromBag(p, inst.uid);
+  Inv.addToBag(p, w.data, ball);
+  w.recalc(p);
+  w.emit({ t: "petupgraded", id: p.id, from, to, nm: c.nm, uid: ball.uid });
   return true;
 }
 
@@ -188,10 +210,11 @@ export function candy(w, p, d, destUid, roll) {
     if (cur >= mx) return w.reject(p, { t: "use" }, "tu compañero ya tiene la vida completa");
     amount = Math.min(mx - cur, roll()); c.hp = cur + amount; if (live) live.hp = c.hp;
   } else {
-    if (!live) return w.reject(p, { t: "use" }, "invoca al compañero para darle maná");
-    const top = Tal.maxMp(c);
-    if ((live.mp ?? top) >= top) return w.reject(p, { t: "use" }, "tu compañero ya tiene el maná completo");
-    amount = Math.min(top - (live.mp ?? 0), roll()); live.mp = (live.mp ?? 0) + amount;
+    const school = Tal.isSchool(c);
+    if (!live && !school) return w.reject(p, { t: "use" }, "invoca al compañero para darle maná");
+    const top = Tal.maxMp(c), cur = live ? live.mp ?? top : c.mp ?? top;           // el de escuela guarda el maná en la bola: se le puede dar guardado
+    if (cur >= top) return w.reject(p, { t: "use" }, "tu compañero ya tiene el maná completo");
+    amount = Math.min(top - cur, roll()); c.mp = Math.floor(cur + amount); if (live) live.mp = cur + amount;
   }
   w.emit({ t: "candy", id: p.id, kind, amount, nm: c.nm, sp: c.sp, item: d.id });
   return amount;

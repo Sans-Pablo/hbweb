@@ -1,7 +1,7 @@
 // F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulación
 // (shared/systems/debug.js); en el servidor real solo funcionan con HB_DEBUG=1. Los datos llegan por window.hbDev (main.js).
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SPECIES = ["Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Orc-Mage", "Hellbound", "Cyclops", "Troll", "Orge"];
+const SPECIES = ["Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Orc-Mage", "Hellbound", "Cyclops", "Troll", "Orge", "Tentocle", "Cannibal-Plant", "Demon", "Frost", "Liche"];
 const KITS = {
   potions: [["RedPotion", 50], ["BluePotion", 50], ["GreenPotion", 50]],
   arrows: [["Arrow", 500]],

@@ -2,6 +2,15 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.34.0 · Escuelas de magia (2026-10-10)
+
+- Escuelas (`systems/schools.js`): Orc/Demon = fuego, Tentocle/Frost = hielo, Cannibal-Plant/Liche = rayo. Los hechizos de ataque de la escuela (atributo de Magic.cfg + tipo ofensivo) solo salen con el summon de esa escuela fuera: lo lanza él (el efecto sale del summon) y paga con SU maná.
+- Los summons de escuela tienen el doble de maná y NO lo regeneran; se recupera con caramelos azules (también con la bola guardada, el maná viaja con la bola).
+- Curar, escudos y berserk (tipos 2, 11, 18) ya no los lanza el jugador: son del Dummy. Los summons normales pierden todos los talentos con hechizo (combate únicamente); Frenzy potencia los hechizos de escuela.
+- Cambio de escuela (hospital, Gail): un Orc/Tentocle/Cannibal-Plant de nivel 50 se cambia por Demon/Frost/Liche de nivel 1 (mismo nombre): +50 % vida, +60 % maná, +25 % daño. Las especies superiores no se compran.
+- Nuevas bolas de prueba: Tentocle y Cannibal-Plant. El summon guardado se desvanece en 1 s.
+- Tierra/sin elemento y utilidades (Recall, Summon, Create Food…) siguen siendo del jugador.
+
 ## 0.33.1 · Dummy más callado y más fuerte (2026-10-10)
 
 - El anillo del área del Dummy se dibuja por debajo de los personajes.

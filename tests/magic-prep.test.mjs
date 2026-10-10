@@ -1,7 +1,7 @@
 // Elegir un hechizo en el libro empieza la animación de lanzar; el clic lo suelta sobre el objetivo.
 // node tests/magic-prep.test.mjs
 import { MAGIC_MODE } from "../web/src/shared/magic.js";
-MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
+MAGIC_MODE.schools = false; MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
 MAGIC_MODE.free = false;
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";

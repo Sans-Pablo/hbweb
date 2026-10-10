@@ -59,7 +59,7 @@ export function castChance(p, id) {
 // Maná que cuesta: el ahorro de maná lo reduce; las varitas tipo 34 suman 20.
 // Reglas del servidor original: hay que aprender cada hechizo (Int y oro), cuesta maná, se lanza con manos libres o varita y puede fallar.
 // free = modo de pruebas (todo aprendido, sin maná) y player = false lo cierra: solo para tests y depuración.
-export const MAGIC_MODE = { free: false, player: true };
+export const MAGIC_MODE = { free: false, player: true, schools: true };   // schools: los hechizos de ataque de escuela los lanza el summon (systems/schools.js); las pruebas del sistema base lo apagan
 export const NO_PLAYER_MAGIC = "los hechizos están cerrados";
 export function manaCost(p, spell) {
   if (MAGIC_MODE.free) return 0;

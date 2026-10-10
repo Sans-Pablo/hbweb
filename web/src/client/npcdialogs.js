@@ -9,6 +9,7 @@ import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shops
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
 import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
+import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
 import { BRANCH_NAMES } from "../shared/systems/talents.js";
 
@@ -455,11 +456,12 @@ export function registerNpcDialogs(gui, api) {
   const hospital = new class extends ClassicDialog {
     constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas"], footer: "Un caído no se invoca hasta revivirlo." }); }
     rows(me) {
-      if (this.tab === 1) return Object.keys(SPECIES).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
-      return me.bag.filter(i => i.comp).map(i => {
+      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
+      const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || i.comp.sp) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
+      return ups.concat(me.bag.filter(i => i.comp).map(i => {
         const c = i.comp, st = c.down ? "Inconsciente" : hpOf(me, c) < maxOf(me, c) ? "Herido" : "Sano";
         return { uid: i.uid, text: (c.nm || c.sp) + " (" + c.sp.replace(/-/g, " ") + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
-      });
+      }));
     }
     drawBody(g, me) {
       g.text(14, 62, this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
@@ -467,6 +469,7 @@ export function registerNpcDialogs(gui, api) {
     }
     pick(r) {
       if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
+      else if (r.up) api.send({ t: "petup", npc: trade.npc.id, uid: r.up });
       else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
     }
   }();
@@ -538,6 +541,7 @@ export function registerNpcDialogs(gui, api) {
       case "sold": gui.close(23); api.log("You sold " + (ev.count > 1 ? ev.count + " " : "") + nm(ev.item) + " for " + ev.price + " Gold.", "gold"); break;   // el original no avisa; invento del port
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
+      case "petupgraded": api.log(ev.nm + " ha evolucionado: " + ev.from.replace(/-/g, " ") + " → " + ev.to + " (nivel 1)."); break;
       case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
       case "cantsell": {

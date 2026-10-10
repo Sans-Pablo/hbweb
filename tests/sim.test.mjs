@@ -1,7 +1,7 @@
 // Prueba de la simulación sin navegador: un "jugador" automático caza en la granja.
 // node tests/sim.test.mjs
 import { MAGIC_MODE } from "../web/src/shared/magic.js";
-MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
+MAGIC_MODE.schools = false; MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
 MAGIC_MODE.free = false;
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";

@@ -23,7 +23,7 @@ dbg({ op: "give", name: "RedPotion", count: 20 }); assert.ok(p.bag.some(i => i.i
 dbg({ op: "spawn", name: "Orc", count: 3 }); assert.equal([...w().ents.values()].filter(e => e.name === "Orc").length, 3);
 dbg({ op: "killall" }); a.tick(100); assert.equal([...w().ents.values()].filter(e => e.kind === "npc" && !e.dead).length, 0);
 dbg({ op: "ball", sp: "Orc", lvl: 40 }); const ball = p.bag.find(i => i.comp); assert.equal(ball.comp.lvl, 40);
-dbg({ op: "petspec", br: "damage" }); assert.equal(T.spec(ball.comp), "damage"); assert.ok(T.spent(ball.comp, "damage") === 12);
+dbg({ op: "petspec", br: "damage" }); assert.equal(T.spec(ball.comp), "damage"); assert.ok(T.spent(ball.comp, "damage") === 8);
 dbg({ op: "petlvl", n: 10 }); assert.equal(ball.comp.lvl, 10);
 a.command(id, { t: "use", uid: ball.uid }); assert.equal(followersOf(w(), p).filter(e => e.comp).length, 1);
 p.hp = 1; dbg({ op: "god" }); w().ents.get(id).hp = p.maxHp;

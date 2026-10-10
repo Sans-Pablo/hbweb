@@ -6,7 +6,7 @@ import { World } from "../web/src/shared/world.js";
 import { GameData } from "../web/src/shared/data.js";
 import { sget } from "../web/src/shared/systems/status.js";
 import { linePoint, MAGIC_MODE } from "../web/src/shared/magic.js";
-MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
+MAGIC_MODE.schools = false; MAGIC_MODE.player = true;   // estas pruebas ejercitan el sistema de hechizos del jugador (cerrado en el juego, ver talents.js)
 
 const D = new URL("../web/data/", import.meta.url);
 const meta = JSON.parse(readFileSync(new URL("map.json", D)));

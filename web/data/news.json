@@ -11,6 +11,35 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Escuelas de magia (v0.34.0)",
+    "en": "Magic schools (v0.34.0)"
+   },
+   "items": [
+    {
+     "es": "Orc (fuego), Tentocle (hielo) y Cannibal-Plant (rayo): tus hechizos de ataque de esa escuela los lanza el summon, con su maná. Sin su summon fuera no salen.",
+     "en": "Orc (fire), Tentocle (ice) and Cannibal-Plant (lightning): your attack spells of that school are cast by the summon, using its mana. Without it out, they don't fire."
+    },
+    {
+     "es": "El maná del summon no se regenera: dale caramelos azules (también guardado en la bola).",
+     "en": "A summon's mana does not regenerate: feed it Blue Candies (also while stored in the ball)."
+    },
+    {
+     "es": "Curar, escudos y berserk son solo del Dummy. Los demás summons son de combate.",
+     "en": "Heal, shields and berserk belong to the Dummy only. Other summons are combat-only."
+    },
+    {
+     "es": "Nivel 50: en el hospital cambia tu summon de escuela por Demon, Frost o Liche (nivel 1, más vida, maná y daño).",
+     "en": "Level 50: at the hospital trade your school summon for a Demon, Frost or Liche (level 1, more life, mana and damage)."
+    },
+    {
+     "es": "El summon que se guarda se desvanece en 1 segundo.",
+     "en": "A stored summon fades out in 1 second."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Dummy más callado y más fuerte (v0.33.1)",
     "en": "Quieter, stronger Dummy (v0.33.1)"
    },

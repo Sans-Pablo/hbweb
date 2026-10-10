@@ -12,6 +12,8 @@ import { addField, DYN, iceResisted, poison } from "./fields.js";
 import { newInst } from "./itemsys.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
 import * as Inv from "../inventory.js";
+import * as Sch from "./schools.js";
+import * as Tal from "./talents.js";
 
 // RequestStudyMagicHandler: hace falta Int >= ReqInt y pagar el coste (negativo = no se vende).
 export function learn(w, p, id) {
@@ -36,6 +38,14 @@ function usable(w, p, cmd) {
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (M.MAGIC_MODE.free) return sp;
+  if (M.MAGIC_MODE.schools && Sch.isSupportSpell(sp)) return w.reject(p, cmd, "esa magia es de los Dummy");
+  const school = M.MAGIC_MODE.schools ? Sch.spellSchool(sp) : null;
+  if (school) {                                                       // magia de escuela: la lanza el summon de esa escuela, con su maná
+    const n = Sch.activeSchoolSummon(w, p, school);
+    if (!n) return w.reject(p, cmd, "necesitas un summon de la escuela " + Sch.SCHOOL_NAMES[school]);
+    if ((n.mp ?? 0) < Tal.manaOf(w, cmd.spell)) return w.reject(p, cmd, "tu summon no tiene maná");
+    return sp;                                                        // lo lanza el summon: no importan las manos del jugador
+  }
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
   if (p.mp < M.manaCost(p, sp)) return w.reject(p, cmd, "maná insuficiente");
@@ -99,7 +109,16 @@ function resolve(w, p, id, sp, x, y, cost) {
   const chance = M.castChance(p, id);
   if (!M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
   if (!M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
-  p.mp = Math.max(0, p.mp - cost);
+  const sch = M.MAGIC_MODE.free || !M.MAGIC_MODE.schools ? null : Sch.spellSchool(sp), sm = sch && Sch.activeSchoolSummon(w, p, sch);
+  let schoolMult = 1;
+  if (sch) {                                                          // paga y lanza el summon de la escuela
+    const mana = Tal.manaOf(w, id);
+    if (!sm || (sm.mp ?? 0) < mana) { w.emit({ t: "nomagic", id: p.id }); return; }
+    sm.mp -= mana;
+    const comp = Inv.instOf(p, sm.ball)?.comp;
+    if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * (1 + 0.01 * comp.lvl); }
+    sm.castAt = w.time;
+  } else p.mp = Math.max(0, p.mp - cost);
   gainSSN(p, 4, 1);
   sclear(w, p, "invis");                                              // lanzar un hechizo rompe la invisibilidad
   let power = M.castPower(p, id);
@@ -111,7 +130,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4) return null;     // invulnerables
-    let dmg = M.spellDamage(w.rng, p, n, d, k);
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k) * schoolMult);
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damageNpc(w, tgt, dmg, p, null, half);
@@ -255,7 +274,7 @@ function resolve(w, p, id, sp, x, y, cost) {
       break;
     default: break;                                                    // 16, 31, 32: solo afectan a otros jugadores
   }
-  w.emit({ t: "spell", id: p.id, spell: id, x, y, attr: sp.attr, type: sp.type });
+  w.emit({ t: "spell", id: sm ? sm.id : p.id, spell: id, x, y, attr: sp.attr, type: sp.type });
 }
 
 // Hechizos de campo (DEF_MAGICTYPE_CREATE_DYNAMIC)

@@ -2,6 +2,7 @@
 // Pestañas: Info (nombre, modo, hechizos, reinicio) y las 3 ramas de talentos (shared/systems/talents.js). INVENTO del port.
 import { ClassicDialog, INK, RED } from "./classicdialog.js";
 import * as Tal from "../shared/systems/talents.js";
+import * as Sch from "../shared/systems/schools.js";
 import { activeBall, statsOf, hpOf, need, MAX_COMP_LEVEL } from "../shared/systems/companion.js";
 import { mobSprite } from "./anim.js";
 import { ACT, mobDurations } from "../shared/const.js";
@@ -25,6 +26,9 @@ export function registerPetDialog(gui, api) {
             : { act: "mode", text: "Mode", right: c.mode === "peace" ? "Peace" : "Attack", tip: "Click to switch between Peace and Attack." },
           { act: "reset", text: "Reset talents", right: String(Tal.resetCost(c)), tip: "Only near the pet nurse (Gail, in the Shop). Costs gold." },
         ];
+        const sc = Sch.schoolOfSpecies(c.sp);
+        if (sc) out.push({ act: "school", text: "School: " + Sch.SCHOOL_NAMES[sc], right: "MP " + (c.mp ?? Tal.maxMp(c)) + "/" + Tal.maxMp(c), color: RED, tip: "Casts your " + Sch.SCHOOL_NAMES[sc] + " attack spells with its own mana. No natural regeneration: feed it Blue Candies." + (Sch.TIER2[c.sp] ? " At level " + Sch.TRADE_LEVEL + " it can evolve into a " + Sch.TIER2[c.sp] + " at the pet nurse." : "") });
+        else if (!Tal.isDummy(c)) out.push({ act: "school", text: "General school", right: "combat", tip: "Combat summon only: it casts no magic." });
         for (const t of Tal.TALENTS) if (t.spell != null && Tal.rankOf(c, t.id) > 0) out.push({ act: "spell", text: t.name, right: "spell", color: RED, tip: t.desc });
         return out;
       }

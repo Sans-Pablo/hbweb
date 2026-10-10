@@ -217,7 +217,7 @@ export class Renderer {
     }
     for (const e of s.world.ents.values()) if (e.comp && !e.dead) seen.set(e.id, { e, map: mapId });
     for (const [id, f] of fades) {
-      const k = (nowMs - f.t0) / 600;
+      const k = (nowMs - f.t0) / 1000;
       if (k >= 1 || s.world.ents.has(id)) { fades.delete(id); continue; }
       f.e.fadeAlpha = 1 - k;
     }

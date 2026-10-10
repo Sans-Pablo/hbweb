@@ -176,11 +176,6 @@ function followerThink(w, n) {
       if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
     }
   }
-  if (tc) {                                                                    // hechizos del compañero (talents.js)
-    const hostiles = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && dist(e, m) <= 8);
-    if (Tal.support(w, n, m, tc, hostiles.length ? hostiles : null)) return;
-    if (best && bd <= 7 && Tal.hasAttackSpell(tc) && Tal.offense(w, n, tc, best, (t, dmg) => petHurt(w, n, t, dmg, "spell"))) return;
-  }
   if (best) {
     if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
     const d = greedyStep(w.grid, n, best.x, best.y, dirTo);
@@ -303,7 +298,7 @@ export function evolveCompanion(w, n, m, tc) {
 export function dismissCompanion(w, p) {
   for (const e of followersOf(w, p)) {
     if (!e.comp) continue;
-    const inst = Inv.instOf(p, e.ball); if (inst) inst.comp.hp = e.hp;
+    const inst = Inv.instOf(p, e.ball); if (inst) { inst.comp.hp = e.hp; if (e.mp !== undefined) inst.comp.mp = Math.floor(e.mp); }
     e.dead = true; e.hp = 0; w.grid.release(e.x, e.y, e.id); e.gen.alive--;
     w.ents.delete(e.id); w.emit({ t: "remove", id: e.id });
   }
@@ -318,6 +313,7 @@ export function spawnCompanion(w, p) {
   const n = spawnFrom(w, gen); if (!n) return null;
   Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side, comp: true, ball: inst.uid, exp: 0, noDieRemainExp: 0 });
   refreshCompanion(w, n, p);
+  if (Tal.isSchool(inst.comp)) n.mp = Math.min(Tal.maxMp(inst.comp), inst.comp.mp ?? Tal.maxMp(inst.comp));      // el maná de escuela viaja con la bola
   return n;
 }
 // Usar una bola: la elige y la invoca (la que estaba elegida se guarda); usar la elegida la guarda. Sin invocación si ya no hay compañero.
