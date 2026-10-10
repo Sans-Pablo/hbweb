@@ -21,7 +21,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
-- `world.js` · 264 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
+- `world.js` · 265 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
 
 ## web/src/shared/systems
 
@@ -29,14 +29,14 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
 - `citizens.js` · 29 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 201 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
-- `companion.js` · 171 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
+- `companion.js` · 209 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `debug.js` · 122 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
 - `dummy.js` · 133 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
 - `fields.js` · 92 · Objetos dinámicos de los hechizos de campo (CheckDynamicObjectList / DynamicObjectEffectProcessor):
 - `ground.js` · 27 · Objetos en el suelo: hasta 12 por casilla, el último en caer queda encima (Map.cpp bSetItem / pGetItem).
-- `itemsys.js` · 131 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
+- `itemsys.js` · 138 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
 - `magicsys.js` · 273 · Lanzar y aprender hechizos.
-- `npcsys.js` · 350 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
+- `npcsys.js` · 361 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 167 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
@@ -51,24 +51,24 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `accounts.js` · 49 · Cuentas locales (la prueba es de un jugador y sin servidor): nombre + contraseña.
 - `anim.js` · 74 · Qué sprite y qué fotograma toca dibujar para cada entidad en cada momento.
 - `assets.js` · 233 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
-- `audio.js` · 202 · Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
+- `audio.js` · 207 · Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 76 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 64 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 294 · Conexión con el "servidor". Dos implementaciones con la misma forma:
-- `controller.js` · 210 · Entrada del jugador -> intenciones -> órdenes al servidor.
+- `controller.js` · 211 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 71 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 470 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
 - `fx.js` · 180 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 - `gui.js` · 473 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
-- `hud.js` · 323 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 279 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `hud.js` · 325 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
+- `i18n.js` · 281 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 669 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 677 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -101,7 +101,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `companion.test.mjs` · 85 · Compañeros: obtención en la tienda, selección, estadísticas compartidas, experiencia, guardado.
 - `data.test.mjs` · 50 · Coherencia de los datos generados (web/data): lo que un conversor deja a medias suele romper el juego mucho después.
 - `debug.test.mjs` · 37 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
-- `dummy.test.mjs` · 86 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
+- `dummy.test.mjs` · 102 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
 - `dungeon.test.mjs` · 185 · 
 - `ghost.test.mjs` · 56 · Esqueleto fantasma: un esqueleto común puede levantarse al desaparecer su cadáver. node tests/ghost.test.mjs
 - `i18n.test.mjs` · 20 · Idiomas: el texto en español se traduce al inglés cuando se elige "en" y vuelve a español al cambiar.

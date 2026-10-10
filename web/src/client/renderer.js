@@ -483,10 +483,10 @@ export class Renderer {
     // Compañeros más altos que el personaje: nacen a la mitad de su altura (un golem es un mini golem) y crecen con el nivel hasta el tamaño real al nivel 50
     const sc = e.comp ? this.petScale(e, key, f) : 1;
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
-    if (e.comp && e.dcls && !e.dead && e.master === s.pid) {                               // área de efecto del Dummy (radio por nivel): se ve dónde colocarlo
-      const R = (radiusOf(e.clvl || 1) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff";
-      ctx.save(); ctx.globalAlpha = 0.13; ctx.fillStyle = col; ctx.fillRect(x - R, y - R, 2 * R, 2 * R);
-      ctx.globalAlpha = 0.45; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(x - R, y - R, 2 * R, 2 * R); ctx.restore();
+    if (e.comp && e.dcls && !e.dead && e.master === s.pid) {                               // área de efecto del Dummy (radio por nivel): anillo como el de subir de nivel, del color de su clase
+      const R = (radiusOf(e.clvl || 1) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff", pulse = 0.5 + 0.2 * Math.sin(performance.now() / 500);
+      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y + 4, R, R / 2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra

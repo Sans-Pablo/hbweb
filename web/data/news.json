@@ -11,6 +11,31 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Caramelos, sonido y órdenes (v0.33.0)",
+    "en": "Candies, sound and orders (v0.33.0)"
+   },
+   "items": [
+    {
+     "es": "Sonido: prueba On/Off de Sound y Music y los deslizadores de volumen en F12.",
+     "en": "Sound: test the Sound and Music On/Off and the volume sliders in F12."
+    },
+    {
+     "es": "Caramelos: rojo cura la vida del compañero, azul le da maná, verde lo revive. Doble clic o arrástralos sobre una bola.",
+     "en": "Candies: red heals your companion, blue gives it mana, green revives it. Double-click or drag onto a ball."
+    },
+    {
+     "es": "Alt + clic derecho: tu compañero va a esa casilla y se queda.",
+     "en": "Alt + right-click: your companion goes to that tile and stays."
+    },
+    {
+     "es": "El área del Dummy es ahora un anillo del color de su clase.",
+     "en": "The Dummy area is now a ring in its class colour."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Bolas en el suelo y Dummy (v0.32.1)",
     "en": "Ground balls and Dummy (v0.32.1)"
    },

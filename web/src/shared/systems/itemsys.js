@@ -5,6 +5,7 @@ import { PLAYER, ACT } from "../const.js";
 import * as Inv from "../inventory.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
 import { toggleCompanion, dismissCompanion } from "./npcsys.js";
+import { isCandy, candy } from "./companion.js";
 
 export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
@@ -101,6 +102,12 @@ export function useItem(w, p, uid, destUid) {
   if (d.type !== ITYPE.EAT && d.type !== ITYPE.USE_DEPLETE) return w.reject(p, { t: "use" }, "no se puede usar");
   const roll = () => dice(w.rng, d.v1, d.v2) + d.v3;
   let amount = 0, stat = null;
+  if (isCandy(d)) {                                                    // caramelos: comida de compañeros (companion.candy)
+    const got = candy(w, p, d, destUid, roll); if (got === false) return false;
+    if (isStack(d) && (inst.count || 1) > 1) inst.count--; else Inv.removeFromBag(p, uid);
+    w.recalc(p);
+    return true;
+  }
   switch (d.effectType) {
     case EFFECT.HP: amount = roll(); stat = "hp"; if (p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + amount); break;
     case EFFECT.MP: amount = roll(); stat = "mp"; p.mp = Math.min(p.maxMp, p.mp + amount); break;

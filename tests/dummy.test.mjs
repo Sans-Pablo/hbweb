@@ -84,3 +84,19 @@ mob.dead = true; w.ents.delete(mob.id);
   assert.ok(D.auraPct(hi, "dexp") <= 25 + 1e-9);
 }
 console.log("OK dummy");
+// Caramelos: rojo cura, verde revive, azul da maná; Alt+clic derecho (petgo) lleva al compañero a una casilla
+{
+  const w2 = w, A2 = A, cc = c;
+  const red = (id) => ({ id, name: id === 780 ? "RedCandy" : id === 781 ? "BlueCandy" : "GreenCandy", effectType: id - 776 });
+  dm.hp = 3; const before = dm.hp;
+  const got = C.candy(w2, A2, red(780), null, () => 5);
+  assert.ok(got > 0 && dm.hp > before, "caramelo rojo cura");
+  cc.down = true; dm.dead = false;
+  assert.equal(C.candy(w2, A2, red(780), null, () => 5), false, "inconsciente: solo el verde");
+  assert.ok(C.candy(w2, A2, red(782), null, () => 5) > 0 && !cc.down, "caramelo verde revive");
+  w2.command(A2.id, { t: "petmode", mode: "attack" });
+  assert.ok(w2.command(A2.id, { t: "petgo", x: dm.x + 3, y: dm.y + 2 }));
+  const gx = dm.x + 3; tick(14000);
+  assert.ok(Math.abs(dm.x - gx) <= 1 && Math.abs(dm.y - (A.y + 2)) <= 1 && dm.holdAt, "el compañero llegó y se queda");
+  console.log("OK dummy candy/petgo");
+}

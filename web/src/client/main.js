@@ -168,6 +168,12 @@ async function main() {
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
     } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
+      if (d && /Candy$/.test(d.name)) {                          // caramelo soltado sobre una bola: se lo come ese compañero
+        const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
+        let best = null, bd = 1e9;
+        for (const o of me.bag) { if (!o.comp || !Number.isFinite(o.x)) continue; const dd = Math.hypot(o.x - nx, o.y - ny); if (dd < bd) { bd = dd; best = o; } }
+        if (best && bd <= 30) { conn.send({ t: "use", uid: inst.uid, dest: best.uid }); return; }
+      }
       if (d && [17, 32, 34].includes(d.effectType)) {             // tinte soltado sobre otro objeto de la mochila: lo tiñe
         const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
         let best = null, bd = 1e9;
@@ -235,6 +241,7 @@ async function main() {
     view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
     sound.setVolume?.(opts.soundVol);
+    sound.setMusic?.(opts.music); sound.setMusicVolume?.(opts.musicVol);
     MAGIC_MODE.free = false;                                   // magia con las reglas del servidor (la opción «magia libre» ya no existe)
     renderer.lighting = !!opts.lighting;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
@@ -328,6 +335,7 @@ async function main() {
     },
     npcKey: e => npcUi.key(e),
     // Alt + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
+    petGo(x, y) { conn.send({ t: "petgo", x, y }); },
     petOrder(ent) {
       if (ent && ent.kind === "npc" && !ent.master) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");

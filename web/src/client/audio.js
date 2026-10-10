@@ -8,7 +8,8 @@ export class Sound {
   constructor(world, me) {
     this.world = world;
     this.me = me;
-    this.on = true;
+    this.on = true;                  // efectos de sonido
+    this.musicOn = true; this.musicVol = 1;                 // música (opción y volumen propios)
     this.ctx = null;
     this.buffers = new Map();
     this.tracks = null;
@@ -36,7 +37,7 @@ export class Sound {
     // gráfico decide cuál se oye (como Diablo II Resurrected al cambiar de modo)
     this.tracks = this.makeTracks(this.track);
     if (this.wanted) { const w = this.wanted; this.wanted = null; this.prefetch(w); }
-    if (this.on) this.startMusic();
+    if (this.musicOn) this.startMusic();
     if (this.wantRain) this.rain(true);
   }
 
@@ -63,7 +64,7 @@ export class Sound {
     };
     fade();
     this.tracks = this.makeTracks(name);
-    if (this.on) this.startMusic();
+    if (this.musicOn) this.startMusic();
   }
 
   // lluvia: bucle del sonido E38 mientras llueve (SetWhetherStatus)
@@ -98,7 +99,7 @@ export class Sound {
   applyMusic(ms) {
     if (!this.tracks) return;
     const want = this.tracks[this.mode]?.broken ? "classic" : this.mode;
-    const target = { classic: want === "classic" ? MUSIC_VOL : 0, remastered: want === "remastered" ? MUSIC_VOL : 0 };
+    const target = { classic: want === "classic" ? MUSIC_VOL * this.musicVol : 0, remastered: want === "remastered" ? MUSIC_VOL * this.musicVol : 0 };
     const start = performance.now(), from = { classic: this.tracks.classic.volume, remastered: this.tracks.remastered.volume };
     cancelAnimationFrame(this.fadeRaf);
     const step = () => {
@@ -109,16 +110,20 @@ export class Sound {
     step();
   }
 
-  setVolume(pct) { this.vol = Math.max(0, Math.min(1, pct / 100)); if (this.master) this.master.gain.value = this.on ? 0.7 * this.vol : 0; }
+  setVolume(pct) { this.vol = Math.max(0, Math.min(1, Number(pct) / 100)); if (this.master) this.master.gain.value = this.on ? 0.7 * this.vol : 0; }
   toggle() {
     this.on = !this.on;
     if (this.master) this.master.gain.value = this.on ? 0.7 * (this.vol ?? 1) : 0;
-    if (this.tracks) {
-      if (this.on) this.startMusic();
-      else for (const a of Object.values(this.tracks)) a.pause();
-    }
     return this.on;
   }
+  // música: interruptor y volumen propios (Opciones → Music / Music Volume)
+  setMusic(on) {
+    on = !!on; if (on === this.musicOn) return;
+    this.musicOn = on;
+    if (!this.tracks) return;
+    if (on) this.startMusic(); else for (const a of Object.values(this.tracks)) a.pause();
+  }
+  setMusicVolume(pct) { this.musicVol = Math.max(0, Math.min(1, Number(pct) / 100)); this.applyMusic?.(0); }
 
   async buffer(name) {
     if (this.buffers.has(name)) return this.buffers.get(name);

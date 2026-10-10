@@ -143,7 +143,7 @@ export class World {
   }
 }
 
-const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode"]);
+const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode", "petgo"]);
 const FOR_DEAD = new Set(["respawn", "say"]);
 
 const COMMANDS = {
@@ -232,6 +232,7 @@ const COMMANDS = {
     return true;
   },
   petmode: (w, p, cmd) => Companion.setMode(w, p, cmd.mode),
+  petgo: (w, p, cmd) => Companion.setGo(w, p, cmd.x, cmd.y),
   pettarget: (w, p, cmd) => Companion.setTarget(w, p, cmd.target),
   drop(w, p, cmd) { return cmd.gold ? ItemSys.dropGold(w, p, cmd.gold) : ItemSys.dropItem(w, p, cmd.uid, cmd.count | 0); },
   equip: (w, p, cmd) => ItemSys.equipCmd(w, p, cmd.uid),

@@ -148,9 +148,19 @@ function followerThink(w, n) {
       else if (w.time >= n.evolveAt && !m.dead && !w.fightZone) return evolveCompanion(w, n, m, tc);
     }
   }
+  if (n.comp && n.holdAt && dist(n, m) > 14) n.holdAt = null;                  // el dueño se aleja demasiado: vuelve a seguirlo
+  const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); return !!d; };
+  if (n.comp && n.goTo) {                                                     // Alt + clic derecho: ir a esa casilla y quedarse allí
+    const g = n.goTo;
+    if (tc && tc.sp === "Dummy") Dummy.think(w, n, m, tc);
+    if ((n.x === g.x && n.y === g.y) || w.time > g.until || (dist(n, g) <= 1 && (!toGoal(g) || w.time - (g.near ??= w.time) > 1500))) { n.holdAt = { x: n.x, y: n.y }; n.goTo = null; }
+    else toGoal(g);
+    return;
+  }
   if (tc && tc.sp === "Dummy") {                                              // Dummy: no ataca; lanza sus magias de apoyo y, en modo seguir, va con el dueño
     Dummy.think(w, n, m, tc);
-    if (tc.mode !== "peace" && dist(n, m) > 2) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+    const anchor = n.holdAt || (tc.mode !== "peace" ? m : null);
+    if (anchor && dist(n, anchor) > (n.holdAt ? 0 : 2)) toGoal(anchor);
     return;
   }
   let best = null, bd = 1e9;
@@ -177,7 +187,8 @@ function followerThink(w, n) {
     if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE);
     return;
   }
-  if (dist(n, m) > 2) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+  const anchor = n.comp && n.holdAt ? n.holdAt : m;
+  if (dist(n, anchor) > (anchor === m ? 2 : 0)) toGoal(anchor);
 }
 
 function followerAttack(w, n, t) {

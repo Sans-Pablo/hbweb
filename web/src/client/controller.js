@@ -32,6 +32,7 @@ export class Controller {
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
       if (e.altKey && e.button === 0) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Alt + clic: orden de ataque al compañero
+      if (e.altKey && e.button === 2) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Alt + clic derecho: el compañero va a esa casilla
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
       this.down = true; this.noHold = false;

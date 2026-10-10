@@ -2,6 +2,13 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.33.0 · Caramelos, sonido y órdenes (2026-10-10)
+
+- Sonido: el interruptor de música y los volúmenes de efectos y música del menú del sistema (F12) ahora funcionan; la música tiene su propio on/off y volumen (`audio.js`: `setMusic`, `setMusicVolume`).
+- Caramelos (Item.cfg 780/781/782): ya no curan al jugador; rojo = vida del compañero, azul = maná, verde = revive al inconsciente (a mitad de vida). Se usan con doble clic (compañero elegido) o arrastrados sobre una bola de la mochila (`companion.candy`).
+- Alt + clic derecho: el compañero va a esa casilla y se queda allí (vuelve a seguirte si te alejas más de 14 casillas; `petgo`).
+- Dummy: el área de efecto se muestra como el anillo de subida de nivel, del color de su clase, en lugar de un cuadrado relleno.
+
 ## 0.32.1 · Nombre de la bola en el suelo y bola del Dummy (2026-10-10)
 
 - Online: las bolas en el suelo llevan su especie, nombre y clase en el paquete de objetos; antes el cliente solo veía el objeto base y mostraba «Pearl» en vez de «Cyclops Ball».

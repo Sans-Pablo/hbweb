@@ -89,6 +89,7 @@ export class Hud {
       case "petname": if (ev.id === me) this.log("Tu compañero se llama ahora " + ev.nm + "."); break;
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
       case "pettarget": if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
+      case "candy": if (ev.id === me) this.log(ev.kind === "revive" ? (ev.nm || ev.sp) + " vuelve en sí con " + ev.amount + " de vida." : (ev.nm || ev.sp) + " recupera " + ev.amount + (ev.kind === "hp" ? " de vida." : " de maná."), "gold"); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-evolve": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " está a punto de cambiar de tamaño…", "gold"); break;
       case "companion-resummon": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve más grande.", "gold"); break;
@@ -111,7 +112,7 @@ export class Hud {
       case "cantcarry": if (ev.id === me) this.log(ev.why === "weight" ? "Pesa demasiado para llevarlo." : "No tienes sitio en la mochila.", "bad"); break;
       case "broken": if (ev.id === me) this.log("Un objeto se ha gastado del todo: hay que repararlo.", "bad"); break;
       case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
-      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport" || ev.cmd === "recall" || ev.cmd === "arenabet" || ev.cmd === "arenainfo")) this.log("No se puede: " + ev.why + ".", "bad"); break;
+      case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "use" || ev.cmd === "petgo" || ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport" || ev.cmd === "recall" || ev.cmd === "arenabet" || ev.cmd === "arenainfo")) this.log("No se puede: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
       case "bossmsg": if (ev.id === me) { this.log(ev.text, "gold"); this.toast?.(ev.text); } break;
@@ -182,7 +183,8 @@ export class Hud {
       L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
       const fxl = this.effectLine(d, it); if (fxl) L.push('<span style="color:#9fe39a">' + fxl + "</span>");
-    } else L.push(d.type === ITYPE.EAT ? "Consumible" : "Objeto");
+    } else if (/Candy$/.test(d.name)) L.push(d.effectType === 4 ? "Caramelo: cura la vida de tu compañero." : d.effectType === 5 ? "Caramelo: devuelve maná a tu compañero." : "Caramelo: revive a tu compañero inconsciente.");
+    else L.push(d.type === ITYPE.EAT ? "Consumible" : "Objeto");
     L.push("Peso " + (realStats(d, it).weight / 100).toFixed(2) + (isStack(d) ? " c/u" : ""));
     return L;
   }

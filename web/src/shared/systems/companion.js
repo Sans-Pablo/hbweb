@@ -169,3 +169,41 @@ export function addExp(w, p, inst, xp) {
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }
+
+// Caramelos (Item.cfg 780 rojo = vida, 781 azul = maná, 782 verde = revivir): alimento de compañeros, ya no curan al jugador.
+// Se usan sobre una bola concreta (arrastrar) o, si no, sobre el compañero elegido. Devuelve la cantidad curada o false (rechazado).
+export const isCandy = d => d.id >= 780 && d.id <= 782 || /Candy$/.test(d.name || "");
+export function candy(w, p, d, destUid, roll) {
+  const inst = (destUid && Inv.instOf(p, destUid)?.comp ? Inv.instOf(p, destUid) : null) || activeBall(p) || p.bag.find(i => i.comp);
+  if (!inst) return w.reject(p, { t: "use" }, "no tienes compañero");
+  const c = inst.comp, live = [...w.ents.values()].find(e => e.comp && e.ball === inst.uid && !e.dead);
+  const mx = maxOf(p, c), kind = d.effectType === 4 ? "hp" : d.effectType === 5 ? "mp" : "revive";
+  let amount = 0;
+  if (kind === "revive") {
+    if (!c.down) return w.reject(p, { t: "use" }, "tu compañero no está inconsciente");
+    c.down = false; c.hp = Math.max(1, Math.round(mx * 0.5)); amount = c.hp;
+  } else if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: necesita el caramelo verde");
+  else if (kind === "hp") {
+    const cur = live ? live.hp : hpOf(p, c);
+    if (cur >= mx) return w.reject(p, { t: "use" }, "tu compañero ya tiene la vida completa");
+    amount = Math.min(mx - cur, roll()); c.hp = cur + amount; if (live) live.hp = c.hp;
+  } else {
+    if (!live) return w.reject(p, { t: "use" }, "invoca al compañero para darle maná");
+    const top = Tal.maxMp(c);
+    if ((live.mp ?? top) >= top) return w.reject(p, { t: "use" }, "tu compañero ya tiene el maná completo");
+    amount = Math.min(top - (live.mp ?? 0), roll()); live.mp = (live.mp ?? 0) + amount;
+  }
+  w.emit({ t: "candy", id: p.id, kind, amount, nm: c.nm, sp: c.sp, item: d.id });
+  return amount;
+}
+
+// Alt + clic derecho: el compañero va a esa casilla y se queda allí (hasta 15 s para llegar; si el dueño se aleja más de 14 casillas vuelve a seguirlo)
+export function setGo(w, p, x, y) {
+  const pet = [...w.ents.values()].find(e => e.comp && e.master === p.id && !e.dead);
+  if (!pet) return w.reject(p, { t: "petgo" }, "no tienes compañero fuera");
+  x = Math.floor(Number(x)); y = Math.floor(Number(y));
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= w.grid.w || y >= w.grid.h || Math.max(Math.abs(x - p.x), Math.abs(y - p.y)) > 24) return w.reject(p, { t: "petgo" }, "casilla no válida");
+  pet.goTo = { x, y, until: w.time + 15000 }; pet.holdAt = null; pet.cTarget = null;
+  w.emit({ t: "petgo", id: p.id, x, y, nm: pet.nick });
+  return true;
+}
