@@ -8,6 +8,9 @@ import { dist } from "../const.js";
 import * as Party from "./party.js";
 import { blog, tooStrong } from "./bot.js";
 import { canFight } from "./combatsys.js";
+import * as Comp from "./companion.js";
+import * as Tal from "./talents.js";
+import * as Sch from "./schools.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -34,9 +37,9 @@ export function create(name) {
   const h = hash(name.toLowerCase()), arch = Object.keys(ARCH)[h % 5];
   return { v: 1, arch, origin: pickBy(ORIGINS, h, 31), motive: pickBy(MOTIVES, h, 37), fear: pickBy(FEARS, h, 41), quirk: pickBy(QUIRKS, h, 43),
     lang: (NAMES.indexOf(name) >= 0 ? NAMES.indexOf(name) : h) % 2 ? "en" : "es",          // mitad habla inglés y mitad español
-    goal: null, mem: [], rel: {}, kills0: 0, deaths: 0, bio: null, chats: 0, qa: { kills: {}, deaths: {}, rej: {}, exp0: 0, pvp: { k: 0, d: 0 } } };
+    goal: null, mem: [], rel: {}, kills0: 0, deaths: 0, bio: null, chats: 0, qa: { kills: {}, deaths: {}, rej: {}, exp0: 0, pvp: { k: 0, d: 0 }, pet: { lost: 0, kills: 0, lvls: 0, heals: 0, spent: 0 } } };
 }
-export function restore(name, saved) { const r = { ...create(name), ...(saved && typeof saved === "object" ? saved : {}) }; r.mem = (r.mem || []).slice(-16); r.qa = { kills: {}, deaths: {}, rej: {}, exp0: 0, ...(r.qa || {}) }; r.qa.pvp ||= { k: 0, d: 0 }; return r; }
+export function restore(name, saved) { const r = { ...create(name), ...(saved && typeof saved === "object" ? saved : {}) }; r.mem = (r.mem || []).slice(-16); r.qa = { kills: {}, deaths: {}, rej: {}, exp0: 0, ...(r.qa || {}) }; r.qa.pvp ||= { k: 0, d: 0 }; r.qa.pet ||= { lost: 0, kills: 0, lvls: 0, heals: 0, spent: 0 }; return r; }
 export const storyOf = (p, lang) => {
   const r = p.res, i = lang === "en" ? 1 : 0, a = ARCH[r.arch][lang === "en" ? "en" : "es"];
   return lang === "en"
@@ -155,11 +158,17 @@ export function onEvent(adv, w, ev) {
       if (k?.res) { k.res.qa.pvp.k++; remember(k, "Derroté a " + ev.name + " en Promise Land.", "Defeated " + ev.name + " in Promise Land."); if (w.rng() < 0.6) speak(adv, k, fmt(k, "win", k.res.lang, ev.name, w)); }
       return;
     }
+    case "companion-lost": { const b = adv.bots.get(ev.id); if (b?.res) { b.res.qa.pet.lost++; blog(w, b, `Mi summon ${ev.nm} (${ev.sp}) ha caído: pierde ${ev.loss} de experiencia (queda nivel ${ev.lvl}).`); remember(b, "Mi summon " + ev.nm + " cayó en combate.", "My summon " + ev.nm + " fell in battle."); } return; }
+    case "companion-lvl": { const b = adv.bots.get(ev.id); if (b?.res) { b.res.qa.pet.lvls++; blog(w, b, `Mi summon ${ev.nm} sube al nivel ${ev.lvl}.`); } return; }
+    case "companion-evolve": case "companion-resummon": { const b = adv.bots.get(ev.id); if (b?.res) blog(w, b, ev.t === "companion-evolve" ? `Mi summon ${ev.nm} va a evolucionar (etapa ${ev.step}).` : "Mi summon ha evolucionado y se vuelve a invocar."); return; }
+    case "petbought": { const b = adv.bots.get(ev.id); if (b?.res) { remember(b, "Compré un summon: " + ev.sp + " llamado " + ev.nm + ".", "Bought a summon: " + ev.sp + " named " + ev.nm + "."); blog(w, b, `Compro un summon ${ev.sp} («${ev.nm}») por ${ev.price} de oro.`); } return; }
+    case "pettreated": { const b = adv.bots.get(ev.id); if (b?.res) { b.res.qa.pet.heals++; b.res.qa.pet.spent += ev.cost; blog(w, b, `${ev.revived ? "Revivo" : "Curo"} a mi summon ${ev.nm} en el hospital por ${ev.cost} de oro.`); if (ev.cost > 3000) report(adv, b, "balance", "revive-cost", `Revivir a mi summon me cuesta ${ev.cost} de oro con nivel ${b.level} y ${b.gold + ev.cost} de oro: demasiado caro si cae a menudo.`, `Reviving my summon costs ${ev.cost} gold at level ${b.level} with ${b.gold + ev.cost} gold: too expensive if it falls often.`); } return; }
+    case "learned": { const b = adv.bots.get(ev.id); if (b?.res && ev.uid) { blog(w, b, `Enseño un hechizo a mi summon ${ev.nm}.`); report(adv, b, "bug", "learn-anywhere", "Puedo enseñarle hechizos a mi summon desde cualquier sitio: la orden «learn» no comprueba que esté junto al Mago de la torre.", "I can teach my summon spells from anywhere: the «learn» command does not check that I'm next to the tower Mage."); } return; }
     case "death": {
       const dead = adv.bots.get(ev.id);
       if (dead?.res) { const kf = w.ents.get(ev.by); dead.res._killer = kf?.name || dead.res._lastHit || "?"; if (kf?.kind === "player") { dead.res._pvpDeath = true; dead.res.qa.pvp.d++; } return; }
-      const b = adv.bots.get(ev.by), n = w.ents.get(ev.id);
-      if (b?.res && n?.kind === "npc") b.res.qa.kills[n.name] = (b.res.qa.kills[n.name] || 0) + 1;
+      const kb = w.ents.get(ev.by), b = adv.bots.get(ev.by) || (kb?.comp ? adv.bots.get(kb.master) : null), n = w.ents.get(ev.id);
+      if (b?.res && n?.kind === "npc") { b.res.qa.kills[n.name] = (b.res.qa.kills[n.name] || 0) + 1; if (kb?.comp) b.res.qa.pet.kills++; }
     }
   }
 }
@@ -222,13 +231,14 @@ export function think(adv, p) {
   }
   qaTick(adv, w, p, r);
   // fuera de la granja (entró a una tienda o a la cripta pisando un teletransporte mientras paseaba): se queda un rato probando y vuelve
-  if (w !== home && !p.bot.owner && !r._trip && !r._delve) {
+  if (w !== home && !p.bot.owner && !r._trip && !r._delve && !r._pet) {
     r._away ??= w.time;
     if (w.time - r._away > 45000 && !p.dead) { r._away = null; remember(p, "Entré en " + (w.map.name || w.map.id) + " y volví.", "I went into " + (w.map.name || w.map.id) + " and came back."); adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   } else r._away = null;
   const tg = p.bot.target;                                                         // se burla del enemigo al que va a atacar
   if (tg?.kind === "player" && r._tauntId !== tg.id) { r._tauntId = tg.id; if (w.rng() < 0.5) speak(adv, p, fmt(p, "taunt", r.lang, tg.name, w)); }
   pits(adv, w, p, r);
+  pets(adv, w, p, r, home);
   expedition(adv, w, p, r, home);
   social(adv, w, p, r);
   // saludar a quien llega
@@ -285,6 +295,9 @@ function qaTick(adv, w, p, r) {
     report(adv, p, "bug", "stuck:" + (w.map.id || "") + ":" + (p.x >> 3) + "," + (p.y >> 3), `Me quedo parado/atascado cerca de (${p.x},${p.y}) en ${w.map.name || w.map.id}.`, `I'm stuck near (${p.x},${p.y}) in ${w.map.name || w.map.id}.`);
   }
   if (p.weight > p.maxLoad * 0.92) report(adv, p, "comfort", "weight", `Voy casi al límite de peso (${p.weight}/${p.maxLoad}) y no lo he visto avisar.`, `I'm near the weight limit (${p.weight}/${p.maxLoad}) and nothing warned me.`);
+  { const ball = p.bag.find(i => i.comp && i.comp.on), lv = ball && liveOf(w, p);                       // summons: ¿sigue a su dueño?
+    if (ball && !lv && !ball.comp.down && !w.fightZone && w.map.kind !== "dungeon") { if ((r._petGone = (r._petGone | 0) + 1) >= 3) report(adv, p, "bug", "pet-missing", `Mi summon ${ball.comp.nm} figura como invocado pero no aparece en el mapa (${w.map.name || w.map.id}).`, `My summon ${ball.comp.nm} counts as summoned but is not on the map (${w.map.name || w.map.id}).`); } else r._petGone = 0;
+    if (lv && dist(p, lv) > 18 && !b.travel) { if ((r._petFar = (r._petFar | 0) + 1) >= 3) report(adv, p, "bug", "pet-far", `Mi summon ${ball.comp.nm} se queda a ${dist(p, lv)} casillas de mí y no me alcanza (${w.map.name || w.map.id}, ${p.x},${p.y}).`, `My summon ${ball.comp.nm} stays ${dist(p, lv)} tiles away and doesn't catch up (${w.map.name || w.map.id}, ${p.x},${p.y}).`); } else r._petFar = 0; }
   if (p.bag.length >= 46) report(adv, p, "comfort", "bagfull", "La mochila (50 huecos) se llena enseguida; no hay forma rápida de vender o tirar lo inútil.", "The 50-slot bag fills up fast; no quick way to sell or drop junk.");
   if (p.level >= 8 && p.gold < 60) report(adv, p, "balance", "poor", `Nivel ${p.level} y solo ${p.gold} de oro: las pociones y el equipo cuestan más de lo que gano.`, `Level ${p.level} with only ${p.gold} gold: potions and gear cost more than I earn.`);
   if (p.gold > 20000) report(adv, p, "idea", "goldsink", `Tengo ${p.gold} de oro y nada útil en que gastarlo: faltan sumideros de oro.`, `I hold ${p.gold} gold with nothing worthwhile to spend it on: gold sinks are missing.`);
@@ -294,6 +307,12 @@ function qaTick(adv, w, p, r) {
     const mins = 8, k = Object.values(r.qa.kills).reduce((a, c) => a + c, 0), d = Object.values(r.qa.deaths).reduce((a, c) => a + c, 0), xp = Math.round((p.exp - r._paceExp) / mins);
     report(adv, p, "balance", "pace:L" + p.level, `Nivel ${p.level}: ${xp} exp/min, ${Math.round((k - r._paceK) / mins * 10) / 10} bajas/min, ${d - r._paceD} muertes en ${mins} min. Más habituales: ${top(r.qa.kills)}.`,
       `Level ${p.level}: ${xp} exp/min, ${Math.round((k - r._paceK) / mins * 10) / 10} kills/min, ${d - r._paceD} deaths in ${mins} min. Most common: ${top(r.qa.kills)}.`, { xpmin: xp, deaths: d - r._paceD });
+    { const ball = p.bag.find(i => i.comp && !i.comp.bad), q = r.qa.pet;
+      if (ball) {
+        report(adv, p, "balance", "pet:" + ball.comp.sp, `Summon ${ball.comp.sp} «${ball.comp.nm}» nivel ${ball.comp.lvl} (yo ${p.level}): ${q.kills} bajas suyas, ${q.lost} caídas, ${q.heals} visitas al hospital (${q.spent} de oro gastado).`, `${ball.comp.sp} summon «${ball.comp.nm}» level ${ball.comp.lvl} (me ${p.level}): ${q.kills} kills, ${q.lost} falls, ${q.heals} hospital visits (${q.spent} gold spent).`, { petlvl: ball.comp.lvl, lost: q.lost });
+        if (p.level - ball.comp.lvl > 12) report(adv, p, "balance", "pet-slow", `Mi summon va al nivel ${ball.comp.lvl} y yo al ${p.level}: sube demasiado despacio (solo recibe el 25 % de mi experiencia).`, `My summon is level ${ball.comp.lvl} while I'm ${p.level}: it levels too slowly (it only gets 25% of my experience).`);
+        if (q.lost >= 3 && q.lost > q.kills) report(adv, p, "balance", "pet-dies", `Mi summon ${ball.comp.sp} cae más de lo que mata (${q.lost} caídas, ${q.kills} bajas): ¿vida o defensa insuficientes?`, `My ${ball.comp.sp} summon falls more than it kills (${q.lost} falls, ${q.kills} kills): not enough health or defense?`);
+      } else if (p.level >= 5) report(adv, p, "comfort", "pet-none", `Soy nivel ${p.level} y aún no tengo summon: conseguirlo exige ir hasta Gail y no hay pista de dónde está.`, `I'm level ${p.level} and still have no summon: getting one means finding Gail and nothing hints where she is.`); }
     r._paceAt = w.time + 480000; r._paceExp = p.exp; r._paceK = k; r._paceD = d;
     if (typeof adv.llm === "function" && adv.llm.ready !== false) {                 // opinión libre del probador con el modelo (si está disponible)
       const lang = r.lang;
@@ -328,7 +347,7 @@ function pickPit(adv, w, p, zones) {
 }
 function expedition(adv, w, p, r, home) {
   const b = p.bot;
-  if (b.owner != null) return;                                                   // los miembros de un grupo van donde va su líder
+  if (b.owner != null || r._pet) return;                                                   // los miembros de un grupo van donde va su líder
   if (r._delve) return delve(adv, w, p, r, home);
   if (r._trip) {
     if (w === home && r._trip.go && w.time > r._trip.goUntil) { r._trip = null; r._tripAt = w.time + 120000; blog(w, p, "No llegué al teletransportador: cancelo la expedición."); return; }
@@ -410,6 +429,79 @@ function delve(adv, w, p, r, home) {
   for (const e of w.ents.values()) if (e.kind === "npc" && !e.dead && !e.comp && !e.aux && !e.master && !tooStrong(w, p, e)) { const dd = dist(p, e); if (dd < bd) { best = e; bd = dd; } }
   if (best && bd > 9) { b.travel = { x: best.x, y: best.y, w, until: w.time + 12000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${best.name} a ${bd} casillas.`); }
   else if (best) b.travel = null;
+}
+// ---------------------------------------------------------------- summons (compañeros): los habitantes los compran, invocan, curan, les dan talentos y hechizos, y avisan de lo que falla
+// Cada habitante prueba una especie distinta (salen de `Comp.SPECIES`; así se ejercitan todas). El hospital (Gail) está en la tienda general de Aresden
+// y al aire libre en Elvine Farm. Los avisos van al informe de probadores (`report`).
+const TALENT_PLAN = { warrior: ["hide", "iron", "taunt", "regen"], hunter: ["might", "frenzy", "might"], trader: ["hide", "might"], wanderer: ["might", "hide", "iron"], scholar: ["mind", "might", "hide"] };
+const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && sp !== "Dummy");           // Demon/Frost/Liche solo por cambio y el Dummy exige un báculo
+const ballOf = p => Comp.activeBall(p) || p.bag.find(i => i.comp && !i.comp.bad);
+const liveOf = (w, p) => { for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead) return e; return null; };
+const nurseOf = w => { for (const e of w.ents.values()) if (e.role === "pethospital") return e; return null; };
+function pickSpecies(p, r) { let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
+function pets(adv, w, p, r, home) {
+  if (p.dead || w.pvp || w.map.kind === "dungeon" || w.time < (r._petThink ||= 0)) return;
+  r._petThink = w.time + 2500;
+  const b = p.bot, ball = ballOf(p), c = ball?.comp, live = liveOf(w, p);
+  // ---- mantenimiento (en cualquier mapa menos Promise Land y la cripta)
+  if (ball) {
+    if ((!c.on || !live) && !c.down && !w.fightZone && w.time - (r._petUseAt || 0) > 12000) {          // invoca a su summon (también si la bola dice «fuera» y no hay summon: tras morir o viajar)
+      if (c.on && !live && (r.deaths | 0) > (r._petDeaths | 0)) { r._petDeaths = r.deaths | 0; report(adv, p, "bug", "pet-after-death", `Tras morir y reaparecer mi summon ${c.nm} no vuelve solo: la bola sigue «fuera» pero no hay summon hasta que la uso otra vez.`, `After dying and respawning my summon ${c.nm} doesn't come back by itself: the ball still says «out» but there is no summon until I use it again.`); }
+      r._petUseAt = w.time; adv.command(p.id, { t: "use", uid: ball.uid });
+      if ((r._petUseFails = (r._petUseFails | 0) + 1) >= 3 && !live) { c.bad = true; r._petUseFails = 0; r.petN = (r.petN | 0) + 1; report(adv, p, "bug", "summon:" + c.sp, `No consigo invocar a mi summon de especie ${c.sp} (la bola no lo saca nunca).`, `I can't summon my ${c.sp} companion (the ball never produces it).`); blog(w, p, `Mi summon ${c.sp} no se deja invocar: lo dejo y probaré otra especie.`); }
+    } else if (live) r._petUseFails = 0;
+    // talentos: gasta los puntos libres según su arquetipo
+    if (Tal.pointsFree(c) > 0) for (const id of TALENT_PLAN[r.arch] || TALENT_PLAN.hunter) if (!Tal.canLearn(c, id)) { adv.command(p.id, { t: "talent", uid: ball.uid, talent: id }); blog(w, p, `Gasto un punto de talento de ${c.nm} en «${Tal.talent(id).name}».`); break; }
+    // los summons de escuela aprenden hechizos (barato primero) y los lanzan contra su objetivo
+    const school = Sch.SCHOOL_OF[c.sp];
+    if (school && w.magic) {
+      if (w.time - (r._teachAt || 0) > 20000) {
+        r._teachAt = w.time;
+        const ids = Object.entries(Sch.unlockLevels(w.magic, school)).filter(([id, lv]) => !Sch.taught(c, id) && lv <= c.lvl).sort((x, y) => x[1] - y[1]);
+        for (const [id] of ids) if (p.stats.int >= Sch.spellInt(w.magic, school, id) && p.gold >= Sch.spellGold(w.magic, school, id)) { adv.command(p.id, { t: "learn", spell: +id }); break; }
+      }
+      const t = b.target, n = live;
+      if (n && t && t.kind === "npc" && !t.dead && dist(p, t) <= 10 && w.time - (r._castAt || 0) > 3500) {
+        const known = (c.spells || []).filter(id => Sch.spellLevel(w.magic, school, id, c.sp) <= c.lvl && (n.mp ?? 0) >= Sch.spellMana(w.magic, school, id)).sort((x, y) => Sch.spellMana(w.magic, school, y) - Sch.spellMana(w.magic, school, x));
+        if (known.length) { r._castAt = w.time; adv.command(p.id, { t: "cast", spell: known[0], x: t.x, y: t.y }); blog(w, p, `Mi summon lanza «${w.magic[known[0]].name}» contra ${t.name}.`); }
+      }
+    }
+    // órdenes y caramelos
+    if (live && b.target?.kind === "npc" && w.time - (r._petOrderAt || 0) > 45000 && w.rng() < 0.5) { r._petOrderAt = w.time; adv.command(p.id, { t: "pettarget", target: b.target.id }); }
+    if (live && live.hp < live.maxHp * 0.4 && w.time - (r._candyAt || 0) > 8000) { const cd = p.bag.find(i => i.id === 780); if (cd) { r._candyAt = w.time; adv.command(p.id, { t: "use", uid: cd.uid }); blog(w, p, "Doy un caramelo rojo a mi summon."); } }
+    if (live && (!r._modeAt || w.time - r._modeAt > 600000)) { r._modeAt = w.time; if (r._modeAt > 1) { const m = c.mode === "peace" ? "attack" : "peace"; adv.command(p.id, { t: "petmode", mode: m }); r._modeBack = w.time + 20000; } }
+    if (r._modeBack && w.time > r._modeBack) { r._modeBack = 0; adv.command(p.id, { t: "petmode", mode: "attack" }); }
+  }
+  // ---- ¿toca ir al hospital? sin summon, o con el summon caído/herido
+  const need = !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
+  if (!r._pet) {
+    if (!need || r.followUntil || r._trip || r._delve || p.bot.owner != null || w.time < (r._petAt ||= w.time + 20000 + Math.floor(w.rng() * 40000)) || w !== home || p.hp < p.maxHp * 0.6 || b.rest) return;
+    const tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"), nurse = nurseOf(w);
+    if (!nurse && !tp) { r._petAt = w.time + 600000; return; }
+    r._pet = { until: w.time + 240000, done: 0, tp: tp ? { x: tp.x, y: tp.y } : null };
+    blog(w, p, !ball ? "Voy a buscar un summon al hospital de compañeros." : "Llevo a mi summon al hospital de compañeros.");
+    if (!ball && w.rng() < 0.6) speak(adv, p, r.lang === "en" ? "I need a companion. Off to the pet hospital." : "Necesito un compañero. Voy al hospital de mascotas.");
+    return;
+  }
+  const d = r._pet;
+  if (w.time > d.until || p.hp < p.maxHp * 0.3) { r._pet = null; r._petAt = w.time + 120000; if (w.time > d.until) blog(w, p, "No llego al hospital de compañeros: cancelo."); return; }
+  const nurse = nurseOf(w);
+  if (nurse) {                                                                           // en el mapa de Gail: se acerca y la usa
+    if (dist(p, nurse) > 5) { if (!b.travel) { b.travel = { x: nurse.x, y: nurse.y + 1, w, until: w.time + 40000 }; b.path = null; b.goal = null; b.fails = 0; } return; }
+    if (w.busy(p) || w.time - (d.cmdAt || 0) < 1500) return;
+    d.cmdAt = w.time;
+    if (!ball) { if (d.bought) { r.petN = (r.petN | 0) + 1; d.bought = false; } const sp = pickSpecies(p, r); d.bought = true; adv.command(p.id, { t: "petbuy", npc: nurse.id, sp }); if (++d.done > 6) { r._pet = null; r._petAt = w.time + 300000; } return; }
+    if (c.down || Comp.hpOf(p, c) < Comp.maxOf(p, c)) { adv.command(p.id, { t: "petheal", uid: ball.uid, npc: nurse.id }); if (++d.done > 4) { r._pet = null; r._petAt = w.time + 300000; } return; }
+    d.leave = true; r._petUseAt = 0;
+  } else if (d.tp && w === home) {                                                       // camino a la tienda general de Aresden
+    if (!b.travel) { b.travel = { x: d.tp.x, y: d.tp.y, w, until: w.time + 90000 }; b.path = null; b.goal = null; b.fails = 0; }
+    return;
+  }
+  // terminado (o no hay enfermera aquí): vuelve a casa
+  if (w === home) { r._pet = null; r._petAt = w.time + (ball ? 240000 : 90000); return; }
+  const out = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === home.map.id) || (adv.maps[w.map.id]?.meta.teleports || [])[0];
+  if (out && !b.travel) { b.travel = { x: out.x, y: out.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
+  else if (!out && w.time - (r._rc || 0) > 8000) { r._rc = w.time; adv.command(p.id, { t: "recall" }); }
 }
 // ---- fosos de Promise Land (INVENTO): cada zona de aparición de monstruos es un foso. Lo controla el bando con jugadores dentro (rect + 6 casillas) mientras el otro no tenga ninguno.
 // `adv.pits` (no se guarda): id → { side, since }. Los habitantes que lo aguantan suman tiempo (`qa.pvp.held`, meta «pit»).

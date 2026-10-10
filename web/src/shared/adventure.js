@@ -215,7 +215,9 @@ export class Adventure {
       if (!p.dead || w.time - p.deadAt < 1500) return false;
       const home = this.homeOf(p);
       if (!this.transfer(p, w, home, home.home)) return false;
-      return respawn(home, p);
+      const ok = respawn(home, p);
+      if (ok && activeBall(p) && !activeBall(p).comp.down) spawnCompanion(home, p);
+      return ok;
     }
     return w.command(id, cmd);
   }

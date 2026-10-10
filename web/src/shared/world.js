@@ -147,7 +147,7 @@ const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder"
 const FOR_DEAD = new Set(["respawn", "say"]);
 
 const COMMANDS = {
-  respawn: (w, p) => Player.respawn(w, p),
+  respawn(w, p) { const ok = Player.respawn(w, p); if (ok && Companion.activeBall(p) && !Companion.activeBall(p).comp.down && !w.fightZone) Npc.spawnCompanion(w, p); return ok; },          // al reaparecer vuelve el summon elegido (al morir el dueño desaparecía y la bola seguía «fuera»)
   say(w, p, cmd) {
     let text = String(cmd.text || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
     if (text[0] === "$") { text = text.slice(1).trim(); return text ? Party.chat(w, p, text) : false; }        // chat de grupo

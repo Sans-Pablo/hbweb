@@ -11,6 +11,27 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Bots con summons (v0.44.0)",
+        "en": "Bots with summons (v0.44.0)"
+      },
+      "items": [
+        {
+          "es": "Los habitantes compran un summon a Gail (en Elvine Farm atiende al aire libre), lo invocan, le dan talentos, le enseñan hechizos de escuela y lo curan o reviven en el hospital. Cada uno prueba una especie distinta y avisa de lo que falla.",
+          "en": "Residents buy a summon from Gail (she now serves outdoors in Elvine Farm), summon it, spend its talents, teach it school spells and heal or revive it at the hospital. Each tries a different species and reports what fails."
+        },
+        {
+          "es": "Arreglado: la bola de «Orc-Mage» se vendía pero no se podía invocar (la especie no existe en NPC.cfg).",
+          "en": "Fixed: the «Orc-Mage» ball was sold but could not be summoned (the species is not in NPC.cfg)."
+        },
+        {
+          "es": "Arreglado: al morir tú, tu summon desaparecía y no volvía al reaparecer aunque la bola siguiera «fuera».",
+          "en": "Fixed: when you died your summon vanished and did not come back on respawn even though the ball still said «out»."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Fosos y cripta (v0.43.0)",
         "en": "Pits and crypt (v0.43.0)"
       },

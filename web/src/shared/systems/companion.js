@@ -113,6 +113,7 @@ export function buyCandy(w, p, cmd) {
 export function buyBall(w, p, cmd) {
   const sp = String(cmd.sp || "");
   if (!SPECIES[sp] || Sch.isTier2(sp) || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
+  if (!w.npcDb[sp]) return w.reject(p, cmd, "esa especie no existe en los datos (Orc-Mage no está en NPC.cfg)");          // se vendía una bola de una especie que no se puede invocar
   if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
   const ball = newInst(w, SPECIES[sp][1]);
   ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };          // un summon de escuela nace sin hechizos: se los enseñas tú

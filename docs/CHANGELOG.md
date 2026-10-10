@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.44.0 · Bots con summons (2026-10-10)
+
+- Habitantes (`residents.pets`): compran bola en el hospital (Aresden: Gail en `gshop_1f`; Elvine Farm: Gail al aire libre, `EXTRA_CITIZENS.elvfarm`), invocan, gastan talentos según su arquetipo, enseñan y lanzan hechizos de escuela, usan `pettarget`/`petmode`/caramelos, y curan o reviven. Informan al informe de probadores (`pet-missing`, `pet-far`, `pet-slow`, `pet-dies`, `learn-anywhere`, `revive-cost`…).
+- Corregido: `petbuy` rechaza especies que no están en NPC.cfg (Orc-Mage). Corregido: al reaparecer vuelve el summon elegido (`world.respawn`, `adventure.command respawn`). Test nuevo `residents-pets.test.mjs`.
+- Pendiente (hallazgos): `learn` no exige estar junto al Mago de la torre; los summons se quedan atrás cuando el dueño corre largas distancias.
+
 ## 0.43.0 · Fosos y cripta (2026-10-10)
 
 - Habitantes: bajan a la cripta (`residents.startDelve/delve`: entrada por `portal mid-entry`, caza, baja con el nivel despejado y Recall al terminar), metas `pvp` / `pit` / `crypt`, y fosos de Promise Land (cada zona de aparición de `2ndmiddle` es un foso; `adv.pits`, dominio por presencia en solitario, tiempo aguantado en `qa.pvp.held`). Eligen fosos del enemigo o libres y cambian de foso al dominarlo. `bot.js`: llegada a destino con espera (`b.hold`) y de viaje solo pelea lo que está a 2 casillas.

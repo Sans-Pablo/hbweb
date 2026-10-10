@@ -6,7 +6,8 @@ const STOP_MS = { 15: 180, 19: 250, 20: 250, 24: 150 };
 
 // NPC de la tienda general que el servidor original pone en otros mapas (el mago está en la torre): aquí, junto al tendero.
 // "Gail" hace de enfermera del hospital de compañeros (invento del port: usa una ficha y un sprite originales sin función en el juego base).
-export const EXTRA_CITIZENS = { gshop_1f: [{ name: "Gail", x: 57, y: 41, role: "pethospital" }, { name: "Gandlf", x: 49, y: 44 }, { name: "Kennedy", x: 55, y: 43, role: "arena", skin: "Howard" }] };
+// Elvine Farm no tiene tienda general disponible: allí Gail atiende al aire libre, junto al punto de inicio (invento del port; sin ella los Elvine no podrían conseguir un compañero).
+export const EXTRA_CITIZENS = { elvfarm: [{ name: "Gail", x: 127, y: 153, role: "pethospital" }], gshop_1f: [{ name: "Gail", x: 57, y: 41, role: "pethospital" }, { name: "Gandlf", x: 49, y: 44 }, { name: "Kennedy", x: 55, y: 43, role: "arena", skin: "Howard" }] };
 
 export function spawnCitizen(w, name, x, y, role = null, skin = null) {
   const cfg = w.npcDb[skin && w.npcDb[skin]?.town ? skin : name];            // skin: aspecto de otro habitante (el Arena Master se ve como Howard)
