@@ -7,7 +7,7 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { packKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
 import { castChance, manaCost } from "../shared/magic.js";
-import { SCHOOL_OF, SCHOOL_NAMES, spellSchool, spellLevel } from "../shared/systems/schools.js";
+import { SCHOOL_OF, SCHOOL_NAMES, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 
 const INK = "#2d1919";                         // RGB(45,25,25): texto del cliente sobre fondo de pergamino
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -201,11 +201,11 @@ export function registerDialogs(gui, api) {
   const TAB_HIT = [[16, 38], [39, 56], [57, 81], [82, 101], [102, 116], [117, 137], [138, 165], [166, 197], [198, 217], [218, 239]];
   const asCaster = me => ({ skills: me.skills || {}, stats: me.stats, level: me.level, eff: me.eff || {} });
   // El libro solo muestra las magias de la escuela del summon elegido (Orc/Demon fuego, Tentocle/Frost hielo, Cannibal-Plant/Liche rayo)
-  const bookSchool = me => { const b = me.bag && me.bag.find(i => i.comp && i.comp.on); return b ? { sp: b.comp.sp, lvl: b.comp.lvl, school: SCHOOL_OF[b.comp.sp] || null } : null; };
+  const bookSchool = me => { const b = me.bag && me.bag.find(i => i.comp && i.comp.on); return b ? { sp: b.comp.sp, lvl: b.comp.lvl, comp: b.comp, school: SCHOOL_OF[b.comp.sp] || null } : null; };
   const spellsOf = (me, view) => {
     const out = [], bs = bookSchool(me);
     if (!bs || !bs.school) return out;
-    for (let i = 0; i < 9; i++) { const id = view * 10 + i, m = api.magic[id]; if (m && spellSchool(m) === bs.school) out.push([id, m, spellLevel(api.magic, bs.school, id, bs.sp)]); }
+    for (let i = 0; i < 9; i++) { const id = view * 10 + i, m = api.magic[id]; if (m && spellSchool(m) === bs.school && taught(bs.comp, id)) out.push([id, m, spellLevel(api.magic, bs.school, id, bs.sp)]); }
     return out;
   };
   const mg = {
@@ -220,14 +220,14 @@ export function registerDialogs(gui, api) {
       let y = 0;
       const bs = bookSchool(me);
       for (const [id, m, need] of list) {
-        const cost = m.mana, name = m.name.replace(/-/g, " "), locked = need == null || bs.lvl < need;
+        const cost = spellMana(api.magic, bs.school, id), name = m.name.replace(/-/g, " "), locked = need == null || bs.lvl < need;
         const over = g.mouse.x - this.x >= 30 && g.mouse.x - this.x <= 240 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
         const col = locked ? "rgb(110,100,90)" : over ? "#fff" : "rgb(8,0,66)";
         g.text(30, 72 + y, name + (locked ? "  (Lv " + need + ")" : ""), col, { bold: true }); g.text(206, 72 + y, String(cost).padStart(3, " "), col, { bold: true });
         y += 18;
       }
       if (!list.length) {
-        const empty = !bs || !bs.school ? ["Your spellbook is empty.", "Choose a school summon: Orc (fire),", "Tentocle (ice) or Cannibal-Plant", "(lightning) and its spells appear here."] : ["Your " + SCHOOL_NAMES[bs.school] + " summon has no spells", "in this circle."];
+        const empty = !bs || !bs.school ? ["This is your summon's spellbook.", "Choose a school summon: Orc (fire),", "Tentocle (ice) or Cannibal-Plant", "(lightning), then teach it spells at", "the Sorcerer (your Int pays for it)."] : ["Your " + SCHOOL_NAMES[bs.school] + " summon knows no spells", "in this circle. Teach it at the Sorcerer."];
         empty.forEach((t, i) => g.aligned(3, 256, 100 + 15 * i, t, "#000"));
       }
       g.put("interface_1", 19, 30, 250);
@@ -261,26 +261,32 @@ export function registerDialogs(gui, api) {
   const SHOP_TAB = [[44, 52, 0], [57, 70, 1], [75, 95, 2], [100, 115, 3], [120, 131, 4], [135, 152, 5], [156, 179, 6], [183, 212, 7], [216, 232, 8], [236, 247, 9]];
   const shop = {
     id: 16, x: 110, y: 90, w: 304, h: 328, view: 0,
-    list(me) { const out = []; for (let i = 0; i < 9; i++) { const id = this.view * 10 + i, m = api.magic[id]; if (m && m.cost >= 0) out.push([id, m]); } return out; },
+    // El Mago enseña al SUMMON elegido: solo salen los hechizos de su escuela, con el nivel del summon, la Int y el oro que cuestan
+    list(me) { const out = [], bs = bookSchool(me); if (!bs || !bs.school) return out; for (let i = 0; i < 9; i++) { const id = this.view * 10 + i, m = api.magic[id]; if (m && spellSchool(m) === bs.school && spellLevel(api.magic, bs.school, id, bs.sp) != null) out.push([id, m]); } return out; },
     draw(g, me) {
       g.put("gamedialog_3", 1, 0, 0); g.put("dialogtext_0", 14, 0, 0);
-      g.text(23, 55, "Spell Name", INK); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
+      const bs = bookSchool(me);
+      if (bs?.school && bs.sp !== this.seenSp) { this.seenSp = bs.sp; for (let v = 0; v < 10; v++) { this.view = v; if (this.list(me).length) break; } }
+      g.text(23, 55, "Spell Name", INK); g.text(150, 55, "Lv", INK); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
       let y = 0;
       for (const [id, m] of this.list(me)) {
-        const known = me.magic && me.magic[id], name = m.name.replace(/-/g, " ");
+        const known = taught(bs.comp, id), need = spellLevel(api.magic, bs.school, id, bs.sp), int = spellInt(api.magic, bs.school, id), gold = spellGold(api.magic, bs.school, id), name = m.name.replace(/-/g, " ");
         const over = g.mouse.x - this.x >= 24 && g.mouse.x - this.x <= 159 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
-        const col = known ? "rgb(41,16,41)" : over ? "#fff" : "rgb(8,0,66)";
-        g.text(24, 72 + y, name, col, { bold: true }); g.text(200, 72 + y, String(m.reqInt).padStart(3, " "), col, { bold: true }); g.text(241, 72 + y, String(m.cost).padStart(3, " "), col, { bold: true });
+        const can = !known && bs.lvl >= need && me.stats.int >= int && me.gold >= gold;
+        const col = known ? "rgb(41,16,41)" : !can ? "rgb(150,60,50)" : over ? "#fff" : "rgb(8,0,66)";
+        g.text(24, 72 + y, name + (known ? " ✓" : ""), col, { bold: true }); g.text(150, 72 + y, String(need).padStart(2, " "), col, { bold: true });
+        g.text(200, 72 + y, String(int).padStart(3, " "), col, { bold: true }); g.text(236, 72 + y, String(gold).padStart(5, " "), col, { bold: true });
         y += 18;
       }
+      if (!this.list(me).length) (!bs || !bs.school ? ["Choose a school summon first:", "Orc (fire), Tentocle (ice) or", "Cannibal-Plant (lightning)."] : ["No spells of your " + SCHOOL_NAMES[bs.school] + " school", "in this circle."]).forEach((t, i) => g.aligned(0, 304, 100 + 15 * i, t, INK));
       g.put("interface_1", 19, 55, 250);
       g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
-      g.aligned(0, 304, 275, "Select a magic which you want to learn.", INK);
+      g.aligned(0, 304, 275, "Teach your summon a new spell.", INK);
     },
     click(g, lx, ly, me) {
       let y = 0;
       for (const [id] of this.list(me)) {
-        if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!(me.magic && me.magic[id])) api.learn(id); return true; }
+        if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!taught(bookSchool(me)?.comp, id)) api.learn(id); return true; }
         y += 18;
       }
       for (const [a, b, v] of SHOP_TAB) if (lx >= a + 11 && lx <= b + 11 && ly >= 248 && ly <= 260) this.view = v;

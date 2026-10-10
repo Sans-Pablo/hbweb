@@ -11,6 +11,27 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "El libro es del summon (v0.39.0)",
+    "en": "The spellbook belongs to the summon (v0.39.0)"
+   },
+   "items": [
+    {
+     "es": "El libro de hechizos es del summon: el Mago de la torre le enseña hechizos de su escuela. Tu Int (2 × nivel del hechizo, máximo 100), el oro y el nivel del summon lo permiten.",
+     "en": "The spellbook belongs to the summon: the Sorcerer in the tower teaches it spells of its school. Your Int (2 × spell level, max 100), gold and the summon's level allow it."
+    },
+    {
+     "es": "Costes rebalanceados: el maná de cada hechizo sale de su nivel (4 al 1 → 78 al 50) y todos los summons de escuela lanzan al menos 6 de los mejores hechizos con el maná lleno. Blizzard: Int 100, 78 de maná.",
+     "en": "Rebalanced costs: each spell's mana comes from its level (4 at 1 → 78 at 50) and every school summon can cast at least 6 of its best spells on full mana. Blizzard: Int 100, 78 mana."
+    },
+    {
+     "es": "El acierto de la magia de escuela depende del nivel del summon; tu Mag sigue subiendo el daño. Los summons de antes conservan lo que ya podían lanzar.",
+     "en": "School spell accuracy depends on the summon's level; your Mag still raises damage. Older summons keep what they could already cast."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Panel de estados (v0.38.0)",
     "en": "Status panel (v0.38.0)"
    },

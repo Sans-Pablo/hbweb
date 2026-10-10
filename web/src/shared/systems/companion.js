@@ -115,7 +115,7 @@ export function buyBall(w, p, cmd) {
   if (!SPECIES[sp] || Sch.isTier2(sp) || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
   if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
   const ball = newInst(w, SPECIES[sp][1]);
-  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack" };
+  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };          // un summon de escuela nace sin hechizos: se los enseñas tú
   const d = w.data.item(ball.id);
   if (!d || p.bag.length >= MAX_ITEMS || !Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); return false; }
   p.gold -= HOSPITAL.ballPrice;
@@ -136,7 +136,7 @@ export function tradeUp(w, p, cmd) {
   if (c.down) return w.reject(p, cmd, "primero hay que revivirlo");
   for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) return w.reject(p, cmd, "guárdalo antes");
   const from = c.sp, ball = newInst(w, SPECIES[to][1]);
-  ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack" };
+  ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack", spells: [...(c.spells || [])] };           // lo que le enseñaste se conserva
   Inv.removeFromBag(p, inst.uid);
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);

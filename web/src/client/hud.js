@@ -7,6 +7,7 @@ const talentName = id => talentDef(id)?.name || id;
 import * as R from "../shared/rules.js";
 import { itemDef, itemName, packKey } from "./names.js";
 import { statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
+import { SCHOOL_OF, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
 import { PROT_CAP, PROT_OVERRIDE } from "../shared/rarity.js";
@@ -111,7 +112,7 @@ export class Hud {
       case "equipfail": if (ev.id === me) this.log("No puedes equiparlo: " + ev.why + ".", "bad"); break;
       case "cantcarry": if (ev.id === me) this.log(ev.why === "weight" ? "Pesa demasiado para llevarlo." : "No tienes sitio en la mochila.", "bad"); break;
       case "broken": if (ev.id === me) this.log("Un objeto se ha gastado del todo: hay que repararlo.", "bad"); break;
-      case "learned": if (ev.id === me) { this.log("Aprendes " + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
+      case "learned": if (ev.id === me) { this.log((ev.nm ? ev.nm + " aprende " : "Aprendes ") + this.magicData?.[ev.spell]?.name + ".", "gold"); this.bookKey = ""; if (this.spell == null) this.spell = ev.spell; } break;
       case "reject": if (ev.id === me && (ev.cmd === "cast" || ev.cmd === "prepare")) this.log("No puedes lanzarlo: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "portal") this.log("No puedes usar el portal: " + ev.why + ".", "bad"); else if (ev.id === me && ev.cmd === "learn") this.log("No puedes aprenderlo: " + ev.why + ".", "bad"); else if (ev.id === me && (ev.cmd === "talent" || ev.cmd === "use" || ev.cmd === "petgo" || ev.cmd === "petup" || ev.cmd === "candybuy" ||  ev.cmd === "talreset" || ev.cmd === "petname" || ev.cmd === "teleport" || ev.cmd === "recall" || ev.cmd === "arenabet" || ev.cmd === "arenainfo")) this.log("No se puede: " + ev.why + ".", "bad"); break;
       case "mapchange": if (ev.id === me) { this.log("Entras en " + ev.name + ".", "gold"); this.toast(ev.name); } break;
       case "dungeon-cleared": if (ev.id === me) { this.log("¡Nivel despejado! Recoge el botín y baja por el portal (E).", "gold"); this.toast("¡Nivel despejado!"); } break;
@@ -245,18 +246,19 @@ export class Hud {
 
   renderBook(me) {
     const M = this.magicData || {};
-    const key = [JSON.stringify(me.magic), me.gold, me.stats.int, this.spell].join("|");
+    const ball = me.bag && me.bag.find(i => i.comp && i.comp.on), c = ball && ball.comp, school = c && SCHOOL_OF[c.sp];
+    const key = [JSON.stringify(c && [c.sp, c.lvl, c.spells]), me.gold, me.stats.int, this.spell].join("|");
     if (this.bookKey === key) return;
     this.bookKey = key;
-    const SUP = new Set([1, 2, 3]);
-    const attr = ["", "tierra", "aire", "fuego", "agua"];
-    let html = "";
+    // el libro es del summon elegido: sus hechizos aprendidos (Elegir) y los que el personaje puede enseñarle (Aprender: Int y oro)
+    let html = school ? "" : "<p>Elige un summon de escuela (Orc fuego, Tentocle hielo, Cannibal-Plant rayo) y enséñale hechizos con tu Int y tu oro.</p>";
     for (const id of Object.keys(M).map(Number).sort((a, b) => a - b)) {
-      const m = M[id]; if (m.cost < 0 || !SUP.has(m.type)) continue;
-      const known = me.magic && me.magic[id];
+      const m = M[id]; if (!school || spellSchool(m) !== school) continue;
+      const need = spellLevel(M, school, id, c.sp); if (need == null) continue;
+      const known = taught(c, id), int = spellInt(M, school, id), gold = spellGold(M, school, id), ok = c.lvl >= need && me.stats.int >= int && me.gold >= gold;
       const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
-        : `<button data-learn="${id}"${(!MAGIC_MODE.free && (me.stats.int < m.reqInt || me.gold < m.cost)) ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
-      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · MP ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
+        : `<button data-learn="${id}"${ok ? "" : " class=dis"}>Enseñar ${gold}</button>`;
+      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> Lv ${need} · MP ${spellMana(M, school, id)} · Int ${int}</small></span>${act}</div>`;
     }
     $("#book .list").innerHTML = html;
   }

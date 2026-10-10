@@ -36,11 +36,11 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `fields.js` · 92 · Objetos dinámicos de los hechizos de campo (CheckDynamicObjectList / DynamicObjectEffectProcessor):
 - `ground.js` · 27 · Objetos en el suelo: hasta 12 por casilla, el último en caer queda encima (Map.cpp bSetItem / pGetItem).
 - `itemsys.js` · 138 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
-- `magicsys.js` · 307 · Lanzar y aprender hechizos.
+- `magicsys.js` · 326 · Lanzar y aprender hechizos.
 - `npcsys.js` · 368 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 167 · Jugador: creación, guardado, recalculo de atributos, reaparición.
-- `schools.js` · 49 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
+- `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 - `status.js` · 24 · Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
 - `talents.js` · 138 · Árbol de talentos y hechizos del compañero. INVENTO del port (sin equivalente en el original); los hechizos son los de Magic.cfg
@@ -61,12 +61,12 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `controller.js` · 211 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 76 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
-- `dialogs.js` · 479 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
+- `dialogs.js` · 485 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
 - `fx.js` · 180 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 - `gui.js` · 528 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
-- `hud.js` · 325 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 286 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `hud.js` · 327 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
+- `i18n.js` · 287 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
@@ -122,7 +122,8 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
-- `schools.test.mjs` · 110 · Escuelas de magia de los summons: el jugador lanza, el summon de la escuela paga y tira; sin regeneración (caramelo azul); cambio al nivel 
+- `schools-all.test.mjs` · 41 · Todas las magias de escuela se pueden enseñar y lanzar con un summon de nivel 50, y hacen daño. node tests/schools-all.test.mjs
+- `schools.test.mjs` · 127 · Escuelas de magia de los summons: el jugador lanza, el summon de la escuela paga y tira; sin regeneración (caramelo azul); cambio al nivel 
 - `shop.test.mjs` · 81 · Tienda, herrero y almacén: compra, venta, reparación y depósito con las reglas del servidor original.
 - `sim.test.mjs` · 159 · Prueba de la simulación sin navegador: un "jugador" automático caza en la granja.
 - `sky.test.mjs` · 72 · Hora del día, clima y zonas sin ataque (HGServer/Game.cpp: _CheckDayOrNight, WhetherProcessor, _SetupNoAttackArea).

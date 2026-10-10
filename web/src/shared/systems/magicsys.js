@@ -16,9 +16,27 @@ import * as Sch from "./schools.js";
 import * as Tal from "./talents.js";
 
 // RequestStudyMagicHandler: hace falta Int >= ReqInt y pagar el coste (negativo = no se vende).
+// Con escuelas (MAGIC_MODE.schools) el libro es del SUMMON: el personaje le enseña un hechizo de su escuela si tiene la Int (2 x nivel del hechizo),
+// el oro y el summon tiene el nivel necesario. El summon elegido puede estar guardado en su bola. Ver schools.js.
 export function learn(w, p, id) {
   const sp = w.magic[id];
   if (!sp) return w.reject(p, { t: "learn" }, "no existe");
+  if (M.MAGIC_MODE.schools && !M.MAGIC_MODE.free) {
+    const ball = activeBall(p), c = ball?.comp, school = c && Sch.SCHOOL_OF[c.sp];
+    if (!school) return w.reject(p, { t: "learn" }, "elige primero un summon de escuela (fuego, hielo o rayo)");
+    if (Sch.spellSchool(sp) !== school) return w.reject(p, { t: "learn" }, "esa magia no es de la escuela de tu summon");
+    const need = Sch.spellLevel(w.magic, school, id, c.sp), int = Sch.spellInt(w.magic, school, id), gold = Sch.spellGold(w.magic, school, id);
+    if (need == null) return w.reject(p, { t: "learn" }, "no se vende");
+    if (Sch.taught(c, id)) return w.reject(p, { t: "learn" }, "tu summon ya la conoce");
+    if (c.lvl < need) return w.reject(p, { t: "learn" }, "tu summon necesita nivel " + need);
+    if (p.stats.int < int) return w.reject(p, { t: "learn" }, "Int " + int + " necesaria");
+    if (p.gold < gold) return w.reject(p, { t: "learn" }, "oro insuficiente");
+    p.gold -= gold;
+    (c.spells || (c.spells = [])).push(+id);
+    w.recalc(p);
+    w.emit({ t: "learned", id: p.id, spell: id, nm: c.nm, uid: ball.uid });
+    return true;
+  }
   if (p.magic[id]) return w.reject(p, { t: "learn" }, "ya la conoces");
   if (sp.cost < 0) return w.reject(p, { t: "learn" }, "no se vende");
   if (!M.MAGIC_MODE.free && p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
@@ -34,7 +52,7 @@ export function learn(w, p, id) {
 function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
   if (sp && M.MAGIC_MODE.free) p.magic[cmd.spell] = 1;
-  const granted = !!sp && M.MAGIC_MODE.schools && !!Sch.spellSchool(sp);        // las magias de escuela las da el summon: no hay que aprenderlas
+  const granted = !!sp && M.MAGIC_MODE.schools && !!Sch.spellSchool(sp);        // las magias de escuela las lanza el summon que las conoce (se comprueba abajo)
   if (!sp || (!p.magic[cmd.spell] && !granted)) return w.reject(p, cmd, "no conoces ese hechizo");
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
@@ -47,8 +65,9 @@ function usable(w, p, cmd) {
     if (!n) return w.reject(p, cmd, "necesitas un summon de la escuela " + Sch.SCHOOL_NAMES[school]);
     const comp = Inv.instOf(p, n.ball)?.comp, need = comp && Sch.spellLevel(w.magic, school, cmd.spell, comp.sp);
     if (need == null) return w.reject(p, cmd, "tu summon no domina esa magia");
+    if (!Sch.taught(comp, cmd.spell)) return w.reject(p, cmd, "enséñasela a tu summon en el Mago de la torre");
     if (comp.lvl < need) return w.reject(p, cmd, "tu summon necesita nivel " + need);
-    if ((n.mp ?? 0) < Tal.manaOf(w, cmd.spell)) return w.reject(p, cmd, "tu summon no tiene maná");
+    if ((n.mp ?? 0) < Sch.spellMana(w.magic, school, cmd.spell)) return w.reject(p, cmd, "tu summon no tiene maná");
     return sp;                                                        // lo lanza el summon: no importan las manos del jugador
   }
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
@@ -125,18 +144,18 @@ function resolve(w, p, id, sp, x, y, cost) {
   const chance = M.castChance(p, id);                                  // las magias de escuela las lanza el summon: no fallan por la habilidad del jugador
   if (!sch && !M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
   if (!sch && !M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
-  let schoolMult = 1;
+  let schoolMult = 1, schoolPower = 0;
   if (sch) {                                                          // paga y lanza el summon de la escuela
-    const mana = Tal.manaOf(w, id);
+    const mana = Sch.spellMana(w.magic, sch, id) ?? Tal.manaOf(w, id);
     if (!sm || (sm.mp ?? 0) < mana) { w.emit({ t: "nomagic", id: p.id }); return; }
     sm.mp -= mana;
     const comp = Inv.instOf(p, sm.ball)?.comp;
-    if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * Sch.levelPower(comp.lvl); }
+    if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * Sch.levelPower(comp.lvl); schoolPower = Sch.spellPower(comp.lvl); }
     sm.castAt = w.time;
   } else p.mp = Math.max(0, p.mp - cost);
   gainSSN(p, 4, 1);
   sclear(w, p, "invis");                                              // lanzar un hechizo rompe la invisibilidad
-  let power = M.castPower(p, id);
+  let power = sch && schoolPower ? schoolPower : M.castPower(p, id);                     // magia de escuela: acierto según el nivel del summon (no según tu habilidad)
   if (id >= 80 || sp.type === 28) power += 10000;                     // los hechizos de 9º círculo y rompe-armaduras no se resisten
   const secs = (sp.last || 0) * 1000;
 

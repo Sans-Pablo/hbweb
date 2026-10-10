@@ -19,7 +19,7 @@ const data = new GameData({ items: J("items.json"), magic, npcs: npcDb });
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
 const id = w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 90, mag: 90, chr: 10 } });
 const A = w.ents.get(id); A.stats.str = 400; A.level = 50; w.recalc(A); A.hp = A.maxHp; A.mp = A.maxMp = 500; A.gold = 1e6;
-A.magic = {};                                                               // las magias de escuela las da el summon: no hace falta aprenderlas
+A.stats.int = 100; A.magic = {};                                                               // las magias de escuela las da el summon: no hace falta aprenderlas
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);
 const buy = sp => { const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, A.x, A.y, A.dead); assert.ok(ok, sp); return A.bag.find(i => i.comp?.sp === sp); };
@@ -41,6 +41,13 @@ assert.ok(w.command(A.id, { t: "use", uid: orc.uid }));
 const o = [...w.ents.values()].find(e => e.comp && e.master === A.id);
 w.command(A.id, { t: "petmode", mode: "peace" });
 tick(500);
+// el libro es del summon: hay que enseñarle el hechizo (Int y oro del personaje)
+assert.equal(w.command(A.id, { t: "cast", spell: 20, x: tgt.x, y: tgt.y }), false, "no sabe el hechizo");
+assert.ok(w.events.some(e => e.t === "reject" && /enséñasela/.test(e.why)));
+{ const g = A.gold, int = A.stats.int; A.stats.int = 5; assert.equal(w.command(A.id, { t: "learn", spell: 20 }), false, "poca Int"); A.stats.int = int;
+  assert.equal(w.command(A.id, { t: "learn", spell: 45 }), false, "hielo no es de su escuela");
+  assert.ok(w.command(A.id, { t: "learn", spell: 20 })); assert.ok(S.taught(orc.comp, 20)); assert.equal(g - A.gold, S.spellGold(magic, "fire", 20));
+  assert.equal(w.command(A.id, { t: "learn", spell: 20 }), false, "ya la conoce"); }
 const top = T.maxMp(orc.comp);  assert.ok(Math.abs(o.mp - top) < 1, "maná completo al invocar");
 assert.equal(w.command(A.id, { t: "cast", spell: 45, x: tgt.x, y: tgt.y }), false, "hielo no es de su escuela");
 const mp0 = A.mp, hp0 = tgt.hp; w.events.length = 0;
@@ -78,6 +85,7 @@ const hpOrc = C.statsOf(A, orc.comp).hp, mpOrc = T.maxMp(orc.comp);
 assert.ok(w.command(A.id, { t: "petup", npc: nurse.id, uid: orc.uid }));
 const dem = A.bag.find(i => i.comp?.sp === "Demon");
 assert.ok(dem && dem.comp.lvl === 1 && dem.comp.nm === orc.comp.nm && !A.bag.includes(orc));
+assert.ok(S.taught(dem.comp, 20), "lo aprendido se conserva al evolucionar");
 dem.comp.lvl = 50;
 assert.ok(C.statsOf(A, dem.comp).hp > hpOrc && T.maxMp(dem.comp) > mpOrc, "Demon más vida y maná");
 assert.equal(w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Demon" }), false, "las especies superiores no se compran");
@@ -89,10 +97,11 @@ assert.equal(S.spellLevel(magic, "fire", 20, "Orc"), 1); assert.equal(S.spellLev
 const lowOrc = A.bag.find(i => i.comp?.sp === "Demon"); lowOrc.comp.lvl = 50; lowOrc.comp.on = false;
 { const b = buy("Orc"); b.comp.lvl = 5; for (const x of A.bag) if (x.comp) x.comp.on = false; assert.ok(w.command(A.id, { t: "use", uid: b.uid }));
   tgt = mob(); const n2 = [...w.ents.values()].find(e => e.comp && e.master === A.id); n2.mp = 400; tick(2500); w.events.length = 0;
-  assert.equal(w.command(A.id, { t: "cast", spell: 30, x: tgt.x, y: tgt.y }), false, "Fire Strike pide nivel 13");
+  assert.equal(w.command(A.id, { t: "learn", spell: 30 }), false, "Fire Strike pide nivel 13");
   assert.ok(w.events.some(e => e.t === "reject" && /nivel 13/.test(e.why)));
   assert.equal(w.command(A.id, { t: "cast", spell: 3, x: tgt.x, y: tgt.y }), false);        // sin escuela (utilidad/otro): no se lanza
   b.comp.lvl = 20; w.events.length = 0; n2.dir = 1;
+  { const r = w.command(A.id, { t: "learn", spell: 30 }); if (!r) console.log(JSON.stringify(w.events.slice(-2))); assert.ok(r, "con nivel, Int y oro se le enseña"); }
   assert.ok(w.command(A.id, { t: "cast", spell: 30, x: tgt.x, y: tgt.y }));
   assert.ok(w.events.some(e => e.t === "dummy-cast" && e.nid === n2.id && /Fire Strike/.test(e.txt)), "el summon dice el nombre de la magia");
   { const dx = Math.sign(tgt.x - n2.x), dy = Math.sign(tgt.y - n2.y); const want = { "0,-1": 1, "1,-1": 2, "1,0": 3, "1,1": 4, "0,1": 5, "-1,1": 6, "-1,0": 7, "-1,-1": 8 }[dx + "," + dy]; assert.equal(n2.dir, want, "el summon mira hacia el objetivo"); }
@@ -107,4 +116,12 @@ assert.equal(g0 - A.gold, C.CANDY_PRICE[781] * 3);
 assert.ok(A.bag.filter(i => i.id === 781).reduce((a, i) => a + (i.count || 1), 0) >= 3, "los caramelos llegan a la mochila");
 assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 999, count: 1 }), false, "solo los caramelos");
 A.gold = 0; assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 780, count: 1 }), false, "sin oro");
+// equilibrio: Int máxima 100, maná del hechizo según su nivel y el maná del summon alcanza para varios lanzamientos de los mejores
+for (const [school, sps] of [["fire", ["Orc", "Demon"]], ["ice", ["Tentocle", "Frost"]], ["lightning", ["Cannibal-Plant", "Liche"]]]) {
+  const ids = Object.keys(S.unlockLevels(magic, school)).map(Number);
+  for (const id of ids) { assert.ok(S.spellInt(magic, school, id) <= 100 && S.spellInt(magic, school, id) >= 10); assert.ok(S.spellMana(magic, school, id) >= 4 && S.spellMana(magic, school, id) <= 80); assert.ok(S.spellGold(magic, school, id) <= 20000); }
+  const best = Math.max(...ids.map(id => S.spellMana(magic, school, id))), first = Math.min(...ids.map(id => S.spellMana(magic, school, id)));
+  for (const sp of sps) { assert.ok(T.maxMp({ sp, lvl: 50, tal: {} }) >= best * 6, sp + " lvl 50 lanza ≥ 6 de los mejores"); assert.ok(T.maxMp({ sp, lvl: 1, tal: {} }) >= first * 8, sp + " lvl 1 lanza ≥ 8 de los primeros"); }
+}
+assert.equal(S.spellInt(magic, "ice", 91), 100, "Blizzard: Int 100"); assert.equal(S.spellMana(magic, "ice", 91), 78);
 console.log("OK schools");

@@ -47,3 +47,16 @@ export const spellLevel = (magic, school, id, species) => {
 };
 // daño del summon: crece con su nivel (0,6 al nivel 1 → 1,4 al 50)
 export const levelPower = lvl => 0.6 + 0.8 * Math.min(50, Math.max(1, lvl)) / 50;
+
+// ---- Libro del summon (rediseño): el libro de hechizos es del SUMMON y el personaje solo le "enseña" con su Int y su oro.
+//  - Enseñar (Mago de la torre): hace falta Int = 2 x nivel del hechizo (máx. 100: se alcanza sin dejar el resto del personaje a cero),
+//    el nivel del summon que indica el libro y oro (25 x nivel^1,7). Lo aprendido queda guardado en la bola (comp.spells).
+//  - Lanzar: el summon fuera, con el hechizo enseñado y maná. El maná de cada hechizo sale de su nivel (4 al 1 → 78 al 50), así que un summon
+//    de nivel 50 (640 de maná) lanza ~8 de los mejores y uno de nivel 1 (52) ~13 de los primeros.
+const baseLevel = (magic, school, id) => unlockLevels(magic, school)[id];
+export const spellInt = (magic, school, id) => { const l = baseLevel(magic, school, id); return l == null ? null : Math.max(10, 2 * l); };
+export const spellGold = (magic, school, id) => { const l = baseLevel(magic, school, id); return l == null ? null : Math.round(25 * Math.pow(l, 1.7) / 10) * 10; };
+export const spellMana = (magic, school, id) => { const l = baseLevel(magic, school, id); return l == null ? null : Math.round(4 + 1.5 * (l - 1)); };
+export const taught = (comp, id) => !!comp && (comp.spells === undefined || (Array.isArray(comp.spells) && comp.spells.includes(+id)));       // bolas anteriores a 0.39 (sin lista): ya sabían todo lo de su nivel
+// Acierto de las magias de escuela contra la resistencia mágica del monstruo (bCheckResistingMagicSuccess): crece con el nivel del summon
+export const spellPower = lvl => 40 + 3 * Math.min(50, Math.max(1, lvl));

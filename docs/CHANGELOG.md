@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.39.0 · El libro es del summon (2026-10-10)
+
+- `learn` enseña al summon elegido (comp.spells); coste de Int/oro/maná normalizado por nivel de hechizo (`schools.js`); acierto por nivel del summon. Sin documentación nueva hasta una versión estable.
+
 ## 0.38.0 · Panel de estados (2026-10-10)
 
 - Panel de estados con DR/MR, buffs, auras y estados con temporizador y efecto; `e.aura` incluye ahora regeneración, estamina, maná y el nombre del Dummy.
