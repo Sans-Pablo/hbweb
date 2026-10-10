@@ -11,6 +11,19 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Segunda ronda de bots (v0.45.1)",
+        "en": "Second bot round (v0.45.1)"
+      },
+      "items": [
+        {
+          "es": "Los 40 habitantes empiezan de nuevo en nivel 1 y el informe anterior se archiva, para repetir el análisis con las reparaciones de la 0.45.0. El modo observar («👁 Observar habitantes» en la pantalla de entrada, o añadir #observar a la dirección) solo aparece si el navegador conecta con el servidor online.",
+          "en": "All 40 residents start again at level 1 and the previous report is archived, to repeat the analysis with the 0.45.0 fixes. Observer mode («👁 Observe residents» on the login screen, or add #observar to the address) only shows when the browser reaches the online server."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Reparaciones tras el informe de bots (v0.45.0)",
         "en": "Fixes after the bot report (v0.45.0)"
       },

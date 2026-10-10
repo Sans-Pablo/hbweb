@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.45.1 · Segunda ronda de bots (2026-10-10)
+
+- Servidor: `BOT_EPOCH` (server.mjs) + `bots-epoch.txt` en la carpeta de datos: al cambiar la época se borran las partidas `bot:*` (todos a nivel 1) y el informe se archiva como `ronda-<fecha> …`. Una sola vez por época; subir la constante para otra ronda.
+
 ## 0.45.0 · Reparaciones del informe de bots (2026-10-10)
 
 - Corregido (crash): `companionStruck` leía la mochila de un dueño que ya no estaba en el mundo (cambio de mapa) y tumbaba el servidor; ahora el summon se disuelve.

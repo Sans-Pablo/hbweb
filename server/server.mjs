@@ -99,6 +99,14 @@ function persist(force = false) {
   for (const b of adventure.residents()) { const s = adventure.saveOf(b.id); if (s) saves[bkey(b.name)] = s; }
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
+// Segunda ronda de análisis: al subir BOT_EPOCH todos los habitantes vuelven a nivel 1 y el informe se archiva y empieza vacío (una sola vez por época).
+const BOT_EPOCH = "2";
+function resetResidents() {
+  for (const k of Object.keys(saves)) if (k.startsWith("bot:")) delete saves[k];
+  try { const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-"); for (const f of ["informe-bots.jsonl", "Informe de bots.md"]) { const p = path.join(STORE, f); if (fs.existsSync(p)) fs.renameSync(p, path.join(STORE, "ronda-" + stamp + " " + f)); } } catch (e) { console.error("archivo del informe:", e.message); }
+}
+{ const ef = path.join(STORE, "bots-epoch.txt"); let cur = ""; try { cur = fs.readFileSync(ef, "utf8").trim(); } catch {}
+  if (cur !== BOT_EPOCH) { resetResidents(); try { fs.writeFileSync(ef, BOT_EPOCH); } catch {} log("[habitantes] época " + BOT_EPOCH + ": los habitantes empiezan de nuevo en nivel 1 y el informe anterior queda archivado."); } }
 const informe = openReport(STORE, { version: VERSION.version, log });
 adventure.report = r => informe.add(r);               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 spawnResidents(RESIDENTS);
