@@ -30,7 +30,7 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
   const hist = db.prepare("INSERT INTO history(k,at,v) VALUES(?,?,?)");
   const prune = db.prepare("DELETE FROM history WHERE k=? AND at NOT IN (SELECT at FROM history WHERE k=? ORDER BY at DESC LIMIT ?)");
   st.flush = (force = false) => {
-    const now = Date.now(); let n = 0;
+    const now = Math.max(Date.now(), (st.lastAt || 0) + 1); st.lastAt = now; let n = 0;       // marca única por volcado: la poda del historial se apoya en `at`
     db.exec("BEGIN");
     try {
       for (const t of ["accounts", "saves"]) {
