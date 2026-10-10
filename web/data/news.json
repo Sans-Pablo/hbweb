@@ -11,6 +11,23 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Bolas en el suelo y Dummy (v0.32.1)",
+    "en": "Ground balls and Dummy (v0.32.1)"
+   },
+   "items": [
+    {
+     "es": "Una bola de compañero tirada en el suelo muestra su nombre (Cyclops Ball...) y no Pearl. Prueba: tira una bola y pasa el ratón por encima.",
+     "en": "A companion ball on the ground shows its name (Cyclops Ball...) instead of Pearl. Test: drop a ball and hover over it."
+    },
+    {
+     "es": "La bola del Dummy en la mochila se tiñe según su clase (verde, amarillo, azul).",
+     "en": "The Dummy ball in the bag is tinted by its class (green, yellow, blue)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Dummy de apoyo (v0.32.0)",
     "en": "Support Dummy (v0.32.0)"
    },

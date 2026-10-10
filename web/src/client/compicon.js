@@ -1,6 +1,7 @@
 // Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
+import { DUMMY_COLORS } from "../shared/systems/talents.js";
 let NPC = {};
 export const setNpcDb = db => { NPC = db || {}; };
 const cache = new Map();
@@ -32,15 +33,15 @@ export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
   const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;
   const [sx, sy, w, h, px, py] = fr, sp = it.comp.sp;
   let m = cache.get(sp); if (!m) { m = miniOf(sp, k => g.spr.frames(k)); cache.set(sp, m); }
-  const tint = m && tintOf(g, sp, m);
+  const tint = it.comp.cls ? DUMMY_COLORS[it.comp.cls] : m && tintOf(g, sp, m);          // Dummy: la bola toma el color de su clase
   let src = g.spr.img[key], ox = sx, oy = sy;
   if (tint) {
-    const ck = key + ":" + d.spriteFrame + ":" + sp;
+    const ck = key + ":" + d.spriteFrame + ":" + sp + ":" + (it.comp.cls || "");
     let c = ballCache.get(ck);
     if (!c) {
       c = document.createElement("canvas"); c.width = w; c.height = h;
       const x2 = c.getContext("2d"); x2.drawImage(g.spr.img[key], sx, sy, w, h, 0, 0, w, h);
-      x2.globalCompositeOperation = "source-atop"; x2.globalAlpha = 0.6; x2.fillStyle = tint; x2.fillRect(0, 0, w, h);
+      x2.globalCompositeOperation = "source-atop"; x2.globalAlpha = it.comp.cls ? 0.8 : 0.6; x2.fillStyle = tint; x2.fillRect(0, 0, w, h);
       ballCache.set(ck, c);
     }
     src = c; ox = 0; oy = 0;

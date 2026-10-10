@@ -426,7 +426,7 @@ function pub(e, own) {
 
 function itemsList(world) {
   const out = [];
-  for (const list of world.items.values()) { const it = list[list.length - 1]; out.push([it.uid, it.id, it.count, it.x, it.y, it.attr || 0]); }   // solo se ve el de encima
+  for (const list of world.items.values()) { const it = list[list.length - 1]; out.push([it.uid, it.id, it.count, it.x, it.y, it.attr || 0, it.comp ? { sp: it.comp.sp, lvl: it.comp.lvl, nm: it.comp.nm, cls: it.comp.cls, down: it.comp.down } : 0]); }   // solo se ve el de encima (las bolas llevan su especie para el nombre)
   return out;
 }
 

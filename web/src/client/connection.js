@@ -175,10 +175,10 @@ export class NetConnection {
     for (const id of m.g || []) w.ents.delete(id);
     if (m.it) {
       w.items.clear();
-      for (const [uid, id, count, x, y, attr] of m.it) {
+      for (const [uid, id, count, x, y, attr, comp] of m.it) {
         const k = w.grid.idx(x, y);
         if (!w.items.has(k)) w.items.set(k, []);
-        w.items.get(k).push({ uid, id, count, x, y, ...(attr ? { attr } : {}) });
+        w.items.get(k).push({ uid, id, count, x, y, ...(attr ? { attr } : {}), ...(comp ? { comp } : {}) });
       }
     }
     for (const ev of m.ev || []) {

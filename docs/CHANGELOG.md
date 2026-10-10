@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.32.1 · Nombre de la bola en el suelo y bola del Dummy (2026-10-10)
+
+- Online: las bolas en el suelo llevan su especie, nombre y clase en el paquete de objetos; antes el cliente solo veía el objeto base y mostraba «Pearl» en vez de «Cyclops Ball».
+- La bola del Dummy en la mochila se tiñe del color de su clase.
+
 ## 0.32.0 · Dummy de apoyo (2026-10-10)
 
 - Nuevo compañero único «Dummy» (ficha `docs/sistemas/dummy.md`): frágil, no ataca, 3 clases (Healer verde, Buffer amarillo, Aura azul) que se fijan con la primera magia, área de efecto 1→6 casillas según el nivel, solo para el grupo y sus summons, MASS, auras proporcionales al nivel, reflejo de agro con aviso hablado y modo Stay/Follow.
