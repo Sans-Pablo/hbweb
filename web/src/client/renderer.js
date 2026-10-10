@@ -459,8 +459,9 @@ export class Renderer {
         if (other && !e.dead) {
           const party = s.me?.party?.names?.includes(e.name);
           const nm = e.name + (party ? ", Party Member" : "");          // BGET_NPC_NAME23
-          const foe = e.arena || (e.pk > 0);                              // _iGetFOE: rojo enemigo / verde aliado
-          this.origName(x, y, [[nm, "255,255,255"], [foe ? "Criminal" : "Traveller", foe ? "255,0,0" : "30,200,30"]]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
+          const mine = s.me?.side || 0, foe = e.arena || (e.pk > 0) || (mine > 0 && e.side > 0 && e.side !== mine);     // _iGetFOE: rojo enemigo (otro bando) / verde aliado
+          const sideName = e.side === 1 ? "Aresden Civilian" : e.side === 2 ? "Elvine Civilian" : "Traveller";
+          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"]]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
       return;

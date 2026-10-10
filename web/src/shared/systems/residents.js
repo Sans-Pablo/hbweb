@@ -6,6 +6,8 @@
 // Todo es determinista salvo `adv.llm` (solo existe en el servidor). El estado (`p.res`) se guarda en el save del habitante.
 import { dist } from "../const.js";
 import * as Party from "./party.js";
+import { blog } from "./bot.js";
+import { canFight } from "./combatsys.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -32,16 +34,16 @@ export function create(name) {
   const h = hash(name.toLowerCase()), arch = Object.keys(ARCH)[h % 5];
   return { v: 1, arch, origin: pickBy(ORIGINS, h, 31), motive: pickBy(MOTIVES, h, 37), fear: pickBy(FEARS, h, 41), quirk: pickBy(QUIRKS, h, 43),
     lang: (NAMES.indexOf(name) >= 0 ? NAMES.indexOf(name) : h) % 2 ? "en" : "es",          // mitad habla inglés y mitad español
-    goal: null, mem: [], rel: {}, kills0: 0, deaths: 0, bio: null, chats: 0, qa: { kills: {}, deaths: {}, rej: {}, exp0: 0 } };
+    goal: null, mem: [], rel: {}, kills0: 0, deaths: 0, bio: null, chats: 0, qa: { kills: {}, deaths: {}, rej: {}, exp0: 0, pvp: { k: 0, d: 0 } } };
 }
-export function restore(name, saved) { const r = { ...create(name), ...(saved && typeof saved === "object" ? saved : {}) }; r.mem = (r.mem || []).slice(-16); return r; }
+export function restore(name, saved) { const r = { ...create(name), ...(saved && typeof saved === "object" ? saved : {}) }; r.mem = (r.mem || []).slice(-16); r.qa = { kills: {}, deaths: {}, rej: {}, exp0: 0, ...(r.qa || {}) }; r.qa.pvp ||= { k: 0, d: 0 }; return r; }
 export const storyOf = (p, lang) => {
   const r = p.res, i = lang === "en" ? 1 : 0, a = ARCH[r.arch][lang === "en" ? "en" : "es"];
   return lang === "en"
     ? `${p.name} is a ${a} from ${r.origin[i]} who ${r.motive[i]}. Fears ${r.fear[i]} and ${r.quirk[i]}.`
     : `${p.name} es un ${a} de ${r.origin[i]} que ${r.motive[i]}. Teme ${r.fear[i]} y ${r.quirk[i]}.`;
 };
-export function remember(p, es, en) { const m = p.res.mem; m.push({ es, en }); if (m.length > 16) m.shift(); }
+export function remember(p, es, en) { const m = p.res.mem; m.push({ es, en }); if (m.length > 16) m.shift(); if (p.res._w) blog(p.res._w, p, "📝 " + es); }
 export const relOf = (p, who) => p.res.rel[who] || 0;
 function befriend(p, who, n = 1) {
   const rel = p.res.rel; rel[who] = (rel[who] || 0) + n;
@@ -82,6 +84,11 @@ const L = {
   level: [["¡Nivel {l}! Un paso más hacia lo que busco.", "Level {l}! One step closer to what I seek."]],
   goal: [["¡Lo logré: {g}!", "I did it: {g}!"]],
   died: [["Me han matado… la próxima vez tendré más cuidado.", "I got killed… I'll be more careful next time."]],
+  group: [["¿Cazamos juntos, {n}?", "Want to hunt together, {n}?"], ["Voy contigo, {n}, mejor en grupo.", "I'm with you, {n}, better as a group."]],
+  trip: [["Voy a Promise Land a probar suerte.", "Heading to Promise Land to try my luck."], ["Toca viaje a Promise Land. ¿Quién se apunta?", "Time for Promise Land. Who's in?"]],
+  taunt: [["¡Por mi bando! Fuera de aquí, {n}.", "For my side! Get out of here, {n}."], ["{n}, hoy no sales vivo de aquí.", "{n}, you're not leaving here alive."]],
+  win: [["¡Uno menos del otro bando!", "One less from the other side!"], ["Eso te pasa por entrar en Promise Land.", "That's what you get for coming to Promise Land."]],
+  lose: [["Me han ganado… la próxima será mía.", "They got me… next one's mine."]],
   other: [["Interesante. Cuéntame más.", "Interesting. Tell me more."], ["Mm, no sé qué decirte, {n}.", "Hm, not sure what to say, {n}."]],
 };
 export const langOf = text => (/[áéíóúñ¿¡]|\b(hola|que|qué|como|cómo|quien|quién|donde|dónde|grupo|gracias|adios|adiós|ayuda|vamos|ven)\b/i.test(text) ? "es" : "en");
@@ -130,10 +137,22 @@ export function onEvent(adv, w, ev) {
   switch (ev.t) {
     case "chat": return onChat(adv, w, ev);
     case "reject": { const b = adv.bots.get(ev.id); if (b?.res) qaReject(adv, w, b, ev); return; }
-    case "damage": { const b = adv.bots.get(ev.id); if (b?.res && ev.from) b.res._lastHit = w.ents.get(ev.from)?.name || "?"; return; }
+    case "damage": {
+      const b = adv.bots.get(ev.id);
+      if (b?.res && ev.from) {
+        const f = w.ents.get(ev.from); b.res._lastHit = f?.name || "?";
+        if (f?.kind === "player" && w.pvp) { b.bot.revenge = { id: f.id, until: w.time + 8000 }; if (!b.res._hitLogAt || w.time - b.res._hitLogAt > 4000) { b.res._hitLogAt = w.time; blog(w, b, `${f.name} (nv ${f.level}, bando enemigo) me ataca: -${ev.amount} (${ev.hp}/${ev.max}).`); } }
+      }
+      return;
+    }
+    case "pvpkill": {
+      const k = adv.bots.get(ev.id);
+      if (k?.res) { k.res.qa.pvp.k++; remember(k, "Derroté a " + ev.name + " en Promise Land.", "Defeated " + ev.name + " in Promise Land."); if (w.rng() < 0.6) speak(adv, k, fmt(k, "win", k.res.lang, ev.name, w)); }
+      return;
+    }
     case "death": {
       const dead = adv.bots.get(ev.id);
-      if (dead?.res) { dead.res._killer = w.ents.get(ev.by)?.name || dead.res._lastHit || "?"; return; }
+      if (dead?.res) { const kf = w.ents.get(ev.by); dead.res._killer = kf?.name || dead.res._lastHit || "?"; if (kf?.kind === "player") { dead.res._pvpDeath = true; dead.res.qa.pvp.d++; } return; }
       const b = adv.bots.get(ev.by), n = w.ents.get(ev.id);
       if (b?.res && n?.kind === "npc") b.res.qa.kills[n.name] = (b.res.qa.kills[n.name] || 0) + 1;
     }
@@ -141,25 +160,30 @@ export function onEvent(adv, w, ev) {
 }
 // Un jugador habla cerca de un habitante: el más cercano (o el nombrado) responde tras una pausa.
 export function onChat(adv, w, ev) {
-  if (!ev.id || adv.bots.has(ev.id) || ev.system || !ev.text) return;
+  if (!ev.id || ev.system || !ev.text) return;
   const human = w.ents.get(ev.id); if (!human) return;
+  const fromBot = adv.bots.get(ev.id), depth = fromBot?.res ? (fromBot.res._depth ?? 0) : 0;
+  if (adv.bots.has(ev.id)) {                                                          // un habitante habla a otro: solo del mismo bando, de cerca, con poca probabilidad y sin cadenas largas
+    if (!fromBot.res || depth >= 3 || w.rng() > 0.5) return;
+  }
   const text = String(ev.text), low = text.toLowerCase();
   let best = null, bd = 1e9;
   for (const b of adv.bots.values()) {
-    if (!b.res || b.dead || adv.worldFor(b.id) !== w || b.res.reply) continue;
+    if (b === human || !b.res || b.dead || adv.worldFor(b.id) !== w || b.res.reply) continue;
+    if (fromBot && (b.side !== fromBot.side || w.time - (b.res._rcd || -1e9) < 20000)) continue;
     const named = low.includes(b.name.toLowerCase()), d = dist(b, human);
-    if (d > (named ? 40 : 10)) continue;
+    if (d > (fromBot ? 7 : named ? 40 : 10)) continue;
     const s = d - (named ? 100 : 0);
     if (s < bd) { best = b; bd = s; }
   }
-  if (best) queueReply(adv, w, best, human, text);
+  if (best) queueReply(adv, w, best, human, text, depth + 1);
 }
-function queueReply(adv, w, p, human, text) {
+function queueReply(adv, w, p, human, text, depth = 0) {
   const r = p.res, lang = langOf(text), intent = intentOf(text), n = human.name;
-  befriend(p, n, 1); r.chats++;
+  befriend(p, n, 1); r.chats++; r._rcd = w.time;
   let key = intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 3 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
-  r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang };
+  r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
   if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // modelo local: si responde a tiempo, sustituye a la frase hecha
     const rep = r.reply; rep.at += 3000;
     Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text })).then(t => { if (t && r.reply === rep) rep.text = String(t); }).catch(() => {});
@@ -169,20 +193,22 @@ function queueReply(adv, w, p, human, text) {
 export function think(adv, p) {
   const r = p.res, w = adv.worldFor(p.id);
   if (!r || w.time < r.next) return;
-  r.next = w.time + 500;
+  r.next = w.time + 500; r._w = w;
+  const home = adv.homeOf(p);
   // respuesta pendiente
   if (r.reply && w.time >= r.reply.at) {
     const rep = r.reply; r.reply = null;
     if (!p.dead) {
-      speak(adv, p, rep.text);
+      r._depth = rep.depth || 0; speak(adv, p, rep.text);
       if (rep.follow && !r.followUntil) { const h = [...w.ents.values()].find(e => e.kind === "player" && e.name === rep.to && !adv.bots.has(e.id)); if (h) { p.bot.owner = h.id; r.followUntil = w.time + 5 * 60000; remember(p, "Acompañé a " + rep.to + " un rato.", "Tagged along with " + rep.to + " for a while."); } }
     }
   }
   if (r.followUntil && w.time > r.followUntil) {                                     // se acabó el acompañamiento: vuelve a su vida
     r.followUntil = 0; p.bot.owner = null; Party.leave(w, p, true);
-    if (w !== adv.farm) { adv.transfer(p, w, adv.farm, adv.farm.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
+    if (w !== home) { adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   }
-  if (p.dead) { if (!r.deadSeen) { r.deadSeen = true; r.deaths++; remember(p, "Morí en combate.", "I died in battle."); if (w.rng() < 0.5) speak(adv, p, fmt(p, "died", r.lang, "", w)); } qaTick(adv, w, p, r); return; }
+  if (r._wid !== w.map.id) worldChanged(adv, w, p, r, home);
+  if (p.dead) { if (!r.deadSeen) { r.deadSeen = true; r.deaths++; remember(p, r._pvpDeath ? "Me mató " + (r._killer || "un enemigo") + " en Promise Land." : "Morí en combate.", r._pvpDeath ? (r._killer || "An enemy") + " killed me in Promise Land." : "I died in battle."); if (w.rng() < 0.5) speak(adv, p, fmt(p, r._pvpDeath ? "lose" : "died", r.lang, "", w)); r._pvpDeath = false; } qaTick(adv, w, p, r); return; }
   r.deadSeen = false;
   if (p.level > r.lvl) { r.lvl = p.level; remember(p, "Subí al nivel " + p.level + ".", "Reached level " + p.level + "."); if (p.bot.owner == null && w.rng() < 0.7) speak(adv, p, fmt(p, "level", r.lang, "", w)); }
   if (goalDone(p)) {
@@ -191,10 +217,14 @@ export function think(adv, p) {
   }
   qaTick(adv, w, p, r);
   // fuera de la granja (entró a una tienda o a la cripta pisando un teletransporte mientras paseaba): se queda un rato probando y vuelve
-  if (w !== adv.farm && !p.bot.owner) {
+  if (w !== home && !p.bot.owner && !r._trip) {
     r._away ??= w.time;
-    if (w.time - r._away > 45000 && !p.dead) { r._away = null; remember(p, "Entré en " + (w.map.name || w.map.id) + " y volví.", "I went into " + (w.map.name || w.map.id) + " and came back."); adv.transfer(p, w, adv.farm, adv.farm.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
+    if (w.time - r._away > 45000 && !p.dead) { r._away = null; remember(p, "Entré en " + (w.map.name || w.map.id) + " y volví.", "I went into " + (w.map.name || w.map.id) + " and came back."); adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   } else r._away = null;
+  const tg = p.bot.target;                                                         // se burla del enemigo al que va a atacar
+  if (tg?.kind === "player" && r._tauntId !== tg.id) { r._tauntId = tg.id; if (w.rng() < 0.5) speak(adv, p, fmt(p, "taunt", r.lang, tg.name, w)); }
+  expedition(adv, w, p, r, home);
+  social(adv, w, p, r);
   // saludar a quien llega
   const seen = (r.seen ||= {});
   for (const e of w.ents.values()) {
@@ -242,7 +272,7 @@ function qaTick(adv, w, p, r) {
   r._qaAt = w.time + 20000;
   if (p.dead) return;
   // atascado (solo en la granja: dentro de tiendas y criptas el bot no sabe qué hacer y vuelve solo)
-  if (w !== adv.farm) { r._pt = w.time; r._px = -1; }       // quieto > 40 s sin descansar ni pelear = atascado
+  if (w !== adv.homeOf(p)) { r._pt = w.time; r._px = -1; }       // quieto > 40 s sin descansar ni pelear = atascado
   else if (r._px !== p.x || r._py !== p.y || b.rest || w.time - p.lastCombat < 6000 || w.busy(p)) { r._px = p.x; r._py = p.y; r._pt = w.time; }
   else if (w.time - r._pt > 40000) {
     r._pt = w.time;
@@ -265,4 +295,71 @@ function qaTick(adv, w, p, r) {
         .then(t => { if (t) report(adv, p, "idea", "llm:" + p.level + ":" + (r.chats | 0), lang === "en" ? "" : t, lang === "en" ? t : "", { text: t }); }).catch(() => {});
     }
   }
+}
+
+// ---------------------------------------------------------------- vida social y expediciones
+const members = (adv, p) => { let n = 0; for (const b of adv.bots.values()) if (b.bot?.owner === p.id) n++; return n; };
+// Al cambiar de mapa (teletransporte, Recall, seguir al líder): el punto de paseo pasa a ser donde llega.
+function worldChanged(adv, w, p, r, home) {
+  const was = r._wid; r._wid = w.map.id;
+  if (!was) return;
+  p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; p.bot.travel = null;
+  blog(w, p, `Cambio de mapa: ${w.map.name || w.map.id}${w.pvp ? " (zona de lucha entre bandos)" : ""}.`);
+  if (w.pvp) remember(p, "Entré en Promise Land.", "Entered Promise Land.");
+  else if (r._trip && w === home) { r._trip = null; r._tripAt = w.time + 240000 + Math.floor(w.rng() * 360000); blog(w, p, "Expedición terminada: de vuelta en casa."); }
+}
+// Los líderes (sin jefe) salen de vez en cuando a Promise Land por el teletransportador normal de su granja, cazan y combaten allí y vuelven con Recall.
+function expedition(adv, w, p, r, home) {
+  const b = p.bot;
+  if (b.owner != null) return;                                                   // los miembros de un grupo van donde va su líder
+  if (r._trip) {
+    if (w === home && r._trip.go && w.time > r._trip.goUntil) { r._trip = null; r._tripAt = w.time + 120000; blog(w, p, "No llegué al teletransportador: cancelo la expedición."); return; }
+    if (w.pvp && w.time > r._trip.until && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, "Fin de la expedición: uso Recall."); adv.command(p.id, { t: "recall" }); }
+    if (w.pvp) {
+      r._trip.go = false;
+      // en Promise Land va a buscar al enemigo más cercano (cualquier distancia: Promise Land es grande y cada bando entra por un extremo) si está sano; el combate lo resuelve el cerebro del bot (pickTarget)
+      if (w.time > (r._seekAt || 0) && !p.dead && b.target?.kind !== "player" && !b.rest && p.hp > p.maxHp * 0.6) {
+        r._seekAt = w.time + 8000;
+        let foe = null, fd = 320;
+        for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 6 && e.hp <= p.hp * 2.2) { const d = dist(p, e); if (d < fd) { foe = e; fd = d; } }
+        if (foe && fd > 10) { b.travel = { x: foe.x, y: foe.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${foe.name} (${foe.side === 1 ? "Aresden" : "Elvine"}, nv ${foe.level}) a ${fd} casillas.`); }
+      }
+    }
+    return;
+  }
+  if (!r._tripAt) r._tripAt = w.time + 60000 + Math.floor(w.rng() * 180000);
+  if (w !== home || w.time < r._tripAt || p.dead || p.hp < p.maxHp * 0.7 || p.level < 3 || b.rest || b.target) return;
+  const tps = (adv.maps[home.map.id]?.meta.teleports || []).filter(t => t.map === "2ndmiddle");
+  if (!tps.length) return;
+  const tp = tps[tps.length >> 1];
+  r._trip = { go: true, goUntil: w.time + 120000, until: w.time + 240000 + Math.floor(w.rng() * 180000) };
+  b.travel = { x: tp.x, y: tp.y, w, until: w.time + 120000 };
+  blog(w, p, `Planeo una expedición a Promise Land: voy al teletransportador (${tp.x},${tp.y}).`);
+  remember(p, "Salí hacia Promise Land.", "Set out for Promise Land.");
+  if (w.rng() < 0.7) speak(adv, p, fmt(p, "trip", r.lang, "", w));
+}
+// Grupos de hasta 4 del mismo bando: el de más nivel lidera, los demás lo siguen (party real) y se disuelven al cabo de un rato para mezclarse.
+function social(adv, w, p, r) {
+  const b = p.bot;
+  if (w.time < (r._socAt ||= w.time + 15000 + Math.floor(w.rng() * 20000))) return;
+  r._socAt = w.time + 25000;
+  if (b.owner != null && !r.followUntil) {                                      // miembro: ¿toca disolver?
+    if (adv.bots.get(b.owner)?.res && w.time > (r._leaveAt || 0)) { blog(w, p, "Dejo el grupo para ir por mi cuenta un rato."); b.owner = null; Party.leave(w, p, true); }
+    return;
+  }
+  if (b.owner != null || r.followUntil || r._trip || p.dead || b.rest) return;
+  let best = null, bd = 99;
+  for (const q of adv.bots.values()) {
+    if (q === p || !q.res || q.dead || q.side !== p.side || adv.worldFor(q.id) !== w || q.bot.owner != null || q.res.followUntil || q.res._trip) continue;
+    const d = dist(p, q);
+    if (d > 20 || Math.abs(q.level - p.level) > 10 || members(adv, p) + members(adv, q) + 2 > 4) continue;
+    if (d < bd) { best = q; bd = d; }
+  }
+  if (!best || w.rng() > 0.5) return;
+  const lead = best.level > p.level || (best.level === p.level && members(adv, best) > members(adv, p)) ? best : p, mem = lead === p ? best : p;
+  mem.bot.owner = lead.id; mem.res._leaveAt = w.time + 600000 + Math.floor(w.rng() * 900000); mem.bot.partyAt = 0;
+  blog(w, mem, `Me uno al grupo de ${lead.name} (nv ${lead.level}).`); blog(w, lead, `${mem.name} (nv ${mem.level}) se une a mi grupo.`);
+  remember(mem, "Me uní al grupo de " + lead.name + ".", "Joined " + lead.name + "'s party."); remember(lead, mem.name + " se unió a mi grupo.", mem.name + " joined my party.");
+  if (w.rng() < 0.6) speak(adv, lead, fmt(lead, "group", lead.res.lang, mem.name, w));
+  befriend(lead, mem.name, 1); befriend(mem, lead.name, 1);
 }

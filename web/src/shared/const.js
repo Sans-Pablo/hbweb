@@ -2,7 +2,7 @@
 // Todo lo que viene del código original lleva el archivo de origen.
 import { MOB_FRAMES } from "./mobtiming.gen.js";
 
-export const NET_PROTO = 4;           // versión del protocolo cliente-servidor (server/server.mjs): si cambia, los clientes viejos deben recargar
+export const NET_PROTO = 5;           // versión del protocolo cliente-servidor (server/server.mjs): si cambia, los clientes viejos deben recargar
 export const TILE = 32;
 
 // Direcciones 1..8 = N, NE, E, SE, S, SO, O, NO (Client/Game.cpp, HGServer/Map.cpp)

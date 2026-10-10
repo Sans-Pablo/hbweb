@@ -4,7 +4,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## web/src/shared
 
-- `adventure.js` · 319 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
+- `adventure.js` · 333 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 - `appearance.js` · 15 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `combat.js` · 98 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
@@ -17,7 +17,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `items.js` · 27 · Constantes y reglas puras de los objetos (HGServer/Item.h, Game.cpp).
 - `magic.js` · 96 · Magia: fórmulas del servidor original (PlayerMagicHandler, Effect_Damage_Spot, bCheckResistingMagicSuccess).
 - `mobtiming.gen.js` · 3 · Generado por tools/convert_frames.py desde Client/MapData.cpp: no editar a mano.
-- `path.js` · 76 · A* en 8 direcciones con montículo binario.
+- `path.js` · 77 · A* en 8 direcciones con montículo binario.
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
@@ -27,9 +27,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 277 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bot.js` · 312 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `citizens.js` · 29 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 203 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 226 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 249 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `debug.js` · 125 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
 - `dummy.js` · 220 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
@@ -40,7 +40,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcsys.js` · 368 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 167 · Jugador: creación, guardado, recalculo de atributos, reaparición.
-- `residents.js` · 268 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 365 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 - `status.js` · 24 · Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
@@ -58,7 +58,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 76 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 64 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
-- `connection.js` · 295 · Conexión con el "servidor". Dos implementaciones con la misma forma:
+- `connection.js` · 310 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 211 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 76 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
@@ -71,14 +71,15 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 677 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 693 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
 - `npcdialogs.js` · 602 · Cuadros de diálogo de los NPC de ciudad, como en el cliente original (Game.cpp):
+- `observer.js` · 69 · MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) 
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 97 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
-- `renderer.js` · 725 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+- `renderer.js` · 726 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
@@ -91,7 +92,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `admin.mjs` · 38 · Texto de ayuda de administración y página del panel (/admin, solo desde el PC del servidor).
 - `llm.mjs` · 62 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
 - `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
-- `server.mjs` · 551 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `server.mjs` · 577 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
@@ -118,12 +119,14 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `mobile.test.mjs` · 35 · Modo móvil: funciones puras (detección, auto-ataque inicial, joystick, objetivos cercanos). node tests/mobile.test.mjs
 - `net-bot.test.mjs` · 29 · El admin invoca un bot en el servidor real: el bot aparece como jugador, entra en el grupo y se mueve con él.
 - `net-dungeon.test.mjs` · 103 · Dos clientes reales: transición, aislamiento y reconexión, con 80 ms de latencia.
+- `net-observe.test.mjs` · 32 · Modo observar: sin cuenta, se pide la lista de habitantes, se elige uno y se recibe el mundo desde su posición; las órdenes se ignoran.
 - `net-persist.test.mjs` · 22 · Cuenta y personaje nuevos sobreviven a matar el servidor de golpe (SIGKILL) nada más entrar.
 - `net-walk.test.mjs` · 35 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `party.test.mjs` · 88 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
 - `path.test.mjs` · 41 · A* con arrays tipados: caminos válidos, de coste óptimo (frente a Dijkstra), reutilizables entre búsquedas y rodeando ocupados. node test
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
+- `pvp.test.mjs` · 63 · PvP entre bandos en Promise Land + granjas de Aresden y Elvine + 40 habitantes (20/20) con grupos y expediciones.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
 - `residents.test.mjs` · 91 · HABITANTES: ficha estable, objetivos, memoria, respuesta al chat (frase hecha y modelo), guardado/carga, acompañamiento y botclear.
@@ -150,7 +153,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `convert_equip.py` · 53 · objetos en suelo y mochila: todas las hojas
 - `convert_frames.py` · 20 · 
 - `convert_fx.py` · 22 · 
-- `convert_maps.py` · 111 · tipo de spot-mob-generator -> (monstruo de NPC.cfg, prob. de habilidad especial %, tipo de habilidad): Game.cpp del servidor
+- `convert_maps.py` · 114 · tipo de spot-mob-generator -> (monstruo de NPC.cfg, prob. de habilidad especial %, tipo de habilidad): Game.cpp del servidor
 - `convert_mobs.py` · 57 · sonido base por sprite (Monsters.ts: states.move.sound = 'M<n>.mp3')
 - `convert_npcs.py` · 52 · pak, clave de sprite, nombre en NPC.cfg
 - `convert_players.py` · 23 · 

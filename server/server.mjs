@@ -81,6 +81,7 @@ const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, 
 const clients = new Set();
 const saves = store.saves;
 // Habitantes: bots permanentes del servidor (systems/residents.js). Su partida vive en saves["bot:<nombre>"] y se guarda con la de los jugadores.
+const OBSERVE = env.HB_OBSERVE !== "0" && CFG.observe !== false;           // modo observar: ver jugar a un habitante en vivo desde la pantalla de entrada
 const RESIDENTS = Math.max(0, Math.min(40, Number(env.HB_RESIDENTS ?? CFG.residents ?? 40) | 0));
 const bkey = n => "bot:" + n.toLowerCase();
 function spawnResidents(n) {
@@ -245,6 +246,7 @@ function drop(c, why) {
   if (why) { send(c, { t: "kicked", msg: why }); setTimeout(() => c.socket.destroy(), 100); }
   c.alive = false;
   clients.delete(c);
+  if (c.watch) { const still = [...clients].some(o => o.watch === c.watch); if (!still) adventure.watched.delete(c.watch); c.watch = 0; }
   if (c.pid) {
     saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
     adventure.worldFor(c.pid).emit({ t: "chat", id: c.pid, name: "Servidor", text: c.name + " ha salido.", system: true });
@@ -321,7 +323,18 @@ function onMessage(c, text) {
   if (!m || typeof m !== "object") return;
   if (m.t === "auth" && !c.acc) { handleAuth(c, m).catch(e => { console.error("auth:", e); send(c, { t: "error", msg: "Error del servidor." }); }); return; }
   if (m.t === "join") { handleJoin(c, m); return; }
-  if (m.t === "cmd" && c.pid && m.cmd && typeof m.cmd.t === "string") {
+  if (m.t === "bots") { if (OBSERVE) send(c, { t: "botlist", list: botList() }); else send(c, { t: "error", msg: "El modo observar está desactivado en este servidor." }); return; }
+  if (m.t === "watch" && OBSERVE) {                                              // observar a un habitante en vivo (no hace falta cuenta)
+    const b = adventure.bots.get(m.id | 0);
+    if (!b) { send(c, { t: "error", msg: "Ese habitante ya no existe." }); return; }
+    if (c.watch) adventure.watched.delete(c.watch);
+    c.watch = b.id; adventure.watched.add(b.id); c.sent.clear(); c.ownJs = null; c.itemsKey = null; c.mapId = null; c.queue.length = 0;
+    send(c, { t: "watching", id: b.id, name: b.name, time: adventure.time });
+    log(`[observar] ${c.name || c.ip} mira a ${b.name}`);
+    return;
+  }
+  if (m.t === "unwatch") { if (c.watch) { adventure.watched.delete(c.watch); c.watch = 0; send(c, { t: "unwatched" }); } return; }
+  if (m.t === "cmd" && c.pid && !c.watch && m.cmd && typeof m.cmd.t === "string") {
     const cmd = m.cmd;
     if (cmd.t === "say") {                                                            // chat: límites, silencio y comandos de administrador
       const txt = String(cmd.text ?? "").slice(0, 120).trim(), now = Date.now();
@@ -383,7 +396,7 @@ function adminCmd(line, by) {
     case "informe": case "report": { if (rest[0] === "borrar") { informe.clear(); return "Informe vaciado."; } informe.flush(); return informe.file + "\n" + JSON.stringify(informe.size()) + "\n\n" + informe.text().slice(0, 3500); }
     case "vida": case "life": {
       const b = adventure.residents().find(x => x.name.toLowerCase() === (rest[0] || "").toLowerCase()); if (!b) return "Uso: vida <nombre de habitante>";
-      return Residents.storyOf(b, "es") + "\nMeta: " + Residents.goalText(b.res.goal, "es") + "\nAmigos: " + (Object.keys(b.res.rel).join(", ") || "ninguno") + "\nRecuerdos:\n- " + b.res.mem.map(m => m.es).join("\n- "); }
+      return Residents.storyOf(b, "es") + "\nMeta: " + Residents.goalText(b.res.goal, "es") + "\nAmigos: " + (Object.keys(b.res.rel).join(", ") || "ninguno") + "\nRecuerdos:\n- " + b.res.mem.map(m => m.es).join("\n- ") + "\nÚltimas acciones:\n" + (b.bot.log || []).slice(-25).join("\n"); }
     case "restart": case "reiniciar": case "stop": case "parar": {
       const restart = /^(restart|reiniciar)$/i.test(cmd);
       for (const c of [...clients]) drop(c, restart ? "El servidor se reinicia. Vuelve a entrar en un minuto." : "El servidor se apaga.");
@@ -447,6 +460,7 @@ function pub(e, own) {
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }
   if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; }
   else {
+    if (e.side) o.sd = e.side;                                                   // bando (1 Aresden, 2 Elvine): el cartel de nombre lo muestra y marca enemigos
     o.mp = e.mp; o.mm = e.maxMp;                                                // maná visible para el grupo (marcos de grupo)
     o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
     o.ap = apparelOf(e, id => data.item(id));                                  // equipo visible para los demás jugadores
@@ -455,6 +469,14 @@ function pub(e, own) {
   return o;
 }
 
+function botList() {
+  return [...adventure.bots.values()].map(b => {
+    const w = adventure.worldFor(b.id), br = b.bot || {}, t = br.target;
+    const st = b.dead ? "muerto" : br.travel ? "viaja" : t ? "lucha: " + String(t.name).replace(/-/g, " ") : br.rest ? "descansa" : br.owner != null ? "sigue al líder" : "pasea";
+    return { id: b.id, name: b.name, side: b.side, lv: b.level, map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, mp: b.mp, mm: b.maxMp, st: b.stats, gold: b.gold, kills: b.kills || 0, ek: b.ek || 0,
+      lang: b.res?.lang || "", arch: b.res?.arch || "", goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)) };
+  }).sort((a, b) => (a.side - b.side) || (b.lv - a.lv) || a.name.localeCompare(b.name));
+}
 function itemsList(world) {
   const out = [];
   for (const list of world.items.values()) { const it = list[list.length - 1]; out.push([it.uid, it.id, it.count, it.x, it.y, it.attr || 0, it.comp ? { sp: it.comp.sp, lvl: it.comp.lvl, nm: it.comp.nm, cls: it.comp.cls, down: it.comp.down } : 0]); }   // solo se ve el de encima (las bolas llevan su especie para el nombre)
@@ -484,11 +506,12 @@ setInterval(() => {
     return s;
   };
   for (const c of clients) {
-    if (!c.pid) continue;
-    const world = adventure.worldFor(c.pid);
-    const me = world.ents.get(c.pid);
+    const vid = c.watch || c.pid;                           // modo observar: el cliente ve el mundo desde un habitante en vez de desde su personaje
+    if (!vid) continue;
+    const world = adventure.worldFor(vid);
+    const me = world.ents.get(vid);
     const events = eventsByMap.get(world.map.id) || [];
-    if (!me) continue;
+    if (!me) { if (c.watch) { c.watch = 0; adventure.watched.delete(vid); send(c, { t: "unwatched", why: "El habitante ya no está." }); } continue; }
     const sh = shared(world);
     if (c.socket.writableLength > 1 << 20) continue;     // conexión atascada: saltar este envío
     const mapChanged = c.mapId !== world.map.id;
@@ -508,8 +531,10 @@ setInterval(() => {
     }
     const gone = [];
     for (const id of c.sent.keys()) if (!seen.has(id)) { gone.push(id); c.sent.delete(id); }
+    const logs = [];
     const ev = events.filter(v => {
-      if (v.id === c.pid) return true;
+      if (v.t === "botlog") { if (v.id === vid && c.watch) logs.push(v.text); return false; }
+      if (v.id === vid) return true;
       return v.t === "chat" || v.t === "drop" || (PUBLIC.has(v.t) && seen.has(v.id));       // lo demás es privado de su dueño
     });
     const msg = { t: "s", time: r1(world.time), ack: c.ack };
@@ -526,6 +551,7 @@ setInterval(() => {
     if (ev.length) msg.ev = ev;
     if (c.itemsKey !== sh.itemsKey) { msg.it = sh.items; c.itemsKey = sh.itemsKey; }
     send(c, msg);
+    for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l);              // lo que piensa y hace el habitante observado, en el chat
   }
 }, TICK_MS);
 

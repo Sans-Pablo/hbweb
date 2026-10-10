@@ -46,6 +46,29 @@ export function playerHit(w, p, t) {
   damageNpc(w, t, r.damage, p, skill);
 }
 
+// ---- PvP (INVENTO del port: el original calcula el golpe contra jugadores en iCalculateAttackEffect con las mismas piezas que contra monstruos).
+// Solo entre bandos distintos (Aresden 1 / Elvine 2), en mapas con `w.pvp` (Promise Land) y fuera de las zonas sin ataque.
+export function canFight(w, p, t) {
+  return !!w.pvp && t !== p && t.kind === "player" && p.side > 0 && t.side > 0 && p.side !== t.side && !p.dead && !t.dead && !w.safeAt(p.x, p.y) && !w.safeAt(t.x, t.y);
+}
+export function hitPlayer(w, p, t) {
+  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (p.eff?.bow && !useArrow(w, p)) return;
+  const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
+  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
+  if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
+  wearWeapon(w, p);
+  const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
+  if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  const a = absorbOnHit(w.rng, t, ap);
+  for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
+  const wasAlive = !t.dead;
+  damagePlayer(w, t, a.damage, p);
+  if (wasAlive && t.dead) { p.ek = (p.ek || 0) + 1; p.kills = (p.kills || 0) + 1; w.emit({ t: "pvpkill", id: p.id, victim: t.id, name: t.name }); }
+  else knockback(w, p, t, a.damage);
+}
+
 // Armas con bonificación fija (iCalculateAttackEffect): varitas de furia +1; espadón/hacha 847 de noche y 848 de día +4
 // (m_cDayOrNight: 1 día, 2 noche). Las de Kloness dependen de la reputación (aún sin portar).
 function weaponBonus(w, p) {

@@ -15,6 +15,8 @@ import { reachOf, MAX_LEVEL } from "./combatsys.js";
 import { groundTop } from "./ground.js";
 import { newInst } from "./itemsys.js";
 import * as Party from "./party.js";
+import * as Tut from "./tutorial.js";
+import { canFight } from "./combatsys.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -35,6 +37,7 @@ export function init(w, p, opts = {}) {
   if (opts.keep) {}                                                      // habitante cargado de su partida: conserva nivel y oro
   else if (lvl > 1) { p.level = lvl; p.exp = R.expForLevel(lvl); p.pool += (lvl - 1) * R.LEVELUP_POINTS; }
   if (!opts.keep) p.gold += 400 + lvl * 250;
+  Tut.init(p, false);                                                    // un bot no hace el tutorial (el observador no debe verlo)
   w.recalc(p);
   p.bot = { owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0 };
   if (!opts.keep) errands(w, p, p.bot, true);
@@ -136,6 +139,7 @@ export function errands(w, p, b, first = false) {
 
 // ---------------------------------------------------------------- percepción y movimiento
 const tooStrong = (w, p, e) => {
+  if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
   if (e.boss && p.level < 40) return true;
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
   return hit * 3 > p.maxHp;
@@ -143,7 +147,15 @@ const tooStrong = (w, p, e) => {
 const hostile = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
 function pickTarget(w, p, owner) {
   let best = null, bs = 1e9;
+  const rv = p.bot.revenge && p.bot.revenge.until > w.time && w.ents.get(p.bot.revenge.id);            // quien me ha golpeado, primero
+  if (rv && !rv.dead && dist(p, rv) <= 12 && canFight(w, p, rv)) return rv;
   for (const e of w.ents.values()) {
+    if (e.kind === "player") {                                                                            // enemigos de otro bando en Promise Land
+      if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e)) continue;
+      const d = dist(p, e);
+      if (d <= 12 && (!owner || dist(owner, e) <= 14) && d - 2 < bs) { best = e; bs = d - 2; }
+      continue;
+    }
     if (!hostile(e)) continue;
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
@@ -154,19 +166,22 @@ function pickTarget(w, p, owner) {
 }
 function step(adv, w, p, b, tx, ty, run) {
   if (w.time - p.lastMove < LIMITS.moveMs || w.busy(p)) return true;
+  b.runOn = b.runOn ? p.sp > 10 : p.sp > p.maxSp * 0.6;                       // auto-run como un jugador (Ctrl+R): corre mientras le quede aliento y descansa al agotarse
+  run = run || b.runOn;
   const moved = !b.goal || b.goal.w !== w || Math.max(Math.abs(b.goal.x - tx), Math.abs(b.goal.y - ty)) > 1;
   if (!b.path?.length || moved) {
     // Rutas A*: no más de una cada 600 ms por bot (el objetivo se mueve sin parar) y, si no hay camino, se anda "a ojo" 2 s antes de reintentar
     if (w.time >= (b.pathAt || 0) && dist(p, { x: tx, y: ty }) > 1) {
-      b.path = dist(p, { x: tx, y: ty }) <= 3 ? [] : findPath(w.grid, p.x, p.y, tx, ty, p.id, 2500);
+      b.path = dist(p, { x: tx, y: ty }) <= 3 ? [] : findPath(w.grid, p.x, p.y, tx, ty, p.id, b.travel ? 40000 : 2500, w.teleports);
       b.pathAt = w.time + (b.path.length ? 600 : 2000);
       b.goal = { x: tx, y: ty, w };
     } else if (!b.path?.length) b.path = [];
   }
   let d = b.path.shift();
   if (!d) d = greedyStep(w.grid, p, tx, ty, dirTo);
+  if (d) { const k = w.grid.idx(p.x + DX[d], p.y + DY[d]); if (w.teleports.has(k) && !(b.travel && p.x + DX[d] === b.travel.x && p.y + DY[d] === b.travel.y)) { b.path = null; b.fails++; return false; } }       // un bot no pisa un teletransportador por descuido
   if (!d) { b.fails++; return false; }
-  if (!adv.command(p.id, { t: "move", dir: d, run: !!run && p.sp > 15 })) { b.path = null; b.fails++; return false; }
+  if (!adv.command(p.id, { t: "move", dir: d, run: !!run && p.sp > 6 })) { b.path = null; b.fails++; return false; }
   b.fails = 0;
   return true;
 }
@@ -185,6 +200,13 @@ const THOUGHTS = {
   level: [["¡He subido al nivel {l}!", "I reached level {l}!"]],
   party: [["Gracias por la invitación al grupo.", "Thanks for the party invite."]],
 };
+// Registro de lo que hace y piensa el bot: anillo de 80 líneas (`admin: vida`) y, si alguien lo observa, evento privado `botlog` que el servidor
+// le manda al chat del observador (modo observar). `w.hooks.watched` = ids de bots observados ahora mismo.
+export function blog(w, p, text) {
+  const b = p.bot; if (!b) return;
+  const l = (b.log ||= []); l.push(text); if (l.length > 80) l.shift();
+  if (w.hooks?.watched?.has(p.id)) w.emit({ t: "botlog", id: p.id, text });
+}
 function think_(w, p, b, key, vars = {}, gap = 9000) {
   const now = w.time;
   if (now - (b.thAt || -1e9) < gap || now - ((b.thKey ||= {})[key] || -1e9) < 25000) return false;
@@ -192,6 +214,7 @@ function think_(w, p, b, key, vars = {}, gap = 9000) {
   const [es, en] = l[Math.floor(w.rng() * l.length)], fill = t => t.replace("{m}", (vars.m || "").replace(/-/g, " ")).replace("{l}", vars.l ?? "");
   b.thAt = now; b.thKey[key] = now;
   w.emit({ t: "botsay", id: p.id, es: fill(es), en: fill(en) });
+  blog(w, p, "💭 " + fill(es));
   return true;
 }
 function say(adv, p, b, text) { if (adv.time - b.said > 20000) { b.said = adv.time; adv.command(p.id, { t: "say", text }); } }
@@ -225,44 +248,56 @@ function run(adv, w, p, b) {
     if (owner && !p.party && w.time > (b.partyAt || 0)) { b.partyAt = w.time + 5000; Party.request(w, p, owner.name, true); think_(w, p, b, "party", {}, 0); }
   }
   // recados
-  if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; think_(w, p, b, "shop"); } }
+  if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp;
   if (hpf < 0.45 && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
-    if (pot) { b.potionAt = w.time; think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
-    if (!b.rest) think_(w, p, b, "rest", {}, 0);
+    if (pot) { b.potionAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}%: bebo una poción roja.`); think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
+    if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: descanso.`); }
     b.rest = true;
   }
-  if (b.rest && hpf > 0.75) { b.rest = false; think_(w, p, b, "rested"); }
+  if (w.pvp && hpf < 0.35 && w.time - (b.recallAt || 0) > 6000) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
+    const foe = [...w.ents.values()].find(e => e.kind === "player" && canFight(w, p, e) && dist(p, e) <= 9);
+    if (foe) { b.recallAt = w.time; blog(w, p, `Poca vida y ${foe.name} (bando enemigo) cerca: intento Recall para huir.`); adv.command(p.id, { t: "recall" }); }
+  }
+  if (b.rest && hpf > 0.75) { b.rest = false; blog(w, p, "Recuperado, sigo."); think_(w, p, b, "rested"); }
   // objetivo
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
   if (!b.rest && w.time >= b.tgtAt) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
-  const t = b.rest ? null : b.target;
+  const t = b.rest || (b.travel && !(b.target && (b.target.target === p.id || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
-    if (b.seen !== t.id) { b.seen = t.id; think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
+    if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (dist(p, t) <= reachOf(w, p, t)) {
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }
     } else step(adv, w, p, b, t.x, t.y, dist(p, t) > 5);
     return;
   }
   // botín cercano (solo si no hay peligro a la vista)
-  if (!b.rest && !b.noLoot) {
+  if (!b.rest && !b.noLoot && !b.travel) {
     const here = groundTop(w, p.x, p.y);
-    if (here && wanted(w, p, here)) { adv.command(p.id, { t: "pickup" }); return; }
+    if (here && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
     let best = null, bd = 1e9;
     for (let y = p.y - 5; y <= p.y + 5; y++) for (let x = p.x - 5; x <= p.x + 5; x++) {
-      const it = w.grid.inside(x, y) && groundTop(w, x, y);
+      const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
       if (it && wanted(w, p, it)) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)); if (d < bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = d; } }
     }
     if (best) { think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
+  }
+  // viaje planeado (p. ej. a Promise Land): anda hasta la casilla del teletransportador
+  if (b.travel && b.travel.w !== w) b.travel = null;
+  if (b.travel && !owner && !b.rest) {
+    const tr = b.travel;
+    if (b.fails > 10 || w.time > tr.until) { if (!tr.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; }
+    else { step(adv, w, p, b, tr.x, tr.y, true); return; }
   }
   // seguir al dueño o vagar por la zona
   if (owner) { if (dist(p, owner) > 8) think_(w, p, b, "follow"); if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
   if (b.rest) return;
   if (!b.wander || (p.x === b.wander.x && p.y === b.wander.y) || w.time > b.wander.until || b.fails > 4) {
-    const r = () => Math.floor(w.rng() * 21) - 10, s = w.freeSpotNear(b.home.x + r(), b.home.y + r());
+    const r = () => Math.floor(w.rng() * 21) - 10; let s = w.freeSpotNear(b.home.x + r(), b.home.y + r());
+    if (s && w.teleports.has(w.grid.idx(s[0], s[1]))) s = null;                          // nunca se pasea hasta un teletransportador
     b.wander = s ? { x: s[0], y: s[1], until: w.time + 12000 } : null; b.fails = 0;
   }
   if (b.wander && b.wander.until - w.time > 11000) think_(w, p, b, "wander", {}, 20000);

@@ -31,7 +31,7 @@ function hpop() {                                                     // devuelv
 
 // Devuelve la lista de direcciones desde (sx,sy) hasta (tx,ty). La casilla de destino puede
 // estar ocupada (útil para ir hacia un monstruo); las demás ocupadas se evitan salvo `self`.
-export function findPath(grid, sx, sy, tx, ty, self, maxNodes = 40000) {
+export function findPath(grid, sx, sy, tx, ty, self, maxNodes = 40000, avoid = null) {
   if (grid.blocked(tx, ty) || (sx === tx && sy === ty)) return [];
   const W = grid.w, start = sy * W + sx, goal = ty * W + tx;
   ensure(W * grid.h);
@@ -48,6 +48,7 @@ export function findPath(grid, sx, sy, tx, ty, self, maxNodes = 40000) {
       const nx = x + DX[d], ny = y + DY[d], k = ny * W + nx;
       if (grid.blocked(nx, ny) || CLOSED[k] === stamp) continue;
       if (k !== goal) {
+        if (avoid && avoid.has(k)) continue;                                // casillas que no se pisan (teletransportadores) salvo que sean el destino
         const o = grid.occupant(nx, ny);
         if (o !== undefined && o !== self) continue;
       }

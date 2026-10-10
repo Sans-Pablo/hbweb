@@ -13,11 +13,11 @@ import { makeReg } from "./systems/party.js";
 import * as Bot from "./systems/bot.js";
 import * as Residents from "./systems/residents.js";
 
-const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
+const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas", elvfarm: "Elvine Farm", "2ndmiddle": "Promise Land" };
 
 // Punto de retorno de Aresfarm (Recall, muerte, salidas de cripta/arena/tienda): lo pidió el diseño; el original usa el punto de reaparición de cada mapa (Map.cfg initial)
 export const FARM_HOME = [65, 75];
-export const ALLOWED_MAPS = new Set(["arefarm", "gshop_1f", "bsmith_1f", "wrhus_1f"]);
+export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
 
 const gkey = p => p.party ? "g" + p.party.id : p.id;   // clave de la cripta: la party comparte una
 export class Adventure {
@@ -27,6 +27,7 @@ export class Adventure {
     this.time = 0;
     this.serial = 0;
     this.locations = new Map();
+    this.watched = new Set();               // ids de bots que alguien observa (modo observar): sus decisiones se mandan al chat
     this.bots = new Map();                  // jugadores simulados (systems/bot.js): id -> entidad
     this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
@@ -54,6 +55,7 @@ export class Adventure {
       arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
       player: id => this.worldFor(id).ents.get(id),
       bot: (p, c) => this.botOp(p, c),
+      watched: this.watched,
       party: this.partyReg,
     };
   }
@@ -72,7 +74,10 @@ export class Adventure {
     const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: isArena ? [] : meta.teleports });
     w.time = this.time;
     w.hooks = this.hooks(w);
+    w.evHook = this.farm.evHook;
     w.map = { id, kind: isArena ? "arena" : id === "aresden" ? "town" : "indoor", name: MAP_NAMES[id] || id, portals: [] };
+    if (id === "elvfarm") w.home = Object.values(meta.initial || {})[0] || m.start;          // granja de Elvine: su propio punto de retorno
+    if (id === "2ndmiddle") w.pvp = true;                                                      // aquí Aresden y Elvine se atacan (systems/pvp.js)
     w.meta = isArena ? { ...meta, noAttack: [[0, -10, 0, 0]], npcs: [] } : meta;
     w.fixedDay = !!meta.fixedDay;
     w.clock = o.clock || null;
@@ -91,8 +96,9 @@ export class Adventure {
     }
     if (!ALLOWED_MAPS.has(id)) {                                    // en esta versión solo existen la granja y las criptas: el resto lleva de vuelta a la granja
       w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "solo existen Aresfarm, sus tiendas y la cripta" });
-      if (w === this.farm) return false;
-      return this.transfer(p, w, this.farm, this.farm.home);
+      const home = this.homeOf(p);
+      if (w === home) return false;
+      return this.transfer(p, w, home, home.home);
     }
     const to = id === w.map.id ? w : this.staticWorld(id);
     if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: this.maps[id] && !this.maps[id].grid ? "cargando el mapa, vuelve a intentarlo" : "mapa no disponible" }); return false; }
@@ -117,7 +123,8 @@ export class Adventure {
   }
   recall(p, w) {
     if (p.dead) return;
-    if (w !== this.farm) { this.transfer(p, w, this.farm, this.farm.home); return; }
+    const home = this.homeOf(p);
+    if (w !== home) { this.transfer(p, w, home, home.home); return; }
     const spot = w.freeSpotNear(...(w.home || w.start));
     if (!spot) return;
     w.grid.release(p.x, p.y, p.id);
@@ -128,6 +135,8 @@ export class Adventure {
     w.emit({ t: "teleport", id: p.id, x: p.x, y: p.y });
   }
 
+  // Granja de cada bando: Aresden (bando 1 y viajeros) en Aresfarm, Elvine (bando 2) en Elvine Farm si el mapa está disponible
+  homeOf(p) { return p.side === 2 ? this.staticWorld("elvfarm") || this.farm : this.farm; }
   worldFor(id) { return this.locations.get(id) || this.farm; }
   addPlayer(name, save, create = null) {
     const id = this.farm.addPlayer(name, save, create);
@@ -157,13 +166,16 @@ export class Adventure {
   // Habitante: bot permanente con ficha, memoria y objetivos (systems/residents.js). `save` = su partida guardada (o null si es nuevo).
   spawnResident(name, save = null) {
     const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const idx = Residents.RESIDENT_NAMES.indexOf(name), side = idx >= 20 ? 2 : 1;           // 20 de Aresden y 20 de Elvine
     const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS } });
     const p = this.farm.ents.get(id);
+    p.side = side;
     Bot.init(this.farm, p, { level: save ? p.level : 1 + (h % 4), keep: !!save });
-    const spot = this.farm.freeSpotNear(FARM_HOME[0] + ((h >> 3) % 41) - 20, FARM_HOME[1] + ((h >> 9) % 41) - 20);
-    if (spot) this.relocate(p, this.farm, spot);
+    const home = this.homeOf(p), c = home.home || FARM_HOME;
+    const spot = home.freeSpotNear(c[0] + ((h >> 3) % 41) - 20, c[1] + ((h >> 9) % 41) - 20);
+    if (spot) { if (home !== this.farm) this.transfer(p, this.farm, home, spot); else this.relocate(p, this.farm, spot); }
     p.bot.home = { x: p.x, y: p.y };
-    Residents.attach(this.farm, p, save?.res);
+    Residents.attach(home, p, save?.res);
     this.bots.set(id, p);
     return p;
   }
@@ -199,10 +211,11 @@ export class Adventure {
       return true;
     }
     if (cmd.t === "dbg" && DEBUG.enabled && (cmd.op === "goto" || cmd.op === "crypt")) return this.debugTravel(p, w, cmd);
-    if (cmd.t === "respawn" && w !== this.farm) {
+    if (cmd.t === "respawn" && w !== this.homeOf(p)) {
       if (!p.dead || w.time - p.deadAt < 1500) return false;
-      if (!this.transfer(p, w, this.farm, this.farm.home)) return false;
-      return respawn(this.farm, p);
+      const home = this.homeOf(p);
+      if (!this.transfer(p, w, home, home.home)) return false;
+      return respawn(home, p);
     }
     return w.command(id, cmd);
   }
@@ -255,6 +268,7 @@ export class Adventure {
     const d = new World({ grid: layout.grid, npcDb: from.npcDb, data: from.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
     d.time = this.time;
     d.hooks = this.hooks(d);
+    d.evHook = this.farm.evHook;
     d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta · nivel " + level + " · " + layout.name, level, total: DUNGEON_LEVELS, boss: layout.boss, theme: layout.theme, seed, version: DUNGEON_VERSION, origin: run.origin, portals: layout.portals };
     d.map.totalEnemies = d.map.remainingEnemies = [...d.ents.values()].filter(e => e.kind === "npc" && !e.comp).length;
     for (const n of d.ents.values()) n.nextAct += this.time;            // los temporizadores usan el reloj de la sesión

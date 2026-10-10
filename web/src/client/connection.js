@@ -148,6 +148,20 @@ export class NetConnection {
     this.admin = !!m.admin;
     return m.id;
   }
+  // modo observar (sin cuenta): lista de habitantes y ver el mundo desde uno de ellos; no se puede actuar
+  async listBots() {
+    await this.open();
+    return (await this.request({ t: "bots" }, "botlist")).list;
+  }
+  async watch(id) {
+    await this.open();
+    const m = await this.request({ t: "watch", id }, "watching");
+    this.pid = m.id; this.observing = true; this.watchName = m.name;
+    this.serverTime = this.world.time = m.time;
+    this.recvAt = performance.now();
+    this.status = "conectado";
+    return m.id;
+  }
   onMessage(m) {
     if (this.waiting && (m.t === this.waiting.okType || m.t === "error")) {
       const w = this.waiting; this.waiting = null;
@@ -156,6 +170,7 @@ export class NetConnection {
     else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
     else if (m.t === "msg") this.events.push({ t: "chat", system: true, text: m.text, id: this.pid });
     else if (m.t === "kicked") this.kickMsg = m.msg;
+    else if (m.t === "unwatched") { this.events.push({ t: "chat", system: true, text: m.why || "Fin de la observación.", id: this.pid }); }
   }
 
   onState(m) {
@@ -232,7 +247,7 @@ export class NetConnection {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
       if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }
       if (own) Object.assign(e, o.o);                    // estado completo del propio jugador (server/server.mjs: ownState)
-      else e.ap = o.ap;                                  // equipo visible de los demás
+      else { e.ap = o.ap; e.side = o.sd || 0; }          // equipo visible de los demás y su bando
       if (e.busyUntil === undefined) e.busyUntil = 0;
       if (e.lastAttack === undefined) e.lastAttack = -1e9;
       if (e.lastMove === undefined) e.lastMove = -1e9;
@@ -242,7 +257,7 @@ export class NetConnection {
   // Predicción: mis pasos y golpes empiezan al instante; el servidor confirma después.
   send(cmd) {
     const w = this.world, me = w.ents.get(this.pid);
-    if (!me || this.ws.readyState !== 1) return false;
+    if (!me || this.ws.readyState !== 1 || this.observing) return false;                 // observando: solo se mira
     if (w.map?.kind === "arena" && (cmd.t === "attack" || cmd.t === "cast" || cmd.t === "prepare")) return false;       // en la arena solo se mira
     if (cmd.t === "move" && !me.dead) {
       if (w.busy(me) || w.time - me.lastMove < LIMITS.moveMs) return false;

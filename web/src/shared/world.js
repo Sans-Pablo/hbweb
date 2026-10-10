@@ -174,7 +174,7 @@ const COMMANDS = {
   },
   attack(w, p, cmd) {
     const t = w.ents.get(cmd.target);
-    if (!t || t.dead || t.kind !== "npc") return w.reject(p, cmd, "sin objetivo");
+    if (!t || t.dead || (t.kind !== "npc" && !Combat.canFight(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
     if (dist(p, t) > Combat.reachOf(w, p, t)) return w.reject(p, cmd, "lejos");
@@ -186,7 +186,7 @@ const COMMANDS = {
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
     w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), tx: t.x, ty: t.y });
-    w.after(ms * PLAYER.attackHitAt, () => Combat.playerHit(w, p, t));
+    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t) : Combat.playerHit(w, p, t)));
     return true;
   },
   prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),

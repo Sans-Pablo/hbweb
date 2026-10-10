@@ -29,6 +29,7 @@ import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
+import { pickBot, observerBar } from "./observer.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -66,6 +67,7 @@ async function main() {
   status.style.display = "none";
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   let world = conn.state;
+  if (conn.observing) observerBar(conn);
   // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
   const stream = new Streamer(assets.sprites);
   status.style.display = "";
@@ -629,12 +631,26 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
   if (online && hint) hint.textContent = tr("Tu cuenta y tu personaje se guardan en el servidor: puedes entrar desde cualquier dispositivo.");
   for (const t of box.querySelectorAll(".tabs button")) t.onclick = () => setTab(t.dataset.tab === "new");
   user.value = store.get("name", "");
+  // modo observar (solo con servidor online): ver jugar a los habitantes sin cuenta
+  let watchBtn = box.querySelector(".watch");
+  if (online && !watchBtn) {
+    watchBtn = document.createElement("button"); watchBtn.type = "button"; watchBtn.className = "watch"; watchBtn.textContent = "👁 Observar habitantes";
+    watchBtn.style.cssText = "margin-top:8px;width:100%;padding:7px;background:#1b1810;color:#ffd76a;border:1px solid #6b5a33;border-radius:6px;cursor:pointer";
+    box.querySelector(".go").insertAdjacentElement("afterend", watchBtn);
+  }
   const known = Accounts.listAccounts();
   if (!online && !known.length && !user.value) setTab(true);
   if (online && !user.value) setTab(true);
   box.style.display = "grid";
   (user.value ? pass : user).focus();
   return new Promise(resolve => {
+    const observe = async () => {
+      box.style.display = "none";
+      const id = await pickBot(conn, { onCancel: () => { box.style.display = "grid"; history.replaceState(null, "", location.pathname + location.search); } });
+      box.remove(); resolve(id);
+    };
+    if (watchBtn) watchBtn.onclick = observe;
+    if (online && location.hash === "#observar") observe();
     const submit = async () => {
       let name = user.value.trim().slice(0, 16);
       msg.textContent = "…";

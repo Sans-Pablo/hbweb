@@ -11,6 +11,27 @@
     {
       "date": "2026-10-10",
       "title": {
+        "es": "Dos bandos (v0.42.0)",
+        "en": "Two sides (v0.42.0)"
+      },
+      "items": [
+        {
+          "es": "Elvine Farm y Promise Land están abiertos: los teletransportadores de las granjas llevan a Promise Land, y allí Aresden y Elvine se atacan.",
+          "en": "Elvine Farm and Promise Land are open: the farm teleporters lead to Promise Land, where Aresden and Elvine fight each other."
+        },
+        {
+          "es": "Los 40 habitantes son 20 de Aresden y 20 de Elvine: corren, forman grupos, hacen expediciones y se burlan del enemigo.",
+          "en": "The 40 residents are 20 Aresden and 20 Elvine: they run, form parties, go on expeditions and taunt the enemy."
+        },
+        {
+          "es": "Modo observar: desde la pantalla de entrada, elige un habitante y míralo jugar en vivo; el chat muestra lo que piensa y hace.",
+          "en": "Observer mode: from the login screen pick a resident and watch it play live; the chat shows what it thinks and does."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "title": {
         "es": "Habitantes (v0.41.0)",
         "en": "Residents (v0.41.0)"
       },

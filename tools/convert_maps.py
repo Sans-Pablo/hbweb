@@ -9,6 +9,7 @@ from tile_table import locate
 
 hb, repo, out = sys.argv[1], sys.argv[2], sys.argv[3]
 servers = (sys.argv[sys.argv.index("--server") + 1] if "--server" in sys.argv else "Aresden").split(",")   # varios: Aresden,Middleland,...
+only = set(sys.argv[sys.argv.index("--only") + 1].lower().split(",")) if "--only" in sys.argv else None      # solo estos mapas (p. ej. --server Elvine --only elvfarm)
 os.makedirs(os.path.join(out, "maps"), exist_ok=True)
 
 
@@ -77,6 +78,8 @@ ip = os.path.join(out, "maps", "index.json")
 index = json.load(open(ip)) if os.path.exists(ip) and "--server" in sys.argv else {}
 used = set()
 for srv, name in names():
+    if only and name.lower() not in only:
+        continue
     f = amds.get(name.lower() + ".amd")
     if not f:
         print("sin .amd:", name)
