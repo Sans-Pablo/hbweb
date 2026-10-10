@@ -20,6 +20,7 @@ import { itemDef, itemName } from "./names.js";
 import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
+import { registerParty } from "./party.js";
 import { registerPetDialog } from "./petdialog.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
@@ -87,6 +88,7 @@ async function main() {
   const guiApi = {
     chatLog,
     log: m => hud.log(m),
+    party: () => partyUi.open(),
     primary: uid => hud.primary(uid),
     disabled: uid => npcUi.bag.disabled(uid),
     magic: assets.data.magic,
@@ -123,6 +125,11 @@ async function main() {
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
+  });
+  // grupo (party): cuadro 32 del original; el clic sobre un personaje del mundo elige a quién invitar (ui.partyPick)
+  const partyUi = registerParty(gui, {
+    me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c),
+    pick: cb => ui.partyPick(cb), cancelPick: () => ui.cancelPick(),
   });
   registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // tutorial para jugadores nuevos (shared/systems/tutorial.js): conversaciones con cara + objetivos, se puede saltar
@@ -219,7 +226,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, spellFx: true, freeMagic: true, hpBars: true };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, spellFx: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
@@ -228,7 +235,7 @@ async function main() {
     view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
     sound.setVolume?.(opts.soundVol);
-    MAGIC_MODE.free = !!opts.freeMagic;
+    MAGIC_MODE.free = false;                                   // magia con las reglas del servidor (la opción «magia libre» ya no existe)
     renderer.lighting = !!opts.lighting;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
@@ -264,11 +271,14 @@ async function main() {
     quick: k => hud.quickUse(k),
     get spell() { return hud.spell; },
     pointing: null,
+    partyCb: null,
+    partyPick(cb) { ui.partyCb = cb; document.body.classList.add("pointing"); },
+    cancelPick() { if (!ui.partyCb) return; ui.partyCb = null; document.body.classList.remove("pointing"); },
     say: m => hud.log(m, "bad"),
     // UseMagic: prepara el hechizo; el siguiente clic izquierdo elige el objetivo, el derecho cancela
     useMagic(id) {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
-      if (!MAGIC_MODE.player) { hud.log("Los hechizos son de tu compañero (F10: talentos).", "bad"); return; }
+      if (!MAGIC_MODE.player) { hud.log("Los hechizos están cerrados.", "bad"); return; }
       if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
       if (ui.pointing != null) return;
       if (!MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
@@ -361,7 +371,7 @@ async function main() {
         case "PageUp": e.preventDefault(); hud.log("No tienes ninguna habilidad especial lista."); return;
         case "+": hud.toast("Mapa ampliado"); return;
         case "-": hud.toast("Mapa normal"); return;
-        case "Escape": ui.cancelPointing(); ui.key("escape"); return;
+        case "Escape": ui.cancelPointing(); if (ui.partyCb) { ui.cancelPick(); partyUi.reset(); } ui.key("escape"); return;
         case "Enter": if (me && me.dead) conn.send({ t: "respawn" }); else openChat(); return;
         case "e": case "E": {
           const portal = world.map?.portals.find(g => me && Math.max(Math.abs(g.x - me.x), Math.abs(g.y - me.y)) <= 1);
@@ -512,7 +522,7 @@ async function main() {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
       tutorial.onEvent(ev);
-      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world);
+      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid));
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia

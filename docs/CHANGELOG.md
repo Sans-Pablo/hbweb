@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.28.0 · Party y magia (2026-10-10)
+
+- **Party** (`shared/systems/party.js`, `client/party.js`, diálogo 32): invitación por clic, aceptar/rechazar/cancelar, retirarse, lista, máx. 8, reparto de experiencia entre miembros vivos del mismo mapa (`GetExp`; con 8 el doble), chat `$`, «, Party Member», disolución con 1 miembro, salida al desconectar. Grupo compartido entre mapas (`hooks.party`). Test `tests/party.test.mjs`. Sin fuego amigo que filtrar: PvP aún no existe.
+- **Magia del jugador activa** (`MAGIC_MODE = { free: false, player: true }`): aprender (Int + oro), maná, probabilidad de fallo; Summon Creature (tipo 9) habilitado. Opción «Magia libre» eliminada.
+- Servidor: sin límite de cuentas por IP (`registers` inerte; `maxRegistersPerHour` ya no existe).
+
 ## 0.27.0 · Bolsa y clásico (2026-10-10)
 
 - Recall y muerte: `w.home` = Aresfarm (65,75) (`adventure.js`, `player.respawn`).

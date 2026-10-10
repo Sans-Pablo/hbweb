@@ -84,6 +84,20 @@ export class Controller {
     return best;
   }
 
+  // otro jugador bajo el cursor (para invitarlo a un grupo)
+  pickPlayer() {
+    const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]), time = this.world.time;
+    let best = null, bd = 1e9;
+    for (const e of this.world.ents.values()) {
+      if (e.kind !== "player" || e.dead || e.id === this.me?.id) continue;
+      const [px, py] = posOf(e, time);
+      if (Math.abs(wx - px) > 22 || wy < py - 64 || wy > py + 14) continue;
+      const d = Math.hypot(wx - px, wy - (py - 28));
+      if (d < bd) { bd = d; best = e; }
+    }
+    return best;
+  }
+
   // NPC de ciudad bajo un punto del mundo
   pickCitizen(wx, wy) { return this.pick(wx, wy, "citizen"); }
 
@@ -108,6 +122,7 @@ export class Controller {
     const me = this.me;
     if (!me || me.dead || !this.pointer) return;
     if (this.ui.pointing != null) { this.ui.cancelPointing(); return; }
+    if (this.ui.partyCb) { this.ui.cancelPick(); this.ui.gui.dialogs.get(32).mode = 0; return; }
     const { ent, x, y } = this.target();
     if (ent) { this.intent = null; this.path = []; this.strike(me, ent); return; }
     const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
@@ -122,6 +137,10 @@ export class Controller {
     if (!this.pointer) return;
     const me = this.me;
     if (!me || me.dead) return;
+    if (this.ui.partyCb) {                                // invitar a un grupo: este clic elige el personaje
+      if (first) { const cb = this.ui.partyCb; this.ui.cancelPick(); this.noHold = true; this.intent = null; this.path = []; cb(this.pickPlayer()?.name || null); }
+      return;
+    }
     const { ent, x: tx, y: ty } = this.target();
     if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
       if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }

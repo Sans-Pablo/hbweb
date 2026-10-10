@@ -433,11 +433,12 @@ export class Renderer {
       overlays.push(() => {
         const yy = y - 78;
         if (other && !e.dead) {
-          if (remaster) this.label(x, yy, e.name, "#9fd2ff");
+          const nm = e.name + (s.me?.party?.names?.includes(e.name) ? ", Party Member" : "");          // BGET_NPC_NAME23
+          if (remaster) this.label(x, yy, nm, s.me?.party?.names?.includes(e.name) ? "#9fe39a" : "#9fd2ff");
           else {
             ctx.font = "12px 'Courier New', monospace"; ctx.textAlign = "center";
-            ctx.fillStyle = "#000"; ctx.fillText(e.name, x + 1, yy + 1);
-            ctx.fillStyle = "#b8dcff"; ctx.fillText(e.name, x, yy);
+            ctx.fillStyle = "#000"; ctx.fillText(nm, x + 1, yy + 1);
+            ctx.fillStyle = "#b8dcff"; ctx.fillText(nm, x, yy);
           }
         }
       });

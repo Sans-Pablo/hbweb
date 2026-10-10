@@ -9,6 +9,7 @@ import { populate, spawnCitizen } from "./systems/citizens.js";
 import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
+import { makeReg } from "./systems/party.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
 
@@ -25,6 +26,7 @@ export class Adventure {
     this.locations = new Map();
     this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
+    this.partyReg = makeReg(() => this.worlds.values());       // grupos: cruzan mapas (systems/party.js)
     this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [] };
@@ -45,6 +47,7 @@ export class Adventure {
       arenaGo: (p, from, to) => { p.arenaBack = { map: from.map.id, x: p.x, y: p.y }; return this.transfer(p, from, to, ARENA.watch); },
       arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
       player: id => this.worldFor(id).ents.get(id),
+      party: this.partyReg,
     };
   }
 

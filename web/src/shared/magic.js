@@ -6,7 +6,7 @@ const MC_PENALTY = [0, 5, 5, 8, 8, 10, 14, 28, 32, 36, 40];             // _tmp_
 
 export const MAGIC_TYPE = { DAMAGE_SPOT: 1, HPUP_SPOT: 2, DAMAGE_AREA: 3 };
 // Todos los tipos de Magic.cfg salvo la invocación (9), que necesita monstruos aliados
-export const SUPPORTED_TYPES = new Set([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 28, 29, 30, 31, 32, 33]);
+export const SUPPORTED_TYPES = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 28, 29, 30, 31, 32, 33]);
 
 // CMisc::GetPoint2: casilla n pasos más allá de (x0,y0) siguiendo la recta hacia (x1,y1)
 export function linePoint(x0, y0, x1, y1, count) {
@@ -57,8 +57,10 @@ export function castChance(p, id) {
 }
 
 // Maná que cuesta: el ahorro de maná lo reduce; las varitas tipo 34 suman 20.
-export const MAGIC_MODE = { free: true, player: false };   // player: false = el jugador no lanza hechizos, solo su compañero (companion/talents)
-export const NO_PLAYER_MAGIC = "los hechizos son de tu compañero";                                         // modo pruebas: todos los hechizos, sin coste de maná
+// Reglas del servidor original: hay que aprender cada hechizo (Int y oro), cuesta maná, se lanza con manos libres o varita y puede fallar.
+// free = modo de pruebas (todo aprendido, sin maná) y player = false lo cierra: solo para tests y depuración.
+export const MAGIC_MODE = { free: false, player: true };
+export const NO_PLAYER_MAGIC = "los hechizos están cerrados";
 export function manaCost(p, spell) {
   if (MAGIC_MODE.free) return 0;
   let c = spell.mana;

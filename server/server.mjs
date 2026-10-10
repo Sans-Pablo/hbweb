@@ -236,7 +236,7 @@ function drop(c, why) {
 //  cliente -> servidor:  auth {mode: login|register, name, pass, proto} · join {create?} · cmd {seq, cmd} · ping {c}
 //  servidor -> cliente:  authok {name, hasChar, admin, proto, version} · welcome {id, time, returning, version, admin} · s {estado} · msg {text} · error {msg} · kicked {msg}
 const NO_LIMITS = env.HB_NO_LIMITS === "1";                 // solo para pruebas locales (muchas cuentas desde la misma IP)
-const loginFails = new Limiter(NO_LIMITS ? 1e9 : 8, 10 * 60000), registers = new Limiter(NO_LIMITS || CFG.maxRegistersPerHour === 0 ? 1e9 : (CFG.maxRegistersPerHour || 5), 60 * 60000);   // config.json: maxRegistersPerHour (0 = sin límite; por defecto 5 por IP y hora)
+const loginFails = new Limiter(NO_LIMITS ? 1e9 : 8, 10 * 60000), registers = new Limiter(1e9, 60 * 60000);   // sin límite de cuentas por IP (decisión del propietario; el limitador queda inerte)
 setInterval(() => { loginFails.sweep(); registers.sweep(); }, 60000).unref();
 
 async function handleAuth(c, m) {

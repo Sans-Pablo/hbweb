@@ -23,4 +23,4 @@ Código: `server/server.mjs` (servidor), `server/accounts.mjs` (cuentas y límit
 `smoothRemote` (client/connection.js): los pasos de otros jugadores se muestran `REMOTE_DELAY` (120 ms) tarde y encadenados; un «parado» en el destino no corta el paso visible. Solo afecta a la vista de los demás; el propio personaje sigue con predicción. Test: `tests/remote-smooth.test.mjs`.
 
 ## Cuentas por IP
-`config.json → maxRegistersPerHour` (por defecto 5 por IP y hora; `0` = sin límite, para pruebas: tras el túnel todos los jugadores pueden compartir IP).
+Sin límite de cuentas por IP (0.28.0): tras el túnel todos comparten IP. `maxRegistersPerHour` ya no se usa.

@@ -20,6 +20,7 @@ import * as Tutorial from "./systems/tutorial.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
+import * as Party from "./systems/party.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
 export const RECALL_CHANNEL_MS = 3000, RECALL_COOLDOWN_MS = 60000;
@@ -90,7 +91,7 @@ export class World {
   // ------------------------------------------------------------------ jugadores (systems/player.js)
   addPlayer(name, save = null, create = null) { return Player.addPlayer(this, name, save, create); }
   saveOf(id) { return Player.saveOf(this, id); }
-  removePlayer(id) { Player.removePlayer(this, id); }
+  removePlayer(id) { const p = this.ents.get(id); if (p?.kind === "player") Party.leave(this, p, true); Player.removePlayer(this, id); }
   recalc(p) { Player.recalc(this, p); }
 
   // Zona sin ataque (CMap::_SetupNoAttackArea + iGetAttribute): los rectángulos de noAttack (-10 = todo el mapa);
@@ -146,7 +147,8 @@ const FOR_DEAD = new Set(["respawn", "say"]);
 const COMMANDS = {
   respawn: (w, p) => Player.respawn(w, p),
   say(w, p, cmd) {
-    const text = String(cmd.text || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
+    let text = String(cmd.text || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
+    if (text[0] === "$") { text = text.slice(1).trim(); return text ? Party.chat(w, p, text) : false; }        // chat de grupo
     if (text) w.emit({ t: "chat", id: p.id, name: p.name, text });
     return !!text;
   },
@@ -189,6 +191,9 @@ const COMMANDS = {
   cast: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.cast(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   learn: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.learn(w, p, cmd.spell) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   pickup: (w, p) => ItemSys.startPickup(w, p),
+  partyreq: (w, p, cmd) => Party.request(w, p, String(cmd.name || "").slice(0, 12)),
+  partyaccept: (w, p, cmd) => Party.answer(w, p, cmd.r | 0),
+  partyleave: (w, p) => Party.leave(w, p),
   buy: (w, p, cmd) => Shop.buy(w, p, cmd),
   sellreq: (w, p, cmd) => Shop.sellRequest(w, p, cmd),
   sellconfirm: (w, p, cmd) => Shop.sellConfirm(w, p, cmd.uid, cmd.count | 0),

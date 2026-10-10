@@ -59,7 +59,7 @@ export function registerDialogs(gui, api) {
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
       if (hit(15)) api.log("No hay misiones en esta versión.");
-      else if (hit(98)) api.log("No hay grupos en esta versión.");
+      else if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
       else if (hit(180)) { g.close(1); g.open(12); return true; }
       return false;
     },
@@ -385,7 +385,7 @@ export function registerDialogs(gui, api) {
 
   // ------------------------------------------------------------ 20: mejoras de esta versión (activables)
   const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
-    ["spellFx", "Animaciones de hechizos"], ["freeMagic", "Magia libre (sin MP)"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
+    ["spellFx", "Animaciones de hechizos"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"]];
   const mods = {
     id: 60, x: 417, y: 140, w: 258, h: 290,
     draw(g) {

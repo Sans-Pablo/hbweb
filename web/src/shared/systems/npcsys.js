@@ -7,6 +7,7 @@ import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import { BOSS_UNIQUE } from "../rarity.js";
 import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
+import * as Party from "./party.js";
 import { sget } from "./status.js";
 import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
@@ -74,7 +75,7 @@ export function killNpc(w, n, p) {
     p.kills++;
     let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
-    giveExp(w, p, xp);
+    Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
     Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
