@@ -9,11 +9,11 @@ import { dice } from "../rules.js";
 import { sget, sset } from "./status.js";
 import * as Tal from "./talents.js";
 
-export const radiusOf = lvl => 1 + Math.round((Math.max(1, lvl) - 1) * 5 / 49);
+export const radiusOf = (lvl, cls) => 1 + Math.round((Math.max(1, lvl) - 1) * 5 / 49) + (cls === "aura" ? 1 : 0);       // el Dummy de aura cubre una casilla más
 const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const rank = (c, id) => Tal.rankOf(c, id);
 // Porcentajes de aura: crecen con el nivel del Dummy; el rango (1..5) los lleva del 60 % al 100 % del máximo del nivel
-const AURA_PER_LEVEL = { dregen: 0.06, dexp: 0.5, ddef: 0.4, dmana: 0.04 };            // al nivel 50: 3 %/s de vida, 25 % de exp, 20 % menos daño, 2 %/s de maná
+const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08 };            // al nivel 50 con rango 5: 5 %/s de vida, 40 % de exp, 30 % menos daño, 4 %/s de maná
 export const auraPct = (c, id) => { const r = rank(c, id); return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.1 * r) * 100) / 100 : 0; };
 const MASS_CD = 60000, MASS_AURA_MS = 20000;
 
@@ -29,6 +29,9 @@ function members(w, m) {
   for (const e of w.ents.values()) if (e.comp && !e.dead && ids.has(e.master) && !e.dummy) out.push(e);
   return out;
 }
+// El Dummy no habla: solo muestra el nombre de la magia o aura que usa (bocadillo sobre él, lo ve su dueño)
+const say = (w, n, txt) => { if (w.time - (n.sayAt || 0) < 900) return; n.sayAt = w.time; w.emit({ t: "dummy-cast", id: n.master, nid: n.id, txt }); };
+const SPELL_NAME = { 1: "Heal", 21: "Great Heal", 13: "Defense Shield", 44: "Great Defense Shield", 33: "Protection From Magic", 50: "Berserk" };
 const frac = e => e.hp / Math.max(1, e.maxHp);
 
 function healAmount(w, c, id, rk) {
@@ -52,6 +55,7 @@ const has = (w, who, b, c) => { const cur = sget(w, who, b.key); return cur >= (
 function applyBuff(w, n, c, b, who) {
   const rk = rank(c, b.tal), v = typeof b.v === "function" ? b.v(rk, c) : b.v;
   sset(w, who, b.key, v, b.ms(rk));
+  say(w, n, SPELL_NAME[b.spell]);
   Tal.emitCast(w, n, b.spell, who.x, who.y);
 }
 
@@ -59,7 +63,7 @@ export function think(w, n, m, c) {
   n.dummy = true;
   n.dcls = c.cls || null;
   if (!c.cls || !w.magic) return;
-  const r = radiusOf(c.lvl), mem = members(w, m), near = mem.filter(e => cheb(n, e) <= r);
+  const r = radiusOf(c.lvl, c.cls), mem = members(w, m), near = mem.filter(e => cheb(n, e) <= r);
   const hostiles = [...w.ents.values()].some(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && cheb(n, e) <= 12);
   n.cd = n.cd || {};
 
@@ -68,6 +72,11 @@ export function think(w, n, m, c) {
     n.auraAt = w.time + 1000;
     const k = w.time < (n.massUntil || 0) ? 2 : 1;
     const hp = auraPct(c, "dregen") * k, mp = auraPct(c, "dmana") * k, ex = auraPct(c, "dexp") * k, df = Math.min(60, auraPct(c, "ddef") * k);
+    if (w.time >= (n.auraSayAt || 0)) {
+      n.auraSayAt = w.time + 8000;
+      const names = [hp > 0 && "Regeneration", ex > 0 && "Wisdom", df > 0 && "Defense", mp > 0 && "Mana"].filter(Boolean);
+      if (names.length) say(w, n, names.join(" + ") + " Aura" + (k > 1 ? " x2" : ""));
+    }
     for (const e of near) {
       if (hp > 0 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + Math.max(1, Math.round(e.maxHp * hp / 100)));
       if (mp > 0 && e.kind === "player" && e.mp < e.maxMp) e.mp = Math.min(e.maxMp, e.mp + Math.max(1, Math.round(e.maxMp * mp / 100)));
@@ -80,6 +89,7 @@ export function think(w, n, m, c) {
   if (w.time >= (n.cd.mass || 0)) {
     if (c.cls === "healer" && rank(c, "dmassh") && mem.filter(e => frac(e) < 0.6).length >= 2 && n.mp >= Tal.manaOf(w, 21) * 3) {
       n.mp -= Tal.manaOf(w, 21) * 2; n.cd.mass = w.time + MASS_CD; n.castAt = w.time;
+      say(w, n, "MASS Great Heal");
       for (const e of mem) { doHeal(w, n, c, 21, e, Math.max(1, rank(c, "dgheal")), 1.2); Tal.emitCast(w, n, 21, e.x, e.y); }
       w.emit({ t: "dummy-mass", id: m.id, cls: c.cls });
       return;
@@ -88,6 +98,7 @@ export function think(w, n, m, c) {
       const bs = BUFFS.filter(b => rank(c, b.tal) && (!b.fight || hostiles));
       if (bs.length && mem.filter(e => bs.some(b => !has(w, e, b, c))).length >= 2) {
         n.mp -= 40; n.cd.mass = w.time + MASS_CD; n.castAt = w.time;
+        say(w, n, "MASS Buff");
         for (const e of mem) for (const b of bs) if (!(b.key === "protect" && b.v === 3 && sget(w, e, "protect") >= 4)) applyBuff(w, n, c, b, e);
         w.emit({ t: "dummy-mass", id: m.id, cls: c.cls });
         return;
@@ -95,6 +106,7 @@ export function think(w, n, m, c) {
     }
     if (c.cls === "aura" && rank(c, "dmassa") && hostiles && n.mp >= 40) {
       n.mp -= 30; n.cd.mass = w.time + MASS_CD; n.massUntil = w.time + MASS_AURA_MS; n.castAt = w.time;
+      say(w, n, "MASS Aura");
       Tal.emitCast(w, n, 33, n.x, n.y);
       w.emit({ t: "dummy-mass", id: m.id, cls: c.cls });
       return;
@@ -104,8 +116,8 @@ export function think(w, n, m, c) {
   if (c.cls === "healer") {
     const hurt = near.filter(e => frac(e) < 0.8).sort((a, b) => frac(a) - frac(b))[0];
     if (!hurt) return;
-    if (rank(c, "dgheal") && frac(hurt) < 0.45 && Tal.ready(w, n, 21)) { doHeal(w, n, c, 21, hurt, rank(c, "dgheal")); Tal.emitCast(w, n, 21, hurt.x, hurt.y); Tal.pay(w, n, 21, 2500); return; }
-    if (rank(c, "dheal") && frac(hurt) < 0.75 && Tal.ready(w, n, 1)) { doHeal(w, n, c, 1, hurt, rank(c, "dheal")); Tal.emitCast(w, n, 1, hurt.x, hurt.y); Tal.pay(w, n, 1, 2000); }
+    if (rank(c, "dgheal") && frac(hurt) < 0.45 && Tal.ready(w, n, 21)) { say(w, n, "Great Heal"); doHeal(w, n, c, 21, hurt, rank(c, "dgheal")); Tal.emitCast(w, n, 21, hurt.x, hurt.y); Tal.pay(w, n, 21, 2500); return; }
+    if (rank(c, "dheal") && frac(hurt) < 0.75 && Tal.ready(w, n, 1)) { say(w, n, "Heal"); doHeal(w, n, c, 1, hurt, rank(c, "dheal")); Tal.emitCast(w, n, 1, hurt.x, hurt.y); Tal.pay(w, n, 1, 2000); }
     return;
   }
   if (c.cls === "buffer" && hostiles) {

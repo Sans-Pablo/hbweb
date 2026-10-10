@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.33.1 · Dummy más callado y más fuerte (2026-10-10)
+
+- El anillo del área del Dummy se dibuja por debajo de los personajes.
+- Los Dummies no hablan: solo muestran sobre su cabeza la magia o aura que usan (`dummy-cast`); se mantiene el aviso corto de que un monstruo los ataca.
+- Aura más fuerte: porcentajes ×1,6 por nivel (rango 5, nivel 50: 5 %/s de vida, 4 %/s de maná, +40 % exp, -30 % daño) y una casilla más de radio.
+
 ## 0.33.0 · Caramelos, sonido y órdenes (2026-10-10)
 
 - Sonido: el interruptor de música y los volúmenes de efectos y música del menú del sistema (F12) ahora funcionan; la música tiene su propio on/off y volumen (`audio.js`: `setMusic`, `setMusicVolume`).

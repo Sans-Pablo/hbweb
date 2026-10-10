@@ -81,7 +81,7 @@ mob.dead = true; w.ents.delete(mob.id);
   const lo = { sp: "Dummy", lvl: 10, tal: { dregen: 5, dexp: 5 } }, hi = { ...lo, lvl: 50 };
   assert.ok(D.auraPct(hi, "dregen") > D.auraPct(lo, "dregen") * 4, "el % crece con el nivel");
   assert.equal(D.auraPct({ sp: "Dummy", lvl: 50, tal: {} }, "dregen"), 0);
-  assert.ok(D.auraPct(hi, "dexp") <= 25 + 1e-9);
+  assert.ok(D.auraPct(hi, "dexp") <= 40 + 1e-9);
 }
 console.log("OK dummy");
 // Caramelos: rojo cura, verde revive, azul da maná; Alt+clic derecho (petgo) lleva al compañero a una casilla

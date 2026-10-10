@@ -11,6 +11,23 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Dummy más callado y más fuerte (v0.33.1)",
+    "en": "Quieter, stronger Dummy (v0.33.1)"
+   },
+   "items": [
+    {
+     "es": "El anillo del Dummy queda por debajo del personaje. El Dummy no habla: solo muestra la magia o el aura que usa.",
+     "en": "The Dummy ring sits under the character. The Dummy never talks: it only shows the spell or aura it is using."
+    },
+    {
+     "es": "Las auras son más fuertes (hasta 5 %/s de vida, +40 % exp, -30 % daño) y cubren una casilla más.",
+     "en": "Auras are stronger (up to 5 %/s HP, +40 % exp, -30 % damage) and cover one more tile."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Caramelos, sonido y órdenes (v0.33.0)",
     "en": "Candies, sound and orders (v0.33.0)"
    },

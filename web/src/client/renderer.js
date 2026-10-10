@@ -201,6 +201,13 @@ export class Renderer {
     }
 
     // 4) personajes y objetos del mapa, fila a fila (orden del cliente original)
+    for (const e of s.world.ents.values()) {                                              // área de efecto del Dummy: anillo del color de su clase, por DEBAJO de los personajes
+      if (!(e.comp && e.dcls && !e.dead && e.master === s.pid)) continue;
+      const [px, py] = posOf(e, time), x = px - camX, y = py - camY;
+      const R = (radiusOf(e.clvl || 1, e.dcls) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff", pulse = 0.5 + 0.2 * Math.sin(performance.now() / 500);
+      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y + 4, R, R / 2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
     const buckets = new Map();
     // compañeros que desaparecen (guardados en la bola, cambio de mapa...): se desvanecen en vez de borrarse de golpe
     const nowMs = performance.now(), mapId = s.world.map?.id, seen = this.seenComp || (this.seenComp = new Map()), fades = this.fades || (this.fades = new Map());
@@ -483,11 +490,6 @@ export class Renderer {
     // Compañeros más altos que el personaje: nacen a la mitad de su altura (un golem es un mini golem) y crecen con el nivel hasta el tamaño real al nivel 50
     const sc = e.comp ? this.petScale(e, key, f) : 1;
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
-    if (e.comp && e.dcls && !e.dead && e.master === s.pid) {                               // área de efecto del Dummy (radio por nivel): anillo como el de subir de nivel, del color de su clase
-      const R = (radiusOf(e.clvl || 1) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff", pulse = 0.5 + 0.2 * Math.sin(performance.now() / 500);
-      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = col; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(x, y + 4, R, R / 2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-    }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás

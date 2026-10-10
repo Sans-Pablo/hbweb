@@ -31,7 +31,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `combatsys.js` · 201 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 209 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `debug.js` · 122 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
-- `dummy.js` · 133 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
+- `dummy.js` · 145 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
 - `fields.js` · 92 · Objetos dinámicos de los hechizos de campo (CheckDynamicObjectList / DynamicObjectEffectProcessor):
 - `ground.js` · 27 · Objetos en el suelo: hasta 12 por casilla, el último en caer queda encima (Map.cpp bSetItem / pGetItem).
 - `itemsys.js` · 138 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
@@ -75,12 +75,12 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcdialogs.js` · 589 · Cuadros de diálogo de los NPC de ciudad, como en el cliente original (Game.cpp):
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 93 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
-- `renderer.js` · 720 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+- `renderer.js` · 722 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
 - `tutorial.js` · 289 · Tutorial para jugadores nuevos (cliente). Guion y estado en shared/systems/tutorial.js; aquí se detectan los objetivos y se dibuja:
-- `voice.js` · 269 · "Personalidad" del jugador y de los habitantes: frases ocasionales en burbujas de chat.
+- `voice.js` · 267 · "Personalidad" del jugador y de los habitantes: frases ocasionales en burbujas de chat.
 
 ## server
 
