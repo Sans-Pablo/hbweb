@@ -58,7 +58,7 @@ const EN = {
   // ---- diálogos
   "No hay misiones en esta versión.": "There are no quests in this version.", "No hay grupos en esta versión.": "There are no parties in this version.",
   "No hay mejora de objetos en esta versión.": "Item upgrades are not available in this version.", "Aprende la habilidad de fabricación para usar el manual.": "Learn the manufacturing skill to use the manual.",
-  "Ataque automático": "Auto attack", "Cursor clásico": "Classic cursor", "Sprites y terreno HD": "HD sprites and terrain", "Luz y viñeta": "Light and vignette", "Magia libre (sin MP)": "Free magic (no MP)",
+  "Ataque automático": "Auto attack", "Panel de estados (DR/MR)": "Status panel (DR/MR)", "Cursor clásico": "Classic cursor", "Sprites y terreno HD": "HD sprites and terrain", "Luz y viñeta": "Light and vignette", "Magia libre (sin MP)": "Free magic (no MP)",
   "Ver casillas bloqueadas": "Show blocked tiles", "Clic derecho: cerrar": "Right click: close", "Esa habilidad aún no se puede usar en esta versión.": "That skill cannot be used yet in this version.",
   "el hechizo falla": "the spell fails", "Galerías de la cripta": "Crypt galleries", "¡Cripta despejada! Recoge el botín y regresa (E).": "Crypt cleared! Collect the loot and go back (E).",
   "Volver a la cripta": "Back to the crypt", "Pantalón": "Trousers", "Probabilidad de acierto": "Hit probability", "Defensa añadida": "Added defense", "Recuperación de HP": "HP recovery",

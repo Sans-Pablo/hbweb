@@ -11,6 +11,43 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Cliente y bots pulidos (v0.47.0)",
+        "en": "Polished client and bots (v0.47.0)"
+      },
+      "items": [
+        {
+          "es": "Las magias de escuela (p. ej. Tentocle → Chill Wind) se pueden lanzar con el invocado aunque tú no la sepas.",
+          "en": "School spells (e.g. Tentocle → Chill Wind) can be cast through the summon even if you don't know them."
+        },
+        {
+          "es": "Todos son «Combatant» (ya no «Civilian»).",
+          "en": "Everyone is a Combatant (no more Civilian)."
+        },
+        {
+          "es": "Solo ves el nombre de otros jugadores al pasar el ratón; el tuyo se ve siempre.",
+          "en": "Other players' names show only on mouse hover; yours is always shown."
+        },
+        {
+          "es": "Las mascotas muestran el nombre de su dueño en vez de «Friendly».",
+          "en": "Pets show their owner's name instead of «Friendly»."
+        },
+        {
+          "es": "El panel DR/MR es opcional (Mods → Panel de estados), desactivado por defecto.",
+          "en": "The DR/MR panel is optional (Mods → Status panel), off by default."
+        },
+        {
+          "es": "Observar un bot ya no va a tirones.",
+          "en": "Observing a bot is no longer laggy."
+        },
+        {
+          "es": "Los bots sin monstruos cerca viajan a cazar en vez de dar vueltas junto al herrero y la tienda.",
+          "en": "Bots with no monsters nearby travel to hunt instead of looping near the blacksmith and shop."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "De vuelta en línea (v0.46.3)",
         "en": "Back online (v0.46.3)"
       },

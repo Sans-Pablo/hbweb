@@ -34,7 +34,7 @@ export function registerDialogs(gui, api) {
       g.put("dialogtext_0", 0, 0, 0);
       const side = me.side, name = me.name + " : Contribution (0)";
       g.aligned(24, 252, 52, name, INK);
-      g.aligned(0, 275, 69, side === 1 ? "Aresden Civilian" : side === 2 ? "Elvine Civilian" : "Traveller", INK);
+      g.aligned(0, 275, 69, side === 1 ? "Aresden Combatant" : side === 2 ? "Elvine Combatant" : "Traveller", INK);
       const L = (v, y, x1 = 180, x2 = 250) => g.aligned(x1, x2, y, String(v), INK);
       const s = me.stats;
       L(me.level, 106); L(comma(me.exp), 125); L(comma(me.nextExp), 142);
@@ -400,9 +400,9 @@ export function registerDialogs(gui, api) {
 
   // ------------------------------------------------------------ 20: mejoras de esta versión (activables)
   const MODS = [["autoAttack", "Ataque automático"], ["classicCursor", "Cursor clásico"], ["hdSprites", "Sprites y terreno HD"], ["lighting", "Luz y viñeta"],
-    ["spellFx", "Animaciones de hechizos"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"], ["groundInfo", "Info de objetos del suelo"]];
+    ["spellFx", "Animaciones de hechizos"], ["run", "Correr"], ["grid", "Ver casillas bloqueadas"], ["map", "Minimapa"], ["groundInfo", "Info de objetos del suelo"], ["statusPanel", "Panel de estados (DR/MR)"]];
   const mods = {
-    id: 60, x: 417, y: 140, w: 258, h: 290,
+    id: 60, x: 417, y: 140, w: 258, h: 320,
     draw(g) {
       const O = api.mods(), c = g.ctx;
       c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);

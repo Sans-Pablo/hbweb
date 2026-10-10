@@ -27,7 +27,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 321 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bot.js` · 334 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 233 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 251 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
@@ -59,7 +59,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `classicdialog.js` · 76 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 64 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 310 · Conexión con el "servidor". Dos implementaciones con la misma forma:
-- `controller.js` · 211 · Entrada del jugador -> intenciones -> órdenes al servidor.
+- `controller.js` · 224 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 76 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 485 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
@@ -71,7 +71,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 694 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 698 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -79,7 +79,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `observer.js` · 69 · MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) 
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 97 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
-- `renderer.js` · 726 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+- `renderer.js` · 729 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):

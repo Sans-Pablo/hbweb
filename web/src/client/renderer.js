@@ -456,11 +456,13 @@ export class Renderer {
       if (talking) this.bq.push(() => this.label(x, y - 78 - (other && !e.dead ? 17 : 0), bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff", true));   // los bocadillos se dibujan al final y esquivan lo ya escrito
       overlays.push(() => {
         const yy = y - 78;
-        if (other && !e.dead) {
+        if (!other && s.pid !== undefined && !e.dead) {              // mi nombre se ve siempre
+          this.origName(x, y, [[e.name, "255,255,255"]]);
+        } else if (other && !e.dead && s.hoverPlayer === e) {          // el de los demás solo al pasar el ratón por encima
           const party = s.me?.party?.names?.includes(e.name);
           const nm = e.name + (party ? ", Party Member" : "");          // BGET_NPC_NAME23
           const mine = s.me?.side || 0, foe = e.arena || (e.pk > 0) || (mine > 0 && e.side > 0 && e.side !== mine);     // _iGetFOE: rojo enemigo (otro bando) / verde aliado
-          const sideName = e.side === 1 ? "Aresden Civilian" : e.side === 2 ? "Elvine Civilian" : "Traveller";
+          const sideName = e.side === 1 ? "Aresden Combatant" : e.side === 2 ? "Elvine Combatant" : "Traveller";
           this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"]]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
@@ -539,7 +541,8 @@ export class Renderer {
     if (hovered || e.arena || e.comp) {
       overlays.push(() => {
         const name = (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
-        const side = e.kind === "citizen" || e.comp ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // DRAW_OBJECT_NAME89 / 90
+        const owner = e.comp && e.master != null ? s.world.ents.get(e.master)?.name : null;
+        const side = e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
         this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }

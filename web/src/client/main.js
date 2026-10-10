@@ -30,6 +30,7 @@ import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
 import { pickBot, observerBar } from "./observer.js";
+import { SCHOOL_OF, spellSchool, taught } from "../shared/systems/schools.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -296,9 +297,12 @@ async function main() {
     useMagic(id) {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
       if (!MAGIC_MODE.player) { hud.log("Los hechizos están cerrados.", "bad"); return; }
-      if (!me || me.dead || !m || !me.magic || !me.magic[id]) return;
+      if (!me || me.dead || !m) return;
+      // magia de escuela: la lanza el summon que la conoce (su maná, no el del jugador); el servidor comprueba nivel y maná del summon
+      const ball = me.bag?.find(i => i.comp?.on), school = ball && SCHOOL_OF[ball.comp.sp], bySummon = !!school && !MAGIC_MODE.free && spellSchool(m) === school && taught(ball.comp, id);
+      if (!bySummon && (!me.magic || !me.magic[id])) return;
       if (ui.pointing != null) return;
-      if (!MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
+      if (!bySummon && !MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
@@ -535,7 +539,7 @@ async function main() {
     if (renderer.grid !== world.grid) {
       renderer.setMap(world.grid, world.map.name);
       ctl.grid = world.grid; ctl.intent = null; ctl.path = []; ctl.down = false;
-      ctl.hover = ctl.hoverEnt = ctl.clickFx = null;
+      ctl.hover = ctl.hoverEnt = ctl.hoverPlayer = ctl.clickFx = null;
       fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
       sound.setTrack(trackFor(world));
       mapStream(world);
@@ -567,7 +571,7 @@ async function main() {
     mob?.update(me, world);
     renderer.render({
       world, me, dt, fx,
-      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, path: ctl.path, clickFx: ctl.clickFx,
+      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
@@ -584,7 +588,7 @@ async function main() {
       else if (!ov && he) cur = foe ? 3 : 6;
       if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }
-    gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur });
+    gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur, statusPanel: opts.statusPanel === true });
     canvas.style.cursor = opts.classicCursor ? "none" : ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
     requestAnimationFrame(loop);
   }

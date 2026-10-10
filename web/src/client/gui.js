@@ -299,7 +299,7 @@ export class Gui {
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
-    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); this.statusPanel(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
+    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); if (info?.statusPanel) this.statusPanel(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
     for (const id of this.order) { const d = this.dialogs.get(id); if (this.mobile && d.mobileFixed) d.layout?.(this); }
     for (const id of this.order) {
       const d = this.dialogs.get(id);

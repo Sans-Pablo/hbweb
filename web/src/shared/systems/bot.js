@@ -304,6 +304,19 @@ function run(adv, w, p, b) {
   }
   if (owner) { if (dist(p, owner) > 8) think_(w, p, b, "follow"); if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
   if (b.rest || b.hold > w.time) return;
+  if (!b.travel && w.time >= (b.huntAt || 0) && w.map.kind !== "dungeon") {                // sin nada a la vista: va a cazar donde hay monstruos (antes vagaba para siempre por el pueblo, junto a la herrería y la tienda)
+    b.huntAt = w.time + 8000;
+    let best = null, bd = 1e9;
+    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e); if (d < bd) { bd = d; best = e; } }
+    if (best && bd > 14) {
+      const spot = w.freeSpotNear(best.x, best.y);
+      if (spot && !w.teleports.has(w.grid.idx(spot[0], spot[1]))) {
+        b.travel = { x: spot[0], y: spot[1], w, until: w.time + 120000 }; b.home = { x: spot[0], y: spot[1] }; b.path = null; b.goal = null; b.wander = null; b.fails = 0;
+        blog(w, p, `No hay monstruos cerca: voy a cazar a (${spot[0]},${spot[1]}), a ${bd} casillas.`);
+        return;
+      }
+    }
+  }
   if (!b.wander || (p.x === b.wander.x && p.y === b.wander.y) || w.time > b.wander.until || b.fails > 4) {
     const r = () => Math.floor(w.rng() * 21) - 10; let s = w.freeSpotNear(b.home.x + r(), b.home.y + r());
     if (s && w.teleports.has(w.grid.idx(s[0], s[1]))) s = null;                          // nunca se pasea hasta un teletransportador

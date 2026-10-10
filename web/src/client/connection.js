@@ -209,11 +209,11 @@ export class NetConnection {
     let e = w.ents.get(o.id);
     const isNew = !e;
     if (isNew) { e = { id: o.id, kind: o.k, name: o.name }; w.ents.set(o.id, e); }
-    const own = o.id === this.pid;
+    const own = o.id === this.pid, remote = !own || this.observing;       // observando, el habitante se mueve como cualquier otro jugador remoto (sin predicción: antes iba a saltos)
     // posición y animación: para mi personaje, solo si el servidor ya procesó todo lo que
     // mandé y no coincide con lo que predije (paso rechazado), o al aparecer/morir
     const posFields = () => {
-      if (!isNew && !own && o.k !== "citizen") {
+      if (!isNew && remote && o.k !== "citizen") {
         const sm = smoothRemote(e, o, this.world.time);
         if (sm.keep) { e.dir = o.dir; return; }
         e.x = o.x; e.y = o.y; e.fx = o.fx; e.fy = o.fy; e.dir = o.dir; e.act = o.act; e.actStart = sm.start; e.actDur = o.d;
@@ -224,7 +224,7 @@ export class NetConnection {
     };
     const newAction = o.s !== e.srvS;           // el servidor empezó una acción nueva
     e.srvS = o.s;
-    if (!own || isNew) posFields();
+    if (remote || isNew) posFields();
     else {
       const settled = this.ack >= this.seq && this.world.time >= e.busyUntil;
       const differs = e.x !== o.x || e.y !== o.y;
