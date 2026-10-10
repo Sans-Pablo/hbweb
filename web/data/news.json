@@ -11,6 +11,27 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Dummy de apoyo (v0.32.0)",
+    "en": "Support Dummy (v0.32.0)"
+   },
+   "items": [
+    {
+     "es": "Nuevo compañero Dummy (Gail, pestaña Bolas): frágil, no ataca, hace de apoyo. Aprende una magia en F10 y queda como Healer (verde), Buffer (amarillo) o Aura (azul).",
+     "en": "New Dummy companion (Gail, Balls tab): fragile, never attacks, plays support. Learn a spell in F10 to make it a Healer (green), Buffer (yellow) or Aura (blue)."
+    },
+    {
+     "es": "Solo ayuda a tu party y sus summons dentro de su área (se ve en el suelo y crece con el nivel). Botón de modo: Stay/Follow. Prueba a colocarlo cerca del grupo.",
+     "en": "It only helps your party and their summons inside its area (drawn on the ground; grows with level). Mode button: Stay/Follow. Try placing it near the group."
+    },
+    {
+     "es": "Los monstruos lo atacan primero y te avisa hablando. Con nivel 30 aprende MASS (afecta a todo el grupo).",
+     "en": "Monsters go for it first and it warns you by speaking. At level 30 it learns MASS (hits the whole party)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Grupo en acción (v0.31.0)",
     "en": "Party in action (v0.31.0)"
    },

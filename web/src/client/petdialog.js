@@ -7,6 +7,7 @@ import { mobSprite } from "./anim.js";
 import { ACT, mobDurations } from "../shared/const.js";
 
 const BUTTONS = [["summons_icon", "Info", "Name, mode, spells and talent reset."], ["pet_support", "Support", "Support talents: healing and protection."], ["pet_damage", "Damage", "Damage talents: more attack power."], ["pet_warrior", "Warrior", "Warrior talents: more health and defence."]];
+const DUMMY_HINTS = ["Healer (green): Heal, Great Heal. The first spell you learn fixes the class.", "Buffer (yellow): shields, Protection From Magic, Berserk.", "Aura (blue): regeneration, experience, defence and mana auras."];
 const BX = 14, BY = 108, BPITCH = 52;
 
 export function registerPetDialog(gui, api) {
@@ -19,15 +20,22 @@ export function registerPetDialog(gui, api) {
       if (this.tab === 0) {
         const out = [
           { act: "rename", text: "Rename", right: "", tip: "Opens the chat with /petname so you can type the new name." },
-          { act: "mode", text: "Mode", right: c.mode === "peace" ? "Peace" : "Attack", tip: "Click to switch between Peace and Attack." },
+          Tal.isDummy(c)
+            ? { act: "mode", text: "Mode", right: c.mode === "peace" ? "Stay" : "Follow", tip: "Click to switch between Stay (it holds its position) and Follow." }
+            : { act: "mode", text: "Mode", right: c.mode === "peace" ? "Peace" : "Attack", tip: "Click to switch between Peace and Attack." },
           { act: "reset", text: "Reset talents", right: String(Tal.resetCost(c)), tip: "Only near the pet nurse (Gail, in the Shop). Costs gold." },
         ];
         for (const t of Tal.TALENTS) if (t.spell != null && Tal.rankOf(c, t.id) > 0) out.push({ act: "spell", text: t.name, right: "spell", color: RED, tip: t.desc });
         return out;
       }
-      const br = Tal.BRANCHES[this.tab - 1];
+      const br = Tal.branchesOf(c)[this.tab - 1];
       return Tal.TALENTS.filter(t => t.br === br).map(t => {
-        const r = Tal.rankOf(c, t.id), locked = Tal.spent(c, br) < Tal.TIER_COST * t.tier;
+        const r = Tal.rankOf(c, t.id);
+        if (t.dummy) {
+          const lockCls = c.cls && c.cls !== br, lockLvl = t.lvl && c.lvl < t.lvl;
+          return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: lockLvl ? "Lv " + t.lvl : r + "/" + t.max, color: lockCls || lockLvl ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (lockCls ? " (this Dummy is already another class)" : lockLvl ? " (needs level " + t.lvl + ")" : "") };
+        }
+        const locked = Tal.spent(c, br) < Tal.TIER_COST * t.tier;
         return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: r + "/" + t.max, color: locked ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (locked ? " (needs " + Tal.TIER_COST * t.tier + " points in this branch)" : "") };
       });
     }
@@ -44,7 +52,7 @@ export function registerPetDialog(gui, api) {
       const nd = need(c.lvl || 1), k = c.lvl >= MAX_COMP_LEVEL ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd)), cx = g.ctx, bw = this.w - X - 26;
       cx.fillStyle = "rgba(10,8,4,.75)"; cx.fillRect(X - 1, 72, bw + 2, 9); cx.fillStyle = "#6aa8ff"; cx.fillRect(X, 73, Math.round(bw * k), 7);
       g.text(X, 84, c.lvl >= MAX_COMP_LEVEL ? "EXP MAX" : "EXP " + (c.exp || 0) + " / " + nd + "  (" + Math.floor(k * 100) + "%)", INK, { size: 9 });
-      g.text(X, 96, "Points: " + Tal.pointsFree(c) + "  " + (sp ? Tal.BRANCH_NAMES[sp] : "No specialty"), INK, { size: 9 });
+      g.text(X, 96, "Points: " + Tal.pointsFree(c) + "  " + (sp ? Tal.branchName(c, sp) : Tal.isDummy(c) ? "No class" : "No specialty"), INK, { size: 9 });
       BUTTONS.forEach(([key, , ], i) => {
         const x = BX + i * BPITCH, over = lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41;
         g.put(key, over || this.tab === i ? 1 : 0, x, BY);
@@ -64,7 +72,8 @@ export function registerPetDialog(gui, api) {
       cx.drawImage(g.spr.img[key], sx, sy, w, h, ax + px * s, ay + py * s, w * s, h * s);
     }
     hintOver(lx, ly) {
-      for (let i = 0; i < BUTTONS.length; i++) { const x = BX + i * BPITCH; if (lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41) return BUTTONS[i][1] + ": " + BUTTONS[i][2]; }
+      const c = this.ball(api.me())?.comp, dm = c && Tal.isDummy(c);
+      for (let i = 0; i < BUTTONS.length; i++) { const x = BX + i * BPITCH; if (lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41) return dm && i ? DUMMY_HINTS[i - 1] : BUTTONS[i][1] + ": " + BUTTONS[i][2]; }
       return "";
     }
     click(g, lx, ly, me) {

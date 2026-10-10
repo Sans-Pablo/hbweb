@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.32.0 · Dummy de apoyo (2026-10-10)
+
+- Nuevo compañero único «Dummy» (ficha `docs/sistemas/dummy.md`): frágil, no ataca, 3 clases (Healer verde, Buffer amarillo, Aura azul) que se fijan con la primera magia, área de efecto 1→6 casillas según el nivel, solo para el grupo y sus summons, MASS, auras proporcionales al nivel, reflejo de agro con aviso hablado y modo Stay/Follow.
+- Nuevo estado Protection From Magic. Pestañas del cuadro Summons adaptadas a las clases del Dummy. Test `tests/dummy.test.mjs`.
+
 ## 0.31.0 · Grupo en acción (2026-10-10)
 
 - Ctrl+P invita al jugador bajo el cursor (o al más cercano) y entra al grupo sin preguntar ni mirar el modo de paz (`partyreq` con `auto`).

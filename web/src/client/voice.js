@@ -180,6 +180,11 @@ export class Voice {
         this.talkPet(world, "attack", "patk", { chance: 1, cool: 1500, fill: nm, list: fs >= 0 ? this.d.fear.attack[fs] : null });
       } break;
       case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
+      case "dummy-agro": if (ev.id === this.pid && pet) {                                 // un monstruo ataca al Dummy
+        const mn = (ev.mn || "").replace(/-/g, " ");
+        this.say(pet.id, { es: "¡" + mn + " me está atacando! ¡Ayuda!", en: mn + " is targeting me! Help!" }, 3800);
+      } break;
+      case "dummy-mass": if (ev.id === this.pid && pet) this.say(pet.id, { es: "¡Efecto MASS!", en: "MASS effect!" }, 2500); break;
       case "damage": if (pet && ev.id === pet.id) {
         if (ev.max && ev.hp / ev.max < 0.3 && ev.hp > 0) this.talkPet(world, "lowhp", "plow", { chance: 0.8, cool: 20000, first: "pet" });
         else if (this.rng() < 0.08) this.talkPet(world, "hurt", "phurt", { chance: 1, cool: 30000, first: "me" });

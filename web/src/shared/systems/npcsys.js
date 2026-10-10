@@ -12,6 +12,7 @@ import { sget } from "./status.js";
 import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
+import * as Dummy from "./dummy.js";
 import * as Inv from "../inventory.js";
 import * as Boss from "./bosses.js";
 
@@ -147,6 +148,11 @@ function followerThink(w, n) {
       else if (w.time >= n.evolveAt && !m.dead && !w.fightZone) return evolveCompanion(w, n, m, tc);
     }
   }
+  if (tc && tc.sp === "Dummy") {                                              // Dummy: no ataca; lanza sus magias de apoyo y, en modo seguir, va con el dueño
+    Dummy.think(w, n, m, tc);
+    if (tc.mode !== "peace" && dist(n, m) > 2) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+    return;
+  }
   let best = null, bd = 1e9;
   // Objetivo marcado por el dueño (Alt + clic): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
@@ -231,8 +237,8 @@ export function npcThink(w, n) {
     let bd = 1e9;
     for (const e of w.ents.values()) {
       if (e.dead || !(e.kind === "player" ? !sget(w, e, "invis") : e.comp)) continue;
-      const d = dist(n, e);
-      if (d <= n.cfg.searchRange && d < bd) { t = e; bd = d; n.target = e.id; }
+      const d = dist(n, e) * (e.dummy ? Dummy.AGRO_FACTOR : 1);                 // reflejo de agro: el Dummy atrae a los monstruos
+      if (dist(n, e) <= n.cfg.searchRange && d < bd) { t = e; bd = d; n.target = e.id; if (e.dummy) Dummy.agroWarn(w, e, n); }
     }
   }
   if (t) {
@@ -268,7 +274,7 @@ function refreshCompanion(w, n, m) {
   if (!inst) return killNpc(w, n, null);
   const c = inst.comp, st = Comp.statsOf(m, c);
   n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
-  n.evoK = Comp.SIZE_STAGES.includes(c.lvl + 1) ? Math.max(0.01, Math.min(1, (c.exp || 0) / Comp.need(c.lvl))) : 0;          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
+  n.evoK = c.sp !== "Dummy" && Comp.SIZE_STAGES.includes(c.lvl + 1) ? Math.max(0.01, Math.min(1, (c.exp || 0) / Comp.need(c.lvl))) : 0;          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
   // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
   if (!n.hpInit) { n.hpInit = true; n.maxHp = st.hp; n.hp = Math.max(1, Math.min(st.hp, c.hp ?? st.hp)); }
   else if (n.maxHp !== st.hp) { const k = n.hp / n.maxHp; n.maxHp = st.hp; n.hp = Math.max(1, Math.round(st.hp * k)); }
@@ -329,6 +335,7 @@ function companionStruck(w, n, t) {
 // Daño directo a un compañero (golpe de monstruo, brasas, drenaje, reflejo...). Al caer pierde experiencia y quizá un nivel (companion.penalize)
 export function companionHurt(w, n, t, dmg) {
   if (t.dead) return;
+  { const ad = Dummy.auraDefense(w, t); if (ad) dmg = Math.max(1, Math.round(dmg * (100 - ad) / 100)); }
   t.hp -= dmg; t.hurtAt = w.time;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp > 0) {

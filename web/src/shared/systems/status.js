@@ -1,5 +1,5 @@
 // Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
-// e.st[clave] = { v, until }. Claves: hold, ice, protect (v = 1..5), invis, berserk, poison (v = nivel), confuse.
+// e.st[clave] = { v, until }. Claves: pfm (v = % menos de daño mágico), hold, ice, protect (v = 1..5), invis, berserk, poison (v = nivel), confuse.
 export function sget(w, e, key) {
   const s = e.st && e.st[key];
   if (!s) return 0;
@@ -21,4 +21,4 @@ export function sclear(w, e, key) {
   w.emit({ t: "status", id: e.id, key, v, on: false });
 }
 
-export const BUFFS = ["hold", "ice", "protect", "invis", "berserk", "confuse"];
+export const BUFFS = ["hold", "ice", "protect", "invis", "berserk", "confuse", "pfm"];

@@ -9,6 +9,8 @@ const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cue
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
 import { sizeStep } from "../shared/systems/companion.js";
+import { DUMMY_COLORS } from "../shared/systems/talents.js";
+import { radiusOf } from "../shared/systems/dummy.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { attrLines } from "../shared/attributes.js";
 import { sellPriceOf } from "../shared/systems/shopsys.js";
@@ -481,6 +483,11 @@ export class Renderer {
     // Compañeros más altos que el personaje: nacen a la mitad de su altura (un golem es un mini golem) y crecen con el nivel hasta el tamaño real al nivel 50
     const sc = e.comp ? this.petScale(e, key, f) : 1;
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
+    if (e.comp && e.dcls && !e.dead && e.master === s.pid) {                               // área de efecto del Dummy (radio por nivel): se ve dónde colocarlo
+      const R = (radiusOf(e.clvl || 1) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff";
+      ctx.save(); ctx.globalAlpha = 0.13; ctx.fillStyle = col; ctx.fillRect(x - R, y - R, 2 * R, 2 * R);
+      ctx.globalAlpha = 0.45; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(x - R, y - R, 2 * R, 2 * R); ctx.restore();
+    }
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
@@ -501,6 +508,9 @@ export class Renderer {
     if (remaster) {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
       else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
+    }
+    if (e.comp && e.dcls && !e.dead) {                                                       // Dummy: el color indica su clase (verde Healer, amarillo Buffer, azul Aura)
+      spr.tinted(ctx, key, f, x, y, DUMMY_COLORS[e.dcls] || "#fff", 0.5);
     }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }

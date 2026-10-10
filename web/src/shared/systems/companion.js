@@ -24,7 +24,7 @@ export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)
 // especie -> muertes para una bola, id de Item.cfg de la bola; el orden es el rango (poder de la especie)
 export const SPECIES = {
   "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
-  "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655],
+  "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655], "Dummy": [500, 652],
 };
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
@@ -42,6 +42,7 @@ export function avgHit(p) {
 // Los compañeros son la parte principal del juego (petición del diseñador): aportan mucho, pero caen y cuestan caro de revivir.
 export const shareOf = (lvl, sp) => Math.min(0.9, (0.3 + 0.012 * lvl) * (0.85 + 0.03 * rankOf(sp)));
 export function statsOf(p, c) {
+  if (c.sp === "Dummy") return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
   const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
   return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg)), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp)), mp: Tal.maxMp(c) };
 }
@@ -164,7 +165,7 @@ export function addExp(w, p, inst, xp) {
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
-    if (SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
+    if (c.sp !== "Dummy" && SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }

@@ -8,6 +8,7 @@ import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
 import { extraWeaponWear } from "./weather.js";
+import { auraDefense, auraExp } from "./dummy.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
 // Flechas (iCalculateAttackEffect, HGServer/Game.cpp ~52836): cada disparo con un blanco gasta una flecha del primer montón
@@ -78,6 +79,7 @@ export function wear(w, p, uid, n) {
 export const MAX_LEVEL = 50;
 export function giveExp(w, p, amount) {
   if (amount <= 0) return;
+  const ax = auraExp(w, p); if (ax) amount = Math.round(amount * (1 + ax / 100));                // aura de sabiduría del Dummy
   if (p.level >= MAX_LEVEL) { p.exp = Math.min(p.exp, p.nextExp - 1); return; }
   p.exp += amount;
   w.emit({ t: "exp", id: p.id, amount });
@@ -92,6 +94,8 @@ export function giveExp(w, p, amount) {
 export function damagePlayer(w, p, dmg, from, elem) {
   if (p.god) return;                                                   // herramientas de prueba: inmortal
   if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
+  if (elem) { const pf = sget(w, p, "pfm"); if (pf) dmg = Math.max(0, Math.round(dmg * (100 - pf) / 100)); }       // Protection From Magic (Dummy buffer)
+  const ad = auraDefense(w, p); if (ad) dmg = Math.max(0, Math.round(dmg * (100 - ad) / 100));              // aura de defensa del Dummy
   p.hp -= dmg;
   p.lastCombat = w.time;
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });
