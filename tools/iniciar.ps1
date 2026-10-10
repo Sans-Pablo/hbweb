@@ -99,12 +99,16 @@ Get-Process cloudflared, ngrok -ErrorAction SilentlyContinue | Stop-Process -For
 
 # 5) túnel
 $tun = $null; $ts = $null; $url = $cfg.publicUrl
-if ($Modo -eq "rapido") {
+$quick = ($Modo -eq "rapido") -or ($cfg.tunnel -eq "cloudflare")           # túnel temporal de Cloudflare (sin cuenta ni tope de tráfico)
+function IniciarCloudflare {
   $cf = Join-Path $tools "cloudflared.exe"
   if (-not (Test-Path $cf)) { Titulo "Descargando cloudflared (solo la primera vez, ~50 MB)..."; Bajar "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" $cf }
   $log = Join-Path $tools "tunnel.log"
   if (Test-Path $log) { Remove-Item $log -Force }
-  $tun = Start-Process -FilePath $cf -ArgumentList "tunnel", "--url", "http://localhost:$port", "--no-autoupdate", "--logfile", "`"$log`"" -WindowStyle Hidden -PassThru
+  return Start-Process -FilePath $cf -ArgumentList "tunnel", "--url", "http://localhost:$port", "--no-autoupdate", "--logfile", "`"$log`"" -WindowStyle Hidden -PassThru
+}
+if ($quick) {
+  $tun = IniciarCloudflare
   $url = $null
 } elseif ($cfg.tunnel -eq "ngrok") {
   $ng = (Get-Command ngrok -ErrorAction SilentlyContinue).Source
@@ -120,7 +124,16 @@ if ($Modo -eq "rapido") {
 function Anunciar {
   for ($i = 0; $i -lt 40; $i++) { try { $null = Invoke-WebRequest "http://localhost:$port/" -UseBasicParsing -TimeoutSec 2; break } catch { Start-Sleep -Milliseconds 500 } }
   $url = $cfg.publicUrl
-  if ($Modo -eq "rapido") {
+  if (-not $quick -and $cfg.tunnel -eq "ngrok" -and $url) {                  # ¿responde el túnel fijo? (el plan gratis de ngrok se queda sin ancho de banda: ERR_NGROK_725)
+    $ok = $false
+    try { $r = Invoke-WebRequest "$url/api/info" -UseBasicParsing -TimeoutSec 8 -Headers @{ "ngrok-skip-browser-warning" = "1" }; $ok = ($r.Content -match "multiplayer") } catch {}
+    if (-not $ok) {
+      Aviso "El túnel de ngrok no responde (¿ancho de banda agotado? ERR_NGROK_725). Uso un enlace temporal de Cloudflare."
+      Get-Process ngrok -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+      try { $script:tun = IniciarCloudflare; $quick = $true; $script:quick = $true } catch { Aviso "No pude crear el enlace de Cloudflare: $_" }
+    }
+  }
+  if ($quick) {
     $url = $null
     for ($i = 0; $i -lt 60 -and -not $url; $i++) {
       Start-Sleep -Seconds 1
@@ -137,9 +150,9 @@ function Anunciar {
   if ($url) {
     Write-Host "   ENLACE PARA JUGAR DESDE INTERNET:" -ForegroundColor Green
     Write-Host "       $url" -ForegroundColor Green
-    if ($Modo -eq "rapido") { try { Set-Clipboard -Value $url; Write-Host "   (copiado al portapapeles; cambia cada vez que abres el programa)" } catch {} }
+    if ($quick) { try { Set-Clipboard -Value $url; Write-Host "   (copiado al portapapeles; cambia cada vez que abres el programa)" } catch {} }
     else { Write-Host "   Los jugadores entran por https://sans-pablo.github.io/hbweb/ (con esta dirección en web\data\server.json; mira docs\ONLINE.md)" }
-  } elseif ($Modo -eq "rapido") { Write-Host "   No se pudo crear el enlace de internet (mira tools\tunnel.log). En tu Wi-Fi sí funciona." -ForegroundColor Red }
+  } elseif ($quick) { Write-Host "   No se pudo crear el enlace de internet (mira tools\tunnel.log). En tu Wi-Fi sí funciona." -ForegroundColor Red }
   Write-Host "   Informe de los bots-probadores: server\data\Informe de bots.md  (o «Ver informe de bots.bat»)"
   Write-Host "   Para apagar: cierra esta ventana (o Ctrl+C). Los datos están en server\data\."
   Write-Host "  ================================================================" -ForegroundColor Yellow

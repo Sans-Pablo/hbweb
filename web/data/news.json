@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "De vuelta en línea (v0.46.3)",
+        "en": "Back online (v0.46.3)"
+      },
+      "items": [
+        {
+          "es": "El lanzador del servidor comprueba el túnel de ngrok y, si no responde (plan gratis sin ancho de banda), crea solo un enlace temporal de Cloudflare. Ese enlace abre el juego completo (cambia en cada arranque): pásalo a los jugadores.",
+          "en": "The server launcher checks the ngrok tunnel and, if it does not answer (free plan out of bandwidth), creates a temporary Cloudflare link by itself. That link opens the whole game (it changes at every start): share it with players."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Modo observar fiable (v0.46.2)",
         "en": "Reliable observer mode (v0.46.2)"
       },

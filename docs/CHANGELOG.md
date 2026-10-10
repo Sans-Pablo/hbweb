@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.46.3 · De vuelta en línea (2026-10-11)
+
+- `tools/iniciar.ps1`: `tunnel: "cloudflare"` en config.json (o `-Modo rapido`) usa el túnel temporal de Cloudflare (`$quick`, `IniciarCloudflare`); con ngrok comprueba `/api/info` del dominio fijo al arrancar y, si no responde (ERR_NGROK_725, ancho de banda agotado), mata ngrok y levanta Cloudflare. El enlace sale en el aviso y se copia al portapapeles. No probado en Windows desde el entorno de desarrollo.
+
 ## 0.46.2 · Modo observar fiable (2026-10-11)
 
 - Causa de «no veo Observar»: el túnel ngrok respondía ERR_NGROK_725 (ancho de banda mensual agotado) → `findServer` caía a prueba local. Ahora, si el servidor configurado no responde, prueba el mismo origen (`api/info`), lo que funciona abriendo `http://localhost:8088/`.
