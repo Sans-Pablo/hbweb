@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.29.1 · Arreglo de guardado (2026-10-10)
+
+- Servidor: el personaje nuevo se vuelca a SQLite al crearlo (`persist(true)`); antes esperaba al temporizador de 5 s y un cierre brusco lo perdía. Test `tests/net-persist.test.mjs`.
+
 ## 0.29.0 · Personajes persistentes (2026-10-10)
 
 - Servidor online: cuentas y partidas en SQLite (`server/store.mjs`, `server/data/hb.sqlite`, WAL + `synchronous=FULL`). Guardado cada 5 s solo de lo que cambió y al desconectarse; copias en `history` (24 por personaje, cada 10 min como mucho y al salir). Admin: `versions <cuenta>` y `restore <cuenta> <n>`. Importa solos los `accounts.json`/`saves.json` antiguos (quedan como `*.migrated`). Sin `node:sqlite` (Node < 22.5) cae al JSON con aviso. Test `tests/store.test.mjs`.

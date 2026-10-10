@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 const PORT = 18123;   // no el 8123: es el del servidor estático de pruebas (tools/e2e.py)
 const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbwalk-")) }, stdio: "ignore" });
-await new Promise(r => setTimeout(r, 1500));
+// espera a que el servidor escuche (con otros tests en paralelo puede tardar)
+for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new WebSocket(`ws://localhost:${PORT}/ws`); t.onopen = () => { t.close(); r(true); }; t.onerror = () => r(false); }); if (ok) break; await new Promise(r => setTimeout(r, 250)); }
 const { default: WS } = await import("node:module").then(() => ({ default: globalThis.WebSocket }));
 const ws = new WS(`ws://localhost:${PORT}/ws`);
 let me, seq = 0, rejects = 0, steps = 0, pos = null;
@@ -19,7 +20,8 @@ ws.onmessage = e => {
     for (const ev of m.ev || []) if (ev.t === "reject" && ev.id === me) { console.log("reject", ev.why); if (ev.why !== "bloqueado") rejects++; }
   }
 };
-await new Promise(r => setTimeout(r, 500));
+for (let i = 0; i < 100 && me === undefined; i++) await new Promise(r => setTimeout(r, 100));
+await new Promise(r => setTimeout(r, 300));
 const dirs = [5, 5, 5, 5, 3, 3, 3, 3];     // sur / este
 const start = Date.now(); let i = 0, next = 0;
 while (Date.now() - start < 12000) {

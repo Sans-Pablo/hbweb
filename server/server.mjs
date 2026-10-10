@@ -287,7 +287,7 @@ function handleJoin(c, m) {
   c.pid = adventure.addPlayer(charName, saves[key], had ? null : m.create);
   const p = adventure.worldFor(c.pid).ents.get(c.pid);
   c.name = p?.name || c.acc;
-  if (!saves[key]) saves[key] = adventure.saveOf(c.pid);
+  if (!saves[key]) { saves[key] = adventure.saveOf(c.pid); persist(true); }       // personaje nuevo: a disco ya, no a los 5 s
   send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: had, version: VERSION.version, admin: ADMINS.has(key) });
   log(`[+] ${c.name} (${c.acc}) ha entrado (${online()} conectados)`);
   adventure.farm.emit({ t: "chat", id: c.pid, name: "Servidor", text: c.name + " ha entrado en la granja.", system: true });
