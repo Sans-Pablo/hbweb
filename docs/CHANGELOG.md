@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.38.0 · Panel de estados (2026-10-10)
+
+- Panel de estados con DR/MR, buffs, auras y estados con temporizador y efecto; `e.aura` incluye ahora regeneración, estamina, maná y el nombre del Dummy.
+
 ## 0.37.0 · Arena y Dummies con carácter (2026-10-10)
 
 - Arena rehecha (combates cortos, críticos, movimientos, hechizos de escuela, comentarios, experiencia y premio), Dummy con carisma/báculo/auras/resurrección, voz de Dummies y bots, estamina original, marco de grupo reubicado. Documentación pendiente hasta una versión estable.

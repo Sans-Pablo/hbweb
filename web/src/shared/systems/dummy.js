@@ -128,7 +128,7 @@ export function think(w, n, m, c) {
       if (hp > 0 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + Math.max(1, Math.round(e.maxHp * hp / 100)));
       if (sta > 0 && e.kind === "player" && e.sp < e.maxSp) e.sp = Math.min(e.maxSp, e.sp + Math.max(1, Math.round(e.maxSp * sta / 100)));
       if (mp > 0 && e.kind === "player" && e.mp < e.maxMp) e.mp = Math.min(e.maxMp, e.mp + Math.max(1, Math.round(e.maxMp * mp / 100)));
-      if (ex > 0 || df > 0 || vp > 0) e.aura = { exp: ex, def: df, vamp: vp, until: w.time + 2500 };
+      if (ex > 0 || df > 0 || vp > 0 || hp > 0 || sta > 0 || mp > 0) e.aura = { exp: ex, def: df, vamp: vp, regen: hp, sta, mana: mp, x2: k > 1, by: n.nick || n.name, until: w.time + 2500 };       // el cliente la muestra en el panel de estados
     }
   }
   // charla (frecuencia limitada): peligro, aliado herido, miedo propio y comentarios en calma

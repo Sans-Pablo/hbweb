@@ -11,6 +11,19 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Panel de estados (v0.38.0)",
+    "en": "Status panel (v0.38.0)"
+   },
+   "items": [
+    {
+     "es": "Nuevo panel a la derecha, bajo el minimapa: tu DR y MR (con lo que suman los buffs), el daño recibido y cada buff, aura o estado con su temporizador y su efecto (Defense Shield +40 DR, aura de defensa -22 % de daño, Vampiric, regeneración, estamina...).",
+     "en": "New panel on the right, under the minimap: your DR and MR (with buff bonuses), damage taken and every buff, aura or status with its timer and effect (Defense Shield +40 DR, Defense Aura -22% damage, Vampiric, regeneration, stamina...)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Arena emocionante y Dummies con carácter (v0.37.0)",
     "en": "Thrilling arena and Dummies with character (v0.37.0)"
    },

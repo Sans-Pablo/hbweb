@@ -299,7 +299,7 @@ export class Gui {
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
-    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
+    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); this.statusPanel(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
     for (const id of this.order) { const d = this.dialogs.get(id); if (this.mobile && d.mobileFixed) d.layout?.(this); }
     for (const id of this.order) {
       const d = this.dialogs.get(id);
@@ -431,6 +431,45 @@ export class Gui {
       }
       y += 8;
     }
+  }
+
+  // Panel de estados (derecha, bajo el minimapa): DR / MR del personaje con lo que le suman los buffs, y cada buff o aura con su temporizador.
+  statusPanel(me, world) {
+    if (me.dead) return;
+    const c = this.ctx, now = world.time, left = u => (u == null ? Infinity : (u - now) / 1000);
+    const fmt = s => s === Infinity ? "∞" : s >= 60 ? Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0") : Math.ceil(s) + "s";
+    const rows = [], st = me.st || {}, au = me.aura && me.aura.until > now ? me.aura : null;
+    let drBonus = 0, magRed = 0, dmgRed = 0;
+    const add = (name, eff, secs, col) => rows.push({ name, eff, secs, col });
+    const pr = st.protect && left(st.protect.until) > 0 ? st.protect.v : 0;
+    if (pr === 3 || pr === 4) drBonus += pr === 3 ? 40 : 100;
+    if (pr) add(({ 1: "Protection From Arrows", 2: "Protection From Magic", 3: "Defense Shield", 4: "Great Defense Shield", 5: "Absolute Magic Protection" })[pr] || "Protection", pr === 3 ? "DR +40" : pr === 4 ? "DR +100" : pr === 1 ? "arrows blocked" : "magic resisted", left(st.protect.until), "#7fd4ff");
+    if (st.pfm && left(st.pfm.until) > 0) { magRed = st.pfm.v; add("Protection From Magic", "magic dmg -" + st.pfm.v + "%", left(st.pfm.until), "#b9a3ff"); }
+    if (st.berserk && left(st.berserk.until) > 0) add("Berserk", "damage x2", left(st.berserk.until), "#ff9a6a");
+    if (st.invis && left(st.invis.until) > 0) add("Invisibility", "unseen", left(st.invis.until), "#d8d8d8");
+    for (const [k, nm, e] of [["hold", "Paralyzed", "can't move"], ["ice", "Frozen", "can't move"], ["confuse", "Confused", "random moves"], ["poison", "Poisoned", "losing HP"]]) if (st[k] && left(st[k].until) > 0) add(nm, e, left(st[k].until), "#ff6a6a");
+    if (au) {
+      const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Dummy") + (au.x2 ? " x2" : "");
+      if (au.def) { dmgRed = au.def; add("Defense Aura", "damage taken -" + au.def + "%", t, "#8fd68f"); }
+      if (au.vamp) add("Vampiric Aura", "heal " + au.vamp + "% of damage", t, "#e07a9a");
+      if (au.regen) add("Regeneration Aura", "+" + au.regen + "% HP/s", t, "#8fd68f");
+      if (au.mana) add("Mana Aura", "+" + au.mana + "% MP/s", t, "#7fa6ff");
+      if (au.sta) add("Stamina Aura", "+" + au.sta + "% SP/s", t, "#e8d66a");
+      if (au.exp) add("Wisdom Aura", "+" + au.exp + "% exp", t, "#e8b86a");
+      rows.auraBy = by;
+    }
+    const fx = me.eff || {}, dr = (fx.defense ?? 0), mr = (fx.resistMagic ?? 0);
+    const W = 190, x = this.W - W - 8, h = 8 + 28 + rows.length * 22 + (rows.auraBy ? 14 : 0);
+    c.fillStyle = "rgba(0,0,0,.45)"; c.fillRect(x, 160, W, h);
+    let y = 164;                                                       // bajo el minimapa (arriba a la derecha)
+    this.text(x + 6, y, "DR " + (dr + drBonus) + (drBonus ? " (+" + drBonus + ")" : ""), drBonus ? "#7fd4ff" : "#fafadc", { shadow: true, size: 11 });
+    this.text(x + 96, y, "MR " + mr, "#fafadc", { shadow: true, size: 11 }); y += 14;
+    this.text(x + 6, y, "Dmg taken " + (dmgRed ? "-" + dmgRed + "%" : "0%") + "   Magic -" + magRed + "%", dmgRed || magRed ? "#8fd68f" : "#9a9a8a", { shadow: true, size: 10 }); y += 14;
+    for (const r of rows) {
+      this.text(x + 6, y, r.name, r.col, { shadow: true, size: 10 }); this.text(x + W - 6, y, fmt(r.secs), r.secs < 5 ? "#ff8a6a" : "#fafadc", { shadow: true, size: 10, align: "right" }); y += 10;
+      this.text(x + 14, y, r.eff, "#c8c8b0", { shadow: true, size: 9 }); y += 12;
+    }
+    if (rows.auraBy) this.text(x + 6, y + 2, "Aura of " + rows.auraBy, "#8fa6d8", { shadow: true, size: 9 });
   }
 
   gauges(me, world, info) {
