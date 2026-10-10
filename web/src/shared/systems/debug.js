@@ -41,6 +41,9 @@ const OPS = {
     w.emit({ t: "pickup", id: p.id, item: d.id, count: n });
     say(w, p, "You receive " + n + " × " + d.name);
   },
+  // ---- bots (jugadores simulados, systems/bot.js)
+  bot(w, p, c) { const r = w.hooks?.bot?.(p, { op: "bot", n: c.n, level: num(c.level, 1, 150, 1), solo: !!c.solo }); say(w, p, r ? (Array.isArray(r) ? r.length + " bot(s): " + r.map(b => b.name).join(", ") : "ok") : "Bots not available here"); },
+  botclear(w, p) { const n = w.hooks?.bot?.(p, { op: "botclear" }); say(w, p, (n || 0) + " bot(s) removed"); },
   // ---- enemigos
   spawn(w, p, c) {
     const name = String(c.name || ""), n = num(c.count, 1, 30, 1);

@@ -8,7 +8,7 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
-import { SPECIES, HOSPITAL, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
+import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
 import { BRANCH_NAMES } from "../shared/systems/talents.js";
@@ -454,8 +454,9 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
   const hospital = new class extends ClassicDialog {
-    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas"], footer: "Un caído no se invoca hasta revivirlo." }); }
+    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos"], footer: "Un caído no se invoca hasta revivirlo." }); }
     rows(me) {
+      if (this.tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
       if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
       const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || i.comp.sp) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
       return ups.concat(me.bag.filter(i => i.comp).map(i => {
@@ -464,11 +465,12 @@ export function registerNpcDialogs(gui, api) {
       }));
     }
     drawBody(g, me) {
-      g.text(14, 62, this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
+      g.text(14, 62, this.tab === 2 ? "Caramelos" : this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
       if (!this.rows(me).length) g.aligned(0, this.w, 120, "No llevas ninguna bola de compañero.", INK);
     }
     pick(r) {
-      if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
+      if (this.tab === 2) api.send({ t: "candybuy", npc: trade.npc.id, item: r.candy, count: 1 });
+      else if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
       else if (r.up) api.send({ t: "petup", npc: trade.npc.id, uid: r.up });
       else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
     }
@@ -541,6 +543,7 @@ export function registerNpcDialogs(gui, api) {
       case "sold": gui.close(23); api.log("You sold " + (ev.count > 1 ? ev.count + " " : "") + nm(ev.item) + " for " + ev.price + " Gold.", "gold"); break;   // el original no avisa; invento del port
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
+      case "candybought": api.log("Compras " + ev.count + " × " + ev.name + " por " + ev.price + " de oro."); break;
       case "petupgraded": api.log(ev.nm + " ha evolucionado: " + ev.from.replace(/-/g, " ") + " → " + ev.to + " (nivel 1)."); break;
       case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;

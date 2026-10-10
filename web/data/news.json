@@ -11,6 +11,31 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Bots, caramelos y manual (v0.35.0)",
+    "en": "Bots, candies and manual (v0.35.0)"
+   },
+   "items": [
+    {
+     "es": "Nuevo: F1 → Bots. Invoca jugadores simulados que entran en tu grupo, cazan, se equipan y suben de nivel (o bots sueltos).",
+     "en": "New: F1 → Bots. Summon simulated players that join your party, hunt, gear up and level (or solo bots)."
+    },
+    {
+     "es": "El hospital de compañeros vende caramelos (pestaña Caramelos).",
+     "en": "The companion hospital sells candies (Candies tab)."
+    },
+    {
+     "es": "El servidor envía menos trabajo por jugador conectado.",
+     "en": "The server does less work per connected player."
+    },
+    {
+     "es": "Manual del jugador de la primera versión en docs/MANUAL.md.",
+     "en": "First-version player manual in docs/MANUAL.md."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Escuelas de magia (v0.34.0)",
     "en": "Magic schools (v0.34.0)"
    },

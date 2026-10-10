@@ -84,4 +84,11 @@ assert.equal(w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Demon" }), false
 assert.equal(S.TIER2.Orc, "Demon"); assert.equal(S.TIER2.Tentocle, "Frost"); assert.equal(S.TIER2["Cannibal-Plant"], "Liche");
 // los talentos de hechizo de los summons normales ya no existen
 assert.equal(T.TALENTS.filter(t => t.spell != null && !t.dummy).length, 0);
+// caramelos en el hospital
+const g0 = A.gold;
+assert.ok(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 781, count: 3 }));
+assert.equal(g0 - A.gold, C.CANDY_PRICE[781] * 3);
+assert.ok(A.bag.filter(i => i.id === 781).reduce((a, i) => a + (i.count || 1), 0) >= 3, "los caramelos llegan a la mochila");
+assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 999, count: 1 }), false, "solo los caramelos");
+A.gold = 0; assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 780, count: 1 }), false, "sin oro");
 console.log("OK schools");

@@ -33,6 +33,8 @@ export function devHtml(lang) {
     row(L(lang, "Objetos", "Items"),
       `<input id="dv-item" list="dv-items" placeholder="${L(lang, "nombre del objeto", "item name")}" style="width:190px"><datalist id="dv-items">${items.map(n => `<option>${esc(n)}</option>`).join("")}</datalist> ` +
       `x ${num("icount", 1, 1, 10000, 64)} ${b("give", "Give")} | ${b("kit:potions", "Potions")} ${b("kit:arrows", "Arrows")} ${b("kit:dyes", "Dyes")} ${b("kit:bone", "Skeleton bones")} ${b("kit:manuals", "Manual")}`) +
+    row("Bots",
+      `${num("bn", 1, 1, 10, 44)} Lv ${num("blv", 1, 1, 50, 52)} ${b("bot", L(lang, "Invocar bot (en tu grupo)", "Summon bot (joins your party)"))} ${b("botsolo", L(lang, "Bot suelto", "Solo bot"))} ${b("botclear", L(lang, "Quitar bots", "Remove bots"))}`) +
     row(L(lang, "Enemigos", "Enemies"),
       `<select id="dv-mob">${opt(monsters, "Skeleton")}</select> x ${num("mcount", 1, 1, 30, 48)} ${L(lang, "fuerza", "power")} ${num("mmult", 1, 1, 50, 48)} ` +
       `${L(lang, "jefe", "boss")} <select id="dv-boss">${opt(["0", "1", "2", "3", "4"])}</select> ${b("spawn", "Spawn")} ${b("killall", "Kill all")} ${b("freeze", "Freeze monsters on/off")} | ${L(lang, "vida del jefe", "boss life")} ${num("bhp", 50, 1, 100, 48)} % ${b("bosshp", "Set")}`) +
@@ -54,6 +56,9 @@ export function devClick(e) {
     case "level": send({ op, n: val("lvl") }); break;
     case "exp": case "gold": case "points": case "skills": send({ op, n: btn.dataset.n }); break;
     case "stat": send({ op, key: val("stat"), n: val("statv") }); break;
+    case "bot": send({ op, n: val("bn"), level: val("blv") }); break;
+    case "botsolo": send({ op: "bot", n: val("bn"), level: val("blv"), solo: true }); break;
+    case "botclear": send({ op }); break;
     case "heal": case "god": case "clear": case "killall": case "freeze": case "petheal": case "petreset": send({ op }); break;
     case "goto": send({ op, map: val("map") }); break;
     case "bosshp": send({ op, n: val("bhp") }); break;

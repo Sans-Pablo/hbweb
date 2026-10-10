@@ -10,6 +10,7 @@ import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
 import { makeReg } from "./systems/party.js";
+import * as Bot from "./systems/bot.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
 
@@ -25,6 +26,7 @@ export class Adventure {
     this.time = 0;
     this.serial = 0;
     this.locations = new Map();
+    this.bots = new Map();                  // jugadores simulados (systems/bot.js): id -> entidad
     this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
     this.partyReg = makeReg(() => this.worlds.values());       // grupos: cruzan mapas (systems/party.js)
@@ -48,6 +50,7 @@ export class Adventure {
       arenaGo: (p, from, to) => { p.arenaBack = { map: from.map.id, x: p.x, y: p.y }; return this.transfer(p, from, to, ARENA.watch); },
       arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
       player: id => this.worldFor(id).ents.get(id),
+      bot: (p, c) => this.botOp(p, c),
       party: this.partyReg,
     };
   }
@@ -129,7 +132,30 @@ export class Adventure {
     return id;
   }
   saveOf(id) { return this.worldFor(id).saveOf(id); }
+
+  // ---- bots (herramienta de admin: dbg bot / botclear)
+  spawnBot(owner, opts = {}) {
+    const taken = new Set([...this.locations.keys()].map(id => this.worldFor(id).ents.get(id)?.name?.toLowerCase()).filter(Boolean));
+    const id = this.addPlayer(opts.name || Bot.pickName(taken), null, { gender: opts.gender || (this.farm.rng() < 0.5 ? 1 : 2), stats: { ...Bot.BOT_STATS } });
+    const p = this.farm.ents.get(id);
+    Bot.init(this.farm, p, { level: opts.level, owner: owner ? owner.id : null });
+    this.bots.set(id, p);
+    if (owner) {
+      const ow = this.worldFor(owner.id);
+      if (ow !== this.farm) this.transfer(p, this.farm, ow, [owner.x, owner.y]); else this.relocate(p, ow, [owner.x + 1, owner.y]);
+      p.bot.home = { x: p.x, y: p.y };
+    }
+    return p;
+  }
+  botOp(p, c) {
+    if (c.op === "botclear") { const n = this.bots.size; for (const id of [...this.bots.keys()]) this.removePlayer(id); return n; }
+    const n = Math.max(1, Math.min(10, c.n | 0 || 1)), solo = !!c.solo, out = [];
+    for (let i = 0; i < n && this.bots.size < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level }));
+    return out;
+  }
   removePlayer(id) {
+    for (const [bid, b] of [...this.bots]) if (b.bot.owner === id) this.removePlayer(bid);          // los bots de un jugador se van con él
+    this.bots.delete(id);
     const w = this.worldFor(id);
     w.removePlayer(id);
     this.locations.delete(id);
@@ -251,6 +277,7 @@ export class Adventure {
   }
 
   tick(dt) {
+    for (const b of this.bots.values()) Bot.think(this, b);
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

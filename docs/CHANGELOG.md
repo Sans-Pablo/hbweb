@@ -2,6 +2,13 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.35.0 · Bots, caramelos y manual (2026-10-10)
+
+- **Bots** (`systems/bot.js`, F1 → Bots): jugadores simulados que entran en tu grupo (o cazan sueltos), siguen al dueño por mapas y criptas, atacan con A*, beben pociones, comen, recogen botín, reparten puntos, se equipan por catálogo y suben de nivel. Funcionan igual en local y en el servidor online. Ficha `docs/sistemas/bots.md`.
+- **Hospital de compañeros**: nueva pestaña **Caramelos** (rojo 60, azul 90, verde 400 de oro).
+- **Optimización**: el servidor serializa cada entidad, la lista de objetos y los campos una sola vez por tick y mundo (antes, una por cliente); el dibujado ya no crea arrays temporales por fotograma.
+- **Manual del jugador** de la primera versión: `docs/MANUAL.md`.
+
 ## 0.34.0 · Escuelas de magia (2026-10-10)
 
 - Escuelas (`systems/schools.js`): Orc/Demon = fuego, Tentocle/Frost = hielo, Cannibal-Plant/Liche = rayo. Los hechizos de ataque de la escuela (atributo de Magic.cfg + tipo ofensivo) solo salen con el summon de esa escuela fuera: lo lanza él (el efecto sale del summon) y paga con SU maná.

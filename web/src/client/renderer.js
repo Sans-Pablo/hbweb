@@ -221,16 +221,19 @@ export class Renderer {
       if (k >= 1 || s.world.ents.has(id)) { fades.delete(id); continue; }
       f.e.fadeAlpha = 1 - k;
     }
-    for (const e of [...s.world.ents.values(), ...[...fades.values()].map(f => f.e)]) {
+    const bucket = e => {
       const [px, py] = posOf(e, time);
-      if (px < camX - 120 || px > camX + VW + 120 || py < camY - 120 || py > camY + VH + 200) continue;
+      if (px < camX - 120 || px > camX + VW + 120 || py < camY - 120 || py > camY + VH + 200) return;
       const moving = (e.act === ACT.MOVE || e.act === ACT.RUN) && time < e.actStart + e.actDur;
       const row = moving ? Math.max(e.y, e.fy) : e.y;
       const col = Math.round((px - 16) / T);
       const k = row * 100000 + col;
-      if (!buckets.has(k)) buckets.set(k, []);
-      buckets.get(k).push([e, px - camX, py - camY]);
-    }
+      let list = buckets.get(k);
+      if (!list) buckets.set(k, (list = []));
+      list.push([e, px - camX, py - camY]);
+    };
+    for (const e of s.world.ents.values()) bucket(e);
+    for (const f of fades.values()) bucket(f.e);
     const overlays = [];
     this.bq = [];
     for (let j = -2; j <= rows + 8; j++) {

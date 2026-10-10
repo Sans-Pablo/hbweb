@@ -442,13 +442,23 @@ setInterval(() => {
   for (const c of clients) if (c.pid) processQueue(c);
   adventure.tick(dt);
   const eventsByMap = adventure.drainEvents();
+  const perWorld = new Map();                              // por mundo y tick: lo que es igual para todos los clientes se calcula una sola vez
+  const shared = world => {
+    let s = perWorld.get(world);
+    if (!s) {
+      const items = itemsList(world);
+      s = { pubs: new Map(), items, itemsKey: JSON.stringify(items), fxj: JSON.stringify([world.dyn || [], world.bfx || []]), sk: (world.fixedDay ? 1 : 0) + "," + (world.dayOrNight || 1) + "," + (world.weather || 0) };
+      perWorld.set(world, s);
+    }
+    return s;
+  };
   for (const c of clients) {
     if (!c.pid) continue;
     const world = adventure.worldFor(c.pid);
     const me = world.ents.get(c.pid);
     const events = eventsByMap.get(world.map.id) || [];
-    const items = itemsList(world);
     if (!me) continue;
+    const sh = shared(world);
     if (c.socket.writableLength > 1 << 20) continue;     // conexión atascada: saltar este envío
     const mapChanged = c.mapId !== world.map.id;
     if (mapChanged) { c.sent.clear(); c.itemsKey = null; c.mapId = world.map.id; }
@@ -456,7 +466,9 @@ setInterval(() => {
     for (const e of world.ents.values()) {
       if (e !== me && e.kind === "npc" && (Math.abs(e.x - me.x) > VIEW || Math.abs(e.y - me.y) > VIEW)) continue;
       seen.add(e.id);
-      const o = pub(e, e === me), js = JSON.stringify(o);
+      let o, js;
+      if (e === me) { o = pub(e, true); js = JSON.stringify(o); }
+      else { let pj = sh.pubs.get(e); if (!pj) { o = pub(e, false); pj = [o, JSON.stringify(o)]; sh.pubs.set(e, pj); } [o, js] = pj; }
       if (c.sent.get(e.id) !== js) { c.sent.set(e.id, js); changed.push(o); }
     }
     const gone = [];
@@ -470,15 +482,14 @@ setInterval(() => {
       msg.map = world.map;
       c.remainingEnemies = world.map.remainingEnemies;
     }
-    const sk = (world.fixedDay ? 1 : 0) + "," + (world.dayOrNight || 1) + "," + (world.weather || 0);
+    const sk = sh.sk;
     if (c.sky !== sk) { c.sky = sk; msg.sk = sk.split(",").map(Number); }
-    const fxj = JSON.stringify([world.dyn || [], world.bfx || []]);
+    const fxj = sh.fxj;
     if (c.fxj !== fxj) { c.fxj = fxj; msg.fx = JSON.parse(fxj); }
     if (changed.length) msg.e = changed;
     if (gone.length) msg.g = gone;
     if (ev.length) msg.ev = ev;
-    const itemsKey = JSON.stringify(items);
-    if (c.itemsKey !== itemsKey) { msg.it = items; c.itemsKey = itemsKey; }
+    if (c.itemsKey !== sh.itemsKey) { msg.it = sh.items; c.itemsKey = sh.itemsKey; }
     send(c, msg);
   }
 }, TICK_MS);

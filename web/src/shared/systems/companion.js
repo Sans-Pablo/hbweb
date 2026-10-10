@@ -68,6 +68,8 @@ export function penalize(w, p, inst) {
 // ---------------------------------------------------------------- hospital de compañeros (NPC "Gail" con role "pethospital")
 // INVENTO del port. Un compañero que cae queda inconsciente (comp.down) y no se puede invocar hasta que se revive; revivirlo es caro.
 export const HOSPITAL = { npc: "Gail", role: "pethospital", reach: 8, ballPrice: 1, healPerHp: 2 };
+// Caramelos a la venta en el hospital (Item.cfg los marca como no vendibles: precios del port). Rojo = vida, azul = maná, verde = revivir.
+export const CANDY_PRICE = { 780: 60, 781: 90, 782: 400 };
 export const maxOf = (p, c) => statsOf(p, c).hp;
 export const hpOf = (p, c) => (c.down ? 0 : Math.min(maxOf(p, c), c.hp ?? maxOf(p, c)));
 export const reviveCost = c => Math.round((1500 + 400 * c.lvl) * (1 + 0.15 * rankOf(c.sp)));
@@ -89,6 +91,21 @@ export function treat(w, p, cmd) {
   for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) e.hp = e.maxHp;          // si estaba fuera, se cura en el acto
   w.recalc(p);
   w.emit({ t: "pettreated", id: p.id, nm: c.nm, sp: c.sp, cost, revived });
+  return true;
+}
+
+// Compra de caramelos en el hospital (1 a 99 por pedido)
+export function buyCandy(w, p, cmd) {
+  const id = cmd.item | 0, price = CANDY_PRICE[id], n = Math.max(1, Math.min(99, cmd.count | 0 || 1)), d = price && w.data.item(id);
+  if (!d || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
+  if (p.gold < price * n) { w.emit({ t: "nogold", id: p.id }); return false; }
+  const inst = newInst(w, id, n);
+  if (!Inv.canCarry(p, w.data, d, n, inst)) { w.emit({ t: "cantcarry", id: p.id, why: "weight" }); return false; }
+  if (!p.bag.some(i => i.id === id) && p.bag.length >= MAX_ITEMS) { w.emit({ t: "cantcarry", id: p.id, why: "slots" }); return false; }
+  p.gold -= price * n;
+  Inv.addToBag(p, w.data, inst);
+  w.recalc(p);
+  w.emit({ t: "candybought", id: p.id, item: id, count: n, price: price * n, name: d.display || d.name });
   return true;
 }
 
