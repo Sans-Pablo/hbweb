@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.30.1 · Atributos, círculos y respawn (2026-10-10)
+
+- Repartir muchos puntos de atributo a la vez ya funciona: el cliente manda una sola orden `stat` con `n` (antes eran decenas de mensajes y el límite por segundo del servidor descartaba el resto). `NET_PROTO` = 3.
+- Ctrl+1…9 y Ctrl+0 abren el libro de magia en el círculo 1…10.
+- Al morir se abre el cuadro del sistema original (diálogo 19) con su botón Restart; desaparece el cartel propio.
+
 ## 0.30.0 · Party en la cripta (2026-10-10)
 
 - Cripta compartida: los miembros de una party entran a la misma cripta, bajan de nivel juntos y la cripta se descarta cuando sale el último (`adventure.js`, clave de grupo). Test en `tests/dungeon.test.mjs`.

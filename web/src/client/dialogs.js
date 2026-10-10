@@ -319,7 +319,7 @@ export function registerDialogs(gui, api) {
         }
       }
       if (lx >= 154 && lx <= 228 && ly > 292 && ly < 312) {
-        for (const [, k] of LU) for (let i = 0; i < (this.d[k] || 0); i++) api.stat(k);
+        for (const [, k] of LU) if (this.d[k] > 0) api.stat(k, this.d[k]);
         g.close(12);
         return true;
       }

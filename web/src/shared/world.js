@@ -250,8 +250,9 @@ const COMMANDS = {
   },
   stat(w, p, cmd) {
     if (p.pool <= 0 || !(cmd.stat in p.stats) || p.stats[cmd.stat] >= R.STAT_LIMIT) return w.reject(p, cmd, "sin puntos");
-    p.stats[cmd.stat]++;
-    p.pool--;
+    const n = Math.max(1, Math.min(p.pool, R.STAT_LIMIT - p.stats[cmd.stat], Math.floor(Number(cmd.n)) || 1));   // varios puntos en una sola orden (el servidor limita los mensajes por segundo)
+    p.stats[cmd.stat] += n;
+    p.pool -= n;
     w.recalc(p);
     w.emit({ t: "stats", id: p.id });
     return true;

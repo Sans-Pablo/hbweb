@@ -11,6 +11,27 @@
   {
    "date": "2026-10-10",
    "title": {
+    "es": "Atributos, círculos y respawn (v0.30.1)",
+    "en": "Stats, circles and respawn (v0.30.1)"
+   },
+   "items": [
+    {
+     "es": "Sube de nivel y reparte todos los puntos de golpe (también con Ctrl para de 5 en 5): deben aplicarse todos.",
+     "en": "Level up and assign all points at once (Ctrl for steps of 5): all must apply."
+    },
+    {
+     "es": "Ctrl+1…0 abre el libro de magia en ese círculo.",
+     "en": "Ctrl+1…0 opens the spell book at that circle."
+    },
+    {
+     "es": "Al morir aparece el cuadro original del sistema con Restart.",
+     "en": "On death the original system dialog with Restart appears."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "title": {
     "es": "Party en la cripta (v0.30.0)",
     "en": "Party in the crypt (v0.30.0)"
    },

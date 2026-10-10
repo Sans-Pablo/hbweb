@@ -116,7 +116,7 @@ async function main() {
       }, 1000);
     },
     restart: () => conn.send({ t: "respawn" }),
-    stat: k => conn.send({ t: "stat", stat: k }),
+    stat: (k, n = 1) => conn.send({ t: "stat", stat: k, n }),
     learn: id => conn.send({ t: "learn", spell: id }),
   };
   registerDialogs(gui, guiApi);
@@ -324,7 +324,7 @@ async function main() {
       if (ent && ent.kind === "npc" && !ent.master) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
     },
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmrstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
@@ -349,6 +349,12 @@ async function main() {
         return;
       }
       if (e.ctrlKey) {
+        if (/^[0-9]$/.test(e.key)) {                                  // Ctrl+1..9,0: abre el libro de magia en ese círculo
+          e.preventDefault();
+          const mg = gui.dialogs.get(3); mg.view = (+e.key + 9) % 10;
+          if (!gui.isOpen(3)) gui.open(3); else gui.bringFront?.(3);
+          return;
+        }
         switch (K) {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
@@ -548,6 +554,7 @@ async function main() {
     hud.update(world, ctl.hoverEnt);
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();
+    { const m = world.ents.get(pid); if (m?.dead && !ui.wasDead) gui.open(19); ui.wasDead = !!m?.dead; }      // GAME.cpp: al morir aparece el cuadro con Restart
     // cursor del original (interface.pak, sprite 0): 0 flecha · 3 enemigo · 6 otro jugador · 4/5 hechizo amigo/enemigo · 10 mano para recoger
     let cur;
     if (opts.classicCursor) {

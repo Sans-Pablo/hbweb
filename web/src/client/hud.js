@@ -278,7 +278,7 @@ export class Hud {
     if ($("#inv").classList.contains("open")) this.renderInv(me);
     if ($("#book").classList.contains("open")) this.renderBook(me);
     this.set("pool", $("#poolbadge"), "text", me.pool ? String(me.pool) : "");
-    this.set("dead", $("#death"), "display", me.dead ? "grid" : "none");
+    this.set("dead", $("#death"), "display", "none");          // al morir se abre el menú del sistema original (diálogo 19) con su botón Restart
     this.set("low", document.body, "--low", me.hp < me.maxHp * 0.3 && !me.dead ? "1" : "0");
 
     // objetivo bajo el cursor
