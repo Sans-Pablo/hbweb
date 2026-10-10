@@ -9,6 +9,19 @@
   },
   "news": [
     {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Subir de nivel cuesta más (v0.46.0)",
+        "en": "Leveling is harder (v0.46.0)"
+      },
+      "items": [
+        {
+          "es": "La experiencia que ganas baja con el nivel: 70 % hasta el nivel 20 y un 8 % menos por cada nivel siguiente (en el 30 ganas ~31 %, en el 49 ~6 %). La tabla de niveles no cambia, así que tu nivel actual se conserva. Llegar al 50 ahora es una meta de muchas horas.",
+          "en": "The experience you earn falls with level: 70% up to level 20 and 8% less for every level after (at 30 you earn ~31%, at 49 ~6%). The level table is unchanged, so your current level is kept. Reaching 50 is now a many-hour goal."
+        }
+      ]
+    },
+    {
       "date": "2026-10-10",
       "title": {
         "es": "Segunda ronda de bots (v0.45.1)",

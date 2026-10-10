@@ -29,7 +29,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
 - `bot.js` · 321 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 229 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 233 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 251 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `debug.js` · 125 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
 - `dummy.js` · 220 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
@@ -110,6 +110,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `debug.test.mjs` · 37 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
 - `dummy.test.mjs` · 155 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
 - `dungeon.test.mjs` · 185 · 
+- `exprate.test.mjs` · 9 · Ritmo de experiencia del port: cuesta mucho más llegar al nivel máximo (expRate en combatsys.js)
 - `ghost.test.mjs` · 56 · Esqueleto fantasma: un esqueleto común puede levantarse al desaparecer su cadáver. node tests/ghost.test.mjs
 - `i18n.test.mjs` · 20 · Idiomas: el texto en español se traduce al inglés cuando se elige "en" y vuelve a español al cambiar.
 - `loot.test.mjs` · 72 · 
@@ -123,7 +124,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `net-persist.test.mjs` · 22 · Cuenta y personaje nuevos sobreviven a matar el servidor de golpe (SIGKILL) nada más entrar.
 - `net-walk.test.mjs` · 35 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
-- `party.test.mjs` · 88 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
+- `party.test.mjs` · 89 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
 - `path.test.mjs` · 41 · A* con arrays tipados: caminos válidos, de coste óptimo (frente a Dijkstra), reutilizables entre búsquedas y rodeando ocupados. node test
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `pvp.test.mjs` · 63 · PvP entre bandos en Promise Land + granjas de Aresden y Elvine + 40 habitantes (20/20) con grupos y expediciones.

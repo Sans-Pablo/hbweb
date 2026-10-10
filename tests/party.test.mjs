@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
 import { GameData } from "../web/src/shared/data.js";
 import { Grid } from "../web/src/shared/grid.js";
+import { expRate } from "../web/src/shared/systems/combatsys.js";
 import * as Party from "../web/src/shared/systems/party.js";
 const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
 const npcDb = J("npc.json");
@@ -45,11 +46,11 @@ assert.equal(C.party.id, A.party.id); assert.equal(A.party.names.length, 3);
 // experiencia: tres miembros, cada uno recibe xp/3 (redondeo del original)
 const exp0 = [A, B, C].map(p => p.exp);
 Party.shareExp(w, A, 300);
-assert.deepEqual([A, B, C].map((p, i) => p.exp - exp0[i]), [100, 100, 100]);
+assert.deepEqual([A, B, C].map((p, i) => p.exp - exp0[i]), [100, 100, 100].map(x => Math.max(1, Math.round(x * expRate(1)))));   // ritmo de experiencia del port (expRate)
 B.dead = true; B.hp = 0;                                             // un muerto no cobra y no cuenta
 const e1 = [A.exp, B.exp, C.exp];
 Party.shareExp(w, A, 300);
-assert.deepEqual([A.exp - e1[0], B.exp - e1[1], C.exp - e1[2]], [150, 0, 150]);
+assert.deepEqual([A.exp - e1[0], B.exp - e1[1], C.exp - e1[2]], [150, 0, 150].map(x => x && Math.round(x * expRate(1))));
 B.dead = false; B.hp = B.maxHp;
 
 // chat de grupo: solo miembros; sin grupo se rechaza

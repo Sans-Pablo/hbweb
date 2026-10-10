@@ -103,10 +103,14 @@ export function wear(w, p, uid, n) {
 }
 
 export const MAX_LEVEL = 50;
+// Ritmo de experiencia (INVENTO del port, a petición del propietario: llegar al nivel máximo debe costar mucho más). La tabla de niveles es la del original;
+// lo que baja es la experiencia que se gana: 70 % hasta el nivel 20 y, desde ahí, un 8 % menos por cada nivel (nivel 30: ~31 %, nivel 49: ~6 %).
+export const expRate = level => 0.7 * Math.pow(0.92, Math.max(0, level - 20));
 export function giveExp(w, p, amount) {
   if (amount <= 0) return;
   const ax = auraExp(w, p); if (ax) amount = Math.round(amount * (1 + ax / 100));                // aura de sabiduría del Dummy
   if (p.level >= MAX_LEVEL) { p.exp = Math.min(p.exp, p.nextExp - 1); return; }
+  amount = Math.max(1, Math.round(amount * expRate(p.level)));
   p.exp += amount;
   w.emit({ t: "exp", id: p.id, amount });
   while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)

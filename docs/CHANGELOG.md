@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.46.0 · Más difícil llegar al nivel máximo (2026-10-11)
+
+- `combatsys.expRate(level)` = 0,7 · 0,92^(nivel-20) (0,7 hasta el 20); `giveExp` escala toda experiencia ganada. Invento del port a petición del propietario; la tabla `expForLevel` (original) no cambia, así que los niveles guardados se conservan. Test `exprate.test.mjs`; `party.test.mjs` ajustado.
+- Nota: la experiencia del summon (`Comp.onKill`) no se escala; sigue siendo el 40 % de la base.
+
 ## 0.45.1 · Segunda ronda de bots (2026-10-10)
 
 - Servidor: `BOT_EPOCH` (server.mjs) + `bots-epoch.txt` en la carpeta de datos: al cambiar la época se borran las partidas `bot:*` (todos a nivel 1) y el informe se archiva como `ronda-<fecha> …`. Una sola vez por época; subir la constante para otra ronda.
