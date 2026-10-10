@@ -38,7 +38,7 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
           const key = t + "\0" + k, s = JSON.stringify(st[t][k]);
           if (st.last.get(key) === s) continue;
           up.run(t, k, s, now); st.last.set(key, s); n++;
-          if (t === "saves" && (force || now - (st.histAt.get(k) || 0) >= HISTORY_EVERY)) { hist.run(k, now, s); prune.run(k, k, HISTORY_KEEP); st.histAt.set(k, now); }
+          if (t === "saves" && !k.startsWith("bot:") && (force || now - (st.histAt.get(k) || 0) >= HISTORY_EVERY)) { hist.run(k, now, s); prune.run(k, k, HISTORY_KEEP); st.histAt.set(k, now); }
         }
         for (const key of [...st.last.keys()]) { const [tt, k] = key.split("\0"); if (tt === t && !(k in st[t])) { del.run(t, k); st.last.delete(key); n++; } }
       }

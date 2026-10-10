@@ -3,7 +3,7 @@
 #   -Modo rapido   servidor + enlace público temporal (Cloudflare) para jugar con alguien sin configurar nada
 # Todo es automático: actualiza el juego (git, si lo hay), usa Node del sistema o descarga uno portátil, pregunta lo imprescindible solo la
 # primera vez, espera a que el servidor responda, abre el navegador, copia el enlace público y reinicia el servidor solo si se cae.
-param([ValidateSet("online", "rapido")][string]$Modo = "online", [switch]$SinNavegador)
+param([ValidateSet("online", "rapido")][string]$Modo = "online", [switch]$SinNavegador, [switch]$SinIA)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
@@ -43,6 +43,27 @@ if (-not ($node -and (NodeValido $node))) {
     Rename-Item (Join-Path $tools "node-$v-win-x64") "node"
     Remove-Item $zip
   }
+}
+
+# 2b) IA local para los habitantes (Ollama: gratis, en este PC). Todo es opcional: si algo falla, los habitantes usan sus frases propias y el
+#     servidor sigue reintentando conectar con Ollama cada minuto. -SinIA lo salta.
+if (-not $SinIA) {
+  try {
+    $ollama = (Get-Command ollama -ErrorAction SilentlyContinue).Source
+    if (-not $ollama) { $p = Join-Path $env:LOCALAPPDATA "Programs\Ollama\ollama.exe"; if (Test-Path $p) { $ollama = $p } }
+    if (-not $ollama -and (Get-Command winget -ErrorAction SilentlyContinue)) {
+      Titulo "Instalando Ollama (IA local gratuita para los habitantes; una sola vez)..."
+      winget install -e --id Ollama.Ollama --silent --accept-package-agreements --accept-source-agreements | Out-Null
+      $p = Join-Path $env:LOCALAPPDATA "Programs\Ollama\ollama.exe"; if (Test-Path $p) { $ollama = $p }
+    }
+    if ($ollama) {
+      $vivo = $false; try { Invoke-RestMethod "http://127.0.0.1:11434/api/tags" -TimeoutSec 2 | Out-Null; $vivo = $true } catch {}
+      if (-not $vivo) { Start-Process -FilePath $ollama -ArgumentList "serve" -WindowStyle Hidden; Start-Sleep 3 }
+      $tiene = & $ollama list 2>$null | Select-String "llama3.2"
+      if (-not $tiene) { Titulo "Descargando el modelo de IA llama3.2 (~2 GB, una sola vez)..."; & $ollama pull llama3.2:3b }
+      Ok "IA local lista (Ollama)."
+    } else { Write-Host "  (Sin Ollama: los habitantes hablan con frases propias. Instálalo desde https://ollama.com para que hablen con IA.)" -ForegroundColor DarkGray }
+  } catch { Write-Host "  (No se pudo preparar la IA local: $($_.Exception.Message). El juego sigue sin ella.)" -ForegroundColor DarkGray }
 }
 
 # 3) configuración: solo la primera vez (online). En modo rápido no hace falta ninguna.
@@ -119,6 +140,7 @@ function Anunciar {
     if ($Modo -eq "rapido") { try { Set-Clipboard -Value $url; Write-Host "   (copiado al portapapeles; cambia cada vez que abres el programa)" } catch {} }
     else { Write-Host "   Los jugadores entran por https://sans-pablo.github.io/hbweb/ (con esta dirección en web\data\server.json; mira docs\ONLINE.md)" }
   } elseif ($Modo -eq "rapido") { Write-Host "   No se pudo crear el enlace de internet (mira tools\tunnel.log). En tu Wi-Fi sí funciona." -ForegroundColor Red }
+  Write-Host "   Informe de los bots-probadores: server\data\Informe de bots.md  (o «Ver informe de bots.bat»)"
   Write-Host "   Para apagar: cierra esta ventana (o Ctrl+C). Los datos están en server\data\."
   Write-Host "  ================================================================" -ForegroundColor Yellow
   if (-not $SinNavegador) { Start-Process "http://localhost:$port/" }

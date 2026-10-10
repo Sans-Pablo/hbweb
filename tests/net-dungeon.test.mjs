@@ -27,7 +27,7 @@ async function until(fn, why) {
 
 test("servidor real: dos jugadores entran en instancias aisladas y vuelven a Aresfarm", { timeout: 90000 }, async () => {
   const folder = mkdtempSync(path.resolve("tests/.dungeon-"));
-  const srv = spawn(process.execPath, ["server/server.mjs", "8125"], { env: { ...process.env, LAG_MS: "80", HB_DATA: folder }, stdio: ["ignore", "pipe", "pipe"] });
+  const srv = spawn(process.execPath, ["server/server.mjs", "8125"], { env: { ...process.env, LAG_MS: "80", HB_RESIDENTS: "0", HB_LLM: "off", HB_DATA: folder }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "", exited = false;
   srv.stdout.on("data", b => output += b); srv.stderr.on("data", b => output += b);
   srv.on("exit", () => exited = true);

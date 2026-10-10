@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 const PORT = 18124;
-const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_DEBUG: "1", HB_NO_LIMITS: "1", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbbot-")) }, stdio: "ignore" });
+const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_DEBUG: "1", HB_NO_LIMITS: "1", HB_RESIDENTS: "0", HB_LLM: "off", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbbot-")) }, stdio: "ignore" });
 for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new WebSocket(`ws://localhost:${PORT}/ws`); t.onopen = () => { t.close(); r(true); }; t.onerror = () => r(false); }); if (ok) break; await new Promise(r => setTimeout(r, 250)); }
 const ws = new WebSocket(`ws://localhost:${PORT}/ws`);
 let me, seq = 0; const seen = new Map();

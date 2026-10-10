@@ -11,6 +11,7 @@ import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
 import { makeReg } from "./systems/party.js";
 import * as Bot from "./systems/bot.js";
+import * as Residents from "./systems/residents.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas" };
 
@@ -39,6 +40,8 @@ export class Adventure {
     this.farm.clock = options.clock || null;
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
+    this.farm.evHook = (w, ev) => Residents.onEvent(this, w, ev);
+    this.llm = null;                         // el servidor puede poner aquí un generador de texto (server/llm.mjs) para los habitantes
   }
 
   // ganchos que el mundo usa para cosas que cruzan mapas (Recall)
@@ -131,7 +134,11 @@ export class Adventure {
     this.locations.set(id, this.farm);
     return id;
   }
-  saveOf(id) { return this.worldFor(id).saveOf(id); }
+  saveOf(id) {
+    const w = this.worldFor(id), s = w.saveOf(id), r = s && w.ents.get(id)?.res;
+    if (r) { const { next, reply, seen, idleAt, lvl, deadSeen, followUntil, ...keep } = r; s.res = JSON.parse(JSON.stringify(keep, (k, v) => (k[0] === "_" ? undefined : v))); }     // el habitante guarda su ficha, memoria y metas
+    return s;
+  }
 
   // ---- bots (herramienta de admin: dbg bot / botclear)
   spawnBot(owner, opts = {}) {
@@ -147,8 +154,22 @@ export class Adventure {
     }
     return p;
   }
+  // Habitante: bot permanente con ficha, memoria y objetivos (systems/residents.js). `save` = su partida guardada (o null si es nuevo).
+  spawnResident(name, save = null) {
+    const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS } });
+    const p = this.farm.ents.get(id);
+    Bot.init(this.farm, p, { level: save ? p.level : 1 + (h % 4), keep: !!save });
+    const spot = this.farm.freeSpotNear(FARM_HOME[0] + ((h >> 3) % 41) - 20, FARM_HOME[1] + ((h >> 9) % 41) - 20);
+    if (spot) this.relocate(p, this.farm, spot);
+    p.bot.home = { x: p.x, y: p.y };
+    Residents.attach(this.farm, p, save?.res);
+    this.bots.set(id, p);
+    return p;
+  }
+  residents() { return [...this.bots.values()].filter(b => b.res); }
   botOp(p, c) {
-    if (c.op === "botclear") { const n = this.bots.size; for (const id of [...this.bots.keys()]) this.removePlayer(id); return n; }
+    if (c.op === "botclear") { let n = 0; for (const [id, b] of [...this.bots]) if (!b.res) { this.removePlayer(id); n++; } return n; }
     const n = Math.max(1, Math.min(10, c.n | 0 || 1)), solo = !!c.solo, out = [];
     for (let i = 0; i < n && this.bots.size < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level }));
     return out;
@@ -277,7 +298,7 @@ export class Adventure {
   }
 
   tick(dt) {
-    for (const b of this.bots.values()) Bot.think(this, b);
+    for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

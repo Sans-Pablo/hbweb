@@ -32,11 +32,12 @@ export const BOT_STATS = { str: 14, vit: 12, dex: 12, int: 10, mag: 10, chr: 10 
 // Prepara a un jugador recién creado: nivel, oro y cerebro
 export function init(w, p, opts = {}) {
   const lvl = Math.max(1, Math.min(opts.level | 0 || 1, MAX_LEVEL));
-  if (lvl > 1) { p.level = lvl; p.exp = R.expForLevel(lvl); p.pool += (lvl - 1) * R.LEVELUP_POINTS; }
-  p.gold += 400 + lvl * 250;
+  if (opts.keep) {}                                                      // habitante cargado de su partida: conserva nivel y oro
+  else if (lvl > 1) { p.level = lvl; p.exp = R.expForLevel(lvl); p.pool += (lvl - 1) * R.LEVELUP_POINTS; }
+  if (!opts.keep) p.gold += 400 + lvl * 250;
   w.recalc(p);
   p.bot = { owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0 };
-  errands(w, p, p.bot, true);
+  if (!opts.keep) errands(w, p, p.bot, true);
   p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp;
 }
 

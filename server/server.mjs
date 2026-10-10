@@ -28,6 +28,10 @@ import { LIMITS, PLAYER, NET_PROTO } from "../web/src/shared/const.js";
 import { apparelOf } from "../web/src/shared/appearance.js";
 import { validCharName } from "../web/src/shared/systems/player.js";
 import { openStore } from "./store.mjs";
+import { openLlm } from "./llm.mjs";
+import { openReport } from "./report.mjs";
+import * as Residents from "../web/src/shared/systems/residents.js";
+import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
 
@@ -74,11 +78,30 @@ try {
 } catch {}
 const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, maps, clock: () => new Date().getMinutes() });   // día y noche como el cliente local
 
+const clients = new Set();
 const saves = store.saves;
+// Habitantes: bots permanentes del servidor (systems/residents.js). Su partida vive en saves["bot:<nombre>"] y se guarda con la de los jugadores.
+const RESIDENTS = Math.max(0, Math.min(40, Number(env.HB_RESIDENTS ?? CFG.residents ?? 40) | 0));
+const bkey = n => "bot:" + n.toLowerCase();
+function spawnResidents(n) {
+  const have = new Set(adventure.residents().map(b => b.name));
+  let made = 0;
+  for (const name of RESIDENT_NAMES) {
+    if (adventure.residents().length >= n) break;
+    if (have.has(name)) continue;
+    try { adventure.spawnResident(name, saves[bkey(name)] || null); made++; } catch (e) { console.error("habitante " + name + ":", e.message); }
+  }
+  return made;
+}
 function persist(force = false) {
   for (const c of clients) if (c.pid) saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
+  for (const b of adventure.residents()) { const s = adventure.saveOf(b.id); if (s) saves[bkey(b.name)] = s; }
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
+const informe = openReport(STORE, { version: VERSION.version, log });
+adventure.report = r => informe.add(r);               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
+spawnResidents(RESIDENTS);
+persist(true);                                          // sus nombres quedan reservados desde el primer momento
 const saveTimer = setInterval(persist, 5000);          // solo se escriben los personajes que cambiaron; WAL: sobrevive a cerrar la ventana
 
 // ------------------------------------------------------------------ web estática
@@ -148,7 +171,6 @@ const server = http.createServer((req, res) => {
 });
 
 // ------------------------------------------------------------------ WebSocket mínimo (RFC 6455)
-const clients = new Set();
 const connsOf = ip => [...clients].filter(c => c.ip === ip).length;
 const MAX_CONN_IP = 6;
 
@@ -354,6 +376,14 @@ function adminCmd(line, by) {
       const k = (rest[0] || "").toLowerCase(), v = store.versions(k), at = v[Number(rest[1] || 0)];
       if (byName(k)) return "Desconecta primero a " + k;
       return at && store.restore(k, at) ? "Personaje " + k + " restaurado a " + new Date(at).toLocaleString("es") : "No hay esa copia (usa: versions " + k + ")"; }
+    case "habitantes": case "residents": {
+      const R = adventure.residents();
+      if (rest[0] && /^\d+$/.test(rest[0])) { const n = Math.min(40, +rest[0]); while (adventure.residents().length > n) { const b = adventure.residents().pop(); saves[bkey(b.name)] = adventure.saveOf(b.id); adventure.removePlayer(b.id); } spawnResidents(n); persist(true); return "Habitantes: " + adventure.residents().length; }
+      return `${R.length} habitantes · IA: ${adventure.llm ? "sí" : "no (frases propias)"}\n` + R.map(b => `${b.name} nv ${b.level} (${b.res.arch}) meta: ${b.res.goal ? b.res.goal.k : "-"}`).join("\n"); }
+    case "informe": case "report": { if (rest[0] === "borrar") { informe.clear(); return "Informe vaciado."; } informe.flush(); return informe.file + "\n" + JSON.stringify(informe.size()) + "\n\n" + informe.text().slice(0, 3500); }
+    case "vida": case "life": {
+      const b = adventure.residents().find(x => x.name.toLowerCase() === (rest[0] || "").toLowerCase()); if (!b) return "Uso: vida <nombre de habitante>";
+      return Residents.storyOf(b, "es") + "\nMeta: " + Residents.goalText(b.res.goal, "es") + "\nAmigos: " + (Object.keys(b.res.rel).join(", ") || "ninguno") + "\nRecuerdos:\n- " + b.res.mem.map(m => m.es).join("\n- "); }
     case "restart": case "reiniciar": case "stop": case "parar": {
       const restart = /^(restart|reiniciar)$/i.test(cmd);
       for (const c of [...clients]) drop(c, restart ? "El servidor se reinicia. Vuelve a entrar en un minuto." : "El servidor se apaga.");
@@ -512,6 +542,10 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log("  Cuentas: " + Object.keys(accounts.db).length + " · admins: " + ([...ADMINS].join(", ") || "ninguno (config.json → admins)") + " · orígenes: " + ORIGINS.join(", "));
   console.log("  Monstruos: " + [...adventure.farm.ents.values()].filter(e => e.kind === "npc").length + ".  Datos en " + STORE + "  ·  escribe «help» para los comandos de administración");
 });
+adventure.llm = openLlm(CFG.llm, env, console.log);          // siempre presente: reintenta conectar con el modelo local cada minuto
 // consola del servidor: los mismos comandos que el chat de un admin
 if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("line", l => console.log(adminCmd(l, "consola")));
-for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); store.close(); setTimeout(() => process.exit(0), 150); });
+// Cierre brusco (ventana cerrada, error inesperado): guardar todo antes de salir; el lanzador vuelve a arrancar el servidor
+process.on("uncaughtException", e => { console.error("Error inesperado:", e); try { persist(true); store.close(); } catch {} process.exit(1); });
+process.on("unhandledRejection", e => console.error("Promesa rechazada:", e));
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); informe.flush(); store.close(); setTimeout(() => process.exit(0), 150); });

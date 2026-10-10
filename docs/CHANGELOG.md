@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.41.0 · Habitantes (2026-10-10)
+
+- 40 bots permanentes en el servidor (`systems/residents.js`): ficha, metas, memoria, relaciones, charla (mitad inglés, mitad español), IA local opcional (`server/llm.mjs`, Ollama) y guardado en `saves["bot:<nombre>"]`. Apagado seguro (SIGHUP/BREAK, excepciones) y `Activar inicio automatico.bat`. Hacen de testers: `server/report.mjs` escribe `server/data/Informe de bots.md` (fallos, incomodidades, balance, ideas); comandos `habitantes`, `vida`, `informe`.
+
 ## 0.40.0 · Servidor más fácil y rápido (2026-10-10)
 
 - `Iniciar servidor.bat` + `tools/iniciar.ps1` (modos online y rápido, sustituye a servidor-online.ps1 y multijugador.ps1; los .bat antiguos lo llaman). A* con arrays tipados (`path.js`, `tests/path.test.mjs`), recálculo de rutas de bots limitado, estado propio solo si cambia (`server.mjs`), `tools/bench.mjs`.

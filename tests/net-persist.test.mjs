@@ -5,7 +5,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 const PORT = 18201, dir = mkdtempSync(path.join(tmpdir(), "hbpers-"));
-const start = () => new Promise(r => { const s = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_DATA: dir }, stdio: ["ignore", "pipe", "ignore"] }); let o = ""; s.stdout.on("data", d => { o += d; if (o.includes("Monstruos")) r(s); }); });
+const start = () => new Promise(r => { const s = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_RESIDENTS: "0", HB_LLM: "off", HB_DATA: dir }, stdio: ["ignore", "pipe", "ignore"] }); let o = ""; s.stdout.on("data", d => { o += d; if (o.includes("Monstruos")) r(s); }); });
 const talk = (mode, create) => new Promise(res => {
   const ws = new WebSocket(`ws://localhost:${PORT}/ws`), log = [];
   ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode, name: "rerere", pass: "rerere", proto: 4 }));

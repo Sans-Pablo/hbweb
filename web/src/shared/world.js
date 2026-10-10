@@ -54,7 +54,7 @@ export class World {
   set nextItem(v) { this.ids.item = v; }
 
   // ------------------------------------------------------------------ utilidades
-  emit(ev) { ev.time = this.time; this.events.push(ev); }
+  emit(ev) { ev.time = this.time; this.events.push(ev); if (this.evHook) this.evHook(this, ev); }
   drainEvents() { const e = this.events; this.events = []; return e; }
   after(ms, fn) { this.timers.push({ at: this.time + ms, fn }); }
   setAct(e, act, dur) { e.act = act; e.actStart = this.time; e.actDur = dur; }

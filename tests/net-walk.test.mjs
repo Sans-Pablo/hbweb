@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 const PORT = 18123;   // no el 8123: es el del servidor estático de pruebas (tools/e2e.py)
-const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbwalk-")) }, stdio: "ignore" });
+const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...process.env, LAG_MS: "80", HB_RESIDENTS: "0", HB_LLM: "off", HB_DATA: mkdtempSync(path.join(tmpdir(), "hbwalk-")) }, stdio: "ignore" });
 // espera a que el servidor escuche (con otros tests en paralelo puede tardar)
 for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new WebSocket(`ws://localhost:${PORT}/ws`); t.onopen = () => { t.close(); r(true); }; t.onerror = () => r(false); }); if (ok) break; await new Promise(r => setTimeout(r, 250)); }
 const { default: WS } = await import("node:module").then(() => ({ default: globalThis.WebSocket }));

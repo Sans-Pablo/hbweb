@@ -4,7 +4,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## web/src/shared
 
-- `adventure.js` · 298 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
+- `adventure.js` · 319 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 - `appearance.js` · 15 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `combat.js` · 98 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
@@ -27,7 +27,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 269 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 276 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bot.js` · 277 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `citizens.js` · 29 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 203 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 249 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
@@ -40,6 +40,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcsys.js` · 368 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 167 · Jugador: creación, guardado, recalculo de atributos, reaparición.
+- `residents.js` · 268 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 - `status.js` · 24 · Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
@@ -88,7 +89,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `accounts.mjs` · 57 · Cuentas del servidor online: usuario + contraseña (scrypt con sal propia). Nada de contraseñas en claro, nunca.
 - `admin.mjs` · 38 · Texto de ayuda de administración y página del panel (/admin, solo desde el PC del servidor).
-- `server.mjs` · 517 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `llm.mjs` · 62 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
+- `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
+- `server.mjs` · 551 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
@@ -123,6 +126,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `recall.test.mjs` · 42 · Botón Recall: canaliza 3 s, se cancela al moverse o entrar en combate, y tiene enfriamiento. node tests/recall.test.mjs
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
+- `residents.test.mjs` · 91 · HABITANTES: ficha estable, objetivos, memoria, respuesta al chat (frase hecha y modelo), guardado/carga, acompañamiento y botclear.
 - `schools-all.test.mjs` · 41 · Todas las magias de escuela se pueden enseñar y lanzar con un summon de nivel 50, y hacen daño. node tests/schools-all.test.mjs
 - `schools.test.mjs` · 127 · Escuelas de magia de los summons: el jugador lanza, el summon de la escuela paga y tira; sin regeneración (caramelo azul); cambio al nivel 
 - `shop.test.mjs` · 81 · Tienda, herrero y almacén: compra, venta, reparación y depósito con las reglas del servidor original.

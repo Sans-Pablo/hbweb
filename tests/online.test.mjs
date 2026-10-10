@@ -16,7 +16,7 @@ async function until(fn, why, ms = 8000) { const end = Date.now() + ms; while (D
 let srv, out = "";
 async function start() {
   out = "";
-  srv = spawn(process.execPath, ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_DATA: dir, HB_ADMINS: "boss", HB_ORIGINS: "https://juego.example", HB_ADMIN_TOKEN: "tok123" }, stdio: ["ignore", "pipe", "pipe"] });
+  srv = spawn(process.execPath, ["server/server.mjs", String(PORT)], { env: { ...process.env, HB_RESIDENTS: "0", HB_LLM: "off", HB_DATA: dir, HB_ADMINS: "boss", HB_ORIGINS: "https://juego.example", HB_ADMIN_TOKEN: "tok123" }, stdio: ["ignore", "pipe", "pipe"] });
   srv.stdout.on("data", b => out += b); srv.stderr.on("data", b => out += b);
   await until(() => out.includes("Monstruos:"), "arranque del servidor\n" + out);
 }
