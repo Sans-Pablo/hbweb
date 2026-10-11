@@ -5,6 +5,8 @@
 import { dist } from "../const.js";
 import { mobRatio, tooStrong, fightEstimate, bossPreview } from "./bot.js";
 
+// "fiebre de guerra": ventanas de 5 min cada 20 en las que el bando se anima a pelear en Promise Land (todo el PvP es allí, nunca en las granjas)
+export const warFever = w => (w.time % (20 * 60000)) < 5 * 60000;
 export const KINDS = ["hunt", "crypt", "pl"];
 const LABEL = { hunt: ["cazar en la granja", "hunt on the farm"], crypt: ["bajar a la cripta", "go down into the crypt"], pl: ["ir a Promise Land", "go to Promise Land"] };
 export const labelOf = (k, lang = "es") => (LABEL[k] || ["nada", "nothing"])[lang === "en" ? 1 : 0];
@@ -22,7 +24,7 @@ export function evaluate(adv, p, H, party = 1) {
   const nb = bossPreview(home, dv), bossOk = !nb || fightEstimate(home, p, nb).ratio * (1 + 0.5 * (party - 1)) >= 1.3;
   const sk = 1500 * (1 + 0.15 * (dv - 1)) / Math.max(100, 1);                                    // un esqueleto del piso `dv` (exp de NPC.cfg * escala de dungeon.js)
   out.crypt = { s: ready && bossOk ? 1.0 + Math.min(1.4, sk / Math.max(300, 80 * lvl + 600)) : ready ? 0.45 : 0.12, why: !ready ? `I am level ${lvl} and the crypt floor ${dv} wants about ${need}` : !bossOk ? `the boss of floor ${dv} would crush us` : `the crypt skeletons give good experience and loot (floor ${dv}, boss ok)` };
-  out.pl = { s: lvl >= 3 ? Math.max(0.1, 0.95 + (party >= 3 ? 0.5 : party >= 2 ? 0.25 : 0) + (r.goal?.k === "pvp" || r.goal?.k === "pit" ? 0.9 : 0) + Math.min(0.5, lvl / 80) - 0.12 * (r.scare | 0)) : 0, why: lvl >= 3 ? `Promise Land has the best loot and the pits give glory${party >= 3 ? ", and with this many of us we can take a pit" : ""}` : "I am too low level for Promise Land" };
+  out.pl = { s: lvl >= 3 ? Math.max(0.1, 0.95 + (party >= 3 ? 0.5 : party >= 2 ? 0.25 : 0) + (r.goal?.k === "pvp" || r.goal?.k === "pit" ? 0.9 : 0) + Math.min(0.5, lvl / 80) - 0.12 * (r.scare | 0) + (r.grudge > home.time ? 0.7 : 0) + (warFever(home) && lvl >= 5 ? 0.45 : 0)) : 0, why: lvl >= 3 ? `${r.grudge > home.time ? "an enemy killed me there and I want revenge, " : ""}Promise Land has the best loot and the pits give glory${party >= 3 ? ", and with this many of us we can take a pit" : ""}` : "I am too low level for Promise Land" };
   const likes = LIKES[r.arch] || {}, g = r.goal?.k;
   for (const k of KINDS) {
     out[k].s *= likes[k] || 1;

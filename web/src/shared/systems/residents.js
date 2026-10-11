@@ -409,6 +409,7 @@ function learnFromDeath(w, p, r) {
   if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[k] = Math.max(r.dlv[k] || 0, p.level); blog(w, p, `Aprendo: «${k}» me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
   // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
   const lostGold = Math.floor(p.gold * 0.1); p.gold -= lostGold; r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
+  if (r._pvpDeath) { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }          // rencor: el grupo tenderá a volver a Promise Land
   blog(w, p, `Morir me cuesta: pierdo ${lostGold} de oro y experiencia; seré más prudente.`);
   if (w.map.kind === "dungeon") { (r.dd ||= {})[w.map.level] = (r.dd[w.map.level] || 0) + 1; blog(w, p, `Aprendo: morí en la cripta nivel ${w.map.level}; bajaré más fuerte.`); }
 }
@@ -511,7 +512,10 @@ function expedition(adv, w, p, r, home) {
   if (r._delve) return delve(adv, w, p, r, home);
   if (r._trip) {
     if (w === home && r._trip.go && w.time > r._trip.goUntil) { r._trip = null; r._tripAt = w.time + 120000; blog(w, p, "No llegué al teletransportador: cancelo la expedición."); return; }
-    if (w.pvp && w.time > r._trip.until && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, "Fin de la expedición: uso Recall."); adv.command(p.id, { t: "recall" }); }
+    if (w.pvp && w.time > r._trip.until) {
+      if (p.recallTok) b.hold = w.time + 1500;                                                   // el canal de Recall dura 3 s: se queda quieto (un segundo comando lo CANCELARÍA)
+      else if (w.time - (r._rc || 0) > 8000 && w.time >= (p.recallCd || 0)) { r._rc = w.time; b.hold = w.time + 3500; b.target = null; blog(w, p, "Fin de la expedición: uso Recall."); adv.command(p.id, { t: "recall" }); }
+    }
     if (w.pvp) {
       r._trip.go = false;
       if (r._trip.pit && r.goal?.k !== "pit" && w.time > (r._reassignAt || 0)) {                      // el foso ya es nuestro desde hace rato: va a por otro que tenga el enemigo
