@@ -60,6 +60,7 @@ export class Adventure {
       watched: this.watched,
       party: this.partyReg,
       guild: this.guildReg,
+      thought: (p, sit) => Residents.thought(this, p, sit),               // burbuja de pensamiento: la genera el modelo de lenguaje
       logSink: (p, t) => this.logSink?.(p, t, w.time),                 // registro de acciones de los habitantes (server: panel de administración)
     };
   }

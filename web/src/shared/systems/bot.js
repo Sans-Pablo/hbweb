@@ -237,19 +237,11 @@ function step(adv, w, p, b, tx, ty, run) {
   return true;
 }
 // Pensamientos en voz alta (burbuja pública `botsay`): el bot cuenta qué ve y qué va a hacer. Personalidad inventada del port.
+// Situaciones de los pensamientos en voz alta (burbuja pública `botsay`). No hay frases escritas: las dice el modelo de lenguaje (residents.thought); sin modelo no hay burbuja.
 const THOUGHTS = {
-  target: [["¡Un {m}! Voy a por él.", "A {m}! I'm going in."], ["Veo un {m}… me lo quedo.", "I see a {m}… that one's mine."], ["Ahí hay un {m}, ¡al ataque!", "There's a {m}, attack!"]],
-  hurt: [["Me duele, me curo un poco.", "Ouch, let me heal up."], ["Cuidado, voy flojo de vida.", "Careful, my health is low."]],
-  rest: [["Sin pociones: descanso un rato.", "No potions left: resting a bit."], ["Voy a recuperar el aliento.", "I'll catch my breath."]],
-  rested: [["Ya estoy mejor, seguimos.", "Feeling better, let's go on."]],
-  loot: [["Algo brilla por ahí, voy a cogerlo.", "Something's shining over there, grabbing it."], ["Botín a la vista.", "Loot in sight."]],
-  shop: [["Toca ir de compras: equipo nuevo.", "Shopping time: new gear."], ["Gasto oro en equiparme mejor.", "Spending gold on better gear."]],
-  follow: [["Te sigo, jefe.", "Right behind you, boss."], ["Esperadme, que voy.", "Wait up, I'm coming."]],
-  wander: [["Voy a ver qué hay por aquí.", "Let's see what's around here."], ["Todo tranquilo… busco monstruos.", "All quiet… looking for monsters."]],
-  danger: [["Eso es demasiado fuerte para mí.", "That one's too strong for me."]],
-  dead: [["¡Ay! Me han matado… vuelvo enseguida.", "Argh! I died… be right back."]],
-  level: [["¡He subido al nivel {l}!", "I reached level {l}!"]],
-  party: [["Gracias por la invitación al grupo.", "Thanks for the party invite."]],
+  target: "you spot a {m} and decide to attack it", hurt: "you are hurt and drink a potion", rest: "you have no potions and are resting to recover",
+  rested: "you feel better and go on", loot: "you see loot on the ground and go grab it", shop: "you are going shopping for better gear", follow: "you are following your party leader",
+  wander: "all is quiet and you look for monsters", danger: "you see a {m} that is too strong for you and avoid it", dead: "you just died", level: "you just reached level {l}", party: "you thank someone for the party invite",
 };
 // Registro de lo que hace y piensa el bot: anillo de 80 líneas (`admin: vida`) y, si alguien lo observa, evento privado `botlog` que el servidor
 // le manda al chat del observador (modo observar). `w.hooks.watched` = ids de bots observados ahora mismo.
@@ -263,10 +255,10 @@ function think_(w, p, b, key, vars = {}, gap = 9000) {
   const now = w.time;
   if (now - (b.thAt || -1e9) < gap || now - ((b.thKey ||= {})[key] || -1e9) < 25000) return false;
   const l = THOUGHTS[key]; if (!l) return false;
-  const [es, en] = l[Math.floor(w.rng() * l.length)], fill = t => t.replace("{m}", (vars.m || "").replace(/-/g, " ")).replace("{l}", vars.l ?? "");
+  const sit = l.replace("{m}", (vars.m || "").replace(/-/g, " ")).replace("{l}", vars.l ?? "");
   b.thAt = now; b.thKey[key] = now;
-  w.emit({ t: "botsay", id: p.id, es: fill(es), en: fill(en) });
-  blog(w, p, "💭 " + fill(es));
+  w.hooks?.thought?.(p, sit);
+  blog(w, p, "💭 " + sit);
   return true;
 }
 function say(adv, p, b, text) { if (adv.time - b.said > 20000) { b.said = adv.time; adv.command(p.id, { t: "say", text }); } }

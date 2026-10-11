@@ -31,7 +31,7 @@ assert.match(R.describe(A, "en"), /Level/);
 tick(5000);
 
 // sin frases escritas: todo lo que dicen lo genera el modelo de lenguaje (aquí, uno de prueba)
-a.llm = async ({ who, from, text }) => (from === "situation" ? "Frase de situación de " + who : "Soy " + who + ", respondo a " + from);
+a.llm = async req => req.task === "act" ? JSON.stringify({ say: "Soy " + req.who + " y charlo contigo, " + req.from + ".", do: /good friends|friendly/.test(req.system) && /party_follow/.test(req.system) ? "party_follow" : "none" }) : req.from === "situation" ? "Frase de situación de " + req.who : "Soy " + req.who + " y charlo contigo, " + req.from + ".";
 
 // un jugador habla cerca: responde el más próximo, recuerda al jugador y habla en su idioma
 const hid = a.addPlayer("Pablo", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
@@ -46,7 +46,6 @@ assert.ok(reply, "un habitante contesta");
 assert.ok(R.relOf(a.bots.get(reply.id), "Pablo") >= 1, "recuerda al jugador");
 
 // modelo de lenguaje: si responde a tiempo, su texto sustituye a la frase hecha
-a.llm = async ({ who, from }) => (from === "situation" ? "situación" : "Soy " + who + " y charlo contigo, " + from + ".");
 const B = a.bots.get(reply.id); a.relocate(B, w, [me.x + 1, me.y]); say.length = 0;
 a.command(hid, { t: "say", text: B.name + ", ¿qué haces?" });
 await new Promise(r => setImmediate(r));            // la respuesta del modelo llega entre ticks
@@ -56,9 +55,9 @@ assert.ok(say.some(e => e.id === B.id && /charlo contigo, Pablo/.test(e.text)), 
 // grupo: solo acepta a quien ya conoce (≥3 charlas)
 const C = a.residents().find(b => b !== B && b !== A);
 a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0;
-a.command(hid, { t: "say", text: C.name + " ven conmigo" }); tick(4000);
+a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
 assert.ok(!C.bot.owner, "aún no se fía");
-C.res.rel.Pablo = 5; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); tick(4000);
+C.res.rel.Pablo = 5; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
 assert.equal(C.bot.owner, hid, "acepta acompañar al amigo");
 C.res.followUntil = w.time + 100; tick(1000);
 assert.equal(C.bot.owner, null, "vuelve a su vida");

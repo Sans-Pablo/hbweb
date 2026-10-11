@@ -169,6 +169,13 @@ export function speak(adv, p, text) {
   q.push({ p, pre: m[1], sit: m[2], at: w.time, lang: p.res.lang }); if (q.length > 14) q.shift();
   pumpSay(adv);
 }
+export function thought(adv, p, sit) {                                                   // burbuja sobre la cabeza (evento botsay) con texto del modelo
+  if (!p.res || typeof adv.llm !== "function" || adv.llm.ready === false) return;
+  const q = (adv._sayQ ||= []), w = adv.worldFor(p.id);
+  if (q.some(x => x.p === p)) return;
+  q.push({ p, pre: "", sit: "you think out loud (a short thought bubble over your head): " + sit, at: w.time, lang: p.res.lang, bubble: true }); if (q.length > 14) q.shift();
+  pumpSay(adv);
+}
 function pumpSay(adv) {
   if (adv._sayBusy) return;
   const q = adv._sayQ || [];
@@ -178,7 +185,7 @@ function pumpSay(adv) {
     adv._sayBusy = true;
     const r = it.p.res, ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` : "";
     Promise.resolve(adv.llm({ task: "say", who: it.p.name, lang: it.lang, system: describe(it.p, it.lang) + ctx, from: "situation", text: it.sit }))
-      .then(t => { if (t && !it.p.dead) adv.command(it.p.id, { t: "say", text: it.pre + String(t).replace(/\s+/g, " ").slice(0, 118) }); })
+      .then(t => { if (!t || it.p.dead) return; const tx = String(t).replace(/\s+/g, " ").slice(0, 118); if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + tx }); })
       .catch(() => {}).finally(() => { adv._sayBusy = false; setTimeout(() => pumpSay(adv), 0); });
     return;
   }
@@ -240,10 +247,51 @@ export function onChat(adv, w, ev) {
   }
   if (best) queueReply(adv, w, best, human, text, depth + 1);
 }
+// CONVERSACIÓN ANCLADA AL JUEGO: cuando un humano habla, el modelo recibe los HECHOS reales del habitante (guild, rango, grupo, nivel, afinidad, distancia…) y la lista
+// de ACCIONES que puede hacer ahora mismo, y responde {say, do}. La acción se ejecuta con las mismas órdenes del juego (guildinvite, party…), así que lo que dice
+// coincide con lo que pasa: un Guildmaster que acepta de verdad te invita al guild; quien no es Guildmaster explica que no puede.
+function groundedFacts(adv, w, p, human) {
+  const r = p.res, es = r.lang !== "en", G = Guild.guildOf(w, p), rel = relOf(p, human.name), d = Math.max(Math.abs(p.x - human.x), Math.abs(p.y - human.y));
+  const facts = [], acts = [];
+  const members = G ? Object.keys(G.members).length : 0;
+  if (G && G.members[p.name] === 0) facts.push(`You are the Guildmaster of the guild "${G.name}" (${members}/${Guild.MAX_MEMBERS} members).`);
+  else if (G) facts.push(`You are a member of the guild "${G.name}" but NOT its leader (${G.master}); only the Guildmaster can invite people.`);
+  else facts.push(`You are not in any guild. Founding one needs level ${Guild.MIN_LEVEL} and charisma ${Guild.MIN_CHR} (you are level ${p.level}, charisma ${p.stats.chr}).`);
+  facts.push(`You are level ${p.level}; your goal now: ${goalText(r.goal, "en") || "none"}.`);
+  facts.push(`${human.name} is level ${human.level}, ${human.side === p.side ? "from your own side" : "from the ENEMY side"}, ${human.guild ? `in the guild "${human.guild.name}"` : "in no guild"}, ${d} tiles from you. Your affinity with ${human.name}: ${rel >= 5 ? "good friends" : rel >= 3 ? "friendly" : rel >= 1 ? "acquaintances" : "strangers"} (${rel}).`);
+  if (p.party) facts.push(`You are in a party with ${p.party.names.filter(x => x !== p.name).join(", ") || "nobody else"}.`);
+  if (G && G.members[p.name] === 0 && members < Guild.MAX_MEMBERS && !human.guild && !human.guildQuery && human.side === p.side && d <= 10 && !human.dead) acts.push("guild_invite (invite them to your guild right now)");
+  else if (G && G.members[p.name] === 0 && d > 10) facts.push(`${human.name} is too far away to be invited; they should come closer.`);
+  const friendly = human.side === p.side || !human.side || !p.side;
+  if (!p.bot.owner && !r._trip && !r._delve && friendly && !human.dead) acts.push("party_follow (join their party and follow them for a while)");
+  if (!human.party && !p.party && !human.partyQuery && friendly) acts.push("party_invite (send them a party invitation)");
+  return { facts: facts.join(" "), acts };
+}
+function askGrounded(adv, w, p, human, text, lang) {
+  const r = p.res, n = human.name, { facts, acts } = groundedFacts(adv, w, p, human);
+  const rep = { at: w.time + 4500, text: "", to: n, lang, depth: 0, act: null };
+  p.bot.hold = Math.max(p.bot.hold || 0, w.time + 9000); p.bot.path = null;          // atiende a quien le habla: se queda quieto mientras piensa y contesta
+  r.reply = rep; adv._reflecting ||= false;
+  const sys = describe(p, lang) + " FACTS: " + facts + " ALLOWED ACTIONS: " + (acts.length ? acts.map(a => a.split(" ")[0]).join(", ") + ", none" : "none only") + ".";
+  Promise.resolve(adv.llm({ task: "act", who: p.name, lang, system: sys, from: n, text })).then(t => {
+    if (!t || r.reply !== rep) return;
+    let j = null; try { const m = /\{.*\}/s.exec(String(t)); j = m && JSON.parse(m[0]); } catch {}
+    if (j && typeof j === "object") { rep.text = String(j.say || "").slice(0, 118); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
+    else rep.text = String(t).slice(0, 118);
+  }).catch(() => {});
+}
+function doAct(adv, w, p, rep) {
+  const r = p.res, h = [...w.ents.values()].find(e => e.kind === "player" && e.name === rep.to && !adv.bots.has(e.id)); if (!h || !rep.act) return;
+  if (rep.act !== "party_follow" && dist(p, h) > 8) { r._pend = { ...rep, until: w.time + 25000 }; return; }          // lo dijo y se acerca a cumplirlo (la invitación exige estar cerca)
+  if (rep.act === "guild_invite") { if (adv.command(p.id, { t: "guildinvite", name: h.name })) { befriend(p, h.name, 1); blog(w, p, `Invito a ${h.name} a mi guild (me lo pidió en el chat).`); } }
+  else if (rep.act === "party_follow") { if (p.bot.owner == null) { p.bot.owner = h.id; r.followUntil = w.time + 5 * 60000; p.bot.partyAt = w.time + 3000; befriend(p, h.name, 1); blog(w, p, `Acompaño a ${h.name} (me lo pidió en el chat).`); } }
+  else if (rep.act === "party_invite") { if (Party.request(w, p, h.name)) blog(w, p, `Invito a ${h.name} a un grupo (me lo pidió en el chat).`); }
+}
 function queueReply(adv, w, p, human, text, depth = 0) {
   const r = p.res, lang = langOf(text), intent = intentOf(text), n = human.name;
   (r.hl ||= {})[n] = lang;
   befriend(p, n, 1); r.chats++; r._rcd = w.time;
+  if (!human.res && typeof adv.llm === "function" && adv.llm.ready !== false) return askGrounded(adv, w, p, human, text, lang);
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 3 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
   r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
@@ -263,7 +311,7 @@ export function think(adv, p) {
   if (r.reply && w.time >= r.reply.at) {
     const rep = r.reply; r.reply = null;
     if (!p.dead) {
-      r._depth = rep.depth || 0; speak(adv, p, rep.text);
+      r._depth = rep.depth || 0; speak(adv, p, rep.text); if (rep.act) doAct(adv, w, p, rep);
       if (rep.follow && !r.followUntil) { const h = [...w.ents.values()].find(e => e.kind === "player" && e.name === rep.to && !adv.bots.has(e.id)); if (h) { p.bot.owner = h.id; r.followUntil = w.time + 5 * 60000; remember(p, "Acompañé a " + rep.to + " un rato.", "Tagged along with " + rep.to + " for a while."); } }
     }
   }
@@ -290,6 +338,12 @@ export function think(adv, p) {
   pits(adv, w, p, r);
   if (r.scare && w.time - (r.scareAt || 0) > 480000) { r.scare--; r.scareAt = w.time; }          // el miedo a morir se va pasando
   reflect(adv, w, p, r);
+  if (r._pend) {
+    const pd = r._pend, h = [...w.ents.values()].find(e => e.kind === "player" && e.name === pd.to && !adv.bots.has(e.id));
+    if (!h || h.dead || w.time > pd.until || p.dead) r._pend = null;
+    else if (dist(p, h) <= 8) { r._pend = null; doAct(adv, w, p, pd); }
+    else if (!p.bot.travel || w.time - (r._pendAt || 0) > 2500) { r._pendAt = w.time; p.bot.travel = { x: h.x, y: h.y, w, until: w.time + 20000, seek: true }; p.bot.path = null; p.bot.target = null; }
+  }
   partyAndTrade(adv, w, p, r);
   guildAI(adv, w, p, r, home);
   gather(adv, w, p, r, home);
