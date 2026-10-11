@@ -77,6 +77,11 @@ assert.ok(!many[8].party, "el noveno no entra");
 // desconexión: se sale sin avisar al que se va
 w.removePlayer(many[1].id);
 assert.equal(A.party.names.length, 7);
+// los niveles del grupo se sincronizan con los miembros
+{ const X = mk("Xi"), Y = mk("Yo"); evs(); w.command(X.id, { t: "partyreq", name: "yo" }); w.command(Y.id, { t: "partyaccept", r: 1 }); evs();
+  assert.ok(X.party && X.party.lvls.length === 2, "lvls en el grupo"); Y.level = 17; Party.shareExp(w, X, 10);
+  assert.deepEqual([...X.party.lvls].sort((a, b) => a - b), [X.level, 17].sort((a, b) => a - b), "los niveles se actualizan al repartir experiencia");
+  w.command(X.id, { t: "partyleave" }); evs(); }
 console.log("OK");
 
 // Ctrl+P: invitación automática, sin preguntar al invitado
