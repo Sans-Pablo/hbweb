@@ -6,11 +6,12 @@
 //  - Auras: porcentaje proporcional al nivel del Dummy (y al rango); no se lanzan, se aplican cada segundo a quien esté dentro del radio.
 //  - Reflejo de agro (npcsys): los monstruos cercanos prefieren al Dummy; el evento "dummy-agro" le hace avisar al dueño.
 import { dice } from "../rules.js";
+import { ACT, dirTo } from "../const.js";
 import { sget, sset } from "./status.js";
 import * as Tal from "./talents.js";
 
 // Alcance: distancia en línea recta (círculo) a la casilla, como el anillo que se dibuja; el radio crece con el nivel (1 → 6)
-export const radiusOf = (lvl, cls) => 1 + Math.round((Math.max(1, lvl) - 1) * 5 / 49) + (cls === "aura" ? 1 : 0);       // el Dummy de aura cubre una casilla más
+export const radiusOf = (lvl, cls) => { const r = 1 + Math.round((Math.max(1, lvl) - 1) * 5 / 49); return cls === "aura" ? r + 1 : cls === "buffer" ? Math.max(1, Math.round(r / 2)) : r; };       // el summon de aura cubre una casilla más; el buffer, la mitad
 const cheb = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);                  // (nombre histórico) distancia euclídea en casillas
 const inRange = (a, b, r) => cheb(a, b) <= r + 0.5;
 // Carisma del dueño: potencia máxima de las curaciones (CHR 10 → ×0,68, 50 → ×1, 100 → ×1,4, tope ×2)
@@ -22,16 +23,16 @@ const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08, dvamp:
 export const auraPct = (c, id) => { const r = rank(c, id), mx = Tal.TALENTS.find(t => t.id === id).max; return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.5 * r / mx) * 100) / 100 : 0; };      // BUG-016: 8 rangos por aura (49 puntos al nivel 50 se gastan enteros: 6×8+3+1); el rango máximo da el 100 %
 const MASS_CD = 60000, MASS_AURA_MS = 20000;
 
-// Dueño + grupo (mismo mundo) + compañeros de todos ellos
-function members(w, m) {
-  const out = [m];
-  const gid = m.party?.id;
+// Dueño + grupo (mismo mundo) + compañeros de todos ellos + (si se da el círculo n, r) CUALQUIER jugador o compañero vivo dentro del círculo, sea o no del grupo
+function members(w, m, n, r) {
+  const out = [m], seen = new Set([m.id]), gid = m.party?.id;
+  const add = e => { if (!seen.has(e.id)) { seen.add(e.id); out.push(e); } };
   for (const e of w.ents.values()) {
     if (e.dead || e === m) continue;
-    if (e.kind === "player" && gid && e.party?.id === gid) out.push(e);
+    if (e.kind === "player" && ((gid && e.party?.id === gid) || (n && inRange(n, e, r)))) add(e);
   }
   const ids = new Set(out.map(e => e.id));
-  for (const e of w.ents.values()) if (e.comp && !e.dead && ids.has(e.master) && !e.dummy) out.push(e);
+  for (const e of w.ents.values()) if (e.comp && !e.dead && !e.dummy && (ids.has(e.master) || (n && inRange(n, e, r)))) add(e);
   return out;
 }
 // Personalidad (invento): espíritu aprendiz del Encantador (Eidolon). Nervioso, leal y muy dramático con su cuerpo de luz; presume de lo que hace,
@@ -55,6 +56,7 @@ const L = {
 const fmt = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
 // Un Dummy dice una frase de su personalidad (y, entre corchetes, la magia o el aura que usa). `force` salta el límite de frecuencia
 export function talk(w, n, key, skill, vars = {}, force = false) {
+  return;                                                                  // los summons de apoyo no hablan
   if (!force && w.time - (n.sayAt || 0) < 1800) return;
   n.sayAt = w.time;
   const [es, en] = L[key][Math.floor(w.rng() * L[key].length)];
@@ -69,6 +71,7 @@ function healAmount(w, c, id, rk, m) {
   return Math.round((dice(w.rng, sp.v4, sp.v5) + sp.v6 + c.lvl) * (1 + 0.25 * (rk - 1)) * chrFactor(m?.stats?.chr));
 }
 function doHeal(w, n, c, id, who, rk, mult = 1, m = null) {
+  if (c.cls === "healer" && n.dur && !w.busy(n)) { n.dir = dirTo(n.x, n.y, who.x, who.y); w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack; }          // el healer hace el gesto de atacar al curar
   const amount = Math.round(healAmount(w, c, id, rk, m) * mult);
   who.hp = Math.min(who.maxHp, who.hp + amount);
   w.emit({ t: "heal", id: who.id, amount, by: n.id });
@@ -110,7 +113,7 @@ export function think(w, n, m, c) {
   n.dummy = true;
   n.dcls = c.cls || null;
   if (!c.cls || !w.magic) return;
-  const r = radiusOf(c.lvl, c.cls), mem = members(w, m), near = mem.filter(e => inRange(n, e, r));
+  const r = radiusOf(c.lvl, c.cls), mem = members(w, m, n, r), near = mem.filter(e => inRange(n, e, r));
   const foe = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && cheb(n, e) <= 12).sort((a, b) => cheb(n, a) - cheb(n, b))[0], hostiles = !!foe;
   n.cd = n.cd || {};
 
@@ -216,5 +219,5 @@ export const auraVamp = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.vamp
 export const auraExp = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.exp : 0);
 
 // Invocar y mantener a un Dummy exige un báculo (Dummy Enchanter): arma de mano con apariencia 34..39 en Item.cfg (varitas y báculos mágicos).
-export const STAFF_MSG = "para invocar a un Dummy necesitas un báculo en la mano";
+export const STAFF_MSG = "para invocar a un summon de apoyo necesitas un báculo en la mano";
 export const hasStaff = p => { const t = p.eff?.wtype || 0; return t >= 34 && t < 40; };

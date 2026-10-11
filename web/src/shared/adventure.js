@@ -353,7 +353,7 @@ export class Adventure {
       if (dungeon) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.aux && !e.dead).length + (w.ghostsPending || 0);
       if (dungeon && !w.cleared && w.map.remainingEnemies === 0) {
         w.cleared = true;
-        for (const p of w.ents.values()) if (p.kind === "player") w.emit({ t: "dungeon-cleared", id: p.id });
+        for (const p of w.ents.values()) if (p.kind === "player") { if (w.map.level >= DUNGEON_LEVELS && p.delve && !p.dead) p.delve.king = (p.delve.king | 0) + 1; w.emit({ t: "dungeon-cleared", id: p.id }); }   // piso 20 despejado = Rey esqueleto dorado abatido
       }
     }
     this.time = this.farm.time;

@@ -77,14 +77,14 @@ function newGoal(w, p) {
   else if (kind === "kills") r.goal = { k: "kills", n: (p.kills || 0) + 25 };
   else if (kind === "pvp") r.goal = { k: "pvp", n: (p.ek || 0) + 3 + Math.floor(w.rng() * 3) };
   else if (kind === "pit") r.goal = { k: "pit", n: (r.qa.pvp.held || 0) + 180, zone: 1 + Math.floor(w.rng() * 12) };           // 180 s dominando el foso
-  else if (kind === "crypt") r.goal = { k: "crypt", n: Math.min(20, (p.delve?.deepest || 1) + 1) };
+  else if (kind === "crypt") r.goal = (p.delve?.deepest || 1) >= 12 && !p.delve?.king ? { k: "crypt", n: 20, king: true } : { k: "crypt", n: Math.min(20, (p.delve?.deepest || 1) + 1) };   // meta final: matar al Rey esqueleto dorado (piso 20)
   else if (kind === "pet") r.goal = { k: "pet", n: Math.min(6, maxedPets(p) + 1) };
   else if (kind === "gear") r.goal = { k: "gear", n: Math.round(avgIlvl(w, p)) + 3 };
   else r.goal = { k: "friend", n: Object.keys(r.rel).length + 2 };
 }
 export const goalText = (g, lang) => !g ? "" : lang === "en"
-  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, pet: `have ${g.n} different summons at max level`, gear: `reach an average item level of ${g.n}`, crypt: `reach crypt level ${g.n}` }[g.k]
-  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, pet: `tener ${g.n} summons distintos al nivel máximo`, gear: `llegar a un nivel de objeto medio de ${g.n}`, crypt: `llegar al nivel ${g.n} de la cripta` }[g.k];
+  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, pet: `have ${g.n} different summons at max level`, gear: `reach an average item level of ${g.n}`, crypt: g.king ? "kill the Golden Skeleton King and finish the crypts" : `reach crypt level ${g.n}` }[g.k]
+  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, pet: `tener ${g.n} summons distintos al nivel máximo`, gear: `llegar a un nivel de objeto medio de ${g.n}`, crypt: g.king ? "matar al Rey esqueleto dorado y terminar las criptas" : `llegar al nivel ${g.n} de la cripta` }[g.k];
 const maxedPets = p => new Set(p.bag.filter(i => i.comp && i.comp.lvl >= Sch.TRADE_LEVEL).map(i => i.comp.sp)).size;
 // nivel medio de objeto de lo que lleva puesto (arma, cuerpo, piernas, escudo, casco, brazos, pantalones)
 export function avgIlvl(w, p) {
@@ -94,7 +94,7 @@ export function avgIlvl(w, p) {
 function goalDone(p) {
   const g = p.res.goal;
   return !g ? false : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
-    : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (p.delve?.deepest || 1) >= g.n : Object.keys(p.res.rel).length >= g.n;
+    : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (g.king ? (p.delve?.king | 0) > 0 : (p.delve?.deepest || 1) >= g.n) : Object.keys(p.res.rel).length >= g.n;
 }
 
 // ---------------------------------------------------------------- frases
@@ -449,8 +449,8 @@ function reflect(adv, w, p, r) {
 // APRENDIZAJE: al morir apunta qué lo mató y a qué nivel (bot.js tooStrong lo evita hasta llevar +3 niveles) y, en la cripta, en qué piso (la bajada
 // exige entonces 5 niveles más por cada muerte allí). Se guarda en la ficha del habitante (`dlv`, `dd`).
 function learnFromDeath(w, p, r) {
-  const k0 = r._killer || r._lastHit, k = k0 && r._killBoss ? k0 + "*" + r._killBoss : k0;          // los jefes de la cripta se aprenden aparte de su especie
-  if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[k] = Math.max(r.dlv[k] || 0, p.level); blog(w, p, `Aprendo: «${k}» me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
+  const k0 = r._killer || r._lastHit, k = k0 && r._killBoss ? k0 + "*" + r._killBoss : k0, ks = k && w.map.kind === "dungeon" ? k + "@" + w.map.level : k;          // los jefes de la cripta se aprenden aparte de su especie
+  if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[ks] = Math.max(r.dlv[ks] || 0, p.level); blog(w, p, `Aprendo: «${k}»${ks !== k ? " en el piso " + w.map.level : ""} me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
   // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
   const lostGold = Math.floor(p.gold * 0.1); p.gold -= lostGold; r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
   if (r._pvpDeath) { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }          // rencor: el grupo tenderá a volver a Promise Land
@@ -541,7 +541,7 @@ function worldChanged(adv, w, p, r, home) {
   blog(w, p, `Cambio de mapa: ${w.map.name || w.map.id}${w.pvp ? " (zona de lucha entre bandos)" : ""}.`);
   if (w.pvp) remember(p, "Entré en Promise Land.", "Entered Promise Land.");
   else if (r._delve && w.map.kind === "dungeon") { r._delve.go = false; r._delve.lv = w.map.level; remember(p, "Bajé a la cripta (nivel " + w.map.level + ").", "Went down into the crypt (level " + w.map.level + ")."); }
-  else if (r._delve && w === home) { r._delve = null; r._tripAt = w.time + 120000 + Math.floor(w.rng() * 240000); blog(w, p, "Expedición a la cripta terminada: de vuelta en casa."); }
+  else if (r._delve && w === home) { r._delve = null; r._tripAt = w.time + (r.goal?.k === "crypt" && r.goal.king ? 20000 : 120000) + Math.floor(w.rng() * 240000); blog(w, p, "Expedición a la cripta terminada: de vuelta en casa."); }
   else if (r._trip && w === home) { r._trip = null; r._tripAt = w.time + 240000 + Math.floor(w.rng() * 360000); blog(w, p, "Expedición terminada: de vuelta en casa."); }
 }
 // Los líderes (sin jefe) salen de vez en cuando de su granja: a Promise Land por el teletransportador normal (cazan, combaten y dominan fosos; vuelven con Recall)
@@ -616,7 +616,7 @@ function startDelve(adv, w, p, r, home) {
   let spot = tp ? w.freeSpotNear(tp.x, tp.y + 2) : null;
   if (!spot || w.teleports.has(w.grid.idx(spot[0], spot[1]))) spot = w.freeSpotNear(...(home.home || [b.home.x, b.home.y]));
   if (!spot) { r._tripAt = w.time + 60000; return; }
-  r._delve = { go: true, goUntil: w.time + 150000, until: w.time + 420000 + Math.floor(w.rng() * 300000), spot, tries: 0, lv: 0 };
+  r._delve = { go: true, goUntil: w.time + 150000, until: w.time + (r.goal?.k === "crypt" && r.goal.king ? 900000 : 420000) + Math.floor(w.rng() * 300000), spot, tries: 0, lv: 0 };
   b.travel = { x: spot[0], y: spot[1], w, until: w.time + 150000 };
   blog(w, p, `Planeo bajar a la cripta de esqueletos${r.goal?.k === "crypt" ? " (mi meta: nivel " + r.goal.n + ")" : ""}: voy a la entrada (${spot[0]},${spot[1]}).`);
   remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
@@ -1106,9 +1106,9 @@ function stallAI(adv, w, p, r, home) {
     if (w.map.id !== "gshop_1f") { r._stall = null; return; }
     if (!st.done) {
       st.done = true; st.back = now + 4000;
-      // BUG-012: el puesto no se monta junto a la puerta; se aparta a ≥ 5 casillas de cualquier teletransporte
-      const nearTp = (x, y) => [...w.teleports.values()].some(t => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) <= 4);
-      if (nearTp(p.x, p.y)) for (const [dx, dy] of [[6, 0], [-6, 0], [0, 6], [0, -6], [6, 6], [-6, -6], [6, -6], [-6, 6], [9, 0], [-9, 0], [0, 9], [0, -9]]) {
+      // BUG-012: el puesto no se monta junto a la puerta; se aparta a más de Stall.DOOR_GAP casillas de cualquier teletransporte
+      const nearTp = (x, y) => [...w.teleports.values()].some(t => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) <= Stall.DOOR_GAP);
+      if (nearTp(p.x, p.y)) for (const [dx, dy] of [[10, 0], [-10, 0], [0, 10], [0, -10], [10, 10], [-10, -10], [10, -10], [-10, 10], [13, 0], [-13, 0], [0, 13], [0, -13]]) {
         const sp = w.freeSpotNear(p.x + dx, p.y + dy); if (sp && !nearTp(sp[0], sp[1])) { adv.relocate(p, w, sp); break; }
       }
       const mine = stallOf(adv, p);
@@ -1287,6 +1287,6 @@ function shareDeath(adv, w, p, r) {
   }
   if (!k || k === "?" || w.map.kind === "dungeon" && !r.dlv?.[k] && false) return;
   L.mobs.push({ name: k, lvl: p.level, by: p.name, at: now }); if (L.mobs.length > 24) L.mobs.shift();
-  for (const m of mates) { adopt(m.res, k, p.level); blog(w, m, `Aviso de ${p.name}: «${k}» es difícil (lo mató a nivel ${p.level}); lo evito.`); }
+  for (const m of mates) { adopt(m.res, w.map.kind === "dungeon" ? k + "@" + w.map.level : k, p.level); blog(w, m, `Aviso de ${p.name}: «${k}» es difícil (lo mató a nivel ${p.level}); lo evito.`); }
   if (G) gsay(adv, p, gline(p, "gdanger", w, { m: String(k).replace(/\*\d+/, " (jefe)").replace(/-/g, " "), l: p.level }));
 }

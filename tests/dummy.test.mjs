@@ -32,10 +32,15 @@ for (const [e, x] of [[A, 20], [B, 22], [Z, 24]]) { w.grid.release(e.x, e.y, e.i
 assert.equal(D.radiusOf(1), 1); assert.equal(D.radiusOf(50), 6); assert.ok(D.radiusOf(25) > 1 && D.radiusOf(25) < 6);
 // frágil: poca vida que casi no sube
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role); A.gold = 1e6;
-{ const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy" }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, nurse.role, A.x, A.y); assert.ok(ok); }
+{ const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy", cls: "healer" }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, nurse.role, A.x, A.y); assert.ok(ok); }
 const ball = A.bag.find(i => i.comp?.sp === "Dummy"), c = ball.comp;
 assert.ok(C.statsOf(A, c).hp <= 10); c.lvl = 50; assert.ok(C.statsOf(A, c).hp <= 70, "frágil incluso al 50");
 c.lvl = 30;
+// tres summons de apoyo: la clase se fija al comprar; buffer con la mitad de radio, aura con una casilla más
+assert.equal(D.radiusOf(50, "buffer"), 3); assert.equal(D.radiusOf(50, "aura"), 7); assert.equal(D.radiusOf(1, "buffer"), 1);
+assert.equal(ball.comp.cls, "healer"); assert.equal(ball.comp.fixed, true, "la clase comprada queda fija");
+{ const bad = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy", cls: "tank" }); assert.ok(!bad, "clase inválida"); }
+console.log("OK dummy tres summons");
 // la primera magia fija la clase; las demás clases quedan cerradas
 assert.ok(w.command(A.id, { t: "talent", uid: ball.uid, talent: "dheal" }));
 assert.equal(c.cls, "healer");
@@ -59,7 +64,10 @@ const rad = D.radiusOf(30);
 B.hp = Math.floor(B.maxHp * 0.3); Z.hp = Math.floor(Z.maxHp * 0.3); const zh = Z.hp;
 dm.mp = 500; tick(6000);
 assert.ok(B.hp > B.maxHp * 0.3, "cura al miembro del grupo dentro del radio");
-assert.equal(Z.hp, zh, "no cura a quien no es del grupo");
+assert.ok(Z.hp > zh, "cura también a quien NO es del grupo si está dentro del círculo");
+w.grid.release(Z.x, Z.y, Z.id); Z.x = Z.fx = 45; w.grid.occupy(Z.x, Z.y, Z.id); Z.hp = Math.floor(Z.maxHp * 0.3); const zf = Z.hp; tick(6000);
+assert.equal(Z.hp, zf, "no cura a quien está fuera del círculo");
+w.grid.release(Z.x, Z.y, Z.id); Z.x = Z.fx = 24; w.grid.occupy(Z.x, Z.y, Z.id);
 // su posición no cambia en modo quedarse
 assert.equal(dm.x, 21);
 
@@ -70,10 +78,12 @@ w.drainEvents(); tick(2000);
 assert.equal(mob.target, dm.id, "reflejo de agro");
 assert.ok(w.events.concat(w.drainEvents()).length >= 0);
 // Buffer en acción (con un monstruo cerca): escudo y PFM al miembro del grupo, nada a Zeta
-mob.nextAct = 1e12; c.tal = { dward: 3, dpfm: 2 }; c.cls = "buffer"; dm.maxHp = dm.hp = 9999; dm.mp = 500; dm.cd = {}; dm.castAt = 0;
-tick(8000);
+w.grid.release(Z.x, Z.y, Z.id); Z.x = Z.fx = 23; w.grid.occupy(Z.x, Z.y, Z.id);   // Zeta dentro del círculo del buffer, sin grupo
+mob.nextAct = 1e12; c.tal = { dward: 3, dpfm: 2, dberserk: 1 }; c.cls = "buffer"; dm.maxHp = dm.hp = 9999; dm.mp = 500; dm.cd = {}; dm.castAt = 0;
+tick(30000);
 assert.equal(sget(w, B, "protect"), 3, "Defense Shield al grupo"); assert.ok(sget(w, B, "pfm") > 0, "PFM al grupo");
-assert.equal(sget(w, Z, "protect"), 0, "nada a quien no es del grupo");
+assert.ok(sget(w, B, "berserk"), "Berserk al compañero de grupo");
+assert.ok(sget(w, Z, "protect") > 0, "escudo también a quien no es del grupo dentro del círculo");
 mob.dead = true; w.ents.delete(mob.id);
 
 // Buffer: escudos al grupo (no a Zeta)
@@ -128,8 +138,8 @@ console.log("OK dummy");
   const { damageNpc } = await import("../web/src/shared/systems/combatsys.js");
   damageNpc(w, m3, 100, B, null);
   assert.ok(B.hp > hb, "Vampiric Aura devuelve vida");
-  // Zeta (fuera del grupo) no
-  Z.hp = Math.floor(Z.maxHp * 0.5); const hz = Z.hp; damageNpc(w, m3, 100, Z, null); assert.equal(Z.hp, hz);
+  // Zeta fuera del círculo no (dentro, sin grupo, sí: el apoyo no distingue grupo)
+  w.grid.release(Z.x, Z.y, Z.id); Z.x = Z.fx = 45; w.grid.occupy(Z.x, Z.y, Z.id); Z.aura = null; Z.hp = Math.floor(Z.maxHp * 0.5); const hz = Z.hp; damageNpc(w, m3, 100, Z, null); assert.equal(Z.hp, hz);
   // resurrección: Beta cae y el Dummy lo levanta
   B.hp = 0; B.dead = true; B.deadAt = w.time; w.grid.release(B.x, B.y, B.id);
   w.events.length = 0; tick(4000);
@@ -154,7 +164,7 @@ console.log("OK dummy");
   w.grid.release(A.x, A.y, A.id); A.dead = true; A.hp = 0; A.deadAt = w.time; w.events.length = 0;
   tick(6000);
   assert.ok(!A.dead && A.hp > 0, "el Dummy resucita al dueño"); assert.ok([...w.ents.values()].some(e => e === dm && !e.dead), "el Dummy sigue en pie");
-  assert.ok(w.events.some(e => e.t === "dummy-cast" && /Resurrection/.test(e.en)), "habla con personalidad");
+  assert.ok(!w.events.some(e => e.t === "dummy-cast" && /Resurrection/.test(e.en)), "los summons de apoyo no hablan");
   console.log("OK dummy chr/stamina/self-res");
 }
 

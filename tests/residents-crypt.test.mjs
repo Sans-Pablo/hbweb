@@ -62,4 +62,13 @@ for (const side of [1, 2]) {
     assert.ok(out, "el habitante sin expedición en la cripta la adopta o sale; registro: " + (b.bot.log || []).slice(-4).join(" | "));
   }
 }
+// v0.57.0: meta «matar al Rey esqueleto dorado»: no se cumple al llegar al piso 20, solo al abatirlo; y las lecciones de muerte son por piso
+{
+  const a = mk(31); a.spawnResident("Aldric"); const b = a.residents()[0];
+  b.delve = { deepest: 20 }; b.res.goal = { k: "crypt", n: 20, king: true }; run(a, 1500);
+  assert.equal(b.res.goal?.king, true, "con el piso 20 alcanzado la meta del rey sigue en pie");
+  b.delve.king = 1; run(a, 1500);
+  assert.ok(b.res.mem.some(m => /Cumplí mi meta/.test(m.es)), "al abatir al rey cumple la meta");
+}
+
 console.log("OK residents-crypt");

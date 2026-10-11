@@ -7,7 +7,75 @@
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
-  "news": [{"date":"2026-10-11","title":{"es":"Ficha de puestos (v0.56.0)","en":"Stall item card (v0.56.0)"},"items":[{"es":"La ventana del puesto es más grande: al pasar el ratón por un objeto, a la derecha ves su sprite, sus estadísticas y si es mejor o peor que lo que llevas equipado (como al comprar en Diablo II).","en":"The stall window is bigger: hovering an item shows its sprite, stats and whether it is better or worse than what you wear (like buying in Diablo II)."},{"es":"El puesto ya no es un cofre dibujado a mano: muestra objetos reales (cesta, pan, saco).","en":"The stall is no longer a hand-drawn chest: it shows real item sprites (basket, bread, sack)."}]},{"date":"2026-10-11","title":{"es":"Avisos del puesto (v0.55.2)","en":"Stall messages (v0.55.2)"},"items":[{"es":"Arreglado: al intentar montar un puesto (/puesto o botón Tienda) fuera de shop, warehouse o herrería no pasaba nada. Ahora lo explica; los rechazos del puesto también salen en el chat.","en":"Fixed: trying to set up a stall (/stall or Stall button) outside the shop, warehouse or blacksmith did nothing. It now explains why; stall rejections also show in the chat."}]},{"date":"2026-10-11","title":{"es":"Arreglo de carga (v0.55.1)","en":"Loading fix (v0.55.1)"},"items":[{"es":"Arreglado: la versión 0.55.0 se quedaba cargando.","en":"Fixed: version 0.55.0 got stuck loading."}]},
+  "news": [
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Criptas y Rey dorado (v0.57.0)",
+        "en": "Crypts and the Golden King (v0.57.0)"
+      },
+      "items": [
+        {
+          "es": "Los habitantes ya pelean en la cripta y tienen una meta nueva: matar al Rey esqueleto dorado (piso 20) y terminar las criptas.",
+          "en": "Residents fight in the crypt again and have a new life goal: kill the Golden Skeleton King (floor 20) and finish the crypts."
+        },
+        {
+          "es": "Summons de apoyo: el Buffer da berserk; curan y potencian a todos en el círculo (también pets); nacen como hechicera, no como muñeco.",
+          "en": "Support summons: the Buffer grants berserk; they heal and buff everyone in the circle (pets too); they spawn as a sorceress, not a dummy."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Ficha de puestos (v0.56.0)",
+        "en": "Stall item card (v0.56.0)"
+      },
+      "items": [
+        {
+          "es": "Tres summons de apoyo: Healer (pelo verde), Buffer (azul) y Aura (amarillo), con el sprite de la Sorceress. Se elige la clase al comprar; no hablan; Aura y Buffer salen a tu derecha; el radio del Buffer es la mitad; el Healer ataca al curar.",
+          "en": "Three support summons: Healer (green hair), Buffer (blue) and Aura (yellow), using the Sorceress sprite. Pick the class when buying; they do not talk; Aura and Buffer spawn on your right; the Buffer radius is halved; the Healer plays its attack animation when healing."
+        },
+        {
+          "es": "Los puestos ya no tapan las entradas: no se abren a menos de 8 casillas de una puerta.",
+          "en": "Stalls no longer block building exits: they cannot open within 8 tiles of a door."
+        },
+        {
+          "es": "La ventana del puesto es más grande: al pasar el ratón por un objeto, a la derecha ves su sprite, sus estadísticas y si es mejor o peor que lo que llevas equipado (como al comprar en Diablo II).",
+          "en": "The stall window is bigger: hovering an item shows its sprite, stats and whether it is better or worse than what you wear (like buying in Diablo II)."
+        },
+        {
+          "es": "El puesto ya no es un cofre dibujado a mano: muestra objetos reales (cesta, pan, saco).",
+          "en": "The stall is no longer a hand-drawn chest: it shows real item sprites (basket, bread, sack)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Avisos del puesto (v0.55.2)",
+        "en": "Stall messages (v0.55.2)"
+      },
+      "items": [
+        {
+          "es": "Arreglado: al intentar montar un puesto (/puesto o botón Tienda) fuera de shop, warehouse o herrería no pasaba nada. Ahora lo explica; los rechazos del puesto también salen en el chat.",
+          "en": "Fixed: trying to set up a stall (/stall or Stall button) outside the shop, warehouse or blacksmith did nothing. It now explains why; stall rejections also show in the chat."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Arreglo de carga (v0.55.1)",
+        "en": "Loading fix (v0.55.1)"
+      },
+      "items": [
+        {
+          "es": "Arreglado: la versión 0.55.0 se quedaba cargando.",
+          "en": "Fixed: version 0.55.0 got stuck loading."
+        }
+      ]
+    },
     {
       "date": "2026-10-11",
       "title": {

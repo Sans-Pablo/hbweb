@@ -195,7 +195,7 @@ export const fightOk = (w, p, e) => fightEstimate(w, p, e).ratio >= 1.3;
 export const tooStrong = (w, p, e) => {
   if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
   if (e.boss && !e.aux) return !fightOk(w, p, e);                                                       // jefe de cripta: solo si el cálculo de la pelea sale a favor (con los compañeros que lo ayuden)
-  const dl = p.res?.dlv?.[e.boss ? e.name + "*" + e.boss : e.name];                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
+  const dl = p.res?.dlv?.[(e.boss ? e.name + "*" + e.boss : e.name) + (w.map.kind === "dungeon" ? "@" + w.map.level : "")];       // en la cripta la lección es por piso (los esqueletos escalan con el piso: un piso que lo mató no veta toda la especie)                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
   if (dl !== undefined && p.level < dl + 3) return true;
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
   return hit * 4 > p.maxHp;

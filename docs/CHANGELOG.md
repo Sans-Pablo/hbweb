@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.57.0 · Criptas y Rey dorado (2026-10-11)
+- Los habitantes vuelven a pelear en la cripta: la lección de una muerte se guarda por piso (antes un solo esqueleto vetaba a todos).
+- Nueva meta de vida: matar al Rey esqueleto dorado (piso 20) y terminar las criptas; expediciones más largas y seguidas mientras dure.
+- Summons de apoyo: el Buffer da berserk, afectan a todos los del círculo (también pets) y se ven como hechicera desde el principio.
+
 ## 0.56.0 · Ficha de puestos (2026-10-11)
 - Ventana del puesto ampliada con ficha a la derecha (sprite, estadísticas, comparación con el equipo, precio y oro).
 - El puesto en el mundo usa sprites reales de objetos en vez del cofre dibujado a mano.
