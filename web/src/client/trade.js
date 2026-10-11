@@ -4,7 +4,7 @@
 //   - Ventana: tu oferta (clic en un objeto = quitarlo), lo que ofrece el otro, y tu mochila (clic en un objeto = ofrecerlo). Oro con los botones.
 //   - Cuando los dos pulsan Confirm se hace el cambio entero. Cualquier cambio quita las confirmaciones.
 import { ClassicDialog, INK, RED, WHITE } from "./classicdialog.js";
-import { itemName, itemDef, packKey } from "./names.js";
+import { itemName, itemDef, packKey, iconKey } from "./names.js";
 import { attrLines } from "../shared/attributes.js";
 import { itemLevel } from "../shared/itemlevel.js";
 
@@ -28,7 +28,7 @@ export function registerTrade(gui, api) {
     }
     icon(g, it, x, y, alpha = 1) {
       const d = itemDef(it.id); if (!d) return;
-      g.putGame(packKey(d), d.spriteFrame, x, y, alpha);
+      g.putGame(iconKey(d), d.spriteFrame, x, y, alpha);
       if (it.count > 1) g.text(x + 8, y + 10, it.count > 999 ? Math.floor(it.count / 1000) + "k" : String(it.count), "#c8c8c8", { shadow: true, size: 10 });
     }
     draw(g, me) {

@@ -1,9 +1,11 @@
+import { applyGear } from "./classgear.js";
 // Datos del juego (generados por tools/convert.py a partir de los .cfg del servidor).
 export class GameData {
   constructor({ items = {}, npcs = {}, magic = {} }) {
     this.magic = magic;
     this.items = new Map();
     this.byName = new Map();
+    applyGear(items);
     for (const [id, d] of Object.entries(items)) {
       d.id = +id;
       this.items.set(d.id, d);

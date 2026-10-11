@@ -10,6 +10,16 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Equipo de clase (v0.62.0)", "en": "Class gear (v0.62.0)" },
+      "items": [
+        { "es": "Armaduras por clase: Mago (túnica, ChainHose, Wizard Hauberk, Wizard-Hat), Guerrero (placas, cualquier casco), Invocador (cuero, ChainHose, Hauberk, Wizard-Cap). Al pasar el ratón sobre un objeto verás «Solo para: …». Lo ya equipado no se quita.", "en": "Armour by class: Mage (robe, ChainHose, Wizard Hauberk, Wizard-Hat), Warrior (plate, any helmet), Summoner (leather, ChainHose, Hauberk, Wizard-Cap). Hover an item to see \"Only for: …\". Gear you already wear stays on." },
+        { "es": "Para invocar a Frost/Tentocle necesitas la Ice Wand equipada, al Liche el Darkness Staff y al Demon el Hero Staff (cada uno con el color de su summon).", "en": "To summon Frost/Tentocle you need the Ice Wand equipped, the Lich needs the Darkness Staff and the Demon the Hero Staff (each tinted like its summon)." },
+        { "es": "Nivel 50: el herrero vende por 1 de oro los báculos maestros (Master Ice Wand, Master Darkness Staff, Master Hero Staff), con halo y chispas de su color.", "en": "Level 50: the blacksmith sells the master staffs (Master Ice Wand, Master Darkness Staff, Master Hero Staff) for 1 gold, with a glow and sparks in their colour." },
+        { "es": "Los niveles del equipo se reajustaron al acto 1 (máximo 50).", "en": "Gear levels were rebalanced to act 1 (max 50)." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Clases (v0.61.0)", "en": "Classes (v0.61.0)" },
       "items": [
         { "es": "Nuevo al crear personaje: Guerrero, Mago o Invocador (solo cambia los atributos iniciales). Los personajes antiguos son Guerreros.", "en": "New on character creation: Warrior, Mage or Summoner (only the starting attributes differ). Existing characters are Warriors." },

@@ -1,5 +1,6 @@
 // Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 import { ACT, DX, DY, CORPSE_MS, CHASE_LIMIT, dirTo, dist, mobDurations } from "../const.js";
+import { STAFF_FOR, STAFF_MSG, staffOk } from "../classgear.js";
 import * as R from "../rules.js";
 import { greedyStep } from "../path.js";
 import { rollKillDrop } from "../drops.js";
@@ -155,6 +156,10 @@ function followerThink(w, n) {
     refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
     if (tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
       tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
+    }
+    const need = tc && STAFF_FOR[tc.sp];                                                  // Frost/Tentocle, Liche y Demon exigen su báculo en la mano (classgear.js)
+    if (need && !staffOk(m, w.data, need)) {
+      tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, STAFF_MSG[need]); return;
     }
     if (tc?.evolve) {                                   // cambio de tamaño: tras unos segundos (se lee la frase) se vuelve a invocar con efecto
       if (!n.evolveAt) n.evolveAt = w.time + EVOLVE_MS;
@@ -375,6 +380,8 @@ export function toggleCompanion(w, p, inst) {
   if (c.on && out) { c.on = false; dismissCompanion(w, p, inst.uid); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
   if (Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
+  const need = STAFF_FOR[c.sp];
+  if (need && !staffOk(p, w.data, need)) return w.reject(p, { t: "use" }, STAFF_MSG[need]);
   const cost = p.bot ? 0 : Math.max(1, Math.ceil((p.maxMp || 0) * Math.min(100, Math.max(1, c.lvl | 0)) / 100));   // invocar cuesta un % de tu maná máximo igual al nivel del summon (nivel 1 = 1 %, nivel 50 = 50 %)
   if ((p.mp || 0) < cost) return w.reject(p, { t: "use" }, "no tienes maná para invocarlo (" + cost + ")");
   const others = Comp.activeBalls(p).filter(b => b !== inst), max = Comp.maxSummons(p);

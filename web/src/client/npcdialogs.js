@@ -3,7 +3,7 @@
 //   14 almacén (DrawDialogBox_Bank)                  23 vender / reparar (DrawDialogBox_SellorRepairItem)
 //   31 lista de venta (DrawDialogBox_SellList)       17 cantidad (DrawDialogBox_QueryDropItemAmount)
 // Todo el estado de la compra-venta vive aquí; la simulación (shared/systems/shopsys.js) hace de servidor.
-import { itemDef, itemName, itemSet, packKey } from "./names.js";
+import { itemDef, itemName, itemSet, packKey, iconKey } from "./names.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
@@ -337,7 +337,7 @@ export function registerNpcDialogs(gui, api) {
       const [lx, ly] = rel(g, this), it = bagItem(me, this.uid), d = it && itemDef(it.id);
       g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", this.mode === 1 ? 11 : 10, 0, 0);
       if (!d) return;
-      g.putGame(packKey(d), d.spriteFrame, 77, 114);
+      g.putGame(iconKey(d), d.spriteFrame, 77, 114);
       const nm = itemName(it.id, it.attr, it.comp), title = this.mode === 1 && this.count > 1 ? this.count + " " + nm : nm;
       const tc = it.attr ? "#00ff32" : INK;
       g.aligned(25, 240, 60, title, tc); g.aligned(26, 241, 60, title, tc);
@@ -424,7 +424,7 @@ export function registerNpcDialogs(gui, api) {
           for (const l of attrLines(it.attr)) g.aligned(70, 253, (y += 15), l, "#969696");
           if (d.levelLimit && it.attr) g.aligned(70, 253, (y += 15), "Level: " + d.levelLimit, "#969696");
           if (d.equipPos !== EQUIP.NONE && d.weight >= 1100) g.aligned(70, 253, (y += 15), "Available for above Str " + Math.ceil(d.weight / 100), "#969696");
-          g.putGame(packKey(d), d.spriteFrame, 60, 68);
+          g.putGame(iconKey(d), d.spriteFrame, 60, 68);
         } else g.aligned(0, 253, 110 + i * BANK_ROW_H, nm, "#000");
       }
       if (n > BANK_ROWS) {

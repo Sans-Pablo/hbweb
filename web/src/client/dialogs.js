@@ -4,7 +4,7 @@ import { drawBall } from "./compicon.js";
 import { getLang, setLang, t } from "./i18n.js";
 import { itemDef } from "./names.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
-import { packKey } from "./names.js";
+import { packKey, iconKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
 import { castChance, manaCost } from "../shared/magic.js";
 import { SCHOOL_OF, SCHOOL_NAMES, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
@@ -73,7 +73,7 @@ export function registerDialogs(gui, api) {
         const key = eqKey(female, d.sprite); if (!key) continue;
         const [x, y] = SLOT_POS[pos][female ? 1 : 0];
         if (g.hitUi(key, d.spriteFrame, x, y, lx, ly)) {
-          g.item = { uid, from: 1, dx: 0, dy: 0, draw: (gg, mx, my) => gg.putGame(packKey(d), d.spriteFrame, mx, my, 0.9) };
+          g.item = { uid, from: 1, dx: 0, dy: 0, draw: (gg, mx, my) => gg.putGame(iconKey(d), d.spriteFrame, mx, my, 0.9) };
           return true;
         }
       }
@@ -144,7 +144,7 @@ export function registerDialogs(gui, api) {
       // el oro es un objeto más de la mochila en el original (Gold, id 90): aquí se dibuja aparte, abajo a la derecha
       const gd = me.gold > 0 && itemDef(90);
       if (gd) {
-        g.putGame(packKey(gd), gd.spriteFrame, 32 + 150, 44 + 95, 1);
+        g.putGame(iconKey(gd), gd.spriteFrame, 32 + 150, 44 + 95, 1);
         g.aligned(32 + 110, 32 + 190, 44 + 108, comma(me.gold), "#ffd34d", { shadow: true, size: 11 });
       }
       for (const uid of this.order) {
@@ -152,7 +152,7 @@ export function registerDialogs(gui, api) {
         if (!d || this.equipped(me, uid) || (g.item && g.item.uid === uid)) continue;
         const [x, y] = this.pos(it);
         if (it.comp) drawBall(g, it, d, packKey(d), x, y, api.disabled?.(uid) ? 0.5 : 1);
-        else g.putGame(packKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
+        else g.putGame(iconKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
         if (isStack(d)) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
@@ -178,7 +178,7 @@ export function registerDialogs(gui, api) {
       if (api.disabled?.(h.it.uid)) return true;                     // esperando una operación de tienda (m_bIsItemDisabled)
       this.order = this.order.filter(u => u !== h.it.uid); this.order.push(h.it.uid);
       const fr = g.spr.frame(packKey(h.d), h.d.spriteFrame);
-      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => h.it.comp ? drawBall(gg, h.it, h.d, packKey(h.d), mx - (lx - h.x), my - (ly - h.y), 0.9) : gg.putGame(packKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
+      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => h.it.comp ? drawBall(gg, h.it, h.d, packKey(h.d), mx - (lx - h.x), my - (ly - h.y), 0.9) : gg.putGame(iconKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
       return true;
     },
     dbl(g, lx, ly, me) {

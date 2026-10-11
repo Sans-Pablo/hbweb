@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.62.0 · Equipo de clase (2026-10-12)
+- Cada clase solo equipa su armadura: Mago = túnica, ChainHose, Wizard Hauberk y Wizard-Hat; Guerrero = placas y cualquier casco; Invocador = cuero, ChainHose, Hauberk normal y Wizard-Cap. Lo que ya llevabas puesto se queda.
+- Para invocar a Frost/Tentocle hace falta la Ice Wand en la mano (antes BerserkWand), para el Liche el Darkness Staff (ResurWand) y para el Demon el Hero Staff. Cada báculo lleva un tinte del color de su summon.
+- Báculos maestros (Master Ice Wand, Master Darkness Staff, Master Hero Staff): nivel 50, 1 de oro en el herrero, tinte más fuerte y un halo con chispas en el color de la escuela. Valen como el báculo de su familia.
+- Niveles del equipo reajustados al acto 1 (máximo 50).
+
 ## 0.61.0 · Clases (2026-10-12)
 - Al crear el personaje se elige clase: Guerrero (FUE y VIT), Mago (INT y MAG) o Invocador (CAR y VIT). Solo cambia los atributos iniciales; los personajes existentes son Guerreros.
 - El Invocador puede tener 2 summons activos a la vez con 100 de carisma (total) y 3 con 200. Deben ser de especies distintas; al pasar el límite se guarda el más antiguo. Cada invocación cuesta su porcentaje de maná.

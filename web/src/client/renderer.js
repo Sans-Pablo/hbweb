@@ -456,6 +456,21 @@ export class Renderer {
     }
   }
 
+  // báculos maestros (classgear.MASTERS, tinte 19..21 = hielo/oscuridad/fuego): halo en el color de su escuela y chispas que giran y suben alrededor del portador.
+  // Solo dibujo: Math.random permitido; se calcula todo del reloj para no guardar estado.
+  masterFx(x, y, tint) {
+    const ctx = this.ctx, now = performance.now(), C = { 19: [150, 215, 255], 20: [190, 90, 255], 21: [255, 110, 40] }[tint], rgb = C.join(",");
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(x, y - 18, 2, x, y - 18, 30); g.addColorStop(0, "rgba(" + rgb + "," + (0.16 + 0.06 * Math.sin(now / 260)).toFixed(3) + ")"); g.addColorStop(1, "rgba(" + rgb + ",0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 18, 30, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 6; i++) {
+      const k = ((now / 1400) + i / 6) % 1, a = now / 500 + i * 1.05, r = 14 + 6 * Math.sin(a * 0.7);
+      const px = x + Math.cos(a) * r, py = y - 4 - k * 38 + Math.sin(a) * 4;
+      ctx.fillStyle = "rgba(" + rgb + "," + (0.85 * (1 - k)).toFixed(3) + ")"; ctx.beginPath(); ctx.arc(px, py, 1.6 * (1 - k * 0.6) + 0.4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // Demon Lv 50: al caminar deja una estela sutil de brasas pequeñas que se apagan en ~1,2 s (como la nieve del Frost). Coordenadas de mundo (this.cam = cámara);
   // en el bestiario, sin cámara, el suelo se desliza hacia atrás a velocidad de paso.
   emberTrail(e, x, y, casting) {
@@ -518,6 +533,7 @@ export class Renderer {
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
       if (zerk) spr.tinted(ctx, body, f, x, y, "#ff2a1a", 0.35);
+      if (ap && ap.col && ap.col.weapon >= 19 && ap.col.weapon <= 21 && !invis) this.masterFx(x, y, ap.col.weapon);
       this.auras(e, x, y, w, false);
       if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
       // nombre de los demás jugadores y bocadillo de chat

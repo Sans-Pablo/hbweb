@@ -9,3 +9,5 @@ export const itemName = (id, attr = 0, comp = null) => comp ? (DUMMY_NAMES[comp.
 export const itemSet = s => (s <= 19 ? s - 1 : s - 3);
 export const groundKey = d => "ig" + itemSet(d.sprite);
 export const packKey = d => "ip" + itemSet(d.sprite);
+// clave de icono: los báculos de escuela llevan su tinte fijo detrás de «#» (gui.putGame lo separa y tiñe)
+export const iconKey = d => packKey(d) + (d.tint ? "#" + d.tint : "");

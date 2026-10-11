@@ -1,7 +1,8 @@
 // Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
 // Tipos de cuerpo (Client/Game.cpp): 1 Bm, 2 Wm, 3 Ym (hombres) y 4 Bw, 5 Ww, 6 Yw (mujeres).
 // Colores de los tintes (índice = tabla m_wR[] de Client/Game.cpp, aclarados para multiplicar el sprite)
-export const DYE_RGB = ["", "#6a6aff", "#c8c8a0", "#ffc83c", "#ff5a2e", "#3caa3c", "#8c8c8c", "#78ccd0", "#ff8cc0", "#c080c0", "#3c8cff", "#e6c296", "#e0d890", "#ffff2a", "#e02a2a", "#505050"];
+export const DYE_RGB = ["", "#6a6aff", "#c8c8a0", "#ffc83c", "#ff5a2e", "#3caa3c", "#8c8c8c", "#78ccd0", "#ff8cc0", "#c080c0", "#3c8cff", "#e6c296", "#e0d890", "#ffff2a", "#e02a2a", "#505050",
+  "#7ec8ff", "#a070d8", "#ff7a3a", "#2aa4ff", "#c030ff", "#ff2a00"];      // 16..21: tintes fijos de los báculos de escuela (shared/classgear.js): hielo, oscuridad, fuego; y los tres maestros, más intensos
 export const DEFAULT_LOOK = { skin: 2, hair: 1, hairCol: 0, under: 0 };
 
 // Color del pelo (m_wR/G/B de Game.cpp, 16 tonos). Valores de pantalla aproximados.

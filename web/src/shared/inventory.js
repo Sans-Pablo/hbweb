@@ -3,6 +3,7 @@
 import { ELEM, PROT_CAP, PROT_OVERRIDE } from "./rarity.js";
 import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./items.js";
 import { realStats, applyEquipAttr } from "./attributes.js";
+import { classOk, classLabel } from "./classgear.js";
 
 // definición del objeto con el peso real de esta unidad (los atributos "Light" lo reducen)
 const real = (d, inst) => inst && inst.comp ? { ...d, weight: 100 } : (inst && inst.attr ? { ...d, weight: realStats(d, inst).weight } : d);
@@ -52,6 +53,7 @@ export function equip(p, data, uid) {
   if (d.levelLimit > p.level) { out.why = "nivel " + d.levelLimit + " necesario"; return out; }
   if (d.gender === 1 && p.gender !== 1) { out.why = "solo para hombres"; return out; }
   if (d.gender === 2 && p.gender !== 2) { out.why = "solo para mujeres"; return out; }
+  if (!p.bot && !classOk(p, d)) { out.why = "solo para " + classLabel(d); return out; }      // equipo de clase (classgear.js); lo ya puesto de antes no se toca
   const w = itemWeight(real(d, inst), 1);
   if (w > p.stats.str * 100) { out.why = "demasiado pesado (fuerza " + Math.ceil(w / 100) + ")"; return out; }
   const pos = d.equipPos;

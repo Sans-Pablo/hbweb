@@ -15,6 +15,7 @@ const MAX_PRICE = 1000000;
 // Precio de compra de `count` unidades: el descuento es (carisma - 10) / 4 por ciento, sin pasar de la mitad.
 export function buyCost(chr, unit, count = 1) {
   const cost = unit * count;
+  if (cost < 2) return cost;
   const ratio = Math.trunc((chr - 10) / 4);
   let discount = Math.trunc(cost * (ratio / 100));
   if (discount >= Math.trunc(cost / 2)) discount = Math.trunc(cost / 2) - 1;
@@ -98,7 +99,8 @@ export function buy(w, p, cmd) {
   if (name.startsWith("10Arrows")) { name = "Arrow"; units = 10; }
   else if (name.startsWith("100Arrows")) { name = "Arrow"; units = 100; }
   const d = w.data.named(name), n = Math.max(1, Math.min(50, cmd.count | 0));
-  if (!d || !(d.price > 0) || BANNED_ITEMS.has(d.id)) return false;                          // price < 0: no está a la venta
+  if (!d || !(d.price > 0) || BANNED_ITEMS.has(d.id)) return false;
+  if (d.buyLevel && p.level < d.buyLevel) return w.reject(p, cmd, "nivel " + d.buyLevel + " necesario");           // báculos maestros (classgear.js)                          // price < 0: no está a la venta
   let bought = 0;
   for (let i = 0; i < n; i++) {
     const cost = buyCost(p.stats.chr, d.price, units);

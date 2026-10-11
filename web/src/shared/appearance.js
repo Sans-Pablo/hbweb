@@ -9,7 +9,8 @@ export function apparelOf(e, itemDef) {
     const it = e.bag.find(b => b.uid === uid), d = it && itemDef(it.id), k = ARMOR_OF_POS[pos];
     if (!d || !k || !d.appr) continue;
     ap[k] = k === "armor" && d.appr >= 100 ? d.appr - 100 : d.appr;
-    if (it.color) (ap.col || (ap.col = {}))[k] = it.color;
+    const col = it.color || (k === "weapon" && d.tint) || 0;           // d.tint: tinte fijo de los báculos de escuela (classgear.js)
+    if (col) (ap.col || (ap.col = {}))[k] = col;
   }
   const gd = e.guild || (e.gd && { name: e.gd[0], cape: e.gd[2], boots: e.gd[3] });          // colores del guild (INVENTO): capa y botas puestas se ven del color elegido
   if (gd) { if (gd.cape > 0 && ap.mantle) (ap.col || (ap.col = {})).mantle = gd.cape; if (gd.boots > 0 && ap.boots) (ap.col || (ap.col = {})).boots = gd.boots; }

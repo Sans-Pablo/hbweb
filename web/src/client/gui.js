@@ -7,6 +7,7 @@ import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
+import { DYE_RGB } from "./look.js";
 
 export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
@@ -73,11 +74,25 @@ export class Gui {
   // ---------------------------------------------------------------- sprites del juego (item-pack...)
   setGameSprites(spr) { this.spr = spr; this._px = {}; }
   putGame(key, f, x, y, alpha = 1) {
+    const hash = key.indexOf("#"), tint = hash < 0 ? 0 : +key.slice(hash + 1); if (hash >= 0) key = key.slice(0, hash);
     const fr = this.spr && this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return;
     const [sx, sy, w, h, px, py] = fr;
     if (alpha !== 1) this.ctx.globalAlpha = alpha;
-    this.ctx.drawImage(this.spr.img[key], sx, sy, w, h, x + px, y + py, w, h);
+    this.ctx.drawImage(tint ? this.tintedIcon(key, f, tint, fr) : this.spr.img[key], tint ? 0 : sx, tint ? 0 : sy, w, h, x + px, y + py, w, h);
     if (alpha !== 1) this.ctx.globalAlpha = 1;
+  }
+  // icono con el tinte fijo de un báculo (multiplicado y recortado a la forma, como el pelo); se guarda un lienzo por fotograma
+  tintedIcon(key, f, tint, fr) {
+    const k = key + ":" + f + ":" + tint, c = this.tintCache || (this.tintCache = new Map());
+    let cv = c.get(k);
+    if (!cv) {
+      const [sx, sy, w, h] = fr; cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      const g = cv.getContext("2d"); g.drawImage(this.spr.img[key], sx, sy, w, h, 0, 0, w, h);
+      g.globalCompositeOperation = "multiply"; g.fillStyle = DYE_RGB[tint]; g.fillRect(0, 0, w, h);
+      g.globalCompositeOperation = "destination-in"; g.drawImage(this.spr.img[key], sx, sy, w, h, 0, 0, w, h);
+      c.set(k, cv);
+    }
+    return cv;
   }
   // ¿el punto (mx, my) toca un píxel opaco del fotograma dibujado en (x, y)? (_bCheckCollison)
   hitUi(key, f, x, y, mx, my) {

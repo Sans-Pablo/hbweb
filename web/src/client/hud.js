@@ -7,6 +7,7 @@ const talentName = id => talentDef(id)?.name || id;
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
 import * as R from "../shared/rules.js";
 import { itemDef, itemName, packKey } from "./names.js";
+import { classLabel, classOk } from "../shared/classgear.js";
 import { FEED, tasteOf, statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
 import { SCHOOL_OF, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 import { SKILL_NAMES } from "../shared/skills.js";
@@ -183,6 +184,8 @@ export class Hud {
         L.push("Defensa +" + d.v1 + (d.equipPos === EQUIP.LHAND ? " · bloqueo " + (d.v1 - Math.floor(d.v1 / 3)) + " %" : d.v2 ? " · absorbe " + d.v2 + " %" : ""));
       }
       L.push(pos + (d.levelLimit ? " · nivel " + d.levelLimit : "") + (d.gender === 1 ? " · hombre" : d.gender === 2 ? " · mujer" : ""));
+      const cl = classLabel(d); if (cl) L.push('<span style="color:' + (me && !classOk(me, d) ? "#e39a9a" : "#9fe39a") + '">Solo para: ' + cl + "</span>");
+      if (d.family) L.push('<span style="color:#9fe39a">' + (d.master ? "Báculo maestro: " : "Báculo de escuela: ") + ({ ice: "controla a Frost y Tentocle", dark: "controla al Liche", fire: "controla al Demon" })[d.family] + "</span>");
       const rs = realStats(d, it);
       L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
