@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Bots atascados en criptas (v0.51.3)",
+        "en": "Bots stuck in crypts (v0.51.3)"
+      },
+      "items": [
+        {
+          "es": "Los habitantes ya no se quedan corriendo de un lado a otro en las criptas: avanzan, matan esqueletos y salen por Recall correctamente.",
+          "en": "Residents no longer run back and forth in crypts: they advance, kill skeletons and recall out properly."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Sembrar con doble clic (v0.51.2)",
         "en": "Plant with double click (v0.51.2)"
       },

@@ -553,6 +553,11 @@ function pickPit(adv, w, p, zones) {
 }
 function expedition(adv, w, p, r, home) {
   const b = p.bot;
+  if (w.map.kind === "dungeon" && b.owner == null && !r._delve && !p.dead) {                // en una cripta sin expedición propia (llegó siguiendo a un líder que se fue o murió, o se le quedó un recado): la adopta para despejar, bajar o salir
+    r._pet = null; r._trip = null;
+    r._delve = { go: false, goUntil: 0, until: w.time + 240000 + Math.floor(w.rng() * 120000), spot: null, tries: 0, lv: w.map.level };
+    blog(w, p, "Estoy en la cripta sin plan: la despejo o salgo.");
+  }
   if (b.owner != null || r._pet) return;                                                   // los miembros de un grupo van donde va su líder
   if (r._delve) return delve(adv, w, p, r, home);
   if (r._trip) {
@@ -614,6 +619,14 @@ function startDelve(adv, w, p, r, home) {
   remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
   if (w.rng() < 0.6) speak(adv, p, "§you are going down to the skeleton crypt to clear skeletons");
 }
+// Recall desde la cripta: el canal dura 3 s y quedarse quieto es obligatorio (moverse o un segundo comando lo cancelan)
+function cryptRecall(adv, w, p, r, es) {
+  const b = p.bot;
+  if (p.recallTok) { b.hold = w.time + 1500; return; }
+  if (w.time - (r._rc || 0) <= 8000 || w.time < (p.recallCd || 0)) return;
+  r._rc = w.time; blog(w, p, es); b.hold = w.time + 3500; b.target = null; b.travel = null; b.path = null;
+  adv.command(p.id, { t: "recall" });
+}
 function delve(adv, w, p, r, home) {
   const b = p.bot, d = r._delve;
   if (w === home) {
@@ -633,11 +646,11 @@ function delve(adv, w, p, r, home) {
     const bs = [...w.ents.values()].find(e => e.boss && !e.aux && !e.dead);
     if (bs) {
       const est = fightEstimate(w, p, bs); r._bossSeen = w.map.id;
-      if (est.ratio < 1.3) { r.dd ||= {}; r.dd[w.map.level] = (r.dd[w.map.level] || 0) + 0.4; r.bossFails = (r.bossFails | 0) + 1; blog(w, p, `El jefe del piso ${w.map.level} (vida ${bs.hp}) me aplastaría: aguanto ${Math.round(est.budget)} de daño y recibiría ${Math.round(est.taken)} (con ${est.allies} aliados cerca). Salgo y vuelvo más fuerte o con grupo.`); adv.command(p.id, { t: "recall" }); return; }
+      if (est.ratio < 1.3) { r.dd ||= {}; r.dd[w.map.level] = (r.dd[w.map.level] || 0) + 0.4; r.bossFails = (r.bossFails | 0) + 1; blog(w, p, `El jefe del piso ${w.map.level} (vida ${bs.hp}) me aplastaría: aguanto ${Math.round(est.budget)} de daño y recibiría ${Math.round(est.taken)} (con ${est.allies} aliados cerca). Salgo y vuelvo más fuerte o con grupo.`); r._rc = 0; cryptRecall(adv, w, p, r, "Salgo de la cripta (Recall)."); return; }
       blog(w, p, `Hago la cuenta contra el jefe del piso ${w.map.level}: aguanto ${Math.round(est.budget)}, recibiría ${Math.round(est.taken)} (${est.allies} aliados). Voy a por él.`);
     }
   }
-  if ((left || (b.rest && !b.target)) && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, left ? "Fin de la bajada: salgo de la cripta (Recall)." : "Voy mal: salgo de la cripta (Recall)."); adv.command(p.id, { t: "recall" }); return; }
+  if (left || (b.rest && !b.target)) { cryptRecall(adv, w, p, r, left ? "Fin de la bajada: salgo de la cripta (Recall)." : "Voy mal: salgo de la cripta (Recall)."); return; }
   if (b.rest || w.time < (r._delveAt || 0)) return;
   r._delveAt = w.time + 1500;
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
@@ -655,7 +668,7 @@ function delve(adv, w, p, r, home) {
   for (const e of w.ents.values()) if (e.kind === "npc" && !e.dead && !e.comp && !e.aux && !e.master && !tooStrong(w, p, e)) { const dd = dist(p, e); if (dd < bd) { best = e; bd = dd; } }
   if (best) r._noPrey = 0;
   else if (!r._noPrey) r._noPrey = w.time;
-  else if (w.time - r._noPrey > 12000 && w.time - (r._rc || 0) > 8000) { r._rc = w.time; r._noPrey = 0; blog(w, p, "Los esqueletos que quedan son demasiado fuertes para mí: salgo de la cripta (Recall)."); adv.command(p.id, { t: "recall" }); return; }       // sin presa que pueda pelear no se queda quieto hasta agotar el tiempo
+  else if (w.time - r._noPrey > 12000) { cryptRecall(adv, w, p, r, "Los esqueletos que quedan son demasiado fuertes para mí: salgo de la cripta (Recall)."); return; }       // sin presa que pueda pelear no se queda quieto hasta agotar el tiempo
   if (best && bd > 9) { b.travel = { x: best.x, y: best.y, w, until: w.time + 12000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${best.name} a ${bd} casillas.`); }
   else if (best) b.travel = null;
 }

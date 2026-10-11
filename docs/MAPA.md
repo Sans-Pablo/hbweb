@@ -48,7 +48,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcsys.js` · 400 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 117 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 170 · Jugador: creación, guardado, recalculo de atributos, reaparición.
-- `residents.js` · 1223 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 1236 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 20 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
@@ -154,7 +154,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `regress-0506.test.mjs` · 8 · Regresiones 0.50.6: tratos de bots con frases fijas sin modelo de lenguaje.
 - `regress-0507.test.mjs` · 16 · 0.50.7: frases de bot sin LLM (saludo/idle/admirar), jefe glacial con tormentas, F4 se reinicia al cambiar de summon.
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
-- `residents-crypt.test.mjs` · 49 · Habitantes: bajan a la cripta de esqueletos, metas de bajas / foso / cripta y dominio de fosos en Promise Land.
+- `residents-crypt.test.mjs` · 65 · Habitantes: bajan a la cripta de esqueletos, metas de bajas / foso / cripta y dominio de fosos en Promise Land.
 - `residents-learn.test.mjs` · 49 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `residents-pets.test.mjs` · 68 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `residents-social.test.mjs` · 62 · Habitantes sociales: comercian (regalo, venta, compra) con jugadores y entre ellos, aceptan/piden grupo, se reúnen en la tienda, equipan po

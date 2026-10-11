@@ -46,4 +46,20 @@ for (const side of [1, 2]) {
   for (const x of g) { b.res.goal = x; run(a, 1500); }
   assert.ok(b.res.mem.some(m => /Cumplí mi meta/.test(m.es)), "cumple sus metas de combate");
 }
+
+// v0.51.3: un habitante que aparece en una cripta sin expedición (_delve) no se queda dando vueltas: la adopta y sale por Recall sin cancelarlo
+{
+  const a = mk(21); a.spawnResident("Aldric"); const b = a.residents()[0];
+  b.level = 12; b.exp = 1e7; b.stats.str = 60; b.stats.vit = 70; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.res._tripAt = 1;
+  a.command(b.id, { t: "portal", portal: "mid-entry" }); run(a, 2000);
+  let w = a.worldFor(b.id), moved = w.map.kind === "dungeon";
+  for (let i = 0; i < 20 * 60 * 3 && !moved; i++) { a.tick(50); w = a.worldFor(b.id); moved = w.map.kind === "dungeon"; }
+  if (moved) {
+    b.res._delve = null; b.res._pet = null;
+    let out = false, cmds = 0; const orig = a.command.bind(a);
+    a.command = (id, c) => { if (id === b.id && c.t === "recall") cmds++; return orig(id, c); };
+    for (let i = 0; i < 20 * 60 * 4 && !out; i++) { a.tick(50); out = a.worldFor(b.id).map.kind !== "dungeon" || !!b.res._delve; }
+    assert.ok(out, "el habitante sin expedición en la cripta la adopta o sale; registro: " + (b.bot.log || []).slice(-4).join(" | "));
+  }
+}
 console.log("OK residents-crypt");
