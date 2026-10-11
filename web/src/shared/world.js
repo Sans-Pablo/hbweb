@@ -8,6 +8,7 @@ import { groundSweep } from "./systems/ground.js";
 import { ACT, DX, DY, LIMITS, PLAYER, dirTo, dist } from "./const.js";
 import * as R from "./rules.js";
 import * as Player from "./systems/player.js";
+import * as Respec from "./systems/respec.js";
 import * as Combat from "./systems/combatsys.js";
 import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
@@ -237,6 +238,7 @@ const COMMANDS = {
   deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
+  statreset: (w, p, cmd) => Respec.respec(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),
   petup: (w, p, cmd) => Companion.tradeUp(w, p, cmd),
   candybuy: (w, p, cmd) => Companion.buyCandy(w, p, cmd),

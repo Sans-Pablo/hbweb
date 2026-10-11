@@ -22,6 +22,7 @@ import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
 import { judge, manage, wish, canWear } from "./botitems.js";
+import { allocate } from "./builds.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -78,8 +79,9 @@ function spendPoints(w, p) {
   if (p.pool <= 0) return;
   if (p.res && p.level >= 15 && p.stats.chr < 20) w.command(p.id, { t: "stat", stat: "chr", n: Math.min(p.pool, 20 - p.stats.chr) });        // carisma 20: requisito para fundar un guild (systems/guild.js)
   if (p.pool <= 0) return;
-  const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
-  for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n });
+  if (p.res) { for (const [stat, n] of Object.entries(allocate(p, p.pool))) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }                  // reparto según su build (builds.js)
+  else { const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
+    for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }
   if (p.pool > 0) w.command(p.id, { t: "stat", stat: "str", n: p.pool });
 }
 function buy(w, p, d, n = 1) {

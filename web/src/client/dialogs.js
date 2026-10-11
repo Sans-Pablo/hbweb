@@ -282,6 +282,9 @@ export function registerDialogs(gui, api) {
       g.put("interface_1", 19, 55, 250);
       g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
       g.aligned(0, 304, 270, "Smn Lv = level your SUMMON needs (not yours).", INK, { size: 10 }); g.aligned(0, 304, 284, "Teach your summon a new spell.", INK, { size: 10 });
+      { const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, over = lx >= 24 && lx <= 200 && ly >= 303 && ly <= 317, cost = 300 + 60 * me.level;      // reinicio de estadísticas (shared/systems/respec.js)
+        const armed = this.resetAt && performance.now() - this.resetAt < 4000;
+        g.text(24, 305, armed ? "[ Click again to confirm (" + cost + " gold) ]" : "[ Reset stats · " + cost + " gold ]", over ? "#fff" : armed ? "#c31919" : "rgb(8,0,66)", { size: 10, bold: true }); }
     },
     click(g, lx, ly, me) {
       let y = 0;
@@ -289,6 +292,7 @@ export function registerDialogs(gui, api) {
         if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!taught(bookSchool(me)?.comp, id)) api.learn(id); return true; }
         y += 18;
       }
+      if (lx >= 24 && lx <= 200 && ly >= 303 && ly <= 317) { if (this.resetAt && performance.now() - this.resetAt < 4000) { api.statReset(); this.resetAt = 0; } else this.resetAt = performance.now(); return true; }
       for (const [a, b, v] of SHOP_TAB) if (lx >= a + 11 && lx <= b + 11 && ly >= 248 && ly <= 260) this.view = v;
       return false;
     },

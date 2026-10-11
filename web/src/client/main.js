@@ -123,6 +123,7 @@ async function main() {
     restart: () => conn.send({ t: "respawn" }),
     stat: (k, n = 1) => conn.send({ t: "stat", stat: k, n }),
     learn: id => conn.send({ t: "learn", spell: id }),
+    statReset: () => conn.send({ t: "statreset" }),
   };
   registerDialogs(gui, guiApi);
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad

@@ -8,6 +8,8 @@ import { dist } from "../const.js";
 import * as Party from "./party.js";
 import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
 import * as Council from "./council.js";
+import * as Builds from "./builds.js";
+import * as Respec from "./respec.js";
 import { canFight } from "./combatsys.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
@@ -355,6 +357,7 @@ export function think(adv, p) {
   guildAI(adv, w, p, r, home);
   gather(adv, w, p, r, home);
   pets(adv, w, p, r, home);
+  rebuild(adv, w, p, r, home);
   expedition(adv, w, p, r, home);
   social(adv, w, p, r);
   // saludar a quien llega
@@ -705,6 +708,50 @@ function pets(adv, w, p, r, home) {
   const out = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === home.map.id) || (adv.maps[w.map.id]?.meta.teleports || [])[0];
   if (out && !b.travel) { b.travel = { x: out.x, y: out.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
   else if (!out && w.time - (r._rc || 0) > 8000) { r._rc = w.time; adv.command(p.id, { t: "recall" }); }
+}
+// ---- REPARTO NUEVO (build): de vez en cuando prueban otro reparto de puntos para descubrir builds mejores (builds.js). Van al mago de la tienda general
+// (Gandlf, reinicio de estadísticas de respec.js), recuperan sus puntos, los reparten según el nuevo build y miden cuánta experiencia por minuto sacan.
+function rebuild(adv, w, p, r, home) {
+  const b = p.bot;
+  if (p.dead) { r._reb = null; return; }
+  r.bperf ||= { name: Builds.buildOf(p), t0: w.time, exp0: p.exp };
+  if (!r._reb) {
+    if (w !== home || p.level < 12 || r._trip || r._delve || r._pet || b.owner != null || b.rest || b.travel || p.hp < p.maxHp * 0.7 || w.time < (r._rebAt ||= w.time + 600000 + Math.floor(w.rng() * 600000))) return;
+    r._rebAt = w.time + 900000 + Math.floor(w.rng() * 600000);
+    if (p.gold < Respec.respecCost(p) + 300 || w.time - r.bperf.t0 < 15 * 60000) return;                          // sin oro o sin haber probado el actual lo bastante
+    const hist = r.builds || [], best = Math.max(0, ...hist.map(h => h.rate)), now = Builds.perf(p, w), poor = best > 0 && now < best * 0.85, curious = hist.length < 4 && w.rng() < 0.3;
+    if (!poor && !curious) return;
+    const nb = Builds.nextBuild(p, w), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
+    if (!tp) return;
+    r._reb = { until: w.time + 300000, nb, done: false, tp: { x: tp.x, y: tp.y } };
+    blog(w, p, `Quiero probar otro reparto de puntos (${Builds.BUILDS[nb].es}): ${poor ? `mi build actual rinde ${Math.round(now)} exp/min y he visto ${Math.round(best)}` : "tengo curiosidad por ver si rinde más"}. Voy al mago a reiniciar mis estadísticas.`);
+    if (w.rng() < 0.6) speak(adv, p, `§you are going to the mage to reset your stats and try a new build (${Builds.BUILDS[nb].es.replace(/^./, c => c)})`);
+    return;
+  }
+  const d = r._reb;
+  if (w.time > d.until || p.hp < p.maxHp * 0.4) { r._reb = null; return; }
+  if (w === home) {
+    if (d.done) { r._reb = null; return; }
+    if (!b.travel) { b.travel = { x: d.tp.x, y: d.tp.y, w, until: w.time + 90000 }; b.path = null; b.goal = null; b.fails = 0; }
+    return;
+  }
+  if (!d.done) {
+    const mage = Respec.mageNear(w, p);
+    if (!mage) { let m = null; for (const e of w.ents.values()) if (e.kind === "citizen" && e.type === Respec.RESPEC.mageType) m = e; if (m && !b.travel) { b.travel = { x: m.x, y: m.y + 1, w, until: w.time + 30000 }; b.path = null; b.goal = null; b.fails = 0; } else if (!m) r._reb = null; return; }
+    if (w.busy(p) || w.time - (d.cmdAt || 0) < 2500) return;
+    d.cmdAt = w.time;
+    Builds.closeBuild(p, w);
+    if (adv.command(p.id, { t: "statreset" })) {
+      d.done = true; p.res.build = d.nb; r.bperf = { name: d.nb, t0: w.time, exp0: p.exp }; b.errand = 0;
+      blog(w, p, `Reinicié mis estadísticas y las reparto como «${Builds.BUILDS[d.nb].es}».`);
+      remember(p, "Reinicié mis estadísticas para probar un reparto «" + Builds.BUILDS[d.nb].es + "».", "I reset my stats to try a different build: " + d.nb + ".");
+      for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
+      if (p.pool > 0) adv.command(p.id, { t: "stat", stat: "str", n: p.pool });
+    } else if (++d.fails > 3) r._reb = null; else d.fails = (d.fails | 0) + 1;
+    return;
+  }
+  const out = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === home.map.id) || (adv.maps[w.map.id]?.meta.teleports || [])[0];
+  if (out && !b.travel) { b.travel = { x: out.x, y: out.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
 }
 // ---- fosos de Promise Land (INVENTO): cada zona de aparición de monstruos es un foso. Lo controla el bando con jugadores dentro (rect + 6 casillas) mientras el otro no tenga ninguno.
 // `adv.pits` (no se guarda): id → { side, since }. Los habitantes que lo aguantan suman tiempo (`qa.pvp.held`, meta «pit»).
