@@ -3,16 +3,16 @@
 //    encaja en ninguna regla es libre. tests/classgear.test.mjs lista todos para que no quede ninguno sin clasificar.
 //  - Niveles: las armas y armaduras con levelLimit > 30 se comprimen a 31..50 (acto 1, nivel máximo 50): applyGear al construir GameData.
 //  - Báculos: BerserkWand = Ice Wand (hielo), ResurWand = Darkness Staff (oscuridad), BlackMageTemple = Hero Staff (fuego). Los summons
-//    Frost/Tentocle, Liche y Demon exigen en la mano su báculo (o el maestro de su familia, ids 9001..9003 inventados).
+//    Frost, Liche y Demon exigen en la mano su báculo (o el maestro de su familia, ids 9001..9003 inventados).
 export const CLASSES = ["warrior", "mage", "summoner"];
 const W = "warrior", M = "mage", S = "summoner";
 
 // [patrón sobre el nombre, clases] por casilla de equipo; gana la primera que encaja. Sin coincidencia: libre.
 const RULES = {
-  1: [[/^[ae]HeroCap/, null], [/^Wizard-Hat/, [W, M]], [/^Wizard-Cap/, [W, S]], [/./, [W]]],
-  2: [[/Robe/, [M]], [/Leather|Ledder/, [S]], [/Plate|Chain|Scale|HeroArmor/, [W]]],
-  3: [[/^(Wizard|DarkMage)Hauberk/, [M]], [/^Hauberk/, [W, S]], [/^(Knight|DarkKnight|SangAh)/, [W]]],
-  4: [[/^ChainHose/, [W, M, S]], [/^DarkMageLeggings/, [M]], [/^(PlateLeggings|KnightPlateLeg|DarkKnightLeggings|SangAhLeggings)/, [W]]],
+  1: [[/^[ae]HeroCap/, [W]], [/^Wizard-Hat/, [W, M]], [/^Wizard-Cap/, [W, S]], [/./, [W]]],
+  2: [[/Robe/, [M]], [/Leather|Ledder/, [S]], [/Plate|Chain|Scale|HeroArmor/, [W]], [/Bodice|Tunic/, [W, M, S]]],
+  3: [[/^(Wizard|DarkMage)Hauberk/, [M]], [/^Hauberk/, [W, S]], [/^(Knight|DarkKnight|SangAh|[ae]Hero)/, [W]], [/Shirt|Chemise/, [W, M, S]]],
+  4: [[/^ChainHose/, [W, M, S]], [/^DarkMageLeggings/, [M]], [/^(PlateLeggings|KnightPlateLeg|DarkKnightLeggings|SangAhLeggings|[ae]HeroLeggings)/, [W]], [/Trousers|Skirt/, [W, M, S]]],
 };
 export function classesOf(d) {
   if (!d || d.type !== 1) return null;
@@ -40,7 +40,7 @@ export const isMaster = id => id in MASTERS;
 export const masterRows = data => Object.keys(MASTERS).map(id => data.items.get ? data.items.get(+id) : data.byId?.get(+id)).filter(Boolean);
 export const MASTER_LEVEL = 50;
 // Qué báculo exige cada especie de summon
-export const STAFF_FOR = { Frost: "ice", Tentocle: "ice", Liche: "dark", Demon: "fire" };
+export const STAFF_FOR = { Frost: "ice", Liche: "dark", Demon: "fire" };
 export const STAFF_MSG = { ice: "necesitas la Ice Wand en la mano", dark: "necesitas el Darkness Staff en la mano", fire: "necesitas el Hero Staff en la mano" };
 
 // ¿tiene el jugador en la mano el báculo de esa familia? (los bots lo ignoran)

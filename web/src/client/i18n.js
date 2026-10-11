@@ -130,7 +130,7 @@ const EN = {
   "solo para Guerrero": "warriors only", "solo para Mago": "mages only", "solo para Invocador": "summoners only",
   "solo para Guerrero / Mago": "warriors and mages only", "solo para Guerrero / Invocador": "warriors and summoners only", "solo para Mago / Invocador": "mages and summoners only",
   "necesitas la Ice Wand en la mano": "you need the Ice Wand in your hand", "necesitas el Darkness Staff en la mano": "you need the Darkness Staff in your hand", "necesitas el Hero Staff en la mano": "you need the Hero Staff in your hand",
-  "Báculo maestro: ": "Master staff: ", "Báculo de escuela: ": "School staff: ", "controla a Frost y Tentocle": "controls Frost and Tentocle", "controla al Liche": "controls the Lich", "controla al Demon": "controls the Demon",
+  "Báculo maestro: ": "Master staff: ", "Báculo de escuela: ": "School staff: ", "controla a Frost": "controls Frost", "controla al Liche": "controls the Lich", "controla al Demon": "controls the Demon",
   // ---- motivos de rechazo (servidor)
   "demasiado rápido": "too fast", "sin objetivo": "no target", "no tienes": "you do not have it", "sin puntos": "no points", "mapa no disponible": "map not available", "cargando el mapa, vuelve a intentarlo": "loading the map, try again", "ocupado o muerto": "busy or dead",
   "acércate al portal": "get close to the portal", "faltan los datos de los esqueletos; recarga la página": "skeleton data is missing; reload the page", "no se puede equipar": "cannot be equipped",

@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.62.1 · Ajuste de equipo (2026-10-12)
+- Tentocle vuelve a ser libre: solo Frost, Liche y Demon exigen su báculo.
+- Fuera el halo y las chispas de los báculos maestros: solo queda el tinte (más fuerte que el normal).
+- El color de cada báculo hace juego con su summon: Ice Wand azul hielo (Frost), Darkness Staff morado oscuro (Liche), Hero Staff naranja brasa (Demon).
+- Ninguna pieza de cabeza/cuerpo/brazos/piernas queda sin clase: Hero (gorro, hauberk, leggings) = Guerrero; ropa básica (Shirt, Tunic, Bodice, Trousers, Skirt...) = las tres. `tests/classgear.test.mjs` lo comprueba pieza a pieza.
+
 ## 0.62.0 · Equipo de clase (2026-10-12)
 - Cada clase solo equipa su armadura: Mago = túnica, ChainHose, Wizard Hauberk y Wizard-Hat; Guerrero = placas y cualquier casco; Invocador = cuero, ChainHose, Hauberk normal y Wizard-Cap. Lo que ya llevabas puesto se queda.
 - Para invocar a Frost/Tentocle hace falta la Ice Wand en la mano (antes BerserkWand), para el Liche el Darkness Staff (ResurWand) y para el Demon el Hero Staff. Cada báculo lleva un tinte del color de su summon.

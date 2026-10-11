@@ -185,7 +185,7 @@ export class Hud {
       }
       L.push(pos + (d.levelLimit ? " · nivel " + d.levelLimit : "") + (d.gender === 1 ? " · hombre" : d.gender === 2 ? " · mujer" : ""));
       const cl = classLabel(d); if (cl) L.push('<span style="color:' + (me && !classOk(me, d) ? "#e39a9a" : "#9fe39a") + '">Solo para: ' + cl + "</span>");
-      if (d.family) L.push('<span style="color:#9fe39a">' + (d.master ? "Báculo maestro: " : "Báculo de escuela: ") + ({ ice: "controla a Frost y Tentocle", dark: "controla al Liche", fire: "controla al Demon" })[d.family] + "</span>");
+      if (d.family) L.push('<span style="color:#9fe39a">' + (d.master ? "Báculo maestro: " : "Báculo de escuela: ") + ({ ice: "controla a Frost", dark: "controla al Liche", fire: "controla al Demon" })[d.family] + "</span>");
       const rs = realStats(d, it);
       L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");

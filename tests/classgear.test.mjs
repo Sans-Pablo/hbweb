@@ -24,6 +24,8 @@ ok("ChainHose(M)", [G.warrior, G.mage, G.summoner]); ok("PlateLeggings(M)", [G.w
 let n = 0;
 for (const d of data.items.values()) if (d.type === 1 && d.equipPos >= 1 && d.equipPos <= 4 && !d.master) { n++; assert.ok(d.name); }
 assert.ok(n > 50, "hay equipo que auditar");
+for (const d of data.items.values()) if (d.type === 1 && d.equipPos >= 1 && d.equipPos <= 4 && !d.master) assert.ok(classesOf(d)?.length, "sin clase: " + d.name + " (" + d.id + ")");
+ok("aHeroCap(M)", [G.warrior]); ok("Shirt(M)", [G.warrior, G.mage, G.summoner]);
 
 // 2. niveles: máximo 50, lo bajo no cambia
 assert.equal(remapLevel(20), 20); assert.equal(remapLevel(30), 30); assert.equal(remapLevel(120), MAX_GEAR_LEVEL);
