@@ -708,7 +708,13 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
     msg.textContent = "";
     pass.autocomplete = c ? "new-password" : "current-password";
   };
-  if (online) fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { if (v.version !== info.version) where.textContent += " · " + tr("tu cliente es la v") + v.version; }).catch(() => {});
+  if (online) fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => {
+    if (v.version === info.version) return;
+    where.textContent += " · " + tr("tu cliente es la v") + v.version;
+    const w = document.createElement("div"); w.style.cssText = "color:#e05a4a;font-weight:bold;font-size:12px;margin-top:6px";
+    w.textContent = tr("¡Aviso! El servidor está en otra versión que tu cliente: puede que lo nuevo no funcione (por ejemplo, comprar bolas nuevas). Reinicia el servidor o recarga la página (Ctrl+F5).");
+    where.append(w);
+  }).catch(() => {});
   const hint = box.querySelector(".hint");
   if (online && hint) hint.textContent = tr("Tu cuenta y tu personaje se guardan en el servidor: puedes entrar desde cualquier dispositivo.");
   for (const t of box.querySelectorAll(".tabs button")) t.onclick = () => setTab(t.dataset.tab === "new");

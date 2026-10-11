@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Aviso de versión (v0.58.1)",
+        "en": "Version warning (v0.58.1)"
+      },
+      "items": [
+        {
+          "es": "Si el servidor está en otra versión que tu cliente (por ejemplo no se reinició tras actualizar), la pantalla de entrada lo avisa en rojo.",
+          "en": "If the server runs a different version than your client (e.g. it was not restarted after an update), the login screen shows a red warning."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Supports independientes (v0.58.0)",
         "en": "Independent supports (v0.58.0)"
       },
