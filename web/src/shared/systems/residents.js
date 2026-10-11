@@ -99,6 +99,7 @@ function goalDone(p) {
 // SITUACIONES (no frases): el habitante ya no tiene diálogos escritos; cada ocasión de hablar es una descripción de lo que pasa y el modelo de lenguaje
 // (adv.llm, server/llm.mjs) lo dice con su voz. Sin modelo, el habitante calla (las acciones no dependen de hablar).
 const SIT = {
+  admire: "{n} has a fully grown, maximum level summon next to them; you notice it and comment on it, impressed",
   greet: "you meet {n} and greet them warmly", again: "you meet {n} again, you remember them and suggest hunting together",
   who: "someone asks who you are; answer with this: {s}", doing: "someone asks what you are doing; you are working on this goal: {g}",
   from: "someone asks where you come from; you come from {o}", fear: "someone asks what you fear; you are afraid of {f} (say it as a secret)",
@@ -396,13 +397,23 @@ export function think(adv, p) {
     if (e.kind !== "player" || adv.bots.has(e.id) || e.dead || dist(e, p) > 6) continue;
     if (w.time - (seen[e.name] || -1e9) < 300000) continue;
     seen[e.name] = w.time;
-    if (w.rng() < ARCH[r.arch].talk) { const again = relOf(p, e.name) > 0; speak(adv, p, fmt(p, again ? "again" : "greet", r.lang, e.name, w)); befriend(p, e.name, 1); }
+    if (w.rng() < ARCH[r.arch].talk) { const again = relOf(p, e.name) > 0; say2(adv, w, p, again ? "again" : "greet", e.name); befriend(p, e.name, 1); }
+    break;
+  }
+  // admirar un summon de nivel máximo ajeno
+  const adm = (r.admired ||= {});
+  for (const e of w.ents.values()) {
+    if (e.kind !== "player" || adv.bots.has(e.id) || e.dead || dist(e, p) > 8 || !e.bag) continue;
+    if (!e.bag.some(i => i.comp?.on && i.comp.lvl >= Sch.TRADE_LEVEL)) continue;
+    if (w.time - (adm[e.name] || -1e9) < 600000) continue;
+    adm[e.name] = w.time;
+    if (w.rng() < 0.8) { say2(adv, w, p, "admire", e.name); befriend(p, e.name, 1); }
     break;
   }
   // charla suelta con otro habitante o consigo mismo
   if (!p.bot.owner && w.time > (r.idleAt ||= w.time + 40000 + Math.floor(w.rng() * 90000))) {
     r.idleAt = w.time + 90000 + Math.floor(w.rng() * 150000);
-    if (w.rng() < ARCH[r.arch].talk) speak(adv, p, fmt(p, "idle", r.lang, "", w));
+    if (w.rng() < ARCH[r.arch].talk) say2(adv, w, p, "idle", "");
   }
 }
 
@@ -869,7 +880,7 @@ function social(adv, w, p, r) {
 // También aceptan o piden grupo, y de vez en cuando se reúnen junto a la tienda de Aresfarm a charlar.
 const worth = (w, i) => { const d = w.data.item(i.id); if (!d) return 1; const base = Math.max(5, Math.abs(d.price || 0) * 0.5), q = d.type === ITYPE.EQUIP ? itemLevel(d, i.attr, i.id) * 6 : 0; return Math.floor((base + q) * (i.count || 1)); };
 const priceFor = (rel, total) => (rel >= 6 ? 0 : Math.floor(total * (rel >= 3 ? 0.7 : 1)));
-const nameOf = (w, i) => (w.data.item(i.id)?.display || w.data.item(i.id)?.name || "?");
+const nameOf = (w, i) => (w.data.item(i.id)?.display || (w.data.item(i.id)?.name || "?").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " "));
 const langFor = (r, who) => r.hl?.[who] || r.lang;
 // Sin modelo de lenguaje, en los tratos hablan con frases fijas (si no, el comprador no sabría qué quiere el habitante)
 const CANNED = {
@@ -877,10 +888,15 @@ const CANNED = {
   toffer: ["Pongo {i} sobre la mesa, pido {p} de oro.", "I put {i} on the table, asking {p} gold."], tpay: ["Pongo {p} de oro por {i}.", "I put {p} gold for {i}."],
   tconfirm: ["Trato hecho, confirmo.", "Deal, I confirm."], twait: ["{n}, ¿qué me ofreces?", "{n}, what do you offer?"], task: ["{n}, ¿qué te interesa?", "{n}, what are you after?"],
   tbye: ["Será otra vez.", "Maybe next time."], tnothing: ["{n}, no tengo nada para ti ahora.", "{n}, I have nothing for you right now."], tno: ["{n}, ese precio no me conviene.", "{n}, that price doesn't suit me."],
+  greet: [["¡Hola, {n}!", "Hi, {n}!"], ["{n}, buenas. ¿Todo bien?", "{n}, hey. All good?"], ["Ey {n}, ¿cazamos juntos?", "Hey {n}, hunt together?"]],
+  again: [["¡{n}! Cuánto tiempo, ¿cazamos juntos?", "{n}! Long time, want to hunt together?"], ["Otra vez por aquí, {n}.", "You again, {n}."]],
+  idle: [["Hoy hay que seguir mejorando.", "Gotta keep improving today."], ["¿Alguien quiere formar grupo?", "Anyone want to party up?"], ["Qué bien se está por aquí.", "Nice around here."]],
+  admire: [["¡{n}, qué summon tan grande! ¿Es de nivel máximo?", "{n}, what a huge summon! Is it max level?"], ["Guau {n}, ese summon al máximo da miedo.", "Wow {n}, that maxed summon is scary."]],
   tnoneed: ["{n}, eso no me hace falta ahora.", "{n}, I don't need that right now."], tcounter: ["{n}, mi objeto vale más que eso.", "{n}, my item is worth more than that."],
 };
 const say2 = (adv, w, p, key, who, extra = {}) => {
-  const c = CANNED[key];
+  let c = CANNED[key];
+  if (c && Array.isArray(c[0])) c = c[Math.floor(w.rng() * c.length)];
   if (c && (typeof adv.llm !== "function" || adv.llm.ready === false)) {
     const t = c[langFor(p.res, who) === "en" ? 1 : 0].replace("{n}", who || "").replace("{i}", extra.i ?? "").replace("{p}", extra.p ?? "");
     adv.command(p.id, { t: "say", text: t.slice(0, 118) }); return;

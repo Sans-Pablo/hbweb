@@ -78,9 +78,10 @@ const auxOf = (w, boss, f) => [...w.ents.values()].filter(e => e.owner === boss.
   assert.ok(boss.shield, "con un cristal vivo sigue el escudo");
   w.killNpc(cr[2], null);
   assert.ok(!boss.shield && B.mitigate(w, boss, 500, p) === 500, "sin cristales se rompe");
-  let frosted = false, held = false;
-  for (let i = 0; i < 700 && !(frosted && held); i++) { tick(50); near(2); if (zonesOf(w, "frost").length) { const z = zonesOf(w, "frost")[0]; if (Math.abs(p.x - z.x) <= z.r && Math.abs(p.y - z.y) <= z.r) frosted = p.chillUntil > w.time || frosted; } if (sget(w, p, "hold")) held = true; }
-  assert.ok(frosted, "el suelo helado ralentiza");
+  let storms = false, held = false;
+  for (let i = 0; i < 700 && !(storms && held); i++) { tick(50); near(2); if ((w.dyn || []).some(f => f.type === 8 && f.owner === boss.id)) storms = true; if (sget(w, p, "hold")) held = true; }
+  assert.ok(storms, "el jefe glacial lanza Tormentas de Hielo");
+  assert.equal(zonesOf(w, "frost").length + zonesOf(w, "warn").filter(z => z.col === "#6ac8ff").length, 0, "sin cuadro ni suelo helado");
   assert.ok(held, "congelación del jugador sin compañero");
 }
 // ---- 4 dorado: furia, reflejo, fases, oro

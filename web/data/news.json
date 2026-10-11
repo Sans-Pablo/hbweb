@@ -11,6 +11,35 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Bots y jefe glacial (v0.50.7)",
+        "en": "Bots and ice boss (v0.50.7)"
+      },
+      "items": [
+        {
+          "es": "Al volver a entrar reapareces donde cerraste sesión (mapas fijos; no en criptas ni arena).",
+          "en": "You reappear where you logged out when you come back (fixed maps; not crypts or arena)."
+        },
+        {
+          "es": "Los bots saludan, charlan y comentan tu summon de nivel máximo aunque no haya modelo de lenguaje.",
+          "en": "Bots greet, chat and comment on your max-level summon even without a language model."
+        },
+        {
+          "es": "El jefe glacial de la cripta ya no marca cuadro ni suelo helado: solo lanza Tormentas de Hielo, más juntas según pierde vida.",
+          "en": "The crypt ice boss no longer draws a ground square or icy floor: it only casts Ice Storms, closer together as it loses health."
+        },
+        {
+          "es": "Al cambiar de summon, la magia elegida para F4 se reinicia.",
+          "en": "Changing summon resets the spell chosen for F4."
+        },
+        {
+          "es": "Los bots ya no dicen el nombre interno de los objetos en los tratos (Long Sword, no LongSword).",
+          "en": "Bots no longer say internal item names in trades (Long Sword, not LongSword)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Bots con armadura y conversación (v0.50.6)",
         "en": "Bots with armor and conversation (v0.50.6)"
       },

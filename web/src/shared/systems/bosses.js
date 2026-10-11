@@ -10,6 +10,7 @@ import { sget, sset, sclear } from "./status.js";
 import { damagePlayer } from "./combatsys.js";
 import { spawnFrom, companionHurt } from "./npcsys.js";
 import { newInst } from "./itemsys.js";
+import { addField, DYN } from "./fields.js";
 import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import * as Tal from "./talents.js";
@@ -131,9 +132,11 @@ function clones(w, n, b) {
 
 // ---------------------------------------------------------------- glacial
 const frostRadius = n => (hpr(n) > 0.66 ? 2 : hpr(n) > 0.33 ? 3 : 4);
+// Sin cuadro de aviso ni suelo helado: solo Tormentas de Hielo (las del hechizo), cada vez más juntas cuanto menos vida le queda.
 function frost(w, n, t, r = frostRadius(n)) {
-  zone(w, { kind: "warn", x: t.x, y: t.y, r, until: w.time + 1000, owner: n.id, col: "#6ac8ff" });
-  w.after(1000, () => { if (!n.dead) zone(w, { kind: "frost", x: t.x, y: t.y, r, until: w.time + 14000, owner: n.id }); });
+  const k = r >= 4 ? 3 : r >= 3 ? 2 : 1;                                   // r = 2/3/4 → 1/2/3 tormentas + la del objetivo
+  const spots = [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].slice(0, k + 1);
+  for (const [dx, dy] of spots) addField(w, DYN.ICESTORM, t.x + dx, t.y + dy, 6000, 0, n.id);
 }
 function freeze(w, n, t) {
   zone(w, { kind: "warn", x: t.x, y: t.y, r: 0, until: w.time + 700, owner: n.id, col: "#9fe0ff" });

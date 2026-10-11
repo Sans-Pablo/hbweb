@@ -249,6 +249,9 @@ export class Hud {
   renderBook(me) {
     const M = this.magicData || {};
     const ball = me.bag && me.bag.find(i => i.comp && i.comp.on), c = ball && ball.comp, school = c && SCHOOL_OF[c.sp];
+    const bu = ball ? ball.uid : 0;
+    if (this.ballUid !== undefined && this.ballUid !== bu && this.spell != null) { this.spell = null; }   // al cambiar de summon, la magia de F4 se reinicia
+    this.ballUid = bu;
     const key = [JSON.stringify(c && [c.sp, c.lvl, c.spells]), me.gold, me.stats.int, this.spell].join("|");
     if (this.bookKey === key) return;
     this.bookKey = key;

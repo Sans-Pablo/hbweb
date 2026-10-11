@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.7 · Bots y jefe glacial (2026-10-11)
+
+- Al volver a entrar reapareces donde cerraste sesión (mapas fijos; no en criptas ni arena).
+- Los bots saludan, charlan y comentan tu summon de nivel máximo aunque no haya modelo de lenguaje.
+- El jefe glacial de la cripta ya no marca cuadro ni suelo helado: solo lanza Tormentas de Hielo, más juntas según pierde vida.
+- Al cambiar de summon, la magia elegida para F4 se reinicia.
+- Los bots ya no dicen el nombre interno de los objetos en los tratos (Long Sword, no LongSword).
+
 ## 0.50.6 · Bots con armadura y conversación (2026-10-11)
 
 - Ctrl+0..9 abre la página correcta del libro de magia.

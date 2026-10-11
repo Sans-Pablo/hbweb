@@ -38,6 +38,7 @@ function hit(w, e, dmg, f) {
     damagePlayer(w, e, dmg, { id: f.owner || 0 }, f.type === DYN.FIRE || f.type === DYN.FIRE3 ? "fire" : f.type === DYN.ICESTORM ? "ice" : f.type === DYN.PCLOUD ? "poison" : undefined);
     return;
   }
+  if (e.kind === "npc" && !e.comp && f.owner && w.ents.get(f.owner)?.boss) return;       // los campos de un jefe no dañan a monstruos
   if (e.boss === 1 && f.type === DYN.FIRE) return;                    // el rey carmesí es inmune a sus llamas
   if (e.cfg.actionLimit === 1 || e.cfg.actionLimit === 2 || e.cfg.actionLimit === 4) return;
   dmg = Boss.mitigate(w, e, dmg, null, "field"); if (dmg <= 0) return;
