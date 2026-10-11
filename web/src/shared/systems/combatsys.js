@@ -72,17 +72,25 @@ export function hitPlayer(w, p, t) {
   const a = absorbOnHit(w.rng, t, ap);
   a.damage = Math.max(1, Math.round(a.damage * PVP_DMG));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
-  const wasAlive = !t.dead;
-  damagePlayer(w, t, a.damage, p);
-  if (wasAlive && t.dead) { p.ek = (p.ek || 0) + 1; p.kills = (p.kills || 0) + 1; w.emit({ t: "pvpkill", id: p.id, victim: t.id, name: t.name }); pvpBounty(w, p, t); }
-  else knockback(w, p, t, a.damage);
+  damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
+  if (!t.dead) knockback(w, p, t, a.damage);
 }
 
 // Promise Land: matar a un jugador enemigo compensa el riesgo (invento del port, para fomentar el combate): recompensa en oro según su nivel y su racha
 // de muertes, y su botín cae al suelo (como el de un monstruo de cripta profunda). Matar a quien lleva racha paga más.
-export function pvpBounty(w, k, v) {
-  const gold = Math.min(6000, Math.floor((150 + v.level * 45) * (1 + Math.min(5, v.ek || 0) * 0.25)));
-  k.gold = (k.gold || 0) + gold; v.ek = 0;
+// EK = enemy kills: muertes de jugadores de la otra ciudad. Es un contador acumulado que nunca baja; la racha que encarece la recompensa es aparte (`streak`).
+function pvpCredit(w, v, from) {
+  const k = from && (from.kind === "player" ? from : w.ents.get(from.id)), was = v.streak || 0;
+  v.streak = 0;
+  if (!w.pvp || !k || k.kind !== "player" || k === v) return;
+  v.dead = false; const ok = canFight(w, k, v); v.dead = true;                                    // canFight rechaza a los muertos: se evalúa como si aún viviera
+  if (!ok) return;
+  k.ek = (k.ek || 0) + 1; k.kills = (k.kills || 0) + 1; k.streak = (k.streak || 0) + 1;
+  w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was);
+}
+export function pvpBounty(w, k, v, streak = 0) {
+  const gold = Math.min(6000, Math.floor((150 + v.level * 45) * (1 + Math.min(5, streak) * 0.25)));
+  k.gold = (k.gold || 0) + gold;
   w.emit({ t: "bounty", id: k.id, victim: v.name, gold });
   const base = w.npcDb.Troll;
   if (!base) return;
@@ -153,6 +161,7 @@ export function damagePlayer(w, p, dmg, from, elem) {
     w.grid.release(p.x, p.y, p.id);
     w.emit({ t: "death", id: p.id, by: from.id });
     deathPenalty(w, p);
+    pvpCredit(w, p, from);
     return;
   }
   if (!w.busy(p) || p.act === ACT.DAMAGE) {

@@ -655,7 +655,14 @@ function pickSpecies(p, r) {
 function pvpPets(adv, w, p, r) {
   if (p.dead || w.time < (r._pvpPetAt ||= 0)) return;
   r._pvpPetAt = w.time + 2000;
-  const ball = ballOf(p), c = ball?.comp; if (!c || c.bad || c.down) return;
+  const ball = ballOf(p), c = ball?.comp; if (!c || c.bad) return;
+  if (c.down) {                                                                                       // su summon cayó: en Promise Land no se puede revivir (Gail está en la ciudad) → acaba la expedición con Recall y va al hospital
+    if (p.gold >= Comp.treatCost(p, c)) {
+      r._petAt = Math.min(r._petAt || 1e15, w.time + 3000);
+      if (r._trip && r._trip.until > w.time && w.time - p.lastCombat > 5000) { r._trip.until = w.time; blog(w, p, "Mi summon ha caído: salgo de Promise Land para revivirlo en el hospital de compañeros."); }
+    }
+    return;
+  }
   const live = liveOf(w, p);
   if (!live) { if (w.time - (r._petUseAt || 0) > 8000 && !w.busy(p)) { r._petUseAt = w.time; adv.command(p.id, { t: "use", uid: ball.uid }); blog(w, p, "Saco a mi summon: en Promise Land vale por un guerrero más."); } return; }
   const hf = live.hp / live.maxHp;                                                                          // lo cuidan: con poca vida lo retiran del combate y esperan a que se recupere

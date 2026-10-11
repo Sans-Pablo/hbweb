@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.2 · EKs, summons caídos y Promise Land (2026-10-11)
+
+- **EK (enemy kills)**: el contador ya no se pone a cero al morir; se acredita al matar a un enemigo de la otra ciudad con golpes, summons, magias o campos. La racha de la recompensa es aparte.
+- **Bots**: la meta de EKs atrae más a Promise Land; si su summon cae allí, salen con Recall y lo reviven en el hospital de compañeros.
+
 ## 0.50.1 · Arreglo: caída del servidor (2026-10-11)
 
 - **Corregido**: el servidor se caía al golpear un summon a un jugador enemigo en Promise Land (`defenseRatio` de un jugador). Eso causaba «conexión perdida» y reinicios.

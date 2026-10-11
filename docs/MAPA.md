@@ -32,7 +32,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botitems.js` · 117 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
 - `builds.js` · 36 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 251 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 260 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 252 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `council.js` · 102 · CONSEJO DE GRUPO (INVENTO del port). Cuando varios habitantes van juntos, qué hacen lo decide una discusión, como entre jugadores de verda
 - `debug.js` · 125 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
@@ -47,7 +47,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcsys.js` · 398 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 170 · Jugador: creación, guardado, recalculo de atributos, reaparición.
-- `residents.js` · 1169 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 1176 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 20 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
