@@ -57,6 +57,8 @@ export function canFight(w, p, t) {
   if (p.side > 0 && p.side === t.side) return false;
   return !(p.party && t.party && p.party.id === t.party.id);
 }
+// Multiplicador del daño entre jugadores (invento del port): subido para que un duelo se decida en unos 15-25 golpes, no en minutos; las pets y las pociones deciden el resto.
+export const PVP_DMG = 1.7;
 export function hitPlayer(w, p, t) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
@@ -68,6 +70,7 @@ export function hitPlayer(w, p, t) {
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap);
+  a.damage = Math.max(1, Math.round(a.damage * PVP_DMG));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   const wasAlive = !t.dead;
   damagePlayer(w, t, a.damage, p);

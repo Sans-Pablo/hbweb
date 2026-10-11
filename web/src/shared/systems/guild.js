@@ -8,6 +8,8 @@
 // Estado: p.guild = { name, rank, cape, boots } (en cada miembro conectado; se guarda { name, rank }). Registro: reg.guilds (name → G) en la aventura.
 // G = { name, master, members: { personaje: rango }, side, cape, boots, at, ethos? }. Eventos privados: {t:"guild", id, k, ...}, {t:"guildquery", id, from, guild},
 // {t:"guildchat", id, name, text, guild}.
+import { newInst } from "./itemsys.js";
+import * as Inv from "../inventory.js";
 export const MIN_LEVEL = 20, MIN_CHR = 20, MAX_MEMBERS = 20, SP_CHAT = 3, COLORS = 16;
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _-]{2,19}$/;
 
@@ -60,8 +62,22 @@ export function answer(w, p, yes) {
   if (!yes) { if (master) note(reg, master.id, { t: "guild", k: "refused", name: p.name }); return true; }
   if (Object.keys(g.members).length >= MAX_MEMBERS) return fail(w, p, "el guild está lleno");
   g.members[p.name] = 1; sync(reg, g);
+  giftGear(w, p, g);
   tellAll(reg, g, { t: "guild", k: "joined", name: p.name, guild: g.name });
   return true;
+}
+// INVENTO del port: al entrar, el Guildmaster regala unas botas y una capa en los colores del guild (una vez por guild; sin hueco o peso, no se entrega).
+function giftGear(w, p, g) {
+  const given = (p.guildGifts ||= []); if (given.includes(g.name)) return;
+  const out = [];
+  for (const [id, color] of [[451, g.boots | 0], [402, g.cape | 0]]) {
+    const d = w.data.item(id); if (!d) continue;
+    const inst = newInst(w, id, 1, { color });
+    if (Inv.canCarry(p, w.data, d, 1, inst) && Inv.addToBag(p, w.data, inst)) out.push(d.name);
+  }
+  if (!out.length) return;
+  given.push(g.name); if (given.length > 8) given.shift();
+  w.emit({ t: "guild", id: p.id, k: "gift", guild: g.name, master: g.master, items: out });
 }
 function drop(reg, g, name, k) {
   delete g.members[name];

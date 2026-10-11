@@ -175,6 +175,8 @@ export class Renderer {
     }
 
 
+    this.drawPetOrder(s, camX, camY);
+
     // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
     ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = "high";
     // 3) objetos en el suelo
@@ -259,6 +261,7 @@ export class Renderer {
     }
 
     if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
+    this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
     // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
     if (remaster && this.lighting !== false) {
@@ -405,6 +408,24 @@ export class Renderer {
 
   // arena de apuestas (systems/arena.js): arena de arena con borde discontinuo dorado sobre el suelo de Aresfarm
 
+  // Orden al summon: línea de puntos desde él hasta la casilla (gris, "ve allí") o hasta el objetivo (roja, "ataca"). Desaparece al cumplirse o a los 15 s; el summon que anda solo no dibuja nada.
+  drawPetOrder(s, camX, camY) {
+    const o = s.petOrder; if (!o) return;
+    const w = s.world, { ctx } = this, perf = performance.now();
+    const pet = [...w.ents.values()].find(e => e.comp && e.master === s.me?.id && !e.dead);
+    let tx, ty;
+    if (o.kind === "go") { tx = o.x; ty = o.y; if (pet && pet.x === tx && pet.y === ty) o.done = true; }
+    else { const t = w.ents.get(o.target); if (!t || t.dead) o.done = true; else { tx = t.x; ty = t.y; } }
+    if (!pet || o.done || perf - o.at > 15000) { s.petOrder = null; if (o.done || !pet) o.at = -1e9; return; }
+    const atk = o.kind === "atk", fade = Math.min(1, (15000 - (perf - o.at)) / 1500);
+    ctx.save(); ctx.lineWidth = 2; ctx.setLineDash([3, 6]); ctx.lineCap = "round";
+    ctx.strokeStyle = atk ? "rgba(255,70,60," + 0.85 * fade + ")" : "rgba(200,200,205," + 0.8 * fade + ")"; ctx.lineDashOffset = -perf / 60;
+    ctx.beginPath(); ctx.moveTo(pet.x * T + 16 - camX, pet.y * T + 18 - camY); ctx.lineTo(tx * T + 16 - camX, ty * T + 18 - camY); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = atk ? "rgba(255,70,60," + 0.9 * fade + ")" : "rgba(200,200,205," + 0.9 * fade + ")";
+    ctx.beginPath(); ctx.arc(tx * T + 16 - camX, ty * T + 18 - camY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   drawPortals(s, camX, camY) {
     const { ctx } = this;
     for (const gate of s.world.map?.portals || []) {
@@ -507,6 +528,7 @@ export class Renderer {
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
     else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
+    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#12002a", 0.45);        // Liche: tonos más oscuros y tenebrosos
     if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
     if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
     if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
@@ -579,7 +601,7 @@ export class Renderer {
     ctx.font = "12px Tahoma, Verdana, sans-serif"; ctx.textAlign = "left";
     lines.forEach(([text, rgb], i) => {
       text = t(text);
-      const lx = Math.round(x - 16), ly = Math.round(y + 12 + i * 14);
+      const lx = Math.round(x - 16), ly = Math.round(y + 18 + i * 14);
       ctx.fillStyle = "#000"; ctx.fillText(text, lx + 1, ly); ctx.fillText(text, lx, ly + 1); ctx.fillText(text, lx + 1, ly + 1);
       ctx.fillStyle = "rgb(" + rgb + ")"; ctx.fillText(text, lx, ly);
     });
@@ -598,6 +620,20 @@ export class Renderer {
     ctx.fillStyle = "#000"; ctx.fillText(text, x + 1, y + 1);
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
+  }
+
+  // casillas de teletransporte (p. ej. la entrada a Promise Land en el borde del mapa): rombo azul que late, para saber dónde pisar
+  drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows) {
+    const tps = s.world?.teleports; if (!tps?.size) return;
+    const { ctx } = this, k = 0.5 + 0.5 * Math.sin(performance.now() / 300);
+    for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) {
+      const tx = tx0 + i, ty = ty0 + j;
+      if (!tps.has(this.grid.idx(tx, ty))) continue;
+      const x = tx * T - camX + T / 2, y = ty * T - camY + T / 2;
+      ctx.fillStyle = "rgba(90,170,255," + (0.12 + 0.14 * k) + ")";
+      ctx.beginPath(); ctx.moveTo(x, y - T / 2); ctx.lineTo(x + T / 2, y); ctx.lineTo(x, y + T / 2); ctx.lineTo(x - T / 2, y); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "rgba(170,225,255," + (0.5 + 0.4 * k) + ")"; ctx.lineWidth = 1.5; ctx.stroke();
+    }
   }
 
   drawGrid(camX, camY, tx0, ty0, cols, rows) {

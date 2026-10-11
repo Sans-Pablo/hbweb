@@ -1,7 +1,7 @@
 import { drawBall } from "./compicon.js";
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
-import { getLang, setLang } from "./i18n.js";
+import { getLang, setLang, t } from "./i18n.js";
 import { itemDef } from "./names.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { packKey } from "./names.js";
@@ -165,7 +165,7 @@ export function registerDialogs(gui, api) {
       this.sync(me);
       for (let i = this.order.length - 1; i >= 0; i--) {
         const it = me.bag.find(b => b.uid === this.order[i]), d = it && itemDef(it.id);
-        if (!d || this.equipped(me, it.uid)) continue;
+        if (!d || this.equipped(me, it.uid) || api.disabled?.(it.uid)) continue;   // un objeto en espera de venta no tapa a los de debajo
         const [x, y] = this.pos(it);
         if (g.hitGame(packKey(d), d.spriteFrame, x, y, lx, ly)) return { it, d, x, y };
       }
@@ -463,27 +463,68 @@ export function registerDialogs(gui, api) {
   gui.register(skill);
 
   // ------------------------------------------------------------ 10: historial de chat (F9). api.chatLog: más nuevo primero, {t, type}
-  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 5: "rgb(127,194,255)", 6: "rgb(255,160,96)", 7: "rgb(143,224,143)", 8: "rgb(214,160,255)", 10: "rgb(180,255,180)", 20: "rgb(150,150,170)" };
-  const MAXSCROLL = 500;
+  // Panel propio (más grande que el original): filtros por canal y líneas largas partidas en varias filas.
+  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 5: "rgb(127,194,255)", 6: "rgb(255,160,96)", 7: "rgb(143,224,143)", 8: "rgb(214,160,255)", 10: "rgb(180,255,180)" };
+  const CHAT_TABS = [["Todo", null], ["Chat", [0, 6, 7]], ["Grupo", [5]], ["Clan", [8]], ["Sistema", [1, 2, 3, 4, 10]]];
+  const CW = 520, CH = 300, CTOP = 28, CLINE = 14, CROWS = Math.floor((CH - CTOP - 10) / CLINE);
+  let chatWrap = { key: "", rows: [] };
+  const wrapChat = (g, tab, wpx) => {
+    const log = api.chatLog, key = tab + "|" + log.length + "|" + (log[0]?.t || "");
+    if (chatWrap.key === key) return chatWrap.rows;
+    const types = CHAT_TABS[tab][1], c = g.ctx, rows = [];
+    c.font = "11px Tahoma, Verdana, sans-serif";
+    for (const e of log) {
+      if (types && !types.includes(e.type)) continue;
+      const words = String(e.t).split(" "), lines = []; let cur = "";
+      for (const w of words) {
+        const tryS = cur ? cur + " " + w : w;
+        if (cur && c.measureText(tryS).width > wpx) { lines.push(cur); cur = "  " + w; } else cur = tryS;
+      }
+      lines.push(cur);
+      for (let i = lines.length - 1; i >= 0; i--) rows.push({ s: lines[i], col: CHAT_COL[e.type] || CHAT_COL[0] });   // más nuevo primero; dentro del mensaje, de abajo arriba
+      if (rows.length > 800) break;
+    }
+    chatWrap = { key, rows };
+    return rows;
+  };
   gui.register({
-    id: 10, x: 215, y: 393, w: 364, h: 162, view: 0,
+    id: 10, x: 140, y: 250, w: CW, h: CH, view: 0, tab: 0,
     draw(g) {
-      g.put("gamedialog_1", 4, 0, 0); g.put("dialogtext_0", 22, 0, 0);
-      this.view = Math.max(0, Math.min(MAXSCROLL - 8, this.view));
-      g.put("gamedialog_1", 7, 346, 33 + 105 - Math.floor(this.view * 105 / (MAXSCROLL - 8)));
-      const log = api.chatLog;
-      for (let i = 0; i < 8; i++) {
-        const e = log[i + this.view]; if (!e) continue;
-        g.text(25, 127 - i * 13, e.t, CHAT_COL[e.type] || CHAT_COL[0], { shadow: true, size: 11 });
+      const c = g.ctx, wpx = CW - 40;
+      c.fillStyle = "rgba(20,16,10,.88)"; c.fillRect(0, 0, CW, CH); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, CW - 2, CH - 2);
+      const rows = wrapChat(g, this.tab, wpx), maxView = Math.max(0, rows.length - CROWS);
+      this.view = Math.max(0, Math.min(maxView, this.view));
+      let tx = 8;
+      CHAT_TABS.forEach(([n], i) => {
+        const w = Math.ceil(c.measureText(t(n)).width) + 18;
+        c.fillStyle = i === this.tab ? "#6a5430" : "#3a2e1c"; c.fillRect(tx, 6, w, 18); c.strokeStyle = "#8a7448"; c.lineWidth = 1; c.strokeRect(tx + .5, 6.5, w - 1, 17);
+        g.text(tx + w / 2, 9, n, i === this.tab ? "#fff" : "#c8b48a", { align: "center", size: 11 });
+        tx += w + 4;
+      });
+      for (let i = 0; i < CROWS; i++) {
+        const r = rows[i + this.view]; if (!r) continue;
+        g.text(10, CH - 10 - CLINE - i * CLINE, r.s, r.col, { shadow: true, size: 11 });
       }
+      const th = CH - CTOP - 10;                                  // barra de desplazamiento
+      c.fillStyle = "#2a2014"; c.fillRect(CW - 18, CTOP, 8, th);
+      if (maxView > 0) { const kh = Math.max(14, th * CROWS / rows.length); c.fillStyle = "#a88a50"; c.fillRect(CW - 18, CTOP + (th - kh) * (1 - this.view / maxView), 8, kh); }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
-      if (m.down && g.order[g.order.length - 1] === 10) {
-        if (lx >= 336 && lx <= 361 && ly >= 28 && ly <= 140) this.view = MAXSCROLL - 8 - Math.floor(((MAXSCROLL - 8) * (ly - 28)) / 105);
-        if (lx >= 336 && lx <= 361 && ly > 18 && ly < 28) this.view = MAXSCROLL - 8;
-        if (lx >= 336 && lx <= 361 && ly > 140 && ly < 163) this.view = 0;
-      }
+      if (m.down && this.sb && maxView > 0) this.view = Math.round(maxView * (1 - Math.max(0, Math.min(1, (ly - CTOP) / th))));
+      if (!m.down) this.sb = false;
+      this.rows = rows;
     },
-    click(g, lx) { return lx >= 336 && lx <= 361; },
-    wheel(g, dir) { this.view += dir > 0 ? 1 : -1; },
+    click(g, lx, ly) {
+      if (lx >= CW - 22 && ly >= CTOP) { this.sb = true; return true; }
+      if (ly >= 6 && ly <= 24) {
+        let tx = 8; const c = g.ctx; c.font = "11px Tahoma, Verdana, sans-serif";
+        for (let i = 0; i < CHAT_TABS.length; i++) {
+          const w = Math.ceil(c.measureText(t(CHAT_TABS[i][0])).width) + 18;
+          if (lx >= tx && lx <= tx + w) { this.tab = i; this.view = 0; return true; }
+          tx += w + 4;
+        }
+      }
+      return false;
+    },
+    wheel(g, dir) { this.view += dir > 0 ? 2 : -2; },
   });
 }

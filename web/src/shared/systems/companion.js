@@ -11,6 +11,7 @@ import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
 import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
+import { foeOf } from "./npcsys.js";
 
 export const MAX_COMP_LEVEL = 50;
 // Tamaño por etapas: el compañero cambia de tamaño al llegar a estos niveles (10 joven, 25 veterano, 40 élite, 50 tamaño real).
@@ -171,7 +172,7 @@ export function setTarget(w, p, targetId) {
   const t = w.ents.get(targetId);
   const pet = [...w.ents.values()].find(e => e.comp && e.master === p.id && !e.dead);
   if (!pet) return w.reject(p, { t: "pettarget" }, "no tienes compañero fuera");
-  if (!t || t.dead || t.kind !== "npc" || t.master || Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) > 16) return w.reject(p, { t: "pettarget" }, "objetivo no válido");
+  if (!t || t.dead || (t.kind !== "npc" && !(t.kind === "player" && w.pvp)) || (t.master && !foeOf(w, p, t)) || Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) > 16) return w.reject(p, { t: "pettarget" }, "objetivo no válido");
   pet.cTarget = t.id;
   w.emit({ t: "pettarget", id: p.id, target: t.id, nm: pet.nick, tn: t.ghost ? "Fantasma skeleton" : t.name });
   return true;

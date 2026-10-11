@@ -98,3 +98,20 @@ export function wish(w, p, gear, bad = new Set(), usableFn = canWear) {
   }
   return best;
 }
+
+// DESEO PARA UN AMIGO: la pieza de la tienda que más mejoraría el equipo de un amigo conectado (si el bot sobra de oro la compra y se la entrega: ver residents.js «ayudar a los amigos»).
+export function friendWish(w, p, gear, friends = []) {
+  let best = null;
+  for (const { q, rel } of friends) {
+    if (q === p || q.dead) continue;
+    for (const [slot, list] of gear) {
+      const have = wornLevel(w, q, list[0] || { equipPos: slot });
+      for (const d of list) {
+        if (!canWear(q, d)) continue;
+        const gain = (itemLevel(d) - have) * rate(rel);
+        if (itemLevel(d) - have > have * 0.25 + 3 && (!best || gain - d.price / 400 > best.gain - best.d.price / 400)) best = { d, q, gain, price: d.price };
+      }
+    }
+  }
+  return best;
+}

@@ -13,6 +13,7 @@ export function miniOf(sp, frames) {
 // Color de la bola de cada especie: el complementario del color medio de su sprite (contraste), o uno fijo si el sprite es gris/blanco/negro
 const tints = new Map();
 function tintOf(g, sp, m) {
+  if (sp === "Liche") return "#1c0630";                                      // el Liche es nigromante: bola en tonos oscuros, casi negro violáceo
   if (tints.has(sp)) return tints.get(sp);
   const f = g.spr.frame(m.key, m.f); if (!f || !g.spr.ready(m.key)) return null;
   const [sx, sy, w, h] = f, c = document.createElement("canvas"); c.width = w; c.height = h;

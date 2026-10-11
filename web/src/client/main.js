@@ -68,6 +68,7 @@ async function main() {
     : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps, clock: () => new Date().getMinutes() }));
   if (online) await Promise.all(Object.values(assets.maps).map(m => m.ensure?.()));     // el servidor no espera: las rejillas se bajan antes
   status.style.display = "none";
+  { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   let world = conn.state;
   if (conn.observing) observerBar(conn);
@@ -362,7 +363,7 @@ async function main() {
     // Alt + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
     petGo(x, y) { conn.send({ t: "petgo", x, y }); },
     petOrder(ent) {
-      if (ent && ent.kind === "npc" && !ent.master) conn.send({ t: "pettarget", target: ent.id });
+      if (ent && (ent.kind === "npc" || (ent.kind === "player" && ent.id !== pid))) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
     },
     isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
@@ -598,7 +599,7 @@ async function main() {
     mob?.update(me, world);
     renderer.render({
       world, me, dt, fx,
-      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, clickFx: ctl.clickFx,
+      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);

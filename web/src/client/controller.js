@@ -69,12 +69,21 @@ export class Controller {
   get world() { return this.conn.state; }
   get me() { return this.world.ents.get(this.conn.pid); }
 
+  // ¿es un jugador al que puedo atacar aquí? (misma regla que combatsys.canFight, que es la que decide en el servidor)
+  enemyPlayer(e) {
+    const me = this.me, w = this.world;
+    if (!me || e.kind !== "player" || e === me || w.map?.id !== "2ndmiddle" || w.safeAt?.(me.x, me.y) || w.safeAt?.(e.x, e.y)) return false;
+    if (me.side > 0 && me.side === e.side) return false;
+    return !(me.party && e.party && me.party.id === e.party.id);
+  }
+
   // monstruo bajo el cursor: el sprite ocupa la casilla de los pies y lo que hay encima
   pick(wx, wy, kind = "npc") {
     let best = null, bestD = 1e9;
     const time = this.world.time;
     for (const e of this.world.ents.values()) {
-      if (e.kind !== kind || e.dead || e.master) continue;                  // un seguidor (compañero) no se ataca
+      if (e.dead || e.master) continue;                                     // un seguidor (compañero) no se ataca
+      if (e.kind !== kind && !(kind === "npc" && this.enemyPlayer(e))) continue;   // en Promise Land también se pueden atacar los jugadores enemigos
       const [px, py] = posOf(e, time);
       const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k));
       const h = Math.max(30, this.r.mobHeight(key, f));

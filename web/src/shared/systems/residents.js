@@ -164,7 +164,17 @@ export function attach(w, p, saved) {
 }
 // Habla del habitante. `text` = "§situación" (o "@§…" para el chat de guild): se pide al modelo de lenguaje en cola (una petición a la vez, las más viejas se
 // descartan) y, si responde a tiempo, se dice; sin modelo no dice nada. Texto sin "§" se dice tal cual (solo lo escrito por el modelo o por un humano).
+// Saca el texto hablado de una respuesta del modelo aunque venga como JSON roto ({"say":"…","do":…), con comillas sueltas o con llaves: nunca se lee código en el chat.
+export function cleanSay(t) {
+  let s = String(t ?? "");
+  const m = /"say"\s*:\s*"((?:[^"\\]|\\.)*)/.exec(s);
+  if (m) { try { s = JSON.parse('"' + m[1] + '"'); } catch { s = m[1].replace(/\\"/g, '"'); } }
+  else if (/^\s*[{[]/.test(s) || /"(?:do|say)"\s*:/.test(s)) s = s.replace(/"(?:do|say)"\s*:\s*"?[a-z_]*"?,?/gi, "").replace(/[{}[\]"]/g, "");
+  return s.replace(/\s+/g, " ").trim();
+}
 export function speak(adv, p, text) {
+  if (!text) return;
+  if (!/^[@$!~]?§/.test(text)) text = cleanSay(text);
   if (!text) return;
   const m = /^([@$!~]?)§(.*)$/s.exec(text);
   if (!m) { adv.command(p.id, { t: "say", text: Human.typo(adv, p, text.replace(/\s+/g, " ").slice(0, 118)) }); return; }
@@ -190,7 +200,7 @@ function pumpSay(adv) {
     adv._sayBusy = true;
     const r = it.p.res, ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` : "";
     Promise.resolve(adv.llm({ task: "say", who: it.p.name, lang: it.lang, system: describe(it.p, it.lang) + ctx, from: "situation", text: it.sit }))
-      .then(t => { if (!t || it.p.dead) return; const tx = String(t).replace(/\s+/g, " ").slice(0, 118); if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + (it.pre ? tx : Human.typo(adv, it.p, tx)) }); })
+      .then(t => { if (!t || it.p.dead) return; const tx = cleanSay(t).slice(0, 118); if (!tx) return; if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + (it.pre ? tx : Human.typo(adv, it.p, tx)) }); })
       .catch(() => {}).finally(() => { adv._sayBusy = false; setTimeout(() => pumpSay(adv), 0); });
     return;
   }
@@ -275,14 +285,14 @@ function groundedFacts(adv, w, p, human) {
 function askGrounded(adv, w, p, human, text, lang) {
   const r = p.res, n = human.name, { facts, acts } = groundedFacts(adv, w, p, human);
   const rep = { at: w.time + 4500, text: "", to: n, lang, depth: 0, act: null };
-  p.bot.hold = Math.max(p.bot.hold || 0, w.time + 9000); p.bot.path = null;          // atiende a quien le habla: se queda quieto mientras piensa y contesta
+  p.bot.hold = Math.max(p.bot.hold || 0, w.time + 9000); p.bot.path = null;          // atiende a quien le habla: se queda charlando (22 s; cada mensaje nuevo renueva el plazo)
   r.reply = rep; adv._reflecting ||= false;
   const sys = describe(p, lang) + " FACTS: " + facts + " ALLOWED ACTIONS: " + (acts.length ? acts.map(a => a.split(" ")[0]).join(", ") + ", none" : "none only") + ".";
   Promise.resolve(adv.llm({ task: "act", who: p.name, lang, system: sys, from: n, text })).then(t => {
     if (!t || r.reply !== rep) return;
     let j = null; try { const m = /\{.*\}/s.exec(String(t)); j = m && JSON.parse(m[0]); } catch {}
-    if (j && typeof j === "object") { rep.text = String(j.say || "").slice(0, 118); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
-    else { rep.text = String(t).slice(0, 118); fallbackAct(); }
+    if (j && typeof j === "object") { rep.text = cleanSay(j.say).slice(0, 118); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
+    else { rep.text = cleanSay(t).slice(0, 118); const a = /"do"\s*:\s*"([a-z_]+)/.exec(String(t))?.[1]; if (a && acts.some(x => x.split(" ")[0] === a)) rep.act = a; fallbackAct(); }
   }).catch(() => fallbackAct());
   // si el modelo falla o no devuelve JSON, una petición clara de grupo se atiende igualmente (hechos reales, sin frases)
   function fallbackAct() { if (r.reply === rep && !rep.act && intentOf(text) === "party" && acts.some(x => x.startsWith("party_follow")) && relOf(p, n) >= 1) rep.act = "party_follow"; }
@@ -304,7 +314,7 @@ function queueReply(adv, w, p, human, text, depth = 0) {
   r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
   if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // el modelo contesta a lo que dijo el interlocutor (sin él, calla)
     const rep = r.reply; rep.at += 3000; rep.text = "";
-    Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text })).then(t => { if (t && r.reply === rep) rep.text = String(t); }).catch(() => {});
+    Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text })).then(t => { if (t && r.reply === rep) rep.text = cleanSay(t); }).catch(() => {});
   }
 }
 
@@ -314,6 +324,7 @@ export function think(adv, p) {
   const r = p.res, w = adv.worldFor(p.id);
   if (!r || w.time < r.next) return;
   r.next = w.time + 500; r._w = w;
+  { let es = 0, en = 0; for (const e of w.ents.values()) if (e.kind === "player" && e.uiLang && !adv.bots.has(e.id)) e.uiLang === "en" ? en++ : es++; if (es + en) r.lang = en > es ? "en" : "es"; }     // todos hablan el idioma de los clientes presentes
   Council.tick(adv, CH);                                                                  // los grupos debaten qué hacer (council.js)
   const home = adv.homeOf(p);
   if (r.greply && w.time >= r.greply.at) { const g = r.greply; r.greply = null; if (!p.dead && p.guild) gsay(adv, p, g.text); }
@@ -460,6 +471,8 @@ function qaTick(adv, w, p, r) {
     report(adv, p, "bug", "stuck:" + (w.map.id || "") + ":" + (p.x >> 3) + "," + (p.y >> 3), `Me quedo parado/atascado cerca de (${p.x},${p.y}) en ${w.map.name || w.map.id}.`, `I'm stuck near (${p.x},${p.y}) in ${w.map.name || w.map.id}.`);
   }
   if (p.weight > p.maxLoad * 0.92) report(adv, p, "comfort", "weight", `Voy casi al límite de peso (${p.weight}/${p.maxLoad}) y no lo he visto avisar.`, `I'm near the weight limit (${p.weight}/${p.maxLoad}) and nothing warned me.`);
+  { const pb = p.bag.find(i => i.comp);                                                    // le pone un nombre propio a su summon (una vez): más cariño
+    if (pb && !r.petNamed) { r.petNamed = 1; const PETN = ["Bruno", "Luna", "Kiko", "Sombra", "Nube", "Rayo", "Chispa", "Toby", "Mochi", "Fénix", "Copo", "Ámbar", "Trufa", "Thor", "Milo", "Nala", "Bola", "Pipo"]; if (Comp.rename(w, p, PETN[Math.floor(w.rng() * PETN.length)])) { blog(w, p, `Le pongo nombre a mi summon: ${pb.comp.nm}.`); remember(p, "Bauticé a mi summon " + pb.comp.nm + ".", "I named my summon " + pb.comp.nm + "."); } } }
   { const ball = p.bag.find(i => i.comp && i.comp.on), lv = ball && liveOf(w, p);                       // summons: ¿sigue a su dueño?
     if (ball && !lv && !ball.comp.down && !w.fightZone && w.map.kind !== "dungeon") { if ((r._petGone = (r._petGone | 0) + 1) >= 3) report(adv, p, "bug", "pet-missing", `Mi summon ${ball.comp.nm} figura como invocado pero no aparece en el mapa (${w.map.name || w.map.id}).`, `My summon ${ball.comp.nm} counts as summoned but is not on the map (${w.map.name || w.map.id}).`); } else r._petGone = 0;
     if (lv && dist(p, lv) > 18 && !b.travel) { if ((r._petFar = (r._petFar | 0) + 1) >= 3) report(adv, p, "bug", "pet-far", `Mi summon ${ball.comp.nm} se queda a ${dist(p, lv)} casillas de mí y no me alcanza (${w.map.name || w.map.id}, ${p.x},${p.y}).`, `My summon ${ball.comp.nm} stays ${dist(p, lv)} tiles away and doesn't catch up (${w.map.name || w.map.id}, ${p.x},${p.y}).`); } else r._petFar = 0; }
@@ -635,7 +648,22 @@ const wantsMoreBalls = (p, r) => {            // metas de vida: muchos summons d
 function pickSpecies(p, r) {
   if (r.arch === "scholar") { const own = new Set(balls(p).map(i => i.comp.sp)), free = MAGE_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
   let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
+// En Promise Land un summon es media pelea: lo sacan (si no está), lo ponen en modo ataque y le señalan al rival (jugador o su summon). Así entrenan a sus summons contra los de los demás.
+function pvpPets(adv, w, p, r) {
+  if (p.dead || w.time < (r._pvpPetAt ||= 0)) return;
+  r._pvpPetAt = w.time + 2000;
+  const ball = ballOf(p), c = ball?.comp; if (!c || c.bad || c.down) return;
+  const live = liveOf(w, p);
+  if (!live) { if (w.time - (r._petUseAt || 0) > 8000 && !w.busy(p)) { r._petUseAt = w.time; adv.command(p.id, { t: "use", uid: ball.uid }); blog(w, p, "Saco a mi summon: en Promise Land vale por un guerrero más."); } return; }
+  const hf = live.hp / live.maxHp;                                                                          // lo cuidan: con poca vida lo retiran del combate y esperan a que se recupere
+  if (hf < 0.3 && c.mode !== "peace") { adv.command(p.id, { t: "petmode", mode: "peace" }); if (w.time - (r._careLog || 0) > 15000) { r._careLog = w.time; blog(w, p, "Mi summon está muy herido (" + Math.round(hf * 100) + "%): lo retiro para que no muera."); } return; }
+  if (c.mode === "peace") { if (hf >= 0.7) adv.command(p.id, { t: "petmode", mode: "attack" }); return; }
+  const tg = p.bot.target; let foe = tg && (tg.kind === "player" || (tg.comp && tg.master)) ? tg : null;
+  if (foe) { const fp = [...w.ents.values()].find(e => e.comp && e.master === foe.id && !e.dead && dist(p, e) <= 12); if (fp && live.hp >= live.maxHp * 0.5) foe = fp; }       // si su summon lo protege y el mío está sano: primero summon contra summon
+  if (foe && live.cTarget !== foe.id && dist(p, foe) <= 14) { adv.command(p.id, { t: "pettarget", target: foe.id }); if (foe.comp && w.time - (r._sparLog || 0) > 20000) { r._sparLog = w.time; blog(w, p, "Mi summon se enfrenta al summon de " + (w.ents.get(foe.master)?.name || "un rival") + ": así los dos suben de nivel."); } }
+}
 function pets(adv, w, p, r, home) {
+  if (w.pvp) return pvpPets(adv, w, p, r);
   if (p.dead || w.pvp || w.map.kind === "dungeon" || w.time < (r._petThink ||= 0)) return;
   r._petThink = w.time + 2500;
   const b = p.bot, live = liveOf(w, p);

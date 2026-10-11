@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.0 · Summons en el PvP (2026-10-11)
+- Energy Strike: las bolas ahora salen del lanzador hacia el objetivo (antes se iban abajo a la derecha).
+- Los summons pelean en Promise Land contra jugadores y summons enemigos; los bots los sacan, los señalan a un rival, los retiran con poca vida y atacan a los summons que les amenazan.
+- PvP más ágil: el daño entre jugadores sube un 70 % para que los duelos no duren minutos.
+- Ventana de chat (F9) nueva: más grande, con filtros (Todo, Chat, Grupo, Clan, Sistema), saltos de línea y barra de scroll; el registro del HUD es más ancho.
+- Orden al summon: línea de puntos gris hasta la casilla a la que lo mandas y roja hasta el objetivo que le ordenas atacar (Alt + clic; también sobre jugadores y summons rivales en Promise Land).
+- La bola y el sprite del Liche tienen tonos más oscuros y tenebrosos.
+
 ## 0.49.0 · Vida propia, grupos y builds (2026-10-11)
 - Habitantes con vida propia: horarios de conexión según la hora, descansos, pausas AFK, despistes, erratas al escribir y charla espontánea.
 - Panel de admin: tarjeta «Conexiones» para elegir qué bots se conectan (on / off / auto) y cuántos como mínimo; columna de build y parties con su debate.

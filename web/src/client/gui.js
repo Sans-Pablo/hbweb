@@ -390,7 +390,11 @@ export class Gui {
     if (!fr || !img || !img.naturalWidth) return;
     const [sx, sy, , , px, py] = fr, w = 37, h = 41, k = 554 - 548 - py, c = this.ctx;
     c.drawImage(img, sx + (xa - px), sy + k, w, h, xb, 554, w, h);
-    this.put("summons_icon", 0, xa, 554);
+    this.summonsIcon(0, xa);
+  }
+  // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
+  summonsIcon(f, x) {
+    const c = this.ctx; c.save(); c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)
@@ -526,7 +530,7 @@ export class Gui {
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
       const icons = [[410, 6, 2, "Character"], [447, 8, 0, "Summons"], [484, 7, 1, "Inventory"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"]];
       for (const [x0, f, dx, name] of icons) {
-        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === 8) this.put("summons_icon", 1, x0 + a, 554); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
+        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === 8) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }
     }
     // Recall: icono en el siguiente hueco de la barra, con barra de canalización / enfriamiento

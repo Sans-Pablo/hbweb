@@ -28,3 +28,5 @@
 - `window.hb.gui.dialogs.get(id)` permite mover cuadros; los NPC se localizan con `renderer` (`camX, camY, scale, ox, oy, dpr`).
 - `api/info` da 404 en el servidor estático: es esperado (indica modo local).
 - El clasificador de comandos del entorno puede agotar el tiempo; reintentar más tarde, no saltarse el sandbox.
+
+- **ui.json pierde los iconos generados**: `convert_all.py --only ui` regenera `web/data/ui.json` y borra `summons_icon`, `recall_icon` y `pet_*` (botones sin icono). Después hay que reejecutar `tools/make_crypt_assets.py`; `tests/uiicons.test.mjs` lo vigila.

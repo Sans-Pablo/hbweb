@@ -63,7 +63,7 @@ export class Hud {
     d.textContent = text;
     if (cls) d.className = cls;
     this.logEl.appendChild(d);
-    while (this.logEl.children.length > 7) this.logEl.firstChild.remove();
+    while (this.logEl.children.length > 10) this.logEl.firstChild.remove();
     setTimeout(() => d.classList.add("old"), 7000);
   }
 
@@ -89,7 +89,8 @@ export class Hud {
       case "recallfail": if (ev.id === me) this.log(ev.why === "cancel" ? "Recall cancelado." : "Recall interrumpido: te moviste o entraste en combate.", "bad"); break;
       case "petname": if (ev.id === me) this.log("Tu compañero se llama ahora " + ev.nm + "."); break;
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
-      case "pettarget": if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
+      case "petgo": if (ev.id === me) this.petOrder = { kind: "go", x: ev.x, y: ev.y, at: performance.now() }; break;
+      case "pettarget": if (ev.id === me) this.petOrder = { kind: "atk", target: ev.target, at: performance.now() }; if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
       case "candy": if (ev.id === me) this.log(ev.kind === "revive" ? (ev.nm || ev.sp) + " vuelve en sí con " + ev.amount + " de vida." : (ev.nm || ev.sp) + " recupera " + ev.amount + (ev.kind === "hp" ? " de vida." : " de maná."), "gold"); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-evolve": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " está a punto de cambiar de tamaño…", "gold"); break;

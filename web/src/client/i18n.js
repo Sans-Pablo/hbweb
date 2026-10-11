@@ -8,6 +8,7 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  "Todo": "All", "Grupo": "Party", "Clan": "Guild", "Sistema": "System",
   // ---- modo online (server/server.mjs, connection.js, main.js)
   " · conectados: ": " · online: ", "El servidor es de otra versión del juego. Recarga la página (Ctrl+F5) o espera a que se actualice.": "The server runs a different version of the game. Reload the page (Ctrl+F5) or wait for the update.",
   "El servidor no está disponible ahora mismo: prueba local (un jugador, se guarda en este navegador).": "The server is not available right now: local test (single player, saved in this browser).",

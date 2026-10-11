@@ -186,6 +186,7 @@ const COMMANDS = {
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
+  lang(w, p, cmd) { if (cmd.lang === "en" || cmd.lang === "es") p.uiLang = cmd.lang; return true; },      // idioma del cliente: los habitantes le hablan en él
   turn(w, p, cmd) {
     if (!w.busy(p) && cmd.dir >= 1 && cmd.dir <= 8) p.dir = cmd.dir;
     return true;

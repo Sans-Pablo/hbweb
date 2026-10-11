@@ -6,7 +6,7 @@ import { rollKillDrop } from "../drops.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
 import { BOSS_UNIQUE } from "../rarity.js";
-import { giveExp, npcStrikes, damagePlayer } from "./combatsys.js";
+import { giveExp, npcStrikes, damagePlayer, canFight } from "./combatsys.js";
 import * as Party from "./party.js";
 import { sget } from "./status.js";
 import { addField, DYN } from "./fields.js";
@@ -187,7 +187,7 @@ function followerThink(w, n) {
   let best = null, bd = 1e9;
   // Objetivo marcado por el dueño (Alt + clic): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
-  if (ct && !ct.dead && ct.kind === "npc" && dist(m, ct) <= 18) { best = ct; bd = dist(n, ct); }
+  if (ct && !ct.dead && (ct.kind === "npc" ? !ct.master || foeOf(w, m, ct) : (ct.kind === "player" && canFight(w, m, ct))) && dist(m, ct) <= 18) { best = ct; bd = dist(n, ct); }
   else {
     n.cTarget = null;
     const calm = n.comp && Inv.instOf(m, n.ball)?.comp.mode === "peace";
@@ -195,6 +195,11 @@ function followerThink(w, n) {
       if (e.kind !== "npc" || e.dead || e.master || (e.cfg.actionLimit && !e.crystal)) continue;
       const d = dist(n, e);
       if (d <= Math.max(n.cfg.searchRange, 6) && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
+    }
+    if (!calm && w.pvp) for (const e of w.ents.values()) {                  // Promise Land: el summon también planta cara a los jugadores enemigos y a sus summons (entrenamiento entre summons)
+      if (e.dead || !foeOf(w, m, e)) continue;
+      const d = dist(n, e) - (e.kind === "player" ? 0 : 2);
+      if (d <= 7 && dist(m, e) <= 12 && d < bd) { best = e; bd = d; }
     }
   }
   if (best) {
@@ -207,6 +212,15 @@ function followerThink(w, n) {
   if (dist(n, anchor) > (anchor === m ? 2 : 0)) toGoal(anchor);
 }
 
+// ¿es un rival del dueño del summon? Un jugador enemigo o el summon de un jugador enemigo (solo en mapas de lucha)
+export function foeOf(w, m, e) {
+  if (!w.pvp || e.dead) return false;
+  if (e.kind === "player") return canFight(w, m, e);
+  if (!e.comp || !e.master) return false;
+  const o = w.ents.get(e.master);
+  return !!o && o.kind === "player" && canFight(w, m, o);
+}
+
 function followerAttack(w, n, t) {
   n.dir = dirTo(n.x, n.y, t.x, t.y);
   w.setAct(n, ACT.ATTACK, n.dur.attack);
@@ -216,6 +230,8 @@ function followerAttack(w, n, t) {
     if (n.dead || t.dead || w.ents.get(t.id) !== t || dist(n, t) > n.cfg.attackRange) return;
     if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return;
     const dmg = n.comp ? Math.max(1, Math.round((n.dmgNow + R.dice(w.rng, 1, 3) - 2) * (sget(w, n, "berserk") ? 2 : 1))) : R.npcMelee(w.rng, n).damage;
+    if (t.kind === "player") { const m = w.ents.get(n.master); if (m && canFight(w, m, t)) damagePlayer(w, t, dmg, m); return; }     // PvP: el golpe cuenta como del dueño
+    if (t.comp) return companionHurt(w, n, t, dmg);                                                                        // summon contra summon
     petHurt(w, n, t, dmg);
   });
 }

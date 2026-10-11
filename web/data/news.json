@@ -11,6 +11,39 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Summons en el PvP (v0.50.0)",
+        "en": "Summons in PvP (v0.50.0)"
+      },
+      "items": [
+        {
+          "es": "Energy Strike: las bolas ahora salen del lanzador hacia el objetivo (antes se iban abajo a la derecha).",
+          "en": "Energy Strike: the orbs now fly from the caster to the target (they used to drift down-right)."
+        },
+        {
+          "es": "Los summons pelean en Promise Land contra jugadores y summons enemigos; los bots los sacan, los señalan a un rival, los retiran con poca vida y atacan a los summons que les amenazan.",
+          "en": "Summons fight in Promise Land against enemy players and summons; bots bring them out, point them at a rival, pull them back when hurt and attack the summons that threaten them."
+        },
+        {
+          "es": "PvP más ágil: el daño entre jugadores sube un 70 % para que los duelos no duren minutos.",
+          "en": "Snappier PvP: player-vs-player damage is up 70 % so duels no longer take minutes."
+        },
+        {
+          "es": "Ventana de chat (F9) nueva: más grande, con filtros (Todo, Chat, Grupo, Clan, Sistema), saltos de línea y barra de scroll; el registro del HUD es más ancho.",
+          "en": "New chat window (F9): bigger, with filters (All, Chat, Party, Guild, System), line wrapping and a scrollbar; the HUD log is wider."
+        },
+        {
+          "es": "Orden al summon: línea de puntos gris hasta la casilla a la que lo mandas y roja hasta el objetivo que le ordenas atacar (Alt + clic; también sobre jugadores y summons rivales en Promise Land).",
+          "en": "Summon orders: a grey dotted line to the tile you send it to and a red one to the target you order it to attack (Alt + click; also on rival players and summons in Promise Land)."
+        },
+        {
+          "es": "La bola y el sprite del Liche tienen tonos más oscuros y tenebrosos.",
+          "en": "The Liche ball and sprite use darker, grimmer tones."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Vida propia, grupos y builds (v0.49.0)",
         "en": "Own life, parties and builds (v0.49.0)"
       },

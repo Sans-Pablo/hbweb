@@ -84,6 +84,7 @@ export function registerGuild(gui, api) {
         case "info": dlg.g = ev.guild; break;
         case "created": api.log("You founded the guild " + ev.name + ". You are its Guildmaster.", "gold"); api.send({ t: "guildinfo" }); break;
         case "joined": api.log(ev.name + " joined the guild.", "guild"); api.send({ t: "guildinfo" }); break;
+        case "gift": api.log("The Guildmaster " + ev.master + " gives you " + ev.items.join(" and ") + " in the colors of " + ev.guild + ".", "guild"); break;
         case "left": api.log(ev.name + " left the guild.", "guild"); api.send({ t: "guildinfo" }); break;
         case "master": api.log(ev.name + " is the new Guildmaster.", "guild"); api.send({ t: "guildinfo" }); break;
         case "colors": api.log("The guild colors changed.", "guild"); break;

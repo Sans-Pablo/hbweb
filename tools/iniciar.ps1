@@ -120,6 +120,28 @@ if ($quick) {
   if (-not $ts) { Aviso "No encuentro Tailscale: se juega solo en tu Wi-Fi." } else { & $ts funnel --bg $port | Out-Null }
 }
 
+# 5b) enlace temporal de Cloudflare -> web\data\server.json -> commit + push, para que https://sans-pablo.github.io/hbweb/
+#     (GitHub Pages, se republica solo en ~2-3 min) apunte a este servidor. Si el push falla solo avisa; el enlace directo sigue valiendo.
+function PublicarEnlace($url) {
+  $f = Join-Path $root "web\data\server.json"
+  try {
+    $actual = ""; if (Test-Path $f) { try { $actual = [string](Get-Content $f -Raw | ConvertFrom-Json).url } catch {} }
+    if ($actual -eq $url) { return }
+    [IO.File]::WriteAllText($f, "{`"url`": `"$url`"}`n", (New-Object Text.UTF8Encoding $false))
+    if (-not (Tiene "git") -or -not (Test-Path (Join-Path $root ".git"))) { Aviso "server.json actualizado, pero sin git no puedo publicarlo en GitHub."; return }
+    $env:GIT_TERMINAL_PROMPT = "0"
+    Push-Location $root
+    try {
+      git add -- web/data/server.json 2>&1 | Out-Null
+      git commit -m "server.json: enlace temporal $url" -- web/data/server.json 2>&1 | Out-Null
+      git pull --rebase --autostash origin main 2>&1 | Out-Null
+      $o = (git push origin HEAD:main 2>&1) -join " "
+      if ($LASTEXITCODE -eq 0) { Ok "Enlace publicado en GitHub: la web de GitHub Pages apuntara a $url en ~3 minutos." }
+      else { Aviso "No pude subir server.json a GitHub (¿credencial sin permiso de escritura?). La web de GitHub seguira con el enlace anterior. $o" }
+    } finally { Pop-Location }
+  } catch { Aviso "No pude publicar el enlace en GitHub: $_" }
+}
+
 # 6) cuando el servidor responde: mostrar direcciones, copiar el enlace y abrir el navegador
 function Anunciar {
   for ($i = 0; $i -lt 40; $i++) { try { $null = Invoke-WebRequest "http://localhost:$port/" -UseBasicParsing -TimeoutSec 2; break } catch { Start-Sleep -Milliseconds 500 } }
@@ -141,6 +163,7 @@ function Anunciar {
       if (Test-Path $log) { $m = Select-String -Path $log -Pattern "https://(?!api\.)[a-z0-9-]+\.trycloudflare\.com" | Select-Object -First 1; if ($m) { $url = $m.Matches[0].Value } }
     }
   }
+  if ($quick -and $url) { PublicarEnlace $url }
   Write-Host ""
   Write-Host "  ================================================================" -ForegroundColor Yellow
   Write-Host "   HELBREATH WEB - SERVIDOR ENCENDIDO" -ForegroundColor Yellow

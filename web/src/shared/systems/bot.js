@@ -21,7 +21,7 @@ import * as Tut from "./tutorial.js";
 import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
-import { judge, manage, wish, canWear } from "./botitems.js";
+import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
 import { allocate } from "./builds.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
@@ -140,6 +140,15 @@ export function errands(w, p, b, first = false) {
       if (inst) { if (tryEquip(w, p, b, inst)) { b.bought = 1; blog(w, p, `Compro ${want.d.name} (${want.price} de oro): era la mejora que más deseaba (+${want.gain} de item level).`); } else { p.gold += want.d.price; Inv.removeFromBag(p, inst.uid); } }
     } else if (want.gain >= 8) { b.saving = true; if (w.time - (b.saveLog || -1e9) > 300000) { b.saveLog = w.time; blog(w, p, `Ahorro para ${want.d.name} (${want.price} de oro, +${want.gain} de item level): me faltan ${spare - p.gold}.`); } }
   }
+  // AMIGOS: si le sobra mucho oro y un amigo conectado anda mal de equipo, le compra la pieza (la entrega el bucle de ayuda de residents.js)
+  if (!first && !b.saving && w.time - (b.giftAt || -1e9) > 240000) {
+    b.giftAt = w.time;
+    const fw = friendWish(w, p, cat.gear, friendsOf(w, p));
+    if (fw && p.gold >= fw.price * 2 + 150 && !p.bag.some(i => i.id === fw.d.id)) {
+      const inst = buy(w, p, fw.d);
+      if (inst) blog(w, p, `Compro ${fw.d.name} (${fw.price} de oro) para regalárselo a ${fw.q.name}, que anda corto de equipo.`);
+    }
+  }
   // compras por catálogo: una pieza por recado (a la primera, un equipo completo)
   let bought = 0;
   for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) {
@@ -214,6 +223,11 @@ function pickTarget(w, p, owner) {
       if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e)) continue;
       const d = dist(p, e);
       if (d <= 12 && (!owner || dist(owner, e) <= 14) && d - 2 < bs) { best = e; bs = d - 2; }
+      continue;
+    }
+    if (w.pvp && e.kind === "npc" && e.comp && e.master && !e.dead) {                                     // summon enemigo: se ataca si me ataca a mí o a los míos, o si está encima
+      const m = w.ents.get(e.master), d = dist(p, e), th = e.cTarget === p.id || e.target === p.id || (owner && e.cTarget === owner.id);
+      if (m && canFight(w, p, m) && d <= 10 && (th || d <= 2) && reachable(w, p, e) && d - (th ? 6 : 0) < bs) { best = e; bs = d - (th ? 6 : 0); }
       continue;
     }
     if (!hostile(e)) continue;

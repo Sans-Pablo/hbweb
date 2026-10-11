@@ -252,7 +252,7 @@ export class SpellFx {
       }
       case 160:
         if (f > e.max) end();
-        else { this.add(16, e.sx, e.sy, X + 50 - rnd(100), Y + 50 - rnd(100)); this.snd(1, e.dx, e.dy); }
+        else { this.add(16, e.sx * T + 16, e.sy * T + 16 - 20, X + 50 - rnd(100), Y + 50 - rnd(100)); this.snd(1, e.dx, e.dy); }
         break;
       case 161: case 130: case 137: case 251: {
         fly(50);

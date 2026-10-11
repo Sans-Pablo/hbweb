@@ -52,7 +52,8 @@ export function registerPetDialog(gui, api) {
       g.aligned(this.mx - 8, 104, 99, c.nm || c.sp, INK, { size: 10, bold: true });
       const X = 112;
       g.text(X, 44, "Level " + c.lvl + (c.lvl >= MAX_COMP_LEVEL ? " (max)" : ""), INK, { size: 11, bold: true });
-      g.text(X, 58, "HP " + (p ? hpOf(p, c) + "/" + statsOf(p, c).hp : ""), INK, { size: 10 });
+      g.text(X, 58, "HP " + (p ? hpOf(p, c) + "/" + statsOf(p, c).hp : ""), RED, { size: 10 });
+      { const mx = Tal.maxMp(c); if (mx > 0) g.text(X + 78, 58, "MP " + Math.floor(c.mp ?? mx) + "/" + mx, "#2a4ea8", { size: 10 }); }
       const nd = need(c.lvl || 1), k = c.lvl >= MAX_COMP_LEVEL ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd)), cx = g.ctx, bw = this.w - X - 26;
       cx.fillStyle = "rgba(10,8,4,.75)"; cx.fillRect(X - 1, 72, bw + 2, 9); cx.fillStyle = "#6aa8ff"; cx.fillRect(X, 73, Math.round(bw * k), 7);
       g.text(X, 84, c.lvl >= MAX_COMP_LEVEL ? "EXP MAX" : "EXP " + (c.exp || 0) + " / " + nd + "  (" + Math.floor(k * 100) + "%)", INK, { size: 9 });
