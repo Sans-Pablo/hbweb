@@ -130,7 +130,7 @@ async function main() {
   };
   registerDialogs(gui, guiApi);
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
-  const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, me: () => world.ents.get(pid), send: c => conn.send(c) });
+  const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, item: id => assets.data.item?.(id), me: () => world.ents.get(pid), send: c => conn.send(c) });
   const npcUi = registerNpcDialogs(gui, {
     preview: (sp, npc) => summonPreview.show(sp, npc),
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),

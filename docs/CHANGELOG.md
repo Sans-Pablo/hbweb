@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.51.1 · Gustos de los summons (2026-10-11)
+
+- Cada especie tiene cultivos favoritos (curan un 50% más; los puntos permanentes suben de 2 en 2) y otros que rechaza sin gastarlos. Se ve en la ficha del summon de la tienda de bolas.
+
 ## 0.51.0 · Agricultura (2026-10-11)
 
 - Agricultura como en el servidor original: semillas, casillas de cultivo, azada y cosecha.

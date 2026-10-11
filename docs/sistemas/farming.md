@@ -10,5 +10,8 @@ Réplica de la agricultura del servidor original. Código: `web/src/shared/syste
 ## Alimentar al summon (idea del port)
 Arrastrar un producto sobre la bola (o usarlo con un compañero activo): Tomate +1 vida máx., Uva +1 maná máx. (también la Uva azul), Champiñón +1 ataque (tope 100 por stat, `c.fb`); se ve en la ventana del summon («Farm: …»). El resto cura al summon en vez de los caramelos; el Ginseng lo revive.
 
+## Gustos (INVENTO del port)
+`TASTE` en `companion.js`: por especie, cultivos que ama (cura/maná ×1,5; stat permanente +2) y que rechaza (`tasteOf` = hate: no se come ni se gasta). El Ginseng nunca se rechaza. La ficha de la tienda de bolas lo muestra («Likes / Refuses»).
+
 ## Bots
 El 30% de los bots son granjeros (`b.farmer`): compran azada y semillas, buscan casillas de cultivo, siembran, cuidan con la azada y recogen los productos para comerciar. Solo actúan en mapas con casillas de cultivo.

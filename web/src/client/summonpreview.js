@@ -2,7 +2,7 @@
 // una leyenda corta y, abajo, las siluetas de sus evoluciones (¿quién es ese Pokémon?) para anunciar que hay más al llegar al nivel máximo.
 import { ClassicDialog, INK, DARK, RED, WHITE } from "./classicdialog.js";
 import { infoOf } from "../shared/systems/summoninfo.js";
-import { HOSPITAL } from "../shared/systems/companion.js";
+import { HOSPITAL, TASTE } from "../shared/systems/companion.js";
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
@@ -53,6 +53,8 @@ export function registerSummonPreview(gui, api) {
         if (c.mystery) g.aligned(cx - 12, cx + 12, 226, "?", WHITE, { size: 14, bold: true });
         g.aligned(cx - pitch / 2, cx + pitch / 2, 247, c.lbl, DARK, { size: 8 });
       });
+      { const ts = TASTE[this.sp], nm = ids => ids.map(id => api.item?.(id)?.name || id).join(", ");
+        if (ts) g.text(14, 253, t("Le gusta") + ": " + nm(ts.love) + (ts.hate.length ? "  ·  " + t("No come") + ": " + nm(ts.hate) : ""), "#2f7a2f", { size: 8 }); }
       const over = this.inBuy(lx, ly);
       g.ctx.fillStyle = over ? "#7a5a30" : "#5a4020"; g.ctx.fillRect(BUY.x, BUY.y, BUY.w, BUY.h);
       g.ctx.strokeStyle = "#e8d6a0"; g.ctx.strokeRect(BUY.x + 0.5, BUY.y + 0.5, BUY.w - 1, BUY.h - 1);

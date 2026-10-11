@@ -33,7 +33,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `builds.js` · 36 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 262 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
-- `companion.js` · 273 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
+- `companion.js` · 300 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `council.js` · 102 · CONSEJO DE GRUPO (INVENTO del port). Cuando varios habitantes van juntos, qué hacen lo decide una discusión, como entre jugadores de verda
 - `debug.js` · 125 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
 - `dummy.js` · 220 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
@@ -80,7 +80,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `gui.js` · 552 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `guild.js` · 98 · Cuadro «Guild» (id 34, Ctrl+G): el guild del original (Guildmaster / Guildsman) con lo que añade el port. La lógica vive en shared/syste
 - `hud.js` · 336 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 295 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `i18n.js` · 296 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
@@ -96,7 +96,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
-- `summonpreview.js` · 69 · Vista previa de un summon antes de comprar su bola en el hospital de compañeros (INVENTO del port): estadísticas, hechizos,
+- `summonpreview.js` · 71 · Vista previa de un summon antes de comprar su bola en el hospital de compañeros (INVENTO del port): estadísticas, hechizos,
 - `trade.js` · 123 · Cuadro «Trade» (id 33): comercio con otros jugadores y habitantes. INVENTO del port, a partir del intercambio del original
 - `tutorial.js` · 289 · Tutorial para jugadores nuevos (cliente). Guion y estado en shared/systems/tutorial.js; aquí se detectan los objetivos y se dibuja:
 - `voice.js` · 269 · "Personalidad" del jugador y de los habitantes: frases ocasionales en burbujas de chat.
@@ -130,7 +130,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `dummy.test.mjs` · 155 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
 - `dungeon.test.mjs` · 185 · 
 - `exprate.test.mjs` · 9 · Ritmo de experiencia del port: cuesta mucho más llegar al nivel máximo (expRate en combatsys.js)
-- `farming.test.mjs` · 82 · Agricultura (systems/farming.js): siembra, azada, cosecha, reglas del servidor original.
+- `farming.test.mjs` · 97 · Agricultura (systems/farming.js): siembra, azada, cosecha, reglas del servidor original.
 - `ghost.test.mjs` · 56 · Esqueleto fantasma: un esqueleto común puede levantarse al desaparecer su cadáver. node tests/ghost.test.mjs
 - `guild.test.mjs` · 45 · Guilds (systems/guild.js): fundar con requisitos, invitar/aceptar, chat «@», colores, expulsar, ceder el mando, disolver y persistencia de
 - `human.test.mjs` · 45 · Humanización: horarios de conexión (admin: pins y mínimo), AFK, erratas, charla y llegadas con experiencia

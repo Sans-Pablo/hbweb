@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Gustos de los summons (v0.51.1)",
+        "en": "Summon tastes (v0.51.1)"
+      },
+      "items": [
+        {
+          "es": "Cada summon tiene cultivos favoritos (curan más o dan el doble de puntos) y otros que rechaza. Míralo en la ficha de la tienda de bolas.",
+          "en": "Each summon has favourite crops (heal more or give double points) and others it refuses. See it on the ball shop preview."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Agricultura (v0.51.0)",
         "en": "Farming (v0.51.0)"
       },

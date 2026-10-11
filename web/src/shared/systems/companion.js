@@ -245,20 +245,47 @@ export function candy(w, p, d, destUid, roll) {
 export const FEED_CAP = 100;
 export const FEED = { 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
   820: { heal: 20 }, 821: { heal: 25 }, 822: { heal: 30 }, 823: { mana: 20 }, 824: { heal: 40 }, 825: { heal: 50 }, 826: { heal: 60 }, 827: { mana: 30 }, 828: { heal: 80 }, 721: { revive: true } };
+// Gustos por especie (INVENTO del port): lo que le gusta cura/sube un 50% más (los puntos permanentes suben de 2 en 2), lo que no le apetece lo rechaza
+// y no se consume. El resto, normal. El Ginseng (revivir) nunca se rechaza. Ids: 820 Sandía, 821 Calabaza, 822 Ajo, 823 Cebada, 824 Zanahoria, 825 Rábano,
+// 826 Maíz, 827 Campanilla, 828 Melón, 829 Tomate, 830 Uva, 831 Uva azul, 832 Champiñón.
+export const TASTE = {
+  "Slime": { love: [820, 828], hate: [822, 832] },            // gota jugosa: fruta de agua
+  "Giant-Ant": { love: [823, 828], hate: [822] },             // obrera: grano y dulce
+  "Amphis": { love: [832, 829], hate: [823] },                // pantano: setas
+  "Orc": { love: [826, 821], hate: [827] },                   // guerrero: maíz y calabaza
+  "Skeleton": { love: [822, 832], hate: [820, 828] },         // huesos: lo seco y amargo
+  "Clay-Golem": { love: [825, 824], hate: [830, 831] },       // barro: raíces
+  "Stone-Golem": { love: [825, 823], hate: [828, 829] },
+  "Orc-Mage": { love: [827, 831], hate: [826] },              // chamán: hierbas y uva azul
+  "Hellbound": { love: [822, 829], hate: [820, 827] },        // infernal: picante y rojo
+  "Cyclops": { love: [828, 821], hate: [832] },
+  "Troll": { love: [832, 826], hate: [827, 831] },            // brutal: lo contundente
+  "Orge": { love: [826, 821, 824], hate: [827] },             // glotón: casi todo, le gusta lo grande
+  "Tentocle": { love: [820, 831], hate: [829, 822] },         // aguas frías
+  "Cannibal-Plant": { love: [829, 820], hate: [] },           // planta: sol y agua
+  "Demon": { love: [829, 830], hate: [820] },                 // rey del inframundo: vino y rojo
+  "Frost": { love: [831, 825], hate: [829, 822] },            // hielo: azul y frío
+  "Liche": { love: [832, 822], hate: [830, 828] },            // nigromante: setas y ajo amargo
+  "Dummy": { love: [824], hate: [] },
+};
+export const tasteOf = (sp, id) => { const t = TASTE[sp]; return t?.love.includes(id) ? "love" : t?.hate.includes(id) ? "hate" : "ok"; };
 export const isFeed = d => !!FEED[d.id];
 export function feed(w, p, d, destUid) {
   const inst = (destUid && Inv.instOf(p, destUid)?.comp ? Inv.instOf(p, destUid) : null) || activeBall(p);
   if (!inst) return null;                                                    // sin compañero: se come como comida normal
   const fd = FEED[d.id], c = inst.comp;
+  const taste = fd.revive ? "ok" : tasteOf(c.sp, d.id);
+  if (taste === "hate") return w.reject(p, { t: "use" }, (c.nm || "Tu compañero") + " no quiere comer eso");
   if (fd.stat) {
     c.fb = c.fb || { hp: 0, mp: 0, atk: 0 };
     if (c.fb[fd.stat] >= FEED_CAP) return w.reject(p, { t: "use" }, "tu compañero no puede mejorar más con esto");
-    c.fb[fd.stat]++;
-    w.emit({ t: "candy", id: p.id, kind: "stat", stat: fd.stat, amount: 1, nm: c.nm, sp: c.sp, item: d.id });
+    const up = Math.min(taste === "love" ? 2 : 1, FEED_CAP - c.fb[fd.stat]);
+    c.fb[fd.stat] += up;
+    w.emit({ t: "candy", id: p.id, kind: "stat", stat: fd.stat, amount: up, nm: c.nm, sp: c.sp, item: d.id });
     return true;
   }
   const fake = { id: d.id, effectType: fd.revive ? 0 : fd.mana ? 5 : 4 };
-  return candy(w, p, fake, inst.uid, () => fd.heal || fd.mana || 0) === false ? false : true;
+  return candy(w, p, fake, inst.uid, () => Math.round((fd.heal || fd.mana || 0) * (taste === "love" ? 1.5 : 1))) === false ? false : true;
 }
 
 // Alt + clic derecho: el compañero va a esa casilla y se queda allí (hasta 15 s para llegar; si el dueño se aleja más de 14 casillas vuelve a seguirlo)

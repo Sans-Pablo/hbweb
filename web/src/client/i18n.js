@@ -68,7 +68,7 @@ const EN = {
   "Volver a la cripta": "Back to the crypt", "Pantalón": "Trousers", "Probabilidad de acierto": "Hit probability", "Defensa añadida": "Added defense", "Recuperación de HP": "HP recovery",
   "Recuperación de SP": "SP recovery", "Recuperación de MP": "MP recovery", "Resistencia mágica": "Magic resistance", "Resistencia al veneno": "Poison resistance", "Absorción física": "Physical absorption",
   "Absorción mágica": "Magic absorption", "Daño de ataques seguidos": "Combo damage", "Ahorro de MP": "MP saving", "Probabilidad de lanzar magia": "Spell casting probability", "Daño convertido en MP": "Damage converted to MP",
-  "Probabilidad de crítico": "Critical chance", "Experiencia": "Experience", "Oro": "Gold", "Daño": "Damage", "Sin puntos para repartir": "No points to assign", "Bonos del equipo": "Equipment bonuses",
+  "Probabilidad de crítico": "Critical chance", "Experiencia": "Experience", "Oro": "Gold", "Le gusta": "Likes", "No come": "Refuses", "Daño": "Damage", "Sin puntos para repartir": "No points to assign", "Bonos del equipo": "Equipment bonuses",
   "Cabeza": "Head", "Cuerpo": "Body", "Brazos": "Arms", "Calzado": "Footwear", "Cuello": "Neck", "Mano izquierda": "Left hand", "Mano derecha": "Right hand", "Dos manos": "Two hands",
   "Anillo dcho.": "Right ring", "Anillo izdo.": "Left ring", "Espalda": "Back", "Cuerpo completo": "Full body",
   // ---- registro de mensajes
@@ -180,7 +180,8 @@ const PATTERNS = [
   [/^(.+) aprende (.+) \((\d+)\)\.$/, m => `${m[1]} learns ${m[2]} (${m[3]}).`],
   [/^tu summon necesita nivel (\d+)$/, m => `your summon needs level ${m[1]}`], [/^necesita nivel (\d+)$/, m => `needs level ${m[1]}`],
   [/^(.+) vuelve en sí con (\d+) de vida\.$/, m => `${m[1]} comes back with ${m[2]} HP.`],
-  [/^(.+) gana \+1 de (vida máxima|maná máximo|ataque)\.$/, m => `${m[1]} gains +1 ${({ "vida máxima": "max HP", "maná máximo": "max MP", ataque: "attack" })[m[2]]}.`],
+  [/^(.+) no quiere comer eso$/, m => `${m[1]} does not want to eat that`],
+  [/^(.+) gana +(d+) de (vida máxima|maná máximo|ataque).$/, m => `${m[1]} gains +${m[2]} ${({ "vida máxima": "max HP", "maná máximo": "max MP", ataque: "attack" })[m[3]]}.`],
   [/^(.+) recupera (\d+) de (vida|maná)\.$/, m => `${m[1]} recovers ${m[2]} ${m[3] === "vida" ? "HP" : "MP"}.`],
   [/^Has reiniciado los talentos de (.+) por (\d+) de oro\.$/, m => `You reset ${m[1]}'s talents for ${m[2]} gold.`],
   [/^Tu compañero se llama ahora (.+)\.$/, m => `Your companion is now called ${m[1]}.`],

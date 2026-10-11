@@ -80,3 +80,18 @@ console.log("farming feed OK");
   assert.ok(sowed, "el bot granjero siembra"); assert.ok(harvested, "el bot granjero cuida y cosecha");
   console.log("farming bot OK");
 }
+
+// Gustos del summon: lo que le gusta rinde más, lo que no le apetece se rechaza y no se gasta
+{
+  const hate = give(823), love = give(832); ball.comp.sp = "Amphis"; const atk0 = ball.comp.fb.atk;
+  w.command(id, { t: "use", uid: hate.uid, dest: ball.uid });
+  assert.ok(p.bag.includes(hate), "la cebada no se gasta si el Amphis la rechaza");
+  assert.match(String(lastReject()), /no quiere comer eso/);
+  w.command(id, { t: "use", uid: love.uid, dest: ball.uid });
+  assert.ok(!p.bag.includes(love), "el champiñón gustado se consume"); assert.equal(ball.comp.fb.atk, atk0 + 2, "lo que le gusta sube de 2 en 2");
+  const ev = events.filter(e => e.t === "candy").pop();
+  assert.ok(ev, "evento de curación");
+  const t = F.PRODUCT && (await import("../web/src/shared/systems/companion.js")).tasteOf;
+  assert.equal(t("Giant-Ant", 823), "love"); assert.equal(t("Giant-Ant", 822), "hate"); assert.equal(t("Giant-Ant", 829), "ok");
+  console.log("farming taste OK");
+}
