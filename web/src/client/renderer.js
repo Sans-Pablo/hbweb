@@ -27,6 +27,11 @@ const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 4: "120,160,
 // Client/Game.cpp, DrawObject_On*: monstruos sin sombra (Slime, Tigerworm, Plant, Ice-Golem, esfera, Abaddon, puerta...)
 const NO_SHADOW = new Set([10, 35, 50, 51, 60, 65, 81, 91]);
 
+// Círculo de casteo por especie (web/data/cast_circle.json, editable y guardable desde el bestiario): color, color del núcleo, brillo (0-1.5) y radio en px
+export const CAST_CFG = { Liche: { color: "#be64ff", core: "#ebc8ff", bright: 0.6, size: 46 }, Demon: { color: "#ff5a1e", core: "#ffc878", bright: 0.6, size: 46 }, Frost: { color: "#82c8ff", core: "#e6f8ff", bright: 0.6, size: 46 }, def: { color: "#ffdc78", core: "#fff5c8", bright: 0.6, size: 46 } };
+fetch("data/cast_circle.json").then(r => r.ok ? r.json() : null).then(j => { if (j) for (const k in j) CAST_CFG[k] = { ...CAST_CFG[k], ...j[k] }; }).catch(() => {});
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(",");
+
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;
@@ -447,8 +452,36 @@ export class Renderer {
     }
   }
 
+  // Demon Lv 50: al caminar deja una estela sutil de brasas pequeñas que se apagan en ~1,2 s (como la nieve del Frost). Coordenadas de mundo (this.cam = cámara);
+  // en el bestiario, sin cámara, el suelo se desliza hacia atrás a velocidad de paso.
+  emberTrail(e, x, y, casting) {
+    const ctx = this.ctx, now = performance.now(), DX = [0, 0, 1, 1, 1, 0, -1, -1, -1], DY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
+    const cx = this.cam ? this.camX : DX[e.dir | 0] * now * 0.045, cy = this.cam ? this.camY : DY[e.dir | 0] * now * 0.045;
+    const crk = this.crk || (this.crk = new Map());
+    let L = crk.get(e.id); if (!L) crk.set(e.id, (L = []));
+    const wx = x + cx, wy = y + cy, last = L[L.length - 1];
+    if (casting && (e.act === ACT.MOVE || e.act === ACT.RUN) && !e.dead && (!last || Math.hypot(wx - last.x, wy - last.y) > 6)) { L.push({ x: wx + (Math.random() - 0.5) * 8, y: wy + (Math.random() - 0.5) * 3, t: now, r: Math.random() }); if (L.length > 30) L.shift(); }
+    while (L.length && now - L[0].t > 1200) L.shift();
+    if (!L.length) { crk.delete(e.id); return; }
+    for (const c of L) {                                           // llamitas del Fire Field que se encogen y se apagan
+      const k = (now - c.t) / 1200;
+      this.flame(c.x - cx, c.y - cy, 0.2 * (1 - k * 0.6), (1 - k) * 0.7, Math.floor(now / 100 + c.r * 8));
+    }
+  }
+
+  // Llama del Fire Field original (fx.json hoja 9, aditiva), escalada; (x, y) = base de la llama
+  flame(x, y, sc, a, f) {
+    const sp = this.fx?.sp, m = sp?.man?.fx9, img = sp?.getImg("fx9");
+    if (!m || !img || !img.naturalWidth || a <= 0) return;
+    const fr = m.frames[((f % 8) + 8) % 8], [sx, sy, sw, sh, px, py] = fr, ctx = this.ctx;
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, a);
+    ctx.drawImage(img, sx, sy, sw, sh, Math.round(x + px * sc), Math.round(y - sh * sc),Math.max(1, Math.round(sw * sc)), Math.max(1, Math.round(sh * sc)));
+    ctx.restore();
+  }
+
   drawEntity(e, x, y, s, overlays) {
     const { ctx, spr } = this;
+    if (e.kind === "npc" && e.comp && e.clvl >= 30 && e.name === "Demon") this.emberTrail(e, x, y, true);
     const remaster = this.mode === "remastered";
     const time = s.world.time;
     const hovered = s.hoverEnt === e || s.hoverCit === e;
@@ -497,11 +530,12 @@ export class Renderer {
     let { key, f } = mobSprite(e, time, k => this.spr.frames(k));
     if (e.crystal) { key = "id1"; f = 1; }                                                     // cristal de hielo del jefe glacial: mineral 2 de item-dynamic (Game.cpp, DEF_DYNAMICOBJECT_MINERAL2)
     const act = actionAt(e, time);
+    const alive = !e.dead && act !== ACT.DYING && act !== ACT.DEAD;                          // al morir se apagan todos los efectos y tintes (auras, escudo, ojos, orbe…)
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
     if (e.fadeAlpha != null) alpha *= e.fadeAlpha;                                             // compañero guardado: se desvanece
     if (e.ghost) alpha *= 0.3;                                                                 // esqueleto fantasma: 30 % de opacidad
     if (e.clone) alpha *= 0.5 + 0.12 * Math.sin(time / 130 + e.id);                           // clon de sombra del rey umbrío: translúcido y parpadeante
-    if (e.boss === 2 && !e.clone && e.hasClones && !e.dead) {                                  // el real: aro violeta bajo los pies
+    if (e.boss === 2 && !e.clone && e.hasClones && alive) {                                  // el real: aro violeta bajo los pies
       ctx.strokeStyle = "rgba(190,120,255," + (0.55 + 0.3 * Math.sin(time / 200)) + ")"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(x, y + 4, 26, 12, 0, 0, Math.PI * 2); ctx.stroke();
     }
@@ -509,7 +543,7 @@ export class Renderer {
       const left = e.actStart + e.actDur + CORPSE_MS - time;
       if (remaster && left < 1500) alpha *= Math.max(0, left / 1500);
     }
-    if (remaster && e.special && !e.dead) {
+    if (remaster && e.special && alive) {
       const pulse = 0.55 + 0.25 * Math.sin(time / 220);
       const g = ctx.createRadialGradient(x, y + 2, 2, x, y + 2, 26);
       g.addColorStop(0, "rgba(" + AURA[e.special] + "," + pulse + ")");
@@ -520,66 +554,66 @@ export class Renderer {
     // Compañeros más altos que el personaje: nacen a la mitad de su altura (un golem es un mini golem) y crecen con el nivel hasta el tamaño real al nivel 50
     const sc = e.comp ? this.petScale(e, key, f) : 1;
     if (sc !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); }
+    let flare = 0;                                                                         // Demon al castear: el cuerpo se enciende (0..1)
+    { const cc = e.comp && !e.dead && (s.fx || this.fx)?.scast?.get(e.id);
+      if (cc && e.name === "Demon" && e.clvl < 30) { /* Lv < 30: sin efecto de casteo */ }
+      else if (cc && e.name === "Liche" && e.clvl < 30) { /* idem */ }
+      else if (cc) { if (e.name === "Demon") { const ag = performance.now() - cc.at; flare = Math.max(0, Math.min(1, ag / 200, (1700 - ag) / 600)); } this.castCircle(ctx, x, y, cc, e, s.fx || this.fx); } }          // círculo de casteo del summon en nivel máximo: bajo sus pies, antes de la sombra y el sprite
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
+    const hover = 0;
+    if (hover) { ctx.save(); ctx.translate(0, -hover); }
     spr.put(ctx, key, f, x, y);
-    if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
-    else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
+    if (e.boss && alive) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
+    else if (e.kind === "npc" && alive && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
-    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#000000", 0.35);        // Liche: su color original, solo más oscuro
-    if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
-    if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
-    if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
+    if (e.comp && e.name === "Liche") spr.tinted(ctx, key, f, x, y, "#000000", 0.35);        // Liche: su color original, solo más oscuro
+    if (e.comp && e.name === "Demon" && e.clvl < 10 && alive) spr.tinted(ctx, key, f, x, y, "#000000", 0.38);   // Demon Lv < 10: brasa apagada (ceniza); se enciende al llegar al 10
+    if (flare > 0 && alive) spr.tinted(ctx, key, f, x, y, "#ff8a20", 0.3 * flare, "lighter");   // Demon casteando: el cuerpo arde
+    if (e.crystal && alive) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
+    if (e.shield && alive) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
+    if (e.wrath && alive) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
     if (big !== 1) ctx.restore();
-    if (e.shield && !e.dead) { ctx.strokeStyle = "rgba(170,230,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - 20, 30, 40, 0, 0, Math.PI * 2); ctx.stroke(); }
+    if (hover) ctx.restore();
+    if (e.shield && alive) { ctx.strokeStyle = "rgba(170,230,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - 20, 30, 40, 0, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
-    if (!e.dead && (sget(s.world, e, "ice") || (e.chillUntil || 0) > s.world.time)) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
-    if (!e.dead && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
-    if (!e.dead) this.auras(e, x, y, s.world, true);
+    if (alive && (sget(s.world, e, "ice") || (e.chillUntil || 0) > s.world.time)) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
+    if (alive && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
+    if (alive) this.auras(e, x, y, s.world, true);
     if (remaster) {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
-      else if (hovered && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
+      else if (hovered && alive) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
     }
-    if (e.comp && e.dcls && !e.dead) {                                                       // Dummy: el color indica su clase (verde Healer, amarillo Buffer, azul Aura)
+    if (e.comp && e.dcls && alive) {                                                       // Dummy: el color indica su clase (verde Healer, amarillo Buffer, azul Aura)
       spr.tinted(ctx, key, f, x, y, DUMMY_COLORS[e.dcls] || "#fff", 0.5);
     }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
-    if (e.comp && e.clvl >= 50 && !e.dead && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
+    const fade = alive ? 1 : act === ACT.DYING ? Math.max(0, 1 - (time - (e.actStart || 0)) / Math.max(1, e.actDur || 700) * 1.6) : 0;   // al morir las luces se apagan en fundido
+    if (e.comp && fade > 0 && (e.name === "Liche" ? e.clvl >= 20 : e.name === "Demon" ? e.clvl >= 10 : e.clvl >= 50 && e.name === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
       const sp = this.fx?.sp, seed = e.id * 997, T = time + seed, rnd = (k) => { const h = Math.sin(k * 12.9898 + e.id) * 43758.5453; return h - Math.floor(h); };
-      ctx.save(); ctx.globalAlpha = e.name === "Liche" ? 1 : 0.5;                              // Demon y Frost más sutiles, a la altura del Liche
+      ctx.save(); ctx.globalAlpha = (e.name === "Liche" ? 1 : 0.5) * fade;                            // Demon y Frost más sutiles, a la altura del Liche
       if (e.name === "Demon") {                                                          // fuego amenazante: círculo infernal con pentagrama, lenguas de fuego, brasas y calor
-        const pulse = 0.5 + 0.5 * Math.sin(T / 260);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
-        ctx.restore();
-        spr.tinted(ctx, key, f, x, y, "#ff2a00", 0.12 + 0.12 * pulse, "lighter");
-        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-        { const HD = { 1: [[-14, -42], [16, -42]], 2: [[-27, -46]], 3: [[4, -40]], 4: [[-20, -33], [19, -45]], 5: [[-25, -42], [27, -42]], 6: [[-18, -48], [12, -33]], 7: [[-3, -40]], 8: [[-12, -44], [17, -40]] }[e.dir] || [];   // puños (relativos al pivote, leídos del sprite por dirección)
-          const st = Math.floor(T / 90);                                                  // llama en bloques de píxel: círculo de fuego que parpadea a pasos, sin degradados suaves
-          for (const [n, h] of HD.entries()) {
-            const hx = Math.round(x + h[0]), hy = Math.round(y + h[1]), fr2 = (k) => { const q = Math.sin((st + n * 7 + k * 13) * 12.9898) * 43758.5453; return q - Math.floor(q); };
-            ctx.fillStyle = "rgba(255,70,10,0.22)"; ctx.fillRect(hx - 7, hy - 5, 14, 10); ctx.fillRect(hx - 5, hy - 7, 10, 14);
-            for (let k = 0; k < 12; k++) {                                                // anillo de fuego de 12 pixeles
-              const an = k / 12 * Math.PI * 2, rr = 5 + (fr2(k) > 0.55 ? 1.5 : 0), px = Math.round(hx + Math.cos(an) * rr), py = Math.round(hy + Math.sin(an) * rr * 0.9);
-              ctx.fillStyle = fr2(k + 30) > 0.45 ? "rgba(255,190,50,0.85)" : "rgba(255,80,20,0.85)"; ctx.fillRect(px - 1, py - 1, 2, 2);
-              if (fr2(k + 60) > 0.75) { ctx.fillStyle = "rgba(255,120,30,0.7)"; ctx.fillRect(px - 1, py - 4, 2, 2); }
-            }
-            ctx.fillStyle = "rgba(255,230,120,0.9)"; ctx.fillRect(hx - 2, hy - 2, 4, 4);
-          } }
-        { const hg = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 46); hg.addColorStop(0, "rgba(255,80,10," + (0.1 + 0.07 * pulse).toFixed(2) + ")"); hg.addColorStop(1, "rgba(255,40,0,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y - 30, 46, 0, Math.PI * 2); ctx.fill(); }   // resplandor de calor
-        ctx.restore();
-        ctx.save(); ctx.globalCompositeOperation = "lighter";
-        for (let n = 0; n < 9; n++) {                                                   // brasas ascendentes
-          const q = ((T / 1100 + rnd(n + 20)) % 1), px = x + (rnd(n + 40) - 0.5) * 34 + Math.sin(q * 6 + n) * 4, py = y - 4 - q * 58;
-          ctx.fillStyle = "rgba(" + (n % 2 ? "255,170,40" : "255,70,20") + "," + (0.85 * (1 - q)).toFixed(2) + ")";
-          ctx.fillRect(px, py, 2, 2 + (1 - q) * 2);
+        const L = e.clvl;                                                              // progresión: 10 brasas en los pies · 20 gotas · 30 más gotas y estela · 40 llamas en los hombros · 50 todo al máximo
+        const fl = (px, py, sc, a, n) => this.flame(px, py, sc, a, Math.floor(T / 100 + rnd(n + 5) * 8));   // llamas del Fire Field original (efecto 9), a escala
+        if (L >= 30) { ctx.globalAlpha = 0.95 * fade;                                                                 // aura de fuego (como el humo del Liche): resplandor bajo él y lenguas de fuego que ascienden y se deshacen
+          const pulse = 0.5 + 0.5 * Math.sin(T / 380), nw = L >= 50 ? 12 : L >= 40 ? 9 : 6, hy = y - hover;
+          for (let n = 0; n < nw; n++) {
+            const q = ((T / 1700 + rnd(n + 7)) % 1), px = x + (rnd(n + 30) - 0.5) * 38 + Math.sin(q * 6 + n * 2) * 6, py = hy - 6 - q * 60, r = 5 + 4 * (1 - q);
+            const wg = ctx.createRadialGradient(px, py, 0, px, py, r), al = Math.sin(q * Math.PI);
+            wg.addColorStop(0, "rgba(255,200,90," + (0.55 * al).toFixed(2) + ")"); wg.addColorStop(0.5, "rgba(255,90,15," + (0.4 * al).toFixed(2) + ")"); wg.addColorStop(1, "rgba(160,20,0,0)");
+            ctx.fillStyle = wg; ctx.beginPath(); ctx.ellipse(px, py, r, r * 1.5, 0, 0, Math.PI * 2); ctx.fill();
+          }
         }
         ctx.restore();
       } else if (e.name === "Liche") {                                                   // oscuridad que da miedo: sombra bajo él, humo negro que sube, ojos ardientes (mirando hacia abajo, abajo-izquierda y abajo-derecha)
         const pulse = 0.5 + 0.5 * Math.sin(T / 420);
         ctx.save();
+        const smoke = e.clvl >= 30, eyes = e.clvl >= 50;                                   // Lv 20 báculo encendido, 30 humo (y círculo), 50 ojos rojos
+        if (smoke) {
         const g = ctx.createRadialGradient(x, y, 3, x, y, 40); g.addColorStop(0, "rgba(0,0,0," + (0.7 + 0.2 * pulse).toFixed(2) + ")"); g.addColorStop(0.6, "rgba(25,0,45,0.45)"); g.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + 2, 40, 18, 0, 0, Math.PI * 2); ctx.fill();
         for (let n = 0; n < 9; n++) {                                                   // jirones de humo oscuro
@@ -587,10 +621,11 @@ export class Renderer {
           const sg = ctx.createRadialGradient(px, py, 0, px, py, r); sg.addColorStop(0, "rgba(8,0,18," + (0.5 * Math.sin(q * Math.PI)).toFixed(2) + ")"); sg.addColorStop(1, "rgba(8,0,18,0)");
           ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
         }
+        }
         ctx.globalCompositeOperation = "lighter";
-        const rest = mobSprite({ ...e, act: ACT.STOP }, 0, k => this.spr.frames(k)), eyeY = y - this.mobHeight(rest.key, rest.f) * 0.81, back = e.dir !== 4 && e.dir !== 5 && e.dir !== 6, ea = 0.55 + 0.4 * pulse, ex = e.dir === 4 ? 1 : e.dir === 6 ? -2 : 0;           // dos ojos rojos brillando en la oscuridad
-        if (!back) for (const dx0 of [-3, 3]) { const dx = dx0 + ex; const eg = ctx.createRadialGradient(x + dx, eyeY, 0, x + dx, eyeY, 5); eg.addColorStop(0, "rgba(255,40,40," + ea.toFixed(2) + ")"); eg.addColorStop(1, "rgba(120,0,40,0)"); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x + dx, eyeY, 6, 0, Math.PI * 2); ctx.fill(); }
-        const orb = this.orbPos(key, f);                                                // orbe violeta del báculo: halo que late y chispas que suben
+        const ea = (0.55 + 0.4 * pulse) * Math.max(0, 1 - (1 - fade) * 2.5), an = this.spr.anchors?.[key]?.eyes?.[f];           // dos ojos rojos en el ancla de la cara de ESTE fotograma (anchors.json); se apagan antes que el orbe
+        if (eyes && an && ea > 0) for (const dx0 of [-3, 3]) { const ex2 = x + an[0] + dx0 * (e.dir === 5 ? 1 : 0.7), ey2 = y + an[1]; const eg = ctx.createRadialGradient(ex2, ey2, 0, ex2, ey2, 5); eg.addColorStop(0, "rgba(255,40,40," + ea.toFixed(2) + ")"); eg.addColorStop(1, "rgba(120,0,40,0)"); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex2, ey2, 6, 0, Math.PI * 2); ctx.fill(); }
+        const orb = this.spr.anchors?.[key]?.orb?.[f] ? { x: this.spr.anchors[key].orb[f][0], y: this.spr.anchors[key].orb[f][1] } : this.orbPos(key, f);                                                // orbe violeta del báculo: halo que late y chispas que suben
         if (orb) {
           const ox = x + orb.x, oy = y + orb.y, op = 0.5 + 0.5 * Math.sin(T / 300);
           const og = ctx.createRadialGradient(ox, oy, 0, ox, oy, 13 + 3 * op); og.addColorStop(0, "rgba(230,170,255," + (0.55 + 0.3 * op).toFixed(2) + ")"); og.addColorStop(0.45, "rgba(160,60,255," + (0.3 + 0.2 * op).toFixed(2) + ")"); og.addColorStop(1, "rgba(80,0,160,0)");
@@ -636,21 +671,6 @@ export class Renderer {
       ctx.restore();
     }
 
-    { const cc = e.comp && !e.dead && this.fx?.scast?.get(e.id), ck = cc ? (performance.now() - cc.at) / 1700 : 2;      // círculo de casteo del summon en nivel máximo: runas que giran bajo sus pies
-      if (cc && ck >= 1) this.fx.scast.delete(e.id);
-      else if (cc) {
-        const col = { Demon: "255,90,30", Frost: "130,200,255", Liche: "190,100,255" }[cc.sc] || "255,220,120", a = Math.sin(Math.min(1, ck) * Math.PI) ** 0.6, R = 26 + 6 * Math.min(1, ck * 3), ry = 0.42, rot = ck * 5;
-        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-        ctx.strokeStyle = "rgba(" + col + "," + (0.75 * a).toFixed(2) + ")"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.ellipse(x, y + 3, R, R * ry, 0, 0, Math.PI * 2); ctx.stroke();
-        ctx.lineWidth = 1; ctx.strokeStyle = "rgba(" + col + "," + (0.45 * a).toFixed(2) + ")";
-        ctx.beginPath(); ctx.ellipse(x, y + 3, R - 6, (R - 6) * ry, 0, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); for (let n = 0; n <= 6; n++) { const q = rot + (n * 2 % 6 < 6 ? n : 0) * Math.PI / 3; const px = x + Math.cos(q) * (R - 3), py = y + 3 + Math.sin(q) * (R - 3) * ry; n ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
-        for (let n = 0; n < 12; n++) { const q = -rot * 0.7 + n * Math.PI / 6; ctx.fillStyle = "rgba(" + col + "," + (0.9 * a).toFixed(2) + ")"; ctx.fillRect(x + Math.cos(q) * (R + 4) - 1, y + 3 + Math.sin(q) * (R + 4) * ry - 1, n % 3 ? 2 : 3, n % 3 ? 2 : 3); }
-        const g = ctx.createRadialGradient(x, y + 3, 2, x, y + 3, R); g.addColorStop(0, "rgba(" + col + "," + (0.25 * a).toFixed(2) + ")"); g.addColorStop(1, "rgba(" + col + ",0)");
-        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + 3, R, R * ry, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      } }
     if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida
@@ -686,14 +706,148 @@ export class Renderer {
       c.set(e.name, h > CHAR_H ? (CHAR_H / 2) / h : 0.7);          // los pequeños nacen al 70 %
     }
     // tamaño por etapas (niveles 10, 25, 40 y 50; companion.SIZE_STAGES): crece a saltos hasta el tamaño real al 50
-    const base = c.get(e.name), k = [0, 0.3, 0.55, 0.8, 1][sizeStep(e.clvl)];
-    const K = [0, 0.3, 0.55, 0.8, 1], st = sizeStep(e.clvl), size = base + (1 - base) * k;
+    const lich = e.name === "Liche", K = lich ? [0.5, 1] : [0, 0.3, 0.55, 0.8, 1], st = lich ? (e.clvl >= 10 ? 1 : 0) : sizeStep(e.clvl);   // Liche: mediano hasta el 9, tamaño normal desde el 10
+    const base = c.get(e.name), k = K[st], size = base + (1 - base) * k;
     const ratio = st > 0 ? (base + (1 - base) * K[st - 1]) / size : 1;                  // tamaño de la etapa anterior / actual (para la animación de evolución)
     const pulse = e.evoK > 0 ? 1 + 0.05 * Math.sin(performance.now() / 1000 * (2 + 14 * e.evoK) * Math.PI) * (0.4 + e.evoK) : 1;     // último nivel antes de evolucionar: late cada vez más rápido
     return size * (this.fx?.popScale?.(e.id, ratio) ?? 1) * pulse;
   }
 
   // Orbe violeta del báculo del Liche: centroide de los píxeles violeta más altos del fotograma (relativo al pivote); se calcula una vez por fotograma
+  // Círculo de casteo (summon Lv 50, 1700 ms): nace girando, se sostiene pulsando y se apaga. Todo es elipse en perspectiva y va BAJO el sprite.
+  castCircle(ctx, x, y, cc, e, fx) {
+    const ck = (performance.now() - cc.at) / 1700;
+    if (ck >= 1) { fx.scast.delete(e.id); return; }
+    const cfg = CAST_CFG[cc.sc] || CAST_CFG.def, col = hexRgb(cfg.color), core = hexRgb(cfg.core), br = cfg.bright;
+    const grow = Math.min(1, ck / 0.22), ease = 1 - (1 - grow) ** 3, po = Math.max(0, (ck - 0.7) / 0.3), out = 1 - po * po * (3 - 2 * po), a = ease * out * br;     // final: 510 ms, se cierra hacia el centro mientras se desvanece
+    const R = Math.max(0.5, (cfg.size * ease + 3 * Math.sin(ck * 18) * ease) * (1 - 0.3 * po * po)), ry = 0.42, cy = y + 3, rot = ck * 4.2, T = ck * 1700;
+    const rgba = (c, al) => "rgba(" + c + "," + Math.max(0, al).toFixed(3) + ")";
+    const ring = (r, w, al, dash) => { r = Math.max(0.1, r); ctx.lineWidth = w; ctx.strokeStyle = rgba(col, al); ctx.setLineDash(dash || []); ctx.beginPath(); ctx.ellipse(x, cy, r, r * ry, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); };
+    const pt = (q, r) => [x + Math.cos(q) * r, cy + Math.sin(q) * r * ry];
+    if (cc.sc === "Demon") return this.infernoBurst(ctx, x, cy, { R: cfg.size, ry, T, a: ease * br, col, core, rgba }, e);   // el Demon no es mago: en vez de círculo, erupción de lava (fireCircle queda sin uso)
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const g = ctx.createRadialGradient(x, cy, 0, x, cy, R * 1.25);                                  // resplandor del suelo
+    g.addColorStop(0, rgba(col, 0.6 * a)); g.addColorStop(0.65, rgba(col, 0.25 * a)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, R * 1.25, R * 1.25 * ry, 0, 0, Math.PI * 2); ctx.fill();
+    ring(R, 2.4, 1 * a); ring(R - 6, 1.2, 0.7 * a, [3, 4]); ring(R * 0.62, 1.6, 0.8 * a);          // anillos: exterior, de runas y medio
+    for (let n = 0; n < 36; n++) { const q = -rot * 0.5 + n * Math.PI / 18, [px, py] = pt(q, R + 3.5), [qx, qy] = pt(q, R + (n % 3 ? 5.5 : 8)); ctx.strokeStyle = rgba(col, (n % 3 ? 0.4 : 0.8) * a); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(qx, qy); ctx.stroke(); }
+    ctx.strokeStyle = rgba(col, 0.75 * a); ctx.lineWidth = 1.2;                                     // hexagrama: dos triángulos que giran en sentidos opuestos
+    for (const s of [1, -1]) { ctx.beginPath(); for (let n = 0; n <= 3; n++) { const [px, py] = pt(s * rot + n * 2 * Math.PI / 3 + (s > 0 ? 0 : Math.PI / 3), R * 0.62); n ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke(); }
+    for (let n = 0; n < 6; n++) { const [px, py] = pt(rot * 1.6 + n * Math.PI / 3, R * 0.8); ctx.fillStyle = rgba(core, 0.85 * a); ctx.beginPath(); ctx.arc(px, py, 1.6, 0, Math.PI * 2); ctx.fill(); }   // gemas orbitando
+    const pulse = 0.5 + 0.5 * Math.sin(T / 90), c = ctx.createRadialGradient(x, cy, 0, x, cy, 11);   // núcleo
+    c.addColorStop(0, rgba(core, (0.55 + 0.3 * pulse) * a)); c.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, cy, 11, 11 * ry * 1.4, 0, 0, Math.PI * 2); ctx.fill();
+    for (let n = 0; n < 16; n++) {                                                                  // chispas que suben del círculo
+      const sd = (Math.sin(n * 91.7 + e.id) * 43758.5453) % 1, ph = ((T / 900 + Math.abs(sd) + n / 16) % 1), q = n * 2.399 + sd * 6, r = R * (0.25 + 0.7 * Math.abs(Math.cos(n * 1.7)));
+      const [px, py] = pt(q, r); ctx.fillStyle = rgba(core, 0.9 * a * (1 - ph)); ctx.fillRect(px - 1, py - ph * 46 - 1, 2, 2 + (n % 3 === 0 ? 1 : 0));
+    }
+    ctx.restore();
+  }
+  // Demon: erupción infernal al castear (Lv 30/40/50 = 5/7/9 grietas y géiseres, cada vez más grande). Onda de calor, grietas de lava que se abren desde los pies
+  // y géiseres de fuego que brotan escalonados al final de cada grieta. Elipse en perspectiva, bajo el sprite.
+  infernoBurst(ctx, x, cy, k, e) {
+    const { R, ry, T, a, col, core, rgba } = k, ck = T / 1700, L = e.clvl, sc = L >= 50 ? 1 : L >= 40 ? 0.82 : 0.65, nC = L >= 50 ? 9 : L >= 40 ? 7 : 5, Rr = R * sc;
+    const rnd = (n) => { const q = Math.sin(n * 12.9898 + e.id) * 43758.5453; return q - Math.floor(q); };
+    const open = Math.min(1, ck / 0.3), eo = 1 - (1 - open) ** 3, heat = 1;
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const g = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 1.1); g.addColorStop(0, rgba(core, 0.4 * a)); g.addColorStop(0.5, rgba(col, 0.22 * a)); g.addColorStop(1, rgba(col, 0));
+    const HIT = 0.12, hk = Math.max(0, ck - HIT), reveal = Math.min(1, hk / 0.18), erase = Math.max(0, Math.min(1, (ck - 0.55) / 0.35));       // la fisura nace en el centro (bajo el Demon), se dibuja hacia los bordes (sin crecer ni encogerse) y luego se borra desde su inicio
+    ctx.save(); ctx.globalAlpha = Math.max(0, 1 - ck * 1.1); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 1.1, Rr * 1.1 * ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    if (ck >= HIT) {                                                                               // GOLPE EN EL SUELO: destello, onda de choque, quemadura bajo los pies, llamas y escombros
+      const imp = Math.max(0, 1 - hk / 0.12);
+      if (imp > 0) { const fg = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 0.9); fg.addColorStop(0, rgba("255,250,220", 0.95 * imp * a)); fg.addColorStop(0.4, rgba(core, 0.6 * imp * a)); fg.addColorStop(1, rgba(col, 0)); ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 0.9, Rr * 0.9 * ry, 0, 0, Math.PI * 2); ctx.fill(); }
+      for (const [d, w0] of [[0, 4], [0.08, 2.5]]) { const q = Math.min(1, Math.max(0, (hk - d) / 0.3)); if (q <= 0 || q >= 1) continue; const rr = Rr * 1.35 * (1 - (1 - q) ** 3);
+        ctx.strokeStyle = rgba(core, 0.85 * (1 - q) * a); ctx.lineWidth = w0 * (1 - q) + 0.5; ctx.beginPath(); ctx.ellipse(x, cy, rr, rr * ry, 0, 0, Math.PI * 2); ctx.stroke(); }
+      const burn = Math.min(1, hk / 0.06) * Math.max(0, 1 - Math.max(0, ck - 0.7) / 0.3);        // quemadura: suelo ennegrecido y brasas bajo los pies
+      if (burn > 0) {
+        ctx.globalCompositeOperation = "source-over"; const bg = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 0.5); bg.addColorStop(0, "rgba(10,3,1," + (0.75 * burn).toFixed(2) + ")"); bg.addColorStop(1, "rgba(10,3,1,0)");
+        ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 0.5, Rr * 0.5 * ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = "lighter";
+        for (let n = 0; n < 9; n++) {                                                              // llamas que arden en círculo a sus pies
+          const ph = (T / 520 + rnd(n + 40)) % 1, fa = n * 2 * Math.PI / 9 + rnd(n + 50), px = x + Math.cos(fa) * Rr * 0.32, py = cy + Math.sin(fa) * Rr * 0.32 * ry, hh = 10 + 12 * rnd(n + 60), r = 5 + 3 * rnd(n + 70), yy = py - ph * hh;
+          const g2 = ctx.createRadialGradient(px, yy, 0, px, yy, r); const al = Math.sin(ph * Math.PI) * burn * a;
+          g2.addColorStop(0, rgba(core, 0.8 * al)); g2.addColorStop(0.5, rgba(col, 0.45 * al)); g2.addColorStop(1, rgba(col, 0));
+          ctx.fillStyle = g2; ctx.beginPath(); ctx.ellipse(px, yy, r, r * 1.5, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      for (let n = 0; n < 16; n++) {                                                               // escombros y chispas que saltan del impacto
+        const t2 = hk / 0.45 - rnd(n + 80) * 0.12; if (t2 <= 0 || t2 >= 1) continue;
+        const an = rnd(n + 90) * 2 * Math.PI, sp = Rr * (0.5 + 0.8 * rnd(n + 100)), vy = 30 + 38 * rnd(n + 110);
+        const px = x + Math.cos(an) * sp * t2, py = cy + Math.sin(an) * sp * ry * t2 - (vy * t2 - 55 * t2 * t2);
+        ctx.fillStyle = rgba(n % 3 ? col : core, 0.95 * (1 - t2) * a); ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
+      }
+    }
+    const lerp = (P, u) => { const t = u * (P.length - 1), i = Math.min(P.length - 2, Math.floor(t)), q = t - i; return [P[i][0] + (P[i + 1][0] - P[i][0]) * q, P[i][1] + (P[i + 1][1] - P[i][1]) * q]; };
+    const ribbon = (P, u0, u1, w, tp, wob) => {                                                    // cinta continua (un solo trazo, sin juntas) de la fisura entre u0 y u1, afinándose hacia la punta
+      if (u1 - u0 < 0.01) return;
+      const m = 14, L = [], R = [];
+      for (let i = 0; i <= m; i++) {
+        const u = u0 + (u1 - u0) * i / m, p = lerp(P, u), p2 = lerp(P, Math.min(1, u + 0.03)), p1 = lerp(P, Math.max(0, u - 0.03));
+        let dx = p2[0] - p1[0], dy = (p2[1] - p1[1]) / ry; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+        const hw = 0.5 * w * (1 - tp * u) * (1 + wob * Math.sin(u * 23 + P[0][0]));
+        L.push([p[0] - dy * hw, p[1] + dx * hw * ry]); R.push([p[0] + dy * hw, p[1] - dx * hw * ry]);
+      }
+      ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]); for (const q of L) ctx.lineTo(q[0], q[1]); for (let i = m; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath(); ctx.fill();
+    };
+    const cracks = [];
+    for (let n = 0; n < nC; n++) {
+      const ang = n * 2 * Math.PI / nC + rnd(n) * 0.5, full = Rr * (1.5 + 0.5 * rnd(n + 9)), pts = [];
+      for (let j = 0; j <= 10; j++) { const r = full * j / 10, jit = j ? (j % 2 ? 1 : -1) * (1.5 + rnd(n * 7 + j) * 3.5) : 0; pts.push([x + Math.cos(ang) * r - Math.sin(ang) * jit, cy + (Math.sin(ang) * r + Math.cos(ang) * jit) * ry]); }
+      cracks.push({ P: pts, u0: 0, u1: 1, w: 1 });
+      const ub = 0.35 + 0.3 * rnd(n + 3), bp = lerp(pts, ub), ba = ang + (rnd(n + 5) > 0.5 ? 1 : -1) * (0.5 + 0.3 * rnd(n + 6)), bl = full * 0.4, bpts = [];       // una rama que sale de la grieta
+      for (let j = 0; j <= 6; j++) { const r = bl * j / 6, jit = j ? (j % 2 ? 1 : -1) * (2 + rnd(n * 5 + j) * 3) : 0; bpts.push([bp[0] + Math.cos(ba) * r - Math.sin(ba) * jit, bp[1] + (Math.sin(ba) * r + Math.cos(ba) * jit) * ry]); }
+      cracks.push({ P: bpts, u0: ub, u1: 1, w: 0.55 });
+    }
+    for (const c of cracks) {                                                                      // el rango visible (reveal..erase) se reparte en la rama a partir de donde nace
+      const ua = Math.max(0, Math.min(1, (erase - c.u0) / (1 - c.u0))), ub2 = Math.max(0, Math.min(1, (reveal - c.u0) / (1 - c.u0)));
+      c.a = c.u0 ? ua : erase; c.b = c.u0 ? ub2 : reveal;
+    }
+    ctx.globalCompositeOperation = "source-over";                                                  // el hueco oscuro del suelo
+    ctx.fillStyle = "rgba(8,3,2," + (0.92 * Math.min(1, a)).toFixed(3) + ")";
+    for (const c of cracks) ribbon(c.P, c.a, c.b, 8 * c.w, 0.55, 0.25);
+    ctx.globalCompositeOperation = "lighter";                                                      // la lava que brilla dentro
+    for (const [w, al, cc2] of [[5, 0.22 * heat, col], [2.4, 0.85, col], [1.1, 0.95 * heat, core]]) {
+      ctx.fillStyle = rgba(cc2, al * a);
+      for (const c of cracks) ribbon(c.P, c.a, c.b, w * c.w, 0.6, 0.35);
+    }
+    ctx.restore();
+  }
+  // Demon (antiguo): pentagrama de fuego invertido. Anillo con lenguas de llama, pentagrama que late al rojo vivo (gira despacio), una llama en cada punta,
+  // runas en el anillo medio y núcleo de lava; brasas suben del suelo. Misma elipse en perspectiva que el resto de círculos.
+  fireCircle(ctx, x, cy, k, e) {
+    const { R, ry, rot, T, a, col, core, rgba, ring, pt } = k, fl = (n, t) => { const q = Math.sin((n + Math.floor(t / 70)) * 12.9898 + e.id) * 43758.5453; return q - Math.floor(q); };   // parpadeo a pasos
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const g = ctx.createRadialGradient(x, cy, 0, x, cy, R * 1.3);                                   // suelo incandescente
+    g.addColorStop(0, rgba(core, 0.45 * a)); g.addColorStop(0.4, rgba(col, 0.35 * a)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, R * 1.3, R * 1.3 * ry, 0, 0, Math.PI * 2); ctx.fill();
+    ring(R, 2.6, a); ring(R * 0.9, 1.1, 0.6 * a, [2, 3]);
+    ctx.fillStyle = rgba(col, 0.75 * a);                                                            // lenguas de llama sobre el anillo exterior
+    for (let n = 0; n < 40; n++) {
+      const q = n * Math.PI / 20 + rot * 0.15, h = 4 + fl(n, T) * 9 + 3 * Math.sin(T / 120 + n), [bx, by] = pt(q, R), [lx, ly] = pt(q - 0.07, R), [rx, rY] = pt(q + 0.07, R);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(bx + Math.sin(T / 150 + n) * 1.5, by - h); ctx.lineTo(rx, rY); ctx.fill();
+    }
+    const heat = 0.65 + 0.35 * Math.sin(T / 110), pr = R * 0.86, P = [];                             // pentagrama invertido (punta hacia abajo)
+    for (let n = 0; n < 5; n++) P.push(pt(Math.PI / 2 + rot * 0.35 + n * 2 * Math.PI / 5, pr));
+    for (const [w, al, c] of [[5, 0.25, col], [2.2, 0.9, col], [0.9, 0.9, core]]) {                 // trazo con halo, cuerpo y filo caliente
+      ctx.strokeStyle = rgba(c, al * a * (w > 2 ? heat : 1)); ctx.lineWidth = w; ctx.beginPath();
+      for (let n = 0; n <= 5; n++) { const [px, py] = P[(n * 2) % 5]; n ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
+    }
+    ring(pr * 0.38, 1.2, 0.7 * a, [2, 2]);
+    for (const [px, py] of P) {                                                                     // llama en cada punta del pentagrama
+      const h = 12 + fl(px, T) * 10 + 4 * Math.sin(T / 90 + px);
+      const fg = ctx.createRadialGradient(px, py - h * 0.4, 0, px, py - h * 0.4, h * 0.9); fg.addColorStop(0, rgba(core, 0.85 * a)); fg.addColorStop(0.5, rgba(col, 0.5 * a)); fg.addColorStop(1, rgba(col, 0));
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(px - 4, py); ctx.quadraticCurveTo(px - 3, py - h * 0.6, px + Math.sin(T / 110 + px) * 2, py - h); ctx.quadraticCurveTo(px + 3, py - h * 0.6, px + 4, py); ctx.fill();
+    }
+    ctx.fillStyle = rgba(core, 0.8 * a);                                                            // runas (marcas) en el anillo medio, contra-giro
+    for (let n = 0; n < 10; n++) { const q = -rot * 0.6 + n * Math.PI / 5, [px, py] = pt(q, R * 0.95 - 3); ctx.fillRect(px - 1, py - 2.5, 2, 5); }
+    const c = ctx.createRadialGradient(x, cy, 0, x, cy, 12);                                        // núcleo de lava
+    c.addColorStop(0, rgba(core, (0.6 + 0.3 * heat) * a)); c.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, cy, 12, 12 * ry * 1.4, 0, 0, Math.PI * 2); ctx.fill();
+    for (let n = 0; n < 22; n++) {                                                                  // brasas
+      const sd = Math.abs(Math.sin(n * 91.7 + e.id)), ph = (T / 1000 + sd + n / 22) % 1, [px, py] = pt(n * 2.399 + sd * 6, R * (0.2 + 0.75 * Math.abs(Math.cos(n * 1.7))));
+      ctx.fillStyle = rgba(n % 2 ? core : col, 0.95 * a * (1 - ph)); ctx.fillRect(Math.round(px + Math.sin(ph * 6 + n) * 3), Math.round(py - ph * 52), 2, 2 + (n % 3 ? 0 : 2));
+    }
+    ctx.restore();
+  }
   orbPos(key, f) {
     const c = this._orb || (this._orb = new Map()), id = key + ":" + f;
     if (c.has(id)) return c.get(id);

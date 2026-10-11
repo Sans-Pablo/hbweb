@@ -1,0 +1,70 @@
+{
+ "rules": [
+  {
+   "match": [
+    "demon*"
+   ],
+   "ops": [
+    {
+     "op": "levels",
+     "gamma": 1.25,
+     "contrast": 1.12,
+     "brightness": 0.0
+    },
+    {
+     "op": "tint",
+     "where": {
+      "hue": [
+       0,
+       45
+      ],
+      "sat_min": 0.35,
+      "val_min": 0.5
+     },
+     "color": "#ff9a1a",
+     "amount": 0.6
+    },
+    {
+     "op": "tint",
+     "where": {
+      "sat_max": 0.35,
+      "val_min": 0.6
+     },
+     "color": "#ffe08a",
+     "amount": 0.85
+    },
+    {
+     "op": "glow",
+     "where": {
+      "hue": [
+       10,
+       50
+      ],
+      "sat_min": 0.4,
+      "val_min": 0.62
+     },
+     "color": "#ff5a10",
+     "radius": 2,
+     "strength": 0.7,
+     "alpha": 0.4,
+     "hd": true
+    }
+   ]
+  }
+ ],
+ "hd": {
+  "include": [
+   "liche*",
+   "demon*",
+   "frost*"
+  ],
+  "exclude": [],
+  "default": {
+   "k": 4,
+   "blur": 1.7,
+   "sharp": 1.0,
+   "edge": 1.8
+  },
+  "overrides": []
+ }
+}

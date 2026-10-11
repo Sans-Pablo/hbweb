@@ -36,6 +36,12 @@ export function validateDungeonAssets(manifest, npcDb) {
   }
 }
 
+// Solo en local: si tools/spritelab/watch.py regenera sprites/anclas, la página se recarga sola (sello en /api/dev/stamp).
+function devReload() {
+  let t0 = null;
+  setInterval(async () => { try { const t = (await (await fetch("/api/dev/stamp", { cache: "no-store" })).json()).t; if (t0 === null) t0 = t; else if (t !== t0) location.reload(); } catch {} }, 2000);
+}
+
 export async function loadAssets(onProgress) {
   await detectWebp();
   const response = async u => {
@@ -88,6 +94,8 @@ export async function loadAssets(onProgress) {
     setDungeonPalette(await json("data/dungeon_palette.json"));          // teselas de middled1n/middled1x para la cripta
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const sprites = new Sprites(manifest, images, hd);
+  sprites.anchors = await json("data/anchors.json").catch(() => ({}));          // anclajes por fotograma (ojos, orbe…) generados por tools/spritelab/anchors.py
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) devReload();
     return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
 }
 

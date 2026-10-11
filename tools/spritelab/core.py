@@ -9,7 +9,7 @@ from PIL import Image
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATA = os.path.join(ROOT, "web", "data")
 ART = os.path.join(ROOT, "art")
-ALGO_VERSION = "1"          # súbelo si cambias el algoritmo de upscale/ops: invalida la caché
+ALGO_VERSION = "2"          # súbelo si cambias el algoritmo de upscale/ops: invalida la caché
 
 
 def jload(p, default=None):

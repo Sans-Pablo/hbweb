@@ -43,7 +43,7 @@ export class Fx {
         this.text(ev.id, String(ev.amount), mine ? "#ff5a4a" : "#fff3d6", ev.amount >= 8);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
-      case "dummy-cast": if (ev.max) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
+      case "dummy-cast": if (ev.max || (ev.lvl >= 30 && (ev.sc === "Demon" || ev.sc === "Liche"))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;

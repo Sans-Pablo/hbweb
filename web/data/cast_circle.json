@@ -1,0 +1,26 @@
+{
+ "Liche": {
+  "color": "#be64ff",
+  "core": "#ebc8ff",
+  "bright": 0.4,
+  "size": 40
+ },
+ "Demon": {
+  "color": "#701e00",
+  "core": "#e00606",
+  "bright": 0.8,
+  "size": 30
+ },
+ "Frost": {
+  "color": "#82c8ff",
+  "core": "#e6f8ff",
+  "bright": 0.15,
+  "size": 33
+ },
+ "def": {
+  "color": "#ffdc78",
+  "core": "#fff5c8",
+  "bright": 0.6,
+  "size": 46
+ }
+}

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Anclas · Liche</title>
+<style>
+body{background:#1c1c22;color:#ddd;font:13px sans-serif;margin:8px}
+select,button{font:inherit;margin-right:6px}
+#g{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.c{position:relative;background:#46464f;cursor:crosshair}
+.c canvas{display:block;image-rendering:pixelated}
+.c span{position:absolute;left:2px;top:2px;font-size:11px;color:#fff;background:#0008;padding:0 3px}
+.c.no{outline:2px solid #e44}.c.ok{outline:2px solid #4e4}
+</style></head><body>
+<b>Anclas de ojos</b> · clic = poner ojos (centro entre ambos) · clic derecho = "sin ojos" · rojo = automático, verde = tuyo
+<div style="margin:6px 0">
+ <select id="k"></select><button id="prev">◀</button><button id="next">▶</button>
+ Zoom <select id="z"><option>3</option><option selected>4</option><option>6</option></select>
+ <span id="info"></span>
+</div>
+<div style="display:flex;gap:14px;align-items:flex-start">
+<div id="g" style="flex:1"></div>
+<div style="position:sticky;top:8px;background:#26262e;padding:8px;border-radius:6px">
+ <b>Animación</b> <select id="fps"><option value="4">4 fps</option><option value="8" selected>8 fps</option><option value="12">12 fps</option></select>
+ <label><input type="checkbox" id="pm" checked> usar mis puntos</label><br>
+ <button id="pp">⏸ Pausa</button> <button id="fp">◀ frame</button> <button id="fn">frame ▶</button> <small>en pausa: clic en la animación pone el punto, clic derecho = sin ojos</small><br>
+<div style="margin:6px 0">Fotograma: X <input id="ex" type="number" step="0.5" style="width:70px"> Y <input id="ey" type="number" step="0.5" style="width:70px"> <small>(relativo al pivote)</small>
+  <br><button id="ra">↺ Este fotograma → automático</button> <button id="rk">↺ Esta clave → automática</button> <button id="rt">↺ Todas → automáticas</button></div>
+ <div style="margin:6px 0;padding:6px;background:#1c1c22;border-radius:4px"><b>Mover todas</b>: dX <input id="dx" type="number" value="0" step="0.5" style="width:60px"> dY <input id="dy" type="number" value="0" step="0.5" style="width:60px">
+  <select id="sc"><option value="k">esta clave</option><option value="a">todas las claves</option></select> <button id="ap">Aplicar</button></div>
+ <canvas id="pv" width="460" height="540" style="background:#46464f;margin-top:6px;image-rendering:pixelated"></canvas>
+ <div id="pf" style="font-size:11px"></div>
+ <button id="sv" style="margin-top:6px">Guardar ✔</button> <small>(también se guarda solo)</small>
+</div></div>
+<script>
+const Z=()=>+document.getElementById('z').value;
+let man={},anc={},spr={},keys=[];
+try{man=JSON.parse(localStorage.getItem('anclasManual')||'{}')}catch(e){}
+let st=null;
+const save=()=>{try{localStorage.setItem('anclasManual',JSON.stringify(man))}catch(e){}
+ clearTimeout(st);st=setTimeout(()=>fetch('/api/dev/anclas',{method:'POST',body:JSON.stringify(man)}).then(r=>{document.getElementById('info').textContent=r.ok?'guardado ✔ '+new Date().toLocaleTimeString()+' · '+Object.keys(man).length+' claves':'ERROR al guardar'}).catch(()=>{document.getElementById('info').textContent='sin servidor: solo en el navegador'}),300)};
+const img=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src});
+async function init(){
+ try{const r=await fetch('/api/dev/anclas');if(r.ok){const d=await r.json();if(Object.keys(d).length)man=d}}catch(e){}
+ anc=await (await fetch('data/anchors.json?'+Date.now())).json();
+ const s=await (await fetch('data/sprites.json')).json();
+ keys=Object.keys(anc).sort((a,b)=>+a.replace(/\D/g,'')-+b.replace(/\D/g,''));
+ const sel=document.getElementById('k');
+ sel.innerHTML=keys.map(k=>{const n=+k.replace(/\D/g,'');return `<option value="${k}">${k} (${['reposo','andar','atacar','daño','morir'][n>>3]} dir ${(n&7)+1})</option>`}).join('');
+ spr=s; sel.value=localStorage.getItem('anclasKey')||keys[0]; show();
+ sel.onchange=show; document.getElementById('z').onchange=show;
+ document.getElementById('prev').onclick=()=>{sel.selectedIndex=Math.max(0,sel.selectedIndex-1);show()};
+ document.getElementById('next').onclick=()=>{sel.selectedIndex=Math.min(keys.length-1,sel.selectedIndex+1);show()};
+}
+async function show(){
+ const k=document.getElementById('k').value; try{localStorage.setItem('anclasKey',k)}catch(e){}
+ const e=spr[k], sh=await img('data/sprites/'+e.png), z=Z(), g=document.getElementById('g'); g.innerHTML='';
+ redraws=[];curK=k;man[k]=man[k]||{eyes:e.frames.map(()=>false)};
+ e.frames.forEach((f,i)=>{
+  const [x,y,w,h,pvx,pvy]=f, d=document.createElement('div'), cv=document.createElement('canvas');
+  cv.width=w*z;cv.height=h*z;d.className='c';d.append(cv);
+  const lab=document.createElement('span');lab.textContent=k+':'+i;d.append(lab);
+  const draw=()=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,cv.width,cv.height);
+   c.drawImage(sh,x,y,w,h,0,0,w*z,h*z);
+   const dot=(p,col)=>{if(!p)return;c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc((p[0]-pvx)*z,(p[1]-pvy)*z,5,0,7);c.stroke();
+    c.beginPath();c.moveTo((p[0]-pvx)*z-8,(p[1]-pvy)*z);c.lineTo((p[0]-pvx)*z+8,(p[1]-pvy)*z);c.stroke()};
+   dot(anc[k].eyes[i],'rgba(255,60,60,.8)');
+   const m=man[k].eyes[i]; dot(m,'#4f4'); d.className='c'+(m===null?' no':m?' ok':'')};
+  draw();redraws[i]=draw;
+  cv.onclick=ev=>{const r=cv.getBoundingClientRect();man[k].eyes[i]=[Math.round(((ev.clientX-r.left)/z+pvx)*10)/10,Math.round(((ev.clientY-r.top)/z+pvy)*10)/10];save();draw()};
+  cv.oncontextmenu=ev=>{ev.preventDefault();man[k].eyes[i]=man[k].eyes[i]===null?false:null;save();draw()};
+  g.append(d)});
+ save(); startAnim(k,e,sh);
+}
+let tm=null,fi=0,paused=false,cur=0,redraws=[],curK=null,pvz=3,pvo=[230,356];
+function startAnim(k,e,sh){
+ clearInterval(tm); fi=0; const cv=document.getElementById('pv'),c=cv.getContext('2d');
+ const step=(adv=true)=>{const z=3,n=e.frames.length,i=((fi%n)+n)%n,cur_=cur=i,[x,y,w,h,pvx,pvy]=e.frames[i];
+  c.imageSmoothingEnabled=false;c.clearRect(0,0,cv.width,cv.height);
+  const ox=cv.width/2,oy=cv.height*0.66;pvo=[ox,oy]; c.drawImage(sh,x,y,w,h,ox+pvx*z,oy+pvy*z,w*z,h*z);
+  const m=man[k]&&man[k].eyes[i],use=document.getElementById('pm').checked;
+  const p=(use&&m!==undefined&&m!==false)?m:anc[k].eyes[i];
+  if(p){[-3,3].forEach(dx=>{const gx=ox+(p[0]+dx*((+k.replace(/\D/g,'')&7)==4?1:.7))*z,gy=oy+p[1]*z;
+   const gr=c.createRadialGradient(gx,gy,0,gx,gy,5*z);gr.addColorStop(0,'rgba(255,255,200,1)');gr.addColorStop(.3,'rgba(255,40,20,.9)');gr.addColorStop(1,'rgba(255,0,0,0)');
+   c.fillStyle=gr;c.beginPath();c.arc(gx,gy,5*z,0,7);c.fill()})}
+  if(document.activeElement.tagName!=='INPUT'){document.getElementById('ex').value=p?p[0]:'';document.getElementById('ey').value=p?p[1]:''}
+  document.getElementById('pf').textContent=k+' · fotograma '+i+(p?'':' · sin ojos')+(use&&m!==undefined&&m!==false?' · (tuyo)':' · (auto)');
+  if(adv)fi++};
+ window.stepFn=step; step(); tm=setInterval(()=>step(!paused),1000/+document.getElementById('fps').value);
+}
+document.getElementById('fps').onchange=()=>show();
+const pp=document.getElementById('pp');
+pp.onclick=()=>{paused=!paused;pp.textContent=paused?'▶ Seguir':'⏸ Pausa';if(paused){fi=cur}else fi=cur+1};
+document.getElementById('fp').onclick=()=>{paused=true;pp.textContent='▶ Seguir';fi=cur-1;stepFn(false);fi=cur;};
+document.getElementById('fn').onclick=()=>{paused=true;pp.textContent='▶ Seguir';fi=cur+1;stepFn(false);fi=cur;};
+const pv=document.getElementById('pv');
+const edit=()=>{const x=parseFloat(document.getElementById('ex').value),y=parseFloat(document.getElementById('ey').value);if(isFinite(x)&&isFinite(y)){man[curK].eyes[cur]=[x,y];save();redraws[cur]&&redraws[cur]();stepFn(false);fi=paused?cur:fi}};
+const resetK=k=>{if(man[k])man[k].eyes=man[k].eyes.map(()=>false)};
+document.getElementById('ra').onclick=()=>{man[curK].eyes[cur]=false;save();redraws[cur]&&redraws[cur]();document.activeElement.blur();stepFn(false);fi=paused?cur:fi};
+document.getElementById('rk').onclick=()=>{resetK(curK);save();show()};
+document.getElementById('rt').onclick=()=>{if(confirm('¿Borrar TODOS tus puntos y volver a los automáticos?')){keys.forEach(resetK);save();show()}};
+document.getElementById('ex').oninput=edit;document.getElementById('ey').oninput=edit;
+document.getElementById('ap').onclick=()=>{const dx=+document.getElementById('dx').value||0,dy=+document.getElementById('dy').value||0,all=document.getElementById('sc').value==='a';
+ for(const k of (all?keys:[curK])){man[k]=man[k]||{eyes:anc[k].eyes.map(()=>false)};
+  man[k].eyes=man[k].eyes.map((m,i)=>{const b=(m!==undefined&&m!==false)?m:anc[k].eyes[i];return b?[Math.round((b[0]+dx)*10)/10,Math.round((b[1]+dy)*10)/10]:m})}
+ document.getElementById('dx').value=0;document.getElementById('dy').value=0;save();show()};
+function setPv(v){if(!paused)return;man[curK].eyes[cur]=v;save();redraws[cur]&&redraws[cur]();stepFn(false);fi=cur}
+pv.onclick=ev=>{const r=pv.getBoundingClientRect();setPv([Math.round(((ev.clientX-r.left)-pvo[0])/pvz*10)/10,Math.round(((ev.clientY-r.top)-pvo[1])/pvz*10)/10])};
+pv.oncontextmenu=ev=>{ev.preventDefault();if(paused)setPv(man[curK].eyes[cur]===null?false:null)};
+document.getElementById('pm').onchange=()=>show();
+document.getElementById('sv').onclick=()=>{save()};
+init();
+</script></body></html>

@@ -129,6 +129,24 @@ def paint(img, p, ctx):
     return out
 
 
+def clean(img, max_area=6, gap=2):
+    """Regla base (siempre activa): borra motas sueltas (grupos de <= max_area px aislados a más de 'gap' px del cuerpo).
+    Quita el ruido de los sprites originales para obtener modelos más limpios."""
+    a = (img[..., 3] > 0).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(cv2.dilate(a, np.ones((2 * gap + 1, 2 * gap + 1), np.uint8)), connectivity=8)
+    out = img.copy()
+    for i in range(1, n):
+        comp = (lab == i) & (a > 0)
+        if comp.sum() <= max_area: out[comp] = 0
+    return out
+
+
+@op("despeckle")
+def despeckle(img, p, ctx):
+    """Limpieza manual con otros umbrales: {"op":"despeckle","max_area":12,"gap":3}."""
+    return clean(img, p.get("max_area", 6), p.get("gap", 2))
+
+
 def apply(img, ops, ctx):
     for o in ops:
         o = dict(o); name = o.pop("op"); o.pop("hd", None)

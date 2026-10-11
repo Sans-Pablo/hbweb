@@ -190,6 +190,26 @@ const server = http.createServer((req, res) => {
     req.on("end", () => { let line = ""; try { line = JSON.parse(body).line; } catch {} json(req, res, 200, { out: adminCmd(String(line || ""), "panel") }); });
     return;
   }
+  if (url.pathname === "/api/dev/anclas") {      // herramienta de arte (web/anclas.html): puntos de ojos hechos a mano -> art/anchors_manual.json, solo desde este PC
+    if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { res.writeHead(403); res.end(); return; }
+    const f = path.resolve(WEB, "..", "art", "anchors_manual.json");
+    if (req.method === "POST") {
+      let body = ""; req.on("data", d => { body += d; if (body.length > 2e6) req.destroy(); });
+      req.on("end", () => { try { JSON.parse(body); fs.writeFileSync(f, body); json(req, res, 200, { ok: true }); } catch (e) { json(req, res, 400, { error: e.message }); } });
+    } else json(req, res, 200, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {});
+    return;
+  }
+  if (url.pathname === "/api/dev/stamp") {      // recarga automática en local: última modificación de los datos de arte generados
+    const m = ["sprites_hd.json", "sprites_mod.json", "anchors.json", "cast_circle.json"].map(n => { try { return fs.statSync(path.resolve(WEB, "data", n)).mtimeMs; } catch { return 0; } });
+    json(req, res, 200, { t: Math.max(...m) });
+    return;
+  }
+  if (url.pathname === "/api/dev/cast" && req.method === "POST") {      // bestiario: ajustes del círculo de casteo -> web/data/cast_circle.json, solo desde este PC
+    if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { res.writeHead(403); res.end(); return; }
+    let body = ""; req.on("data", d => { body += d; if (body.length > 1e5) req.destroy(); });
+    req.on("end", () => { try { JSON.parse(body); fs.writeFileSync(path.resolve(WEB, "data", "cast_circle.json"), body); json(req, res, 200, { ok: true }); } catch (e) { json(req, res, 400, { error: e.message }); } });
+    return;
+  }
   let rel = decodeURIComponent(url.pathname);
   if (rel.endsWith("/")) rel += "index.html";
   const file = path.resolve(WEB, "." + rel);
