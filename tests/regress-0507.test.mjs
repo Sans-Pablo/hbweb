@@ -8,3 +8,9 @@ assert.ok(res.includes('say2(adv, w, p, "admire"'), "los bots admiran un summon 
 assert.ok(bos.includes("DYN.ICESTORM") && !bos.includes('kind: "frost"'), "el jefe glacial usa Tormentas de Hielo, sin suelo");
 assert.ok(hud.includes("this.ballUid !== bu"), "cambiar de summon reinicia F4");
 console.log("OK regress-0507");
+// el bot no dice nombres internos
+{
+  const r = rd("shared/systems/residents.js");
+  assert.ok(r.includes('replace(/([a-z])([A-Z])/g, "$1 $2")'), "nombre visible del objeto en los tratos");
+  console.log("OK regress-0507 names");
+}
