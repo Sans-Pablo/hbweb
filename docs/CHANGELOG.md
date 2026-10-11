@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.53.0 · Los summons de nivel 50 hablan según su especie (2026-10-11)
+- Al llegar al nivel 50, Liche (nigromante, aterrador), Demon (rey del inframundo, majestuoso y cálido) y Frost (belleza y muerte por escarcha) dicen una frase propia, con respuesta del jugador (es/en). Datos: `voice.json` → `companion.milestone50`. Test en `tests/voice.test.mjs`.
+
 ## 0.52.2 · Puestos: diálogos propios (2026-10-11)
 - Precio y rótulo del puesto se piden con un cuadro propio (el `prompt` del navegador está bloqueado en muchos webviews). Pie de página correcto al montar un puesto. Probado: tienda NPC, montar y abrir puesto, plantar y alimentar.
 

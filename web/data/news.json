@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Summons de nivel 50 con voz propia (v0.53.0)",
+        "en": "Level-50 summons with their own voice (v0.53.0)"
+      },
+      "items": [
+        {
+          "es": "Liche, Demon y Frost dicen algo distinto al llegar al nivel 50: el Liche da miedo, el Demon es un rey majestuoso y cercano, y Frost habla de la belleza de morir congelado.",
+          "en": "Liche, Demon and Frost say something different at level 50: the Lich is frightening, the Demon a majestic yet warm king, and Frost speaks of the beauty of freezing to death."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Puestos: diálogos propios (v0.52.2)",
         "en": "Stalls: own dialogs (v0.52.2)"
       },

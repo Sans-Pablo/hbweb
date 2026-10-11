@@ -167,7 +167,7 @@ export class Voice {
         else this.me(this.d.companion.dismiss.me, "pdismiss", 0.6, 4000);
         break;
       case "companion-lvl": if (ev.id === this.pid) {
-        const ms = this.d.companion.milestone?.[ev.lvl];                                  // niveles 10, 25, 40 y 50: frase propia
+        const ms = (ev.lvl === 50 && this.d.companion.milestone50?.[ev.sp]) || this.d.companion.milestone?.[ev.lvl];  // niveles 10, 25, 40 y 50; en el 50 Liche/Demon/Frost tienen frase propia
         if (ms) this.talkPet(world, "milestone", "pmile", { chance: 1, cool: 0, first: "pet", list: [ms] });
         else this.talkPet(world, "levelup", "plvl", { chance: 1, cool: 2000, first: "pet" });
       } break;

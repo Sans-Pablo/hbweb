@@ -1919,6 +1919,86 @@
     }
    ]
   },
+  "milestone50": {
+   "Liche": {
+    "pet": [
+     {
+      "es": "Cincuenta lunas… y la muerte aún me obedece. Siente cómo tiembla la sombra a mis pies.",
+      "en": "Fifty moons… and death still obeys me. Feel the shadow tremble at my feet."
+     },
+     {
+      "es": "Hubo un tiempo en que temí a la oscuridad. Ahora la oscuridad me teme a mí.",
+      "en": "There was a time I feared the dark. Now the dark fears me."
+     },
+     {
+      "es": "Mis huesos cantan, mortal. Cada alma que caiga ante nosotros será mi coro.",
+      "en": "My bones sing, mortal. Every soul that falls before us will be my choir."
+     }
+    ],
+    "me": [
+     {
+      "es": "Se me hiela la sangre cuando sonríes así… pero sigo a tu lado.",
+      "en": "My blood runs cold when you smile like that… but I stay at your side."
+     },
+     {
+      "es": "Tu poder da miedo, amigo mío. Espero que siempre estés de mi lado.",
+      "en": "Your power is frightening, my friend. I hope you're always on my side."
+     }
+    ]
+   },
+   "Demon": {
+    "pet": [
+     {
+      "es": "Mi señor… mi amigo. Cincuenta veces me arrodillé ante tu fuerza; hoy el inframundo se arrodilla conmigo.",
+      "en": "My lord… my friend. Fifty times I knelt before your strength; today the underworld kneels with me."
+     },
+     {
+      "es": "Soy el rey de las brasas y de los abismos, pero a ti te debo mi corona. Gracias por tu paciencia.",
+      "en": "I am king of embers and abysses, yet I owe you my crown. Thank you for your patience."
+     },
+     {
+      "es": "Las llamas del infierno me coronan, y aun así nada arde tan cálido como tu compañía.",
+      "en": "The flames of hell crown me, yet nothing burns as warm as your company."
+     }
+    ],
+    "me": [
+     {
+      "es": "Majestuoso como siempre, rey mío. Es un honor caminar junto a ti.",
+      "en": "Majestic as ever, my king. It is an honor to walk beside you."
+     },
+     {
+      "es": "Reinas en el inframundo, pero aquí eres mi amigo. Gracias por todo.",
+      "en": "You rule the underworld, but here you're my friend. Thank you for everything."
+     }
+    ]
+   },
+   "Frost": {
+    "pet": [
+     {
+      "es": "Mira el hielo a mi alrededor: cada cristal es una promesa. Qué hermosa es la muerte cuando llega despacio.",
+      "en": "Look at the ice around me: every crystal is a promise. How beautiful death is when it arrives slowly."
+     },
+     {
+      "es": "Tras cincuenta inviernos soy la nieve que cae sobre todo… y todo calla bajo su belleza.",
+      "en": "After fifty winters I am the snow that falls on everything… and all falls silent beneath its beauty."
+     },
+     {
+      "es": "Duerme, enemigo. La escarcha te abrazará con ternura mientras te apagas.",
+      "en": "Sleep, enemy. The frost will embrace you tenderly as you fade."
+     }
+    ],
+    "me": [
+     {
+      "es": "Eres preciosa y letal a la vez. Que el frío nunca llegue hasta mí… ¿verdad?",
+      "en": "You're beautiful and deadly at once. The cold will never reach me… right?"
+     },
+     {
+      "es": "Hasta tu aliento brilla. Cuánta belleza para tanto peligro.",
+      "en": "Even your breath glitters. So much beauty for so much danger."
+     }
+    ]
+   }
+  },
   "milestone": {
    "10": {
     "me": [

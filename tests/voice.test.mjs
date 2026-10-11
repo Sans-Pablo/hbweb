@@ -63,3 +63,12 @@ console.log("persona OK");
   T += 100000; v2 = mk(); v2.onEvent({ t: "ghost", x: 12, y: 10 }, w2); assert.ok(bubbles.get(1)?.text, "fantasma cerca");
 }
 console.log("fear OK");
+// nivel 50: Liche, Demon y Frost tienen frase propia (es + en); el resto usa la genérica
+{
+  const m50 = data.companion.milestone50;
+  for (const sp of ["Liche", "Demon", "Frost"]) { assert.ok(m50[sp].pet.length >= 3 && m50[sp].me.length >= 2, sp); for (const l of [...m50[sp].pet, ...m50[sp].me]) assert.ok(l.es && l.en, sp + " con es y en"); }
+  const w3 = { ents: new Map([[1, { id: 1, x: 10, y: 10 }], [2, { id: 2, x: 11, y: 10, comp: true, master: 1, name: "Demon" }]]), generators: [], map: { id: "farm" } };
+  T += 100000; const v3 = mk(); v3.onPetEvent({ t: "companion-lvl", id: 1, sp: "Demon", lvl: 50 }, w3);
+  assert.ok(m50.Demon.pet.some(l => bubbles.get(2)?.text === l.es || bubbles.get(2)?.text?.endsWith(l.es)), "el Demon dice su frase de nivel 50");
+}
+console.log("milestone50 OK");
