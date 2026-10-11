@@ -21,6 +21,8 @@ import * as Inv from "../inventory.js";
 import { itemLevel } from "../itemlevel.js";
 import { EQUIP, ITYPE } from "../items.js";
 import * as Shop from "./shopsys.js";
+import { judge, stallable } from "./botitems.js";
+import * as Stall from "./stall.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -282,7 +284,7 @@ function groundedFacts(adv, w, p, human) {
   if (G && G.members[p.name] === 0 && members < Guild.MAX_MEMBERS && !human.guild && !human.guildQuery && human.side === p.side && d <= 10 && !human.dead) acts.push("guild_invite (invite them to your guild right now)");
   else if (G && G.members[p.name] === 0 && d > 10) facts.push(`${human.name} is too far away to be invited; they should come closer.`);
   const friendly = human.side === p.side || !human.side || !p.side;
-  if (!p.bot.owner && !r._trip && !r._delve && friendly && !human.dead) acts.push("party_follow (join their party and follow them for a while)");
+  if (!p.bot.owner && !r._trip && !r._delve && !r._stall && friendly && !human.dead) acts.push("party_follow (join their party and follow them for a while)");
   if (!human.party && !p.party && !human.partyQuery && friendly) acts.push("party_invite (send them a party invitation)");
   return { facts: facts.join(" "), acts };
 }
@@ -369,7 +371,7 @@ export function think(adv, p) {
   }
   qaTick(adv, w, p, r);
   // fuera de la granja (entró a una tienda o a la cripta pisando un teletransporte mientras paseaba): se queda un rato probando y vuelve
-  if (w !== home && !p.bot.owner && !r._trip && !r._delve && !r._pet) {
+  if (w !== home && !p.bot.owner && !r._trip && !r._delve && !r._pet && !r._stall) {
     r._away ??= w.time;
     if (w.time - r._away > 45000 && !p.dead) { r._away = null; remember(p, "Entré en " + (w.map.name || w.map.id) + " y volví.", "I went into " + (w.map.name || w.map.id) + " and came back."); adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   } else r._away = null;
@@ -387,6 +389,7 @@ export function think(adv, p) {
   partyAndTrade(adv, w, p, r);
   guildAI(adv, w, p, r, home);
   gather(adv, w, p, r, home);
+  stallAI(adv, w, p, r, home);
   pets(adv, w, p, r, home);
   rebuild(adv, w, p, r, home);
   expedition(adv, w, p, r, home);
@@ -1079,6 +1082,54 @@ function gather(adv, w, p, r, home) {
   r._gather = { spot: { x: spot[0], y: spot[1] }, until: now + 75000 + Math.floor(w.rng() * 60000) };
   b.travel = { x: spot[0], y: spot[1], w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0;
   blog(w, p, `Me paso por la tienda a charlar un rato con los vecinos (${spot[0]},${spot[1]}).`);
+}
+
+// ---------------------------------------------------------------- puestos (INVENTO del port: systems/stall.js)
+// Con la mochila llena de equipo que no le sirve, el habitante entra en la tienda, monta un puesto con precios razonables y vuelve a sus cosas;
+// más tarde regresa a recoger el oro (y cierra el puesto si ya no queda nada). Los jugadores le compran aunque él no esté.
+const stallOf = (adv, p) => (adv.stallDb || []).find(x => x.owner === p.name.toLowerCase());
+export function stallSurplus(w, p) {
+  const worn = new Set(Object.values(p.equip)), out = [];
+  for (const i of p.bag) { if (worn.has(i.uid) || i.comp) continue; const v = judge(w, p, i, []); if (stallable(v)) out.push({ i, v }); }          // lo que juzga «para comerciar»
+  return out.sort((a, b) => b.v.value - a.v.value).slice(0, Stall.MAX_ITEMS_STALL);
+}
+function stallAI(adv, w, p, r, home) {
+  const b = p.bot, now = w.time;
+  if (p.dead) { r._stall = null; return; }
+  const st = r._stall;
+  if (st) {
+    if (now > st.until || b.owner != null || r._trip || r._delve || r._pet) { r._stall = null; if (w !== home) { adv.transfer(p, w, home, home.home); b.home = { x: p.x, y: p.y }; b.path = null; b.target = null; } return; }
+    if (w === home) {
+      if (!b.travel && !b.target) { b.travel = { x: st.tp.x, y: st.tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
+      return;
+    }
+    if (w.map.id !== "gshop_1f") { r._stall = null; return; }
+    if (!st.done) {
+      st.done = true; st.back = now + 4000;
+      const mine = stallOf(adv, p);
+      if (mine) {
+        const gold = mine.gold; adv.command(p.id, { t: "stalltake" });
+        if (!mine.items.length) { adv.command(p.id, { t: "stallclose" }); blog(w, p, "Cierro mi puesto: vendí todo" + (gold ? " (+" + gold + " de oro)." : ".")); }
+        else if (gold) blog(w, p, "Recojo " + gold + " de oro de mi puesto.");
+      } else {
+        const items = stallSurplus(w, p).map(({ i, v }) => ({ uid: i.uid, price: Math.max(1, Math.round(Math.max(v.value, Shop.sellPriceOf(w.data.item(i.id), i) * 2) * (0.9 + w.rng() * 0.4) / (i.count || 1))), count: i.count || 1 }));
+        if (items.length && adv.command(p.id, { t: "stallopen", title: pickBy(["Ocasión", "Rebajas", "Todo a buen precio", "Liquidación", "Cosas útiles"], hash(p.name), 7), items })) {
+          remember(p, "Monté un puesto en la tienda con " + items.length + " objetos.", "I set up a stall in the shop with " + items.length + " items.");
+        }
+      }
+    } else if (now >= st.back) { r._stall = null; adv.transfer(p, w, home, home.home); b.home = { x: p.x, y: p.y }; b.path = null; b.target = null; }
+    return;
+  }
+  if (w !== home || now < (r._stallAt ||= now + 240000 + (hash(p.name) % 300000))) return;
+  r._stallAt = now + 30000;                                                                   // ocupado: reintenta pronto
+  if (b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || p.hp < p.maxHp * 0.7 || b.travel || w.pvp) return;
+  const mine = stallOf(adv, p), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"); if (!tp) return;
+  if (!mine && stallSurplus(w, p).length < (p.bag.length >= 40 ? 1 : 3)) return;                // monta puesto con ≥3 objetos que le sobran (o 1 si la mochila casi está llena)
+  if (mine && !mine.gold && mine.items.length && w.rng() < 0.7) return;                        // nada que cobrar: casi nunca vuelve
+  r._stallAt = now + 600000 + Math.floor(w.rng() * 600000);
+  r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000 };
+  b.travel = { x: tp.x, y: tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0;
+  blog(w, p, mine ? "Voy a mi puesto de la tienda a ver qué se ha vendido." : "Voy a montar un puesto en la tienda para vender lo que me sobra.");
 }
 
 // ---------------------------------------------------------------- guilds (INVENTO del port: systems/guild.js) ----------------------------------------------------------------

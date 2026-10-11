@@ -44,18 +44,22 @@ export function judge(w, p, i, friends = []) {
   return { act: "sell", value: sellPrice, why: `no mejora nada (item level ${il}, llevo ${cur})` };
 }
 
+// ¿Vale la pena ponerlo en el puesto en vez de venderlo al NPC? (para comerciar, o se vende pero vale ≥150; no si es para un amigo)
+export const stallable = v => !v.for && (v.act === "store" || (v.act === "sell" && v.value >= 150));
+
 // Vende, guarda y ordena. `log(text)` deja constancia (registro de acciones del bot). Devuelve cuántos objetos movió.
-export function manage(w, p, { force = false, friends = [], log = () => {} } = {}) {
+export function manage(w, p, { force = false, friends = [], log = () => {}, stallKeep = 0 } = {}) {
   const load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
   let moved = 0;
   if (force || load >= 0.5 || p.bag.length >= MAX_ITEMS - 12) {
     const worn = new Set(Object.values(p.equip));
-    let sold = 0, gold = 0, stored = 0;
+    let sold = 0, gold = 0, stored = 0, kept = 0;
     for (const i of [...p.bag]) {
       if (worn.has(i.uid)) continue;
       const v = judge(w, p, i, friends);
       if (v.act === "keep" || v.act === "equip") continue;
       const d = w.data.item(i.id);
+      if (kept < stallKeep && stallable(v)) { kept++; continue; }                  // se queda en la mochila para el puesto (residents.js stallAI)
       if (v.act === "store" && (p.bank?.length || 0) < 120 && Shop.deposit(w, p, { uid: i.uid, count: i.count })) { stored++; moved++; log(`Guardo ${d.name} en el almacén: ${v.why}.`); continue; }
       const price = Shop.sellPriceOf(d, i, i.count || 1) || 0;
       p.gold += price; Inv.removeFromBag(p, i.uid); sold++; gold += price; moved++;

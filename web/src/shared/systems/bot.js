@@ -104,7 +104,7 @@ function tryEquip(w, p, b, inst) {
 // MOCHILA: la gestiona botitems.js (valor de cada objeto → equipar / guardar / vender, orden de la mochila y lista de deseos).
 export const bagClass = (w, p, i) => { const v = judge(w, p, i, friendsOf(w, p)); return v.act === "equip" ? "keep" : v.act; };
 const friendsOf = (w, p) => w.hooks?.friends?.(p) || [];
-const sellExtra = (w, p, force = false) => manage(w, p, { force, friends: friendsOf(w, p), log: t => blog(w, p, t) });
+const sellExtra = (w, p, force = false) => manage(w, p, { force, friends: friendsOf(w, p), log: t => blog(w, p, t), stallKeep: p.res ? 8 : 0 });
 export function errands(w, p, b, first = false) {
   if (p.dead) return;
   spendPoints(w, p);

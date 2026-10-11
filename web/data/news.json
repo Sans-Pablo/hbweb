@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Habitantes con puesto (v0.54.0)",
+        "en": "Residents run stalls (v0.54.0)"
+      },
+      "items": [
+        {
+          "es": "Los habitantes de la granja ahora abren puestos en la tienda (gshop_1f) con lo que les sobra de la mochila, a precios razonables, y vuelven a recoger el oro. Míralos en la tienda y compra en su puesto.",
+          "en": "Farm residents now open stalls in the shop (gshop_1f) with their spare bag items at fair prices, and come back to collect the gold. Visit the shop and buy from them."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Summons de nivel 50 con voz propia (v0.53.0)",
         "en": "Level-50 summons with their own voice (v0.53.0)"
       },

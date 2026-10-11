@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.54.0 · Habitantes con puesto (2026-10-11)
+- Los habitantes (bots residentes) abren un puesto en `gshop_1f` con hasta 8 objetos sobrantes (`stallSurplus`), los venden a ~el doble del precio de tienda, vuelven a recoger oro y cierran cuando se agota. `manage` reserva hasta 8 objetos vendibles (`stallKeep`). Test: `tests/residents-stall.test.mjs`.
+
 ## 0.53.0 · Los summons de nivel 50 hablan según su especie (2026-10-11)
 - Al llegar al nivel 50, Liche (nigromante, aterrador), Demon (rey del inframundo, majestuoso y cálido) y Frost (belleza y muerte por escarcha) dicen una frase propia, con respuesta del jugador (es/en). Datos: `voice.json` → `companion.milestone50`. Test en `tests/voice.test.mjs`.
 
