@@ -136,8 +136,9 @@ export class Renderer {
       if (Math.abs(tx - this.cam[0]) > 200 || Math.abs(ty - this.cam[1]) > 200) this.cam = [tx, ty];
     }
     // alineada a píxel físico: sin temblor
-    const camX = this.camX = Math.round(this.cam[0] * this.scale) / this.scale;
-    const camY = this.camY = Math.round(this.cam[1] * this.scale) / this.scale;
+    const q = this.quake, qa = q && performance.now() < q.until ? q.amp : 0;                  // temblor de pantalla (Demon al castear)
+    const camX = this.camX = Math.round((this.cam[0] + (qa ? (Math.random() - 0.5) * 2 * qa : 0)) * this.scale) / this.scale;
+    const camY = this.camY = Math.round((this.cam[1] + (qa ? (Math.random() - 0.5) * 2 * qa : 0)) * this.scale) / this.scale;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = remaster ? "#000" : "#0b0c0e";
@@ -470,11 +471,12 @@ export class Renderer {
   }
 
   // Llama del Fire Field original (fx.json hoja 9, aditiva), escalada; (x, y) = base de la llama
-  flame(x, y, sc, a, f) {
+  flame(x, y, sc, a, f, flip) {
     const sp = this.fx?.sp, m = sp?.man?.fx9, img = sp?.getImg("fx9");
     if (!m || !img || !img.naturalWidth || a <= 0) return;
     const fr = m.frames[((f % 8) + 8) % 8], [sx, sy, sw, sh, px, py] = fr, ctx = this.ctx;
     ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, a);
+    if (flip) { ctx.translate(0, 2 * y); ctx.scale(1, -1); }                                      // llama al revés (cuelga hacia abajo)
     ctx.drawImage(img, sx, sy, sw, sh, Math.round(x + px * sc), Math.round(y - sh * sc),Math.max(1, Math.round(sw * sc)), Math.max(1, Math.round(sh * sc)));
     ctx.restore();
   }
@@ -565,7 +567,16 @@ export class Renderer {
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     const hover = 0;
     if (hover) { ctx.save(); ctx.translate(0, -hover); }
+    if (e.comp && e.name === "Demon" && e.clvl >= 30 && alive) {                          // Demon Lv >= 30: brillo de fuego en el borde del sprite; la intensidad recorre el contorno (se dibuja detrás del cuerpo)
+      const L = e.clvl, rad = L >= 50 ? 1.8 : L >= 40 ? 1.5 : 1.2, tt = performance.now() / 1000;
+      for (let n = 0; n < 12; n++) {
+        const an = n * Math.PI / 6, w = 0.5 + 0.5 * Math.sin(tt * 3.2 - an * 2 + e.id);
+        spr.tinted(ctx, key, f, x + Math.cos(an) * rad, y + Math.sin(an) * rad, w > 0.6 ? "#ffb030" : "#ff4a08", (0.025 + 0.065 * w) * alpha, "lighter");
+      }
+    }
     spr.put(ctx, key, f, x, y);
+    if (e.comp && e.name === "Demon" && e.clvl >= 30 && alive)                           // huesos y venas de las alas al rojo vivo, con pulso lento
+      spr.veins(ctx, key, f, x, y, "#ff5a10", (0.11 + 0.08 * Math.sin(performance.now() / 420 + e.id)) * alpha * (e.clvl >= 50 ? 1 : 0.75));
     if (e.boss && alive) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
     else if (e.kind === "npc" && alive && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
@@ -597,17 +608,6 @@ export class Renderer {
       ctx.save(); ctx.globalAlpha = (e.name === "Liche" ? 1 : 0.5) * fade;                            // Demon y Frost más sutiles, a la altura del Liche
       if (e.name === "Demon") {                                                          // fuego amenazante: círculo infernal con pentagrama, lenguas de fuego, brasas y calor
         ctx.save(); ctx.globalCompositeOperation = "lighter";
-        const L = e.clvl;                                                              // progresión: 10 brasas en los pies · 20 gotas · 30 más gotas y estela · 40 llamas en los hombros · 50 todo al máximo
-        const fl = (px, py, sc, a, n) => this.flame(px, py, sc, a, Math.floor(T / 100 + rnd(n + 5) * 8));   // llamas del Fire Field original (efecto 9), a escala
-        if (L >= 30) { ctx.globalAlpha = 0.95 * fade;                                                                 // aura de fuego (como el humo del Liche): resplandor bajo él y lenguas de fuego que ascienden y se deshacen
-          const pulse = 0.5 + 0.5 * Math.sin(T / 380), nw = L >= 50 ? 12 : L >= 40 ? 9 : 6, hy = y - hover;
-          for (let n = 0; n < nw; n++) {
-            const q = ((T / 1700 + rnd(n + 7)) % 1), px = x + (rnd(n + 30) - 0.5) * 38 + Math.sin(q * 6 + n * 2) * 6, py = hy - 6 - q * 60, r = 5 + 4 * (1 - q);
-            const wg = ctx.createRadialGradient(px, py, 0, px, py, r), al = Math.sin(q * Math.PI);
-            wg.addColorStop(0, "rgba(255,200,90," + (0.55 * al).toFixed(2) + ")"); wg.addColorStop(0.5, "rgba(255,90,15," + (0.4 * al).toFixed(2) + ")"); wg.addColorStop(1, "rgba(160,20,0,0)");
-            ctx.fillStyle = wg; ctx.beginPath(); ctx.ellipse(px, py, r, r * 1.5, 0, 0, Math.PI * 2); ctx.fill();
-          }
-        }
         ctx.restore();
       } else if (e.name === "Liche") {                                                   // oscuridad que da miedo: sombra bajo él, humo negro que sube, ojos ardientes (mirando hacia abajo, abajo-izquierda y abajo-derecha)
         const pulse = 0.5 + 0.5 * Math.sin(T / 420);
@@ -751,63 +751,29 @@ export class Renderer {
     const open = Math.min(1, ck / 0.3), eo = 1 - (1 - open) ** 3, heat = 1;
     ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
     const g = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 1.1); g.addColorStop(0, rgba(core, 0.4 * a)); g.addColorStop(0.5, rgba(col, 0.22 * a)); g.addColorStop(1, rgba(col, 0));
-    const HIT = 0.12, hk = Math.max(0, ck - HIT), reveal = Math.min(1, hk / 0.18), erase = Math.max(0, Math.min(1, (ck - 0.55) / 0.35));       // la fisura nace en el centro (bajo el Demon), se dibuja hacia los bordes (sin crecer ni encogerse) y luego se borra desde su inicio
     ctx.save(); ctx.globalAlpha = Math.max(0, 1 - ck * 1.1); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 1.1, Rr * 1.1 * ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    if (ck >= HIT) {                                                                               // GOLPE EN EL SUELO: destello, onda de choque, quemadura bajo los pies, llamas y escombros
-      const imp = Math.max(0, 1 - hk / 0.12);
-      if (imp > 0) { const fg = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 0.9); fg.addColorStop(0, rgba("255,250,220", 0.95 * imp * a)); fg.addColorStop(0.4, rgba(core, 0.6 * imp * a)); fg.addColorStop(1, rgba(col, 0)); ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 0.9, Rr * 0.9 * ry, 0, 0, Math.PI * 2); ctx.fill(); }
-      for (const [d, w0] of [[0, 4], [0.08, 2.5]]) { const q = Math.min(1, Math.max(0, (hk - d) / 0.3)); if (q <= 0 || q >= 1) continue; const rr = Rr * 1.35 * (1 - (1 - q) ** 3);
-        ctx.strokeStyle = rgba(core, 0.85 * (1 - q) * a); ctx.lineWidth = w0 * (1 - q) + 0.5; ctx.beginPath(); ctx.ellipse(x, cy, rr, rr * ry, 0, 0, Math.PI * 2); ctx.stroke(); }
-      const burn = Math.min(1, hk / 0.06) * Math.max(0, 1 - Math.max(0, ck - 0.7) / 0.3);        // quemadura: suelo ennegrecido y brasas bajo los pies
-      if (burn > 0) {
-        ctx.globalCompositeOperation = "source-over"; const bg = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 0.5); bg.addColorStop(0, "rgba(10,3,1," + (0.75 * burn).toFixed(2) + ")"); bg.addColorStop(1, "rgba(10,3,1,0)");
-        ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 0.5, Rr * 0.5 * ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = "lighter";
-        for (let n = 0; n < 9; n++) {                                                              // llamas que arden en círculo a sus pies
-          const ph = (T / 520 + rnd(n + 40)) % 1, fa = n * 2 * Math.PI / 9 + rnd(n + 50), px = x + Math.cos(fa) * Rr * 0.32, py = cy + Math.sin(fa) * Rr * 0.32 * ry, hh = 10 + 12 * rnd(n + 60), r = 5 + 3 * rnd(n + 70), yy = py - ph * hh;
-          const g2 = ctx.createRadialGradient(px, yy, 0, px, yy, r); const al = Math.sin(ph * Math.PI) * burn * a;
-          g2.addColorStop(0, rgba(core, 0.8 * al)); g2.addColorStop(0.5, rgba(col, 0.45 * al)); g2.addColorStop(1, rgba(col, 0));
-          ctx.fillStyle = g2; ctx.beginPath(); ctx.ellipse(px, yy, r, r * 1.5, 0, 0, Math.PI * 2); ctx.fill();
-        }
+    // TREMOR de fuego: el efecto 138 del cliente original (Game.cpp bAddNewEffect: 15 nubes del efecto 14 = hoja 11, fotogramas 28+, dispersas en 120x80 px sobre el
+    // objetivo, 100 ms por fotograma) teñido de rojo bajo el Demon, y la pantalla tiembra mientras dura el temblor.
+    if (T < 450) this.quake = { until: performance.now() + 60, amp: (2 + 3 * sc) * (1 - T / 450) };
+    const fs = this.fx?.sp, mf = fs?.man?.fx11, im = fs?.getImg("fx11");
+    if (mf && im && im.naturalWidth) {
+      const tint = (f) => {                                                                        // fotograma de la nube con el color de lava (se guarda una vez)
+        const c = this._tf || (this._tf = new Map()); if (c.has(f)) return c.get(f);
+        const fr = mf.frames[f]; if (!fr) return null;
+        const cv = document.createElement("canvas"); cv.width = fr[2]; cv.height = fr[3]; const g = cv.getContext("2d");
+        g.drawImage(im, fr[0], fr[1], fr[2], fr[3], 0, 0, fr[2], fr[3]);
+        g.globalCompositeOperation = "multiply"; g.fillStyle = "rgb(255,70,18)"; g.fillRect(0, 0, fr[2], fr[3]);
+        g.globalCompositeOperation = "destination-in"; g.drawImage(im, fr[0], fr[1], fr[2], fr[3], 0, 0, fr[2], fr[3]);
+        const o = { cv, px: fr[4], py: fr[5] }; c.set(f, o); return o;
+      };
+      ctx.globalCompositeOperation = "lighter";
+      for (let n = 0; n < 15; n++) {
+        const f = Math.floor((T - rnd(n + 20) * 150) / 100); if (f < 0 || f > 14) continue;
+        const o = tint(28 + f); if (!o) continue;
+        const px = x + (rnd(n + 30) - 0.5) * 120 * sc, py = cy + (rnd(n + 40) - 0.5) * 80 * sc * 0.8 - 6;
+        ctx.globalAlpha = Math.min(1, 0.9 * a * 1.3); ctx.drawImage(o.cv, Math.round(px + o.px), Math.round(py + o.py));
       }
-      for (let n = 0; n < 16; n++) {                                                               // escombros y chispas que saltan del impacto
-        const t2 = hk / 0.45 - rnd(n + 80) * 0.12; if (t2 <= 0 || t2 >= 1) continue;
-        const an = rnd(n + 90) * 2 * Math.PI, sp = Rr * (0.5 + 0.8 * rnd(n + 100)), vy = 30 + 38 * rnd(n + 110);
-        const px = x + Math.cos(an) * sp * t2, py = cy + Math.sin(an) * sp * ry * t2 - (vy * t2 - 55 * t2 * t2);
-        ctx.fillStyle = rgba(n % 3 ? col : core, 0.95 * (1 - t2) * a); ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
-      }
-    }
-    const lerp = (P, u) => { const t = u * (P.length - 1), i = Math.min(P.length - 2, Math.floor(t)), q = t - i; return [P[i][0] + (P[i + 1][0] - P[i][0]) * q, P[i][1] + (P[i + 1][1] - P[i][1]) * q]; };
-    const ribbon = (P, u0, u1, w, tp, wob) => {                                                    // cinta continua (un solo trazo, sin juntas) de la fisura entre u0 y u1, afinándose hacia la punta
-      if (u1 - u0 < 0.01) return;
-      const m = 14, L = [], R = [];
-      for (let i = 0; i <= m; i++) {
-        const u = u0 + (u1 - u0) * i / m, p = lerp(P, u), p2 = lerp(P, Math.min(1, u + 0.03)), p1 = lerp(P, Math.max(0, u - 0.03));
-        let dx = p2[0] - p1[0], dy = (p2[1] - p1[1]) / ry; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
-        const hw = 0.5 * w * (1 - tp * u) * (1 + wob * Math.sin(u * 23 + P[0][0]));
-        L.push([p[0] - dy * hw, p[1] + dx * hw * ry]); R.push([p[0] + dy * hw, p[1] - dx * hw * ry]);
-      }
-      ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]); for (const q of L) ctx.lineTo(q[0], q[1]); for (let i = m; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath(); ctx.fill();
-    };
-    const cracks = [];
-    for (let n = 0; n < nC; n++) {
-      const ang = n * 2 * Math.PI / nC + rnd(n) * 0.5, full = Rr * (1.5 + 0.5 * rnd(n + 9)), pts = [];
-      for (let j = 0; j <= 10; j++) { const r = full * j / 10, jit = j ? (j % 2 ? 1 : -1) * (1.5 + rnd(n * 7 + j) * 3.5) : 0; pts.push([x + Math.cos(ang) * r - Math.sin(ang) * jit, cy + (Math.sin(ang) * r + Math.cos(ang) * jit) * ry]); }
-      cracks.push({ P: pts, u0: 0, u1: 1, w: 1 });
-      const ub = 0.35 + 0.3 * rnd(n + 3), bp = lerp(pts, ub), ba = ang + (rnd(n + 5) > 0.5 ? 1 : -1) * (0.5 + 0.3 * rnd(n + 6)), bl = full * 0.4, bpts = [];       // una rama que sale de la grieta
-      for (let j = 0; j <= 6; j++) { const r = bl * j / 6, jit = j ? (j % 2 ? 1 : -1) * (2 + rnd(n * 5 + j) * 3) : 0; bpts.push([bp[0] + Math.cos(ba) * r - Math.sin(ba) * jit, bp[1] + (Math.sin(ba) * r + Math.cos(ba) * jit) * ry]); }
-      cracks.push({ P: bpts, u0: ub, u1: 1, w: 0.55 });
-    }
-    for (const c of cracks) {                                                                      // el rango visible (reveal..erase) se reparte en la rama a partir de donde nace
-      const ua = Math.max(0, Math.min(1, (erase - c.u0) / (1 - c.u0))), ub2 = Math.max(0, Math.min(1, (reveal - c.u0) / (1 - c.u0)));
-      c.a = c.u0 ? ua : erase; c.b = c.u0 ? ub2 : reveal;
-    }
-    ctx.globalCompositeOperation = "source-over";                                                  // el hueco oscuro del suelo
-    ctx.fillStyle = "rgba(8,3,2," + (0.92 * Math.min(1, a)).toFixed(3) + ")";
-    for (const c of cracks) ribbon(c.P, c.a, c.b, 8 * c.w, 0.55, 0.25);
-    ctx.globalCompositeOperation = "lighter";                                                      // la lava que brilla dentro
-    for (const [w, al, cc2] of [[5, 0.22 * heat, col], [2.4, 0.85, col], [1.1, 0.95 * heat, core]]) {
-      ctx.fillStyle = rgba(cc2, al * a);
-      for (const c of cracks) ribbon(c.P, c.a, c.b, w * c.w, 0.6, 0.35);
+      ctx.globalAlpha = 1;
     }
     ctx.restore();
   }

@@ -238,4 +238,25 @@ export class Sprites {
     ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
     ctx.restore();
   }
+
+  // Solo los píxeles oscuros del fotograma (huesos y venas de las alas, pliegues) teñidos de `color`; la máscara se guarda por fotograma.
+  veins(ctx, key, f, x, y, color, alpha, maxLum = 75) {
+    const fr = this.frame(key, f);
+    if (!fr || !this.ready(key)) return;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
+    const ck = key + ":" + f + ":" + maxLum + ":" + color + ":" + W + "x" + H + ":" + sx + "," + sy; this.veinC ||= new Map();
+    let c = this.veinC.get(ck);
+    if (!c) {
+      c = document.createElement("canvas"); c.width = W; c.height = H;
+      const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+      const d = g.getImageData(0, 0, W, H), p = d.data, cr = parseInt(color.slice(1, 3), 16), cg = parseInt(color.slice(3, 5), 16), cb = parseInt(color.slice(5, 7), 16);
+      for (let i = 0; i < p.length; i += 4) {
+        if (p[i + 3] > 200 && 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2] < maxLum) { p[i] = cr; p[i + 1] = cg; p[i + 2] = cb; } else p[i + 3] = 0;
+      }
+      g.putImageData(d, 0, 0); this.veinC.set(ck, c);
+    }
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.globalCompositeOperation = "lighter";
+    ctx.drawImage(c, 0, 0, W, H, x + pvx, y + pvy, w, h);
+    ctx.restore();
+  }
 }

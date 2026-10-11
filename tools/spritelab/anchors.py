@@ -109,15 +109,49 @@ def demon_head(fr, pvx, off=14):
     return float(x0 + cols.mean()) if len(cols) else float(-pvx), float(top + off)
 
 
+def demon_hands(fr, pvx, d):
+    """Demon: manos. Pixeles rojos del cuerpo (no las alas pardas), abiertos con un kernel 5x5 para quitar la cola y los huesos de ala finos,
+    y una ventana vertical bajo la cara (los muslos y las rodillas quedan fuera). De frente/espaldas: punto mas bajo del brazo a cada lado
+    fuera de las piernas. De perfil/diagonal: solo la mano delantera (la mas adelantada en el sentido que mira). Devuelve [izq, der] (None si no hay)."""
+    r, g, b, a = [fr[..., i].astype(int) for i in range(4)]
+    m = ((a > 200) & (r > g * 1.5) & (r > 100) & (b < g + 12)).astype(np.uint8)
+    mo = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8)).astype(bool); m = m.astype(bool)
+    h = demon_head(fr, pvx)
+    if h is None: return [None, None]
+    H, W = m.shape; cx = -pvx; y0, y1 = int(h[1]) + 8, int(h[1]) + 60
+    win = np.zeros_like(m); win[y0:y1, :] = True
+    pts = lambda sel, mm=None: np.nonzero((m if mm is None else mm) & win & sel)
+    if d in (0, 4):                                                    # de frente (4) o de espaldas (0)
+        out = []
+        for sgn in (-1, 1):
+            xs_ = np.arange(W); sel = np.tile((19 <= sgn * (xs_ - cx)) & (sgn * (xs_ - cx) <= 48), (H, 1))
+            ys, xs = pts(sel, mo)
+            if len(ys) < 10: out.append(None); continue
+            k = ys >= ys.max() - 5; out.append((float(xs[k].mean()), float(ys[k].mean())))
+        return out
+    right = d in (1, 2, 3)                                             # mira a la derecha (dir 2, 3, 4 del juego) o a la izquierda
+    sel = np.tile(np.arange(W) > cx + 4 if right else np.arange(W) < cx - 4, (H, 1))
+    sg = 1 if right else -1; fb = (h[0] + sg * 22, h[1] + 34)           # sin punto fiable: desplazamiento fijo desde la cabeza, del lado al que mira
+    ys, xs = pts(sel)
+    p = fb
+    if len(ys) >= 6:
+        ex = xs.max() if right else xs.min(); k = np.abs(xs - ex) <= 4
+        q = (float(xs[k].mean()), float(ys[k].mean()))
+        if 10 <= sg * (q[0] - h[0]) <= 40 and 20 <= q[1] - h[1] <= 50: p = q   # la cola, el ala o la rodilla caen fuera de esta caja
+    return [None, p] if right else [p, None]
+
+
 def demon(base, prefix="demon"):
     out = {}
     for d in range(8):
         for g in range(GROUPS):
             key = f"{prefix}{g * 8 + d}"
             if key not in base: continue
-            e = base[key]; out[key] = {"eyes": [], "orb": []}
+            e = base[key]; out[key] = {"eyes": [], "orb": [], "hands": []}
             for i, fr in enumerate(core.split_frames(core.load_sheet(e), e["frames"])):
                 pvx, pvy = e["frames"][i][4], e["frames"][i][5]
+                hh = demon_hands(fr, pvx, d)
+                out[key]["hands"].append([[round(pvx + p[0], 1), round(pvy + p[1], 1)] if p else None for p in hh])
                 h = None if (d not in (3, 4, 5) or (g == 4 and i >= 2)) else demon_head(fr, pvx)    # de espaldas y de perfil sin ojos
                 out[key]["eyes"].append([round(pvx + h[0], 1), round(pvy + h[1], 1)] if h else None)
                 out[key]["orb"].append(None)
@@ -150,9 +184,10 @@ def cmd_check(a):
             im = Image.fromarray(fr).resize((fr.shape[1] * Z, fr.shape[0] * Z), Image.NEAREST).convert("RGBA")
             bg = Image.new("RGBA", im.size, (70, 70, 80, 255)); bg.alpha_composite(im); dr = ImageDraw.Draw(bg)
             pvx, pvy = e["frames"][i][4], e["frames"][i][5]
-            for nm, col in (("eyes", (255, 0, 0)), ("orb", (0, 255, 255))):
-                p = anc[k][nm][i]
-                if p: x, y = (p[0] - pvx) * Z, (p[1] - pvy) * Z; dr.ellipse((x - 4, y - 4, x + 4, y + 4), outline=col, width=2)
+            for nm, col in (("eyes", (255, 0, 0)), ("orb", (0, 255, 255)), ("hands", (0, 255, 0))):
+                p = anc[k].get(nm, [None] * 99)[i]
+                for p in ([p] if nm != "hands" else (p or [])):
+                  if p: x, y = (p[0] - pvx) * Z, (p[1] - pvy) * Z; dr.ellipse((x - 4, y - 4, x + 4, y + 4), outline=col, width=2)
             dr.text((2, 2), f"{k}:{i}", fill=(255, 255, 255)); cells.append(bg)
     cols = a.cols; rows = (len(cells) + cols - 1) // cols
     cw, ch = max(c.width for c in cells), max(c.height for c in cells)
