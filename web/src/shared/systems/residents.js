@@ -824,12 +824,24 @@ function partyAndTrade(adv, w, p, r) {
     if (q === p || q.kind !== "player" || q.dead || q.side !== p.side || dist(p, q) > 8 || busyTrade(q) || q.bot?.rest) continue;
     const qb = adv.bots.has(q.id), rel = relOf(p, q.name);
     if (!qb && rel < 1) continue;
-    if (qb && !group && w.rng() > 0.5) continue;
+    if (qb && !group && rel < 2 && w.rng() > 0.5) continue;       // a los amigos siempre intenta ayudarlos con el equipo
     fromBank(w, p, q); const it = spareFor(w, p, q); if (!it) continue;
     const total = worth(w, it); let ask = priceFor(rel, total);
     if (qb && ask > q.gold * 0.6) ask = rel >= 3 ? 0 : -1;                                   // el comprador no puede pagarlo: regalo si hay afinidad
     if (ask < 0) continue;
     if (Trade.request(w, p, q.name)) { r._deal = { to: q.id, uid: it.uid, ask, until: now + 45000 }; say2(adv, w, p, ask ? "tsell" : "tgift", q.name, { i: nameOf(w, it), p: ask }); break; }
+  }
+  // ---- AYUDAR A LOS AMIGOS CON EL EQUIPO: si un amigo conectado (en este mapa) necesita algo que llevo de más o tengo en el almacén, voy a su encuentro para dárselo/venderle
+  if (now >= (r._helpAt ||= now + 90000) && !b.travel) {
+    r._helpAt = now + 180000;
+    for (const { q, rel } of adv.friendsOf(p)) {
+      if (adv.worldFor(q.id) !== w || dist(p, q) <= 8) continue;
+      const it = spareFor(w, p, q) || (p.bank?.some(i => { const d = w.data.item(i.id); return d && canUse(q, d) && itemLevel(d, i.attr, i.id) > wornIlvl(w, q, d) * 1.15 + 1; }) ? { bank: true } : null);
+      if (!it) continue;
+      b.travel = { x: q.x, y: q.y, w, until: now + 40000, seek: true }; b.path = null; b.goal = null;
+      blog(w, p, `${q.name} (afinidad ${rel}) necesita equipo y yo tengo algo que le sirve: voy a su encuentro.`);
+      break;
+    }
   }
   // ---- invitar a un jugador humano cercano a mi grupo (solo sin grupo propio)
   if (!p.party && b.owner == null && !r._trip && !r._delve && !w.pvp) {

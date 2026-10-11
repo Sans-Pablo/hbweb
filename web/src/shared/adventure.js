@@ -60,6 +60,7 @@ export class Adventure {
       watched: this.watched,
       party: this.partyReg,
       guild: this.guildReg,
+      friends: p => this.friendsOf(p),                                       // amigos conectados (afinidad ≥ 2, mismo bando) para ayudarles con el equipo
       thought: (p, sit) => Residents.thought(this, p, sit),               // burbuja de pensamiento: la genera el modelo de lenguaje
       logSink: (p, t) => this.logSink?.(p, t, w.time),                 // registro de acciones de los habitantes (server: panel de administración)
     };
@@ -142,6 +143,11 @@ export class Adventure {
 
   // Granja de cada bando: Aresden (bando 1 y viajeros) en Aresfarm, Elvine (bando 2) en Elvine Farm si el mapa está disponible
   homeOf(p) { return p.side === 2 ? this.staticWorld("elvfarm") || this.farm : this.farm; }
+  friendsOf(p) {
+    const out = [], rel = p.res?.rel; if (!rel) return out;
+    for (const [id, w] of this.locations) { if (id === p.id) continue; const q = w.ents.get(id); if (q && q.kind === "player" && !q.dead && rel[q.name] >= 2 && (q.side === p.side || !q.side)) out.push({ q, rel: rel[q.name] }); }
+    return out;
+  }
   worldFor(id) { return this.locations.get(id) || this.farm; }
   addPlayer(name, save, create = null) {
     const id = this.farm.addPlayer(name, save, create);

@@ -54,7 +54,7 @@ assert.ok(say.some(e => e.id === B.id && /charlo contigo, Pablo/.test(e.text)), 
 
 // grupo: solo acepta a quien ya conoce (≥3 charlas)
 const C = a.residents().find(b => b !== B && b !== A);
-a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0;
+a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0; C.res._tripAt = w.time + 1e9; C.res._pet = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null;
 a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
 assert.ok(!C.bot.owner, "aún no se fía");
 C.res.rel.Pablo = 5; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);

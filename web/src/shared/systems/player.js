@@ -87,7 +87,7 @@ export function addPlayer(w, name, save = null, create = null) {
 }
 
 function loadSave(w, p, s) {
-  for (const k of ["level", "exp", "pool", "gold", "kills", "gender", "side"]) if (Number.isFinite(s[k])) p[k] = s[k];
+  for (const k of ["level", "exp", "pool", "gold", "kills", "ek", "gender", "side"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
   if (s.look) p.look = { ...p.look, ...s.look };
   if (typeof s.persona === "string" && "wjd".includes(s.persona) && s.persona.length === 1) p.persona = s.persona;
@@ -124,7 +124,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
+    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, ek: p.ek || 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1 }, tut: Tut.toSave(p),

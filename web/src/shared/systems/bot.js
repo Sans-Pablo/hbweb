@@ -21,6 +21,7 @@ import * as Tut from "./tutorial.js";
 import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
+import { judge, manage, wish, canWear } from "./botitems.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -97,42 +98,10 @@ function tryEquip(w, p, b, inst) {
   b.bad.add(inst.id); p.equip = before;                                // no le sirve (nivel, fuerza, atributo): se revende
   return false;
 }
-// MOCHILA: el peso es un problema, así que el bot clasifica lo que carga. Lo que le sirve (lo puesto, consumibles, summons) se queda; lo que no usa pero vale
-// (otro sexo o nivel, buen item level, precio alto) va al ALMACÉN (Howard) para usar más adelante o comerciar; lo demás es basura y se vende (mitad de precio).
-const KEEP_TYPES = t => t === ITYPE.EAT || t === ITYPE.USE_DEPLETE || t === ITYPE.ARROW;
-export function bagClass(w, p, i) {
-  const d = w.data.item(i.id);
-  if (!d || i.id === GOLD || i.comp) return "keep";
-  if (KEEP_TYPES(d.type) && (i.count || 1) <= 30) return "keep";
-  if (d.type === ITYPE.EQUIP) {
-    const mine = canWear(p, d), il = itemLevel(d, i.attr, i.id), cur = wornLevel(w, p, d);
-    if (mine && il > cur * 1.08 + 0.5 && i.life !== 0) return "keep";                 // me va a servir (el recado de equipo lo pondrá)
-    if (i.life === 0) return "sell";
-    if (!mine && (il >= 6 || (d.price || 0) >= 400)) return "store";                    // no puedo usarlo (género/nivel) pero otro sí: comerciar
-    if (mine && il >= cur * 0.8 && il >= 8) return "store";                            // casi tan bueno que lo que llevo: recambio / comercio
-    return "sell";
-  }
-  return (d.price || 0) >= 600 ? "store" : "sell";
-}
-const canWear = (p, d) => d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY;
-function wornLevel(w, p, d) {
-  const slot = d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos, uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined), i = uid !== undefined && Inv.instOf(p, uid);
-  return i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0;
-}
-function sellExtra(w, p, force = false) {
-  const load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
-  if (!force && load < 0.5 && p.bag.length < MAX_ITEMS - 12) return;                   // mochila holgada: no hace falta
-  const worn = new Set(Object.values(p.equip));
-  for (const i of [...p.bag]) {
-    if (worn.has(i.uid)) continue;
-    const k = bagClass(w, p, i);
-    if (k === "keep") continue;
-    const d = w.data.item(i.id);
-    if (k === "store" && (p.bank?.length || 0) < 120 && Shop.deposit(w, p, { uid: i.uid, count: i.count })) continue;
-    p.gold += Math.max(0, Math.floor((d.price > 0 ? d.price : 0) / 2) * (i.count || 1));
-    Inv.removeFromBag(p, i.uid);
-  }
-}
+// MOCHILA: la gestiona botitems.js (valor de cada objeto → equipar / guardar / vender, orden de la mochila y lista de deseos).
+export const bagClass = (w, p, i) => { const v = judge(w, p, i, friendsOf(w, p)); return v.act === "equip" ? "keep" : v.act; };
+const friendsOf = (w, p) => w.hooks?.friends?.(p) || [];
+const sellExtra = (w, p, force = false) => manage(w, p, { force, friends: friendsOf(w, p), log: t => blog(w, p, t) });
 export function errands(w, p, b, first = false) {
   if (p.dead) return;
   spendPoints(w, p);
@@ -158,10 +127,22 @@ export function errands(w, p, b, first = false) {
     if (tryEquip(w, p, b, best.i)) blog(w, p, `Me equipo ${w.data.item(best.i.id).name} (item level ${ilv(best.i)}).`);
     else b.badUid.add(best.i.uid);
   }
+  // LISTA DE DESEOS: la pieza que más le mejoraría. Si le llega el oro, la compra; si no, ahorra para ella (no gasta en mejoras menores) hasta tenerla
+  const want = wish(w, p, cat.gear, b.bad, usable);
+  b.wish = want ? { name: want.d.name, price: want.price, gain: want.gain, slot: want.slot } : null;
+  b.saving = false;
+  if (want) {
+    const spare = want.price + 60;
+    if (p.gold >= spare) {
+      const inst = buy(w, p, want.d);
+      if (inst) { if (tryEquip(w, p, b, inst)) { b.bought = 1; blog(w, p, `Compro ${want.d.name} (${want.price} de oro): era la mejora que más deseaba (+${want.gain} de item level).`); } else { p.gold += want.d.price; Inv.removeFromBag(p, inst.uid); } }
+    } else if (want.gain >= 8) { b.saving = true; if (w.time - (b.saveLog || -1e9) > 300000) { b.saveLog = w.time; blog(w, p, `Ahorro para ${want.d.name} (${want.price} de oro, +${want.gain} de item level): me faltan ${spare - p.gold}.`); } }
+  }
   // compras por catálogo: una pieza por recado (a la primera, un equipo completo)
   let bought = 0;
   for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) {
     const list = cat.gear.get(slot) || [], have = value(slot), budget = p.gold * (first ? 0.25 : 0.6);
+    if (b.saving && have > 0) continue;                                               // ahorrando para algo mejor: no se gasta en mejoras menores
     let got = false;
     for (const d of list.filter(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x)).slice(0, 6)) {      // prueba el siguiente si no puede cargarlo o no se lo puede poner (antes se atascaba para siempre con el más caro y peleaba sin arma)
       const inst = buy(w, p, d);
