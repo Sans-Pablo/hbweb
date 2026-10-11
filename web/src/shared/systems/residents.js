@@ -6,7 +6,8 @@
 // Todo es determinista salvo `adv.llm` (solo existe en el servidor). El estado (`p.res`) se guarda en el save del habitante.
 import { dist } from "../const.js";
 import * as Party from "./party.js";
-import { blog, tooStrong } from "./bot.js";
+import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
+import * as Council from "./council.js";
 import { canFight } from "./combatsys.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
@@ -27,6 +28,7 @@ const ARCH = {
   trader: { es: "comerciante", en: "trader", talk: 0.8, brave: 0.4 }, wanderer: { es: "viajero", en: "wanderer", talk: 0.7, brave: 0.6 },
   scholar: { es: "estudioso", en: "scholar", talk: 0.6, brave: 0.3 },
 };
+const ARCH_MIX = ["warrior", "hunter", "scholar", "wanderer", "scholar", "trader", "warrior", "scholar"];
 const ORIGINS = [["una aldea de pescadores", "a fishing village"], ["las minas del norte", "the northern mines"], ["una familia de herreros", "a family of smiths"], ["la ciudad de Aresden", "the city of Aresden"],
   ["un monasterio lejano", "a distant monastery"], ["un barco mercante", "a merchant ship"], ["las montañas", "the mountains"], ["una granja a las afueras", "a farm on the outskirts"]];
 const MOTIVES = [["quiere hacerse rico", "wants to get rich"], ["busca a un hermano desaparecido", "is looking for a missing brother"], ["quiere ser el mejor cazador", "wants to be the best hunter"],
@@ -40,7 +42,7 @@ const pickBy = (arr, h, salt) => arr[(Math.imul(h, salt) >>> 0) % arr.length];
 
 // ---------------------------------------------------------------- ficha e historia
 export function create(name) {
-  const h = hash(name.toLowerCase()), arch = Object.keys(ARCH)[h % 5];
+  const h = hash(name.toLowerCase()), arch = ARCH_MIX[h % 8];       // 3 de cada 8 son magos (estudiosos: summons de escuela que lanzan magias)
   return { v: 1, arch, origin: pickBy(ORIGINS, h, 31), motive: pickBy(MOTIVES, h, 37), fear: pickBy(FEARS, h, 41), quirk: pickBy(QUIRKS, h, 43),
     lang: (NAMES.indexOf(name) >= 0 ? NAMES.indexOf(name) : h) % 2 ? "en" : "es",          // mitad habla inglés y mitad español
     goal: null, mem: [], rel: {}, kills0: 0, deaths: 0, bio: null, chats: 0, qa: { kills: {}, deaths: {}, rej: {}, exp0: 0, pvp: { k: 0, d: 0 }, pet: { lost: 0, kills: 0, lvls: 0, heals: 0, spent: 0 } } };
@@ -303,10 +305,13 @@ function queueReply(adv, w, p, human, text, depth = 0) {
   }
 }
 
+const CH = { speak: (adv, p, t) => speak(adv, p, t), blog, remember: (p, a, b) => remember(p, a, b), relOf: (p, who) => relOf(p, who), cryptNeed: (r, L) => cryptNeed(r, L),
+  leave(adv, m, lead, why) { const w = adv.worldFor(m.id); m.bot.owner = null; m.bot.partyAt = 0; m.res._leaveAt = 0; try { Party.leave(w, m, true); } catch {} blog(w, m, `Dejo el grupo de ${lead.name}: ${why}.`); remember(m, "Dejé el grupo de " + lead.name + " por desacuerdo.", "I left " + lead.name + "'s party over a disagreement."); befriend(m, lead.name, -1); } };
 export function think(adv, p) {
   const r = p.res, w = adv.worldFor(p.id);
   if (!r || w.time < r.next) return;
   r.next = w.time + 500; r._w = w;
+  Council.tick(adv, CH);                                                                  // los grupos debaten qué hacer (council.js)
   const home = adv.homeOf(p);
   if (r.greply && w.time >= r.greply.at) { const g = r.greply; r.greply = null; if (!p.dead && p.guild) gsay(adv, p, g.text); }
   // respuesta pendiente
@@ -525,8 +530,15 @@ function expedition(adv, w, p, r, home) {
   }
   if (!r._tripAt) r._tripAt = w.time + 60000 + Math.floor(w.rng() * 120000);
   if (w !== home || w.time < r._tripAt || p.dead || p.hp < p.maxHp * 0.7 || p.level < 2 || b.rest || b.travel) return;
-  const g = r.goal?.k, wantsPL = g === "pvp" || g === "pit", wantsCrypt = g === "crypt";
-  const pl = p.level >= 3 && !wantsCrypt && (wantsPL || w.rng() < 0.5);
+  const g = r.goal?.k, plan = r._plan && w.time < r._plan.until ? r._plan : null;
+  // QUÉ HACER: lo que decidió el grupo (council.js) o, en solitario, lo que más le conviene según lo que rinde cada cosa (hunt / crypt / pl)
+  let kind = plan?.kind;
+  if (!kind) {
+    const ev = Council.evaluate(adv, p, CH, 1); kind = Council.bestOf(ev);
+    if (w.time - (r._evalLog || 0) > 120000) { r._evalLog = w.time; blog(w, p, `Evalúo qué me conviene: ${Council.KINDS.map(k => k + " " + ev[k].s).join(", ")} → ${Council.labelOf(kind)} (${ev[kind].why}).`); }
+  }
+  if (kind === "hunt") { r._tripAt = plan ? plan.until : w.time + 90000; return; }                   // se queda cazando en la granja (la caza prefiere lo que más rinde)
+  const pl = p.level >= 3 && kind === "pl";
   if (!pl) return startDelve(adv, w, p, r, home);
   const tps = (adv.maps[home.map.id]?.meta.teleports || []).filter(t => t.map === "2ndmiddle");
   if (!tps.length) return startDelve(adv, w, p, r, home);
@@ -556,19 +568,29 @@ function delve(adv, w, p, r, home) {
     if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
     if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
     if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
-    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; d.tries++; adv.command(p.id, { t: "portal", portal: "mid-entry", restart: false }); }
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; d.tries++; const dp = p.delve?.deepest || 1, bp = bossPreview(w, dp), restart = !!bp && fightEstimate(w, p, bp).ratio < 1.3;       // si su piso más hondo es de jefe y no puede con él, empieza de cero
+      if (restart) blog(w, p, `Mi piso más hondo (${dp}) es de jefe y aún no puedo con él: empiezo la cripta desde el principio.`);
+      adv.command(p.id, { t: "portal", portal: "mid-entry", restart }); }
     return;
   }
   if (w.map.kind !== "dungeon") return;
   d.go = false;
   const left = w.time > d.until || p.level < 2 || p.level < cryptNeed(r, w.map.level) - 2;          // aprendizaje: si este piso lo mató y aún no está listo, sale
   if (p.dead) return;
+  if (w.map.boss && r._bossSeen !== w.map.id) {                                           // piso de jefe: antes de acercarse hace la cuenta; si no puede con él, sale (con la party, si la hay, cuenta lo que pegan los compañeros)
+    const bs = [...w.ents.values()].find(e => e.boss && !e.aux && !e.dead);
+    if (bs) {
+      const est = fightEstimate(w, p, bs); r._bossSeen = w.map.id;
+      if (est.ratio < 1.3) { r.dd ||= {}; r.dd[w.map.level] = (r.dd[w.map.level] || 0) + 0.4; r.bossFails = (r.bossFails | 0) + 1; blog(w, p, `El jefe del piso ${w.map.level} (vida ${bs.hp}) me aplastaría: aguanto ${Math.round(est.budget)} de daño y recibiría ${Math.round(est.taken)} (con ${est.allies} aliados cerca). Salgo y vuelvo más fuerte o con grupo.`); adv.command(p.id, { t: "recall" }); return; }
+      blog(w, p, `Hago la cuenta contra el jefe del piso ${w.map.level}: aguanto ${Math.round(est.budget)}, recibiría ${Math.round(est.taken)} (${est.allies} aliados). Voy a por él.`);
+    }
+  }
   if ((left || (b.rest && !b.target)) && w.time - (r._rc || 0) > 8000) { r._rc = w.time; blog(w, p, left ? "Fin de la bajada: salgo de la cripta (Recall)." : "Voy mal: salgo de la cripta (Recall)."); adv.command(p.id, { t: "recall" }); return; }
   if (b.rest || w.time < (r._delveAt || 0)) return;
   r._delveAt = w.time + 1500;
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
   if (w.cleared) {
-    const gate = w.map.portals.find(g => g.target === "down"), deeper = !!gate && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000;
+    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
     const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
     if (!exit) return;
     if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
@@ -651,6 +673,8 @@ function pets(adv, w, p, r, home) {
   // ---- ¿toca ir al hospital? sin summon, o con el summon caído/herido
   const more = wantsMoreBalls(p, r);
   const need = more ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
+  if (!(r.arch === "scholar" && !ball && p.bot.owner != null)) r._noBall = 0;
+  else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > 90000) { r._noBall = 0; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, "un mago sin su summon no sirve de nada: voy al hospital de compañeros"); }          // los magos no se quedan sin summon por seguir a nadie
   if (!r._pet) {
     if (!need || r._trip || r._delve || p.bot.owner != null || w.time < (r._petAt ||= w.time + 20000 + Math.floor(w.rng() * 40000)) || w !== home || p.hp < p.maxHp * 0.5 || b.rest) return;
     const tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"), nurse = nurseOf(w);
@@ -793,7 +817,7 @@ function partyAndTrade(adv, w, p, r) {
   if (p.trade) return tradeStep(adv, w, p, r);
   r._tr = null;
   // ---- proponer un trato (cada ~60 s como mucho; con quien está cerca y aprecia)
-  if (now < (r._dealAt ||= now + 30000 + Math.floor(w.rng() * 40000)) || p.dead || b.rest || b.target || w.pvp || busyTrade(p) || now - p.lastCombat < 6000 || w.map.kind === "dungeon") return;
+  if (now < (r._dealAt ||= now + 30000 + Math.floor(w.rng() * 40000)) || p.dead || b.rest || b.target || b.travel || b.owner != null || r._trip || r._delve || r._pet || r._plan || w.pvp || busyTrade(p) || now - p.lastCombat < 6000 || w.map.kind === "dungeon") return;       // solo comercia cuando está parado y libre (no a mitad de una caza, viaje, cripta o plan de grupo)
   r._dealAt = now + 60000 + Math.floor(w.rng() * 90000);
   const group = r._gather && now < r._gather.until;
   for (const q of w.ents.values()) {

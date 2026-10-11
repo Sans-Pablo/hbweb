@@ -4,6 +4,7 @@
 //  - `summaries()`: una ficha por bot (personalidad, guild, meta, estado, números, relaciones).
 //  - `analyze()`: patrones, anomalías y afinidades entre bots (matriz, parejas, grupos) a partir de las fichas.
 import * as Residents from "../web/src/shared/systems/residents.js";
+import * as Council from "../web/src/shared/systems/council.js";
 
 const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const mad = a => { const m = median(a); return median(a.map(x => Math.abs(x - m))) || 1; };
@@ -114,5 +115,17 @@ export function openBotStats(adv, log = () => {}) {
     return { at: Date.now(), n: S.length, names, matrix: M, best, worst, clusters, affinity: { guild: avg(guildPairs), other: avg(otherPairs), byArch: Object.entries(archAff).map(([k, a]) => ({ k, v: a.reduce((x, y) => x + y, 0) / a.length, n: a.length })).sort((a, b) => b.v - a.v) },
       anomalies: A.sort((a, b) => b.sev - a.sev), patterns: P, acts: Object.entries(acts).map(([k, v]) => ({ k, pct: Math.round(v) })).sort((a, b) => b.pct - a.pct), topKinds, deathsBy: Object.entries(deathsBy).sort((a, b) => b[1] - a[1]).slice(0, 8), archStats, ideas: ideaList };
   }
-  return { summaries, detail, analyze, idea, sample, hist };
+  // PARTIES: grupos de habitantes (líder + seguidores), qué plan decidieron y cómo lo discutieron (council.js)
+  function parties() {
+    const out = [], seen = new Set(), cs = adv.councils || new Map();
+    const card = (b) => { const w = adv.worldFor(b.id); return { name: b.name, lv: b.level, arch: b.res?.arch, hp: Math.round(100 * b.hp / Math.max(1, b.maxHp)), map: w.map.name || w.map.id, act: hist(b.name).st || "", goal: b.res?.goal ? Residents.goalText(b.res.goal, "es") : "" }; };
+    for (const g of Council.groupsOf(adv)) {
+      const c = cs.get(g.leader.name) || {}, pl = g.leader.res._plan;
+      seen.add(g.leader.name);
+      out.push({ live: true, leader: card(g.leader), members: g.members.map(card), plan: pl ? { kind: pl.kind, label: Council.labelOf(pl.kind), by: pl.by, secs: Math.max(0, Math.round((pl.until - adv.farm.time) / 1000)) } : null, history: (c.history || []).map(h => ({ ...h, winnerLabel: Council.labelOf(h.winner) })), since: Math.round(((adv.farm.time - (c.since ?? adv.farm.time)) / 1000)) });
+    }
+    for (const [k, c] of cs) if (!seen.has(k) && c.history.length) out.push({ live: false, leader: { name: k }, members: c.members.map(n => ({ name: n })), plan: null, history: c.history.map(h => ({ ...h, winnerLabel: Council.labelOf(h.winner) })), since: 0 });
+    return out;
+  }
+  return { summaries, detail, analyze, idea, sample, hist, parties };
 }

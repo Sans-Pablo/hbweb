@@ -6,12 +6,14 @@
 //  - Cada pocos segundos hace «recados» (sin ir a la tienda: compra por catálogo con su oro, ver `errands`): reparte puntos, compra y
 //    se equipa lo mejor que le llega, repone pociones y comida, vende lo que sobra y recoge botín.
 //  - Sube de nivel matando (giveExp normal). Evita monstruos que lo matarían en 3 golpes y descansa con poca vida.
+import { hazardAt, safeSpot } from "./hazards.js";
 import { dist, dirTo, DX, DY, LIMITS, PLAYER } from "../const.js";
 import { findPath, greedyStep } from "../path.js";
 import { EQUIP, ITYPE, EFFECT, MAX_ITEMS } from "../items.js";
 import * as Inv from "../inventory.js";
 import * as R from "../rules.js";
 import { reachOf, MAX_LEVEL } from "./combatsys.js";
+import { damageRange } from "../combat.js";
 import { groundTop } from "./ground.js";
 import { newInst } from "./itemsys.js";
 import * as Party from "./party.js";
@@ -160,11 +162,14 @@ export function errands(w, p, b, first = false) {
   let bought = 0;
   for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) {
     const list = cat.gear.get(slot) || [], have = value(slot), budget = p.gold * (first ? 0.25 : 0.6);
-    const d = list.find(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x));
-    if (!d) continue;
-    const inst = buy(w, p, d);
-    if (!inst) continue;
-    if (!tryEquip(w, p, b, inst)) { p.gold += d.price; Inv.removeFromBag(p, inst.uid); continue; }
+    let got = false;
+    for (const d of list.filter(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x)).slice(0, 6)) {      // prueba el siguiente si no puede cargarlo o no se lo puede poner (antes se atascaba para siempre con el más caro y peleaba sin arma)
+      const inst = buy(w, p, d);
+      if (!inst) { if (p.gold >= d.price) b.bad.add(d.id); continue; }
+      if (!tryEquip(w, p, b, inst)) { p.gold += d.price; Inv.removeFromBag(p, inst.uid); continue; }
+      got = true; break;
+    }
+    if (!got) continue;
     b.bought = 1;
     if (++bought >= (first ? 7 : 1)) break;
   }
@@ -173,18 +178,40 @@ export function errands(w, p, b, first = false) {
 }
 
 // ---------------------------------------------------------------- percepción y movimiento
+// ESTIMACIÓN DE UNA PELEA (daño por segundo de cada lado): un jefe tiene muchísima vida y pega fuerte, así que se decide con números (arma, vida, pociones y
+// compañeros cercanos) y no con el nivel a secas: un nivel 50 sin arma no le hace cosquillas. Es el «cálculo» que haría un jugador mirando su equipo.
+const avgOf = r => (r[0] + r[1]) / 2;
+export const dpsOf = q => avgOf(damageRange(q)) * 0.6;
+export function fightEstimate(w, p, e) {
+  let ally = 0, n = 0;
+  for (const q of w.ents.values()) if (q !== p && q.kind === "player" && !q.dead && q.side === p.side && dist(p, q) <= 14) { ally += dpsOf(q); n++; }
+  const foeHit = (e.cfg.attackDiceThrow || 1) * ((e.cfg.attackDiceRange || 1) + 1) / 2 * (e.dmgMul || 1) * 0.65, foeDps = foeHit * 0.8 / Math.max(0.9, (e.cfg.actionTime || 1500) / 1000);
+  const ttk = e.hp / Math.max(0.5, dpsOf(p) + ally), taken = foeDps * ttk / (1 + n * 0.7);
+  const red = w.data.named("RedPotion"), pots = red ? p.bag.reduce((a, i) => a + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
+  const budget = p.hp + pots * Math.min(80, p.maxHp * 0.4);
+  return { ttk, taken, budget, ratio: budget / Math.max(1, taken), allies: n };
+}
+// el jefe que habrá en el piso `level` de la cripta (misma escala que dungeon.js), para decidir ANTES de bajar
+export function bossPreview(w, level) {
+  const cfg = w.npcDb.Skeleton; if (!cfg || level % 5) return null;
+  const tier = Math.min(4, level / 5), sc = { hp: 1 + .22 * (level - 1), dmg: 1 + .1 * (level - 1) };
+  return { cfg, hp: Math.round(cfg.hitDice * 5.75 * sc.hp * (6 + 2 * tier)), dmgMul: sc.dmg * (1.6 + .2 * tier) };
+}
+export const fightOk = (w, p, e) => fightEstimate(w, p, e).ratio >= 1.3;
 export const tooStrong = (w, p, e) => {
   if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
-  if (e.boss) {                                                                                       // jefe de cripta: se ataca con nivel suficiente, y antes si hay compañeros cerca
-    let al = 0; for (const q of w.ents.values()) if (q !== p && q.kind === "player" && !q.dead && dist(p, q) <= 14) al++;
-    if (p.level < 8 + 5 * e.boss - 3 * Math.min(3, al)) return true;
-  }
+  if (e.boss && !e.aux) return !fightOk(w, p, e);                                                       // jefe de cripta: solo si el cálculo de la pelea sale a favor (con los compañeros que lo ayuden)
   const dl = p.res?.dlv?.[e.boss ? e.name + "*" + e.boss : e.name];                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
   if (dl !== undefined && p.level < dl + 3) return true;
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
   return hit * 4 > p.maxHp;
 };
-const hostile = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
+// los auxiliares de un jefe también se pelean: cristales de hielo (rompen su escudo), clones de sombra y huesos que lo curan
+// VALOR DE UN MONSTRUO para quien lo caza: lo que cuesta subir de nivel frente a lo que da cada baja. Un nivel 25 que sigue con slimes pierde el tiempo;
+// los bots prefieren lo mejor que aguantan (hasta 9 casillas de ventaja) y lo trivial solo lo matan si les estorba (INVENTO del port, objetivo «superarse»).
+export const mobRatio = (p, e) => (e.exp || e.cfg.expMin || 0) / Math.max(100, R.expForLevel(p.level + 1) - R.expForLevel(p.level));
+export const mobBonus = (p, e) => { const r = mobRatio(p, e); return r < 0.04 ? -6 : Math.min(9, 3 * Math.log2(1 + r * 4)); };
+const hostile = e => e.kind === "npc" && !e.dead && !e.master && (e.crystal || (!e.aux || (e.owner && !e.comp)) && !e.cfg.actionLimit);
 // ¿hay camino hasta el enemigo? (otro nivel de terreno: acantilado, agua, muro entre medias). Se cachea 4 s por enemigo; los inalcanzables no se eligen.
 function reachable(w, p, e) {
   const b = p.bot, c = (b.reach ||= new Map()), hit = c.get(e.id);
@@ -210,7 +237,8 @@ function pickTarget(w, p, owner) {
     if (p.bot.ignore?.has(e.id) && e.target !== p.id) continue;                                         // inalcanzable hace un momento
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
-    const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
+    const shielded = e.crystal && [...w.ents.values()].some(o => o.boss && o.shield && !o.dead && dist(o, e) <= 20);
+    const s = (shielded ? -20 : 0) - (e.target === p.id || e.kind !== "npc" ? 0 : mobBonus(p, e)) + d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
     if (s < bs && reachable(w, p, e)) { best = e; bs = s; }
   }
   return best;
@@ -232,6 +260,12 @@ function step(adv, w, p, b, tx, ty, run) {
   if (!d) d = greedyStep(w.grid, p, tx, ty, dirTo);
   if (d) { const k = w.grid.idx(p.x + DX[d], p.y + DY[d]); if (w.teleports.has(k) && !(b.travel && p.x + DX[d] === b.travel.x && p.y + DY[d] === b.travel.y)) { b.path = null; b.fails++; return false; } }       // un bot no pisa un teletransportador por descuido
   if (!d) { b.fails++; return false; }
+  if (!hazardAt(w, p.x, p.y) && hazardAt(w, p.x + DX[d], p.y + DY[d], 200)) {                   // no entra en el fuego: prueba las direcciones vecinas o espera
+    const alt = [(d % 8) + 1, ((d + 6) % 8) + 1].find(a => !hazardAt(w, p.x + DX[a], p.y + DY[a], 200) && !w.grid.blocked(p.x + DX[a], p.y + DY[a]) && !w.teleports.has(w.grid.idx(p.x + DX[a], p.y + DY[a])));
+    b.path = null;
+    if (!alt) return true;
+    d = alt;
+  }
   if (!adv.command(p.id, { t: "move", dir: d, run: !!run && p.sp > 6 })) { b.path = null; b.fails++; return false; }
   b.fails = 0;
   return true;
@@ -276,8 +310,13 @@ function run(adv, w, p, b) {
     if (w.time - p.deadAt > 3000) { adv.command(p.id, { t: "respawn" }); b.target = null; b.path = null; b.deadSaid = false; }
     return;
   }
-  if (p.level > b.lvl) { say(adv, p, b, "Level " + p.level + "!"); think_(w, p, b, "level", { l: p.level }, 0); b.lvl = p.level; b.errand = 0; }
+  if (p.level > b.lvl) { say(adv, p, b, "Level " + p.level + "!"); think_(w, p, b, "level", { l: p.level }, 0); b.lvl = p.level; b.errand = 0; b.bad.clear(); b.badUid?.clear(); }
   if (w.busy(p) || p.trade) return;                                       // en pleno trato se queda quieto
+  // PELIGRO EN EL SUELO: fuego, brasas, hielo o veneno bajo los pies (o un aviso de brasa a punto de caer): sale de ahí antes que cualquier otra cosa
+  if (hazardAt(w, p.x, p.y, 300)) {
+    const spot = safeSpot(w, p);
+    if (spot) { if (w.time - (b.dodgeLog || 0) > 8000) { b.dodgeLog = w.time; blog(w, p, `Estoy sobre fuego/hielo: me aparto a (${spot[0]},${spot[1]}).`); } b.path = null; b.goal = null; b.dodge = w.time; if (step(adv, w, p, b, spot[0], spot[1], true)) return; }
+  }
   // dueño: debe seguir conectado
   let owner = null;
   if (b.owner != null) {
@@ -286,6 +325,10 @@ function run(adv, w, p, b) {
     if (!owner) b.owner = null;
     else if (ow !== w) {                                                 // el dueño está en otro mapa: NO se teletransporta (los miembros de un grupo van a pie, como un jugador)
       b.lost = b.lost || w.time;
+      if (ow.pvp && !w.pvp && !p.dead && !w.busy(p)) {                                                // el líder está en Promise Land: va al teletransportador de esa zona y entra tras él
+        const tp = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === ow.map.id), spot = tp && w.freeSpotNear(tp.x, tp.y + 1);
+        if (tp && dist(p, tp) > 1) { if (!b.travel) { b.travel = { x: tp.x, y: tp.y, w, until: w.time + 90000 }; b.path = null; b.goal = null; } }
+      }
       if (ow.map.kind === "dungeon" && w.map.kind !== "dungeon" && !p.dead && !w.busy(p)) {        // va a la entrada de la cripta y baja con su grupo (enterCrypt lo mete en la cripta del grupo)
         const tp = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === "middled1n"), spot = tp && w.freeSpotNear(tp.x, tp.y + 2);
         if (spot && dist(p, { x: spot[0], y: spot[1] }) > 2) { if (!b.travel) { b.travel = { x: spot[0], y: spot[1], w, until: w.time + 60000 }; b.path = null; } }
@@ -370,12 +413,12 @@ function run(adv, w, p, b) {
   if (!b.travel && w.time >= (b.huntAt || 0) && w.map.kind !== "dungeon") {                // sin nada a la vista: va a cazar donde hay monstruos (antes vagaba para siempre por el pueblo, junto a la herrería y la tienda)
     b.huntAt = w.time + 8000;
     let best = null, bd = 1e9;
-    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e) + Math.min(10, (p.kinds?.[e.name] || 0) / 6); if (d < bd && (dist(p, e) > 40 || reachable(w, p, e))) { bd = d; best = e; } }
-    if (best && bd > 14) {
+    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e) + Math.min(10, (p.kinds?.[e.name] || 0) / 6) - 3 * mobBonus(p, e); if (d < bd && (dist(p, e) > 40 || reachable(w, p, e))) { bd = d; best = e; } }
+    if (best && dist(p, best) > 14) {
       const spot = w.freeSpotNear(best.x, best.y);
       if (spot && !w.teleports.has(w.grid.idx(spot[0], spot[1]))) {
         b.travel = { x: spot[0], y: spot[1], w, until: w.time + 120000 }; b.home = { x: spot[0], y: spot[1] }; b.path = null; b.goal = null; b.wander = null; b.fails = 0;
-        blog(w, p, `No hay monstruos cerca: voy a cazar a (${spot[0]},${spot[1]}), a ${bd} casillas.`);
+        blog(w, p, `No hay monstruos cerca: voy a cazar ${best.name} (rinde ${mobRatio(p, best).toFixed(2)} niveles por baja) a (${spot[0]},${spot[1]}), a ${dist(p, best)} casillas.`);
         return;
       }
     }

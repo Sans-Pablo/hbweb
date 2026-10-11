@@ -9,6 +9,7 @@ nav.tabs{display:flex;gap:8px;margin:0 0 14px}nav.tabs button.on{border-color:va
 </style>
 <nav class="tabs"><button id="tsrv" class="on">Servidor</button><button id="tbots">Bots</button></nav>
 <div id="botsv">
+  <div class="card"><div class="row"><b style="color:var(--gold)">Parties</b><span class="dim" id="psum"></span><button id="pref">Actualizar</button></div><div id="pty"></div></div>
   <div class="card"><div class="row"><b style="color:var(--gold)">Bots</b><span class="dim" id="bsum"></span><input id="bq" placeholder="buscar nombre, guild, personalidad…"><button id="bref">Actualizar</button></div>
     <table class="bt" id="bt"><thead><tr id="bth"></tr></thead><tbody></tbody></table></div>
   <div class="card" id="bdet" style="display:none"></div>
@@ -20,7 +21,7 @@ const $=s=>document.querySelector(s), tok=new URLSearchParams(location.search).g
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ARCH={warrior:"Guerrero",hunter:"Cazador",trader:"Comerciante",wanderer:"Viajero",scholar:"Mago"};
 document.querySelectorAll(".card").forEach(c=>{if(!c.closest("#botsv"))c.classList.add("srv")});
-const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadAn()}};
+const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadParties();loadAn()}};
 $("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");
 const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
 let bots=[],sort="lv",dir=-1,cur=null,sub="log";
@@ -32,7 +33,7 @@ function renderBots(){const q=$("#bq").value.trim().toLowerCase();
  $("#bt tbody").innerHTML=rows.map(b=>'<tr class="brow" data-n="'+esc(b.name)+'"><td><b>'+esc(b.name)+'</b></td><td>'+b.lv+'</td><td>'+esc(ARCH[b.arch]||b.arch)+'</td><td>'+(b.guild?esc(b.guild.name)+(b.guild.rank===0?" ★":""):"—")+'</td><td class="dim">'+esc(b.goal)+'</td><td>'+esc(b.act)+'</td><td>'+b.gold+'</td><td>'+b.kills+'</td><td>'+b.deaths+'</td><td>'+(b.scare||"")+'</td><td>'+b.trades+'</td><td>'+Math.round(b.expMin)+'</td><td>'+(b.still>=2?'<span class="sev3">'+b.still+' min</span>':"")+'</td><td>'+b.ideasN+'</td></tr>').join("");}
 async function loadBots(){const r=await fetch("/api/admin/bots?token="+tok);if(!r.ok)return;bots=(await r.json()).bots;renderBots();if(cur)loadDet(cur,true)}
 $("#bth").onclick=e=>{const k=e.target.dataset.k;if(!k)return;dir=sort===k?-dir:-1;sort=k;renderBots()};
-$("#bq").oninput=renderBots;$("#bref").onclick=loadBots;$("#aref").onclick=loadAn;
+$("#bq").oninput=renderBots;$("#bref").onclick=loadBots;$("#pref").onclick=loadParties;$("#aref").onclick=loadAn;
 $("#bt tbody").onclick=e=>{const tr=e.target.closest("tr.brow");if(tr){cur=tr.dataset.n;loadDet(cur)}};
 const bars=(rows,fmt)=>rows.map(([k,v,t])=>'<div class="bar"><span style="min-width:120px">'+esc(k)+'</span><i style="width:'+Math.max(2,Math.min(180,v*1.8))+'px"></i>'+esc(t??fmt?.(v)??v)+'</div>').join("");
 async function loadDet(name,keep){const r=await fetch("/api/admin/botdetail?token="+tok+"&name="+encodeURIComponent(name));const d=await r.json();const box=$("#bdet");if(d.error){box.style.display="none";return}
@@ -54,6 +55,13 @@ async function loadDet(name,keep){const r=await fetch("/api/admin/botdetail?toke
  box.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{sub=b.dataset.s;loadDet(name,true)});
  if(!keep)box.scrollIntoView({behavior:"smooth"})}
 const heat=v=>v>0?"rgba(240,210,122,"+Math.min(1,v/8)+")":v<0?"rgba(220,80,60,"+Math.min(1,-v/4)+")":"transparent";
+const KL={hunt:"cazar en la granja",crypt:"bajar a la cripta",pl:"ir a Promise Land"};
+async function loadParties(){const r=await fetch("/api/admin/botparties?token="+tok);if(!r.ok)return;const ps=(await r.json()).parties;const live=ps.filter(p=>p.live);$("#psum").textContent=live.length+" activas · "+(ps.length-live.length)+" disueltas recientes";
+ const mem=m=>'<a href="#" data-b="'+esc(m.name)+'">'+esc(m.name)+"</a>"+(m.lv?' <span class="dim">nv '+m.lv+" · "+esc(ARCH[m.arch]||m.arch||"")+(m.act?" · "+esc(m.act):"")+(m.map?" · "+esc(m.map):"")+"</span>":"");
+ $("#pty").innerHTML=ps.map(p=>'<div class="card" style="margin:6px 0;padding:8px"><div><b>'+(p.live?"●":"○")+" Grupo de "+esc(p.leader.name)+'</b> <span class="dim">'+(p.live?p.members.length+1+" miembros":"disuelto")+"</span>"+(p.plan?' · plan: <b style="color:var(--gold)">'+esc(p.plan.label)+'</b> <span class="dim">(propuso '+esc(p.plan.by)+", quedan "+p.plan.secs+" s)</span>":"")+"</div>"
+  +'<div style="margin:3px 0">★ '+mem(p.leader)+(p.members.length?"<br>"+p.members.map(mem).join("<br>"):"")+"</div>"
+  +(p.history.length?'<details'+(p.live?" open":"")+'><summary class="dim">Discusiones ('+p.history.length+")</summary>"+p.history.map(h=>'<div style="margin:4px 0;padding-left:8px;border-left:2px solid var(--gold)"><div class="dim">'+"min "+Math.round(h.at/60000)+" · gana <b>'+esc(h.winnerLabel)+"</b> — votos: cazar "+h.tally.hunt+" · cripta "+h.tally.crypt+" · PL "+h.tally.pl+(h.left?" · dejan el grupo: "+esc(h.left.join(", ")):"")+"</div>"+h.lines.map(l=>"<div>"+esc(l.who)+": <b>"+esc(KL[l.kind]||l.kind)+'</b> <span class="dim">(peso '+l.weight+") "+esc(l.why)+"</span></div>").join("")+"</div>").join("")+"</details>":"")+"</div>").join("")||'<div class="dim">No hay grupos de habitantes ahora mismo.</div>';
+ $("#pty").querySelectorAll("[data-b]").forEach(x=>x.onclick=e=>{e.preventDefault();cur=x.dataset.b;loadDet(cur)})}
 async function loadAn(){const r=await fetch("/api/admin/botanalysis?token="+tok);if(!r.ok)return;const a=await r.json();$("#asum").textContent=a.n+" bots · "+new Date(a.at).toLocaleTimeString();
  const pairRow=p=>'<div>'+esc(p.a)+" ↔ "+esc(p.b)+' <b>'+p.v.toFixed(1)+'</b> <span class="dim">('+p.ab+"/"+p.ba+")"+(p.sameGuild?" · mismo guild":"")+(p.sameArch?" · misma personalidad":"")+"</span></div>";
  let h='<div class="grid2"><div><h3>Patrones</h3>'+(a.patterns.map(p=>"<div>• "+esc(p)+"</div>").join("")||"—")+'</div>'
@@ -67,6 +75,6 @@ async function loadAn(){const r=await fetch("/api/admin/botanalysis?token="+tok)
  +'<div><b>Afinidad media</b><div>Mismo guild: '+a.affinity.guild.toFixed(2)+" · distinto guild: "+a.affinity.other.toFixed(2)+"</div>"+a.affinity.byArch.slice(0,8).map(x=>'<div class="dim">'+esc(x.k.split("+").map(k=>ARCH[k]||k).join(" + "))+": "+x.v.toFixed(2)+" ("+x.n+")</div>").join("")+"</div></div>"
  +'<h3>Mapa de afinidad</h3><div style="overflow:auto"><table class="hm"><tr><th></th>'+a.names.map((n,i)=>'<th title="'+esc(n)+'">'+esc(n.slice(0,2))+"</th>").join("")+"</tr>"+a.names.map((n,i)=>"<tr><th style=\"text-align:right\">"+esc(n)+"</th>"+a.matrix[i].map((v,j)=>'<td style="background:'+(i===j?"#333":heat(v))+'" title="'+esc(n)+" ↔ "+esc(a.names[j])+": "+v.toFixed(1)+'"></td>').join("")+"</tr>").join("")+"</table></div>";
  $("#an").innerHTML=h;$("#an").querySelectorAll("[data-b]").forEach(x=>x.onclick=e=>{e.preventDefault();cur=x.dataset.b;loadDet(cur)})}
-setInterval(()=>{if($("#botsv").style.display==="block"){loadBots()}},8000);
+setInterval(()=>{if($("#botsv").style.display==="block"){loadBots();loadParties()}},8000);
 })();
 </script>

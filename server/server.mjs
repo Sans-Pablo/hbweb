@@ -156,11 +156,12 @@ const server = http.createServer((req, res) => {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     json(req, res, 200, adminState()); return;
   }
-  if (url.pathname === "/api/admin/bots" || url.pathname === "/api/admin/botanalysis" || url.pathname === "/api/admin/botdetail") {
+  if (url.pathname === "/api/admin/bots" || url.pathname === "/api/admin/botanalysis" || url.pathname === "/api/admin/botdetail" || url.pathname === "/api/admin/botparties") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     try {
       if (url.pathname === "/api/admin/bots") json(req, res, 200, { bots: botStats.summaries() });
       else if (url.pathname === "/api/admin/botanalysis") json(req, res, 200, botStats.analyze());
+      else if (url.pathname === "/api/admin/botparties") json(req, res, 200, { parties: botStats.parties() });
       else json(req, res, 200, botStats.detail(url.searchParams.get("name") || "") || { error: "no existe" });
     } catch (e) { json(req, res, 500, { error: e.message }); }
     return;
