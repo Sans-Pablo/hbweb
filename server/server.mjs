@@ -157,7 +157,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x");
   if (req.method === "OPTIONS") { res.writeHead(204, { ...cors(req), "Access-Control-Max-Age": "600" }); res.end(); return; }
   if (url.pathname === "/api/info") {
-    json(req, res, 200, { multiplayer: true, proto: PROTO, version: VERSION.version, name: VERSION.name, max: MAX_PLAYERS, players: [...clients].filter(c => c.pid).map(c => c.name) });
+    json(req, res, 200, { multiplayer: true, proto: PROTO, version: VERSION.version, name: VERSION.name, max: MAX_PLAYERS, players: [...clients].filter(c => c.pid).map(c => c.name).concat(adventure.residents().map(b => b.name)) });   // los habitantes (bots conectados según su horario) cuentan como conectados
     return;
   }
   if (url.pathname === "/admin") {

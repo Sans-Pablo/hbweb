@@ -9,6 +9,19 @@
   },
   "news": [
     {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Bots en los conectados (v0.60.1)",
+        "en": "Bots among the connected (v0.60.1)"
+      },
+      "items": [
+        {
+          "es": "La lista de conectados de la pantalla de entrada incluye ahora a los habitantes que están conectados.",
+          "en": "The connected list on the login screen now includes the residents who are online."
+        }
+      ]
+    },
+    {
       "date": "2026-10-11",
       "title": {
         "es": "Maná proporcional, gustos y manuales (v0.60.0)",

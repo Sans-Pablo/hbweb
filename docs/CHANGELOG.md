@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.60.1 · Bots en la lista de conectados (2026-10-12)
+- La pantalla de entrada (y /api/info) cuenta y nombra a los habitantes conectados junto a los jugadores.
+
 ## 0.60.0 · Maná proporcional, gustos y manuales (2026-10-11)
 - Invocar cuesta un porcentaje de tu maná máximo igual al nivel del summon (nivel 1 = 1 %, nivel 50 = 50 %).
 - F10 → Info muestra la comida que le gusta y la que no a tu summon.
