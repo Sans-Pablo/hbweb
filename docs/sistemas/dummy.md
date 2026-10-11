@@ -1,6 +1,6 @@
 # Dummy (summon de apoyo único)
 
-INVENTO del port (no existe en el original). Usa el NPC `Dummy` de NPC.cfg y los hechizos de Magic.cfg. Código: `shared/systems/dummy.js`, talentos en `talents.js`, ficha del compañero en `companion.js`.
+INVENTO del port (no existe en el original). Son tres especies independientes (`Healer`, `Buffer`, `Aura`), cada una con su propio NPC en `npc.json` (clon de `Dummy` de NPC.cfg con su sprite: `uhealer`, `usorceress`, `ubuffer`) y los hechizos de Magic.cfg. Código: `shared/systems/dummy.js`, talentos en `talents.js`, ficha del compañero en `companion.js`.
 
 - **Aspecto**: tres mobs de apoyo (`DUMMY_SPRITE` en `anim.js`) con la Sorceress original y solo el pelo recoloreado (`tools/make_summon_sprites.py`): Healer = verde, Buffer = azul, Aura = amarillo. La clase se elige al comprar la bola (`petbuy` con `cls`; queda fija) y no habla. Aura y Buffer aparecen siempre a la derecha del jugador. El radio del Buffer es la mitad que el del Healer y el del Aura una casilla más. El Healer hace la animación de atacar al curar.
 - **Único**: es una bola de compañero (Gail la vende como las demás); solo hay un compañero activo, así que llevar un Dummy es jugar de apoyo.
@@ -17,3 +17,9 @@ INVENTO del port (no existe en el original). Usa el NPC `Dummy` de NPC.cfg y los
 - `dvamp` (nivel 25, 5 rangos): `AURA_PER_LEVEL.dvamp = 0,16` → hasta 8 % del daño que hace el aliado (dentro del radio) vuelve como vida (`damageNpc`, `auraVamp`).
 - `dres` (nivel 40, 3 rangos, Magic.cfg 94): si un jugador del grupo está caído a ≤ radio+2, el Dummy gasta 200 de maná, lo levanta con 40 % + 10 %/rango de vida y emite `respawn`/`resurrected`. Recarga 180 s − 40 s por rango extra.
 - Test: `tests/dummy.test.mjs` («OK dummy vamp/res»).
+
+## Bolas
+- Nombre por clase (`DUMMY_NAMES`: Healer/Buffer/Aura Summon) en tienda, mochila, hospital, tooltip y chat; color propio (`BALL_COLORS`: magenta/naranja/violeta) y el sprite del summon dentro (`client/compicon.js`).
+
+## 0.58.0 — Especies independientes
+- Ya no hay un «Dummy» que cambie de clase o de sprite: la bola se compra como Healer, Buffer o Aura y nace con su sprite y su clase fijos (`Tal.CLS_OF`/`SPECIES_OF`). Las bolas antiguas `sp:"Dummy"` se migran al cargar (`Tal.fixSupport`). El NPC `Dummy` queda solo para el cristal del jefe.

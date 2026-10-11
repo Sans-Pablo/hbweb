@@ -2,7 +2,7 @@
 // (shared/systems/debug.js); en el servidor real solo funcionan con HB_DEBUG=1. Los datos llegan por window.hbDev (main.js).
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 import { SPECIES as ALL_SPECIES } from "../shared/systems/companion.js";
-const SPECIES = Object.keys(ALL_SPECIES);      // todas las especies, también Dummy (sus tres clases) y las de escuela
+const SPECIES = Object.keys(ALL_SPECIES);      // todas las especies, también los tres supports y las de escuela
 const KITS = {
   potions: [["RedPotion", 50], ["BluePotion", 50], ["GreenPotion", 50]],
   arrows: [["Arrow", 500]],

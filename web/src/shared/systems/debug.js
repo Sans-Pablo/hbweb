@@ -74,9 +74,9 @@ const OPS = {
   ball(w, p, c) {
     const sp = String(c.sp || ""); if (!Comp.SPECIES[sp]) return say(w, p, "Unknown species");
     const b = newInst(w, Comp.SPECIES[sp][1]);
-    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack", ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };
+    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack", ...(Tal.CLS_OF[sp] ? { cls: Tal.CLS_OF[sp], fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };
     Inv.addToBag(p, w.data, b); w.recalc(p);
-    w.emit({ t: "petbought", id: p.id, sp, nm: b.comp.nm, uid: b.uid, price: 0 });
+    w.emit({ t: "petbought", id: p.id, sp, cls: b.comp.cls, nm: b.comp.nm, uid: b.uid, price: 0 });
   },
   petlvl(w, p, c) {
     const b = ball(p); if (!b) return say(w, p, "You have no ball");

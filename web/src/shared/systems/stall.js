@@ -26,12 +26,13 @@ export function spawn(w, s) {
   return n;
 }
 
+export const DOOR_GAP = 8;          // un puesto no se abre a menos de 8 casillas de una entrada (antes 4: seguía tapando la salida)
 export function open(w, p, cmd) {
   const list = db(w); if (!list) return false;
   const rej = why => w.reject(p, { t: "stallopen" }, why);
   if (!MAPS.has(w.map.id)) return rej("aquí no se pueden abrir puestos (solo shop, warehouse y herrería)");
   // BUG-012: ni sobre una entrada/teletransporte ni cerca (el puesto taparía la puerta); el hueco del puesto queda a ≥ 2 casillas
-  for (const t of w.teleports.values()) if (Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) <= 4) return rej("no puedes abrir un puesto junto a una entrada o teletransporte");
+  for (const t of w.teleports.values()) if (Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) <= DOOR_GAP) return rej("no puedes abrir un puesto junto a una entrada o teletransporte");
   const key = p.name.toLowerCase();
   if (p.dead || p.trade) return rej("ahora no puedes abrir un puesto");
   if (list.some(s => s.owner === key)) return rej("ya tienes un puesto abierto");

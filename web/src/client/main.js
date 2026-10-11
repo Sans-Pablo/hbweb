@@ -136,7 +136,7 @@ async function main() {
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
   const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, item: id => assets.data.item?.(id), me: () => world.ents.get(pid), send: c => conn.send(c) });
   const npcUi = registerNpcDialogs(gui, {
-    preview: (sp, npc) => summonPreview.show(sp, npc),
+    preview: (sp, npc, cls) => summonPreview.show(sp, npc, cls),
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
@@ -631,7 +631,7 @@ async function main() {
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia
-      if (ev.t === "companion" && ev.on && ev.cls === "aura" && ev.id === pid && opts.statusPanel !== true) { setOpt("statusPanel", true); hud.log("Panel de estados activado (aura del Doomy)."); }       // BUG-021
+      if (ev.t === "companion" && ev.on && ev.cls === "aura" && ev.id === pid && opts.statusPanel !== true) { setOpt("statusPanel", true); hud.log("Panel de estados activado (aura del summon)."); }       // BUG-021
       if ((ev.t === "companion" && ev.on || ev.t === "ball") && ev.id === pid) {         // baja las hojas de la especie para el icono y el compañero
         const sp = assets.npcDb[ev.sp]?.sprite;
         if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);

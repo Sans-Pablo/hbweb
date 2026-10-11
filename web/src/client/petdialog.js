@@ -28,7 +28,7 @@ export function registerPetDialog(gui, api) {
         ];
         // BUG-010: rasgos y evolución de la especie
         if (Sch.TIER2[c.sp]) out.push({ act: "info", text: "Evolves → " + Sch.TIER2[c.sp], right: "Lv " + Sch.TRADE_LEVEL, color: c.lvl >= Sch.TRADE_LEVEL ? RED : null, tip: "At level " + Sch.TRADE_LEVEL + " the nurse (Gail) evolves it into " + Sch.TIER2[c.sp] + "; it returns to level 1." });
-        if (Tal.isDummy(c)) out.push({ act: "info", text: c.cls ? Tal.DUMMY_NAMES[c.cls] : "Doomy: no class yet", right: "", color: c.cls ? Tal.DUMMY_COLORS[c.cls] : null, tip: DUMMY_HINTS[["healer", "buffer", "aura"].indexOf(c.cls)] || "Learn a spell to fix its class: Healer, Buff or Aura Doomy." });
+        if (Tal.isDummy(c)) out.push({ act: "info", text: Tal.DUMMY_NAMES[c.cls], right: "", color: Tal.DUMMY_COLORS[c.cls], tip: DUMMY_HINTS[["healer", "buffer", "aura"].indexOf(c.cls)] });
         const sc = Sch.schoolOfSpecies(c.sp);
         if (sc) out.push({ act: "school", text: "School: " + Sch.SCHOOL_NAMES[sc], right: "MP " + (c.mp ?? Tal.maxMp(c)) + "/" + Tal.maxMp(c), color: RED, tip: "Casts your " + Sch.SCHOOL_NAMES[sc] + " attack spells with its own mana. No natural regeneration: feed it Blue Candies." + (Sch.TIER2[c.sp] ? " At level " + Sch.TRADE_LEVEL + " it can evolve into a " + Sch.TIER2[c.sp] + " at the pet nurse." : "") });
         else if (!Tal.isDummy(c)) out.push({ act: "school", text: "General school", right: "combat", tip: "Combat summon only: it casts no magic." });
@@ -40,7 +40,7 @@ export function registerPetDialog(gui, api) {
         const r = Tal.rankOf(c, t.id);
         if (t.dummy) {
           const lockCls = c.cls && c.cls !== br, lockLvl = t.lvl && c.lvl < t.lvl;
-          return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: lockLvl ? "Lv " + t.lvl : r + "/" + t.max, color: lockCls || lockLvl ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (lockCls ? " (this Dummy is already another class)" : lockLvl ? " (needs level " + t.lvl + ")" : "") };
+          return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: lockLvl ? "Lv " + t.lvl : r + "/" + t.max, color: lockCls || lockLvl ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (lockCls ? " (this summon is already another class)" : lockLvl ? " (needs level " + t.lvl + ")" : "") };
         }
         const locked = Tal.spent(c, br) < Tal.TIER_COST * t.tier;
         return { id: t.id, text: t.name + (t.spell != null ? " *" : ""), right: r + "/" + t.max, color: locked ? "#5a4636" : r >= t.max ? RED : null, tip: t.desc + (locked ? " (needs " + Tal.TIER_COST * t.tier + " points in this branch)" : "") };

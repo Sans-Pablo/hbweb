@@ -1,11 +1,11 @@
 // Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
-import { DUMMY_COLORS } from "../shared/systems/talents.js";
+import { BALL_COLORS } from "../shared/systems/talents.js";
 let NPC = {};
 export const setNpcDb = db => { NPC = db || {}; };
 const cache = new Map();
-export function miniOf(sp, frames) {
+export function miniOf(sp, frames, cls) {
   const cfg = NPC[sp]; if (!cfg) return null;
   const e = { kind: "npc", type: cfg.type, cfg, dir: 5, act: ACT.STOP, actStart: 0, actDur: 0, phase: 0, dur: { stopFrame: 200 } };
   return mobSprite(e, 0, frames);
@@ -33,8 +33,8 @@ const ballCache = new Map();
 export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
   const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;
   const [sx, sy, w, h, px, py] = fr, sp = it.comp.sp;
-  let m = cache.get(sp); if (!m) { m = miniOf(sp, k => g.spr.frames(k)); cache.set(sp, m); }
-  const tint = it.comp.cls ? DUMMY_COLORS[it.comp.cls] : m && tintOf(g, sp, m);          // Dummy: la bola toma el color de su clase
+  const mk = sp + ":" + (it.comp.cls || ""); let m = cache.get(mk); if (!m) { m = miniOf(sp, k => g.spr.frames(k), it.comp.cls); cache.set(mk, m); }
+  const tint = it.comp.cls ? BALL_COLORS[it.comp.cls] : m && tintOf(g, sp, m);          // Dummy: la bola toma el color de su clase
   let src = g.spr.img[key], ox = sx, oy = sy;
   if (tint) {
     const ck = key + ":" + d.spriteFrame + ":" + sp + ":" + (it.comp.cls || "");
@@ -42,7 +42,7 @@ export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
     if (!c) {
       c = document.createElement("canvas"); c.width = w; c.height = h;
       const x2 = c.getContext("2d"); x2.drawImage(g.spr.img[key], sx, sy, w, h, 0, 0, w, h);
-      x2.globalCompositeOperation = "source-atop"; x2.globalAlpha = it.comp.cls ? 0.8 : 0.6; x2.fillStyle = tint; x2.fillRect(0, 0, w, h);
+      x2.globalCompositeOperation = "source-atop"; x2.globalAlpha = it.comp.cls ? 0.85 : 0.6; x2.fillStyle = tint; x2.fillRect(0, 0, w, h);
       ballCache.set(ck, c);
     }
     src = c; ox = 0; oy = 0;
@@ -57,9 +57,15 @@ export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
     const f = g.spr.frame(m.key, m.f);
     if (!f) { if (gray) g.ctx.filter = "none"; return; }
     if (!g.spr.ready(m.key)) { g.spr.img[m.key]; if (gray) g.ctx.filter = "none"; return; }
-    const [mx, my, mw, mh] = f, k = Math.min(1, 24 / Math.max(mw, mh));
+    const [mx, my, mw, mh] = f, k = Math.min(1, 24 / Math.max(mw, mh)) * scale / 1.15;
     g.ctx.drawImage(g.spr.img[m.key], mx, my, mw, mh, cx - mw * k / 2, cy - mh * k / 2, mw * k, mh * k);
   }
   if (gray) g.ctx.filter = "none";
   if (it.comp.on) g.text(x + px, y + py + 10, "★", "#ffd34d", { shadow: true, size: 11 });
+}
+// bola centrada en (cx, cy) y de unos `size` px (filas de lista, tiendas): misma bola con su sprite dentro
+export function drawBallIcon(g, it, d, key, cx, cy, size = 16) {
+  const fr = g.spr.frame(key, d.spriteFrame); if (!fr) return;
+  const [, , w, h, px, py] = fr, sc = size / Math.max(w, h);
+  drawBall(g, it, d, key, cx - px - w / 2, cy - py - h / 2, 1, sc);
 }

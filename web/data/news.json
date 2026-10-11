@@ -11,6 +11,23 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Supports independientes (v0.58.0)",
+        "en": "Independent supports (v0.58.0)"
+      },
+      "items": [
+        {
+          "es": "Healer, Buffer y Aura son tres summons distintos: cada uno nace con su propio sprite y su clase, ya no se transforman.",
+          "en": "Healer, Buffer and Aura are three separate summons: each is born with its own sprite and class and never transforms."
+        },
+        {
+          "es": "Tus bolas antiguas de Dummy se convierten solas en Healer, Buffer o Aura según su clase.",
+          "en": "Your old Dummy balls convert by themselves into Healer, Buffer or Aura according to their class."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Colores de supports (v0.57.1)",
         "en": "Support colours (v0.57.1)"
       },
@@ -18,6 +35,10 @@
         {
           "es": "Aura tiene el pelo azul y Buffer el amarillo.",
           "en": "Aura has blue hair and Buffer yellow."
+        },
+        {
+          "es": "Las bolas de Healer, Buffer y Aura se llaman igual en tienda, mochila y chat, llevan su sprite dentro y tienen color propio (magenta, naranja, violeta) para contrastar.",
+          "en": "Healer, Buffer and Aura balls keep their name in shop, bag and chat, show their sprite inside and have their own colour (magenta, orange, violet) for contrast."
         }
       ]
     },

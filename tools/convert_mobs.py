@@ -53,5 +53,8 @@ for t, key in TOWN.items():
     for d in range(8): export(pak, key, d, sdir, "%s%d" % (key, d), manifest)
     npcs[name] = dict(cfg[name], sprite=key, sound=0, town=True)
 json.dump(manifest, open(man_path, "w"), separators=(",", ":"))
+# Supports independientes (INVENTO): tres especies propias clonadas de Dummy, cada una con su sprite de hechicera (ver tools/make_summon_sprites.py)
+for _sp, _spr in (("Healer", "uhealer"), ("Buffer", "usorceress"), ("Aura", "ubuffer")):
+    if "Dummy" in npcs: npcs[_sp] = dict(npcs["Dummy"], sprite=_spr)
 json.dump(npcs, open(npc_path, "w"), indent=1)
 print("monstruos:", len(done), "sprites; fichas NPC:", len(npcs))

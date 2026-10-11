@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.58.0 · Supports independientes (2026-10-11)
+- Healer, Buffer y Aura son tres summons distintos, cada uno con su sprite y su clase desde que se invoca; ya no hay un Dummy que se transforme. Las bolas antiguas se convierten solas.
+- Las bolas de los supports muestran su nombre y su color propio en tienda, mochila y chat.
+
 ## 0.57.1 · Colores de supports (2026-10-11)
 - Aura ahora tiene el pelo azul y Buffer el amarillo.
 

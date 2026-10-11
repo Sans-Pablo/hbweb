@@ -73,7 +73,6 @@ export function bundleOfWorld(world, manifest, npcDb, index = new Map()) {
     const cfg = npcDb[name];
     if (!cfg) continue;
     mobs.push(...sheetsOf(manifest, cfg.sprite, index));
-    if (name === "Dummy") for (const sp of ["eidh", "eidb", "eida"]) mobs.push(...sheetsOf(manifest, sp, index));
     if (cfg.sound) for (let i = 0; i <= 3; i++) sounds.add("M" + (cfg.sound + i));   // M<n>: reposo, golpe, daño, muerte (HGServer/Game.cpp, sonidos de NPC)
   }
   if (world.map?.kind === "dungeon") sounds.add("M" + (npcDb.Skeleton?.sound ?? 0));

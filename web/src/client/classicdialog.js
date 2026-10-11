@@ -17,6 +17,8 @@
 //   7. Filas: top + visible*rowH <= 256 (el constructor lo calcula si no pasas `visible`).
 //   }
 //   gui.register(new Mio());   y   gui.open(50)
+import { drawBallIcon } from "./compicon.js";
+import { itemDef, packKey } from "./names.js";
 export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
 const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly < y2;
 
@@ -63,7 +65,8 @@ export class ClassicDialog {
       const r = rows[i + this.view]; if (!r) break;
       const y = this.top + i * this.rowH, over = inside(lx, ly, this.mx - 4, this.w - 12, y - 1, y + this.rowH - 2);
       const col = over ? WHITE : r.color || DARK;
-      g.text(this.mx, y, r.text, col, { size: 11 });
+      if (r.ball) { const d = itemDef(r.ball.id); if (d) drawBallIcon(g, r.ball, d, packKey(d), this.mx + 8, y + 7, 16); }
+      g.text(this.mx + (r.ball ? 20 : 0), y, r.text, col, { size: 11 });
       if (r.right != null) g.text(this.w - 44, y, String(r.right), col, { size: 11 });
       if (over && r.tip) hint = r.tip;
     }

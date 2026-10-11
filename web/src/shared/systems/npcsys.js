@@ -145,7 +145,7 @@ function followerThink(w, n) {
   if (!m || (!n.comp && w.time - n.summonedAt > SUMMON_MS)) return killNpc(w, n, null);
   if (m.dead) {                                                                 // el dueño ha caído: solo se queda un Dummy de aura con Resurrection (dummy.js rescue)
     const dc = n.comp && Inv.instOf(m, n.ball)?.comp;
-    if (!(dc && dc.sp === "Dummy" && Dummy.rescue(w, n, m, dc))) return killNpc(w, n, null);
+    if (!(dc && Tal.isDummy(dc) && Dummy.rescue(w, n, m, dc))) return killNpc(w, n, null);
     Tal.regen(w, n, dc);
     if (dist(n, m) > 1) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
     return;
@@ -153,7 +153,7 @@ function followerThink(w, n) {
   let tc = null;
   if (n.comp) {
     refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
-    if (tc?.sp === "Dummy" && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
+    if (tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
       tc.on = false; dismissCompanion(w, m); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
     }
     if (tc?.evolve) {                                   // cambio de tamaño: tras unos segundos (se lee la frase) se vuelve a invocar con efecto
@@ -173,12 +173,12 @@ function followerThink(w, n) {
   const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE); return !!d; };
   if (n.comp && n.goTo) {                                                     // Alt + clic derecho: ir a esa casilla y quedarse allí
     const g = n.goTo;
-    if (tc && tc.sp === "Dummy") Dummy.think(w, n, m, tc);
+    if (tc && Tal.isDummy(tc)) Dummy.think(w, n, m, tc);
     if ((n.x === g.x && n.y === g.y) || w.time > g.until || (dist(n, g) <= 1 && (!toGoal(g) || w.time - (g.near ??= w.time) > 1500))) { n.holdAt = { x: n.x, y: n.y }; n.goTo = null; }
     else toGoal(g);
     return;
   }
-  if (tc && tc.sp === "Dummy") {                                              // Dummy: no ataca; lanza sus magias de apoyo y, en modo seguir, va con el dueño
+  if (tc && Tal.isDummy(tc)) {                                              // Dummy: no ataca; lanza sus magias de apoyo y, en modo seguir, va con el dueño
     Dummy.think(w, n, m, tc);
     const anchor = n.holdAt || (tc.mode !== "peace" ? m : null);
     if (anchor && dist(n, anchor) > (n.holdAt ? 0 : 2)) toGoal(anchor);
@@ -320,7 +320,7 @@ function refreshCompanion(w, n, m) {
   const c = inst.comp, st = Comp.statsOf(m, c);
   n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
   { const k = (c.exp || 0) / Comp.need(c.lvl);   // solo el último 10% de la experiencia
-      n.evoK = c.sp !== "Dummy" && Comp.SIZE_STAGES.includes(c.lvl + 1) && k >= 0.9 ? Math.max(0.01, Math.min(1, (k - 0.9) / 0.1)) : 0; }          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
+      n.evoK = !Tal.isDummy(c) && Comp.SIZE_STAGES.includes(c.lvl + 1) && k >= 0.9 ? Math.max(0.01, Math.min(1, (k - 0.9) / 0.1)) : 0; }          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
   // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
   if (!n.hpInit) { n.hpInit = true; n.maxHp = st.hp; n.hp = Math.max(1, Math.min(st.hp, c.hp ?? st.hp)); }
   else if (n.maxHp !== st.hp) { const k = n.hp / n.maxHp; n.maxHp = st.hp; n.hp = Math.max(1, Math.round(st.hp * k)); }
@@ -350,8 +350,11 @@ export function spawnCompanion(w, p) {
   dismissCompanion(w, p);
   const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
   if (!w.npcDb[gen.name]) return null;
-  const n = spawnFrom(w, gen); if (!n) return null;
-  Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side, comp: true, ball: inst.uid, exp: 0, noDieRemainExp: 0 });
+  let n = null;
+  if (inst.comp.cls === "aura" || inst.comp.cls === "buffer") for (const [dx, dy] of [[1, 0], [2, 0], [1, 1], [1, -1], [2, 1], [2, -1]]) { if (n) break; gen.rect = [p.x + dx, p.y + dy, p.x + dx, p.y + dy]; n = spawnFrom(w, gen); }          // aura y buffer siempre aparecen a la derecha del dueño
+  if (!n) { gen.rect = [p.x - 2, p.y - 2, p.x + 2, p.y + 2]; n = spawnFrom(w, gen); }
+  if (!n) return null;
+  Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side, comp: true, dcls: inst.comp.cls || null, ball: inst.uid, exp: 0, noDieRemainExp: 0 });
   refreshCompanion(w, n, p);
   if (Tal.isSchool(inst.comp)) n.mp = Math.min(Tal.maxMp(inst.comp), inst.comp.mp ?? Tal.maxMp(inst.comp));      // el maná de escuela viaja con la bola
   return n;
@@ -363,7 +366,7 @@ export function toggleCompanion(w, p, inst) {
   if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: llévalo al hospital de compañeros");
   if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
-  if (c.sp === "Dummy" && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
+  if (Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
   for (const b of p.bag) if (b.comp) b.comp.on = false;
   c.on = true;
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }

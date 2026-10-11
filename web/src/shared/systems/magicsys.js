@@ -57,7 +57,7 @@ function usable(w, p, cmd) {
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (M.MAGIC_MODE.free) return sp;
-  if (M.MAGIC_MODE.schools && Sch.isSupportSpell(sp)) return w.reject(p, cmd, "esa magia es de los Dummy");
+  if (M.MAGIC_MODE.schools && Sch.isSupportSpell(sp)) return w.reject(p, cmd, "esa magia es de los summons de apoyo");
   const school = M.MAGIC_MODE.schools ? Sch.spellSchool(sp) : null;
   if (M.MAGIC_MODE.schools && !school) return w.reject(p, cmd, "solo se lanza la magia de la escuela de tu summon");
   if (school) {                                                       // magia de escuela: la lanza el summon de esa escuela, con su maná

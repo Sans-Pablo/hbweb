@@ -27,7 +27,7 @@ export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)
 export const SPECIES = {
   "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
   "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655],
-  "Tentocle": [900, 654], "Cannibal-Plant": [900, 655], "Demon": [0, 652], "Frost": [0, 654], "Liche": [0, 655], "Dummy": [500, 652],     // escuelas (schools.js); Demon/Frost/Liche solo por cambio al nivel 50
+  "Tentocle": [900, 654], "Cannibal-Plant": [900, 655], "Demon": [0, 652], "Frost": [0, 654], "Liche": [0, 655], "Healer": [500, 652], "Buffer": [500, 652], "Aura": [500, 652],     // escuelas (schools.js); Demon/Frost/Liche solo por cambio al nivel 50
 };
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
@@ -45,7 +45,7 @@ export function avgHit(p) {
 // Los compañeros son la parte principal del juego (petición del diseñador): aportan mucho, pero caen y cuestan caro de revivir.
 export const shareOf = (lvl, sp) => Math.min(0.9, (0.3 + 0.012 * lvl) * (0.85 + 0.03 * rankOf(sp)));
 export function statsOf(p, c) {
-  if (c.sp === "Dummy") return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
+  if (Tal.isDummy(c)) return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
   const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
   const t2 = Sch.isTier2(c.sp);                                              // especie superior de escuela: más vida y daño
   return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))) + (c.fb?.atk || 0), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };
@@ -113,18 +113,18 @@ export function buyCandy(w, p, cmd) {
 
 // Bolas para probar: 1 de oro cada una, de cualquier especie
 export function buyBall(w, p, cmd) {
-  const sp = String(cmd.sp || "");
+  const sp = String(cmd.sp || ""), cls = Tal.CLS_OF[sp] || null;
   if (!SPECIES[sp] || Sch.isTier2(sp) || !nearHospital(w, p, cmd.npc)) return w.reject(p, cmd, "no disponible");
   if (!w.npcDb[sp]) return w.reject(p, cmd, "esa especie no existe en los datos (Orc-Mage no está en NPC.cfg)");          // se vendía una bola de una especie que no se puede invocar
   if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
   const ball = newInst(w, SPECIES[sp][1]);
-  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };          // un summon de escuela nace sin hechizos: se los enseñas tú
+  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(cls ? { cls, fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };          // el summon de apoyo nace con su clase (Healer/Buffer/Aura); un summon de escuela nace sin hechizos: se los enseñas tú
   const d = w.data.item(ball.id);
   if (!d || p.bag.length >= MAX_ITEMS || !Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); return false; }
   p.gold -= HOSPITAL.ballPrice;
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);
-  w.emit({ t: "petbought", id: p.id, sp, nm: ball.comp.nm, uid: ball.uid, price: HOSPITAL.ballPrice });
+  w.emit({ t: "petbought", id: p.id, sp, cls, nm: ball.comp.nm, uid: ball.uid, price: HOSPITAL.ballPrice });
   return true;
 }
 
@@ -207,7 +207,7 @@ export function addExp(w, p, inst, xp) {
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
-    if (c.sp !== "Dummy" && SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
+    if (!Tal.isDummy(c) && SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }
@@ -266,7 +266,7 @@ export const TASTE = {
   "Demon": { love: [829, 830], hate: [820] },                 // rey del inframundo: vino y rojo
   "Frost": { love: [831, 825], hate: [829, 822] },            // hielo: azul y frío
   "Liche": { love: [832, 822], hate: [830, 828] },            // nigromante: setas y ajo amargo
-  "Dummy": { love: [824], hate: [] },
+  "Healer": { love: [824], hate: [] }, "Buffer": { love: [824], hate: [] }, "Aura": { love: [824], hate: [] },
 };
 export const tasteOf = (sp, id) => { const t = TASTE[sp]; return t?.love.includes(id) ? "love" : t?.hate.includes(id) ? "hate" : "ok"; };
 export const isFeed = d => !!FEED[d.id];

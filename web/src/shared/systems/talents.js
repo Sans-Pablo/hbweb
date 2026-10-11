@@ -21,11 +21,12 @@ export const TALENTS = [
   { id: "taunt", br: "tank", tier: 3, max: 1, name: "Taunt", desc: "Nearby monsters attack it" },
   { id: "regen", br: "tank", tier: 4, max: 1, name: "Fortitude", desc: "Recovers 1% health per second" },
 ];
-// ---- Dummy (summon de apoyo único, systems/dummy.js): 3 clases en lugar de las 3 ramas; la primera magia que se aprende fija la clase.
+// ---- Dummy (summon de apoyo único, systems/dummy.js): 3 clases en lugar de las 3 ramas; cada una es de su clase desde que se invoca.
 //  dummy: true · lvl = nivel mínimo del compañero · max = rangos (cada rango potencia la magia)
 export const DUMMY_BRANCHES = ["healer", "buffer", "aura"];
 export const DUMMY_BRANCH_NAMES = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
-export const DUMMY_NAMES = { healer: "Healer Doomy", buffer: "Buff Doomy", aura: "Aura Doomy" };       // BUG-020: nombre por clase (la especie sigue siendo «Dummy» en los datos)
+export const DUMMY_NAMES = { healer: "Healer Summon", buffer: "Buffer Summon", aura: "Aura Summon" };       // BUG-020: nombre por clase (la especie es Healer, Buffer o Aura)
+export const BALL_COLORS = { healer: "#d02a72", buffer: "#f28a14", aura: "#7b3fe0" };       // bola de cada clase: contrasta con el pelo del sprite (verde→magenta, azul→naranja, amarillo→violeta)
 export const DUMMY_COLORS = { healer: "#4fe05a", buffer: "#f2d83a", aura: "#4aa0ff" };       // verde, amarillo, azul
 TALENTS.push(
   { id: "dheal", br: "healer", tier: 0, max: 5, dummy: true, name: "Heal", spell: 1, desc: "Heals the weakest ally in range" },
@@ -45,7 +46,16 @@ TALENTS.push(
   { id: "dres", br: "aura", tier: 0, max: 3, dummy: true, lvl: 50, name: "Resurrection", spell: 94, desc: "Max level: raises a fallen ally or you (3 min cooldown, less per rank)" },
   { id: "dmassa", br: "aura", tier: 0, max: 1, dummy: true, lvl: 30, name: "Mass Aura", desc: "MASS: doubles every aura for 20 s (60 s)" },
 );
-export const isDummy = c => c.sp === "Dummy";
+// Tres especies independientes (cada una con su sprite y su clase desde que se invoca; no hay summon «sin clase» que se transforme).
+export const CLS_OF = { Healer: "healer", Buffer: "buffer", Aura: "aura" };
+export const SPECIES_OF = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
+export const isDummy = c => !!CLS_OF[c.sp];
+// Bolas guardadas antes de 0.58: eran «Dummy» + clase (o sin clase). Pasan a su especie propia.
+export function fixSupport(c) {
+  if (c.sp === "Dummy") c.sp = SPECIES_OF[c.cls] || "Healer";
+  if (CLS_OF[c.sp]) { c.cls = CLS_OF[c.sp]; c.fixed = true; }
+  return c;
+}
 export const branchesOf = c => (isDummy(c) ? DUMMY_BRANCHES : BRANCHES);
 export const branchName = (c, b) => (isDummy(c) ? DUMMY_BRANCH_NAMES[b] : BRANCH_NAMES[b]);
 const BY_ID = Object.fromEntries(TALENTS.map(t => [t.id, t]));
@@ -58,7 +68,7 @@ export const spent = (c, br) => TALENTS.reduce((a, t) => a + (t.br === br ? rank
 export const spentAll = c => TALENTS.reduce((a, t) => a + rankOf(c, t.id), 0);
 export const pointsFree = c => Math.max(0, c.lvl - 1 - spentAll(c));
 export function spec(c) {
-  if (isDummy(c)) return c.cls || null;
+  if (isDummy(c)) return CLS_OF[c.sp];
   let best = null, bp = 0, tie = false;
   for (const b of BRANCHES) { const s = spent(c, b); if (s > bp) { best = b; bp = s; tie = false; } else if (s === bp && s > 0) tie = true; }
   return tie ? null : best;
@@ -99,11 +109,10 @@ export function learn(c, id) {
   const why = canLearn(c, id);
   if (why) return why;
   c.tal = { ...(c.tal || {}), [id]: rankOf(c, id) + 1 };
-  if (BY_ID[id].dummy) c.cls = BY_ID[id].br;                                        // la clase queda fijada con la primera magia
   return null;
 }
 export const resetCost = c => 50 * c.lvl;
-export const reset = c => { c.tal = {}; delete c.cls; };
+export const reset = c => { c.tal = {}; };
 export const spellsOf = c => TALENTS.filter(t => t.spell != null && rankOf(c, t.id) > 0);
 
 // ------------------------------------------------------------------ lanzamiento (IA del compañero)

@@ -1,5 +1,6 @@
 // Jugador: creación, guardado, recalculo de atributos, reaparición.
 import * as Tut from "./tutorial.js";
+import * as Tal from "./talents.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
 import { EQUIP, isStack } from "../items.js";
@@ -98,12 +99,12 @@ function loadSave(w, p, s) {
   if (s.guild && typeof s.guild.name === "string") Guild.restore(w, p, s.guild);
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
-  if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: { ...i.comp } } : {}) }));
+  if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
   if (s.hunt) p.hunt = { ...s.hunt };
   restoreArena(w, p, s);                                       // historial de la arena y apuesta pendiente (se cobra el resultado fijado)
   if (s.delve) p.delve = { deepest: Math.max(1, s.delve.deepest | 0), ...(s.delve.king ? { king: s.delve.king | 0 } : {}) };         // progreso en la cripta de esqueletos
   if (Array.isArray(s.bag)) {
-    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
+    p.bag = s.bag.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, old: i.uid, ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) }));
     p.equip = {};
     for (const [pos, old] of Object.entries(s.equip || {})) { const m = p.bag.find(i => i.old === old); if (m) p.equip[pos] = m.uid; }
     for (const i of p.bag) delete i.old;

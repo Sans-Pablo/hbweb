@@ -679,7 +679,7 @@ function delve(adv, w, p, r, home) {
 // Cada habitante prueba una especie distinta (salen de `Comp.SPECIES`; así se ejercitan todas). El hospital (Gail) está en la tienda general de Aresden
 // y al aire libre en Elvine Farm. Los avisos van al informe de probadores (`report`).
 const TALENT_PLAN = { warrior: ["hide", "iron", "taunt", "regen"], hunter: ["might", "frenzy", "might"], trader: ["hide", "might"], wanderer: ["might", "hide", "iron"], scholar: ["mind", "might", "hide"] };
-const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && sp !== "Dummy");           // Demon/Frost/Liche solo por cambio y el Dummy exige un báculo
+const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && !Tal.CLS_OF[sp]);           // Demon/Frost/Liche solo por cambio y el Dummy exige un báculo
 const ballOf = p => Comp.activeBall(p) || p.bag.find(i => i.comp && !i.comp.bad);
 const liveOf = (w, p) => { for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead) return e; return null; };
 const nurseOf = w => { for (const e of w.ents.values()) if (e.role === "pethospital") return e; return null; };

@@ -22,7 +22,9 @@ export const LORE = {
   "Demon": "Forma superior del Orc: un señor del fuego que ha dominado las llamas.",
   "Frost": "Forma superior del Tentocle: un espíritu de hielo eterno.",
   "Liche": "Forma superior de la Planta Caníbal: un nigromante que domina el rayo.",
-  "Dummy": "Muñeco de entrenamiento. Frágil, pero aprende cualquier oficio de apoyo.",
+  "Healer": "Summon de apoyo: cura al aliado más herido del círculo. Frágil y silencioso; pelo verde.",
+  "Buffer": "Summon de apoyo: escudos, protección y berserk para quien esté en su círculo. Frágil y silencioso; pelo amarillo.",
+  "Aura": "Summon de apoyo: auras de regeneración, experiencia, defensa… para todos en su círculo. Frágil y silencioso; pelo azul.",
 };
 export const loreOf = sp => LORE[sp] || "Un compañero misterioso. Crece contigo y guarda secretos.";
 

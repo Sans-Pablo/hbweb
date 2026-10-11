@@ -3,8 +3,8 @@
 import { ClassicDialog, INK, DARK, RED, WHITE } from "./classicdialog.js";
 import { infoOf } from "../shared/systems/summoninfo.js";
 import { HOSPITAL, TASTE } from "../shared/systems/companion.js";
-import { mobSprite, DUMMY_SPRITE } from "./anim.js";
-import { DUMMY_NAMES } from "../shared/systems/talents.js";
+import { mobSprite } from "./anim.js";
+import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
 
@@ -14,12 +14,12 @@ const SCALES = [0.62, 0.74, 0.87, 1];                       // crecimiento aprox
 export function registerSummonPreview(gui, api) {
   const dlg = new class extends ClassicDialog {
     constructor() { super({ id: 45, title: "Summon", footer: "" }); this.sp = null; this.npc = null; }
-    show(sp, npc, cls) { this.sp = sp; this.npc = npc; this.cls = cls || null; this.title = DUMMY_NAMES[cls] || sp.replace(/-/g, " "); gui.open(45); }
+    show(sp, npc) { this.sp = sp; this.npc = npc; this.cls = CLS_OF[sp] || null; this.title = DUMMY_NAMES[this.cls] || sp.replace(/-/g, " "); gui.open(45); }
     // sprite de reposo de la especie, escalado para caber en `box` y anclado a los pies (ax, ay); `sil`: solo silueta
     sprite(g, sp, ax, ay, box, k = 1, sil = false, cls = null) {
       const cfg = api.npc(sp); if (!cfg || !g.spr) return;
-      for (let i = 0; i < 40; i++) api.want?.((DUMMY_SPRITE[cls] || (sp === "Dummy" ? "usorceress" : cfg.sprite)) + i);
-      const e = { kind: "npc", comp: sp === "Dummy", type: cfg.type, cfg, dcls: cls, dir: 5, act: ACT.STOP, actStart: 0, actDur: 0, phase: 0, dur: { stopFrame: 200 } };
+      for (let i = 0; i < 40; i++) api.want?.(cfg.sprite + i);
+      const e = { kind: "npc", type: cfg.type, cfg, dcls: cls, dir: 5, act: ACT.STOP, actStart: 0, actDur: 0, phase: 0, dur: { stopFrame: 200 } };
       const { key, f } = mobSprite(e, 0, n => g.spr.frames(n)), fr = g.spr.frame(key, f);
       if (!fr || !g.spr.ready(key)) return;
       const [sx, sy, w, h, px, py] = fr, s = Math.min(1.4, box / Math.max(w, h, 20)) * k, c = g.ctx;
@@ -63,7 +63,7 @@ export function registerSummonPreview(gui, api) {
     }
     inBuy(lx, ly) { return lx >= BUY.x && lx <= BUY.x + BUY.w && ly >= BUY.y && ly <= BUY.y + BUY.h; }
     click(g, lx, ly, me) {
-      if (this.inBuy(lx, ly)) { api.send({ t: "petbuy", npc: this.npc, sp: this.sp, cls: this.cls }); g.close(this.id); return true; }
+      if (this.inBuy(lx, ly)) { api.send({ t: "petbuy", npc: this.npc, sp: this.sp }); g.close(this.id); return true; }
       return super.click(g, lx, ly, me);
     }
   }();

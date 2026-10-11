@@ -1,3 +1,4 @@
+import { DUMMY_NAMES } from "../shared/systems/talents.js";
 import { imgUrl } from "./imgurl.js";
 import { MAGIC_MODE } from "../shared/magic.js";
 import { talent as talentDef } from "../shared/systems/talents.js";
@@ -220,9 +221,10 @@ export class Hud {
 
   // bola de compañero (shared/systems/companion.js): especie, nivel, experiencia y daño compartido con el dueño
   describeBall(it, me) {
+    const kindOf = c => DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
     const c = it.comp, st = companionStats(me, c), nx = companionNeed(c.lvl);
     return [
-      "Compañero: " + (c.nm ? c.nm + " (" + c.sp.replace(/-/g, " ") + ")" : c.sp.replace(/-/g, " ")) + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
+      "Compañero: " + (c.nm ? c.nm + " (" + kindOf(c) + ")" : kindOf(c)) + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
       "Experiencia " + c.exp + " / " + nx + (c.lvl >= Math.min(60, me.level) ? " (tope: tu nivel)" : ""),
       "Daño ≈ " + st.dmg + " por golpe (" + Math.round(st.share * 100) + " % del tuyo) · vida " + st.hp,
     ];

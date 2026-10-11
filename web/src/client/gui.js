@@ -5,7 +5,7 @@
 import { miniOf } from "./compicon.js";
 import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
-import { DUMMY_NAMES } from "../shared/systems/talents.js";
+import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
@@ -358,7 +358,7 @@ export class Gui {
     const bx = 411, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(bx, by, 38, 38);
     cx.strokeStyle = atk ? "#c85a3c" : "#6fae5a"; cx.lineWidth = 1; cx.strokeRect(bx + .5, by + .5, 37, 37);
-    const mi = this.spr && miniOf(c.sp, kk => this.spr.frames(kk));
+    const mi = this.spr && miniOf(c.sp, kk => this.spr.frames(kk), c.cls);
     const fr = mi && this.spr.frame(mi.key, mi.f);
     if (fr && this.spr.ready(mi.key)) {
       const [sx, sy, w, h] = fr, s = Math.min(1, 32 / Math.max(w, h)), dw = w * s, dh = h * s, dx = bx + 19 - dw / 2, dy = by + 19 - dh / 2;
@@ -430,7 +430,7 @@ export class Gui {
       c.fillStyle = col(k); c.fillRect(x, y, Math.round(w * k), h);
     };
     const hpCol = k => k > 0.5 ? "#4caf3a" : k > 0.25 ? "#d9a62e" : "#d6382b", mpCol = () => "#3f7fe0";
-    const kindOf = pet => pet.dcls ? DUMMY_NAMES[pet.dcls] : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : pet.name === "Dummy" ? "Dummy" : "Combat";
+    const kindOf = pet => pet.dcls ? DUMMY_NAMES[pet.dcls] : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : CLS_OF[pet.name] ? "Support" : "Combat";
     for (const name of [me.name, ...me.party.names.filter(n => n !== me.name)]) {
       const m = name === me.name ? me : ents.find(e => e.kind === "player" && e.name === name);
       const lv = m === me ? me.level : (m?.level || me.party.lvls?.[me.party.names.indexOf(name)] || 0);
@@ -469,7 +469,7 @@ export class Gui {
     if (st.invis && left(st.invis.until) > 0) add("Invisibility", "unseen", left(st.invis.until), "#d8d8d8");
     for (const [k, nm, e] of [["hold", "Paralyzed", "can't move"], ["ice", "Frozen", "can't move"], ["confuse", "Confused", "random moves"], ["poison", "Poisoned", "losing HP"]]) if (st[k] && left(st[k].until) > 0) add(nm, e, left(st[k].until), "#ff6a6a");
     if (au) {
-      const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Doomy") + (au.x2 ? " x2" : "");
+      const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Aura Summon") + (au.x2 ? " x2" : "");
       if (au.def) { dmgRed = au.def; add("Defense Aura", "damage taken -" + au.def + "%", t, "#8fd68f"); }
       if (au.vamp) add("Vampiric Aura", "heal " + au.vamp + "% of damage", t, "#e07a9a");
       if (au.regen) add("Regeneration Aura", "+" + au.regen + "% HP/s", t, "#8fd68f");

@@ -756,6 +756,11 @@ export class Renderer {
 
   // Escala fija por especie (altura del fotograma de reposo la primera vez que se ve): solo se reducen los más altos que el personaje
   petScale(e, key, f) {
+    if (e.dcls) {                                                                   // Healer/Buffer/Aura summon: sprite original de unidad reducido a la altura del personaje
+      const c = this.petScales || (this.petScales = new Map()), k = "d:" + e.dcls;
+      if (!c.has(k)) { const fr = this.spr.frame(key, f), h = fr ? fr[3] : 0; if (!h || !this.spr.ready(key)) return 1; c.set(k, h > CHAR_H ? CHAR_H / h : 1); }
+      return c.get(k);
+    }
     const c = this.petScales || (this.petScales = new Map());
     if (!c.has(e.name)) {
       const fr = this.spr.frame(key, f), h = fr ? fr[3] : 0;
@@ -1078,7 +1083,7 @@ export class Renderer {
 
   // sprite pequeño (reposo, de frente) de mi summon sobre el minimapa; false si su hoja aún no está cargada
   miniPet(e, x, y, h) {
-    const m = miniOf(e.name, k => this.spr.frames(k)); if (!m || !this.spr.ready(m.key)) return false;
+    const m = miniOf(e.name, k => this.spr.frames(k), e.dcls); if (!m || !this.spr.ready(m.key)) return false;
     const fr = this.spr.frame(m.key, m.f); if (!fr) return false;
     const [sx, sy, w, hh] = fr, k = h / Math.max(w, hh, 1);
     this.ctx.drawImage(this.spr.img[m.key], sx, sy, w, hh, x - w * k / 2, y - hh * k / 2, w * k, hh * k);

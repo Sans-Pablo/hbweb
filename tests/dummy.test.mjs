@@ -32,18 +32,17 @@ for (const [e, x] of [[A, 20], [B, 22], [Z, 24]]) { w.grid.release(e.x, e.y, e.i
 assert.equal(D.radiusOf(1), 1); assert.equal(D.radiusOf(50), 6); assert.ok(D.radiusOf(25) > 1 && D.radiusOf(25) < 6);
 // frágil: poca vida que casi no sube
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role); A.gold = 1e6;
-{ const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy", cls: "healer" }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, nurse.role, A.x, A.y); assert.ok(ok); }
-const ball = A.bag.find(i => i.comp?.sp === "Dummy"), c = ball.comp;
+{ const ok = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Healer" }); if (!ok) console.log(JSON.stringify(w.events.slice(-3)), nurse.x, nurse.y, nurse.role, A.x, A.y); assert.ok(ok); }
+const ball = A.bag.find(i => i.comp?.sp === "Healer"), c = ball.comp;
 assert.ok(C.statsOf(A, c).hp <= 10); c.lvl = 50; assert.ok(C.statsOf(A, c).hp <= 70, "frágil incluso al 50");
 c.lvl = 30;
 // tres summons de apoyo: la clase se fija al comprar; buffer con la mitad de radio, aura con una casilla más
 assert.equal(D.radiusOf(50, "buffer"), 3); assert.equal(D.radiusOf(50, "aura"), 7); assert.equal(D.radiusOf(1, "buffer"), 1);
 assert.equal(ball.comp.cls, "healer"); assert.equal(ball.comp.fixed, true, "la clase comprada queda fija");
-{ const bad = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy", cls: "tank" }); assert.ok(!bad, "clase inválida"); }
+{ const bad = w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Dummy" }); assert.ok(!bad, "«Dummy» ya no es una especie: son Healer, Buffer y Aura"); }
 console.log("OK dummy tres summons");
-// la primera magia fija la clase; las demás clases quedan cerradas
-assert.ok(w.command(A.id, { t: "talent", uid: ball.uid, talent: "dheal" }));
-assert.equal(c.cls, "healer");
+// cada especie es de su clase desde el principio; las magias de otra clase quedan cerradas
+assert.equal(c.cls, "healer"); assert.ok(w.command(A.id, { t: "talent", uid: ball.uid, talent: "dheal" }));
 assert.equal(w.command(A.id, { t: "talent", uid: ball.uid, talent: "dward" }), false, "otra clase");
 assert.equal(w.command(A.id, { t: "talent", uid: ball.uid, talent: "dgheal" }), true);
 assert.equal(w.command(A.id, { t: "talent", uid: ball.uid, talent: "might" }), false, "talento de combate no sirve al Dummy");
@@ -56,7 +55,7 @@ const staff = wand(A); assert.equal(A.eff.wtype, 36);
 // invocarlo y dejarlo quieto cerca de Alfa, Beta dentro del radio, Zeta fuera
 assert.ok(w.command(A.id, { t: "use", uid: ball.uid }));
 let dm = [...w.ents.values()].find(e => e.comp && e.master === A.id);
-assert.ok(dm && dm.name === "Dummy");
+assert.ok(dm && dm.name === "Healer" && dm.dcls === "healer" && dm.cfg.sprite === "uhealer", "nace con su propio sprite: " + dm?.name + " " + dm?.cfg?.sprite);
 w.command(A.id, { t: "petmode", mode: "peace" });
 w.grid.release(dm.x, dm.y, dm.id); dm.x = dm.fx = 21; dm.y = dm.fy = 20; w.grid.occupy(21, 20, dm.id);
 tick(500); assert.equal(dm.dcls, "healer");
@@ -88,15 +87,16 @@ mob.dead = true; w.ents.delete(mob.id);
 
 // Buffer: escudos al grupo (no a Zeta)
 {
-  const c2 = { sp: "Dummy", lvl: 30, exp: 0, tal: {} }; assert.equal(T.canLearn(c2, "dward"), null);
+  const c2 = T.fixSupport({ sp: "Buffer", lvl: 30, exp: 0, tal: {} }); assert.equal(T.canLearn(c2, "dward"), null);
   T.learn(c2, "dward"); assert.equal(c2.cls, "buffer"); assert.ok(T.canLearn(c2, "dheal")); assert.ok(T.canLearn(c2, "dgward") === null);
-  T.reset(c2); assert.equal(c2.cls, undefined);
+  T.reset(c2); assert.equal(c2.cls, "buffer", "reiniciar talentos no cambia la especie");
+  assert.equal(T.fixSupport({ sp: "Dummy", cls: "aura" }).sp, "Aura"); assert.equal(T.fixSupport({ sp: "Dummy" }).sp, "Healer");
 }
 // Auras: porcentaje proporcional al nivel
 {
-  const lo = { sp: "Dummy", lvl: 10, tal: { dregen: 5, dexp: 5 } }, hi = { ...lo, lvl: 50 };
+  const lo = { sp: "Aura", lvl: 10, tal: { dregen: 5, dexp: 5 } }, hi = { ...lo, lvl: 50 };
   assert.ok(D.auraPct(hi, "dregen") > D.auraPct(lo, "dregen") * 4, "el % crece con el nivel");
-  assert.equal(D.auraPct({ sp: "Dummy", lvl: 50, tal: {} }, "dregen"), 0);
+  assert.equal(D.auraPct({ sp: "Aura", lvl: 50, tal: {} }, "dregen"), 0);
   assert.ok(D.auraPct(hi, "dexp") <= 40 + 1e-9);
 }
 { // quitar el báculo guarda al Dummy
@@ -126,9 +126,9 @@ console.log("OK dummy");
 }
 // Vampiric Aura y Resurrection (Dummy de aura)
 {
-  assert.ok(D.auraPct({ sp: "Dummy", lvl: 50, tal: { dvamp: 5 } }, "dvamp") <= 8 + 1e-9);
-  assert.equal(T.canLearn({ sp: "Dummy", lvl: 20, tal: {}, cls: "aura" }, "dvamp"), "necesita nivel 25");
-  assert.equal(T.canLearn({ sp: "Dummy", lvl: 49, tal: {}, cls: "aura" }, "dres"), "necesita nivel 50");
+  assert.ok(D.auraPct({ sp: "Aura", lvl: 50, tal: { dvamp: 5 } }, "dvamp") <= 8 + 1e-9);
+  assert.equal(T.canLearn({ sp: "Aura", lvl: 20, tal: {} }, "dvamp"), "necesita nivel 25");
+  assert.equal(T.canLearn({ sp: "Aura", lvl: 49, tal: {} }, "dres"), "necesita nivel 50");
   c.lvl = 50; c.cls = "aura"; c.tal = { dvamp: 5, dres: 2, dregen: 1 }; dm.maxHp = dm.hp = 9999; dm.mp = 900; dm.cd = {}; dm.castAt = 0; dm.dcls = "aura";
   w.grid.release(dm.x, dm.y, dm.id); dm.x = dm.fx = 21; dm.y = dm.fy = 20; w.grid.occupy(21, 20, dm.id);
   // vampiro: Beta (en el grupo) cura al golpear
@@ -171,8 +171,15 @@ console.log("OK dummy");
 { // BUG-016: el Dummy de aura gasta todos sus puntos de talento al nivel 50 (antes sobraban 15)
   const aura = T.TALENTS.filter(t => t.br === "aura" && t.dummy);
   assert.ok(aura.reduce((s, t) => s + t.max, 0) >= 49, "las auras absorben los 49 puntos del nivel 50");
-  const c = { sp: "Dummy", lvl: 50, tal: {} };
+  const c = { sp: "Aura", lvl: 50, tal: {} };
   for (const t of aura) c.tal[t.id] = t.max;
   assert.equal(D.auraPct(c, "dregen"), 5, "rango máximo = 100 % del máximo del nivel");
   console.log("OK dummy aura points");
+}
+
+{ // bolas de apoyo: un color distinto por clase y nombre propio
+  const cols = Object.values(T.BALL_COLORS);
+  assert.equal(new Set(cols).size, 3, "colores de bola distintos");
+  for (const k of ["healer", "buffer", "aura"]) assert.ok(T.BALL_COLORS[k] && T.DUMMY_NAMES[k], "color y nombre de " + k);
+  console.log("OK dummy ball colors");
 }

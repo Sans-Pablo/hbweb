@@ -11,7 +11,7 @@ import { ClassicDialog } from "./classicdialog.js";
 import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
-import { BRANCH_NAMES, DUMMY_NAMES, DUMMY_COLORS } from "../shared/systems/talents.js";
+import { BRANCH_NAMES, DUMMY_NAMES, DUMMY_COLORS, CLS_OF } from "../shared/systems/talents.js";
 import { getLang, t } from "./i18n.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
@@ -477,12 +477,12 @@ export function registerNpcDialogs(gui, api) {
     rows(me) {
       if (this.tab === 3) return [];
       if (this.tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
-      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
+      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, ball: { id: SPECIES[sp][1], comp: { sp, ...(CLS_OF[sp] ? { cls: CLS_OF[sp] } : {}) } }, text: (CLS_OF[sp] ? DUMMY_NAMES[CLS_OF[sp]] : sp.replace(/-/g, " ")) + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
       const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || i.comp.sp) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
       return ups.concat(me.bag.filter(i => i.comp).map(i => {
         const c = i.comp, hp = hpOf(me, c), mx = maxOf(me, c), st = c.down ? "Inconsciente" : hp < mx ? "Herido " + hp + "/" + mx : "Sano";
-        const kind = c.sp === "Dummy" && c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
-        return { uid: i.uid, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : c.sp === "Dummy" && DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
+        const kind = c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
+        return { uid: i.uid, ball: i, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
       }));
     }
     drawBody(g, me) {
@@ -572,7 +572,7 @@ export function registerNpcDialogs(gui, api) {
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
       case "candybought": api.log("Compras " + ev.count + " × " + ev.name + " por " + ev.price + " de oro."); break;
       case "petupgraded": api.log(ev.nm + " ha evolucionado: " + ev.from.replace(/-/g, " ") + " → " + ev.to + " (nivel 1)."); break;
-      case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
+      case "petbought": api.log("Compras la bola de " + (DUMMY_NAMES[ev.cls] || ev.sp.replace(/-/g, " ")) + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bounty": api.log("Recompensa por derrotar a " + ev.victim + ": " + ev.gold + " de oro.", "gold"); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
       case "cantsell": {
