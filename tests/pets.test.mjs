@@ -23,9 +23,9 @@ const man = newInst(w, data.named("ArcheryManual").id);
 p.bag.push(man);
 assert.ok(!p.skills[6]);
 assert.equal(w.command(id, { t: "use", uid: man.uid }), true);
-assert.equal(p.skills[6], 20); assert.ok(!p.bag.some(i => i.uid === man.uid), "manual gastado");
+assert.equal(p.skills[6], 100); assert.ok(!p.bag.some(i => i.uid === man.uid), "manual gastado");
 assert.equal(evs("skilllearn").length, 1);
-const man2 = newInst(w, data.named("ArcheryManual").id); p.bag.push(man2);
+const man2 = newInst(w, data.named("ArcheryManual").id); p.bag.push(man2);   // ya al 100 %
 assert.equal(w.command(id, { t: "use", uid: man2.uid }), false); assert.ok(p.bag.some(i => i.uid === man2.uid), "no se gasta si ya se conoce");
 
 // hospital: comprar bola por 1 de oro

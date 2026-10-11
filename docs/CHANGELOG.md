@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.60.0 · Maná proporcional, gustos y manuales (2026-10-11)
+- Invocar cuesta un porcentaje de tu maná máximo igual al nivel del summon (nivel 1 = 1 %, nivel 50 = 50 %).
+- F10 → Info muestra la comida que le gusta y la que no a tu summon.
+- Los manuales de habilidad dan el 100 % de la habilidad (se usan también para subir una habilidad ya aprendida).
+
 ## 0.59.0 · Invocar cuesta maná (2026-10-11)
 - Invocar un summon cuesta maná igual a su nivel (nivel 12 = 12 de maná). Sin maná suficiente no se invoca; guardarlo es gratis.
 

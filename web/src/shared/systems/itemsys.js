@@ -127,10 +127,10 @@ export function useItem(w, p, uid, destUid) {
       break;
     case EFFECT.STUDYSKILL: {
       // Manuales (HGServer/Game.cpp ~27249, TrainSkillResponse): v1 = habilidad, v2 = nivel inicial; solo si aún no se tiene (nivel 0).
-      // Diferencia con el original, que gasta el manual aunque ya se conozca la habilidad: aquí no se gasta.
-      const sk = d.v1, lvl = d.specialEffect > 0 ? d.specialEffect : d.v2;
+      // Diferencia con el original: el manual da el 100 % de la habilidad (no su nivel inicial); no se gasta si ya la tienes al 100.
+      const sk = d.v1, lvl = 100;
       if (!(sk >= 0 && sk <= 100)) return w.reject(p, { t: "use" }, "no se puede usar");
-      if ((p.skills[sk] || 0) !== 0) return w.reject(p, { t: "use" }, "ya conoces esa habilidad");
+      if ((p.skills[sk] || 0) >= 100) return w.reject(p, { t: "use" }, "ya conoces esa habilidad");
       p.skills[sk] = lvl;
       Inv.removeFromBag(p, uid);
       w.recalc(p);

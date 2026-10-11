@@ -3,8 +3,10 @@
 import { ClassicDialog, INK, RED } from "./classicdialog.js";
 import * as Tal from "../shared/systems/talents.js";
 import * as Sch from "../shared/systems/schools.js";
-import { activeBall, statsOf, hpOf, need, MAX_COMP_LEVEL } from "../shared/systems/companion.js";
+import { activeBall, statsOf, hpOf, need, MAX_COMP_LEVEL, TASTE } from "../shared/systems/companion.js";
 import { mobSprite } from "./anim.js";
+import { itemName } from "./names.js";
+import { t as tr } from "./i18n.js";
 import { ACT, mobDurations } from "../shared/const.js";
 
 const BUTTONS = [["summons_icon", "Info", "Name, mode, spells and talent reset."], ["pet_support", "Support", "Support talents: healing and protection."], ["pet_damage", "Damage", "Damage talents: more attack power."], ["pet_warrior", "Warrior", "Warrior talents: more health and defence."]];
@@ -29,6 +31,8 @@ export function registerPetDialog(gui, api) {
         // BUG-010: rasgos y evolución de la especie
         if (Sch.TIER2[c.sp]) out.push({ act: "info", text: "Evolves → " + Sch.TIER2[c.sp], right: "Lv " + Sch.TRADE_LEVEL, color: c.lvl >= Sch.TRADE_LEVEL ? RED : null, tip: "At level " + Sch.TRADE_LEVEL + " the nurse (Gail) evolves it into " + Sch.TIER2[c.sp] + "; it returns to level 1." });
         if (Tal.isDummy(c)) out.push({ act: "info", text: Tal.DUMMY_NAMES[c.cls], right: "", color: Tal.DUMMY_COLORS[c.cls], tip: DUMMY_HINTS[["healer", "buffer", "aura"].indexOf(c.cls)] });
+        const ts = TASTE[c.sp], nm = ids => ids.length ? ids.map(i => tr(itemName(i))).join(", ") : "—";
+        if (ts) out.push({ act: "info", text: tr("Likes") + ": " + nm(ts.love), right: "", color: "#2f7a2f", tip: "Loved food heals 50% more (or gives +2 permanent points)." }, { act: "info", text: tr("Dislikes") + ": " + nm(ts.hate), right: "", color: RED, tip: "It refuses disliked food." });
         const sc = Sch.schoolOfSpecies(c.sp);
         if (sc) out.push({ act: "school", text: "School: " + Sch.SCHOOL_NAMES[sc], right: "MP " + (c.mp ?? Tal.maxMp(c)) + "/" + Tal.maxMp(c), color: RED, tip: "Casts your " + Sch.SCHOOL_NAMES[sc] + " attack spells with its own mana. No natural regeneration: feed it Blue Candies." + (Sch.TIER2[c.sp] ? " At level " + Sch.TRADE_LEVEL + " it can evolve into a " + Sch.TIER2[c.sp] + " at the pet nurse." : "") });
         else if (!Tal.isDummy(c)) out.push({ act: "school", text: "General school", right: "combat", tip: "Combat summon only: it casts no magic." });

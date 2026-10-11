@@ -11,6 +11,27 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Maná proporcional, gustos y manuales (v0.60.0)",
+        "en": "Proportional mana, tastes and manuals (v0.60.0)"
+      },
+      "items": [
+        {
+          "es": "Invocar cuesta un % de tu maná máximo igual al nivel del summon: uno de nivel 1 es casi gratis, uno de nivel 50 gasta la mitad.",
+          "en": "Summoning costs a % of your max mana equal to the summon's level: level 1 is almost free, level 50 takes half."
+        },
+        {
+          "es": "En F10 → Info ves la comida que le gusta y la que rechaza tu summon.",
+          "en": "In F10 → Info you can see the food your summon likes and the food it refuses."
+        },
+        {
+          "es": "Los manuales de habilidad dan el 100 % de la habilidad.",
+          "en": "Skill manuals give 100% of the skill."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Invocar cuesta maná (v0.59.0)",
         "en": "Summoning costs mana (v0.59.0)"
       },

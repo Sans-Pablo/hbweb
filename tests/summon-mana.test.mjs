@@ -1,4 +1,4 @@
-// Invocar un summon cuesta maná igual a su nivel; sin maná no se invoca. Guardarlo es gratis.
+// Invocar un summon cuesta un % de tu maná máximo igual a su nivel; sin maná no se invoca. Guardarlo es gratis.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
@@ -14,12 +14,16 @@ const A = w.ents.get(w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vi
 A.level = 30; w.recalc(A);
 const ball = A.bag.find(i => i.comp) || (() => { const b = { uid: 9001, id: C.SPECIES.Slime[1], count: 1, comp: { sp: "Slime", lvl: 12, exp: 0, on: false, nm: "X", mode: "attack" } }; A.bag.push(b); return b; })();
 ball.comp.lvl = 12; ball.comp.on = false;
-A.mp = 11;
-assert.equal(w.command(A.id, { t: "use", uid: ball.uid }), false, "con 11 de maná no se invoca un nivel 12");
-assert.equal(A.mp, 11);
-A.mp = 20;
+const pct = l => Math.max(1, Math.ceil(A.maxMp * l / 100));
+assert.ok(pct(50) > pct(12) && pct(12) > pct(1), "escala con el nivel");
+A.mp = pct(12) - 1;
+const before = A.mp;
+assert.equal(w.command(A.id, { t: "use", uid: ball.uid }), false, "sin maná suficiente no se invoca");
+assert.equal(A.mp, before);
+A.mp = A.maxMp;
 assert.ok(w.command(A.id, { t: "use", uid: ball.uid }));
-assert.equal(A.mp, 8, "cuesta el nivel del summon");
+assert.equal(A.mp, A.maxMp - pct(12), "cuesta el % de maná igual al nivel");
+const left = A.mp;
 assert.ok(w.command(A.id, { t: "use", uid: ball.uid }), "guardarlo es gratis");
-assert.equal(A.mp, 8);
+assert.equal(A.mp, left);
 console.log("OK summon mana");
