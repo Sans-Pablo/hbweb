@@ -10,6 +10,7 @@ import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
 import { makeReg } from "./systems/party.js";
+import { makeReg as makeGuildReg } from "./systems/guild.js";
 import * as Bot from "./systems/bot.js";
 import * as Residents from "./systems/residents.js";
 
@@ -31,6 +32,7 @@ export class Adventure {
     this.bots = new Map();                  // jugadores simulados (systems/bot.js): id -> entidad
     this.instances = new Map();             // una cripta por jugador durante la sesión
     this.worlds = new Map();
+    this.guildReg = makeGuildReg(() => this.worlds.values());       // guilds: persisten y cruzan mapas (systems/guild.js)
     this.partyReg = makeReg(() => this.worlds.values());       // grupos: cruzan mapas (systems/party.js)
     this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
@@ -57,6 +59,7 @@ export class Adventure {
       bot: (p, c) => this.botOp(p, c),
       watched: this.watched,
       party: this.partyReg,
+      guild: this.guildReg,
     };
   }
 
@@ -249,10 +252,10 @@ export class Adventure {
       w.emit({ t: "dungeon-choice", id: p.id, deepest: dv.deepest, total: DUNGEON_LEVELS, portal: gate.id });
       return false;
     }
-    if (cmd.restart === true) dv.deepest = 1;
     this.runs = this.runs || new Map();
-    const key = gkey(p), live = this.instances.get(key);
-    if (live && p.party && cmd.restart !== true) {                  // la party entra siempre a la misma cripta
+    const key = gkey(p), live = this.instances.get(key), occupied = !!live && [...live.ents.values()].some(e => e.kind === "player" && e !== p);
+    if (cmd.restart === true && !(occupied && p.party)) dv.deepest = 1;     // «reiniciar» no vale si la party ya está dentro: se entra a su cripta (antes se creaba otra y se descartaba la de los compañeros)
+    if (live && p.party && (cmd.restart !== true || occupied)) {                  // la party entra siempre a la misma cripta
       const near = live.start || live.map.portals?.[0] || [p.x, p.y];
       if (!this.transfer(p, w, live, Array.isArray(near) ? near : [near.x, near.y])) return w.reject(p, cmd, "entrada ocupada");
       return true;

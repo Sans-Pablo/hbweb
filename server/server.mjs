@@ -9,6 +9,7 @@
 // - También sirve la web (carpeta web/), para jugar sin GitHub: http://localhost:PUERTO/. El cliente de GitHub Pages se conecta a /ws
 //   de este servidor (data/server.json) a través de un túnel (docs/ONLINE.md).
 // - Administración: comandos de chat para cuentas admin, consola del servidor y panel /admin (solo desde este PC).
+import { exportReg as exportGuilds, importReg as importGuilds } from "../web/src/shared/systems/guild.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -97,18 +98,20 @@ function spawnResidents(n) {
 function persist(force = false) {
   for (const c of clients) if (c.pid) saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
   for (const b of adventure.residents()) { const s = adventure.saveOf(b.id); if (s) saves[bkey(b.name)] = s; }
+  saves["sys:guilds"] = { list: exportGuilds(adventure.guildReg) };               // los guilds (systems/guild.js) viven en la misma base que los personajes
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
 // Segunda ronda de análisis: al subir BOT_EPOCH todos los habitantes vuelven a nivel 1 y el informe se archiva y empieza vacío (una sola vez por época).
 const BOT_EPOCH = "2";
 function resetResidents() {
-  for (const k of Object.keys(saves)) if (k.startsWith("bot:")) delete saves[k];
+  for (const k of Object.keys(saves)) if (k.startsWith("bot:") || k === "sys:guilds") delete saves[k];
   try { const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-"); for (const f of ["informe-bots.jsonl", "Informe de bots.md"]) { const p = path.join(STORE, f); if (fs.existsSync(p)) fs.renameSync(p, path.join(STORE, "ronda-" + stamp + " " + f)); } } catch (e) { console.error("archivo del informe:", e.message); }
 }
 { const ef = path.join(STORE, "bots-epoch.txt"); let cur = ""; try { cur = fs.readFileSync(ef, "utf8").trim(); } catch {}
   if (cur !== BOT_EPOCH) { resetResidents(); try { fs.writeFileSync(ef, BOT_EPOCH); } catch {} log("[habitantes] época " + BOT_EPOCH + ": los habitantes empiezan de nuevo en nivel 1 y el informe anterior queda archivado."); } }
 const informe = openReport(STORE, { version: VERSION.version, log });
 adventure.report = r => informe.add(r);               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
+importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 spawnResidents(RESIDENTS);
 setInterval(() => { try { if (adventure.residents().length < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
 persist(true);                                          // sus nombres quedan reservados desde el primer momento
@@ -472,6 +475,7 @@ function pub(e, own) {
     if (e.side) o.sd = e.side;                                                   // bando (1 Aresden, 2 Elvine): el cartel de nombre lo muestra y marca enemigos
     o.mp = e.mp; o.mm = e.maxMp;                                                // maná visible para el grupo (marcos de grupo)
     o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
+    if (e.guild) o.gd = [e.guild.name, e.guild.rank, e.guild.cape, e.guild.boots];                 // guild visible: nombre bajo el personaje y colores
     o.ap = apparelOf(e, id => data.item(id));                                  // equipo visible para los demás jugadores
     if (own) { Object.assign(o, { bu: r1(e.busyUntil), la: r1(e.lastAttack), lm: r1(e.lastMove) }); o.o = ownState(e); }
   }
@@ -544,7 +548,8 @@ setInterval(() => {
     const ev = events.filter(v => {
       if (v.t === "botlog") { if (v.id === vid && c.watch) logs.push(v.text); return false; }
       if (v.id === vid) return true;
-      return v.t === "chat" || v.t === "drop" || (PUBLIC.has(v.t) && seen.has(v.id));       // lo demás es privado de su dueño
+      if (v.t === "chat") return v.system || v.ch !== "local" && v.ch !== "side" || (v.ch === "local" ? Math.abs(v.x - me.x) <= 24 && Math.abs(v.y - me.y) <= 24 : v.side === me.side);       // canales del original: local por cercanía, bando por bando, grito a todo el mapa
+      return v.t === "drop" || (PUBLIC.has(v.t) && seen.has(v.id));       // lo demás es privado de su dueño
     });
     const msg = { t: "s", time: r1(world.time), ack: c.ack };
     if (mapChanged || c.remainingEnemies !== world.map.remainingEnemies) {

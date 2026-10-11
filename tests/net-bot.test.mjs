@@ -8,7 +8,7 @@ const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...proce
 for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new WebSocket(`ws://localhost:${PORT}/ws`); t.onopen = () => { t.close(); r(true); }; t.onerror = () => r(false); }); if (ok) break; await new Promise(r => setTimeout(r, 250)); }
 const ws = new WebSocket(`ws://localhost:${PORT}/ws`);
 let me, seq = 0; const seen = new Map();
-ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "adm" + Date.now() % 1000, pass: "secret1", proto: 5 }));
+ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "adm" + Date.now() % 1000, pass: "secret1", proto: 6 }));
 ws.onmessage = e => {
   const m = JSON.parse(e.data);
   if (m.t === "authok") ws.send(JSON.stringify({ t: "join", create: { name: "admin" + Date.now() % 100 } }));

@@ -11,5 +11,7 @@ export function apparelOf(e, itemDef) {
     ap[k] = k === "armor" && d.appr >= 100 ? d.appr - 100 : d.appr;
     if (it.color) (ap.col || (ap.col = {}))[k] = it.color;
   }
+  const gd = e.guild || (e.gd && { name: e.gd[0], cape: e.gd[2], boots: e.gd[3] });          // colores del guild (INVENTO): capa y botas puestas se ven del color elegido
+  if (gd) { if (gd.cape > 0 && ap.mantle) (ap.col || (ap.col = {})).mantle = gd.cape; if (gd.boots > 0 && ap.boots) (ap.col || (ap.col = {})).boots = gd.boots; }
   return ap;
 }

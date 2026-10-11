@@ -102,7 +102,7 @@ export class Controller {
   // NPC de ciudad bajo un punto del mundo
   pickCitizen(wx, wy) { return this.pick(wx, wy, "citizen"); }
   // otro jugador bajo el cursor (solo para mostrar su nombre)
-  pickPlayer(wx, wy) {
+  playerAt(wx, wy) {
     let best = null, bestD = 1e9; const time = this.world.time;
     for (const e of this.world.ents.values()) {
       if (e.kind !== "player" || e.dead || e.id === this.conn.pid) continue;
@@ -180,7 +180,7 @@ export class Controller {
       this.hover = [Math.floor(wx / T), Math.floor(wy / T)];
       this.hoverEnt = this.pick(wx, wy);
       this.hoverCit = this.hoverEnt ? null : this.pickCitizen(wx, wy);
-      this.hoverPlayer = this.pickPlayer(wx, wy);
+      this.hoverPlayer = this.playerAt(wx, wy);
     } else { this.hover = null; this.hoverEnt = null; this.hoverCit = null; this.hoverPlayer = null; }
     if (!me || me.dead) { this.intent = null; this.path = []; return; }
 

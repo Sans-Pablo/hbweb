@@ -75,6 +75,9 @@ export function killNpc(w, n, p) {
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
     let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
+    // VARIEDAD (INVENTO del port): los primeros de cada especie valen más (×1,8 el primero, ×1,4 tras 12, ×1,1 tras 100) para premiar cazar de todo
+    const seen = (p.kinds ||= {}), prev = seen[n.name] || 0; seen[n.name] = prev + 1;
+    xp = Math.round(xp * (1 + 0.8 / (1 + prev / 12)));
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
     Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
@@ -163,7 +166,11 @@ function followerThink(w, n) {
     const sp = w.freeSpotNear(m.x, m.y);
     if (sp) { w.grid.release(n.x, n.y, n.id); n.x = n.fx = sp[0]; n.y = n.fy = sp[1]; w.grid.occupy(n.x, n.y, n.id); n.act = ACT.STOP; n.actStart = w.time; n.actDur = 0; n.busyUntil = w.time; w.emit({ t: "teleport", id: n.id, x: n.x, y: n.y }); return; }
   }
-  const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); return !!d; };
+  // LEASH: cuanto más lejos del dueño, más deprisa anda y reacciona (hasta el doble), de forma continua: al aproximarse recupera el ritmo
+  // normal poco a poco (se suaviza con la zancada anterior), así no hay saltos de velocidad ni teletransportes salvo que se pierda de vista.
+  const away = dist(n, m), want = n.comp && !n.goTo && !n.holdAt && away > 3 ? Math.max(0.5, 1 - (away - 3) * 0.06) : 1;
+  n.leashF = Math.max(0.5, Math.min(1, (n.leashF ?? 1) + Math.max(-0.12, Math.min(0.08, want - (n.leashF ?? 1)))));
+  const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE); return !!d; };
   if (n.comp && n.goTo) {                                                     // Alt + clic derecho: ir a esa casilla y quedarse allí
     const g = n.goTo;
     if (tc && tc.sp === "Dummy") Dummy.think(w, n, m, tc);
@@ -193,7 +200,7 @@ function followerThink(w, n) {
   if (best) {
     if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
     const d = greedyStep(w.grid, n, best.x, best.y, dirTo);
-    if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE);
+    if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE);
     return;
   }
   const anchor = n.comp && n.holdAt ? n.holdAt : m;
@@ -249,7 +256,7 @@ export function npcThink(w, n) {
   if (n.boss === 1 && !n.dead && !n.aux) crimsonPhase(w, n);
   if (n.boss && !n.aux && !n.dead) Boss.bossTick(w, n);
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
-  if (n.master) { n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") || (n.chillUntil || 0) > w.time ? 1.5 : 1); return followerThink(w, n); }
+  if (n.master) { n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") || (n.chillUntil || 0) > w.time ? 1.5 : 1) * (n.leashF || 1); return followerThink(w, n); }
   n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1) * Boss.speedFactor(n);       // hielo: un 50 % más lento; la furia del jefe carmesí acelera
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   let t = n.target ? w.ents.get(n.target) : null;

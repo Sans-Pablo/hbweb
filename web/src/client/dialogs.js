@@ -459,7 +459,7 @@ export function registerDialogs(gui, api) {
   gui.register(skill);
 
   // ------------------------------------------------------------ 10: historial de chat (F9). api.chatLog: más nuevo primero, {t, type}
-  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 10: "rgb(180,255,180)", 20: "rgb(150,150,170)" };
+  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 5: "rgb(127,194,255)", 6: "rgb(255,160,96)", 7: "rgb(143,224,143)", 8: "rgb(214,160,255)", 10: "rgb(180,255,180)", 20: "rgb(150,150,170)" };
   const MAXSCROLL = 500;
   gui.register({
     id: 10, x: 215, y: 393, w: 364, h: 162, view: 0,

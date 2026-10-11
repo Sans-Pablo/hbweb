@@ -247,7 +247,7 @@ export class NetConnection {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
       if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }
       if (own) Object.assign(e, o.o);                    // estado completo del propio jugador (server/server.mjs: ownState)
-      else { e.ap = o.ap; e.side = o.sd || 0; }          // equipo visible de los demás y su bando
+      else { e.ap = o.ap; e.side = o.sd || 0; e.gd = o.gd || null; }          // equipo visible de los demás y su bando
       if (e.busyUntil === undefined) e.busyUntil = 0;
       if (e.lastAttack === undefined) e.lastAttack = -1e9;
       if (e.lastMove === undefined) e.lastMove = -1e9;

@@ -8,6 +8,7 @@ import { initVitals } from "./vitals.js";
 import { MAGIC_MODE } from "../magic.js";
 import { newInst } from "./itemsys.js";
 import { restore as restoreArena } from "./arena.js";
+import * as Guild from "./guild.js";
 
 const LEGACY = { red: 91, bigred: 92, blue: 93, green: 95 };     // partidas guardadas con el formato antiguo
 
@@ -92,6 +93,8 @@ function loadSave(w, p, s) {
   if (typeof s.persona === "string" && "wjd".includes(s.persona) && s.persona.length === 1) p.persona = s.persona;
   if (typeof s.charName === "string" && validCharName(s.charName)) p.name = s.charName;
   if (s.skills) p.skills = { ...s.skills };
+  if (s.kinds && typeof s.kinds === "object") p.kinds = { ...s.kinds };
+  if (s.guild && typeof s.guild.name === "string") Guild.restore(w, p, s.guild);
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
   if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: { ...i.comp } } : {}) }));
@@ -121,7 +124,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
+    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1 }, tut: Tut.toSave(p),

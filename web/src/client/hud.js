@@ -125,7 +125,7 @@ export class Hud {
         this.log(ev.on ? "Estás " + names[ev.key] + "." : "Ya no estás " + names[ev.key] + ".", ev.on && bad ? "bad" : "");
       } break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con el HP lleno."); break;
-      case "chat": this.log(ev.system ? ev.text : ev.name + ": " + ev.text, ev.system ? "gold" : "chat"); break;
+      case "chat": this.log(ev.system ? ev.text : (ev.ch === "shout" ? "[Shout] " : ev.ch === "side" ? "[Side] " : "") + ev.name + ": " + ev.text, ev.system ? "gold" : ev.ch === "shout" ? "shout" : ev.ch === "side" ? "side" : "chat"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;
     }
   }

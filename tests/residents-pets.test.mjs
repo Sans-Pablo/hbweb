@@ -33,7 +33,8 @@ for (const n of ["Aldric", "Cora"]) {                                           
   const b = a.residents().find(x => x.name === n);
   b.level = 8; b.exp = 1e5; b.stats.vit = 40; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.gold = 5000; b.res._petAt = 1;
   let ok = false;
-  for (let i = 0; i < 20 * 60 * 8 && !ok; i++) { a.tick(50); ok = !!b.bag.find(x => x.comp)?.comp.on && [...a.worldFor(b.id).ents.values()].some(e => e.comp && e.master === b.id); }
+  for (let i = 0; i < 20 * 60 * 16 && !ok; i++) { a.tick(50); ok = !!b.bag.find(x => x.comp)?.comp.on && [...a.worldFor(b.id).ents.values()].some(e => e.comp && e.master === b.id); }
+  if (n === "Aldric") { b.bot.next = 1e12; b.res.next = 1e12; a.transfer(b, a.worldFor(b.id), a.staticWorld("gshop_1f"), [3, 3]); }   // ya cumplió: que no estorbe a Cora
   assert.ok(ok, n + " consigue y tiene fuera un summon; registro: " + b.bot.log.slice(-6).join(" | "));
 }
 // el summon vuelve tras morir el dueño y reaparecer

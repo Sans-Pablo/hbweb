@@ -299,7 +299,7 @@ export class Gui {
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
-    if (me && !this.mobile) { this.gauges(me, world, info); this.partyFrames(me, world); if (info?.statusPanel) this.statusPanel(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
+    if (me && !this.mobile) { this.gauges(me, world, info); this.partyLayer(me, world); if (info?.statusPanel) this.statusPanel(me, world); }          // en móvil las barras y botones son DOM (mobile.js)
     for (const id of this.order) { const d = this.dialogs.get(id); if (this.mobile && d.mobileFixed) d.layout?.(this); }
     for (const id of this.order) {
       const d = this.dialogs.get(id);
@@ -400,6 +400,24 @@ export class Gui {
     else if (ev.t === "recallfail") r.ch = 0;
   }
 
+  // Los marcos de grupo van pegados al borde izquierdo de la VENTANA (bajo el rótulo de fps), no al del lienzo 800x600 (que se centra
+  // con bandas laterales en pantallas anchas): tienen su propio lienzo, a la izquierda del todo.
+  partyLayer(me, world) {
+    let pf = this.pf;
+    if (!pf) {
+      pf = this.pf = document.createElement("canvas");
+      pf.style.cssText = "position:fixed;left:0;pointer-events:none;z-index:" + (this.cv.style.zIndex || 5);
+      this.cv.insertAdjacentElement("afterend", pf);
+    }
+    const w = Math.ceil(230 * this.scale), h = Math.ceil(420 * this.scale);
+    pf.style.top = this.rect.y + "px"; pf.style.width = w + "px"; pf.style.height = h + "px";
+    const pw = Math.round(w * this.dpr), ph = Math.round(h * this.dpr);
+    if (pf.width !== pw || pf.height !== ph) { pf.width = pw; pf.height = ph; }
+    const main = this.ctx, g = pf.getContext("2d");
+    g.setTransform(this.scale * this.dpr, 0, 0, this.scale * this.dpr, 0, 0); g.clearRect(0, 0, 230, 420);
+    this.ctx = g;
+    try { this.partyFrames(me, world); } finally { this.ctx = main; }
+  }
   // Marcos de grupo a la izquierda (como en WoW): nombre y barra de vida de cada miembro y, debajo, la de su compañero
   partyFrames(me, world) {
     if (!me.party || !world) return;

@@ -13,6 +13,7 @@ import { DUMMY_COLORS } from "../shared/systems/talents.js";
 import { radiusOf } from "../shared/systems/dummy.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { attrLines } from "../shared/attributes.js";
+const guildLine = e => { const g = e.guild ? [e.guild.name, e.guild.rank] : e.gd; return g ? g[0] + (g[1] === 0 ? " Guildmaster" : " Guildsman") : null; };
 import { sellPriceOf } from "../shared/systems/shopsys.js";
 import { isStack } from "../shared/items.js";
 import { miniOf } from "./compicon.js";
@@ -457,13 +458,15 @@ export class Renderer {
       overlays.push(() => {
         const yy = y - 78;
         if (!other && s.pid !== undefined && !e.dead) {              // mi nombre se ve siempre
-          this.origName(x, y, [[e.name, "255,255,255"]]);
+          const gl = guildLine(e);                                       // DEF_MSG_GUILDMASTER / GUILDSMAN: «<Guild> Guildmaster» en gris bajo el nombre
+          this.origName(x, y, gl ? [[e.name, "255,255,255"], [gl, "180,180,180"]] : [[e.name, "255,255,255"]]);
         } else if (other && !e.dead && s.hoverPlayer === e) {          // el de los demás solo al pasar el ratón por encima
           const party = s.me?.party?.names?.includes(e.name);
           const nm = e.name + (party ? ", Party Member" : "");          // BGET_NPC_NAME23
           const mine = s.me?.side || 0, foe = e.arena || (e.pk > 0) || (mine > 0 && e.side > 0 && e.side !== mine);     // _iGetFOE: rojo enemigo (otro bando) / verde aliado
           const sideName = e.side === 1 ? "Aresden Combatant" : e.side === 2 ? "Elvine Combatant" : "Traveller";
-          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"]]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
+          const gl = guildLine(e);
+          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"], ...(gl ? [[gl, "180,180,180"]] : [])]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
       return;

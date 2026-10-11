@@ -100,7 +100,7 @@ export function registerParty(gui, api) {
           else if (ev.k === 6) { if (ev.name === me.name) d.show(6); else api.log(ev.name + " withdrew from the party."); }
           else if (ev.k === 7) d.show(d.mode === 11 || d.mode === 5 ? 7 : 9);
           break;
-        case "partychat": api.log("[Party] " + ev.name + ": " + ev.text, "chat"); break;
+        case "partychat": api.log("[Party] " + ev.name + ": " + ev.text, "party"); break;
       }
     },
   };

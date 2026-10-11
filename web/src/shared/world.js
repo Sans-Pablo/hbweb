@@ -21,6 +21,8 @@ import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
 import * as Party from "./systems/party.js";
+import * as Trade from "./systems/trade.js";
+import * as Guild from "./systems/guild.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
 export const RECALL_CHANNEL_MS = 3000, RECALL_COOLDOWN_MS = 60000;
@@ -91,7 +93,7 @@ export class World {
   // ------------------------------------------------------------------ jugadores (systems/player.js)
   addPlayer(name, save = null, create = null) { return Player.addPlayer(this, name, save, create); }
   saveOf(id) { return Player.saveOf(this, id); }
-  removePlayer(id) { const p = this.ents.get(id); if (p?.kind === "player") Party.leave(this, p, true); Player.removePlayer(this, id); }
+  removePlayer(id) { const p = this.ents.get(id); if (p?.kind === "player") { Party.leave(this, p, true); Trade.cancel(this, p, "se ha ido"); } Player.removePlayer(this, id); }
   recalc(p) { Player.recalc(this, p); }
 
   // Zona sin ataque (CMap::_SetupNoAttackArea + iGetAttribute): los rectángulos de noAttack (-10 = todo el mapa);
@@ -136,7 +138,8 @@ export class World {
         if (e.kind === "npc") { if (!(this.dbgFreeze && !e.master)) Npc.npcThink(this, e); }
         else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
-      if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); }
+      if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); }
+      if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); }
       Arena.tickArena(this);
       tickSky(this);
     }
@@ -150,8 +153,21 @@ const COMMANDS = {
   respawn(w, p) { const ok = Player.respawn(w, p); if (ok && Companion.activeBall(p) && !Companion.activeBall(p).comp.down && !w.fightZone) Npc.spawnCompanion(w, p); return ok; },          // al reaparecer vuelve el summon elegido (al morir el dueño desaparecía y la bola seguía «fuera»)
   say(w, p, cmd) {
     let text = String(cmd.text || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
-    if (text[0] === "$") { text = text.slice(1).trim(); return text ? Party.chat(w, p, text) : false; }        // chat de grupo
-    if (text) w.emit({ t: "chat", id: p.id, name: p.name, text });
+    // Canales de chat del original (HGServer/Game.cpp, ChatMsgHandler): sin prefijo = lo oyen los de alrededor; «!» grito a todo el mapa
+    // (nivel > 10, 5 SP); «~» chat de bando (nivel > 1, 3 SP); «$» chat de grupo (3 SP). `ch` y `x,y,side` los usa el servidor para filtrar.
+    const pre = text[0];
+    if (pre === "@") { text = text.slice(1).trim(); return text ? Guild.chat(w, p, text) : false; }                       // chat de guild
+    if (pre === "$") { text = text.slice(1).trim(); return text ? Party.chat(w, p, text) : false; }
+    if (pre === "!" || pre === "~") {
+      text = text.slice(1).trim(); if (!text) return false;
+      const cost = pre === "!" ? 5 : 3;
+      if ((pre === "!" && p.level <= 10) || (pre === "~" && p.level <= 1)) return w.reject(p, cmd, "nivel insuficiente para este canal");
+      if (p.sp < cost) return w.reject(p, cmd, "sin resistencia");
+      p.sp -= cost;
+      w.emit({ t: "chat", id: p.id, name: p.name, text, ch: pre === "!" ? "shout" : "side", side: p.side });
+      return true;
+    }
+    if (text) w.emit({ t: "chat", id: p.id, name: p.name, text, ch: "local", x: p.x, y: p.y });
     return !!text;
   },
   move(w, p, cmd) {
@@ -196,6 +212,21 @@ const COMMANDS = {
   partyreq: (w, p, cmd) => Party.request(w, p, String(cmd.name || "").slice(0, 12), cmd.auto === true),
   partyaccept: (w, p, cmd) => Party.answer(w, p, cmd.r | 0),
   partyleave: (w, p) => Party.leave(w, p),
+  guildcreate: (w, p, cmd) => Guild.create(w, p, cmd.name),
+  guildinvite: (w, p, cmd) => Guild.invite(w, p, String(cmd.name || "").slice(0, 12)),
+  guildanswer: (w, p, cmd) => Guild.answer(w, p, cmd.r === 1),
+  guildleave: (w, p) => Guild.leave(w, p),
+  guildkick: (w, p, cmd) => Guild.kick(w, p, String(cmd.name || "").slice(0, 12)),
+  guilddisband: (w, p) => Guild.disband(w, p),
+  guildcolor: (w, p, cmd) => Guild.setColors(w, p, cmd.cape === undefined ? NaN : +cmd.cape, cmd.boots === undefined ? NaN : +cmd.boots),
+  guildinfo: (w, p) => Guild.info(w, p),
+  tradereq: (w, p, cmd) => Trade.request(w, p, String(cmd.name || "").slice(0, 12)),
+  tradeanswer: (w, p, cmd) => Trade.answer(w, p, cmd.r === 1),
+  tradeset: (w, p, cmd) => Trade.setItem(w, p, cmd.uid),
+  tradeunset: (w, p, cmd) => Trade.unsetItem(w, p, cmd.uid),
+  tradegold: (w, p, cmd) => Trade.setGold(w, p, cmd.n),
+  tradeok: (w, p) => Trade.confirm(w, p),
+  tradecancel: (w, p) => Trade.cancel(w, p, ""),
   buy: (w, p, cmd) => Shop.buy(w, p, cmd),
   sellreq: (w, p, cmd) => Shop.sellRequest(w, p, cmd),
   sellconfirm: (w, p, cmd) => Shop.sellConfirm(w, p, cmd.uid, cmd.count | 0),

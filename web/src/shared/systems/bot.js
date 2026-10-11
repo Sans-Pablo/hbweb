@@ -17,6 +17,7 @@ import { newInst } from "./itemsys.js";
 import * as Party from "./party.js";
 import * as Tut from "./tutorial.js";
 import { canFight } from "./combatsys.js";
+import { itemLevel } from "../itemlevel.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -71,6 +72,8 @@ const countOf = (p, id) => p.bag.reduce((a, i) => a + (i.id === id ? i.count || 
 
 function spendPoints(w, p) {
   if (p.pool <= 0) return;
+  if (p.res && p.level >= 15 && p.stats.chr < 20) w.command(p.id, { t: "stat", stat: "chr", n: Math.min(p.pool, 20 - p.stats.chr) });        // carisma 20: requisito para fundar un guild (systems/guild.js)
+  if (p.pool <= 0) return;
   const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
   for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n });
   if (p.pool > 0) w.command(p.id, { t: "stat", stat: "str", n: p.pool });
@@ -110,22 +113,29 @@ export function errands(w, p, b, first = false) {
   // comida y pociones
   if (cat.potion && countOf(p, cat.potion.id) < 6) buy(w, p, cat.potion, 6 - countOf(p, cat.potion.id));
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
-  // equipo del suelo/mochila que ya lleve y sea mejor
-  const value = slot => {
-    const uid = slot === EQUIP.RHAND ? (p.equip[EQUIP.RHAND] ?? p.equip[EQUIP.TWOHAND]) : p.equip[slot];
-    const i = uid !== undefined && Inv.instOf(p, uid);
-    return i ? w.data.item(i.id).price || 0 : 0;
-  };
+  // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
+  // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
+  const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0);
+  const worn = slot => { const uid = p.equip[slot]; return uid !== undefined ? Inv.instOf(p, uid) : null; };
+  const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
+  const usable = d => d && d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
+    d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && SKIP_WEAPON.test(d.name));
+  let best = null;
   for (const i of p.bag) {
     const d = w.data.item(i.id);
-    if (!d || d.type !== ITYPE.EQUIP || b.bad.has(i.id) || i.life === 0 || Object.values(p.equip).includes(i.uid) || !catalog(w.data).gear.get(slotOf(d))?.includes(d)) continue;
-    if ((d.price || 0) > value(slotOf(d)) * 1.15) tryEquip(w, p, b, i);
+    if (!usable(d) || (b.badUid ||= new Set()).has(i.uid) || i.life === 0 || Object.values(p.equip).includes(i.uid)) continue;
+    const slot = slotOf(d), mine = ilv(i), cur = d.equipPos === EQUIP.TWOHAND ? ilv(worn(EQUIP.RHAND)) + ilv(worn(EQUIP.LHAND)) : value(slot);
+    if (mine > cur * 1.08 + 0.5 && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
+  }
+  if (best) {
+    if (tryEquip(w, p, b, best.i)) blog(w, p, `Me equipo ${w.data.item(best.i.id).name} (item level ${ilv(best.i)}).`);
+    else b.badUid.add(best.i.uid);
   }
   // compras por catálogo: una pieza por recado (a la primera, un equipo completo)
   let bought = 0;
   for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) {
     const list = cat.gear.get(slot) || [], have = value(slot), budget = p.gold * (first ? 0.25 : 0.6);
-    const d = list.find(x => x.price <= budget && x.price > have * 1.3 && !b.bad.has(x.id) && !(x.levelLimit > p.level) && !(x.gender === 1 && p.gender !== 1) && !(x.gender === 2 && p.gender !== 2) && x.price * 4 >= have);
+    const d = list.find(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x));
     if (!d) continue;
     const inst = buy(w, p, d);
     if (!inst) continue;
@@ -140,7 +150,12 @@ export function errands(w, p, b, first = false) {
 // ---------------------------------------------------------------- percepción y movimiento
 export const tooStrong = (w, p, e) => {
   if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
-  if (e.boss && p.level < 40) return true;
+  if (e.boss) {                                                                                       // jefe de cripta: se ataca con nivel suficiente, y antes si hay compañeros cerca
+    let al = 0; for (const q of w.ents.values()) if (q !== p && q.kind === "player" && !q.dead && dist(p, q) <= 14) al++;
+    if (p.level < 8 + 5 * e.boss - 3 * Math.min(3, al)) return true;
+  }
+  const dl = p.res?.dlv?.[e.boss ? e.name + "*" + e.boss : e.name];                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
+  if (dl !== undefined && p.level < dl + 3) return true;
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
   return hit * 4 > p.maxHp;
 };
@@ -160,7 +175,7 @@ function pickTarget(w, p, owner) {
     if (p.bot.ignore?.has(e.id) && e.target !== p.id) continue;                                         // inalcanzable hace un momento
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
-    const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0);
+    const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(5, (p.kinds?.[e.name] || 0) / 8);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
     if (s < bs) { best = e; bs = s; }
   }
   return best;
@@ -234,7 +249,7 @@ function run(adv, w, p, b) {
     return;
   }
   if (p.level > b.lvl) { say(adv, p, b, "Level " + p.level + "!"); think_(w, p, b, "level", { l: p.level }, 0); b.lvl = p.level; b.errand = 0; }
-  if (w.busy(p)) return;
+  if (w.busy(p) || p.trade) return;                                       // en pleno trato se queda quieto
   // dueño: debe seguir conectado
   let owner = null;
   if (b.owner != null) {
@@ -284,7 +299,8 @@ function run(adv, w, p, b) {
     const here = groundTop(w, p.x, p.y);
     if (here && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
     let best = null, bd = 1e9;
-    for (let y = p.y - 5; y <= p.y + 5; y++) for (let x = p.x - 5; x <= p.x + 5; x++) {
+    const LR = (b.lootBoost || 0) > w.time ? 9 : 5;                                       // actividad de guild «loot»: rastrea más lejos
+    for (let y = p.y - LR; y <= p.y + LR; y++) for (let x = p.x - LR; x <= p.x + LR; x++) {
       const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
       if (it && wanted(w, p, it)) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)); if (d < bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = d; } }
     }
@@ -307,7 +323,7 @@ function run(adv, w, p, b) {
   if (!b.travel && w.time >= (b.huntAt || 0) && w.map.kind !== "dungeon") {                // sin nada a la vista: va a cazar donde hay monstruos (antes vagaba para siempre por el pueblo, junto a la herrería y la tienda)
     b.huntAt = w.time + 8000;
     let best = null, bd = 1e9;
-    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e); if (d < bd) { bd = d; best = e; } }
+    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e) + Math.min(10, (p.kinds?.[e.name] || 0) / 6); if (d < bd) { bd = d; best = e; } }
     if (best && bd > 14) {
       const spot = w.freeSpotNear(best.x, best.y);
       if (spot && !w.teleports.has(w.grid.idx(spot[0], spot[1]))) {
@@ -330,5 +346,6 @@ function wanted(w, p, it) {
   if (!d) return false;
   if (it.id === GOLD) return true;
   if (it.comp) return false;
-  return (d.price > 0 || d.type === ITYPE.EAT) && p.bag.length < MAX_ITEMS - 3 && Inv.canCarry(p, w.data, d, it.count || 1, it);
+  if (d.type === ITYPE.EQUIP && d.price <= 0 && !it.attr && !(d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && !(d.levelLimit > p.level))) return false;
+  return (d.price > 0 || d.type === ITYPE.EAT || d.type === ITYPE.EQUIP) && p.bag.length < MAX_ITEMS - 3 && Inv.canCarry(p, w.data, d, it.count || 1, it);
 }

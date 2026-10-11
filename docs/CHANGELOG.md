@@ -2,6 +2,22 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.48.0 · Comercio, guilds y bots sociales (2026-10-11)
+- Item level: cada objeto tiene un nivel de objeto y los bots se equipan lo mejor de su mochila y compran por mejora.
+- El summon te sigue con correa: acelera suavemente si se queda atrás, sin saltos bruscos.
+- La barra de vida del grupo está pegada al borde izquierdo de la ventana.
+- Chats como en el original: sin prefijo local, ! grito, ~ bando, $ grupo, @ guild (cada uno con su color).
+- Matar enemigos distintos da más experiencia; los bots variados y aprenden: evitan lo que los mató y se avisan entre ellos.
+- Los bots atacan a los jefes de la cripta si tienen nivel o compañeros suficientes, y aprenden de cada jefe por separado.
+- Los bots usan las magias de sus summons.
+- Comercio (Ctrl+E o /trade) con jugadores y bots: ítems y oro con confirmación de ambos; los bots compran, venden y regalan según afinidad.
+- Los bots aceptan tu petición de grupo (o te invitan) si te conocen.
+- Los bots charlan en la tienda del pueblo.
+- Guilds del original (Ctrl+G, /guild): crear (nv 20, car 20), invitar, expulsar, capa y botas de color, 'Guildmaster/Guildsman' bajo el nombre.
+- Los bots fundan y organizan guilds por afinidad, charlan por el chat de guild y proponen cripta, raid en Promise Land o buscar loot.
+- Corregido: dos grupos distintos podían acabar en una cripta mal emparejada al reiniciar; y Ctrl+P / elegir jugador funciona de nuevo.
+- Protocolo de red 6.
+
 ## 0.47.0 · Cliente y bots pulidos (2026-10-11)
 
 - `main.js useMagic`: con bola de invocación activa, la magia de su escuela se lanza sin saberla (la valida el servidor). Etiquetas «Combatant»/«Traveller». Nombres ajenos solo con el ratón encima (`controller.pickPlayer`, `hoverPlayer`); nombre propio siempre. Mascotas: nombre del dueño.

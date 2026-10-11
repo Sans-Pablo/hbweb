@@ -11,6 +11,67 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Comercio, guilds y bots sociales (v0.48.0)",
+        "en": "Trade, guilds and social bots (v0.48.0)"
+      },
+      "items": [
+        {
+          "es": "Item level: cada objeto tiene un nivel de objeto y los bots se equipan lo mejor de su mochila y compran por mejora.",
+          "en": "Item level: every item has an item level; bots equip the best gear in their bag and buy upgrades."
+        },
+        {
+          "es": "El summon te sigue con correa: acelera suavemente si se queda atrás, sin saltos bruscos.",
+          "en": "Summons are leashed: they speed up smoothly when lagging behind, without abrupt jumps."
+        },
+        {
+          "es": "La barra de vida del grupo está pegada al borde izquierdo de la ventana.",
+          "en": "The party health frame is pinned to the left edge of the window."
+        },
+        {
+          "es": "Chats como en el original: sin prefijo local, ! grito, ~ bando, $ grupo, @ guild (cada uno con su color).",
+          "en": "Chats as in the original: no prefix local, ! shout, ~ side, $ party, @ guild (each with its own colour)."
+        },
+        {
+          "es": "Matar enemigos distintos da más experiencia; los bots variados y aprenden: evitan lo que los mató y se avisan entre ellos.",
+          "en": "Killing different enemies gives more experience; bots vary their prey, learn from deaths and warn each other."
+        },
+        {
+          "es": "Los bots atacan a los jefes de la cripta si tienen nivel o compañeros suficientes, y aprenden de cada jefe por separado.",
+          "en": "Bots attack crypt bosses when level or companions are enough, and learn from each boss separately."
+        },
+        {
+          "es": "Los bots usan las magias de sus summons.",
+          "en": "Bots cast their summons' spells."
+        },
+        {
+          "es": "Comercio (Ctrl+E o /trade) con jugadores y bots: ítems y oro con confirmación de ambos; los bots compran, venden y regalan según afinidad.",
+          "en": "Trade (Ctrl+E or /trade) with players and bots: items and gold with both confirming; bots buy, sell and gift by affinity."
+        },
+        {
+          "es": "Los bots aceptan tu petición de grupo (o te invitan) si te conocen.",
+          "en": "Bots accept your party request (or invite you) if they know you."
+        },
+        {
+          "es": "Los bots charlan en la tienda del pueblo.",
+          "en": "Bots hang out and chat in the town shop."
+        },
+        {
+          "es": "Guilds del original (Ctrl+G, /guild): crear (nv 20, car 20), invitar, expulsar, capa y botas de color, 'Guildmaster/Guildsman' bajo el nombre.",
+          "en": "Original guilds (Ctrl+G, /guild): create (lv 20, chr 20), invite, kick, cape and boots colours, 'Guildmaster/Guildsman' under the name."
+        },
+        {
+          "es": "Los bots fundan y organizan guilds por afinidad, charlan por el chat de guild y proponen cripta, raid en Promise Land o buscar loot.",
+          "en": "Bots found and run guilds by affinity, talk in guild chat and propose crypt runs, Promise Land raids or loot hunts."
+        },
+        {
+          "es": "Corregido: dos grupos distintos podían acabar en una cripta mal emparejada al reiniciar; y Ctrl+P / elegir jugador funciona de nuevo.",
+          "en": "Fixed: restarting could orphan a party's crypt; Ctrl+P / picking a player works again."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Cliente y bots pulidos (v0.47.0)",
         "en": "Polished client and bots (v0.47.0)"
       },

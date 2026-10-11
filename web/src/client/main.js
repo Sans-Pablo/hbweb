@@ -21,6 +21,8 @@ import { ITYPE } from "../shared/items.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
 import { registerParty } from "./party.js";
+import { registerTrade } from "./trade.js";
+import { registerGuild } from "./guild.js";
 import { registerPetDialog } from "./petdialog.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
@@ -134,6 +136,8 @@ async function main() {
     me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c),
     pick: cb => ui.partyPick(cb), cancelPick: () => ui.cancelPick(),
   });
+  const tradeUi = registerTrade(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
+  const guildUi = registerGuild(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c), autoInvite: () => ui.autoInvite() });
   registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // tutorial para jugadores nuevos (shared/systems/tutorial.js): conversaciones con cara + objetivos, se puede saltar
   const tutorial = new Tutorial({
@@ -292,6 +296,20 @@ async function main() {
       if (!e || Math.hypot(e.x - me.x, e.y - me.y) > 20) { hud.log("No hay ningún jugador cerca."); return; }
       conn.send({ t: "partyreq", name: e.name, auto: true });
     },
+    // Invitar al guild al jugador bajo el cursor (o el más cercano)
+    autoInvite() {
+      const me = world.ents.get(pid); if (!me || me.dead) return;
+      const e = ctl.hoverPlayer || [...world.ents.values()].filter(o => o.kind === "player" && !o.dead && o.id !== pid).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
+      if (!e || Math.max(Math.abs(e.x - me.x), Math.abs(e.y - me.y)) > 10) { hud.log("No hay nadie cerca a quien invitar."); return; }
+      conn.send({ t: "guildinvite", name: e.name }); hud.log("Invitación enviada a " + e.name + ".");
+    },
+    // Ctrl+E (o «/trade nombre»): comerciar con el jugador bajo el cursor (o el más cercano a ≤ 10 casillas)
+    autoTrade(name) {
+      const me = world.ents.get(pid); if (!me || me.dead) return;
+      const e = name ? [...world.ents.values()].find(o => o.kind === "player" && o.name.toLowerCase() === name.toLowerCase()) : ctl.hoverPlayer || [...world.ents.values()].filter(o => o.kind === "player" && !o.dead && o.id !== pid).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
+      if (!e || Math.max(Math.abs(e.x - me.x), Math.abs(e.y - me.y)) > 10) { hud.log("No hay nadie con quien comerciar cerca."); return; }
+      tradeUi.start(e.name);
+    },
     say: m => hud.log(m, "bad"),
     // UseMagic: prepara el hechizo; el siguiente clic izquierdo elige el objetivo, el derecho cancela
     useMagic(id) {
@@ -382,6 +400,8 @@ async function main() {
           case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
           case "h": e.preventDefault(); ui.key("news"); return;
           case "p": e.preventDefault(); ui.autoParty(); return;
+          case "e": e.preventDefault(); ui.autoTrade(); return;
+          case "g": e.preventDefault(); guildUi.open(); return;
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
           case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
           case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
@@ -457,7 +477,7 @@ async function main() {
   $id("btn-tutorial").onclick = () => { optionsEl.classList.remove("open"); tutorial.restart(); };
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
-  hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
+  hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
   gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
@@ -488,13 +508,19 @@ async function main() {
   setNpcDb(assets.npcDb);
   let voice = null;                                 // personalidad: frases (voice.js, data/voice.json)
   fetch("data/voice.json").then(r => r.json()).then(d => { voice = new Voice({ data: d, bubbles, pid, lang: getLang }); voice.setPlayer(world.ents.get(pid)?.name, world.ents.get(pid)?.persona); }).catch(() => {});
-  function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre; chatIn.focus(); }
+  const CH_HINT = { "$": ["party", "Chat de grupo ($): solo tu grupo"], "!": ["shout", "Grito (!): todo el mapa, nivel > 10"], "~": ["side", "Chat de bando (~): tu nación"], "@": ["guild", "Chat de guild (@): tu guild"] };
+  const chTag = () => { const h = CH_HINT[chatIn.value[0]]; chatIn.className = h ? "ch-" + h[0] : ""; chatIn.placeholder = tr(h ? h[1] : "Escribe y pulsa Intro (Esc para cancelar)"); };
+  chatIn.addEventListener("input", chTag);
+  // como en el original (Game.cpp): tras un mensaje con «!» o «$» la siguiente línea ya empieza con ese prefijo
+  function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre || flags.chPrefix || ""; chTag(); chatIn.focus(); }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
       else if (/^\/petname\s+\S/.test(t)) conn.send({ t: "petname", name: t.replace(/^\/petname\s+/, "") });
+      else if (/^\/guild(\s|$)/.test(t)) guildUi.command(t);
+      else if (/^\/trade(\s|$)/.test(t)) ui.autoTrade(t.slice(7).trim());
       else if (t === "/tutorial") tutorial.restart();
       else if (t === "/tutorial off") tutorial.skipAll();
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
@@ -510,7 +536,7 @@ async function main() {
         hud.log("Clima: " + w.weather);
       }
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
-      else if (t) { flags.lastChat = t; conn.send({ t: "say", text: t }); }
+      else if (t) { flags.lastChat = t; flags.chPrefix = /^[!$@]/.test(t) ? t[0] : ""; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
   });
@@ -551,7 +577,7 @@ async function main() {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
       tutorial.onEvent(ev);
-      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid));
+      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid)); tradeUi.onEvent(ev, world.ents.get(pid)); guildUi.onEvent(ev, world.ents.get(pid));
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia
@@ -560,7 +586,7 @@ async function main() {
         if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);
       }
       if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
-      if (ev.t === "chat" && !ev.system) bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
+      if (ev.t === "chat" && !ev.system && ev.ch !== "side") bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") { const l = document.getElementById("lost"); if (ev.reason) l.querySelector("p").textContent = ev.reason; l.style.display = "grid"; }
     }
     const me = world.ents.get(pid);
