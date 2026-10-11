@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Puestos: arreglo y botón Tienda (v0.52.1)",
+        "en": "Stalls: fix and Stall button (v0.52.1)"
+      },
+      "items": [
+        {
+          "es": "El botón de la mochila ahora es «Tienda»: elige objetos, ponles precio y pulsa «Abrir tienda». También sirve /puesto.",
+          "en": "The bag button is now «Stall»: pick items, set prices and press «Open stall». /stall also works."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Puestos de jugadores (v0.52.0)",
         "en": "Player stalls (v0.52.0)"
       },

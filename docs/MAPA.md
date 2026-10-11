@@ -75,17 +75,17 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `controller.js` · 235 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 127 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 76 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
-- `dialogs.js` · 558 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
+- `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
 - `fx.js` · 182 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 - `gui.js` · 552 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `guild.js` · 98 · Cuadro «Guild» (id 34, Ctrl+G): el guild del original (Guildmaster / Guildsman) con lo que añade el port. La lógica vive en shared/syste
 - `hud.js` · 336 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 297 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `i18n.js` · 298 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 88 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 747 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 748 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 10 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -96,7 +96,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `renderer.js` · 1143 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
 - `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
-- `stall.js` · 74 · Cuadro «Puesto» (id 47): tiendas de jugador (INVENTO del port; lógica en shared/systems/stall.js). Tres vistas:
+- `stall.js` · 80 · Cuadro «Puesto» (id 48): tiendas de jugador (INVENTO del port; lógica en shared/systems/stall.js). Tres vistas:
 - `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
 - `summonpreview.js` · 71 · Vista previa de un summon antes de comprar su bola en el hospital de compañeros (INVENTO del port): estadísticas, hechizos,
 - `trade.js` · 123 · Cuadro «Trade» (id 33): comercio con otros jugadores y habitantes. INVENTO del port, a partir del intercambio del original

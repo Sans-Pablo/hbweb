@@ -157,7 +157,9 @@ export function registerDialogs(gui, api) {
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
       if (!g.item && g.dialogAt(m.x, m.y) === this) { const h = this.pick(g, lx, ly, me); if (h) g.hoverUid = h.it.uid; }
-      if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 1, 23, 172);
+      { const c = g.ctx, on = lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184;      // el botón «Upgrade» del original pasa a «Tienda» (puestos de jugador)
+        c.fillStyle = on ? "#5a4526" : "#3a2c18"; c.fillRect(23, 172, 54, 13); c.strokeStyle = "#8a7448"; c.lineWidth = 1; c.strokeRect(23.5, 172.5, 53, 12);
+        g.aligned(23, 77, 173, "Tienda", on ? "#fff3c0" : "#e8d9a8", { size: 10 }); }
       if (lx >= 140 && lx <= 212 && ly >= 172 && ly <= 184) g.put("gamedialog_7", 2, 140, 172);
     },
     // objeto bajo el cursor (de arriba abajo), con colisión por píxel
@@ -187,7 +189,7 @@ export function registerDialogs(gui, api) {
       return true;
     },
     click(g, lx, ly) {
-      if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) { api.log("No hay mejora de objetos en esta versión."); return true; }
+      if (lx >= 23 && lx <= 76 && ly >= 172 && ly <= 184) { api.stall(); return true; }
       if (lx >= 140 && lx <= 212 && ly >= 172 && ly <= 184) { api.log("Aprende la habilidad de fabricación para usar el manual."); return true; }
       return false;
     },

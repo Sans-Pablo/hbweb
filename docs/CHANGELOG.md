@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.52.1 · Puestos: arreglo y botón Tienda (2026-10-11)
+
+- Arreglo: `/puesto` no abría nada (el id del cuadro chocaba con el rastreador del tutorial; ahora es el 48).
+- El botón «Upgrade» de la mochila pasa a «Tienda» y abre el montaje del puesto. El cuadro explica los pasos y tiene botón «Abrir tienda» abajo (Ok cancela).
+
 ## 0.52.0 · Puestos de jugadores (2026-10-11)
 
 - Nuevo: los jugadores abren puestos de venta en shop, warehouse y herrería (`/puesto`). Comisión 0, oro recogible por el dueño, el puesto queda abierto AFK y se guarda en el servidor. Protocolo 7.

@@ -94,6 +94,7 @@ async function main() {
   const logout = { n: null, t: 0 };
   const chatLog = [];
   const guiApi = {
+    stall: () => stallUi.setup(),
     chatLog,
     log: m => hud.log(m),
     party: () => partyUi.open(),
