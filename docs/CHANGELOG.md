@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.56.0 · Ficha de puestos (2026-10-11)
+- Ventana del puesto ampliada con ficha a la derecha (sprite, estadísticas, comparación con el equipo, precio y oro).
+- El puesto en el mundo usa sprites reales de objetos en vez del cofre dibujado a mano.
+
 ## 0.55.2 · Avisos del puesto (2026-10-11)
 - Montar un puesto fuera de shop, warehouse o herrería ya no es silencioso: aviso claro al pulsar Tienda o /puesto, y los rechazos del servidor (cerca de un teletransporte, ya tienes uno...) salen en el chat.
 

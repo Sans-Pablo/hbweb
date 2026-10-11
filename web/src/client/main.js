@@ -177,9 +177,9 @@ async function main() {
     return { name: itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : ""), lines };
   };
   // BUG-009: ficha de un objeto de tienda (sin instancia): sprite, estadísticas y comparación con lo que llevas puesto en esa ranura
-  gui.describeDef = id => {
+  gui.describeDef = (id, inst) => {
     const me = world.ents.get(pid), d = itemDef(id); if (!me || !d) return null;
-    const it = { uid: -1, id, count: 1, life: realStats(d, null).maxLife, attr: null };
+    const it = { uid: -1, id, count: inst?.count || 1, life: inst?.life ?? realStats(d, null).maxLife, attr: inst?.attr || null };
     const strip = l => l.replace(/<[^>]+>/g, "");
     const lines = hud.describe(it, me).map(l => ({ t: strip(l), c: /color:#9fe39a/.test(l) ? "#9fe39a" : undefined }));
     if (d.type === ITYPE.EQUIP) {
@@ -189,6 +189,7 @@ async function main() {
       if (cur) {
         const cd = itemDef(cur.id), diff = Math.round((val(d) - val(cd)) * 10) / 10;
         lines.push({ t: "Puesto: " + itemName(cur.id, cur.attr) + " (" + (diff > 0 ? "+" : "") + diff + (atk(d) ? " daño medio" : " defensa") + ")", c: diff > 0 ? "#9fe39a" : diff < 0 ? "#e39a9a" : "#e8e8d0" });
+        lines.push({ t: diff > 0 ? "▲ Mejor que lo que llevas" : diff < 0 ? "▼ Peor que lo que llevas" : "= Igual que lo que llevas", c: diff > 0 ? "#9fe39a" : diff < 0 ? "#e39a9a" : "#e8e8d0" });
       } else lines.push({ t: "Ranura libre: nada puesto", c: "#9fe39a" });
     }
     return { name: itemName(id), lines, sprite: [packKey(d), d.spriteFrame] };

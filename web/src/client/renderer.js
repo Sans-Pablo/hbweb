@@ -497,7 +497,7 @@ export class Renderer {
     const time = s.world.time;
     const hovered = s.hoverEnt === e || s.hoverCit === e;
     const flashAge = performance.now() - (s.fx.flash.get(e.id) || -1e9);
-    if (e.stall) {          // BUG-001: un puesto de jugador se ve como un cofre (dibujado a mano: el original no trae un sprite de cofre)
+    if (e.stall) {          // BUG-001: un puesto de jugador se ve como un mostrador con géneros (sprites reales de objetos; el original no trae cofre)
       this.stallChest(x, y);
       overlays.push(() => this.origName(x, y - 6, [["Puesto de " + e.stall.owner, "255,255,255"], ["(" + e.stall.title + ")", "255,220,120"]]));
       return;
@@ -746,15 +746,13 @@ export class Renderer {
     }
   }
 
+  // Puesto: género expuesto con sprites reales del original (cesta de flores, baguette, saco de semillas), sin dibujo propio
   stallChest(x, y) {
     const c = this.ctx;
-    c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(x, y + 2, 17, 6, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#6b4423"; c.fillRect(x - 14, y - 16, 28, 16);                    // cuerpo
-    c.fillStyle = "#8a5a2e"; c.beginPath(); c.moveTo(x - 15, y - 16); c.quadraticCurveTo(x, y - 32, x + 15, y - 16); c.closePath(); c.fill();   // tapa
-    c.strokeStyle = "#c9a227"; c.lineWidth = 2;
-    c.strokeRect(x - 14, y - 16, 28, 16); c.beginPath(); c.moveTo(x - 5, y - 16); c.lineTo(x - 5, y); c.moveTo(x + 5, y - 16); c.lineTo(x + 5, y); c.stroke();
-    c.fillStyle = "#f0d060"; c.fillRect(x - 3, y - 12, 6, 6);                       // cerradura
+    c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(x, y + 2, 22, 7, 0, 0, Math.PI * 2); c.fill();
+    for (const [id, dx, dy] of [[98, -14, 0], [801, 14, 0], [521, 0, -3]]) { const d = itemDef(id); if (d) this.spr.put(c, groundKey(d), d.spriteFrame, x + dx, y + dy); }
   }
+
 
   // Escala fija por especie (altura del fotograma de reposo la primera vez que se ve): solo se reducen los más altos que el personaje
   petScale(e, key, f) {

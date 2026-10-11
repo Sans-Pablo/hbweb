@@ -26,7 +26,7 @@ function ask(label, def, numeric) {
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 export function registerStall(gui, api) {
   const dlg = new class extends ClassicDialog {
-    constructor() { super({ id: 48, title: "Puesto", top: 84, rowH: 16, footer: "Clic en una fila para comprar (Ctrl = toda la pila). Comisión 0." }); this.mode = "off"; this.st = null; this.set = []; this.ctrl = false; }
+    constructor() { super({ id: 48, title: "Puesto", w: 520, x: 140, top: 84, rowH: 16, footer: "Clic en una fila para comprar (Ctrl = toda la pila). Comisión 0." }); this.mode = "off"; this.hov = null; this.st = null; this.set = []; this.ctrl = false; }
     bagItems(me) {
       const worn = new Set(Object.values(me?.equip || {}));
       return (me?.bag || []).filter(it => !worn.has(it.uid) && !it.comp && it.id !== GOLD);
@@ -42,6 +42,29 @@ export function registerStall(gui, api) {
       if (this.st.mine) r.push({ act: "take", text: "Recoger oro (" + comma(this.st.gold) + ")", color: "#1a6b1a" }, { act: "close", text: "Cerrar puesto", color: RED, tip: "Recuperas objetos y oro" });
       return r;
     }
+    // Ventana doble: a la izquierda la lista (marco clásico de 258 px), a la derecha la ficha del objeto bajo el ratón (sprite, estadísticas y
+    // comparación con lo equipado, como al comprar en Diablo II). La lógica de filas sigue midiendo el marco izquierdo.
+    draw(g, me) {
+      const W = this.w; this.w = 258; this.hovered(g, me); super.draw(g, me); this.w = W;
+      g.put("gamedialog_1", 2, 262, 0); this.card(g, me);
+    }
+    hovered(g, me) {
+      const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, i = Math.floor((ly - this.top) / this.rowH);
+      if (ly >= this.top && i >= 0 && i < this.visible && lx > this.mx - 4 && lx < this.w - 12) { const r = (this.rows(me) || [])[i + this.view]; if (r?.it) this.hov = r.it; }
+    }
+    card(g, me) {
+      const X = 262, it = this.hov;
+      g.aligned(X, X + 258, 22, "Ficha del objeto", INK, { bold: true });
+      const info = it && g.describeDef && g.describeDef(it.id, it);
+      if (!info) { this.wrap(g, "Pasa el ratón sobre un objeto para ver su sprite, sus estadísticas y cómo se compara con lo que llevas puesto.", 226, 11).forEach((l, i) => g.text(X + 16, 90 + i * 14, l, INK, { size: 11 })); return; }
+      if (info.sprite) g.putGame(info.sprite[0], info.sprite[1], X + 129, 82);
+      g.aligned(X, X + 258, 120, info.name, INK, { bold: true, size: 11 });
+      const price = this.st && !this.st.mine ? it.price : this.set.find(s => s.uid === it.uid)?.price;
+      let y = 138;
+      const put = (t, c) => { for (const l of this.wrap(g, tr(t), 226, 10)) { if (y > 276) return; g.text(X + 16, y, l, c || INK, { size: 10 }); y += 12; } };
+      if (price) put((this.st && !this.st.mine ? tr("Precio:") : tr("Tu precio:")) + " " + comma(price) + " " + tr("c/u") + (this.st && !this.st.mine ? " · " + tr("Tienes") + " " + comma(me?.gold || 0) : ""), this.st && !this.st.mine && (me?.gold || 0) < price ? RED : "#1a6b1a");
+      for (const l of info.lines) put(l.t, l.c === "#9fe39a" ? "#1a6b1a" : l.c === "#e39a9a" ? RED : l.c ? INK : null);
+    }
     drawBody(g, me, lx, ly) {
       if (this.mode === "setup") { g.text(this.mx, 58, "1. Clic en un objeto: pon su precio (✔).", INK, { size: 10 }); g.text(this.mx, 70, "2. Pulsa «Abrir tienda». Ok cierra sin abrir.", INK, { size: 10 });
         const on = lx >= 22 && lx <= 122 && ly >= 292 && ly <= 312, c = g.ctx, ready = this.set.length > 0;
@@ -51,8 +74,9 @@ export function registerStall(gui, api) {
       if (this.mode === "view" && this.st && !this.st.items.length) g.aligned(0, this.w, 120, "No queda nada a la venta.", INK);
     }
     click(g, lx, ly, me) {
+      if (lx > 262) return this.fixed === true;
       if (this.mode === "setup" && lx >= 22 && lx <= 122 && ly >= 292 && ly <= 312) { this.pick({ act: "go" }, me); return true; }
-      return super.click(g, lx, ly, me);
+      const W = this.w; this.w = 258; try { return super.click(g, lx, ly, me); } finally { this.w = W; }
     }
     pick(r, me) {
       if (r.act === "go") {
@@ -76,7 +100,7 @@ export function registerStall(gui, api) {
       }
       if (this.st && !this.st.mine) api.send({ t: "stallbuy", sid: this.st.sid, uid: r.it.uid, count: (window.event?.ctrlKey || this.ctrl) ? r.it.count : 1 });
     }
-    onClose() { this.mode = "off"; this.st = null; this.set = []; }
+    onClose() { this.hov = null; this.mode = "off"; this.st = null; this.set = []; }
   }();
   gui.register(dlg);
   const show = () => { if (!gui.isOpen(48)) gui.open(48); };
