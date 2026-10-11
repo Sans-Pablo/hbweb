@@ -7,7 +7,7 @@
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
-  "news": [{"date":"2026-10-11","title":{"es":"Arreglo de carga (v0.55.1)","en":"Loading fix (v0.55.1)"},"items":[{"es":"Arreglado: la versión 0.55.0 se quedaba cargando.","en":"Fixed: version 0.55.0 got stuck loading."}]},
+  "news": [{"date":"2026-10-11","title":{"es":"Avisos del puesto (v0.55.2)","en":"Stall messages (v0.55.2)"},"items":[{"es":"Arreglado: al intentar montar un puesto (/puesto o botón Tienda) fuera de shop, warehouse o herrería no pasaba nada. Ahora lo explica; los rechazos del puesto también salen en el chat.","en":"Fixed: trying to set up a stall (/stall or Stall button) outside the shop, warehouse or blacksmith did nothing. It now explains why; stall rejections also show in the chat."}]},{"date":"2026-10-11","title":{"es":"Arreglo de carga (v0.55.1)","en":"Loading fix (v0.55.1)"},"items":[{"es":"Arreglado: la versión 0.55.0 se quedaba cargando.","en":"Fixed: version 0.55.0 got stuck loading."}]},
     {
       "date": "2026-10-11",
       "title": {

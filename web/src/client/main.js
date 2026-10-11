@@ -147,7 +147,7 @@ async function main() {
     pick: cb => ui.partyPick(cb), cancelPick: () => ui.cancelPick(),
   });
   const tradeUi = registerTrade(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
-  const stallUi = registerStall(gui, { send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
+  const stallUi = registerStall(gui, { mapId: () => world.map?.id, send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
   const guildUi = registerGuild(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c), autoInvite: () => ui.autoInvite() });
   registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // tutorial para jugadores nuevos (shared/systems/tutorial.js): conversaciones con cara + objetivos, se puede saltar

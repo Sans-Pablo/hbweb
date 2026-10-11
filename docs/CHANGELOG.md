@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.55.2 · Avisos del puesto (2026-10-11)
+- Montar un puesto fuera de shop, warehouse o herrería ya no es silencioso: aviso claro al pulsar Tienda o /puesto, y los rechazos del servidor (cerca de un teletransporte, ya tienes uno...) salen en el chat.
+
 ## 0.55.1 · Arreglo de carga (2026-10-11)
 - Hotfix: la 0.55.0 no cargaba (expresión regular rota en la tienda del granjero). Arreglado.
 - Los habitantes (bots) ya no fallan al arrancar el servidor si su partida estaba en otro mapa.

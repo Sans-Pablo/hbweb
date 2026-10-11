@@ -5,6 +5,7 @@
 import { ClassicDialog, INK, RED } from "./classicdialog.js";
 import { itemName, itemDef } from "./names.js";
 import { t as tr } from "./i18n.js";
+import { MAPS } from "../shared/systems/stall.js";
 
 const GOLD = 90;
 // Mini-cuadro propio (window.prompt está bloqueado en muchos navegadores/webviews y es feo): devuelve Promise<string|null>.
@@ -80,7 +81,7 @@ export function registerStall(gui, api) {
   gui.register(dlg);
   const show = () => { if (!gui.isOpen(48)) gui.open(48); };
   return {
-    setup() { dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.footer = "Clic: poner a la venta (pide el precio por unidad); otro clic lo quita."; dlg.view = 0; show(); },
+    setup() { if (api.mapId && !MAPS.has(api.mapId())) { api.log("Los puestos solo se pueden montar dentro de la tienda (shop), el almacén (warehouse) o la herrería (blacksmith).", "bad"); return; } dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.footer = "Clic: poner a la venta (pide el precio por unidad); otro clic lo quita."; dlg.view = 0; show(); },
     view(cit) { api.send({ t: "stallview", sid: cit.stall.sid }); },
     setCtrl(v) { dlg.ctrl = v; },
     onEvent(ev, me) {
