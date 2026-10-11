@@ -1,9 +1,9 @@
+import { fileURLToPath } from "node:url";
 // Coherencia de los datos generados (web/data): lo que un conversor deja a medias suele romper el juego mucho después.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-
-const D = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "web", "data");
+const D = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "web", "data");
 const J = f => JSON.parse(fs.readFileSync(path.join(D, f), "utf8"));
 const npc = J("npc.json"), sprites = J("sprites.json"), items = J("items.json"), shops = J("shops.json"), maps = J("maps/index.json");
 const byName = new Map(Object.values(items).map(i => [i.name, i]));
