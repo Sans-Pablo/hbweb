@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.54.1 · Publicación online arreglada (2026-10-11)
+- `net-bot`, `net-persist` y `net-walk` usan `NET_PROTO` en vez de `proto: 6` fijo (el CI fallaba desde v0.52.0 al subir el protocolo y Pages no se desplegaba). `data.test` ya funciona en Windows.
+
 ## 0.54.0 · Habitantes con puesto (2026-10-11)
 - Los habitantes (bots residentes) abren un puesto en `gshop_1f` con hasta 8 objetos sobrantes (`stallSurplus`), los venden a ~el doble del precio de tienda, vuelven a recoger oro y cierran cuando se agota. `manage` reserva hasta 8 objetos vendibles (`stallKeep`). Test: `tests/residents-stall.test.mjs`.
 

@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Publicación online arreglada (v0.54.1)",
+        "en": "Online publishing fixed (v0.54.1)"
+      },
+      "items": [
+        {
+          "es": "La web de pruebas no se actualizaba desde la v0.51.3 porque fallaban 3 tests de red (versión de protocolo fija). Arreglado: ya se publican los puestos, summons con voz y habitantes con puesto.",
+          "en": "The test site had not updated since v0.51.3 because 3 network tests failed (hard-coded protocol version). Fixed: stalls, voiced summons and stall-running residents are now published."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Habitantes con puesto (v0.54.0)",
         "en": "Residents run stalls (v0.54.0)"
       },

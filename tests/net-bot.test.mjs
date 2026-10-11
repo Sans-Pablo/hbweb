@@ -1,3 +1,4 @@
+import { NET_PROTO } from "../web/src/shared/const.js";
 // El admin invoca un bot en el servidor real: el bot aparece como jugador, entra en el grupo y se mueve con él.
 import { spawn } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -8,7 +9,7 @@ const srv = spawn("node", ["server/server.mjs", String(PORT)], { env: { ...proce
 for (let i = 0; i < 80; i++) { const ok = await new Promise(r => { const t = new WebSocket(`ws://localhost:${PORT}/ws`); t.onopen = () => { t.close(); r(true); }; t.onerror = () => r(false); }); if (ok) break; await new Promise(r => setTimeout(r, 250)); }
 const ws = new WebSocket(`ws://localhost:${PORT}/ws`);
 let me, seq = 0; const seen = new Map();
-ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "adm" + Date.now() % 1000, pass: "secret1", proto: 6 }));
+ws.onopen = () => ws.send(JSON.stringify({ t: "auth", mode: "register", name: "adm" + Date.now() % 1000, pass: "secret1", proto: NET_PROTO }));
 ws.onmessage = e => {
   const m = JSON.parse(e.data);
   if (m.t === "authok") ws.send(JSON.stringify({ t: "join", create: { name: "admin" + Date.now() % 100 } }));
