@@ -32,6 +32,7 @@ import { openStore } from "./store.mjs";
 import { openLlm } from "./llm.mjs";
 import { openReport } from "./report.mjs";
 import * as Residents from "../web/src/shared/systems/residents.js";
+import * as Human from "../web/src/shared/systems/human.js";
 import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
@@ -86,12 +87,18 @@ const saves = store.saves;
 const OBSERVE = env.HB_OBSERVE !== "0" && CFG.observe !== false;           // modo observar: ver jugar a un habitante en vivo desde la pantalla de entrada
 const RESIDENTS = Math.max(0, Math.min(40, Number(env.HB_RESIDENTS ?? CFG.residents ?? 40) | 0));
 const bkey = n => "bot:" + n.toLowerCase();
+// Humanización (systems/human.js): horarios de conexión según la hora real; el admin los controla desde el panel (cfg guardado en saves["sys:human"])
+adventure.hourFn = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+adventure.nowFn = () => Date.now();
+{ const hc = Human.cfgOf(adventure), saved = saves["sys:human"]; if (saved) Object.assign(hc, saved, { pins: { ...(saved.pins || {}) } }); else hc.on = true; if (env.HB_HUMAN === "0") hc.on = false; else if (env.HB_HUMAN === "1") hc.on = true; }
 function spawnResidents(n) {
   const have = new Set(adventure.residents().map(b => b.name));
   let made = 0;
   for (const name of RESIDENT_NAMES) {
     if (adventure.residents().length >= n) break;
     if (have.has(name)) continue;
+    if (Human.isOffline(adventure, name)) continue;
+    if (!adventure._humBoot && Human.restoreOffline(adventure, name, saves[bkey(name)])) continue;
     try { adventure.spawnResident(name, saves[bkey(name)] || null); made++; } catch (e) { console.error("habitante " + name + ":", e.message); }
   }
   return made;
@@ -99,6 +106,8 @@ function spawnResidents(n) {
 function persist(force = false) {
   for (const c of clients) if (c.pid) saves[c.key] = adventure.saveOf(c.pid) || saves[c.key];
   for (const b of adventure.residents()) { const s = adventure.saveOf(b.id); if (s) saves[bkey(b.name)] = s; }
+  for (const [n, e] of adventure.offline || []) if (e.save) saves[bkey(n)] = e.save;                // los desconectados también se guardan
+  saves["sys:human"] = Human.cfgOf(adventure);
   saves["sys:guilds"] = { list: exportGuilds(adventure.guildReg) };               // los guilds (systems/guild.js) viven en la misma base que los personajes
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
@@ -115,7 +124,8 @@ const botStats = openBotStats(adventure, log);
 adventure.report = r => { informe.add(r); botStats.idea(r); };               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 spawnResidents(RESIDENTS);
-setInterval(() => { try { if (adventure.residents().length < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
+adventure._humBoot = true;
+setInterval(() => { try { if (adventure.residents().length + (adventure.offline?.size || 0) < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
 persist(true);                                          // sus nombres quedan reservados desde el primer momento
 const saveTimer = setInterval(persist, 5000);          // solo se escriben los personajes que cambiaron; WAL: sobrevive a cerrar la ventana
 
@@ -164,6 +174,14 @@ const server = http.createServer((req, res) => {
       else if (url.pathname === "/api/admin/botparties") json(req, res, 200, { parties: botStats.parties() });
       else json(req, res, 200, botStats.detail(url.searchParams.get("name") || "") || { error: "no existe" });
     } catch (e) { json(req, res, 500, { error: e.message }); }
+    return;
+  }
+  if (url.pathname === "/api/admin/human") {
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    if (req.method === "POST") {
+      let body = ""; req.on("data", d => { body += d; if (body.length > 8000) req.destroy(); });
+      req.on("end", () => { try { json(req, res, 200, Human.configure(adventure, JSON.parse(body || "{}"))); persist(true); } catch (e) { json(req, res, 400, { error: e.message }); } });
+    } else json(req, res, 200, Human.status(adventure));
     return;
   }
   if (url.pathname === "/api/admin/cmd" && req.method === "POST") {

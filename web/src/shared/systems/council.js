@@ -12,6 +12,9 @@ const LABEL = { hunt: ["cazar en la granja", "hunt on the farm"], crypt: ["bajar
 export const labelOf = (k, lang = "es") => (LABEL[k] || ["nada", "nothing"])[lang === "en" ? 1 : 0];
 // gustos por arquetipo (multiplican la valoración)
 const LIKES = { warrior: { pl: 1.3, crypt: 1.1, hunt: 0.8 }, hunter: { hunt: 1.3, crypt: 1, pl: 0.8 }, trader: { hunt: 1.1, crypt: 0.8, pl: 0.5 }, wanderer: { crypt: 1.2, hunt: 0.9, pl: 1 }, scholar: { crypt: 1.1, hunt: 1, pl: 0.6 } };
+// Estilos individuales (además del arquetipo): el que muele mobs, el explorador de criptas, el pendenciero y el equilibrado
+const STYLE = { grinder: { hunt: 1.25, pl: 0.9 }, explorer: { crypt: 1.25, hunt: 0.9 }, fighter: { pl: 1.3, hunt: 0.9 }, balanced: {} };
+export const styleOf = p => ["grinder", "explorer", "fighter", "balanced"][([...p.name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 11) >> 3) % 4];
 const wild = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
 
 // Qué le conviene a `p` ahora: valoración (0..~3) y el motivo, para cada opción. `H.cryptNeed` viene de residents.js.
@@ -28,6 +31,7 @@ export function evaluate(adv, p, H, party = 1) {
   const likes = LIKES[r.arch] || {}, g = r.goal?.k;
   for (const k of KINDS) {
     out[k].s *= likes[k] || 1;
+    out[k].s *= STYLE[styleOf(p)]?.[k] || 1;                                               // estilo personal (sale de su nombre): cada uno tiene sus manías
     if (g === "crypt" && k === "crypt") out[k].s *= 2;
     if (g === "kills" && k === "hunt") out[k].s *= 1.3;
     if ((g === "level" || g === "gear") && k !== "hunt") out[k].s *= 1.15;

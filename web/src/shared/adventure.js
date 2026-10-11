@@ -12,6 +12,7 @@ import { DEBUG } from "./systems/debug.js";
 import { makeReg } from "./systems/party.js";
 import { makeReg as makeGuildReg } from "./systems/guild.js";
 import * as Bot from "./systems/bot.js";
+import * as Human from "./systems/human.js";
 import * as Residents from "./systems/residents.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas", elvfarm: "Elvine Farm", "2ndmiddle": "Promise Land" };
@@ -182,7 +183,8 @@ export class Adventure {
     const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS } });
     const p = this.farm.ents.get(id);
     p.side = side;
-    Bot.init(this.farm, p, { level: save ? p.level : 1 + (h % 4), keep: !!save });
+    const vet = save ? 0 : Human.arrivalLevel(this, name, h);
+    Bot.init(this.farm, p, { level: save ? p.level : vet || 1 + (h % 4), keep: !!save });
     const home = this.homeOf(p), c = home.home || FARM_HOME;
     const spot = home.freeSpotNear(c[0] + ((h >> 3) % 41) - 20, c[1] + ((h >> 9) % 41) - 20);
     if (spot) { if (home !== this.farm) this.transfer(p, this.farm, home, spot); else this.relocate(p, this.farm, spot); }
@@ -326,6 +328,7 @@ export class Adventure {
   }
 
   tick(dt) {
+    Human.tick(this);                                                                        // horarios de los habitantes (human.js; apagado salvo en el servidor)
     for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
     for (const w of this.worlds.values()) {
       w.tick(dt);

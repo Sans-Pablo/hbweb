@@ -8,6 +8,7 @@ import { dist } from "../const.js";
 import * as Party from "./party.js";
 import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
 import * as Council from "./council.js";
+import * as Human from "./human.js";
 import * as Builds from "./builds.js";
 import * as Respec from "./respec.js";
 import { canFight } from "./combatsys.js";
@@ -166,7 +167,7 @@ export function attach(w, p, saved) {
 export function speak(adv, p, text) {
   if (!text) return;
   const m = /^([@$!~]?)§(.*)$/s.exec(text);
-  if (!m) { adv.command(p.id, { t: "say", text: text.replace(/\s+/g, " ").slice(0, 118) }); return; }
+  if (!m) { adv.command(p.id, { t: "say", text: Human.typo(adv, p, text.replace(/\s+/g, " ").slice(0, 118)) }); return; }
   if (typeof adv.llm !== "function" || adv.llm.ready === false) return;
   const q = (adv._sayQ ||= []), w = adv.worldFor(p.id);
   if (q.some(x => x.p === p && x.pre === m[1])) return;                                        // uno pendiente por habitante y canal
@@ -189,7 +190,7 @@ function pumpSay(adv) {
     adv._sayBusy = true;
     const r = it.p.res, ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` : "";
     Promise.resolve(adv.llm({ task: "say", who: it.p.name, lang: it.lang, system: describe(it.p, it.lang) + ctx, from: "situation", text: it.sit }))
-      .then(t => { if (!t || it.p.dead) return; const tx = String(t).replace(/\s+/g, " ").slice(0, 118); if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + tx }); })
+      .then(t => { if (!t || it.p.dead) return; const tx = String(t).replace(/\s+/g, " ").slice(0, 118); if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + (it.pre ? tx : Human.typo(adv, it.p, tx)) }); })
       .catch(() => {}).finally(() => { adv._sayBusy = false; setTimeout(() => pumpSay(adv), 0); });
     return;
   }
@@ -331,6 +332,8 @@ export function think(adv, p) {
   if (r._wid !== w.map.id) worldChanged(adv, w, p, r, home);
   if (p.dead) { if (!r.deadSeen) { r.deadSeen = true; r.deaths++; learnFromDeath(w, p, r); shareDeath(adv, w, p, r); remember(p, r._pvpDeath ? "Me mató " + (r._killer || "un enemigo") + " en Promise Land." : "Morí en combate.", r._pvpDeath ? (r._killer || "An enemy") + " killed me in Promise Land." : "I died in battle."); if (w.rng() < 0.5) speak(adv, p, fmt(p, r._pvpDeath ? "lose" : "died", r.lang, "", w)); r._pvpDeath = false; } qaTick(adv, w, p, r); return; }
   r.deadSeen = false;
+  if (Human.afk(adv, w, p, r)) return;                                                    // pausa AFK (human.js)
+  Human.slip(adv, w, p, r); Human.chatter(adv, w, p, r, speak);
   if (p.level > r.lvl) { r.lvl = p.level; remember(p, "Subí al nivel " + p.level + ".", "Reached level " + p.level + "."); if (p.bot.owner == null && w.rng() < 0.7) speak(adv, p, fmt(p, "level", r.lang, "", w)); }
   if (goalDone(p)) {
     const g = goalText(r.goal, "es"), ge = goalText(r.goal, "en");
@@ -449,9 +452,11 @@ function qaTick(adv, w, p, r) {
   if (p.dead) return;
   // atascado (solo en la granja: dentro de tiendas y criptas el bot no sabe qué hacer y vuelve solo)
   if (w !== adv.homeOf(p)) { r._pt = w.time; r._px = -1; }       // quieto > 40 s sin descansar ni pelear = atascado
-  else if (r._px !== p.x || r._py !== p.y || b.rest || w.time - p.lastCombat < 6000 || w.busy(p) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; }
+  else if (r._px !== p.x || r._py !== p.y || b.rest || w.time - p.lastCombat < 6000 || w.busy(p) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; r._stuckN = 0; }
   else if (w.time - r._pt > 40000) {
     r._pt = w.time;
+    b.path = null; b.goal = null; b.wander = null; b.target = null; b.fails = 0; b.ignore?.clear?.();          // se desatasca solo: olvida camino y objetivo y, a la segunda vez seguida, usa Recall (vuelve a la ciudad)
+    if ((r._stuckN = (r._stuckN | 0) + 1) >= 2 && !p.recallTok) { r._stuckN = 0; blog(w, p, "Sigo atascado: uso Recall."); adv.command(p.id, { t: "recall" }); } else b.hold = w.time + 500;
     report(adv, p, "bug", "stuck:" + (w.map.id || "") + ":" + (p.x >> 3) + "," + (p.y >> 3), `Me quedo parado/atascado cerca de (${p.x},${p.y}) en ${w.map.name || w.map.id}.`, `I'm stuck near (${p.x},${p.y}) in ${w.map.name || w.map.id}.`);
   }
   if (p.weight > p.maxLoad * 0.92) report(adv, p, "comfort", "weight", `Voy casi al límite de peso (${p.weight}/${p.maxLoad}) y no lo he visto avisar.`, `I'm near the weight limit (${p.weight}/${p.maxLoad}) and nothing warned me.`);
@@ -680,8 +685,8 @@ function pets(adv, w, p, r, home) {
   // ---- ¿toca ir al hospital? sin summon, o con el summon caído/herido
   const more = wantsMoreBalls(p, r);
   const need = more ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
-  if (!(r.arch === "scholar" && !ball && p.bot.owner != null)) r._noBall = 0;
-  else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > 90000) { r._noBall = 0; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, "un mago sin su summon no sirve de nada: voy al hospital de compañeros"); }          // los magos no se quedan sin summon por seguir a nadie
+  if (!(!ball && p.bot.owner != null)) r._noBall = 0;          // cualquiera sin summon deja el grupo para ir a por uno (el mago, antes que nadie)
+  else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > (r.arch === "scholar" ? 90000 : 150000)) { r._noBall = 0; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, r.arch === "scholar" ? "un mago sin su summon no sirve de nada: voy al hospital de compañeros" : "aún no tengo summon: voy al hospital de compañeros a por uno"); }          // los magos no se quedan sin summon por seguir a nadie
   if (!r._pet) {
     if (!need || r._trip || r._delve || p.bot.owner != null || w.time < (r._petAt ||= w.time + 20000 + Math.floor(w.rng() * 40000)) || w !== home || p.hp < p.maxHp * 0.5 || b.rest) return;
     const tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"), nurse = nurseOf(w);

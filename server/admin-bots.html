@@ -9,6 +9,7 @@ nav.tabs{display:flex;gap:8px;margin:0 0 14px}nav.tabs button.on{border-color:va
 </style>
 <nav class="tabs"><button id="tsrv" class="on">Servidor</button><button id="tbots">Bots</button></nav>
 <div id="botsv">
+  <div class="card"><div class="row"><b style="color:var(--gold)">Conexiones (humanización)</b><span class="dim" id="hsum"></span><label><input type="checkbox" id="hon"> activa</label> mín. conectados <input id="hmin" type="number" min="0" max="40" style="width:56px"><button id="hset">Aplicar</button><button id="hall1">Todos conectados</button><button id="hall0">Todos auto</button></div><div class="dim" style="margin:4px 0">Cada bot tiene su hora punta y se conecta/desconecta solo (sesiones, descansos, vacaciones, pausas AFK). Aquí eliges quién fuerza conexión («on»), quién se queda fuera («off») o sigue su horario («auto»).</div><div id="hum" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
   <div class="card"><div class="row"><b style="color:var(--gold)">Parties</b><span class="dim" id="psum"></span><button id="pref">Actualizar</button></div><div id="pty"></div></div>
   <div class="card"><div class="row"><b style="color:var(--gold)">Bots</b><span class="dim" id="bsum"></span><input id="bq" placeholder="buscar nombre, guild, personalidad…"><button id="bref">Actualizar</button></div>
     <table class="bt" id="bt"><thead><tr id="bth"></tr></thead><tbody></tbody></table></div>
@@ -21,7 +22,7 @@ const $=s=>document.querySelector(s), tok=new URLSearchParams(location.search).g
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ARCH={warrior:"Guerrero",hunter:"Cazador",trader:"Comerciante",wanderer:"Viajero",scholar:"Mago"};
 document.querySelectorAll(".card").forEach(c=>{if(!c.closest("#botsv"))c.classList.add("srv")});
-const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadParties();loadAn()}};
+const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadParties();loadAn();loadHum()}};
 $("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");
 const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
 let bots=[],sort="lv",dir=-1,cur=null,sub="log";
@@ -56,6 +57,12 @@ async function loadDet(name,keep){const r=await fetch("/api/admin/botdetail?toke
  if(!keep)box.scrollIntoView({behavior:"smooth"})}
 const heat=v=>v>0?"rgba(240,210,122,"+Math.min(1,v/8)+")":v<0?"rgba(220,80,60,"+Math.min(1,-v/4)+")":"transparent";
 const KL={hunt:"cazar en la granja",crypt:"bajar a la cripta",pl:"ir a Promise Land"};
+async function loadHum(){const r=await fetch("/api/admin/human?token="+tok);if(!r.ok)return;const h=await r.json();hrender(h)}
+function hrender(h){$("#hsum").textContent=h.online+" conectados · "+h.offline+" fuera · hora "+h.hour;$("#hon").checked=h.cfg.on;if(document.activeElement!==$("#hmin"))$("#hmin").value=h.cfg.minOnline;
+ $("#hum").innerHTML=h.bots.sort((a,b)=>a.name<b.name?-1:1).map(b=>'<div class="card" style="margin:0;padding:4px 8px;min-width:150px;opacity:'+(b.state==="off"?.55:1)+'"><b>'+(b.state==="on"?"●":b.state==="afk"?"◐":"○")+" "+esc(b.name)+'</b> <span class="dim">'+(b.state==="afk"?"AFK":b.state==="off"?"fuera"+(b.backMin!=null?" · vuelve en "+b.backMin+" min":""):"")+' · punta '+b.peak+'h · ganas '+b.want+'%</span><br><select data-n="'+esc(b.name)+'"><option value="auto"'+(b.pin==="auto"?" selected":"")+'>auto</option><option value="on"'+(b.pin==="on"?" selected":"")+'>on</option><option value="off"'+(b.pin==="off"?" selected":"")+'>off</option></select></div>').join("");
+ $("#hum").querySelectorAll("select").forEach(x=>x.onchange=()=>hpost({pins:{[x.dataset.n]:x.value}}))}
+async function hpost(b){const r=await fetch("/api/admin/human?token="+tok,{method:"POST",body:JSON.stringify(b)});if(r.ok)hrender(await r.json())}
+$("#hset").onclick=()=>hpost({on:$("#hon").checked,minOnline:+$("#hmin").value});$("#hall1").onclick=()=>hpost({all:"on"});$("#hall0").onclick=()=>hpost({all:"auto"});
 async function loadParties(){const r=await fetch("/api/admin/botparties?token="+tok);if(!r.ok)return;const ps=(await r.json()).parties;const live=ps.filter(p=>p.live);$("#psum").textContent=live.length+" activas · "+(ps.length-live.length)+" disueltas recientes";
  const mem=m=>'<a href="#" data-b="'+esc(m.name)+'">'+esc(m.name)+"</a>"+(m.lv?' <span class="dim">nv '+m.lv+" · "+esc(ARCH[m.arch]||m.arch||"")+(m.act?" · "+esc(m.act):"")+(m.map?" · "+esc(m.map):"")+"</span>":"");
  $("#pty").innerHTML=ps.map(p=>'<div class="card" style="margin:6px 0;padding:8px"><div><b>'+(p.live?"●":"○")+" Grupo de "+esc(p.leader.name)+'</b> <span class="dim">'+(p.live?p.members.length+1+" miembros":"disuelto")+"</span>"+(p.plan?' · plan: <b style="color:var(--gold)">'+esc(p.plan.label)+'</b> <span class="dim">(propuso '+esc(p.plan.by)+", quedan "+p.plan.secs+" s)</span>":"")+"</div>"
@@ -75,6 +82,6 @@ async function loadAn(){const r=await fetch("/api/admin/botanalysis?token="+tok)
  +'<div><b>Afinidad media</b><div>Mismo guild: '+a.affinity.guild.toFixed(2)+" · distinto guild: "+a.affinity.other.toFixed(2)+"</div>"+a.affinity.byArch.slice(0,8).map(x=>'<div class="dim">'+esc(x.k.split("+").map(k=>ARCH[k]||k).join(" + "))+": "+x.v.toFixed(2)+" ("+x.n+")</div>").join("")+"</div></div>"
  +'<h3>Mapa de afinidad</h3><div style="overflow:auto"><table class="hm"><tr><th></th>'+a.names.map((n,i)=>'<th title="'+esc(n)+'">'+esc(n.slice(0,2))+"</th>").join("")+"</tr>"+a.names.map((n,i)=>"<tr><th style=\"text-align:right\">"+esc(n)+"</th>"+a.matrix[i].map((v,j)=>'<td style="background:'+(i===j?"#333":heat(v))+'" title="'+esc(n)+" ↔ "+esc(a.names[j])+": "+v.toFixed(1)+'"></td>').join("")+"</tr>").join("")+"</table></div>";
  $("#an").innerHTML=h;$("#an").querySelectorAll("[data-b]").forEach(x=>x.onclick=e=>{e.preventDefault();cur=x.dataset.b;loadDet(cur)})}
-setInterval(()=>{if($("#botsv").style.display==="block"){loadBots();loadParties()}},8000);
+setInterval(()=>{if($("#botsv").style.display==="block"){loadBots();loadParties();loadHum()}},8000);
 })();
 </script>
