@@ -53,6 +53,7 @@ assert.equal(T.rankOf(c, "dheal"), 4);
 assert.equal(w.command(A.id, { t: "use", uid: ball.uid }), false, "sin báculo no hay Dummy");
 const staff = wand(A); assert.equal(A.eff.wtype, 36);
 // invocarlo y dejarlo quieto cerca de Alfa, Beta dentro del radio, Zeta fuera
+A.mp = A.maxMp;
 assert.ok(w.command(A.id, { t: "use", uid: ball.uid }));
 let dm = [...w.ents.values()].find(e => e.comp && e.master === A.id);
 assert.ok(dm && dm.name === "Healer" && dm.dcls === "healer" && dm.cfg.sprite === "uhealer", "nace con su propio sprite: " + dm?.name + " " + dm?.cfg?.sprite);

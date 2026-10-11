@@ -367,9 +367,12 @@ export function toggleCompanion(w, p, inst) {
   if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
   if (Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
+  const cost = p.bot ? 0 : Math.max(1, c.lvl | 0);                                   // invocar cuesta maná igual al nivel del summon (llevarlos y traerlos no es gratis)
+  if ((p.mp || 0) < cost) return w.reject(p, { t: "use" }, "no tienes maná para invocarlo (" + cost + ")");
   for (const b of p.bag) if (b.comp) b.comp.on = false;
   c.on = true;
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
+  p.mp -= cost;
   w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl, nm: c.nm, cls: c.cls || null });
   return true;
 }

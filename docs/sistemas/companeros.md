@@ -37,3 +37,6 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 
 ## Evolución por tamaño (v0.26.0)
 `companion.SIZE_STAGES` = [10, 25, 40, 50]; `sizeStep(lvl)` 0..4 (`renderer.petScale`: escala 0 / 0,3 / 0,55 / 0,8 / 1 entre el tamaño de cría y el real; los pequeños nacen al 70 %). Al cruzar un nivel: `addExp` marca `comp.evolve` y emite `companion-evolve` (aviso en el registro); `followerThink` espera `EVOLVE_MS` (2,5 s) y `evolveCompanion` lo re-invoca (`spawnCompanion` limpia la marca) emitiendo `companion-resummon` {fx,fy,x,y,nid} (público). Cliente: `fx.js` (anillos, chispas, hechizo 31, `popScale`) y `voice.js` (`companion.evolve[paso]`, generado por `tools/mkvoice_phases.py`). Si el compañero está guardado no hay re-invocación. Test: `tests/summon-size.test.mjs`.
+
+## Coste de invocar
+Invocar (usar la bola) cuesta maná del dueño igual al nivel del summon (`toggleCompanion`, npcsys.js). Sin maná: rechazo. Guardarlo es gratis; los bots no pagan. Test: `tests/summon-mana.test.mjs`.

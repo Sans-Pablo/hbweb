@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.59.0 · Invocar cuesta maná (2026-10-11)
+- Invocar un summon cuesta maná igual a su nivel (nivel 12 = 12 de maná). Sin maná suficiente no se invoca; guardarlo es gratis.
+
 ## 0.58.1 · Aviso de versión (2026-10-11)
 - La pantalla de entrada avisa en rojo cuando el servidor está en otra versión que tu cliente (p. ej. servidor sin reiniciar tras una actualización).
 

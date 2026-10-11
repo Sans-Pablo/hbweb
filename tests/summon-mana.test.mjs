@@ -1,0 +1,25 @@
+// Invocar un summon cuesta maná igual a su nivel; sin maná no se invoca. Guardarlo es gratis.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { World } from "../web/src/shared/world.js";
+import { GameData } from "../web/src/shared/data.js";
+import { Grid } from "../web/src/shared/grid.js";
+import * as C from "../web/src/shared/systems/companion.js";
+const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
+const npcDb = J("npc.json");
+const grid = new Grid(40, 40, new Uint8Array(40 * 40 * 10));
+let seed = 5; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const w = new World({ grid, npcDb, data: new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb }), spawns: [], rng, start: [10, 10] });
+const A = w.ents.get(w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }));
+A.level = 30; w.recalc(A);
+const ball = A.bag.find(i => i.comp) || (() => { const b = { uid: 9001, id: C.SPECIES.Slime[1], count: 1, comp: { sp: "Slime", lvl: 12, exp: 0, on: false, nm: "X", mode: "attack" } }; A.bag.push(b); return b; })();
+ball.comp.lvl = 12; ball.comp.on = false;
+A.mp = 11;
+assert.equal(w.command(A.id, { t: "use", uid: ball.uid }), false, "con 11 de maná no se invoca un nivel 12");
+assert.equal(A.mp, 11);
+A.mp = 20;
+assert.ok(w.command(A.id, { t: "use", uid: ball.uid }));
+assert.equal(A.mp, 8, "cuesta el nivel del summon");
+assert.ok(w.command(A.id, { t: "use", uid: ball.uid }), "guardarlo es gratis");
+assert.equal(A.mp, 8);
+console.log("OK summon mana");

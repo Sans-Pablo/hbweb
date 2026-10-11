@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Invocar cuesta maná (v0.59.0)",
+        "en": "Summoning costs mana (v0.59.0)"
+      },
+      "items": [
+        {
+          "es": "Invocar un summon gasta maná igual a su nivel, así que llevarlos y traerlos por todos lados ya no es gratis. Guardarlo no cuesta nada.",
+          "en": "Summoning costs mana equal to the summon level, so swapping them around is no longer free. Dismissing is free."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Aviso de versión (v0.58.1)",
         "en": "Version warning (v0.58.1)"
       },

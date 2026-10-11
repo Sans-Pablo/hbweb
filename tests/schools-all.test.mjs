@@ -21,6 +21,7 @@ for (const [school, sp] of [["fire", "Orc"], ["ice", "Tentocle"], ["lightning", 
   { const r = w.command(A.id, { t: "petbuy", npc: nurse.id, sp }); if (!r) console.log(JSON.stringify(w.events.slice(-2))); assert.ok(r); }
   const ball = A.bag.filter(i => i.comp?.sp === sp).pop(); ball.comp.lvl = 50;
   for (const b of A.bag) if (b.comp) b.comp.on = false;
+  A.mp = A.maxMp;
   assert.ok(w.command(A.id, { t: "use", uid: ball.uid })); w.command(A.id, { t: "petmode", mode: "peace" });
   for (const id of Object.keys(S.unlockLevels(magic, school)).map(Number)) {
     assert.ok(w.command(A.id, { t: "learn", spell: id }), sp + " aprende " + magic[id].name);

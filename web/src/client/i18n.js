@@ -23,6 +23,7 @@ const EN = {
   "Crea tu personaje.": "Create your character.", "Has entrado desde otro sitio.": "You logged in from somewhere else.", "Estás silenciado.": "You are muted.", "Sin respuesta.": "No response.",
   "El servidor se apaga.": "The server is shutting down.", "El servidor se reinicia. Vuelve a entrar en un minuto.": "The server is restarting. Log back in in a minute.", "Cuenta bloqueada.": "Account blocked.", "Bloqueado.": "Blocked.",
   "Nombre de personaje no válido.": "Invalid character name.", "Ese nombre de personaje ya está en uso.": "That character name is already in use.",
+  "no tienes maná para invocarlo (": "not enough mana to summon it (",
   "tu cliente es la v": "your client is v",
   "¡Aviso! El servidor está en otra versión que tu cliente: puede que lo nuevo no funcione (por ejemplo, comprar bolas nuevas). Reinicia el servidor o recarga la página (Ctrl+F5).": "Warning! The server runs a different version than your client: new features may not work (e.g. buying new balls). Restart the server or reload the page (Ctrl+F5).",
   "Inicia sesión primero.": "Log in first.",
