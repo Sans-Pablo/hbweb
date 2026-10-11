@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.51.2 · Sembrar con doble clic (2026-10-11)
+
+- Doble clic en una bolsa de semillas de la mochila siembra en la casilla que se mira (antes no hacía nada). También se puede arrastrar la bolsa a una casilla vecina del mundo: el personaje se vuelve hacia ella y siembra.
+
 ## 0.51.1 · Gustos de los summons (2026-10-11)
 
 - Cada especie tiene cultivos favoritos (curan un 50% más; los puntos permanentes suben de 2 en 2) y otros que rechaza sin gastarlos. Se ve en la ficha del summon de la tienda de bolas.

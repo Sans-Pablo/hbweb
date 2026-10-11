@@ -155,7 +155,7 @@ export class Hud {
     if (!d) return;
     if (it.comp) this.act("use", uid);
     else if (d.type === ITYPE.EQUIP) this.act(this.isEquipped(me, uid) ? "unequip" : "equip", uid);
-    else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) this.act("use", uid);
+    else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE || d.effectType === 30) this.act("use", uid);          // 30 = bolsa de semillas (ITEMEFFECTTYPE_ITEMFARM, tipo 11): siembra en la casilla que se mira
   }
   // atajo F2/F3 de un objeto: equipar/quitar el equipo o usar el consumible
   useItemId(id) {

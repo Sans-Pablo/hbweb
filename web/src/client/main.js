@@ -6,7 +6,7 @@ import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
-import { NET_PROTO } from "../shared/const.js";
+import { NET_PROTO, dirTo } from "../shared/const.js";
 import { Renderer } from "./renderer.js";
 import { Controller } from "./controller.js";
 import { Fx } from "./fx.js";
@@ -210,6 +210,10 @@ async function main() {
           }
         }
       }
+    } else if (!dlg && y < 548 && d?.effectType === 30 && cx !== undefined) {   // bolsa de semillas soltada sobre una casilla vecina del mundo: se vuelve hacia ella y siembra
+      const [wx, wy] = renderer.toWorld(cx, cy), tx = Math.floor(wx / 32), ty = Math.floor(wy / 32);
+      if (Math.max(Math.abs(tx - me.x), Math.abs(ty - me.y)) === 1) conn.send({ t: "turn", dir: dirTo(me.x, me.y, tx, ty) });
+      conn.send({ t: "use", uid: inst.uid });
     } else if (!dlg && y < 548 && (it.from === 2 || it.from === 1)) {   // fuera de la interfaz: tirar al suelo (también lo que llevas puesto, p. ej. set Hero/Knight; el servidor lo desequipa)
       hud.act("drop", inst.uid);
     }

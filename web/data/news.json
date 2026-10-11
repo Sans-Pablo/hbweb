@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Sembrar con doble clic (v0.51.2)",
+        "en": "Plant with double click (v0.51.2)"
+      },
+      "items": [
+        {
+          "es": "Doble clic en una bolsa de semillas de la mochila siembra en la casilla que miras; también puedes arrastrarla a una casilla vecina.",
+          "en": "Double-click a seed bag in your bag to plant on the tile you face; you can also drag it onto a neighbouring tile."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Gustos de los summons (v0.51.1)",
         "en": "Summon tastes (v0.51.1)"
       },
