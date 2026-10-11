@@ -112,7 +112,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botstats.mjs` · 131 · Estadísticas y análisis de comportamiento de los habitantes (bots) para el panel de administración.
 - `llm.mjs` · 71 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
 - `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
-- `server.mjs` · 678 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `server.mjs` · 681 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests

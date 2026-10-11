@@ -140,7 +140,7 @@ const MIME = {
 // IP del cliente: detrás de un túnel (ngrok, Tailscale, Cloudflare) llega la del túnel y la real va en x-forwarded-for
 const isLoopback = a => a === "127.0.0.1" || a === "::1" || a === "::ffff:127.0.0.1";
 const viaTunnel = req => !!(req.headers["x-forwarded-for"] || req.headers["cf-connecting-ip"] || req.headers["x-forwarded-host"]);
-const ipOf = req => String(req.headers["cf-connecting-ip"] || (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket.remoteAddress || "").replace("::ffff:", "");
+const ipOf = req => String((isLoopback(req.socket.remoteAddress) && (req.headers["cf-connecting-ip"] || (req.headers["x-forwarded-for"] || "").split(",")[0].trim())) || req.socket.remoteAddress || "").replace("::ffff:", "");     // las cabeceras del túnel solo valen si llegan por loopback: desde la red se podrían falsear para saltarse bloqueos y límites
 // origen permitido: el de GitHub Pages configurado, el propio servidor y localhost (pruebas); sin cabecera Origin (no es un navegador) también
 function originOk(req) {
   const o = req.headers.origin;
@@ -154,7 +154,7 @@ const json = (req, res, code, obj) => { res.writeHead(code, { "Content-Type": "a
 const adminAllowed = (req, url) => isLoopback(req.socket.remoteAddress) && !viaTunnel(req) && url.searchParams.get("token") === ADMIN_TOKEN;   // el panel solo desde este PC
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, "http://x");
+  let url; try { url = new URL(req.url, "http://x"); } catch { res.writeHead(400); res.end(); return; }
   if (req.method === "OPTIONS") { res.writeHead(204, { ...cors(req), "Access-Control-Max-Age": "600" }); res.end(); return; }
   if (url.pathname === "/api/info") {
     json(req, res, 200, { multiplayer: true, proto: PROTO, version: VERSION.version, name: VERSION.name, max: MAX_PLAYERS, players: [...clients].filter(c => c.pid).map(c => c.name).concat(adventure.residents().map(b => b.name)) });   // los habitantes (bots conectados según su horario) cuentan como conectados
@@ -225,7 +225,7 @@ const server = http.createServer((req, res) => {
     req.on("end", () => { try { JSON.parse(body); fs.writeFileSync(path.resolve(WEB, "data", "cast_circle.json"), body); json(req, res, 200, { ok: true }); } catch (e) { json(req, res, 400, { error: e.message }); } });
     return;
   }
-  let rel = decodeURIComponent(url.pathname);
+  let rel; try { rel = decodeURIComponent(url.pathname); } catch { res.writeHead(400); res.end("URL no válida"); return; }
   if (rel.endsWith("/")) rel += "index.html";
   const file = path.resolve(WEB, "." + rel);
   if (!file.startsWith(WEB + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
@@ -237,15 +237,15 @@ const server = http.createServer((req, res) => {
   if (range) {
     let start = range[1] ? Number(range[1]) : size - Number(range[2]);
     let end = range[1] && range[2] ? Number(range[2]) : size - 1;
-    if (start >= size || start < 0) { res.writeHead(416, { "Content-Range": "bytes */" + size }); res.end(); return; }
+    if (!(start >= 0) || start >= size || (range[1] && range[2] && Number(range[2]) < start)) { res.writeHead(416, { "Content-Range": "bytes */" + size }); res.end(); return; }
     end = Math.min(end, size - 1);
     res.writeHead(206, { "Content-Type": type, "Content-Range": `bytes ${start}-${end}/${size}`, "Content-Length": end - start + 1, "Accept-Ranges": "bytes" });
-    fs.createReadStream(file, { start, end }).pipe(res);
+    fs.createReadStream(file, { start, end }).on("error", () => res.destroy()).pipe(res);
     return;
   }
   res.writeHead(200, { "Content-Type": type, "Content-Length": size, "Accept-Ranges": "bytes",
     "Cache-Control": /\.(png|mp3|wav|bin)$/.test(file) ? "max-age=3600" : "no-cache" });
-  fs.createReadStream(file).pipe(res);
+  fs.createReadStream(file).on("error", () => res.destroy()).pipe(res);
 });
 
 // ------------------------------------------------------------------ WebSocket mínimo (RFC 6455)
@@ -261,7 +261,7 @@ server.on("upgrade", (req, socket) => {
   socket.write("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " + accept + "\r\n\r\n");
   socket.setNoDelay(true);
   const c = { socket, ip, buf: Buffer.alloc(0), pid: null, name: "", key: "", acc: null, queue: [], ack: 0, sent: new Map(), itemsVer: -1, alive: true, frag: null,
-    lastMsg: Date.now(), rate: { t: 0, n: 0 }, lastSay: 0, busy: false, since: Date.now(), ping: 0 };
+    lastMsg: Date.now(), cmdErrors: 0, rate: { t: 0, n: 0 }, lastSay: 0, busy: false, since: Date.now(), ping: 0 };
   clients.add(c);
   socket.on("data", d => { c.buf = Buffer.concat([c.buf, d]); readFrames(c); });
   socket.on("close", () => drop(c));
@@ -515,8 +515,11 @@ function processQueue(c) {
     const now = world.time;
     if (backdate !== null) world.time = backdate;
     const changedMap = q.cmd.t === "portal" || q.cmd.t === "respawn";
-    adventure.command(c.pid, q.cmd);
-    world.time = now;
+    try { adventure.command(c.pid, q.cmd); }
+    catch (e) {                                                                      // una orden mal formada solo afecta a quien la manda
+      crashLog("cmd:" + q.cmd.t, e); if (++c.cmdErrors > 25) { drop(c, "Demasiadas órdenes no válidas."); return; }
+    }
+    finally { world.time = now; }
     c.ack = q.seq;
     if (changedMap && adventure.worldFor(c.pid) !== world) { c.queue = []; return; }
     if (TIMED.has(q.cmd.t)) return;          // como mucho una acción con tiempo por tick

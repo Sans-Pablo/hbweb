@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.62.2 · Revisión de código (2026-10-12)
+- Servidor: una URL mal formada (`GET /%`) o un `Range` imposible ya no tumban el proceso (400/416).
+- Servidor: las cabeceras de túnel (`X-Forwarded-For`, `CF-Connecting-IP`) solo se creen si la conexión viene de loopback, así no se falsea la IP para saltar límites.
+- Servidor: una orden que lanza excepción ya no aborta el tick ni deja `world.time` desfasado; se registra y, tras 25 errores, se expulsa al cliente.
+- Los flujos de lectura de ficheros estáticos cierran la respuesta si fallan.
+
 ## 0.62.1 · Ajuste de equipo (2026-10-12)
 - Tentocle vuelve a ser libre: solo Frost, Liche y Demon exigen su báculo.
 - Fuera el halo y las chispas de los báculos maestros: solo queda el tinte (más fuerte que el normal).

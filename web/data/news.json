@@ -10,6 +10,13 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Revisión de código (v0.62.2)", "en": "Code review (v0.62.2)" },
+      "items": [
+        { "es": "Servidor más robusto: URLs mal formadas, rangos imposibles y órdenes con error ya no lo tumban ni lo desincronizan.", "en": "More robust server: malformed URLs, impossible ranges and failing commands no longer crash or desync it." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Ajuste de equipo (v0.62.1)", "en": "Gear tweaks (v0.62.1)" },
       "items": [
         { "es": "Tentocle ya no necesita báculo: solo Frost, Liche y Demon. Los báculos maestros pierden el halo y las partículas; solo cambia el color, que ahora hace juego con el summon (Liche: morado oscuro).", "en": "Tentocle no longer needs a staff: only Frost, Lich and Demon do. Master staffs lose the halo and particles; only the tint remains, now matching the summon (Lich: dark purple)." },
