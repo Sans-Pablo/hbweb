@@ -454,7 +454,7 @@ export class Renderer {
       const other = s.pid !== undefined && e.id !== s.pid;
       const bubble = s.bubbles && s.bubbles.get(e.id);
       const talking = bubble && performance.now() < bubble.until;
-      if (talking) this.bq.push(() => this.label(x, y - 78 - (other && !e.dead ? 17 : 0), bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff", true));   // los bocadillos se dibujan al final y esquivan lo ya escrito
+      if (talking) this.bq.push(() => this.label(x, y - 62 - (other && !e.dead ? 17 : 0), bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff", true));   // los bocadillos se dibujan al final y esquivan lo ya escrito
       overlays.push(() => {
         const yy = y - 78;
         if (!other && s.pid !== undefined && !e.dead) {              // mi nombre se ve siempre
@@ -579,7 +579,7 @@ export class Renderer {
     ctx.font = "12px Tahoma, Verdana, sans-serif"; ctx.textAlign = "left";
     lines.forEach(([text, rgb], i) => {
       text = t(text);
-      const lx = Math.round(x - 16), ly = Math.round(y + 4 + i * 14);
+      const lx = Math.round(x - 16), ly = Math.round(y + 12 + i * 14);
       ctx.fillStyle = "#000"; ctx.fillText(text, lx + 1, ly); ctx.fillText(text, lx, ly + 1); ctx.fillText(text, lx + 1, ly + 1);
       ctx.fillStyle = "rgb(" + rgb + ")"; ctx.fillText(text, lx, ly);
     });

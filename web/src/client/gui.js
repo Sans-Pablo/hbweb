@@ -168,6 +168,7 @@ export class Gui {
     c.font = (bold ? "bold " : "") + size + "px Tahoma, Verdana, sans-serif";
     c.textBaseline = "top";
     c.textAlign = align;
+    if (this.lint) { const w = c.measureText(s).width; this.lint.push({ s, x: align === "center" ? x - w / 2 : align === "right" ? x - w : x, y, w, h: size + 1 }); }
     if (shadow) { c.fillStyle = "#000"; c.fillText(s, x + 1, y + 1); }
     c.fillStyle = color;
     c.fillText(s, x, y);

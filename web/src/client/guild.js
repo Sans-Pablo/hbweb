@@ -56,7 +56,6 @@ export function registerGuild(gui, api) {
       }
       return super.click(g, lx, ly, me);
     }
-    hoverOk() { return false; }
     onClose() { if (this.mode === "query" && this.query) api.send({ t: "guildanswer", r: 0 }); this.mode = "info"; }
   }();
   gui.register(dlg);

@@ -6,6 +6,15 @@
 //     rows(me) { return [{ text: "Fila", right: "10", color: null, tip: "ayuda", data: ... }]; }   // lista que se pinta con rueda y resalte
 //     pick(row, me, g) { ... }                                                                       // clic en una fila
 //     drawBody(g, me, lx, ly) { ... }                                                                // pintado extra opcional (cabecera)
+//
+// REGLAS DE MAQUETACIÓN (todas las comprueba tools/lint_dialogs.py; un cuadro nuevo debe salir limpio):
+//   1. Zona útil: x entre 12 y w-12; y entre 60 (bajo las pestañas) y 288. Por debajo de 288 solo está el botón Ok (x w-104..w-30, y 292..312).
+//   2. Nada se pinta sobre el Ok. Un texto fijo («footer») va en la zona de ayuda (y 262..286, dos líneas), nunca en y>288: usa `footer`/hintText.
+//   3. Texto de longitud variable (nombres, textos traducidos): envuélvelo con this.wrap(g, texto, ancho) o recórtalo; el inglés suele ser más largo que el español.
+//   4. Dos textos en la misma línea no se pisan: la columna derecha (`right`) reserva ~44 px; calcula x con medida, no a ojo.
+//   5. Los botones propios van encima de y 288 y con hover/clic en la MISMA caja; no sobrescribas hoverOk() sin dibujar tu propio Ok que cierre (g.close(this.id)).
+//   6. Todo texto nuevo en español lleva su entrada en i18n.js (la comprobación visual se hace en inglés).
+//   7. Filas: top + visible*rowH <= 256 (el constructor lo calcula si no pasas `visible`).
 //   }
 //   gui.register(new Mio());   y   gui.open(50)
 export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
@@ -24,6 +33,21 @@ export class ClassicDialog {
   // --- pintado
   tabX(i) { return 30 + i * Math.floor((this.w - 50) / Math.max(1, this.tabs.length)); }
   draw(g, me) {
+    if (g.lintOn) g.lint = [];
+    this.draw_(g, me);
+    if (g.lintOn) { this.lintReport(g.lint); g.lint = null; }
+  }
+  // Comprobación automática de maquetación (tools/lint_dialogs.py): textos fuera del marco, sobre el botón Ok o encima de otros textos
+  lintReport(rs) {
+    const bad = (window.hbLint ||= {})[this.id] ||= new Set(), ok = { x: this.w - 104, y: 292, w: 74, h: 20 };
+    const hit = (a, b) => a.x < b.x + b.w - 1 && b.x < a.x + a.w - 1 && a.y < b.y + b.h - 2 && b.y < a.y + a.h - 2;
+    rs.forEach((r, i) => {
+      if (r.x < 12 || r.x + r.w > this.w - 12) bad.add("fuera del marco: " + r.s);
+      if (r.y + r.h > 290 && hit(r, ok) || r.y + r.h > 292 && r.y < 312 && r.x + r.w > ok.x - 2 && r.x < ok.x + ok.w) bad.add("sobre el botón Ok: " + r.s);
+      for (let j = i + 1; j < rs.length; j++) if (hit(r, rs[j])) bad.add("se superpone: «" + r.s + "» con «" + rs[j].s + "»");
+    });
+  }
+  draw_(g, me) {
     const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, rows = this.rows(me) || [];
     g.put("gamedialog_1", 2, 0, 0);
     g.put("dialogtext_1", this.hoverOk(lx, ly) ? 1 : 0, this.w - 104, 292);
@@ -47,7 +71,7 @@ export class ClassicDialog {
     this.hintText = "";
     if (this.hintOver) hint = this.hintOver(lx, ly, me) || hint;
     if (hint) this.paintHint(g, hint);
-    else if (this.footer) g.text(this.mx, 308, this.footer, INK, { size: 9 });
+    else if (this.footer) this.paintHint(g, this.footer);
   }
   // Texto de ayuda en una zona fija del cuadro (no flota junto al ratón: no tapa filas ni estorba al hacer clic)
   wrap(g, text, maxW, size = 10) {

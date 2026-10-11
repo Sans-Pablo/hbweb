@@ -4,6 +4,7 @@ import { dice } from "./rules.js";
 import { GOLD, BANNED_ITEMS } from "./items.js";
 import { rollAttributes } from "./attributes.js";
 
+export const WEAK_DROP = 30;       // % de bajas de monstruos de nivel de generación 1-2 que sueltan algo (INVENTO del port)
 export const DROP_RATES = { primary: 1, secondary: 1, repModifier: 5 };
 
 const GEN_LEVEL = {};
@@ -71,6 +72,7 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
   const type = npc.type;
   if (type === 21 || type === 34 || type === 64) return null;          // guardia, maniquí, cultivo
   if (dice(rng, 1, 10000) < rates.primary) return null;                // hay objeto si la tirada >= tasa primaria
+  if (!depth && GEN_LEVEL[type] <= 2 && dice(rng, 1, 100) > WEAK_DROP) return null;   // monstruos débiles (slimes…): sueltan poco, el suelo no se llena
   if (dice(rng, 1, 10000) <= Math.max(3500, 6000 - 100 * depth)) {     // en la cripta, cuanto más hondo menos oro y más equipo
     let count = dice(rng, 1, npc.cfg.goldMax - npc.cfg.goldMin) + npc.cfg.goldMin;
     if (addGold) count += Math.floor((addGold / 100) * count);                // atributo "Oro +%" del equipo

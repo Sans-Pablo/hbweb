@@ -4,6 +4,7 @@
 // El cliente le manda órdenes (`command`) y lee el estado y los eventos. Cada orden la valida
 // igual que el servidor original (tiempos mínimos, casilla libre, distancia).
 // La lógica está repartida en sistemas (systems/*.js); este archivo solo guarda el estado y el bucle.
+import { groundSweep } from "./systems/ground.js";
 import { ACT, DX, DY, LIMITS, PLAYER, dirTo, dist } from "./const.js";
 import * as R from "./rules.js";
 import * as Player from "./systems/player.js";
@@ -139,7 +140,7 @@ export class World {
         else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); }
-      if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); }
+      if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); groundSweep(this); }
       Arena.tickArena(this);
       tickSky(this);
     }
