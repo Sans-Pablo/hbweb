@@ -19,7 +19,11 @@ const r = new Renderer($("game"), assets, grid);
 const stream = new Streamer(assets.sprites);
 const cv = $("cv"), ctx = cv.getContext("2d");
 const names = Object.keys(assets.npcDb).filter(n => assets.npcDb[n].sprite).sort((a, b) => (FEATURED.includes(b) - FEATURED.includes(a)) || a.localeCompare(b));
-$("sp").innerHTML = names.map(n => `<option>${n}</option>`).join("");
+// Unidades que no son enemigos (Crusade/Heldenian, guardias, ángeles): tools/convert_units.py -> data/units.json. No están en npc.json.
+const units = await fetch("data/units.json").then(r => r.json()).catch(() => ({}));
+const unitNames = Object.keys(units).filter(n => assets.sprites.has(units[n].sprite + "0"));
+const cfgOf = n => assets.npcDb[n] || units[n];
+$("sp").innerHTML = `<optgroup label="Criaturas">${names.map(n => `<option>${n}</option>`).join("")}</optgroup><optgroup label="Unidades (no enemigos)">${unitNames.map(n => `<option>${n}</option>`).join("")}</optgroup>`;
 $("lvl").innerHTML = '<option value="0">Todas (Evolución)</option>' + [...new Set([...STAGES, 20, 30, 45])].sort((a, b) => a - b).map(l => `<option>${l}</option>`).join("");
 $("lvl").value = "0";
 for (let d = 1; d <= 8; d++) $("dir").insertAdjacentHTML("beforeend", `<option value="${d}">${["", "Arriba", "Arriba-der.", "Derecha", "Abajo-der.", "Abajo", "Abajo-izq.", "Izquierda", "Arriba-izq."][d]}</option>`);
@@ -30,13 +34,13 @@ r.fx = fx; fx.sp.load();      // hojas de efectos del cliente original (llamas d
 const world = { time: 0, map: null, ents: new Map() };
 let loaded = "";
 function ensure(name) {
-  const sp = assets.npcDb[name].sprite;
+  const sp = cfgOf(name).sprite;
   if (loaded === name) return;
   loaded = name;
-  const keys = []; for (let k = 0; k < 40; k++) keys.push(sp + k);
+  const keys = []; for (let k = 0; k < (units[name]?.n || 40); k++) keys.push(sp + k);
   stream.wantAll(keys, 3);
 }
-const SAVE = ["sp", "mode", "lvl", "act", "dir", "zoom", "comp", "cast", "bg"], LS = "hb_bestiary_sel";   // la selección sobrevive a recargar la página
+const SAVE = ["sp", "mode", "lvl", "act", "dir", "zoom", "comp", "cast", "bg", "rc-h", "rc-s", "rc-b"], LS = "hb_bestiary_sel";   // la selección sobrevive a recargar la página
 const store = () => { try { const o = {}; for (const id of SAVE) o[id] = $(id).type === "checkbox" ? $(id).checked : $(id).value; localStorage.setItem(LS, JSON.stringify(o)); } catch {} };
 try { const o = JSON.parse(localStorage.getItem(LS) || "{}"); for (const id of SAVE) if (id in o) { if ($(id).type === "checkbox") $(id).checked = !!o[id]; else $(id).value = o[id]; } } catch {}
 for (const id of SAVE) $(id).addEventListener("change", store);
@@ -58,9 +62,20 @@ $("cc-save").onclick = async () => {
   setTimeout(() => $("cc-save").textContent = "Guardar círculo", 1500);
 };
 
+// Recolor de prueba: filtro CSS (hue-rotate/saturate/brightness) sobre el cuerpo; el texto de al lado se copia tal cual para fijar una paleta
+const rcApply = () => {
+  const h = +$("rc-h").value, s = +$("rc-s").value, b = +$("rc-b").value;
+  $("rc-ho").textContent = h + "°"; $("rc-so").textContent = s + "%"; $("rc-bo").textContent = b + "%";
+  const f = h === 0 && s === 100 && b === 100 ? "" : `hue-rotate(${h}deg) saturate(${s}%) brightness(${b}%)`;
+  assets.sprites.recolor = f; $("rc-css").textContent = f;
+};
+for (const id of ["rc-h", "rc-s", "rc-b"]) $(id).addEventListener("input", rcApply);
+$("rc-reset").onclick = () => { $("rc-h").value = 0; $("rc-s").value = 100; $("rc-b").value = 100; rcApply(); store(); };
+rcApply();
+
 let nextId = 5000;
 function ent(name, lvl, dir, act, t) {
-  const cfg = assets.npcDb[name], dur = mobDurations(cfg.type);
+  const cfg = cfgOf(name), dur = mobDurations(cfg.type);
   const a = ACTS[act], d = act === "stop" ? 0 : dur[act] || 800, period = act === "dying" ? d + 700 : d + (act === "damage" ? 500 : 300);
   const start = act === "stop" ? 0 : t - (t % period);
   return { id: 1 + ((nextId++) % 4000), name, cfg, type: cfg.type, kind: "npc", dir, comp: $("comp").checked, clvl: lvl, dead: false, hp: 100, maxHp: 100,
@@ -92,6 +107,6 @@ function frame(t) {
     ctx.fillText((mode === "evo" || lv0 ? "Lv " + lv + " · " : "") + "dir " + d, ci * cw + 4, ri * ch + 12);
   }));
   r.ctx = r.canvas.getContext("2d");
-  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `${name} · tipo ${assets.npcDb[name].type} · hojas ${stream.done}/${stream.total} cargadas · etapas de tamaño en los niveles ${SIZE_STAGES.join(", ")}; Demon: ceniza <10, ojos rojos y estela de fuego al caminar 10, pulso de brasa y grietas 20, brillo en el borde, venas y Tremor de fuego 30, ondas de calor y chispas 40, máximo 50 (fisuras de lava al castear desde 30). Frost: gris azulado <10, huellas y vaho 10, nieve y niebla 20, ojos azules, báculo, brillo y nova de hielo con copo de nieve bajo los pies 30, cristales 40, viento en espiral, halo y venas 50. Liche: tamaño Lv 10, báculo 20, humo y círculo 30, ojos 50.`;
+  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `${name} · tipo ${cfgOf(name).type} · hojas ${stream.done}/${stream.total} cargadas · etapas de tamaño en los niveles ${SIZE_STAGES.join(", ")}; Demon: ceniza <10, ojos rojos y estela de fuego al caminar 10, pulso de brasa y grietas 20, brillo en el borde, venas y Tremor de fuego 30, ondas de calor y chispas 40, máximo 50 (fisuras de lava al castear desde 30). Frost: gris azulado <10, huellas y vaho 10, nieve y niebla 20, ojos azules, báculo, brillo y nova de hielo con copo de nieve bajo los pies 30, cristales 40, viento en espiral, halo y venas 50. Liche: tamaño Lv 10, báculo 20, humo y círculo 30, ojos 50.`;
 }
 requestAnimationFrame(frame);

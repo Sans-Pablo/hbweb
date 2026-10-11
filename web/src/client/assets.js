@@ -169,7 +169,9 @@ export class Sprites {
     if (!fr) return;
     if (!this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key);
+    if (this.recolor) { ctx.save(); ctx.filter = this.recolor; }      // solo el bestiario: matiz/saturación/brillo para probar paletas
     ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
+    if (this.recolor) ctx.restore();
   }
 
   // Pelo teñido: el color del original se suma a los píxeles (PutSpriteRGB); aquí se mezcla con el tono base

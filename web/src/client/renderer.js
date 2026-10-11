@@ -618,9 +618,6 @@ export class Renderer {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));
       else if (hovered && alive) spr.tinted(ctx, key, f, x, y, "#ffe8b0", 0.22, "lighter");
     }
-    if (e.comp && e.dcls && alive) {                                                       // Dummy: el color indica su clase (verde Healer, amarillo Buffer, azul Aura)
-      spr.tinted(ctx, key, f, x, y, DUMMY_COLORS[e.dcls] || "#fff", 0.5);
-    }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
     const fade = alive ? 1 : act === ACT.DYING ? Math.max(0, 1 - (time - (e.actStart || 0)) / Math.max(1, e.actDur || 700) * 1.6) : 0;   // al morir las luces se apagan en fundido

@@ -47,6 +47,7 @@ export function playerSprite(e, time, bow = false) {
 // Monstruo: 5 grupos x 8 direcciones (0 quieto, 1 andar, 2 atacar, 3 daño, 4 morir), 4 fotogramas
 // Hoja del .pak de cada acción de un monstruo (Client/Game.cpp, DrawObject_On*): 0 reposo, 1 andar, 2 atacar, 3 daño, 4 morir.
 // Wyvern y Fire-Wyvern (66, 73) solo tienen tres hojas.
+export const DUMMY_SPRITE = { healer: "eidh", buffer: "eidb", aura: "eida" };      // Eidolon: tools/make_eidolon.py
 const WYVERN = { stop: 0, move: 1, attack: 0, damage: 0, dying: 2 };
 const sheet = (type, act) => (type === 66 || type === 73 ? WYVERN[act] : { stop: 0, move: 1, attack: 2, damage: 3, dying: 4 }[act]);
 
@@ -55,7 +56,8 @@ const sheet = (type, act) => (type === 66 || type === 73 ? WYVERN[act] : { stop:
 export function mobSprite(e, time, count = () => 4) {
   if (e.kind === "citizen") return { key: e.cfg.sprite + (e.dir - 1), f: Math.floor((time + e.phase) / e.dur.stopFrame) % 8 };   // NPC de ciudad: 8 fotogramas de reposo
   const act = actionAt(e, time), p = progress(e, time), t = e.type;
-  const key = g => e.cfg.sprite + (g * 8 + e.dir - 1);
+  const sp = DUMMY_SPRITE[e.dcls] || e.cfg.sprite;                                       // el Dummy se ve como Eidolon (hoja propia por clase)
+  const key = g => sp + (g * 8 + e.dir - 1);
   const n = g => Math.max(1, count(key(g)) || 4);
   const scaled = (g, a) => ({ key: key(g), f: Math.min(n(g) - 1, Math.floor(p * n(g))) });
   const two = (a, last) => {                                           // 4 fotogramas de la hoja 0 y el resto de su hoja

@@ -2,6 +2,7 @@
 
 INVENTO del port (no existe en el original). Usa el NPC `Dummy` de NPC.cfg y los hechizos de Magic.cfg. Código: `shared/systems/dummy.js`, talentos en `talents.js`, ficha del compañero en `companion.js`.
 
+- **Aspecto**: Eidolon, espíritu con túnica, halo y orbe dibujado desde cero (`tools/make_eidolon.py`, hojas `eidh/eidb/eida`; `DUMMY_SPRITE` en `anim.js`). La clase se ve en el color; el tinte del sprite ya no se usa.
 - **Único**: es una bola de compañero (Gail la vende como las demás); solo hay un compañero activo, así que llevar un Dummy es jugar de apoyo.
 - **Frágil**: vida `6 + 1,2 × nivel` (66 al nivel 50). No ataca. Los monstruos cercanos lo prefieren (reflejo de agro: la distancia cuenta la mitad) y él avisa con un bocadillo (12 s entre avisos).
 - **Clases** (la primera magia fija la clase; reiniciar talentos cuesta oro): Healer (verde: Heal, Great Heal), Buffer (amarillo: Defense Shield, Great Defense Shield, Protection From Magic, Berserk), Aura (azul: regeneración de vida, experiencia, defensa, maná). Cada rango potencia la magia; las avanzadas piden nivel.

@@ -34,22 +34,22 @@ function members(w, m) {
   for (const e of w.ents.values()) if (e.comp && !e.dead && ids.has(e.master) && !e.dummy) out.push(e);
   return out;
 }
-// Personalidad (invento): aprendiz de paja del Encantador. Nervioso, leal y muy dramático con su cuerpo de paja; presume de lo que hace,
+// Personalidad (invento): espíritu aprendiz del Encantador (Eidolon). Nervioso, leal y muy dramático con su cuerpo de luz; presume de lo que hace,
 // avisa del peligro y se queja con cariño. Cada frase lleva su versión en español e inglés y el nombre de la magia entre corchetes.
 const L = {
-  heal: [["¡Aguanta, que te remiendo!", "Hold on, I'll patch you up!"], ["Un poquito de paja y como nuevo.", "A little straw and you're good as new."], ["¡Ya voy, ya voy!", "Coming, coming!"], ["Tranquilo, para eso me hicieron.", "Easy, that's what I was made for."]],
-  gheal: [["¡Esto va a doler... a mi paja!", "This is going to hurt... my straw!"], ["¡Toda la paja que tengo para ti!", "All the straw I have, for you!"], ["¡No te me mueras ahora!", "Don't you dare die on me!"]],
+  heal: [["¡Aguanta, que te remiendo!", "Hold on, I'll patch you up!"], ["Un poco de luz y como nuevo.", "A little light and you're good as new."], ["¡Ya voy, ya voy!", "Coming, coming!"], ["Tranquilo, para eso me hicieron.", "Easy, that's what I was made for."]],
+  gheal: [["¡Esto me deja sin brillo!", "This is going to dim me!"], ["¡Toda la luz que tengo para ti!", "All the light I have, for you!"], ["¡No te me mueras ahora!", "Don't you dare die on me!"]],
   ward: [["¡Escudo arriba, jefe!", "Shield up, boss!"], ["Que no te toquen ni un pelo.", "Not a hair on your head."], ["Te cubro las espaldas.", "I've got your back."]],
   pfm: [["¡Que la magia rebote!", "Let the magic bounce off!"], ["Protección mágica, por si acaso.", "Magic protection, just in case."]],
   berserk: [["¡A darles con todo!", "Hit them with everything!"], ["¡Rabia, rabia, rabia!", "Rage, rage, rage!"]],
   aura: [["Os cuido a todos desde aquí.", "I'll look after you all from here."], ["Mi aura, mi orgullo.", "My aura, my pride."], ["Pegaos a mí, que os protejo.", "Stay close, I'll protect you."]],
   mass: [["¡TODO LO QUE TENGO, AHORA!", "EVERYTHING I'VE GOT, NOW!"], ["¡Vamos todos juntos!", "All together now!"]],
-  res: [["¡Levántate, aún no hemos terminado!", "Get up, we're not done yet!"], ["¡De pie, que yo estoy hecho de paja y sigo aquí!", "Up you get, I'm made of straw and I'm still here!"], ["¡Ni se te ocurra quedarte ahí tumbado!", "Don't even think of staying down there!"]],
+  res: [["¡Levántate, aún no hemos terminado!", "Get up, we're not done yet!"], ["¡De pie, que yo soy un espíritu y sigo aquí!", "Up you get, I'm a spirit and I'm still here!"], ["¡Ni se te ocurra quedarte ahí tumbado!", "Don't even think of staying down there!"]],
   danger: [["¡Cuidado! ¡{mn} a la vista!", "Careful! {mn} in sight!"], ["¡Ahí viene un {mn}! ¡Yo no he visto nada!", "Here comes a {mn}! I didn't see anything!"], ["Eh... ¿ese {mn} viene hacia aquí?", "Uh... is that {mn} coming this way?"]],
   hurtAlly: [["¡{who} está fatal! ¡Aguanta!", "{who} is in bad shape! Hang in there!"], ["¡Cuidado con {who}, que no llega!", "Watch {who}, they won't last!"]],
-  scared: [["¡Que soy de paja, no me peguen!", "I'm made of straw, don't hit me!"], ["¡Me falta relleno!", "I'm losing my stuffing!"], ["¡Auxilio, me deshilacho!", "Help, I'm unraveling!"]],
+  scared: [["¡Que soy de luz, no me peguen!", "I'm made of light, don't hit me!"], ["¡Me estoy apagando!", "I'm fading out!"], ["¡Auxilio, me desvanezco!", "Help, I'm vanishing!"]],
   agro: [["¡Me atacan! ¡Me atacan!", "I'm under attack! I'm under attack!"], ["¡Un {mn} me persigue! ¡Mamá!", "A {mn} is chasing me! Mommy!"]],
-  idle: [["Qué tranquilo está esto... demasiado.", "So quiet here... too quiet."], ["¿Alguien tiene un cuervo? Me da cosa.", "Anyone seen a crow? They creep me out."], ["Me han dicho que los espantapájaros también tienen sueños.", "I hear scarecrows have dreams too."], ["Aquí me tienes, listo para lo que sea.", "Here I am, ready for anything."]],
+  idle: [["Qué tranquilo está esto... demasiado.", "So quiet here... too quiet."], ["¿Alguien ha oído ese susurro? Me da cosa.", "Did anyone hear that whisper? It creeps me out."], ["Me han dicho que los espíritus también tienen sueños.", "I hear spirits have dreams too."], ["Aquí me tienes, listo para lo que sea.", "Here I am, ready for anything."]],
   owner_down: [["¡NOOO! ¡Aguanta, voy!", "NOOO! Hold on, I'm coming!"], ["¡Jefe! ¡No te vayas!", "Boss! Don't go!"]],
 };
 const fmt = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");

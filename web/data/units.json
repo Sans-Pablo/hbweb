@@ -1,0 +1,224 @@
+{
+ "Guard": {
+  "sprite": "uguard",
+  "type": 21,
+  "n": 40,
+  "pak": "Guard"
+ },
+ "Arrow Guard Tower": {
+  "sprite": "ugtarrow",
+  "type": 36,
+  "n": 40,
+  "pak": "GT-Arrow"
+ },
+ "Cannon Guard Tower": {
+  "sprite": "ugtcannon",
+  "type": 37,
+  "n": 40,
+  "pak": "GT-Cannon"
+ },
+ "Mana Collector": {
+  "sprite": "umanacollector",
+  "type": 38,
+  "n": 40,
+  "pak": "ManaCollector"
+ },
+ "Detector": {
+  "sprite": "udetector",
+  "type": 39,
+  "n": 40,
+  "pak": "Detector"
+ },
+ "Energy Shield Generator": {
+  "sprite": "uesg",
+  "type": 40,
+  "n": 40,
+  "pak": "ESG"
+ },
+ "Grand Magic Generator": {
+  "sprite": "ugmg",
+  "type": 41,
+  "n": 40,
+  "pak": "GMG"
+ },
+ "Mana Stone": {
+  "sprite": "umanastone",
+  "type": 42,
+  "n": 40,
+  "pak": "ManaStone"
+ },
+ "Light War Beetle": {
+  "sprite": "ulwb",
+  "type": 43,
+  "n": 40,
+  "pak": "LWB"
+ },
+ "God's Hand Knight": {
+  "sprite": "ughk",
+  "type": 44,
+  "n": 40,
+  "pak": "GHK"
+ },
+ "God's Hand Knight (Battle Steed)": {
+  "sprite": "ughkabs",
+  "type": 45,
+  "n": 40,
+  "pak": "GHKABS"
+ },
+ "Temple Knight": {
+  "sprite": "utk",
+  "type": 46,
+  "n": 40,
+  "pak": "TK"
+ },
+ "Battle Golem": {
+  "sprite": "ubg",
+  "type": 47,
+  "n": 40,
+  "pak": "BG"
+ },
+ "Catapult": {
+  "sprite": "ucatapult",
+  "type": 51,
+  "n": 40,
+  "pak": "Catapult"
+ },
+ "Sorceress": {
+  "sprite": "usorceress",
+  "type": 82,
+  "n": 40,
+  "pak": "Sorceress"
+ },
+ "TP Knight": {
+  "sprite": "utpknight",
+  "type": 83,
+  "n": 40,
+  "pak": "TPKnight"
+ },
+ "Elf Master": {
+  "sprite": "uelfmaster",
+  "type": 84,
+  "n": 40,
+  "pak": "ElfMaster"
+ },
+ "Dark Knight": {
+  "sprite": "udarkknight",
+  "type": 85,
+  "n": 40,
+  "pak": "DarkKnight"
+ },
+ "Heavy Battle Tank": {
+  "sprite": "uhbtank",
+  "type": 86,
+  "n": 32,
+  "pak": "HBTank"
+ },
+ "CB Turret": {
+  "sprite": "ucbturret",
+  "type": 87,
+  "n": 32,
+  "pak": "CBTurret"
+ },
+ "Babarian": {
+  "sprite": "ubabarian",
+  "type": 88,
+  "n": 40,
+  "pak": "Babarian"
+ },
+ "Arcane Cannon": {
+  "sprite": "uacannon",
+  "type": 89,
+  "n": 32,
+  "pak": "ACannon"
+ },
+ "Heldenian Gate": {
+  "sprite": "ugate",
+  "type": 91,
+  "n": 24,
+  "pak": "Gate"
+ },
+ "Tutelar Angel (STR)": {
+  "sprite": "ututelarangel1",
+  "type": 0,
+  "n": 48,
+  "pak": "TutelarAngel1"
+ },
+ "Tutelar Angel (DEX)": {
+  "sprite": "ututelarangel2",
+  "type": 0,
+  "n": 48,
+  "pak": "TutelarAngel2"
+ },
+ "Tutelar Angel (INT)": {
+  "sprite": "ututelarangel3",
+  "type": 0,
+  "n": 48,
+  "pak": "TutelarAngel3"
+ },
+ "Tutelar Angel (MAG)": {
+  "sprite": "ututelarangel4",
+  "type": 0,
+  "n": 48,
+  "pak": "TutelarAngel4"
+ },
+ "Magma Golem": {
+  "sprite": "lgol",
+  "type": 12,
+  "n": 40,
+  "pak": "derivada de GOL"
+ },
+ "Magma Golem \u00b7 Healer": {
+  "sprite": "lgolh",
+  "type": 12,
+  "n": 40,
+  "pak": "derivada de GOL"
+ },
+ "Magma Golem \u00b7 Buffer": {
+  "sprite": "lgolb",
+  "type": 12,
+  "n": 40,
+  "pak": "derivada de GOL"
+ },
+ "Magma Golem \u00b7 Aura": {
+  "sprite": "lgola",
+  "type": 12,
+  "n": 40,
+  "pak": "derivada de GOL"
+ },
+ "Nizie Healer": {
+  "sprite": "znzh",
+  "type": 79,
+  "n": 40,
+  "pak": "derivada de NIZIE"
+ },
+ "Nizie Buffer": {
+  "sprite": "znzb",
+  "type": 79,
+  "n": 40,
+  "pak": "derivada de NIZIE"
+ },
+ "Nizie Aura": {
+  "sprite": "znza",
+  "type": 79,
+  "n": 40,
+  "pak": "derivada de NIZIE"
+ },
+ "Eidolon Healer": {
+  "sprite": "eidh",
+  "type": 30,
+  "n": 40,
+  "pak": "nuevo (Eidolon)"
+ },
+ "Eidolon Buffer": {
+  "sprite": "eidb",
+  "type": 30,
+  "n": 40,
+  "pak": "nuevo (Eidolon)"
+ },
+ "Eidolon Aura": {
+  "sprite": "eida",
+  "type": 30,
+  "n": 40,
+  "pak": "nuevo (Eidolon)"
+ }
+}
