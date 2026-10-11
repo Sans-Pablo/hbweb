@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.1 · Arreglo: caída del servidor (2026-10-11)
+
+- **Corregido**: el servidor se caía al golpear un summon a un jugador enemigo en Promise Land (`defenseRatio` de un jugador). Eso causaba «conexión perdida» y reinicios.
+- **Bots en la cripta**: si todos los esqueletos que quedan les resultan demasiado fuertes, salen con Recall en vez de quedarse parados.
+
 ## 0.50.0 · Summons en el PvP (2026-10-11)
 - Energy Strike: las bolas ahora salen del lanzador hacia el objetivo (antes se iban abajo a la derecha).
 - Los summons pelean en Promise Land contra jugadores y summons enemigos; los bots los sacan, los señalan a un rival, los retiran con poca vida y atacan a los summons que les amenazan.

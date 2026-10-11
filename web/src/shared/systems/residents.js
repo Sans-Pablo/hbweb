@@ -593,7 +593,7 @@ function delve(adv, w, p, r, home) {
     if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
     if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
     if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
-    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; d.tries++; const dp = p.delve?.deepest || 1, bp = bossPreview(w, dp), restart = !!bp && fightEstimate(w, p, bp).ratio < 1.3;       // si su piso más hondo es de jefe y no puede con él, empieza de cero
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, bp = bossPreview(w, dp), restart = !!bp && fightEstimate(w, p, bp).ratio < 1.3;       // si su piso más hondo es de jefe y no puede con él, empieza de cero
       if (restart) blog(w, p, `Mi piso más hondo (${dp}) es de jefe y aún no puedo con él: empiezo la cripta desde el principio.`);
       adv.command(p.id, { t: "portal", portal: "mid-entry", restart }); }
     return;
@@ -623,9 +623,12 @@ function delve(adv, w, p, r, home) {
     return;
   }
   // caza: los esqueletos cercanos los pelea el cerebro del bot; si no hay ninguno a la vista, va a por el más cercano
-  if (b.target) return;
+  if (b.target) { r._noPrey = 0; return; }
   let best = null, bd = 1e9;
   for (const e of w.ents.values()) if (e.kind === "npc" && !e.dead && !e.comp && !e.aux && !e.master && !tooStrong(w, p, e)) { const dd = dist(p, e); if (dd < bd) { best = e; bd = dd; } }
+  if (best) r._noPrey = 0;
+  else if (!r._noPrey) r._noPrey = w.time;
+  else if (w.time - r._noPrey > 12000 && w.time - (r._rc || 0) > 8000) { r._rc = w.time; r._noPrey = 0; blog(w, p, "Los esqueletos que quedan son demasiado fuertes para mí: salgo de la cripta (Recall)."); adv.command(p.id, { t: "recall" }); return; }       // sin presa que pueda pelear no se queda quieto hasta agotar el tiempo
   if (best && bd > 9) { b.travel = { x: best.x, y: best.y, w, until: w.time + 12000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${best.name} a ${bd} casillas.`); }
   else if (best) b.travel = null;
 }

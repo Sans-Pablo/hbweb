@@ -11,6 +11,23 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Arreglo: caída del servidor (v0.50.1)",
+        "en": "Fix: server crash (v0.50.1)"
+      },
+      "items": [
+        {
+          "es": "Corregida la caída del servidor («conexión perdida») cuando un summon golpeaba a un jugador enemigo en Promise Land.",
+          "en": "Fixed the server crash (\"connection lost\") when a summon hit an enemy player in Promise Land."
+        },
+        {
+          "es": "Los bots que se quedan sin esqueletos que puedan pelear salen de la cripta en lugar de quedarse parados.",
+          "en": "Bots with no skeletons they can fight now leave the crypt instead of standing still."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Summons en el PvP (v0.50.0)",
         "en": "Summons in PvP (v0.50.0)"
       },

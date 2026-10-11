@@ -47,7 +47,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `npcsys.js` · 398 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 116 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 170 · Jugador: creación, guardado, recalculo de atributos, reaparición.
-- `residents.js` · 1166 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 1169 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 20 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 214 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,

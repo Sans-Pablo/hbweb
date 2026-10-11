@@ -228,7 +228,7 @@ function followerAttack(w, n, t) {
   w.emit({ t: "attack", id: n.id, target: t.id });
   w.after(n.dur.attack * 0.5, () => {
     if (n.dead || t.dead || w.ents.get(t.id) !== t || dist(n, t) > n.cfg.attackRange) return;
-    if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.cfg.defenseRatio, n.dir === t.dir)) return;
+    if (R.dice(w.rng, 1, 100) > R.hitChance(n.cfg.hitRatio, t.kind === "player" ? t.defense : t.cfg.defenseRatio, n.dir === t.dir)) return;
     const dmg = n.comp ? Math.max(1, Math.round((n.dmgNow + R.dice(w.rng, 1, 3) - 2) * (sget(w, n, "berserk") ? 2 : 1))) : R.npcMelee(w.rng, n).damage;
     if (t.kind === "player") { const m = w.ents.get(n.master); if (m && canFight(w, m, t)) damagePlayer(w, t, dmg, m); return; }     // PvP: el golpe cuenta como del dueño
     if (t.comp) return companionHurt(w, n, t, dmg);                                                                        // summon contra summon
