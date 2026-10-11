@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.3 · Liche y brillo de evolucionados (2026-10-11)
+
+- **Liche**: color más oscuro y saturado (violeta), sin el tono azulado.
+- **Summons evolucionados** (Demon, Frost, Liche): destello blanco periódico (cada ~5 s) para distinguirlos.
+
 ## 0.50.2 · EKs, summons caídos y Promise Land (2026-10-11)
 
 - **EK (enemy kills)**: el contador ya no se pone a cero al morir; se acredita al matar a un enemigo de la otra ciudad con golpes, summons, magias o campos. La racha de la recompensa es aparte.

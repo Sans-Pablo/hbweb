@@ -10,6 +10,14 @@
   "news": [
     {
       "date": "2026-10-11",
+      "title": { "es": "Liche y brillo de evolucionados (v0.50.3)", "en": "Lich and evolved glow (v0.50.3)" },
+      "items": [
+        { "es": "El Liche es más oscuro y saturado, sin el tono azulado.", "en": "The Lich is darker and more saturated, without the bluish tone." },
+        { "es": "Los summons evolucionados (Demon, Frost, Liche) destellan cada pocos segundos.", "en": "Evolved summons (Demon, Frost, Lich) flash every few seconds." }
+      ]
+    },
+    {
+      "date": "2026-10-11",
       "title": { "es": "EKs y summons caídos (v0.50.2)", "en": "EKs and fallen summons (v0.50.2)" },
       "items": [
         { "es": "El contador de EK (muertes de enemigos de la otra ciudad) ya no se reinicia al morir, y cuenta también las bajas hechas por summons y magias.", "en": "The EK counter (kills of players from the other city) no longer resets on death, and also counts kills made by summons and spells." },

@@ -528,7 +528,7 @@ export class Renderer {
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
     else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
-    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#12002a", 0.45);        // Liche: tonos más oscuros y tenebrosos
+    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#7a2fb0", 0.8, "multiply");        // Liche: más oscuro y saturado (violeta), sin el azulado original
     if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
     if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
     if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
@@ -547,6 +547,10 @@ export class Renderer {
     }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
+    if (e.comp && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche") && !e.dead) {                // summon evolucionado: destello periódico (como las armas especiales, pero solo cada pocos segundos)
+      const ph = ((time + e.id * 997) % 5000) / 900;
+      if (ph < 1) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.55 * Math.sin(ph * Math.PI), "lighter");
+    }
     if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida
