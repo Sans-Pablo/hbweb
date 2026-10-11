@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.57.1 · Colores de supports (2026-10-11)
+- Aura ahora tiene el pelo azul y Buffer el amarillo.
+
 ## 0.57.0 · Criptas y Rey dorado (2026-10-11)
 - Los habitantes vuelven a pelear en la cripta: la lección de una muerte se guarda por piso (antes un solo esqueleto vetaba a todos).
 - Nueva meta de vida: matar al Rey esqueleto dorado (piso 20) y terminar las criptas; expediciones más largas y seguidas mientras dure.

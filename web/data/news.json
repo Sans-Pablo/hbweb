@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Colores de supports (v0.57.1)",
+        "en": "Support colours (v0.57.1)"
+      },
+      "items": [
+        {
+          "es": "Aura tiene el pelo azul y Buffer el amarillo.",
+          "en": "Aura has blue hair and Buffer yellow."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Criptas y Rey dorado (v0.57.0)",
         "en": "Crypts and the Golden King (v0.57.0)"
       },
@@ -33,8 +46,8 @@
       },
       "items": [
         {
-          "es": "Tres summons de apoyo: Healer (pelo verde), Buffer (azul) y Aura (amarillo), con el sprite de la Sorceress. Se elige la clase al comprar; no hablan; Aura y Buffer salen a tu derecha; el radio del Buffer es la mitad; el Healer ataca al curar.",
-          "en": "Three support summons: Healer (green hair), Buffer (blue) and Aura (yellow), using the Sorceress sprite. Pick the class when buying; they do not talk; Aura and Buffer spawn on your right; the Buffer radius is halved; the Healer plays its attack animation when healing."
+          "es": "Tres summons de apoyo: Healer (pelo verde), Buffer (amarillo) y Aura (azul), con el sprite de la Sorceress. Se elige la clase al comprar; no hablan; Aura y Buffer salen a tu derecha; el radio del Buffer es la mitad; el Healer ataca al curar.",
+          "en": "Three support summons: Healer (green hair), Buffer (yellow) and Aura (blue), using the Sorceress sprite. Pick the class when buying; they do not talk; Aura and Buffer spawn on your right; the Buffer radius is halved; the Healer plays its attack animation when healing."
         },
         {
           "es": "Los puestos ya no tapan las entradas: no se abren a menos de 8 casillas de una puerta.",

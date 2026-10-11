@@ -47,7 +47,7 @@ export function playerSprite(e, time, bow = false) {
 // Monstruo: 5 grupos x 8 direcciones (0 quieto, 1 andar, 2 atacar, 3 daño, 4 morir), 4 fotogramas
 // Hoja del .pak de cada acción de un monstruo (Client/Game.cpp, DrawObject_On*): 0 reposo, 1 andar, 2 atacar, 3 daño, 4 morir.
 // Wyvern y Fire-Wyvern (66, 73) solo tienen tres hojas.
-export const DUMMY_SPRITE = { healer: "uhealer", buffer: "ubuffer", aura: "usorceress" };      // Sorceress original con el pelo verde (healer), azul (buffer) y amarillo (aura): tools/make_summon_sprites.py
+export const DUMMY_SPRITE = { healer: "uhealer", buffer: "usorceress", aura: "ubuffer" };      // Sorceress original con el pelo verde (healer), amarillo (buffer) y azul (aura): tools/make_summon_sprites.py
 const WYVERN = { stop: 0, move: 1, attack: 0, damage: 0, dying: 2 };
 const sheet = (type, act) => (type === 66 || type === 73 ? WYVERN[act] : { stop: 0, move: 1, attack: 2, damage: 3, dying: 4 }[act]);
 
