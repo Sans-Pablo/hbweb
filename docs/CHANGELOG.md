@@ -2,6 +2,16 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.49.0 · Vida propia, grupos y builds (2026-10-11)
+- Habitantes con vida propia: horarios de conexión según la hora, descansos, pausas AFK, despistes, erratas al escribir y charla espontánea.
+- Panel de admin: tarjeta «Conexiones» para elegir qué bots se conectan (on / off / auto) y cuántos como mínimo; columna de build y parties con su debate.
+- Los grupos de bots debaten qué hacer (cazar, cripta o Promise Land) y cada bot tiene su estilo; buscan mejores presas en vez de quedarse en slimes.
+- Los bots calculan si pueden con un jefe, esquivan el fuego y la escarcha y atacan a los cristales y clones; se curan y huyen con Recall.
+- PvP solo en Promise Land: los bots guardan rencor tras morir y hay «fiebre de guerra» periódica.
+- Gestión de objetos de los bots por valor: venden, guardan, regalan a amigos, ordenan la mochila y ahorran para su mejora deseada.
+- Reset de estadísticas: habla con el mago de la tienda general (cuesta 300 + 60 × nivel); los bots lo usan para probar builds.
+- Menos basura en el suelo (los slimes sueltan poco y los drops desaparecen); tienda de magia indica «Smn Lv» (nivel del summon); nombres algo más abajo; botón Ok del guild arreglado; nuevos jugadores empiezan en Aresden; los bots atienden peticiones de party por chat.
+
 ## 0.48.0 · Comercio, guilds y bots sociales (2026-10-11)
 - Item level: cada objeto tiene un nivel de objeto y los bots se equipan lo mejor de su mochila y compran por mejora.
 - El summon te sigue con correa: acelera suavemente si se queda atrás, sin saltos bruscos.

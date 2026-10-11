@@ -11,6 +11,47 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Vida propia, grupos y builds (v0.49.0)",
+        "en": "Own life, parties and builds (v0.49.0)"
+      },
+      "items": [
+        {
+          "es": "Habitantes con vida propia: horarios de conexión según la hora, descansos, pausas AFK, despistes, erratas al escribir y charla espontánea.",
+          "en": "Residents with their own life: log-in schedules by time of day, breaks, AFK pauses, slips, typos while chatting and spontaneous talk."
+        },
+        {
+          "es": "Panel de admin: tarjeta «Conexiones» para elegir qué bots se conectan (on / off / auto) y cuántos como mínimo; columna de build y parties con su debate.",
+          "en": "Admin panel: «Connections» card to choose which bots log in (on / off / auto) and the minimum online; build column and parties with their debate."
+        },
+        {
+          "es": "Los grupos de bots debaten qué hacer (cazar, cripta o Promise Land) y cada bot tiene su estilo; buscan mejores presas en vez de quedarse en slimes.",
+          "en": "Bot parties debate what to do (hunt, crypt or Promise Land) and each bot has a style; they look for better prey instead of staying on slimes."
+        },
+        {
+          "es": "Los bots calculan si pueden con un jefe, esquivan el fuego y la escarcha y atacan a los cristales y clones; se curan y huyen con Recall.",
+          "en": "Bots work out whether they can take a boss, dodge fire and frost, attack crystals and clones, heal and flee with Recall."
+        },
+        {
+          "es": "PvP solo en Promise Land: los bots guardan rencor tras morir y hay «fiebre de guerra» periódica.",
+          "en": "PvP only in Promise Land: bots hold a grudge after dying and there is a periodic «war fever»."
+        },
+        {
+          "es": "Gestión de objetos de los bots por valor: venden, guardan, regalan a amigos, ordenan la mochila y ahorran para su mejora deseada.",
+          "en": "Bot item management by value: they sell, store, gift to friends, tidy the bag and save for the upgrade they want."
+        },
+        {
+          "es": "Reset de estadísticas: habla con el mago de la tienda general (cuesta 300 + 60 × nivel); los bots lo usan para probar builds.",
+          "en": "Stat reset: talk to the mage in the general shop (costs 300 + 60 × level); bots use it to try builds."
+        },
+        {
+          "es": "Menos basura en el suelo (los slimes sueltan poco y los drops desaparecen); tienda de magia indica «Smn Lv» (nivel del summon); nombres algo más abajo; botón Ok del guild arreglado; nuevos jugadores empiezan en Aresden; los bots atienden peticiones de party por chat.",
+          "en": "Less loot clutter (slimes drop little and drops expire); magic shop shows «Smn Lv» (summon level); names a bit lower; guild Ok button fixed; new players start in Aresden; bots answer party requests in chat."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Comercio, guilds y bots sociales (v0.48.0)",
         "en": "Trade, guilds and social bots (v0.48.0)"
       },
@@ -3079,6 +3120,39 @@
       "text": {
         "es": "Como administrador: /who lista a los jugadores; /mute silencia a uno; /kick lo expulsa; /ban bloquea su cuenta y /unban la libera; el panel http://localhost:8088/admin?token=… funciona en el PC del servidor y da 403 por el túnel.",
         "en": "As admin: /who lists players; /mute silences one; /kick removes them; /ban blocks the account and /unban frees it; the panel http://localhost:8088/admin?token=… works on the server PC and returns 403 through the tunnel."
+      }
+    },
+    {
+      "id": "hum-sched",
+      "group": {
+        "es": "Habitantes",
+        "en": "Residents"
+      },
+      "text": {
+        "es": "Los habitantes se desconectan y vuelven a lo largo del día; el panel de admin permite forzarlos on/off.",
+        "en": "Residents log off and back on through the day; the admin panel lets you force them on/off."
+      }
+    },
+    {
+      "id": "stat-reset",
+      "group": {
+        "es": "Estadísticas",
+        "en": "Stats"
+      },
+      "text": {
+        "es": "Habla con el mago de la tienda general y pulsa Reset stats: recuperas los puntos sobre 10 y pagas 300 + 60 × nivel.",
+        "en": "Talk to the mage in the general shop and press Reset stats: you get back the points above 10 and pay 300 + 60 × level."
+      }
+    },
+    {
+      "id": "bot-pl-pvp",
+      "group": {
+        "es": "Bots",
+        "en": "Bots"
+      },
+      "text": {
+        "es": "Los bots pelean contra el bando enemigo en Promise Land (nunca en las granjas).",
+        "en": "Bots fight the enemy side in Promise Land (never on the farms)."
       }
     }
   ],
