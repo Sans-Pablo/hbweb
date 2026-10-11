@@ -158,12 +158,29 @@ def demon(base, prefix="demon"):
     return out
 
 
+def frost(base, prefix="frost"):
+    """Frost: ojos = fila opaca mas alta de la banda central + desplazamiento fijo (como el Demon); solo de frente y diagonales delanteras."""
+    out = {}
+    for d in range(8):
+        for g in range(GROUPS):
+            key = f"{prefix}{g * 8 + d}"
+            if key not in base: continue
+            e = base[key]; out[key] = {"eyes": [], "orb": [], "hands": []}
+            for i, fr in enumerate(core.split_frames(core.load_sheet(e), e["frames"])):
+                pvx, pvy = e["frames"][i][4], e["frames"][i][5]
+                h = None if (d != 4 or (g == 4 and i >= 2)) else demon_head(fr, pvx, 10)
+                out[key]["eyes"].append([round(pvx + h[0], 1), round(pvy + h[1], 1)] if h else None)
+                out[key]["orb"].append(None); out[key]["hands"].append([None, None])
+    return out
+
+
 def cmd_build(_):
     base = core.base_manifest()
     path = os.path.join(DATA, "anchors.json")
     out = core.jload(path, {})
     out.update(liche(base))
     out.update(demon(base))
+    out.update(frost(base))
     man = core.jload(os.path.join(ART_DIR, "anchors_manual.json"), {})        # puntos puestos a mano (web/anclas.html): pisan a los automáticos
     for k, v in man.items():
         for i, p in enumerate(v.get("eyes", [])):

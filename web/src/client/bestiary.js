@@ -92,6 +92,6 @@ function frame(t) {
     ctx.fillText((mode === "evo" || lv0 ? "Lv " + lv + " · " : "") + "dir " + d, ci * cw + 4, ri * ch + 12);
   }));
   r.ctx = r.canvas.getContext("2d");
-  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `${name} · tipo ${assets.npcDb[name].type} · hojas ${stream.done}/${stream.total} cargadas · etapas de tamaño en los niveles ${SIZE_STAGES.join(", ")}; Demon: ceniza <10, estela de fuego al caminar desde 10, brillo de fuego en el borde y venas de las alas al rojo desde 30 (más grueso a 40 y 50), casteo = Tremor de fuego (nubes rojas del efecto 138 original + temblor de pantalla) 30, 40 y 50 cada vez mayor. Frost: aura Lv 50. Liche: tamaño Lv 10, báculo 20, humo y círculo 30, ojos 50.`;
+  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `${name} · tipo ${assets.npcDb[name].type} · hojas ${stream.done}/${stream.total} cargadas · etapas de tamaño en los niveles ${SIZE_STAGES.join(", ")}; Demon: ceniza <10, ojos rojos y estela de fuego al caminar 10, pulso de brasa y grietas 20, brillo en el borde, venas y Tremor de fuego 30, ondas de calor y chispas 40, máximo y grietas de lava 50. Frost: gris azulado <10, huellas y vaho 10, nieve y niebla 20, ojos azules, báculo, brillo y nova de hielo 30, cristales 40, viento en espiral, halo y venas 50. Liche: tamaño Lv 10, báculo 20, humo y círculo 30, ojos 50.`;
 }
 requestAnimationFrame(frame);

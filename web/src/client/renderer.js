@@ -464,8 +464,14 @@ export class Renderer {
     if (casting && (e.act === ACT.MOVE || e.act === ACT.RUN) && !e.dead && (!last || Math.hypot(wx - last.x, wy - last.y) > 6)) { L.push({ x: wx + (Math.random() - 0.5) * 8, y: wy + (Math.random() - 0.5) * 3, t: now, r: Math.random() }); if (L.length > 30) L.shift(); }
     while (L.length && now - L[0].t > 1200) L.shift();
     if (!L.length) { crk.delete(e.id); return; }
-    for (const c of L) {                                           // llamitas del Fire Field que se encogen y se apagan
+    for (const c of L) {                                           // llamitas del Fire Field que se encogen y se apagan (Frost: huella de escarcha y vaho que sube)
       const k = (now - c.t) / 1200;
+      if (e.name === "Frost") {
+        const px = c.x - cx, py = c.y - cy; ctx.save(); ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = "rgba(170,225,255," + (0.35 * (1 - k)).toFixed(3) + ")"; ctx.beginPath(); ctx.ellipse(px, py, 3.2 - k, 1.4, 0, 0, Math.PI * 2); ctx.fill();
+        const vg = ctx.createRadialGradient(px, py - 4 - k * 14, 0, px, py - 4 - k * 14, 4 + k * 5); vg.addColorStop(0, "rgba(225,245,255," + (0.22 * (1 - k)).toFixed(3) + ")"); vg.addColorStop(1, "rgba(225,245,255,0)");
+        ctx.fillStyle = vg; ctx.beginPath(); ctx.arc(px, py - 4 - k * 14, 9, 0, Math.PI * 2); ctx.fill(); ctx.restore(); continue;
+      }
       this.flame(c.x - cx, c.y - cy, 0.2 * (1 - k * 0.6), (1 - k) * 0.7, Math.floor(now / 100 + c.r * 8));
     }
   }
@@ -483,7 +489,7 @@ export class Renderer {
 
   drawEntity(e, x, y, s, overlays) {
     const { ctx, spr } = this;
-    if (e.kind === "npc" && e.comp && e.clvl >= 30 && e.name === "Demon") this.emberTrail(e, x, y, true);
+    if (e.kind === "npc" && e.comp && e.clvl >= 10 && (e.name === "Demon" || e.name === "Frost")) this.emberTrail(e, x, y, true);
     const remaster = this.mode === "remastered";
     const time = s.world.time;
     const hovered = s.hoverEnt === e || s.hoverCit === e;
@@ -559,7 +565,7 @@ export class Renderer {
     let flare = 0;                                                                         // Demon al castear: el cuerpo se enciende (0..1)
     { const cc = e.comp && !e.dead && (s.fx || this.fx)?.scast?.get(e.id);
       if (cc && e.name === "Demon" && e.clvl < 30) { /* Lv < 30: sin efecto de casteo */ }
-      else if (cc && e.name === "Liche" && e.clvl < 30) { /* idem */ }
+      else if (cc && (e.name === "Liche" || e.name === "Frost") && e.clvl < 30) { /* idem */ }
       else if (cc) { if (e.name === "Demon") { const ag = performance.now() - cc.at; flare = Math.max(0, Math.min(1, ag / 200, (1700 - ag) / 600)); } this.castCircle(ctx, x, y, cc, e, s.fx || this.fx); } }          // círculo de casteo del summon en nivel máximo: bajo sus pies, antes de la sombra y el sprite
     ctx.globalAlpha = alpha;
     if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
@@ -567,16 +573,22 @@ export class Renderer {
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     const hover = 0;
     if (hover) { ctx.save(); ctx.translate(0, -hover); }
-    if (e.comp && e.name === "Demon" && e.clvl >= 30 && alive) {                          // Demon Lv >= 30: brillo de fuego en el borde del sprite; la intensidad recorre el contorno (se dibuja detrás del cuerpo)
-      const L = e.clvl, rad = L >= 50 ? 1.8 : L >= 40 ? 1.5 : 1.2, tt = performance.now() / 1000;
+    const isD = e.comp && e.name === "Demon", isF = e.comp && e.name === "Frost";
+    if ((isD || isF) && e.clvl >= 30 && alive) {                                          // Demon/Frost Lv >= 30: brillo en el borde del sprite (fuego / hielo); la intensidad recorre el contorno (se dibuja detrás del cuerpo)
+      const L = e.clvl, rad = L >= 50 ? 1.8 : L >= 40 ? 1.5 : 1.2, tt = performance.now() / 1000, c1 = isF ? "#d8f4ff" : "#ffb030", c2 = isF ? "#3a8cff" : "#ff4a08";
       for (let n = 0; n < 12; n++) {
         const an = n * Math.PI / 6, w = 0.5 + 0.5 * Math.sin(tt * 3.2 - an * 2 + e.id);
-        spr.tinted(ctx, key, f, x + Math.cos(an) * rad, y + Math.sin(an) * rad, w > 0.6 ? "#ffb030" : "#ff4a08", (0.025 + 0.065 * w) * alpha, "lighter");
+        spr.tinted(ctx, key, f, x + Math.cos(an) * rad, y + Math.sin(an) * rad, w > 0.6 ? c1 : c2, (0.025 + 0.065 * w) * alpha, "lighter");
       }
     }
     spr.put(ctx, key, f, x, y);
-    if (e.comp && e.name === "Demon" && e.clvl >= 30 && alive)                           // huesos y venas de las alas al rojo vivo, con pulso lento
-      spr.veins(ctx, key, f, x, y, "#ff5a10", (0.11 + 0.08 * Math.sin(performance.now() / 420 + e.id)) * alpha * (e.clvl >= 50 ? 1 : 0.75));
+    if (isD && e.clvl >= 20 && alive) {                                                  // Demon Lv 20: el cuerpo late como brasa y las grietas oscuras se ven al rojo; Lv 30: huesos y venas de las alas; 50: más venas
+      const pu = 0.5 + 0.5 * Math.sin(performance.now() / 420 + e.id), L = e.clvl;
+      if (L < 30) { spr.tinted(ctx, key, f, x, y, "#ff2a00", (0.05 + 0.07 * pu) * alpha, "lighter"); spr.veins(ctx, key, f, x, y, "#ff7a18", (0.07 + 0.06 * pu) * alpha, 45); }
+      else spr.veins(ctx, key, f, x, y, "#ff5a10", (0.11 + 0.08 * Math.sin(performance.now() / 420 + e.id)) * alpha * (L >= 50 ? 1 : 0.75), L >= 50 ? 95 : 75);
+    }
+    if (isF && e.clvl >= 50 && alive) spr.veins(ctx, key, f, x, y, "#7fd0ff", (0.12 + 0.08 * Math.sin(performance.now() / 500 + e.id)) * alpha, 95);   // venas de hielo brillantes
+    if (isF && e.clvl < 10 && alive) spr.tinted(ctx, key, f, x, y, "#1c2536", 0.4);        // Frost Lv < 10: hielo apagado, gris azulado oscuro
     if (e.boss && alive) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
     else if (e.kind === "npc" && alive && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
@@ -603,11 +615,26 @@ export class Renderer {
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
     const fade = alive ? 1 : act === ACT.DYING ? Math.max(0, 1 - (time - (e.actStart || 0)) / Math.max(1, e.actDur || 700) * 1.6) : 0;   // al morir las luces se apagan en fundido
-    if (e.comp && fade > 0 && (e.name === "Liche" ? e.clvl >= 20 : e.name === "Demon" ? e.clvl >= 10 : e.clvl >= 50 && e.name === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
+    if (e.comp && fade > 0 && (e.name === "Liche" ? e.clvl >= 20 : e.name === "Demon" ? e.clvl >= 10 : e.clvl >= 20 && e.name === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
       const sp = this.fx?.sp, seed = e.id * 997, T = time + seed, rnd = (k) => { const h = Math.sin(k * 12.9898 + e.id) * 43758.5453; return h - Math.floor(h); };
       ctx.save(); ctx.globalAlpha = (e.name === "Liche" ? 1 : 0.5) * fade;                            // Demon y Frost más sutiles, a la altura del Liche
-      if (e.name === "Demon") {                                                          // fuego amenazante: círculo infernal con pentagrama, lenguas de fuego, brasas y calor
+      if (e.name === "Demon") {                                                          // Lv 10 ojos de brasa, 40 calor y chispas lentas, 50 más intensos
+        const L = e.clvl, pulse = 0.5 + 0.5 * Math.sin(T / 380);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
+        const ea = (0.6 + 0.35 * pulse) * Math.max(0, 1 - (1 - fade) * 2.5), an = this.spr.anchors?.[key]?.eyes?.[f];          // ojos en el ancla de la cara de ESTE fotograma (anchors.json)
+        if (an && ea > 0) for (const dx0 of [-3, 3]) { const ex2 = x + an[0] + dx0 * (e.dir === 5 ? 1 : 0.7), ey2 = y + an[1]; const eg = ctx.createRadialGradient(ex2, ey2, 0, ex2, ey2, 5); eg.addColorStop(0, "rgba(255," + (L >= 50 ? 200 : 120) + ",40," + ea.toFixed(2) + ")"); eg.addColorStop(1, "rgba(200,20,0,0)"); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex2, ey2, 6, 0, Math.PI * 2); ctx.fill(); }
+        if (L >= 40) {
+          const ns = L >= 50 ? 14 : 8;
+          for (let n = 0; n < ns; n++) {                                                // chispas lentas que suben de los hombros
+            const q = ((T / 2600 + rnd(n + 7)) % 1), px = x + (n % 2 ? 1 : -1) * (8 + rnd(n + 30) * 14) + Math.sin(q * 6 + n) * 4, py = y - 40 - q * 46;
+            ctx.fillStyle = "rgba(255," + (120 + 100 * rnd(n + 50) | 0) + ",40," + (0.9 * Math.sin(q * Math.PI)).toFixed(2) + ")"; ctx.fillRect(px, py, 2, 2);
+          }
+          ctx.lineWidth = 1.5; ctx.lineCap = "round";
+          for (let n = 0; n < 3; n++) {                                                // ondas de calor sobre los hombros y la cabeza
+            const q = ((T / 1800 + n / 3) % 1); ctx.strokeStyle = "rgba(255,150,60," + (0.12 * Math.sin(q * Math.PI)).toFixed(3) + ")"; ctx.beginPath();
+            for (let k = -22; k <= 22; k += 4) { const px = x + k, py = y - 52 - q * 24 + Math.sin(k * 0.3 + T / 260) * 2.5; k === -22 ? ctx.moveTo(px, py) : ctx.lineTo(px, py); } ctx.stroke();
+          }
+        }
         ctx.restore();
       } else if (e.name === "Liche") {                                                   // oscuridad que da miedo: sombra bajo él, humo negro que sube, ojos ardientes (mirando hacia abajo, abajo-izquierda y abajo-derecha)
         const pulse = 0.5 + 0.5 * Math.sin(T / 420);
@@ -633,9 +660,25 @@ export class Renderer {
           for (let n = 0; n < 5; n++) { const q = ((T / 900 + rnd(n + 60)) % 1); ctx.fillStyle = "rgba(210,130,255," + (0.9 * (1 - q)).toFixed(2) + ")"; ctx.fillRect(ox + (rnd(n + 70) - 0.5) * 12 + Math.sin(q * 7 + n) * 3, oy - q * 22, 2, 2); }
         }
         ctx.restore();
-      } else {                                                                           // Frost: viento helado en espiral, copos que arrastra y destellos de hielo
-        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-        for (let n = 0; n < 5; n++) {                                                   // ráfagas que orbitan el cuerpo
+      } else {                                                                           // Frost: 20 nieve y bruma, 30 ojos y báculo, 40 cristales, 50 viento helado en espiral
+        const L = e.clvl; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+        { const nm = L >= 40 ? 5 : 3;                                                   // bruma fría a los pies
+          for (let n = 0; n < nm; n++) { const q = ((T / 3200 + n / nm) % 1), mx = x + Math.sin(T / 1500 + n * 2.1) * 16 + (n - nm / 2) * 9, my = y - 1 - q * 8, r = 13 + q * 6;
+            const mg = ctx.createRadialGradient(mx, my, 0, mx, my, r); mg.addColorStop(0, "rgba(200,232,255," + ((L >= 40 ? 0.2 : 0.13) * Math.sin(q * Math.PI)).toFixed(3) + ")"); mg.addColorStop(1, "rgba(200,232,255,0)");
+            ctx.fillStyle = mg; ctx.beginPath(); ctx.ellipse(mx, my, r, r * 0.4, 0, 0, Math.PI * 2); ctx.fill(); } }
+        for (let n = 0; n < 12; n++) {                                                  // copos finos que caen despacio
+          const q = ((T / 4200 + rnd(n + 90)) % 1), px = x - 30 + rnd(n + 100) * 60 + Math.sin(q * 8 + n) * 5, py = y - 70 + q * 70;
+          ctx.fillStyle = "rgba(235,250,255," + (0.8 * Math.sin(q * Math.PI)).toFixed(2) + ")"; ctx.fillRect(px, py, 1.5, 1.5);
+        }
+        if (L >= 30) {
+          const pu = 0.5 + 0.5 * Math.sin(T / 380), ea = (0.6 + 0.35 * pu) * Math.max(0, 1 - (1 - fade) * 2.5), an = this.spr.anchors?.[key]?.eyes?.[f];          // ojos azules en el ancla de la cara
+          if (an && ea > 0) for (const dx0 of [-3, 3]) { const ex2 = x + an[0] + dx0, ey2 = y + an[1]; const eg = ctx.createRadialGradient(ex2, ey2, 0, ex2, ey2, 5); eg.addColorStop(0, "rgba(150,230,255," + ea.toFixed(2) + ")"); eg.addColorStop(1, "rgba(30,90,255,0)"); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex2, ey2, 6, 0, Math.PI * 2); ctx.fill(); }
+        }
+        if (L >= 40) for (let n = 0; n < 3; n++) {                                      // cristales de hielo flotando junto a los hombros
+          const sd = n % 2 ? 1 : -1, cx2 = x + sd * (20 + 3 * Math.sin(T / 700 + n)), cy2 = y - 52 + Math.sin(T / 600 + n * 2) * 4 - n * 7, r = 3 + (n === 1 ? 1.5 : 0);
+          ctx.fillStyle = "rgba(190,235,255,0.75)"; ctx.beginPath(); ctx.moveTo(cx2, cy2 - r * 1.7); ctx.lineTo(cx2 + r * 0.6, cy2); ctx.lineTo(cx2, cy2 + r * 1.7); ctx.lineTo(cx2 - r * 0.6, cy2); ctx.closePath(); ctx.fill();
+        }
+        if (L >= 50) for (let n = 0; n < 5; n++) {                                                   // ráfagas que orbitan el cuerpo
           const lvl = n / 5, rx = 24 + (n % 2) * 8, base = T / (520 + n * 90) * (n % 2 ? -1 : 1) + n * 1.9, cy = y - 8 - lvl * 40;
           for (let k = 0; k < 12; k++) {
             const a = base - k * 0.09 * (n % 2 ? -1 : 1), al = 0.5 * (1 - k / 12);
@@ -644,19 +687,19 @@ export class Renderer {
             ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * rx, cy + Math.sin(a) * rx * 0.38); ctx.lineTo(x + Math.cos(a2) * rx, cy + Math.sin(a2) * rx * 0.38); ctx.stroke();
           }
         }
-        for (let n = 0; n < 10; n++) {                                                  // copos arrastrados por el viento
+        if (L >= 50) for (let n = 0; n < 10; n++) {                                     // copos arrastrados por el viento
           const q = ((T / 1800 + rnd(n + 3)) % 1), px = x - 34 + q * 68 + Math.sin(q * 9 + n) * 4, py = y - 8 - rnd(n + 50) * 46 + Math.sin(q * 7 + n) * 5;
           ctx.fillStyle = "rgba(230,248,255," + (0.8 * Math.sin(q * Math.PI)).toFixed(2) + ")"; ctx.fillRect(px, py, 2, 2);
         }
-        for (let n = 0; n < 4; n++) {                                                   // destellos de cristal
+        if (L >= 40) for (let n = 0; n < 4; n++) {                                      // destellos de cristal
           const ph = ((T + n * 700) % 2800) / 2800, ep = Math.floor((T + n * 700) / 2800); if (ph > 0.35) continue;
           const tw = Math.sin(ph / 0.35 * Math.PI), r = 2 + 5 * tw, sx = x + (rnd(ep * 4 + n + 60) - 0.5) * 38, sy = y - 6 - rnd(ep * 4 + n + 90) * 44;
           ctx.fillStyle = "rgba(205,240,255," + (0.9 * tw).toFixed(2) + ")";
           ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx + r * 0.22, sy - r * 0.22); ctx.lineTo(sx + r, sy); ctx.lineTo(sx + r * 0.22, sy + r * 0.22);
           ctx.lineTo(sx, sy + r); ctx.lineTo(sx - r * 0.22, sy + r * 0.22); ctx.lineTo(sx - r, sy); ctx.lineTo(sx - r * 0.22, sy - r * 0.22); ctx.closePath(); ctx.fill();
         }
-        { const hg = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 48); hg.addColorStop(0, "rgba(120,200,255," + (0.12 + 0.06 * Math.sin(T / 380)).toFixed(2) + ")"); hg.addColorStop(1, "rgba(80,150,255,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y - 30, 48, 0, Math.PI * 2); ctx.fill(); }   // aura gélida
-        { const tp = this.tipPos(key, f);                                                 // báculo helado: cristal que late, anillo de escarcha y copos que caen de la punta
+        if (L >= 50) { const hg = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 48); hg.addColorStop(0, "rgba(120,200,255," + (0.12 + 0.06 * Math.sin(T / 380)).toFixed(2) + ")"); hg.addColorStop(1, "rgba(80,150,255,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y - 30, 48, 0, Math.PI * 2); ctx.fill(); }   // aura gélida
+        if (L >= 30) { const tp = this.tipPos(key, f);                                                 // báculo helado: cristal que late, anillo de escarcha y copos que caen de la punta
           if (tp) {
             const tx = x + tp.x, ty = y + tp.y, tpu = 0.5 + 0.5 * Math.sin(T / 330);
             const sg = ctx.createRadialGradient(tx, ty, 0, tx, ty, 14 + 3 * tpu); sg.addColorStop(0, "rgba(235,252,255," + (0.65 + 0.25 * tpu).toFixed(2) + ")"); sg.addColorStop(0.45, "rgba(120,200,255," + (0.3 + 0.15 * tpu).toFixed(2) + ")"); sg.addColorStop(1, "rgba(60,130,255,0)");
@@ -666,7 +709,7 @@ export class Renderer {
             for (let n = 0; n < 5; n++) { const q = ((T / 1200 + rnd(n + 160)) % 1); ctx.fillStyle = "rgba(210,242,255," + (0.9 * (1 - q)).toFixed(2) + ")"; ctx.fillRect(tx + (rnd(n + 170) - 0.5) * 14 + Math.sin(q * 6 + n) * 2, ty + 3 + q * 24, 2, 2); }
           } }
         ctx.restore();
-        spr.tinted(ctx, key, f, x, y, "#9fd8ff", 0.07, "lighter");
+        if (L >= 50) spr.tinted(ctx, key, f, x, y, "#9fd8ff", 0.07, "lighter");
       }
       ctx.restore();
     }
@@ -724,6 +767,7 @@ export class Renderer {
     const rgba = (c, al) => "rgba(" + c + "," + Math.max(0, al).toFixed(3) + ")";
     const ring = (r, w, al, dash) => { r = Math.max(0.1, r); ctx.lineWidth = w; ctx.strokeStyle = rgba(col, al); ctx.setLineDash(dash || []); ctx.beginPath(); ctx.ellipse(x, cy, r, r * ry, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); };
     const pt = (q, r) => [x + Math.cos(q) * r, cy + Math.sin(q) * r * ry];
+    if (cc.sc === "Frost") return this.iceNova(ctx, x, cy, { R: cfg.size, ry, T, a: ease * br, col, core, rgba }, e);
     if (cc.sc === "Demon") return this.infernoBurst(ctx, x, cy, { R: cfg.size, ry, T, a: ease * br, col, core, rgba }, e);   // el Demon no es mago: en vez de círculo, erupción de lava (fireCircle queda sin uso)
     ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
     const g = ctx.createRadialGradient(x, cy, 0, x, cy, R * 1.25);                                  // resplandor del suelo
@@ -774,6 +818,36 @@ export class Renderer {
         ctx.globalAlpha = Math.min(1, 0.9 * a * 1.3); ctx.drawImage(o.cv, Math.round(px + o.px), Math.round(py + o.py));
       }
       ctx.globalAlpha = 1;
+    }
+    if (L >= 50) {                                                                          // Lv 50: grietas de lava en el suelo
+      const ca = Math.max(0, 1 - Math.max(0, ck - 0.4) / 0.6); ctx.lineCap = "round";
+      for (let n = 0; n < nC; n++) {
+        const a0 = n * 2 * Math.PI / nC + rnd(n) * 0.5, len = Rr * (0.6 + 0.4 * rnd(n + 9)) * eo; let px = x, py = cy;
+        ctx.strokeStyle = rgba(core, 0.7 * ca); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(px, py);
+        for (let sg = 1; sg <= 5; sg++) { const a = a0 + (rnd(n * 7 + sg) - 0.5) * 0.7, r = len * sg / 5; px = x + Math.cos(a) * r; py = cy + Math.sin(a) * r * ry; ctx.lineTo(px, py); }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  // Frost: nova de hielo al castear (Lv 30/40/50 cada vez mayor). Onda azul que se expande desde los pies, grietas de escarcha en el suelo y esquirlas que saltan. Bajo el sprite.
+  iceNova(ctx, x, cy, k, e) {
+    const { R, ry, T, col, core, rgba } = k, ck = T / 1700, L = e.clvl, sc = L >= 50 ? 1.15 : L >= 40 ? 0.95 : 0.75, Rr = R * sc, nC = L >= 50 ? 9 : L >= 40 ? 7 : 5;
+    const rnd = (n) => { const q = Math.sin(n * 12.9898 + e.id) * 43758.5453; return q - Math.floor(q); };
+    const ex = Math.min(1, ck / 0.35), ee = 1 - (1 - ex) ** 3, fa = Math.max(0, 1 - Math.max(0, ck - 0.45) / 0.55);
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const g = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 1.1); g.addColorStop(0, rgba(core, 0.35 * fa)); g.addColorStop(0.6, rgba(col, 0.2 * fa)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 1.1, Rr * 1.1 * ry, 0, 0, Math.PI * 2); ctx.fill();
+    const wr = Math.max(0.5, Rr * ee);                                                      // onda que se expande
+    ctx.strokeStyle = rgba(core, 0.8 * fa); ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(x, cy, wr, wr * ry, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = rgba(col, 0.5 * fa); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, cy, wr * 0.7, wr * 0.7 * ry, 0, 0, Math.PI * 2); ctx.stroke();
+    for (let n = 0; n < nC; n++) {                                                         // grietas de escarcha que se abren desde los pies
+      const a0 = n * 2 * Math.PI / nC + rnd(n) * 0.5, len = Rr * (0.65 + 0.35 * rnd(n + 9)) * ee; let px = x, py = cy;
+      ctx.strokeStyle = rgba(core, 0.75 * fa); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(px, py);
+      for (let sg = 1; sg <= 5; sg++) { const a = a0 + (rnd(n * 7 + sg) - 0.5) * 0.7, r = len * sg / 5; px = x + Math.cos(a) * r; py = cy + Math.sin(a) * r * ry; ctx.lineTo(px, py); }
+      ctx.stroke();
+      const sh = Math.min(1, Math.max(0, (ck - 0.15 - n * 0.02) / 0.3)) * fa;                // esquirla de hielo al final de la grieta
+      if (sh > 0) { const h = 14 * sh * sc; ctx.fillStyle = rgba(core, 0.7 * sh); ctx.beginPath(); ctx.moveTo(px - 2, py); ctx.lineTo(px, py - h); ctx.lineTo(px + 2, py); ctx.closePath(); ctx.fill(); }
     }
     ctx.restore();
   }
