@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.52.2 · Puestos: diálogos propios (2026-10-11)
+- Precio y rótulo del puesto se piden con un cuadro propio (el `prompt` del navegador está bloqueado en muchos webviews). Pie de página correcto al montar un puesto. Probado: tienda NPC, montar y abrir puesto, plantar y alimentar.
+
 ## 0.52.1 · Puestos: arreglo y botón Tienda (2026-10-11)
 
 - Arreglo: `/puesto` no abría nada (el id del cuadro chocaba con el rastreador del tutorial; ahora es el 48).

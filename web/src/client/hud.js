@@ -6,7 +6,7 @@ const talentName = id => talentDef(id)?.name || id;
 // clásico = barra de piedra estrecha como el original; remastered = orbes y paneles modernos.
 import * as R from "../shared/rules.js";
 import { itemDef, itemName, packKey } from "./names.js";
-import { statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
+import { FEED, tasteOf, statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
 import { SCHOOL_OF, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
@@ -187,9 +187,20 @@ export class Hud {
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
       const fxl = this.effectLine(d, it); if (fxl) L.push('<span style="color:#9fe39a">' + fxl + "</span>");
     } else if (/Candy$/.test(d.name)) L.push(d.effectType === 4 ? "Caramelo: cura la vida de tu compañero." : d.effectType === 5 ? "Caramelo: devuelve maná a tu compañero." : "Caramelo: revive a tu compañero inconsciente.");
+    else if (FEED[d.id]) this.feedLines(d, me, L);
+    else if (d.effectType === 30) L.push("Bolsa de semillas: doble clic para sembrar en tierra de cultivo (habilidad de Agricultura " + d.v2 + ").");
     else L.push(d.type === ITYPE.EAT ? "Consumible" : "Objeto");
     L.push("Peso " + (realStats(d, it).weight / 100).toFixed(2) + (isStack(d) ? " c/u" : ""));
     return L;
+  }
+
+  // productos de granja: qué le hacen a un compañero y si a los que llevas les gusta (companion.TASTE)
+  feedLines(d, me, L) {
+    const f = FEED[d.id], N = { hp: "vida máxima", mp: "maná máximo", atk: "daño" };
+    L.push("Comida de compañero: " + (f.revive ? "revive a tu compañero inconsciente." : f.stat ? "+1 " + N[f.stat] + " permanente." : f.heal ? "cura " + f.heal + " de vida." : "devuelve " + f.mana + " de maná."));
+    const T = { love: "le encanta (+50 %)", hate: "lo rechaza" };
+    for (const b of (me?.bag || []).filter(i => i.comp)) { const t = f.revive ? "ok" : tasteOf(b.comp.sp, d.id); if (T[t]) L.push('<span style="color:' + (t === "love" ? "#9fe39a" : "#e39a9a") + '">' + (b.comp.nm || b.comp.sp) + ": " + T[t] + "</span>"); }
+    L.push("Arrástralo sobre la bola o usa el doble clic con el compañero fuera.");
   }
 
   // efecto especial de collares y anillos (ADDEFFECT de Item.cfg; mismos casos que shared/inventory.js recalc)

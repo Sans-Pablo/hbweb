@@ -4,8 +4,24 @@
 //   - montar: «/puesto» dentro de shop, warehouse o herrería → tu mochila; clic en un objeto = ponerlo (pide el precio), «Abrir puesto» lo monta.
 import { ClassicDialog, INK, RED } from "./classicdialog.js";
 import { itemName, itemDef } from "./names.js";
+import { t as tr } from "./i18n.js";
 
 const GOLD = 90;
+// Mini-cuadro propio (window.prompt está bloqueado en muchos navegadores/webviews y es feo): devuelve Promise<string|null>.
+function ask(label, def, numeric) {
+  return new Promise(res => {
+    const bg = document.createElement("div"); bg.style.cssText = "position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#0008";
+    const box = document.createElement("div"); box.style.cssText = "background:#3a2a1a;border:2px solid #c8a96a;border-radius:4px;padding:12px 14px;color:#f0e0b8;font:13px sans-serif;display:grid;gap:8px;min-width:240px";
+    const t = document.createElement("div"); t.textContent = tr(label);
+    const inp = document.createElement("input"); inp.value = def; inp.style.cssText = "font:14px sans-serif;padding:4px;background:#f0e0b8;color:#2d1919;border:1px solid #2d1919"; if (numeric) { inp.inputMode = "numeric"; inp.maxLength = 9; }
+    const row = document.createElement("div"); row.style.cssText = "display:flex;gap:8px;justify-content:flex-end";
+    const done = v => { bg.remove(); res(v); };
+    const mk = (txt, ok) => { const b = document.createElement("button"); b.textContent = tr(txt); b.style.cssText = "padding:3px 12px;cursor:pointer"; b.onclick = () => done(ok ? inp.value : null); return b; };
+    row.append(mk("Cancelar", false), mk("Ok", true)); box.append(t, inp, row); bg.append(box); document.body.append(bg);
+    inp.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") done(inp.value); else if (e.key === "Escape") done(null); };
+    inp.focus(); inp.select();
+  });
+}
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 export function registerStall(gui, api) {
   const dlg = new class extends ClassicDialog {
@@ -40,8 +56,10 @@ export function registerStall(gui, api) {
     pick(r, me) {
       if (r.act === "go") {
         if (!this.set.length) { api.log("Primero elige algún objeto de la lista y ponle precio."); return; }
-        const title = (window.prompt("Rótulo del puesto (máx. 24 letras):", "En venta") || "En venta").slice(0, 24);
-        api.send({ t: "stallopen", title, items: this.set.map(s => ({ uid: s.uid, price: s.price, count: s.count })) }); return;
+        ask("Rótulo del puesto (máx. 24 letras):", "En venta").then(v => {
+          if (v === null) return;
+          api.send({ t: "stallopen", title: (v.trim() || "En venta").slice(0, 24), items: this.set.map(s => ({ uid: s.uid, price: s.price, count: s.count })) });
+        }); return;
       }
       if (r.act === "take") { api.send({ t: "stalltake" }); return; }
       if (r.act === "close") { api.send({ t: "stallclose" }); return; }
@@ -49,8 +67,10 @@ export function registerStall(gui, api) {
         const i = this.set.findIndex(s => s.uid === r.it.uid);
         if (i >= 0) { this.set.splice(i, 1); return; }
         if (this.set.length >= 8) { api.log("Un puesto admite hasta 8 objetos."); return; }
-        const price = Math.floor(+window.prompt("Precio por unidad de " + this.label(r.it) + ":", "100"));
-        if (price >= 1) this.set.push({ uid: r.it.uid, price, count: r.it.count || 1 });
+        ask("Precio por unidad de " + this.label(r.it) + ":", "100", true).then(v => {
+          const price = Math.floor(+v);
+          if (price >= 1 && !this.set.some(s => s.uid === r.it.uid)) this.set.push({ uid: r.it.uid, price, count: r.it.count || 1 });
+        });
         return;
       }
       if (this.st && !this.st.mine) api.send({ t: "stallbuy", sid: this.st.sid, uid: r.it.uid, count: (window.event?.ctrlKey || this.ctrl) ? r.it.count : 1 });
@@ -60,7 +80,7 @@ export function registerStall(gui, api) {
   gui.register(dlg);
   const show = () => { if (!gui.isOpen(48)) gui.open(48); };
   return {
-    setup() { dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.view = 0; show(); },
+    setup() { dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.footer = "Clic: poner a la venta (pide el precio por unidad); otro clic lo quita."; dlg.view = 0; show(); },
     view(cit) { api.send({ t: "stallview", sid: cit.stall.sid }); },
     setCtrl(v) { dlg.ctrl = v; },
     onEvent(ev, me) {

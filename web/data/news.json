@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Puestos: diálogos propios (v0.52.2)",
+        "en": "Stalls: own dialogs (v0.52.2)"
+      },
+      "items": [
+        {
+          "es": "Al montar un puesto, el precio y el rótulo se piden con un cuadro propio (antes no aparecía nada en algunos navegadores).",
+          "en": "When setting up a stall, price and sign use an in-game box (nothing showed up in some browsers before)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Puestos: arreglo y botón Tienda (v0.52.1)",
         "en": "Stalls: fix and Stall button (v0.52.1)"
       },
