@@ -40,7 +40,7 @@ export function openBotStats(adv, log = () => {}) {
       name: b.name, lv: b.level, side: b.side, arch: r.arch, lang: r.lang, origin: r.origin?.[0], motive: r.motive?.[0], fear: r.fear?.[0], quirk: r.quirk?.[0],
       life: life(b), story: Residents.storyOf(b, "es"), goal: Residents.goalText(r.goal, "es"), guild, party: b.party?.names?.filter(n => n !== b.name) || [],
       act: h.st || stateOf(b), map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, gold: b.gold, bank: b.bank?.length || 0, bag: b.bag.length,
-      kills: b.kills || 0, deaths: r.deaths | 0, ek: b.ek || 0, scare: r.scare | 0, trades: r.trades | 0, chats: r.chats | 0, exp: b.exp,
+      kills: b.kills || 0, deaths: r.deaths | 0, ek: b.ek || 0, scare: r.scare | 0, build: r.build || "", peak: r.hum?.peak, afk: !!r._afk, grudge: r.grudge > 0, trades: r.trades | 0, chats: r.chats | 0, exp: b.exp,
       expMin: (b.exp - (h.exp0 ?? b.exp)) / mins, mins: Math.round(mins), still: Math.round(h.still * 10 / 60 * 10) / 10,
       kinds: top(b.kills >= 0 ? b.kinds : {}, 5), killedBy: top(r.qa?.deaths, 3), dlv: r.dlv || {}, ethos: null,
       rel: rel.slice(0, 8), relN: rel.length, states: Object.fromEntries(Object.entries(h.states).map(([k, v]) => [k, Math.round(100 * v / total)])),

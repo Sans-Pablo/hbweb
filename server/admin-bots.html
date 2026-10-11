@@ -24,7 +24,7 @@ const ARCH={warrior:"Guerrero",hunter:"Cazador",trader:"Comerciante",wanderer:"V
 document.querySelectorAll(".card").forEach(c=>{if(!c.closest("#botsv"))c.classList.add("srv")});
 const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadParties();loadAn();loadHum()}};
 $("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");
-const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
+const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["build","Build"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
 let bots=[],sort="lv",dir=-1,cur=null,sub="log";
 $("#bth").innerHTML=COLS.map(([k,t])=>'<th data-k="'+k+'">'+t+'</th>').join("");
 const val=(b,k)=>k==="guild"?(b.guild?.name||""):k==="arch"?ARCH[b.arch]||b.arch:b[k];
