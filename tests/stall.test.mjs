@@ -30,6 +30,7 @@ assert.ok(!Stall.open(other, A, { items: [{ uid: sword.uid, price: 10 }] }), "ma
 assert.ok(!w.command(A.id, { t: "stallopen", items: [{ uid: sword.uid, price: 0 }] }));
 assert.ok(!w.command(A.id, { t: "stallopen", items: [] }));
 // abrir: sword + 4 de 10 pociones
+{ const k = w.grid.idx(A.x + 2, A.y); w.teleports.set(k, { x: A.x + 2, y: A.y, map: "x" }); assert.ok(!w.command(A.id, { t: "stallopen", items: [{ uid: sword.uid, price: 300 }] }), "BUG-012: junto a un teletransporte no"); w.teleports.delete(k); }
 w.drainEvents(); const okOpen = w.command(A.id, { t: "stallopen", title: "Armas!", items: [{ uid: sword.uid, price: 300 }, { uid: pots.uid, price: 20, count: 4 }] }); if (!okOpen) console.log(w.drainEvents()); assert.ok(okOpen);
 assert.equal(db.length, 1); assert.ok(!A.bag.some(i => i.uid === sword.uid), "el objeto sale de la mochila");
 assert.equal(A.bag.find(i => i.id === pots.id).count, potsBase - 4);

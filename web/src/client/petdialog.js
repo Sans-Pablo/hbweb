@@ -26,6 +26,9 @@ export function registerPetDialog(gui, api) {
             : { act: "mode", text: "Mode", right: c.mode === "peace" ? "Peace" : "Attack", tip: "Click to switch between Peace and Attack." },
           { act: "reset", text: "Reset talents", right: String(Tal.resetCost(c)), tip: "Only near the pet nurse (Gail, in the Shop). Costs gold." },
         ];
+        // BUG-010: rasgos y evolución de la especie
+        if (Sch.TIER2[c.sp]) out.push({ act: "info", text: "Evolves → " + Sch.TIER2[c.sp], right: "Lv " + Sch.TRADE_LEVEL, color: c.lvl >= Sch.TRADE_LEVEL ? RED : null, tip: "At level " + Sch.TRADE_LEVEL + " the nurse (Gail) evolves it into " + Sch.TIER2[c.sp] + "; it returns to level 1." });
+        if (Tal.isDummy(c)) out.push({ act: "info", text: c.cls ? Tal.DUMMY_NAMES[c.cls] : "Doomy: no class yet", right: "", color: c.cls ? Tal.DUMMY_COLORS[c.cls] : null, tip: DUMMY_HINTS[["healer", "buffer", "aura"].indexOf(c.cls)] || "Learn a spell to fix its class: Healer, Buff or Aura Doomy." });
         const sc = Sch.schoolOfSpecies(c.sp);
         if (sc) out.push({ act: "school", text: "School: " + Sch.SCHOOL_NAMES[sc], right: "MP " + (c.mp ?? Tal.maxMp(c)) + "/" + Tal.maxMp(c), color: RED, tip: "Casts your " + Sch.SCHOOL_NAMES[sc] + " attack spells with its own mana. No natural regeneration: feed it Blue Candies." + (Sch.TIER2[c.sp] ? " At level " + Sch.TRADE_LEVEL + " it can evolve into a " + Sch.TIER2[c.sp] + " at the pet nurse." : "") });
         else if (!Tal.isDummy(c)) out.push({ act: "school", text: "General school", right: "combat", tip: "Combat summon only: it casts no magic." });

@@ -1,0 +1,22 @@
+// v0.55.0: reconectar no cura (BUG-002).
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { Grid } from "../web/src/shared/grid.js";
+import { Adventure } from "../web/src/shared/adventure.js";
+import { GameData } from "../web/src/shared/data.js";
+import { setDungeonPalette } from "../web/src/shared/dungeon.js";
+const dir = new URL("../web/data/", import.meta.url), J = f => JSON.parse(readFileSync(new URL(f, dir)));
+const meta = J("map.json"), npcDb = J("npc.json");
+const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
+setDungeonPalette(J("dungeon_palette.json"));
+const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL(meta.map + ".bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps: {} });
+import { saveOf } from "../web/src/shared/systems/player.js";
+const id = a.addPlayer("herido"), p = a.farm.ents.get(id);
+p.hp = 7; p.mp = 3;
+const sv = JSON.parse(JSON.stringify(saveOf(a.farm, id)));
+const b = a.farm.ents.get(a.addPlayer("herido2", sv));
+assert.equal(b.hp, 7, "conserva la vida"); assert.equal(b.mp, 3, "conserva el maná");
+p.dead = true; assert.equal(saveOf(a.farm, id).hp, 0);
+const c = a.farm.ents.get(a.addPlayer("herido3", JSON.parse(JSON.stringify(saveOf(a.farm, id)))));
+assert.equal(c.hp, 1, "el muerto reconecta con 1");
+console.log("OK reconnect-hp");

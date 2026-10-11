@@ -19,7 +19,7 @@ const rank = (c, id) => Tal.rankOf(c, id);
 // Vampiric Aura (invento): devuelve a quien la recibe ese % del daño que hace (hasta 8 % al nivel 50 con rango 5).
 // Porcentajes de aura: crecen con el nivel del Dummy; el rango (1..5) los lleva del 60 % al 100 % del máximo del nivel
 const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08, dvamp: 0.16, dstam: 0.08 };            // al nivel 50 con rango 5: 5 %/s de vida, 40 % de exp, 30 % menos daño, 4 %/s de maná y de estamina
-export const auraPct = (c, id) => { const r = rank(c, id); return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.1 * r) * 100) / 100 : 0; };
+export const auraPct = (c, id) => { const r = rank(c, id), mx = Tal.TALENTS.find(t => t.id === id).max; return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.5 * r / mx) * 100) / 100 : 0; };      // BUG-016: 8 rangos por aura (49 puntos al nivel 50 se gastan enteros: 6×8+3+1); el rango máximo da el 100 %
 const MASS_CD = 60000, MASS_AURA_MS = 20000;
 
 // Dueño + grupo (mismo mundo) + compañeros de todos ellos
@@ -125,9 +125,9 @@ export function think(w, n, m, c) {
       if (names.length) talk(w, n, "aura", names.join(" + ") + " Aura" + (k > 1 ? " x2" : ""), {}, true);
     }
     for (const e of near) {
-      if (hp > 0 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + Math.max(1, Math.round(e.maxHp * hp / 100)));
+      if (hp > 0 && e.hp < e.maxHp) { const g = Math.min(e.maxHp - e.hp, Math.max(1, Math.round(e.maxHp * hp / 100))); e.hp += g; w.emit({ t: "heal", id: e.id, amount: g, by: n.id, aura: 1 }); }       // BUG-021: número verde sobre el personaje, visible para todos
       if (sta > 0 && e.kind === "player" && e.sp < e.maxSp) e.sp = Math.min(e.maxSp, e.sp + Math.max(1, Math.round(e.maxSp * sta / 100)));
-      if (mp > 0 && e.kind === "player" && e.mp < e.maxMp) e.mp = Math.min(e.maxMp, e.mp + Math.max(1, Math.round(e.maxMp * mp / 100)));
+      if (mp > 0 && e.kind === "player" && e.mp < e.maxMp) { const g = Math.min(e.maxMp - e.mp, Math.max(1, Math.round(e.maxMp * mp / 100))); e.mp += g; w.emit({ t: "auramp", id: e.id, amount: g, by: n.id }); }
       if (ex > 0 || df > 0 || vp > 0 || hp > 0 || sta > 0 || mp > 0) e.aura = { exp: ex, def: df, vamp: vp, regen: hp, sta, mana: mp, x2: k > 1, by: n.nick || n.name, until: w.time + 2500 };       // el cliente la muestra en el panel de estados
     }
   }

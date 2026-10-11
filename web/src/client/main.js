@@ -16,8 +16,9 @@ import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
 import { apparelOf, equipKeys } from "./look.js";
-import { itemDef, itemName } from "./names.js";
-import { ITYPE } from "../shared/items.js";
+import { itemDef, itemName, packKey } from "./names.js";
+import { ITYPE, EFFECT } from "../shared/items.js";
+import { realStats } from "../shared/attributes.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
 import { registerParty } from "./party.js";
@@ -35,6 +36,7 @@ import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
 import { pickBot, observerBar } from "./observer.js";
 import { SCHOOL_OF, spellSchool, taught } from "../shared/systems/schools.js";
+import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 
@@ -174,17 +176,38 @@ async function main() {
     const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
     return { name: itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : ""), lines };
   };
+  // BUG-009: ficha de un objeto de tienda (sin instancia): sprite, estadísticas y comparación con lo que llevas puesto en esa ranura
+  gui.describeDef = id => {
+    const me = world.ents.get(pid), d = itemDef(id); if (!me || !d) return null;
+    const it = { uid: -1, id, count: 1, life: realStats(d, null).maxLife, attr: null };
+    const strip = l => l.replace(/<[^>]+>/g, "");
+    const lines = hud.describe(it, me).map(l => ({ t: strip(l), c: /color:#9fe39a/.test(l) ? "#9fe39a" : undefined }));
+    if (d.type === ITYPE.EQUIP) {
+      const cur = me.bag.find(i => Object.values(me.equip || {}).includes(i.uid) && itemDef(i.id).equipPos === d.equipPos);
+      const atk = x => x.effectType === EFFECT.ATTACK || x.effectType === EFFECT.ATTACK_MANASAVE || x.effectType === EFFECT.ATTACK_ARROW;
+      const val = x => atk(x) ? x.v1 * (x.v2 + 1) / 2 + x.v3 : x.v1;
+      if (cur) {
+        const cd = itemDef(cur.id), diff = Math.round((val(d) - val(cd)) * 10) / 10;
+        lines.push({ t: "Puesto: " + itemName(cur.id, cur.attr) + " (" + (diff > 0 ? "+" : "") + diff + (atk(d) ? " daño medio" : " defensa") + ")", c: diff > 0 ? "#9fe39a" : diff < 0 ? "#e39a9a" : "#e8e8d0" });
+      } else lines.push({ t: "Ranura libre: nada puesto", c: "#9fe39a" });
+    }
+    return { name: itemName(id), lines, sprite: [packKey(d), d.spriteFrame] };
+  };
   gui.onSound = n => sound.playRaw("E" + n, 1, 0);
   fx.onSfx = (n, x, y) => sound.playAt(n, x, y);
   gui.onItemDrop = (it, x, y, dlg, cx, cy) => {
     const me = world.ents.get(pid), inst = me?.bag.find(i => i.uid === it.uid), d = inst && itemDef(inst.id);
     if (!me || me.dead || !inst) return;
     if (dlg && npcUi.dropOn(dlg, inst.uid, x, y)) return;           // lista de venta o almacén
+    if (!dlg && y < 548 && cx !== undefined && d && FEED[d.id]) {                 // BUG-007: comida soltada sobre el compañero
+      const [wx, wy] = renderer.toWorld(cx, cy), pet = ctl.pickPet(wx, wy);
+      if (pet) { conn.send({ t: "use", uid: inst.uid, dest: pet.ball }); return; }
+    }
     if (!dlg && y < 548 && dropOnCitizen(inst.uid, x, y, cx, cy)) return;
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
     } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
-      if (d && /Candy$/.test(d.name)) {                          // caramelo soltado sobre una bola: se lo come ese compañero
+      if (d && (/Candy$/.test(d.name) || FEED[d.id])) {          // caramelo o comida soltados sobre una bola: se lo come ese compañero
         const nx = x - dlg.x - 32 - it.dx, ny = y - dlg.y - 44 - it.dy;
         let best = null, bd = 1e9;
         for (const o of me.bag) { if (!o.comp || !Number.isFinite(o.x)) continue; const dd = Math.hypot(o.x - nx, o.y - ny); if (dd < bd) { bd = dd; best = o; } }
@@ -282,6 +305,8 @@ async function main() {
   });
   // Teclas del cliente original (Game.cpp, OnKeyUp/OnKeyDown). Las acciones tienen nombre propio;
   // los botones de la interfaz usan los mismos nombres.
+  // BUG-018: el clic derecho nunca abre el menú de Windows (ni en los paneles DOM como F1); solo se respeta en campos de texto
+  document.addEventListener("contextmenu", e => { if (!e.target.closest?.("input[type=text],input:not([type]),textarea")) e.preventDefault(); });
   const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", news: "news" };
   const togglePanel = id => document.getElementById(id).classList.toggle("open");
   const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "", whisper: true, shout: true };
@@ -605,6 +630,7 @@ async function main() {
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia
+      if (ev.t === "companion" && ev.on && ev.cls === "aura" && ev.id === pid && opts.statusPanel !== true) { setOpt("statusPanel", true); hud.log("Panel de estados activado (aura del Doomy)."); }       // BUG-021
       if ((ev.t === "companion" && ev.on || ev.t === "ball") && ev.id === pid) {         // baja las hojas de la especie para el icono y el compañero
         const sp = assets.npcDb[ev.sp]?.sprite;
         if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);

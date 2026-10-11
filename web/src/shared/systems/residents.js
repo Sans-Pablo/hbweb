@@ -1106,6 +1106,11 @@ function stallAI(adv, w, p, r, home) {
     if (w.map.id !== "gshop_1f") { r._stall = null; return; }
     if (!st.done) {
       st.done = true; st.back = now + 4000;
+      // BUG-012: el puesto no se monta junto a la puerta; se aparta a ≥ 5 casillas de cualquier teletransporte
+      const nearTp = (x, y) => [...w.teleports.values()].some(t => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) <= 4);
+      if (nearTp(p.x, p.y)) for (const [dx, dy] of [[6, 0], [-6, 0], [0, 6], [0, -6], [6, 6], [-6, -6], [6, -6], [-6, 6], [9, 0], [-9, 0], [0, 9], [0, -9]]) {
+        const sp = w.freeSpotNear(p.x + dx, p.y + dy); if (sp && !nearTp(sp[0], sp[1])) { adv.relocate(p, w, sp); break; }
+      }
       const mine = stallOf(adv, p);
       if (mine) {
         const gold = mine.gold; adv.command(p.id, { t: "stalltake" });

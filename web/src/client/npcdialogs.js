@@ -11,7 +11,7 @@ import { ClassicDialog } from "./classicdialog.js";
 import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
-import { BRANCH_NAMES } from "../shared/systems/talents.js";
+import { BRANCH_NAMES, DUMMY_NAMES, DUMMY_COLORS } from "../shared/systems/talents.js";
 import { getLang, t } from "./i18n.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
@@ -172,6 +172,10 @@ export function registerNpcDialogs(gui, api) {
 
   // hacia dónde se abre el menú: pegado al cursor (tX = msX - 117, tY = msY - 50)
   const place = (mx, my) => { query.x = clamp(mx - 117, 0, 799 - 235); query.y = clamp(my - 50, 0, 599 - 100); };
+  const FARMER_HELP = [
+    "Granjero: aquí tienes todas las semillas y el Manual de Cultivo.",
+    "Usa el manual para aprender Farming; la azada se compra en la herrería. Siembra la bolsa de semillas en tierra libre y cosecha con la azada.",
+  ];
   const MENU = {          // qué abre cada NPC (Game.cpp, CommandProcessor)
     [NPC.SHOP]: { mode: 5, link: 11, shop: 1 }, [NPC.BLACKSMITH]: { mode: 5, link: 11, shop: 2 },
     [NPC.MAGE]: { mode: 0, link: 16 }, [NPC.WAREHOUSE]: { mode: 0, link: 14 },
@@ -180,6 +184,11 @@ export function registerNpcDialogs(gui, api) {
   // clic en un NPC de ciudad
   function clickNpc(e, mx, my) {
     if (e.role === ARENA.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; arena.open(); return true; }
+    if (e.role === "farmer") {      // BUG-013: granjero de Aresfarm: todas las semillas y el manual, con explicación
+      trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
+      for (const l of FARMER_HELP) api.log(l);
+      shop.begin(1, true); gui.open(11); return true;
+    }
     if (e.role === HOSPITAL.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; hospital.tab = 0; hospital.view = 0; gui.open(41); return true; }
     const cfg = MENU[e.type]; if (!cfg) return false;
     trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
@@ -209,7 +218,7 @@ export function registerNpcDialogs(gui, api) {
   // ------------------------------------------------------------ 11: tienda
   const shop = {
     id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false,
-    begin(type) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
+    begin(type, farm = false) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => farm ? /^(SeedBag(|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
     onOpen() { if (!this.rows.length) this.begin(this.type); },
     maxQty(me) { return Math.max(1, MAX_ITEMS - bagCount(me)); },
     price(me, row) { return listPrice(stat(me, "chr"), row.price); },
@@ -228,6 +237,7 @@ export function registerNpcDialogs(gui, api) {
         for (let i = 0; i < SHOP_ROWS; i++) {
           const row = this.rows[i + this.view]; if (!row) break;
           const over = within(lx, ly, 20, 220, i * SHOP_ROW_H + 65, i * SHOP_ROW_H + 79), col = over ? WHITE : DARK;
+          if (over) { const real = api.itemByName(row.name.replace(/^(10|100)Arrows$/, "Arrow")); if (real) g.hoverDef = real.id; }      // BUG-009: ficha al pasar el cursor
           g.aligned(10, 190, i * SHOP_ROW_H + 65, row.display, col);
           g.aligned(148, 260, i * SHOP_ROW_H + 65, String(this.price(me, row)).padStart(6, " "), col);
         }
@@ -455,17 +465,28 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
   const hospital = new class extends ClassicDialog {
-    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos"], footer: "Un caído no se invoca hasta revivirlo." }); }
+    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], footer: "Un caído no se invoca hasta revivirlo." }); }
+    // BUG-008: texto de la pestaña de ayuda (cada elemento es un párrafo; se ajusta al ancho del cuadro)
+    static HELP = ["CUIDADOS: cura a los heridos (2 de oro por punto de vida) o revive a los caídos (más caro).",
+      "EVOLUCIÓN: Orc, Tentocle y Cannibal-Plant nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
+      "BOLAS: compra una bola de nivel 1; previsualiza antes.",
+      "CARAMELOS: rojo vida, azul maná, verde revive. Arrástralos al compañero.",
+      "COMIDA: la de la granja da mejoras permanentes; arrástrala al compañero o a su bola.",
+      "DOOMY: Healer (verde) cura, Buff (amarillo) protege, Aura (azul) regenera."];
+    helpLines(g) { return this.constructor.HELP.flatMap(p => this.wrap(g, t(p), this.w - 40, 10)); }
     rows(me) {
+      if (this.tab === 3) return [];
       if (this.tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
       if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, text: sp.replace(/-/g, " ") + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
       const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || i.comp.sp) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
       return ups.concat(me.bag.filter(i => i.comp).map(i => {
-        const c = i.comp, st = c.down ? "Inconsciente" : hpOf(me, c) < maxOf(me, c) ? "Herido" : "Sano";
-        return { uid: i.uid, text: (c.nm || c.sp) + " (" + c.sp.replace(/-/g, " ") + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
+        const c = i.comp, hp = hpOf(me, c), mx = maxOf(me, c), st = c.down ? "Inconsciente" : hp < mx ? "Herido " + hp + "/" + mx : "Sano";
+        const kind = c.sp === "Dummy" && c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
+        return { uid: i.uid, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : c.sp === "Dummy" && DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
       }));
     }
     drawBody(g, me) {
+      if (this.tab === 3) { const L = this.helpLines(g); L.forEach((l, i) => i < 15 && g.text(this.mx, 66 + i * 13, l, INK, { size: 10 })); return; }
       g.text(14, 62, this.tab === 2 ? "Caramelos" : this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
       if (!this.rows(me).length) g.aligned(0, this.w, 120, "No llevas ninguna bola de compañero.", INK);
     }

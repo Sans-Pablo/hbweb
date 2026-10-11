@@ -2,6 +2,13 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.55.0 · Doomy, hospital y granja (2026-10-11)
+- Doomy (sistema Dummy): nombres y colores por clase (Healer verde, Buff amarillo, Aura azul); barras de HP/maná/exp de los summons diferenciadas; indicador de zona menos intrusivo; Aura Doomy muestra HP/maná sobre el personaje (opción F12, visible a otros jugadores, evento `auramp`).
+- Hospital de compañeros: HP en las filas, nombre y color de Doomy, pestaña Ayuda. Tienda: al pasar el ratón se ve sprite, estadísticas completas y comparación con lo equipado. Summons: filas de evolución y clase Doomy en Info; dar de comer arrastrando el alimento al summon o con doble clic.
+- Arreglos: sprite de personaje parado (pecho), PV al cambiar de mapa, bola de Dummy desde F1 → Herramientas, sin puestos en entradas/teletransportes, grimorio de vuelta en la barra inferior, puntos de aura al nivel 50, guarda de reaparición tras morir.
+- Granjero en Aresfarm (77,106): vende todas las semillas y el Manual de Cultivo, con explicación. Test `farmer.test.mjs`.
+- Pendiente: BUG-019 (diálogos unificados) y fichas ampliadas de más especies (BUG-010).
+
 ## 0.54.1 · Publicación online arreglada (2026-10-11)
 - `net-bot`, `net-persist` y `net-walk` usan `NET_PROTO` en vez de `proto: 6` fijo (el CI fallaba desde v0.52.0 al subir el protocolo y Pages no se desplegaba). `data.test` ya funciona en Windows.
 

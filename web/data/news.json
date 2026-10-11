@@ -11,6 +11,31 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Doomy, hospital y granja (v0.55.0)",
+        "en": "Doomy, hospital and farm (v0.55.0)"
+      },
+      "items": [
+        {
+          "es": "Doomy tiene nombre y color por clase (Healer, Buff, Aura); Aura Doomy muestra HP/maná sobre el personaje (opción en F12).",
+          "en": "Doomy has a name and colour per class (Healer, Buff, Aura); Aura Doomy shows HP/mana above the character (option in F12)."
+        },
+        {
+          "es": "Hospital con vida de cada summon y pestaña Ayuda; la tienda enseña sprite y estadísticas al pasar el ratón, comparando con lo que llevas puesto.",
+          "en": "Hospital shows each summon's HP and has a Help tab; shop hover shows sprite and full stats, compared to what you wear."
+        },
+        {
+          "es": "Nuevo granjero en Aresfarm (77,106): semillas y Manual de Cultivo. Prueba comprarlas y sembrar.",
+          "en": "New farmer in Aresfarm (77,106): seeds and Farming Manual. Try buying and sowing."
+        },
+        {
+          "es": "Arreglos: PV al cambiar de mapa, grimorio en la barra, puestos no en entradas, puntos de aura a nivel 50, dar de comer a summons arrastrando.",
+          "en": "Fixes: HP on map change, spellbook on the bar, no stalls on entrances, aura points at level 50, feeding summons by dragging."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Publicación online arreglada (v0.54.1)",
         "en": "Online publishing fixed (v0.54.1)"
       },

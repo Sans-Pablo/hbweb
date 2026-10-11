@@ -24,7 +24,8 @@ export const TALENTS = [
 // ---- Dummy (summon de apoyo único, systems/dummy.js): 3 clases en lugar de las 3 ramas; la primera magia que se aprende fija la clase.
 //  dummy: true · lvl = nivel mínimo del compañero · max = rangos (cada rango potencia la magia)
 export const DUMMY_BRANCHES = ["healer", "buffer", "aura"];
-export const DUMMY_NAMES = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
+export const DUMMY_BRANCH_NAMES = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
+export const DUMMY_NAMES = { healer: "Healer Doomy", buffer: "Buff Doomy", aura: "Aura Doomy" };       // BUG-020: nombre por clase (la especie sigue siendo «Dummy» en los datos)
 export const DUMMY_COLORS = { healer: "#4fe05a", buffer: "#f2d83a", aura: "#4aa0ff" };       // verde, amarillo, azul
 TALENTS.push(
   { id: "dheal", br: "healer", tier: 0, max: 5, dummy: true, name: "Heal", spell: 1, desc: "Heals the weakest ally in range" },
@@ -35,18 +36,18 @@ TALENTS.push(
   { id: "dpfm", br: "buffer", tier: 0, max: 5, dummy: true, lvl: 20, name: "Protection From Magic", spell: 33, desc: "Reduces magic damage taken by an ally" },
   { id: "dberserk", br: "buffer", tier: 0, max: 5, dummy: true, lvl: 25, name: "Berserk", spell: 50, desc: "Double damage for an ally" },
   { id: "dmassb", br: "buffer", tier: 0, max: 1, dummy: true, lvl: 30, name: "Mass Buff", desc: "MASS: all your buffs on the whole party (60 s)" },
-  { id: "dregen", br: "aura", tier: 0, max: 5, dummy: true, name: "Regeneration Aura", desc: "% of max HP regenerated per second" },
-  { id: "dexp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 10, name: "Wisdom Aura", desc: "% extra experience" },
-  { id: "ddef", br: "aura", tier: 0, max: 5, dummy: true, lvl: 15, name: "Defense Aura", desc: "% less damage taken" },
-  { id: "dmana", br: "aura", tier: 0, max: 5, dummy: true, lvl: 20, name: "Mana Aura", desc: "% of max MP regenerated per second" },
-  { id: "dstam", br: "aura", tier: 0, max: 5, dummy: true, lvl: 12, name: "Stamina Aura", desc: "% of max stamina regained per second" },
-  { id: "dvamp", br: "aura", tier: 0, max: 5, dummy: true, lvl: 25, name: "Vampiric Aura", desc: "% of the damage dealt by allies returns to them as life" },
+  { id: "dregen", br: "aura", tier: 0, max: 8, dummy: true, name: "Regeneration Aura", desc: "% of max HP regenerated per second" },
+  { id: "dexp", br: "aura", tier: 0, max: 8, dummy: true, lvl: 10, name: "Wisdom Aura", desc: "% extra experience" },
+  { id: "ddef", br: "aura", tier: 0, max: 8, dummy: true, lvl: 15, name: "Defense Aura", desc: "% less damage taken" },
+  { id: "dmana", br: "aura", tier: 0, max: 8, dummy: true, lvl: 20, name: "Mana Aura", desc: "% of max MP regenerated per second" },
+  { id: "dstam", br: "aura", tier: 0, max: 8, dummy: true, lvl: 12, name: "Stamina Aura", desc: "% of max stamina regained per second" },
+  { id: "dvamp", br: "aura", tier: 0, max: 8, dummy: true, lvl: 25, name: "Vampiric Aura", desc: "% of the damage dealt by allies returns to them as life" },
   { id: "dres", br: "aura", tier: 0, max: 3, dummy: true, lvl: 50, name: "Resurrection", spell: 94, desc: "Max level: raises a fallen ally or you (3 min cooldown, less per rank)" },
   { id: "dmassa", br: "aura", tier: 0, max: 1, dummy: true, lvl: 30, name: "Mass Aura", desc: "MASS: doubles every aura for 20 s (60 s)" },
 );
 export const isDummy = c => c.sp === "Dummy";
 export const branchesOf = c => (isDummy(c) ? DUMMY_BRANCHES : BRANCHES);
-export const branchName = (c, b) => (isDummy(c) ? DUMMY_NAMES[b] : BRANCH_NAMES[b]);
+export const branchName = (c, b) => (isDummy(c) ? DUMMY_BRANCH_NAMES[b] : BRANCH_NAMES[b]);
 const BY_ID = Object.fromEntries(TALENTS.map(t => [t.id, t]));
 export const talent = id => BY_ID[id];
 export const TIER_COST = 2;                                                        // puntos en la rama por cada fila

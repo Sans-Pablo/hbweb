@@ -5,7 +5,7 @@ import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
 import { DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
-import { populate, spawnCitizen } from "./systems/citizens.js";
+import { populate, spawnCitizen, EXTRA_CITIZENS } from "./systems/citizens.js";
 import * as Stall from "./systems/stall.js";
 import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
@@ -47,6 +47,11 @@ export class Adventure {
     this.worlds.set(this.farm.map.id, this.farm);
     this.farm.hooks = this.hooks(this.farm);
     this.farm.evHook = (w, ev) => Residents.onEvent(this, w, ev);
+    {                                          // BUG-013: granjero de Aresfarm; sin gastar la secuencia aleatoria de la granja (las criptas y los tests con semilla dependen de ella)
+      const rng = this.farm.rng; this.farm.rng = () => 0.5;
+      for (const c of EXTRA_CITIZENS.arefarm || []) spawnCitizen(this.farm, c.name, c.x, c.y, c.role, c.skin);
+      this.farm.rng = rng;
+    }
     this.llm = null;                         // el servidor puede poner aquí un generador de texto (server/llm.mjs) para los habitantes
   }
 
@@ -236,7 +241,7 @@ export class Adventure {
     }
     if (cmd.t === "dbg" && DEBUG.enabled && (cmd.op === "goto" || cmd.op === "crypt")) return this.debugTravel(p, w, cmd);
     if (cmd.t === "respawn" && w !== this.homeOf(p)) {
-      if (!p.dead || w.time - p.deadAt < 1500) return false;
+      if (!p.dead || w.time - p.deadAt < 600) return false;
       const home = this.homeOf(p);
       if (!this.transfer(p, w, home, home.home)) return false;
       const ok = respawn(home, p);

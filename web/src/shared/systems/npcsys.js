@@ -367,7 +367,7 @@ export function toggleCompanion(w, p, inst) {
   for (const b of p.bag) if (b.comp) b.comp.on = false;
   c.on = true;
   if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
-  w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl, nm: c.nm });
+  w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl, nm: c.nm, cls: c.cls || null });
   return true;
 }
 

@@ -8,6 +8,7 @@ import * as R from "../rules.js";
 import { SKILL_NAMES } from "../skills.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
+import * as Sch from "./schools.js";
 
 export const DEBUG = { enabled: true };
 
@@ -73,7 +74,7 @@ const OPS = {
   ball(w, p, c) {
     const sp = String(c.sp || ""); if (!Comp.SPECIES[sp]) return say(w, p, "Unknown species");
     const b = newInst(w, Comp.SPECIES[sp][1]);
-    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack" };
+    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack", ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };
     Inv.addToBag(p, w.data, b); w.recalc(p);
     w.emit({ t: "petbought", id: p.id, sp, nm: b.comp.nm, uid: b.uid, price: 0 });
   },

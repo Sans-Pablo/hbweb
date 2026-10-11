@@ -82,6 +82,7 @@ export function addPlayer(w, name, save = null, create = null) {
   p.hp = p.maxHp; p.mp = p.maxMp;
   initVitals(w, p);
   if (save && Number.isFinite(save.hunger)) p.hunger = save.hunger;
+  if (save && Number.isFinite(save.hp)) { p.hp = Math.max(1, Math.min(p.maxHp, save.hp)); if (Number.isFinite(save.mp)) p.mp = Math.min(p.maxMp, save.mp); if (Number.isFinite(save.sp)) p.sp = Math.min(p.maxSp, save.sp); }      // BUG-002: reconectar ya no cura (el muerto vuelve con 1 de vida)
   w.emit({ t: "spawn", id: p.id });
   return p.id;
 }
@@ -125,7 +126,7 @@ export function saveOf(w, id) {
   if (!p || p.kind !== "player") return null;
   return {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, ek: p.ek || 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
-    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger,
+    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1 }, tut: Tut.toSave(p),
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
@@ -146,7 +147,7 @@ export function recalc(w, p) {
 }
 
 export function respawn(w, p) {
-  if (!p.dead || w.time - p.deadAt < 1500) return false;
+  if (!p.dead || w.time - p.deadAt < 600) return false;
   const home = w.home || w.start, [x, y] = w.freeSpotNear(home[0], home[1]);
   p.x = p.fx = x; p.y = p.fy = y;
   w.grid.occupy(x, y, p.id);

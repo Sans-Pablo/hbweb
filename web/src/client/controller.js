@@ -110,6 +110,18 @@ export class Controller {
     return best;
   }
 
+  // compañero propio bajo un punto del mundo (BUG-007: soltar comida encima para dárselo)
+  pickPet(wx, wy) {
+    const time = this.world.time; let best = null, bd = 1e9;
+    for (const e of this.world.ents.values()) {
+      if (!e.comp || e.dead || e.master !== this.me?.id) continue;
+      const [px, py] = posOf(e, time);
+      if (Math.abs(wx - px) > 26 || wy < py - 60 || wy > py + 14) continue;
+      const d = Math.hypot(wx - px, wy - (py - 24));
+      if (d < bd) { bd = d; best = e; }
+    }
+    return best;
+  }
   // NPC de ciudad bajo un punto del mundo
   pickCitizen(wx, wy) { return this.pick(wx, wy, "citizen"); }
   // otro jugador bajo el cursor (solo para mostrar su nombre)

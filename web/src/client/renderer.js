@@ -9,7 +9,7 @@ const CHAR_H = 56;          // altura aproximada del personaje (fotograma de cue
 import { TILE as T, ACT, TRANSLUCENT_MOBS, CORPSE_MS, DX, DY } from "../shared/const.js";
 import { sget } from "../shared/systems/status.js";
 import { sizeStep } from "../shared/systems/companion.js";
-import { DUMMY_COLORS } from "../shared/systems/talents.js";
+import { DUMMY_COLORS, DUMMY_NAMES } from "../shared/systems/talents.js";
 import { radiusOf } from "../shared/systems/dummy.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { attrLines } from "../shared/attributes.js";
@@ -214,8 +214,10 @@ export class Renderer {
     for (const e of s.world.ents.values()) {                                              // área de efecto del Dummy: anillo del color de su clase, por DEBAJO de los personajes
       if (!(e.comp && e.dcls && !e.dead && e.master === s.pid)) continue;
       const [px, py] = posOf(e, time), x = px - camX, y = py - camY;
-      const R = (radiusOf(e.clvl || 1, e.dcls) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff", pulse = 0.5 + 0.2 * Math.sin(performance.now() / 500);
-      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = col; ctx.lineWidth = 2;
+      const R = (radiusOf(e.clvl || 1, e.dcls) + 0.5) * T, col = DUMMY_COLORS[e.dcls] || "#fff";
+      ctx.save(); const g = ctx.createRadialGradient(x, y + 4, R * 0.6, x, y + 4, R); g.addColorStop(0, col + "00"); g.addColorStop(1, col + "26");       // BUG-015: velo muy tenue hacia el borde + línea fina discontinua (antes un anillo grueso pulsante)
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y + 4, R, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.28; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.setLineDash([6, 8]);
       ctx.beginPath(); ctx.arc(x, y + 4, R, 0, Math.PI * 2); ctx.stroke(); ctx.restore();       // alcance euclídeo (dummy.inRange): círculo
     }
     const buckets = new Map();
@@ -225,10 +227,10 @@ export class Renderer {
       seen.delete(id);
       if (!o.e.dead && o.map === mapId) fades.set(id, { e: o.e, t0: nowMs });
     }
-    for (const e of s.world.ents.values()) if (e.comp && !e.dead) seen.set(e.id, { e, map: mapId });
+    for (const e of s.world.ents.values()) { if (e.fadeAlpha != null && !fades.has(e.id)) delete e.fadeAlpha; if (e.comp && !e.dead) seen.set(e.id, { e, map: mapId }); }
     for (const [id, f] of fades) {
       const k = (nowMs - f.t0) / 1000;
-      if (k >= 1 || s.world.ents.has(id)) { fades.delete(id); continue; }
+      if (k >= 1 || s.world.ents.has(id)) { delete f.e.fadeAlpha; fades.delete(id); continue; }       // BUG-011: sin esto la opacidad parcial se quedaba pegada y el cuerpo del compañero no volvía a verse del todo
       f.e.fadeAlpha = 1 - k;
     }
     const bucket = e => {
@@ -495,6 +497,11 @@ export class Renderer {
     const time = s.world.time;
     const hovered = s.hoverEnt === e || s.hoverCit === e;
     const flashAge = performance.now() - (s.fx.flash.get(e.id) || -1e9);
+    if (e.stall) {          // BUG-001: un puesto de jugador se ve como un cofre (dibujado a mano: el original no trae un sprite de cofre)
+      this.stallChest(x, y);
+      overlays.push(() => this.origName(x, y - 6, [["Puesto de " + e.stall.owner, "255,255,255"], ["(" + e.stall.title + ")", "255,220,120"]]));
+      return;
+    }
 
     if (e.kind === "player") {
       const ap = apparelOf(e, itemDef), bow = !!ap && ap.weapon >= 40 && ap.weapon < 60;        // arma 40..59 = arco (DrawObject_OnAttack)
@@ -736,10 +743,20 @@ export class Renderer {
       overlays.push(() => {
         const name = e.stall ? "Puesto de " + e.stall.owner : e.crop ? (CROP_NAMES[e.crop] || "Crop") : (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         const owner = e.comp && e.master != null ? s.world.ents.get(e.master)?.name : null;
-        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.stall ? ["(" + e.stall.title + ")", "255,220,120"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
+        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + (e.dcls ? " · " + DUMMY_NAMES[e.dcls] : "") + ")", e.dcls ? hexRgb(DUMMY_COLORS[e.dcls]) : "30,255,30"] : e.stall ? ["(" + e.stall.title + ")", "255,220,120"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
         this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }
+  }
+
+  stallChest(x, y) {
+    const c = this.ctx;
+    c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(x, y + 2, 17, 6, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#6b4423"; c.fillRect(x - 14, y - 16, 28, 16);                    // cuerpo
+    c.fillStyle = "#8a5a2e"; c.beginPath(); c.moveTo(x - 15, y - 16); c.quadraticCurveTo(x, y - 32, x + 15, y - 16); c.closePath(); c.fill();   // tapa
+    c.strokeStyle = "#c9a227"; c.lineWidth = 2;
+    c.strokeRect(x - 14, y - 16, 28, 16); c.beginPath(); c.moveTo(x - 5, y - 16); c.lineTo(x - 5, y); c.moveTo(x + 5, y - 16); c.lineTo(x + 5, y); c.stroke();
+    c.fillStyle = "#f0d060"; c.fillRect(x - 3, y - 12, 6, 6);                       // cerradura
   }
 
   // Escala fija por especie (altura del fotograma de reposo la primera vez que se ve): solo se reducen los más altos que el personaje

@@ -5,6 +5,7 @@
 import { miniOf } from "./compicon.js";
 import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
+import { DUMMY_NAMES } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
 
 export const W = 800, H = 600;
@@ -283,12 +284,13 @@ export class Gui {
     if (this.petBall && x > 411 && x < 449) this.onAction?.("petmode");
     else if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
     else if (x > 413 + a && x < 447 + a) this.onAction?.("char");
-    else if (x > 447 + a && x < 484 + a) this.onAction?.("pets");        // botón nuevo «Summons» (en el puesto del antiguo inventario)
-    else if (x > 484 + a && x < 521 + a) this.onAction?.("inv");
+    else if (x > 447 + a && x < 484 + a) this.onAction?.("inv");
+    else if (x > 484 + a && x < 521 + a) this.onAction?.("book");        // BUG-014: el libro de hechizos vuelve a su puesto original
     else if (x > 521 + a && x < 558 + a) this.onAction?.("skill");
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
-    else if (x > 632 + a && x < 669 + a) this.onAction?.("recall");
+    else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
+    else if (x > 669 + a && x < 706 + a) this.onAction?.("recall");
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -318,19 +320,22 @@ export class Gui {
 
   // estadísticas del objeto que se arrastra o sobre el que está el cursor
   itemTooltip(me) {
-    const uid = this.item ? this.item.uid : this.hoverUid;
-    this.hoverUid = null;
-    if (!uid || !me || !this.describe) return;
-    const info = this.describe(uid); if (!info) return;
+    const uid = this.item ? this.item.uid : this.hoverUid, def = this.hoverDef;
+    this.hoverUid = null; this.hoverDef = null;
+    if (!me) return;
+    const info = uid ? (this.describe && this.describe(uid)) : (def && this.describeDef && this.describeDef(def));
+    if (!info) return;
     const c = this.ctx, rows = [[info.name, "#ffe9a0", true], ...info.lines.map(l => [l.t, l.c || "#e8e8d0", false])];
     c.font = "12px Tahoma, Verdana, sans-serif";
-    const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14, h = rows.length * 14 + 10;
+    const pad = info.sprite ? 50 : 0;
+    const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14 + pad, h = Math.max(rows.length * 14 + 10, info.sprite ? 56 : 0);
     let x = this.mouse.x + 18, y = this.mouse.y + 14;
     if (x + w > this.W) x = this.mouse.x - w - 8;
     if (y + h > this.H) y = this.H - h;
     c.fillStyle = "rgba(10,8,4,.88)"; c.fillRect(x, y, w, h);
     c.strokeStyle = "#8a7a4a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
-    rows.forEach((r, i) => this.text(x + 7, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));
+    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + 30);
+    rows.forEach((r, i) => this.text(x + 7 + pad, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)
@@ -365,16 +370,16 @@ export class Gui {
     // barra de vida del compañero, sobre la del personaje
     const x0 = 23 + RESX, y0 = 531, wd = 101;
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 - 1, wd + 2, 8);
-    cx.fillStyle = k > .5 ? "#6fcf4f" : k > .25 ? "#e3b341" : "#e0493b"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
+    cx.fillStyle = k > .5 ? "#2fd0b0" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
     // experiencia del compañero (para tentar al jugador a subirlo): barra fina bajo la de vida y números en el aviso
     const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 8, wd + 2, 5);
-    cx.fillStyle = "#6aa8ff"; cx.fillRect(x0, y0 + 9, Math.round(wd * ek), 3);
+    cx.fillStyle = "#f0c040"; cx.fillRect(x0, y0 + 9, Math.round(wd * ek), 3);
     const mpMax = pet?.maxMp ?? pet?.maxMpC ?? c.mpMax ?? 0, mp = pet ? pet.mp ?? 0 : c.mp ?? 0;
     if (mpMax > 0) {                                                       // maná del compañero (las escuelas dependen de él)
       cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 14, wd + 2, 6);
-      cx.fillStyle = "#3f7fe0"; cx.fillRect(x0, y0 + 15, Math.round(wd * Math.max(0, Math.min(1, mp / mpMax))), 4);
+      cx.fillStyle = "#b070f0"; cx.fillRect(x0, y0 + 15, Math.round(wd * Math.max(0, Math.min(1, mp / mpMax))), 4);
       if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 13 && m.y < y0 + 21) this.tip((c.nm || c.sp) + " MP " + Math.floor(mp) + "/" + mpMax);
     }
     const expTxt = c.lvl >= 50 ? "EXP MAX" : "EXP " + (c.exp || 0) + "/" + nd + " (" + Math.floor(ek * 100) + "%)";
@@ -383,15 +388,6 @@ export class Gui {
     else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max + " (click: rename)");
   }
 
-  // Barra inferior: la imagen horneada trae el inventario en 447 y el libro de hechizos en 484. Aquí el inventario pasa a 484 (copia de la imagen
-  // horneada) y 447 es «Summons» con un icono propio (huella de garra, tools/make_crypt_assets.py). Invento del port.
-  swapSlots(xa, xb) {
-    const m = this.manifest && this.manifest.gamedialog2_6, img = this.img.gamedialog2_6, fr = m && m.frames[14];
-    if (!fr || !img || !img.naturalWidth) return;
-    const [sx, sy, , , px, py] = fr, w = 37, h = 41, k = 554 - 548 - py, c = this.ctx;
-    c.drawImage(img, sx + (xa - px), sy + k, w, h, xb, 554, w, h);
-    this.summonsIcon(0, xa);
-  }
   // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
   summonsIcon(f, x) {
     const c = this.ctx; c.save(); c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
@@ -434,7 +430,7 @@ export class Gui {
       c.fillStyle = col(k); c.fillRect(x, y, Math.round(w * k), h);
     };
     const hpCol = k => k > 0.5 ? "#4caf3a" : k > 0.25 ? "#d9a62e" : "#d6382b", mpCol = () => "#3f7fe0";
-    const kindOf = pet => pet.dcls ? ({ healer: "Healer", buffer: "Buffer", aura: "Aura" })[pet.dcls] + " Dummy" : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : pet.name === "Dummy" ? "Dummy" : "Combat";
+    const kindOf = pet => pet.dcls ? DUMMY_NAMES[pet.dcls] : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : pet.name === "Dummy" ? "Dummy" : "Combat";
     for (const name of [me.name, ...me.party.names.filter(n => n !== me.name)]) {
       const m = name === me.name ? me : ents.find(e => e.kind === "player" && e.name === name);
       const lv = m === me ? me.level : (m?.level || me.party.lvls?.[me.party.names.indexOf(name)] || 0);
@@ -473,7 +469,7 @@ export class Gui {
     if (st.invis && left(st.invis.until) > 0) add("Invisibility", "unseen", left(st.invis.until), "#d8d8d8");
     for (const [k, nm, e] of [["hold", "Paralyzed", "can't move"], ["ice", "Frozen", "can't move"], ["confuse", "Confused", "random moves"], ["poison", "Poisoned", "losing HP"]]) if (st[k] && left(st[k].until) > 0) add(nm, e, left(st[k].until), "#ff6a6a");
     if (au) {
-      const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Dummy") + (au.x2 ? " x2" : "");
+      const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Doomy") + (au.x2 ? " x2" : "");
       if (au.def) { dmgRed = au.def; add("Defense Aura", "damage taken -" + au.def + "%", t, "#8fd68f"); }
       if (au.vamp) add("Vampiric Aura", "heal " + au.vamp + "% of damage", t, "#e07a9a");
       if (au.regen) add("Regeneration Aura", "+" + au.regen + "% HP/s", t, "#8fd68f");
@@ -516,7 +512,6 @@ export class Gui {
 
     this.petPanel(me, world, a);
     this.dungeonInfo(world);
-    this.swapSlots(447 + a, 484 + a);
     if (this.flags.safe) this.put("gamedialog2_6", 4, 368 + a - 2, 440 + RESY);
     else if (this.flags.combat) this.put("gamedialog2_6", 5, 368 + a - 1, 440 + RESY);
     if (m.x > 362 + a && m.x < 404 + a && m.y > 434 + RESY && m.y < 475 + RESY) {
@@ -529,14 +524,15 @@ export class Gui {
     this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#c8c878");
 
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
-      const icons = [[410, 6, 2, "Character"], [447, 8, 0, "Summons"], [484, 7, 1, "Inventory"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"]];
+      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"]];
       for (const [x0, f, dx, name] of icons) {
-        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === 8) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
+        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }
     }
+    this.summonsIcon(0, 632 + a);
     // Recall: icono en el siguiente hueco de la barra, con barra de canalización / enfriamiento
     {
-      const rx = 632 + a, n = performance.now(), r = this.rc || {}, ch = r.ch > n, cd = r.cd > n, over = m.x > rx && m.x < rx + 37 && m.y > 436 + RESY && m.y < 478 + RESY;
+      const rx = 669 + a, n = performance.now(), r = this.rc || {}, ch = r.ch > n, cd = r.cd > n, over = m.x > rx && m.x < rx + 37 && m.y > 436 + RESY && m.y < 478 + RESY;
       this.put("recall_icon", over || ch ? 1 : 0, rx, 554);
       if (cd) { const k = (r.cd - n) / 60000; this.ctx.fillStyle = "rgba(0,0,0,.55)"; this.ctx.fillRect(rx + 3, 554 + 4, 31, Math.round(33 * k)); }
       if (ch) { const k = 1 - (r.ch - n) / r.chMs; this.ctx.fillStyle = "#e3b341"; this.ctx.fillRect(rx + 3, 554 + 38, Math.round(31 * k), 3); }

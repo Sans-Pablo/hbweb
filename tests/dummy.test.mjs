@@ -145,6 +145,10 @@ console.log("OK dummy");
   // aura de estamina: devuelve aguante a los del radio
   c.tal = { dstam: 5 }; dm.cd = {}; dm.auraAt = 0; A.sp = 1; B.sp = 1; tick(2500);
   assert.ok(A.sp > 10 && B.sp > 10, "Stamina Aura recupera aguante");
+  // BUG-021: las auras de vida y maná sacan el número sobre el personaje (eventos públicos para el resto de jugadores)
+  c.tal = { dregen: 5, dmana: 5 }; dm.cd = {}; dm.auraAt = 0; A.hp = Math.floor(A.maxHp / 2); A.mp = 1; w.events.length = 0; tick(2500);
+  assert.ok(w.events.some(e => e.t === "heal" && e.aura && e.id === A.id && e.amount > 0), "número de vida del aura");
+  assert.ok(w.events.some(e => e.t === "auramp" && e.id === A.id && e.amount > 0), "número de maná del aura");
   // el dueño cae: el Dummy con Resurrection se queda y lo levanta
   c.tal = { dres: 3 }; dm.cd = {}; dm.mp = 900; dm.castAt = 0;
   w.grid.release(A.x, A.y, A.id); A.dead = true; A.hp = 0; A.deadAt = w.time; w.events.length = 0;
@@ -152,4 +156,13 @@ console.log("OK dummy");
   assert.ok(!A.dead && A.hp > 0, "el Dummy resucita al dueño"); assert.ok([...w.ents.values()].some(e => e === dm && !e.dead), "el Dummy sigue en pie");
   assert.ok(w.events.some(e => e.t === "dummy-cast" && /Resurrection/.test(e.en)), "habla con personalidad");
   console.log("OK dummy chr/stamina/self-res");
+}
+
+{ // BUG-016: el Dummy de aura gasta todos sus puntos de talento al nivel 50 (antes sobraban 15)
+  const aura = T.TALENTS.filter(t => t.br === "aura" && t.dummy);
+  assert.ok(aura.reduce((s, t) => s + t.max, 0) >= 49, "las auras absorben los 49 puntos del nivel 50");
+  const c = { sp: "Dummy", lvl: 50, tal: {} };
+  for (const t of aura) c.tal[t.id] = t.max;
+  assert.equal(D.auraPct(c, "dregen"), 5, "rango máximo = 100 % del máximo del nivel");
+  console.log("OK dummy aura points");
 }

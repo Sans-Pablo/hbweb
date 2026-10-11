@@ -59,6 +59,7 @@ export class Fx {
         break;
       }
       case "heal": this.text(ev.id, "+" + ev.amount, "#7fe07f"); break;
+      case "auramp": this.text(ev.id, "+" + ev.amount, "#7fa6ff", false, -10); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
       case "resist": this.text(ev.id, "resiste", "#a9b4c2"); break;
       case "exp": if (mine) this.text(ev.id, "+" + ev.amount + " exp", "#e6c869", false, -16); break;
