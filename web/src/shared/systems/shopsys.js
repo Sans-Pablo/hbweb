@@ -182,7 +182,7 @@ export function repairConfirm(w, p, cmd) {
 export function deposit(w, p, cmd) {
   const inst = Inv.instOf(p, cmd.uid);
   if (!inst) return false;
-  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p); }
+  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p, inst.uid); }
   const d = w.data.item(inst.id);
   const amount = isStack(d) ? Math.max(1, Math.min(inst.count, cmd.count | 0 || inst.count)) : 1;
   if (!p.bank) p.bank = [];

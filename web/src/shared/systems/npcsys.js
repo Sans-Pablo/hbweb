@@ -154,7 +154,7 @@ function followerThink(w, n) {
   if (n.comp) {
     refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
     if (tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
-      tc.on = false; dismissCompanion(w, m); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
+      tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
     }
     if (tc?.evolve) {                                   // cambio de tamaño: tras unos segundos (se lee la frase) se vuelve a invocar con efecto
       if (!n.evolveAt) n.evolveAt = w.time + EVOLVE_MS;
@@ -332,22 +332,30 @@ export const EVOLVE_MS = 2500;
 export function evolveCompanion(w, n, m, tc) {
   const from = { x: n.x, y: n.y }, nm = tc.nm, sp = tc.sp, lvl = tc.lvl;
   delete tc.evolve;
-  const nn = spawnCompanion(w, m);
+  const nn = spawnCompanion(w, m, Inv.instOf(m, n.ball));
   if (nn) w.emit({ t: "companion-resummon", id: m.id, sp, lvl, nm, fx: from.x, fy: from.y, x: nn.x, y: nn.y, nid: nn.id });
 }
-export function dismissCompanion(w, p) {
+export function dismissCompanion(w, p, uid = null) {
   for (const e of followersOf(w, p)) {
-    if (!e.comp) continue;
+    if (!e.comp || (uid !== null && e.ball !== uid)) continue;
     const inst = Inv.instOf(p, e.ball); if (inst) { inst.comp.hp = e.hp; if (e.mp !== undefined) inst.comp.mp = Math.floor(e.mp); }
     e.dead = true; e.hp = 0; w.grid.release(e.x, e.y, e.id); e.gen.alive--;
     w.ents.delete(e.id); w.emit({ t: "remove", id: e.id });
   }
 }
-export function spawnCompanion(w, p) {
-  const inst = Comp.activeBall(p); if (!inst || p.dead) return null;
+// Sin `only`: reinvoca todas las bolas activas (cambio de mapa, reaparición); devuelve la primera entidad creada.
+export function spawnCompanion(w, p, only = null) {
+  if (p.dead) return null;
+  if (!only) {
+    let first = null;
+    dismissCompanion(w, p);
+    for (const b of Comp.activeBalls(p)) { if (b.comp.down) continue; const n = spawnCompanion(w, p, b); first = first || n; }
+    return first;
+  }
+  const inst = only;
   inst.comp.nm = inst.comp.nm || Comp.randomName(w.rng);          // bolas antiguas sin nombre
   delete inst.comp.evolve;
-  dismissCompanion(w, p);
+  dismissCompanion(w, p, inst.uid);
   const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
   if (!w.npcDb[gen.name]) return null;
   let n = null;
@@ -364,14 +372,16 @@ export function toggleCompanion(w, p, inst) {
   if (p.dead) return false;
   const c = inst.comp, out = followersOf(w, p).some(e => e.comp && e.ball === inst.uid);
   if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: llévalo al hospital de compañeros");
-  if (c.on && out) { c.on = false; dismissCompanion(w, p); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
+  if (c.on && out) { c.on = false; dismissCompanion(w, p, inst.uid); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
   if (Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
   const cost = p.bot ? 0 : Math.max(1, Math.ceil((p.maxMp || 0) * Math.min(100, Math.max(1, c.lvl | 0)) / 100));   // invocar cuesta un % de tu maná máximo igual al nivel del summon (nivel 1 = 1 %, nivel 50 = 50 %)
   if ((p.mp || 0) < cost) return w.reject(p, { t: "use" }, "no tienes maná para invocarlo (" + cost + ")");
-  for (const b of p.bag) if (b.comp) b.comp.on = false;
+  const others = Comp.activeBalls(p).filter(b => b !== inst), max = Comp.maxSummons(p);
+  if (others.some(b => b.comp.sp === c.sp)) return w.reject(p, { t: "use" }, "ya tienes un summon de esa especie: deben ser distintos");
+  while (others.length >= max) { const old = others.shift(); old.comp.on = false; dismissCompanion(w, p, old.uid); w.emit({ t: "companion", id: p.id, sp: old.comp.sp, on: false, nm: old.comp.nm }); }
   c.on = true;
-  if (!spawnCompanion(w, p)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
+  if (!spawnCompanion(w, p, inst)) { c.on = false; return w.reject(p, { t: "use" }, "no hay sitio"); }
   p.mp -= cost;
   w.emit({ t: "companion", id: p.id, sp: c.sp, on: true, lvl: c.lvl, nm: c.nm, cls: c.cls || null });
   return true;

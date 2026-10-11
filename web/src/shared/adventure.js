@@ -247,7 +247,7 @@ export class Adventure {
       const home = this.homeOf(p);
       if (!this.transfer(p, w, home, home.home)) return false;
       const ok = respawn(home, p);
-      if (ok && activeBall(p) && !activeBall(p).comp.down) spawnCompanion(home, p);
+      if (ok && activeBall(p)) spawnCompanion(home, p);
       return ok;
     }
     return w.command(id, cmd);

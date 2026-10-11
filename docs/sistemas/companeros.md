@@ -40,3 +40,4 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 
 ## Coste de invocar (v0.60: % del maná máximo = nivel del summon; F10 Info lista gustos/rechazos; manuales dan 100 %)
 Invocar (usar la bola) cuesta maná del dueño igual al nivel del summon (`toggleCompanion`, npcsys.js). Sin maná: rechazo. Guardarlo es gratis; los bots no pagan. Test: `tests/summon-mana.test.mjs`.
+- **Varios a la vez** (v0.61.0): ver [clases.md](clases.md).

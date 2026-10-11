@@ -10,6 +10,14 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Clases (v0.61.0)", "en": "Classes (v0.61.0)" },
+      "items": [
+        { "es": "Nuevo al crear personaje: Guerrero, Mago o Invocador (solo cambia los atributos iniciales). Los personajes antiguos son Guerreros.", "en": "New on character creation: Warrior, Mage or Summoner (only the starting attributes differ). Existing characters are Warriors." },
+        { "es": "El Invocador lleva 2 summons a la vez con 100 de carisma y 3 con 200, siempre de especies distintas.", "en": "The Summoner can have 2 summons at once with 100 charisma and 3 with 200, always of different species." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": {
         "es": "Bots en los conectados (v0.60.1)",
         "en": "Bots among the connected (v0.60.1)"

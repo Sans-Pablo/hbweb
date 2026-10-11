@@ -43,7 +43,7 @@ function takeItem(w, p) {
 export function dropItem(w, p, uid, amount) {
   const inst = Inv.instOf(p, uid);
   if (!inst) return w.reject(p, { t: "drop" }, "no tienes");
-  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p); }      // soltar la bola guarda al compañero
+  if (inst.comp?.on) { inst.comp.on = false; dismissCompanion(w, p, inst.uid); }      // soltar la bola guarda al compañero
   const d = w.data.item(inst.id);
   let out;
   if (isStack(d) && amount > 0 && amount < inst.count) { inst.count -= amount; out = { ...inst, uid: w.nextItem++, count: amount }; }

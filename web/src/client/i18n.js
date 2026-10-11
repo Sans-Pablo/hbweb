@@ -8,6 +8,7 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  "Guerrero": "Warrior", "Mago": "Mage", "Invocador": "Summoner", "ya tienes un summon de esa especie: deben ser distintos": "you already have a summon of that species: they must be different",
   "elige Healer, Buffer o Aura": "choose Healer, Buffer or Aura",
   // ---- 0.50.7
   "el oro no se puede tirar: usa el intercambio": "gold can't be dropped: use trade",

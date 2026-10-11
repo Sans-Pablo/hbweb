@@ -121,7 +121,7 @@ let target = null;
   assert(m.skills[4] === 14 + 10 && m.skills[5] === 10 + 10, "habilidades iniciales según los atributos");
   assert(Object.keys(m.equip).length === 2 && m.bag.some(i => data.item(i.id).name === "Chemise(W)"), "mujer: lleva Chemise(W)");
   const bad = mk({ stats: { str: 14, vit: 14, dex: 14, int: 14, mag: 14, chr: 14 }, gender: 7, skin: 9 });   // 84 puntos: se ignora
-  assert(bad.stats.str === 14 && bad.stats.dex === 14 && bad.stats.int === 10 && bad.gender === 1 && bad.look.skin === 2, "valores fuera de regla vuelven a los de por defecto");
+  assert(bad.stats.str === 14 && bad.stats.vit === 14 && bad.stats.dex === 10 && bad.stats.int === 10 && bad.gender === 1 && bad.look.skin === 2, "valores fuera de regla vuelven a los de por defecto");
   const sv = mk({ gender: 2, hair: 3 }), w5 = new World({ grid, npcDb, data, spawns, rng, start: meta.start });
   const back = w5.ents.get(w5.addPlayer("Otro", { gender: 2, look: { hair: 3 }, charName: "Elfa", stats: { str: 12 } }));
   assert(back.name === "Elfa" && back.look.hair === 3 && sv.look.hair === 3, "guardado conserva nombre y aspecto");

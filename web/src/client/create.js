@@ -14,6 +14,7 @@ export const PERSONAS = [
 ];
 export function createCharacter(spr, defaultName) {
   const root = document.getElementById("create");
+  let cls = "warrior";
   const st = { ...PRESETS.warrior };
   const c = { name: validCharName(defaultName) ? defaultName : "", gender: 1 + rnd(2), skin: 1 + rnd(3), hair: rnd(8), hairCol: rnd(16), under: rnd(8), persona: rnd(3) };
   const left = () => 70 - STATS.reduce((a, [k]) => a + st[k], 0);
@@ -23,7 +24,7 @@ export function createCharacter(spr, defaultName) {
     <div class="cols">
       <div class="col">
         <label>Nombre<input class="cname" maxlength="10" autocomplete="off" spellcheck="false"></label>
-        <div class="presets"><button data-preset="warrior">Guerrero</button><button data-preset="mage">Mago</button><button data-preset="priest">Sacerdote</button></div>
+        <div class="presets"><button data-preset="warrior">Guerrero</button><button data-preset="mage">Mago</button><button data-preset="summoner">Invocador</button></div>
         <div class="stats"></div>
         <p class="left"></p>
       </div>
@@ -102,7 +103,7 @@ export function createCharacter(spr, defaultName) {
   return new Promise(resolve => {
     root.onclick = e => {
       const b = e.target.closest("button"); if (!b) return;
-      if (b.dataset.preset) { Object.assign(st, PRESETS[b.dataset.preset]); render(); return; }
+      if (b.dataset.preset) { cls = b.dataset.preset; Object.assign(st, PRESETS[cls]); render(); return; }
       if (b.dataset.s) {
         const k = b.dataset.s, d = +b.dataset.d;
         if (d > 0 ? st[k] < 14 && left() > 0 : st[k] > 10) st[k] += d;
@@ -118,7 +119,7 @@ export function createCharacter(spr, defaultName) {
         if (!validCharName(name)) { msg.textContent = "Nombre no válido: hasta 10 letras o números, sin espacios ni símbolos."; return; }
         cancelAnimationFrame(raf);
         root.style.display = "none"; root.innerHTML = "";
-        resolve({ name, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under, persona: PERSONAS[c.persona].id });
+        resolve({ name, cls, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under, persona: PERSONAS[c.persona].id });
       }
     };
     root.onkeydown = e => e.stopPropagation();

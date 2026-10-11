@@ -33,6 +33,9 @@ const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
 export const need = lvl => Math.floor(30 * Math.pow(lvl, 1.7));              // experiencia para subir desde `lvl`
 export const activeBall = p => p.bag.find(i => i.comp && i.comp.on);
+// Invocador: 2 summons a la vez con 100 de carisma (total) y 3 con 200; el resto de clases, uno. Deben ser de especies distintas.
+export const maxSummons = p => (p.cls === "summoner" ? ((p.stats?.chr | 0) >= 200 ? 3 : (p.stats?.chr | 0) >= 100 ? 2 : 1) : 1);
+export const activeBalls = p => p.bag.filter(i => i.comp && i.comp.on);
 
 // daño medio de un golpe del jugador (playerStrike sin azar)
 export function avgHit(p) {

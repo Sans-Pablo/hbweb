@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.61.0 · Clases (2026-10-12)
+- Al crear el personaje se elige clase: Guerrero (FUE y VIT), Mago (INT y MAG) o Invocador (CAR y VIT). Solo cambia los atributos iniciales; los personajes existentes son Guerreros.
+- El Invocador puede tener 2 summons activos a la vez con 100 de carisma (total) y 3 con 200. Deben ser de especies distintas; al pasar el límite se guarda el más antiguo. Cada invocación cuesta su porcentaje de maná.
+- F10 y los controles de modo actúan sobre el primer summon activo.
+
 ## 0.60.1 · Bots en la lista de conectados (2026-10-12)
 - La pantalla de entrada (y /api/info) cuenta y nombra a los habitantes conectados junto a los jugadores.
 

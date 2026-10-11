@@ -22,10 +22,11 @@ export const validCharName = n => typeof n === "string" && n.length >= 1 && n.le
 // como máximo; género 1/2, piel 1-3, peinado 0-7, color de pelo 0-15, color de ropa interior 0-7.
 const clampInt = (v, lo, hi, d) => (Number.isInteger(v) && v >= lo && v <= hi ? v : d);
 export const PRESETS = {
-  warrior: { str: 14, vit: 12, dex: 14, int: 10, mag: 10, chr: 10 },
+  warrior: { str: 14, vit: 14, dex: 10, int: 10, mag: 10, chr: 10 },
   mage: { str: 10, vit: 12, dex: 10, int: 14, mag: 14, chr: 10 },
-  priest: { str: 14, vit: 10, dex: 10, int: 10, mag: 12, chr: 14 },
+  summoner: { str: 10, vit: 14, dex: 10, int: 10, mag: 10, chr: 14 },
 };
+export const CLASSES = ["warrior", "mage", "summoner"];      // clase elegida al crear: cambia los atributos iniciales y, en el invocador, cuántos summons a la vez (companion.maxSummons)
 export function sanitizeCreate(c) {
   c = c || {};
   let stats = { ...PRESETS.warrior };
@@ -35,7 +36,7 @@ export function sanitizeCreate(c) {
     if (k.every(n => Number.isInteger(v[n]) && v[n] >= 10 && v[n] <= 14) && k.reduce((a, n) => a + v[n], 0) <= 70) stats = v;
   }
   return {
-    stats,
+    stats, cls: CLASSES.includes(c.cls) ? c.cls : "warrior",
     gender: clampInt(c.gender, 1, 2, 1),
     persona: "wjd".includes(c.persona) && c.persona.length === 1 ? c.persona : null,      // personalidad (tono de las frases)
     look: { skin: clampInt(c.skin, 1, 3, 2), hair: clampInt(c.hair, 0, 7, 1), hairCol: clampInt(c.hairCol, 0, 15, 0), under: clampInt(c.under, 0, 7, 0) },
@@ -53,7 +54,7 @@ function allSpells(w) {
 function newCharacter(w, p, create) {
   const c = sanitizeCreate(create);
   Object.assign(p, {
-    gender: c.gender, look: c.look, persona: c.persona,
+    gender: c.gender, look: c.look, persona: c.persona, cls: c.cls,
     stats: c.stats,
     level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
     bag: [], equip: {}, bank: [], gold: 0, ssn: {}, magic: allSpells(w),
@@ -93,6 +94,7 @@ function loadSave(w, p, s) {
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
   if (s.look) p.look = { ...p.look, ...s.look };
   if (typeof s.persona === "string" && "wjd".includes(s.persona) && s.persona.length === 1) p.persona = s.persona;
+  if (CLASSES.includes(s.cls)) p.cls = s.cls;                  // partidas antiguas: guerrero
   if (typeof s.charName === "string" && validCharName(s.charName)) p.name = s.charName;
   if (s.skills) p.skills = { ...s.skills };
   if (s.kinds && typeof s.kinds === "object") p.kinds = { ...s.kinds };
@@ -126,7 +128,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, ek: p.ek || 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null,
+    level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, ek: p.ek || 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p),
