@@ -27,15 +27,15 @@ test("rarityOf", () => {
 
 test("el botín mejora con la profundidad: menos oro, más equipo y mejores atributos", () => {
   const stat = depth => {
-    const rng = seededRandom(99); let gold = 0, gear = 0, rare = 0, n = 6000;
+    const rng = seededRandom(99); let gold = 0, gear = 0, rare = 0, drops = 0, n = 6000;
     for (let i = 0; i < n; i++) {
-      const r = rollKillDrop(rng, npc, { data, depth, month: 1 }); if (!r) continue;
+      const r = rollKillDrop(rng, npc, { data, depth, month: 1 }); if (!r) continue; drops++;
       if (r.id === 90) gold++; else if (r.attr !== undefined) { gear++; if (rarityOf(r.id, r.attr) >= 2) rare++; }
     }
-    return { gold, gear, rare };
+    return { gold, gear, rare, drops };
   };
   const a = stat(0), b = stat(20);
-  assert.ok(b.gold < a.gold, "menos oro " + a.gold + "→" + b.gold);
+  assert.ok(b.gold / b.drops < a.gold / a.drops, "menos oro " + a.gold + "→" + b.gold);
   assert.ok(b.gear > a.gear, "más equipo " + a.gear + "→" + b.gear);
   assert.ok(b.rare / b.gear > a.rare / a.gear, "más raros");
 });

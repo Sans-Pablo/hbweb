@@ -145,6 +145,7 @@ export class Adventure {
   worldFor(id) { return this.locations.get(id) || this.farm; }
   addPlayer(name, save, create = null) {
     const id = this.farm.addPlayer(name, save, create);
+    const pl = this.farm.ents.get(id); if (pl && !pl.side) pl.side = 1;       // nadie empieza de «viajero»: Aresfarm es de Aresden, como los habitantes (así pueden invitarte a party y guild)
     this.locations.set(id, this.farm);
     return id;
   }

@@ -12,7 +12,7 @@ import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../share
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
 import { BRANCH_NAMES } from "../shared/systems/talents.js";
-import { getLang } from "./i18n.js";
+import { getLang, t } from "./i18n.js";
 
 const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
@@ -499,7 +499,7 @@ export function registerNpcDialogs(gui, api) {
       const o = this.o;
       if (this.tab === 1) { g.text(this.mx, 62, "Últimos combates", INK, { size: 10 }); g.text(this.w - 44, 62, "Neto", INK, { size: 10 }); if (!this.rows(me).length) g.aligned(0, this.w, 120, "Aún no has apostado.", INK); return; }
       if (this.wait) return g.aligned(0, this.w, 120, "…", INK);
-      if (!o || o.none) return g.aligned(0, this.w, 110, "Necesitas un compañero (bola) sano para combatir.", INK);
+      if (!o || o.none) return this.wrap(g, t("Necesitas un compañero (bola) sano para combatir."), this.w - 50, 11).forEach((l, i) => g.aligned(0, this.w, 110 + i * 14, l, INK, { size: 11 }));
       if (o.busy) return g.aligned(0, this.w, 110, "Hay un combate en curso…", INK);
       const line = (k, p, y) => { g.text(this.mx, y, k.nm + (k.champion ? " ★" : ""), INK, { size: 11, bold: true }); g.text(this.mx, y + 12, k.sp.replace(/-/g, " ") + " nv " + k.lvl + " · " + this.roleName(k.role) + " · " + Math.round(p * 100) + " %", INK, { size: 10 }); };
       line(o.a, o.pa, 64); g.text(this.w - 44, 80, "VS", RED, { size: 11, bold: true }); line(o.b, o.pb, 92);

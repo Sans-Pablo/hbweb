@@ -258,7 +258,7 @@ export class Hud {
       const known = taught(c, id), int = spellInt(M, school, id), gold = spellGold(M, school, id), ok = c.lvl >= need && me.stats.int >= int && me.gold >= gold;
       const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
         : `<button data-learn="${id}"${ok ? "" : " class=dis"}>Enseñar ${gold}</button>`;
-      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> Lv ${need} · MP ${spellMana(M, school, id)} · Int ${int}</small></span>${act}</div>`;
+      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> Summon Lv ${need} · MP ${spellMana(M, school, id)} · Int ${int}</small></span>${act}</div>`;
     }
     $("#book .list").innerHTML = html;
   }

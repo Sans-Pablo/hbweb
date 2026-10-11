@@ -35,7 +35,7 @@ assert.match(R.describe(b, "en"), /What I have learned/);
 {
   const gm = b; { const w0 = a.worldFor(gm.id), h0 = a.homeOf(gm); if (w0 !== h0) a.transfer(gm, w0, h0, h0.home); } gm.res.followUntil = 0; gm.res._trip = null; gm.res._delve = null; const w = a.worldFor(gm.id); gm.level = 20; gm.stats.chr = 20; gm.side = 1;
   assert.ok(a.command(gm.id, { t: "guildcreate", name: "Los Lobos" }) || gm.guild, "el bot funda su guild");
-  const hid = a.addPlayer("Pablo", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }), me = a.worldFor(hid).ents.get(hid); me.side = 1;
+  const hid = a.addPlayer("Pablo", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }), me = a.worldFor(hid).ents.get(hid); assert.ok(me.side === 1, "un jugador nuevo ya no es viajero: empieza del bando de Aresfarm"); me.side = 1;
   a.relocate(me, a.worldFor(gm.id), [gm.x + 1, gm.y]);
   const seen = [];
   a.llm = async req => { seen.push(req); return req.task === "act" ? '{"say":"Claro, te invito a Los Lobos.","do":"guild_invite"}' : "ok"; };

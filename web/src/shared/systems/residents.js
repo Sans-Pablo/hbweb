@@ -277,8 +277,10 @@ function askGrounded(adv, w, p, human, text, lang) {
     if (!t || r.reply !== rep) return;
     let j = null; try { const m = /\{.*\}/s.exec(String(t)); j = m && JSON.parse(m[0]); } catch {}
     if (j && typeof j === "object") { rep.text = String(j.say || "").slice(0, 118); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
-    else rep.text = String(t).slice(0, 118);
-  }).catch(() => {});
+    else { rep.text = String(t).slice(0, 118); fallbackAct(); }
+  }).catch(() => fallbackAct());
+  // si el modelo falla o no devuelve JSON, una petición clara de grupo se atiende igualmente (hechos reales, sin frases)
+  function fallbackAct() { if (r.reply === rep && !rep.act && intentOf(text) === "party" && acts.some(x => x.startsWith("party_follow")) && relOf(p, n) >= 1) rep.act = "party_follow"; }
 }
 function doAct(adv, w, p, rep) {
   const r = p.res, h = [...w.ents.values()].find(e => e.kind === "player" && e.name === rep.to && !adv.bots.has(e.id)); if (!h || !rep.act) return;
@@ -293,7 +295,7 @@ function queueReply(adv, w, p, human, text, depth = 0) {
   befriend(p, n, 1); r.chats++; r._rcd = w.time;
   if (!human.res && typeof adv.llm === "function" && adv.llm.ready !== false) return askGrounded(adv, w, p, human, text, lang);
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
-  if (intent === "party") { key = relOf(p, n) >= 3 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
+  if (intent === "party") { key = relOf(p, n) >= 2 || w.rng() < 0.5 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
   r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
   if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // el modelo contesta a lo que dijo el interlocutor (sin él, calla)
     const rep = r.reply; rep.at += 3000; rep.text = "";

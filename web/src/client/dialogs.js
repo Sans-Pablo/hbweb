@@ -267,7 +267,7 @@ export function registerDialogs(gui, api) {
       g.put("gamedialog_3", 1, 0, 0); g.put("dialogtext_0", 14, 0, 0);
       const bs = bookSchool(me);
       if (bs?.school && bs.sp !== this.seenSp) { this.seenSp = bs.sp; for (let v = 0; v < 10; v++) { this.view = v; if (this.list(me).length) break; } }
-      g.text(23, 55, "Spell Name", INK); g.text(150, 55, "Lv", INK); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
+      g.text(23, 55, "Spell Name", INK); g.text(146, 55, "Smn Lv", INK, { size: 10 }); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
       let y = 0;
       for (const [id, m] of this.list(me)) {
         const known = taught(bs.comp, id), need = spellLevel(api.magic, bs.school, id, bs.sp), int = spellInt(api.magic, bs.school, id), gold = spellGold(api.magic, bs.school, id), name = m.name.replace(/-/g, " ");
@@ -281,7 +281,7 @@ export function registerDialogs(gui, api) {
       if (!this.list(me).length) (!bs || !bs.school ? ["Choose a school summon first:", "Orc (fire), Tentocle (ice) or", "Cannibal-Plant (lightning)."] : ["No spells of your " + SCHOOL_NAMES[bs.school] + " school", "in this circle."]).forEach((t, i) => g.aligned(0, 304, 100 + 15 * i, t, INK));
       g.put("interface_1", 19, 55, 250);
       g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
-      g.aligned(0, 304, 275, "Teach your summon a new spell.", INK);
+      g.aligned(0, 304, 270, "Smn Lv = level your SUMMON needs (not yours).", INK, { size: 10 }); g.aligned(0, 304, 284, "Teach your summon a new spell.", INK, { size: 10 });
     },
     click(g, lx, ly, me) {
       let y = 0;
