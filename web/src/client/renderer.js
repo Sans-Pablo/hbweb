@@ -528,7 +528,7 @@ export class Renderer {
     if (e.boss && !e.dead) spr.tinted(ctx, key, f, x, y, BOSS_COLORS[e.boss] || "#ff3b2e", 0.5);
     else if (e.kind === "npc" && !e.dead && !e.clone && !e.crystal && !e.comp && !e.master && s.world.map?.kind === "dungeon")      // esbirros: tinte leve del rey del tramo, para que el jefe resalte
       spr.tinted(ctx, key, f, x, y, BOSS_COLORS[Math.min(4, Math.ceil((s.world.map.level || 1) / 5))], 0.14);
-    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#7a2fb0", 0.8, "multiply");        // Liche: más oscuro y saturado (violeta), sin el azulado original
+    if (e.comp && e.name === "Liche" && !e.dead) spr.tinted(ctx, key, f, x, y, "#000000", 0.35);        // Liche: su color original, solo más oscuro
     if (e.crystal && !e.dead) spr.tinted(ctx, key, f, x, y, "#8fe8ff", 0.2 + 0.15 * Math.sin(time / 260 + e.id), "lighter");
     if (e.shield && !e.dead) spr.tinted(ctx, key, f, x, y, "#bff0ff", 0.35 + 0.15 * Math.sin(time / 200), "lighter");   // escudo de hielo
     if (e.wrath && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffb020", 0.07 * e.wrath, "lighter");                // contador de furia del rey dorado
@@ -547,10 +547,24 @@ export class Renderer {
     }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
-    if (e.comp && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche") && !e.dead) {                // summon evolucionado: destello periódico (como las armas especiales, pero solo cada pocos segundos)
-      const ph = ((time + e.id * 997) % 5000) / 900;
-      if (ph < 1) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.55 * Math.sin(ph * Math.PI), "lighter");
+    if (e.comp && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche") && !e.dead) {                // summon evolucionado: brillitos como los de la armadura Merien, en ráfagas cada pocos segundos
+      const ph = ((time + e.id * 997) % 5000) / 1800;
+      if (ph < 1) {
+        const ep = Math.floor((time + e.id * 997) / 5000);
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        for (let n = 0; n < 9; n++) {
+          const h1 = Math.sin((ep * 9 + n) * 12.9898 + e.id) * 43758.5453, h2 = Math.sin((ep * 9 + n) * 78.233 + e.id) * 12345.678;
+          const rx = h1 - Math.floor(h1), ry = h2 - Math.floor(h2), q = (ph * 1.6 - n * 0.07) ;
+          if (q < 0 || q > 0.55) continue;
+          const tw = Math.sin(q / 0.55 * Math.PI), r = 1.5 + 4.5 * tw, sx = x + (rx - 0.5) * 38, sy = y - 6 - ry * 40 - q * 14;
+          ctx.fillStyle = "rgba(255,246,200," + (0.9 * tw).toFixed(2) + ")";
+          ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx + r * 0.22, sy - r * 0.22); ctx.lineTo(sx + r, sy); ctx.lineTo(sx + r * 0.22, sy + r * 0.22);
+          ctx.lineTo(sx, sy + r); ctx.lineTo(sx - r * 0.22, sy + r * 0.22); ctx.lineTo(sx - r, sy); ctx.lineTo(sx - r * 0.22, sy - r * 0.22); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      }
     }
+
     if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida

@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.4 · Brillitos y Liche (2026-10-11)
+
+- **Liche**: conserva su color original, solo más oscuro.
+- **Summons evolucionados**: en vez del destello blanco, brillitos en forma de estrella (como la armadura Merien) en ráfagas cada ~5 s.
+
 ## 0.50.3 · Liche y brillo de evolucionados (2026-10-11)
 
 - **Liche**: color más oscuro y saturado (violeta), sin el tono azulado.

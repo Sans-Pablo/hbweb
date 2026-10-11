@@ -10,6 +10,14 @@
   "news": [
     {
       "date": "2026-10-11",
+      "title": { "es": "Brillitos y Liche (v0.50.4)", "en": "Sparkles and Lich (v0.50.4)" },
+      "items": [
+        { "es": "El Liche mantiene su color original, solo más oscuro.", "en": "The Lich keeps its original colour, just darker." },
+        { "es": "Los summons evolucionados sueltan brillitos (estilo armadura Merien) cada pocos segundos.", "en": "Evolved summons give off sparkles (Merien-armour style) every few seconds." }
+      ]
+    },
+    {
+      "date": "2026-10-11",
       "title": { "es": "Liche y brillo de evolucionados (v0.50.3)", "en": "Lich and evolved glow (v0.50.3)" },
       "items": [
         { "es": "El Liche es más oscuro y saturado, sin el tono azulado.", "en": "The Lich is darker and more saturated, without the bluish tone." },
