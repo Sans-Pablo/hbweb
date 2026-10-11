@@ -819,21 +819,45 @@ export class Renderer {
       }
       ctx.globalAlpha = 1;
     }
-    if (L >= 50) {                                                                          // Lv 50: grietas de lava en el suelo
-      const ca = Math.max(0, 1 - Math.max(0, ck - 0.4) / 0.6); ctx.lineCap = "round";
-      for (let n = 0; n < nC; n++) {
-        const a0 = n * 2 * Math.PI / nC + rnd(n) * 0.5, len = Rr * (0.6 + 0.4 * rnd(n + 9)) * eo; let px = x, py = cy;
-        ctx.strokeStyle = rgba(core, 0.7 * ca); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(px, py);
-        for (let sg = 1; sg <= 5; sg++) { const a = a0 + (rnd(n * 7 + sg) - 0.5) * 0.7, r = len * sg / 5; px = x + Math.cos(a) * r; py = cy + Math.sin(a) * r * ry; ctx.lineTo(px, py); }
-        ctx.stroke();
+    const HIT = 0.12, hk = Math.max(0, ck - HIT), reveal = Math.min(1, hk / 0.18), erase = Math.max(0, Math.min(1, (ck - 0.55) / 0.35));       // la fisura nace en el centro (bajo el Demon), se dibuja hacia los bordes (sin crecer ni encogerse) y luego se borra desde su inicio
+    const lerp = (P, u) => { const t = u * (P.length - 1), i = Math.min(P.length - 2, Math.floor(t)), q = t - i; return [P[i][0] + (P[i + 1][0] - P[i][0]) * q, P[i][1] + (P[i + 1][1] - P[i][1]) * q]; };
+    const ribbon = (P, u0, u1, w, tp, wob) => {                                                    // cinta continua (un solo trazo, sin juntas) de la fisura entre u0 y u1, afinándose hacia la punta
+      if (u1 - u0 < 0.01) return;
+      const m = 14, L = [], R = [];
+      for (let i = 0; i <= m; i++) {
+        const u = u0 + (u1 - u0) * i / m, p = lerp(P, u), p2 = lerp(P, Math.min(1, u + 0.03)), p1 = lerp(P, Math.max(0, u - 0.03));
+        let dx = p2[0] - p1[0], dy = (p2[1] - p1[1]) / ry; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+        const hw = 0.5 * w * (1 - tp * u) * (1 + wob * Math.sin(u * 23 + P[0][0]));
+        L.push([p[0] - dy * hw, p[1] + dx * hw * ry]); R.push([p[0] + dy * hw, p[1] - dx * hw * ry]);
       }
+      ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]); for (const q of L) ctx.lineTo(q[0], q[1]); for (let i = m; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath(); ctx.fill();
+    };
+    const cracks = [];
+    for (let n = 0; n < nC; n++) {
+      const ang = n * 2 * Math.PI / nC + rnd(n) * 0.5, full = Rr * (1.5 + 0.5 * rnd(n + 9)), pts = [];
+      for (let j = 0; j <= 10; j++) { const r = full * j / 10, jit = j ? (j % 2 ? 1 : -1) * (1.5 + rnd(n * 7 + j) * 3.5) : 0; pts.push([x + Math.cos(ang) * r - Math.sin(ang) * jit, cy + (Math.sin(ang) * r + Math.cos(ang) * jit) * ry]); }
+      cracks.push({ P: pts, u0: 0, u1: 1, w: 1 });
+      const ub = 0.35 + 0.3 * rnd(n + 3), bp = lerp(pts, ub), ba = ang + (rnd(n + 5) > 0.5 ? 1 : -1) * (0.5 + 0.3 * rnd(n + 6)), bl = full * 0.4, bpts = [];       // una rama que sale de la grieta
+      for (let j = 0; j <= 6; j++) { const r = bl * j / 6, jit = j ? (j % 2 ? 1 : -1) * (2 + rnd(n * 5 + j) * 3) : 0; bpts.push([bp[0] + Math.cos(ba) * r - Math.sin(ba) * jit, bp[1] + (Math.sin(ba) * r + Math.cos(ba) * jit) * ry]); }
+      cracks.push({ P: bpts, u0: ub, u1: 1, w: 0.55 });
+    }
+    for (const c of cracks) {                                                                      // el rango visible (reveal..erase) se reparte en la rama a partir de donde nace
+      const ua = Math.max(0, Math.min(1, (erase - c.u0) / (1 - c.u0))), ub2 = Math.max(0, Math.min(1, (reveal - c.u0) / (1 - c.u0)));
+      c.a = c.u0 ? ua : erase; c.b = c.u0 ? ub2 : reveal;
+    }
+    ctx.globalCompositeOperation = "source-over";                                                  // el hueco oscuro del suelo
+    ctx.fillStyle = "rgba(8,3,2," + (0.92 * Math.min(1, a)).toFixed(3) + ")";
+    for (const c of cracks) ribbon(c.P, c.a, c.b, 8 * c.w, 0.55, 0.25);
+    ctx.globalCompositeOperation = "lighter";                                                      // la lava que brilla dentro
+    for (const [w, al, cc2] of [[5, 0.22 * heat, col], [2.4, 0.85, col], [1.1, 0.95 * heat, core]]) {
+      ctx.fillStyle = rgba(cc2, al * a);
+      for (const c of cracks) ribbon(c.P, c.a, c.b, w * c.w, 0.6, 0.35);
     }
     ctx.restore();
   }
   // Frost: nova de hielo al castear (Lv 30/40/50 cada vez mayor). Onda azul que se expande desde los pies, grietas de escarcha en el suelo y esquirlas que saltan. Bajo el sprite.
   iceNova(ctx, x, cy, k, e) {
-    const { R, ry, T, col, core, rgba } = k, ck = T / 1700, L = e.clvl, sc = L >= 50 ? 1.15 : L >= 40 ? 0.95 : 0.75, Rr = R * sc, nC = L >= 50 ? 9 : L >= 40 ? 7 : 5;
-    const rnd = (n) => { const q = Math.sin(n * 12.9898 + e.id) * 43758.5453; return q - Math.floor(q); };
+    const { R, ry, T, col, core, rgba } = k, ck = T / 1700, L = e.clvl, sc = L >= 50 ? 1.15 : L >= 40 ? 0.95 : 0.75, Rr = R * sc;
     const ex = Math.min(1, ck / 0.35), ee = 1 - (1 - ex) ** 3, fa = Math.max(0, 1 - Math.max(0, ck - 0.45) / 0.55);
     ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
     const g = ctx.createRadialGradient(x, cy, 0, x, cy, Rr * 1.1); g.addColorStop(0, rgba(core, 0.35 * fa)); g.addColorStop(0.6, rgba(col, 0.2 * fa)); g.addColorStop(1, rgba(col, 0));
@@ -841,14 +865,20 @@ export class Renderer {
     const wr = Math.max(0.5, Rr * ee);                                                      // onda que se expande
     ctx.strokeStyle = rgba(core, 0.8 * fa); ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(x, cy, wr, wr * ry, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = rgba(col, 0.5 * fa); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, cy, wr * 0.7, wr * 0.7 * ry, 0, 0, Math.PI * 2); ctx.stroke();
-    for (let n = 0; n < nC; n++) {                                                         // grietas de escarcha que se abren desde los pies
-      const a0 = n * 2 * Math.PI / nC + rnd(n) * 0.5, len = Rr * (0.65 + 0.35 * rnd(n + 9)) * ee; let px = x, py = cy;
-      ctx.strokeStyle = rgba(core, 0.75 * fa); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(px, py);
-      for (let sg = 1; sg <= 5; sg++) { const a = a0 + (rnd(n * 7 + sg) - 0.5) * 0.7, r = len * sg / 5; px = x + Math.cos(a) * r; py = cy + Math.sin(a) * r * ry; ctx.lineTo(px, py); }
-      ctx.stroke();
-      const sh = Math.min(1, Math.max(0, (ck - 0.15 - n * 0.02) / 0.3)) * fa;                // esquirla de hielo al final de la grieta
-      if (sh > 0) { const h = 14 * sh * sc; ctx.fillStyle = rgba(core, 0.7 * sh); ctx.beginPath(); ctx.moveTo(px - 2, py); ctx.lineTo(px, py - h); ctx.lineTo(px + 2, py); ctx.closePath(); ctx.fill(); }
-    }
+    const flake = (R0, rot, al, lw) => {                                                    // copo de nieve de seis brazos con ramas, aplastado en perspectiva
+      ctx.strokeStyle = rgba(core, al); ctx.lineWidth = lw;
+      for (let n = 0; n < 6; n++) {
+        const an = rot + n * Math.PI / 3, c = Math.cos(an), sn = Math.sin(an), P = (r, off = 0) => [x + c * r - sn * off, cy + (sn * r + c * off) * ry];
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(...P(R0));
+        for (const [u, bl] of [[0.4, 0.28], [0.68, 0.2]]) { const [bx, by] = P(R0 * u); ctx.moveTo(bx, by); ctx.lineTo(...P(R0 * (u + bl), R0 * bl)); ctx.moveTo(bx, by); ctx.lineTo(...P(R0 * (u + bl), -R0 * bl)); }
+        ctx.stroke();
+        const [tx, ty] = P(R0 * 1.04); ctx.fillStyle = rgba(core, al); ctx.beginPath(); ctx.ellipse(tx, ty, 1.8, 1.8 * ry * 1.4, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    };
+    const fz = Math.min(1, ck / 0.3), fe = 1 - (1 - fz) ** 3;
+    flake(Rr * 0.95 * fe, T / 1700 * 0.5, 0.85 * fa, 1.8);                                  // el icono del copo bajo los pies, gira despacio
+    ctx.strokeStyle = rgba(col, 0.4 * fa); ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, cy, Rr * 0.5 * fe, Rr * 0.5 * fe * ry, 0, 0, Math.PI * 2); ctx.stroke();
+    if (L >= 50) flake(Rr * 0.5 * fe, -T / 1700 * 0.8, 0.7 * fa, 1.2);                     // Lv 50: segundo copo interior en sentido contrario
     ctx.restore();
   }
   // Demon (antiguo): pentagrama de fuego invertido. Anillo con lenguas de llama, pentagrama que late al rojo vivo (gira despacio), una llama en cada punta,
