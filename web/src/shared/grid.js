@@ -24,6 +24,7 @@ export class Grid {
     if (!this.inside(x, y)) return true;
     return (this.dv.getUint8(this.idx(x, y) * 10 + 8) & 0x80) !== 0;
   }
+  farm(x, y) { return this.inside(x, y) && (this.dv.getUint8(this.idx(x, y) * 10 + 8) & 0x20) !== 0; }    // bGetIsFarm
   occupant(x, y) { return this.occ.get(this.idx(x, y)); }
   free(x, y, self) {
     if (this.blocked(x, y)) return false;

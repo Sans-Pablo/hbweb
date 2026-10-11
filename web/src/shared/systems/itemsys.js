@@ -5,7 +5,8 @@ import { PLAYER, ACT } from "../const.js";
 import * as Inv from "../inventory.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
 import { toggleCompanion, dismissCompanion } from "./npcsys.js";
-import { isCandy, candy } from "./companion.js";
+import { isCandy, candy, isFeed, feed, activeBall } from "./companion.js";
+import * as Farming from "./farming.js";
 
 export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
@@ -95,7 +96,18 @@ export function useItem(w, p, uid, destUid) {
   if (inst.comp) return toggleCompanion(w, p, inst);                 // bola de compañero (companion.js)
   const d = w.data.item(inst.id);
   if (d.effectType === EFFECT.DYE || d.effectType === 32 || d.effectType === 34) return dye(w, p, d, uid, destUid);
-  if (d.type !== ITYPE.EAT && d.type !== ITYPE.USE_DEPLETE) return w.reject(p, { t: "use" }, "no se puede usar");
+  if (d.effectType === Farming.EFFECT_FARM) {                          // bolsa de semillas: siembra en la casilla que se mira
+    if (Farming.plant(w, p, d) !== true) return false;
+    if (isStack(d) && (inst.count || 1) > 1) inst.count--; else Inv.removeFromBag(p, uid);
+    w.recalc(p);
+    return true;
+  }
+  if (isFeed(d) && (destUid && Inv.instOf(p, destUid)?.comp || activeBall(p))) {   // productos de granja: comida de compañeros
+    if (feed(w, p, d, destUid) !== true) return false;
+    if (isStack(d) && (inst.count || 1) > 1) inst.count--; else Inv.removeFromBag(p, uid);
+    return true;
+  }
+  if (d.type !== ITYPE.EAT && d.type !== ITYPE.USE_DEPLETE && d.type !== 11) return w.reject(p, { t: "use" }, "no se puede usar");
   const roll = () => dice(w.rng, d.v1, d.v2) + d.v3;
   let amount = 0, stat = null;
   if (isCandy(d)) {                                                    // caramelos: comida de compañeros (companion.candy)

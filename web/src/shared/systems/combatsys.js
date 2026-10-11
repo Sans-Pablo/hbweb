@@ -11,6 +11,7 @@ import { extraWeaponWear } from "./weather.js";
 import { rollKillDrop } from "../drops.js";
 import { groundPush } from "./ground.js";
 import { newInst } from "./itemsys.js";
+import * as Farming from "./farming.js";
 import { auraDefense, auraExp, auraVamp } from "./dummy.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
@@ -38,6 +39,7 @@ export function reachOf(w, p, t) {
 
 export function playerHit(w, p, t) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
   const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }

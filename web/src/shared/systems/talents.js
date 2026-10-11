@@ -81,8 +81,8 @@ export function factors(c) {
   };
 }
 export const isSchool = c => !!SCHOOL_OF[c.sp];                                       // summon de escuela: sin regeneración natural de maná (caramelos azules)
-export const maxMp = c => isDummy(c) ? Math.round(40 + 10 * c.lvl)
-  : Math.round((20 + 6 * c.lvl) * factors(c).mp * (isSchool(c) ? MP_BASE * (isTier2(c.sp) ? TIER_MULT.mp : 1) : 1));
+export const maxMp = c => (c.fb?.mp || 0) + (isDummy(c) ? Math.round(40 + 10 * c.lvl)
+  : Math.round((20 + 6 * c.lvl) * factors(c).mp * (isSchool(c) ? MP_BASE * (isTier2(c.sp) ? TIER_MULT.mp : 1) : 1)));
 export function canLearn(c, id) {
   const t = BY_ID[id];
   if (!t) return "no existe";

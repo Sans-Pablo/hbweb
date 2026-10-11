@@ -526,7 +526,7 @@ function pub(e, own) {
   if (e.role) o.rl = e.role;
   if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); if (e.dcls) o.dc = e.dcls; if (e.maxMpC) { o.mp = Math.floor(e.mp ?? 0); o.mm = e.maxMpC; } }
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }
-  if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; }
+  if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; if (e.crop) o.a2 = e.a2; }
   else {
     if (e.side) o.sd = e.side;                                                   // bando (1 Aresden, 2 Elvine): el cartel de nombre lo muestra y marca enemigos
     o.mp = e.mp; o.mm = e.maxMp;                                                // maná visible para el grupo (marcos de grupo)

@@ -17,6 +17,7 @@ const guildLine = e => { const g = e.guild ? [e.guild.name, e.guild.rank] : e.gd
 import { sellPriceOf } from "../shared/systems/shopsys.js";
 import { isStack } from "../shared/items.js";
 import { miniOf } from "./compicon.js";
+import { CROP_NAMES } from "../shared/systems/farming.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
 
@@ -536,6 +537,7 @@ export class Renderer {
 
     // monstruo
     let { key, f } = mobSprite(e, time, k => this.spr.frames(k));
+    if (e.crop) { key = "crop" + (31 + (e.dir || 1)); f = Math.min(2, Math.max(0, (e.a2 & 255) - 1)); }             // cultivo: hoja crop32.. (Game.cpp), fotograma = fase de crecimiento
     if (e.crystal) { key = "id1"; f = 1; }                                                     // cristal de hielo del jefe glacial: mineral 2 de item-dynamic (Game.cpp, DEF_DYNAMICOBJECT_MINERAL2)
     const act = actionAt(e, time);
     const alive = !e.dead && act !== ACT.DYING && act !== ACT.DEAD;                          // al morir se apagan todos los efectos y tintes (auras, escudo, ojos, orbe…)
@@ -719,7 +721,7 @@ export class Renderer {
     // encima de todo: nombre y vida
     if (e.dead) return;
     const top = y - this.mobHeight(key, f) * sc * (e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1) - 6;
-    if (remaster && e.kind !== "citizen" && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered || e.arena)) {
+    if (remaster && e.kind !== "citizen" && !e.crop && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered || e.arena)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
         ctx.fillStyle = "rgba(0,0,0,.65)";
@@ -732,9 +734,9 @@ export class Renderer {
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
     if (hovered || e.arena || e.comp) {
       overlays.push(() => {
-        const name = (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
+        const name = e.crop ? (CROP_NAMES[e.crop] || "Crop") : (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         const owner = e.comp && e.master != null ? s.world.ents.get(e.master)?.name : null;
-        const side = e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
+        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
         this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }

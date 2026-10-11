@@ -57,7 +57,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   const cb = comboBonus(p.eff.wtype === 0 ? 5 : p.eff.skill, p.combo);
   sm += cb; l += cb;
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
-  if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2) return { hit: true, damage: 0 };   // invulnerables
+  if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 5) return { hit: true, damage: 0 };   // invulnerables
   let dmg = n.cfg.size === 0 ? sm : l;
   if (n.absDamage < 0) {
     dmg = Math.floor(dmg - dmg * (Math.abs(n.absDamage) / 100));

@@ -172,7 +172,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
-    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4) return null;     // invulnerables
+    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k) * schoolMult);
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);

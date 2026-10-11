@@ -268,6 +268,7 @@ function crimsonPhase(w, n) {
 }
 export function npcThink(w, n) {
   if (n.arena) return;                                                         // gladiadores de la arena: los mueve systems/arena.js
+  if (n.crop) return;                                                          // cultivos (farming.js): no actúan
   if (n.crystal) return;                                                       // los cristales del jefe glacial no actúan
   if (n.boss === 1 && !n.dead && !n.aux) crimsonPhase(w, n);
   if (n.boss && !n.aux && !n.dead) Boss.bossTick(w, n);

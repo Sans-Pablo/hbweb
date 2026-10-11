@@ -40,7 +40,7 @@ function hit(w, e, dmg, f) {
   }
   if (e.kind === "npc" && !e.comp && f.owner && w.ents.get(f.owner)?.boss) return;       // los campos de un jefe no dañan a monstruos
   if (e.boss === 1 && f.type === DYN.FIRE) return;                    // el rey carmesí es inmune a sus llamas
-  if (e.cfg.actionLimit === 1 || e.cfg.actionLimit === 2 || e.cfg.actionLimit === 4) return;
+  if (e.cfg.actionLimit === 1 || e.cfg.actionLimit === 2 || e.cfg.actionLimit === 4 || e.cfg.actionLimit === 5) return;
   dmg = Boss.mitigate(w, e, dmg, null, "field"); if (dmg <= 0) return;
   e.hp -= dmg;
   w.emit({ t: "damage", id: e.id, from: f.owner || 0, amount: dmg, hp: Math.max(0, e.hp), max: e.maxHp });

@@ -58,6 +58,7 @@ export function registerPetDialog(gui, api) {
       cx.fillStyle = "rgba(10,8,4,.75)"; cx.fillRect(X - 1, 72, bw + 2, 9); cx.fillStyle = "#6aa8ff"; cx.fillRect(X, 73, Math.round(bw * k), 7);
       g.text(X, 84, c.lvl >= MAX_COMP_LEVEL ? "EXP MAX" : "EXP " + (c.exp || 0) + " / " + nd + "  (" + Math.floor(k * 100) + "%)", INK, { size: 9 });
       g.text(X, 96, "Points: " + Tal.pointsFree(c) + "  " + (sp ? Tal.branchName(c, sp) : Tal.isDummy(c) ? "No class" : "No specialty"), INK, { size: 9 });
+      { const fb = c.fb; if (fb && (fb.hp || fb.mp || fb.atk)) g.text(X, 107, "Farm: +" + (fb.hp || 0) + " HP  +" + (fb.mp || 0) + " MP  +" + (fb.atk || 0) + " ATK", "#2f7a2f", { size: 9 }); }
       BUTTONS.forEach(([key, , ], i) => {
         const x = BX + i * BPITCH, over = lx >= x && lx < x + 37 && ly >= BY && ly < BY + 41;
         g.put(key, over || this.tab === i ? 1 : 0, x, BY);

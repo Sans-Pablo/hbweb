@@ -45,10 +45,10 @@ export function avgHit(p) {
 // Los compañeros son la parte principal del juego (petición del diseñador): aportan mucho, pero caen y cuestan caro de revivir.
 export const shareOf = (lvl, sp) => Math.min(0.9, (0.3 + 0.012 * lvl) * (0.85 + 0.03 * rankOf(sp)));
 export function statsOf(p, c) {
-  if (c.sp === "Dummy") return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
+  if (c.sp === "Dummy") return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
   const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
   const t2 = Sch.isTier2(c.sp);                                              // especie superior de escuela: más vida y daño
-  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))), mp: Tal.maxMp(c) };
+  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))) + (c.fb?.atk || 0), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };
 }
 
 export const OWNER_SHARE = 0.4;                                              // parte de la experiencia del dueño que recibe su compañero (0.25 hasta v0.44: los habitantes lo veían subir demasiado despacio)
@@ -238,6 +238,27 @@ export function candy(w, p, d, destUid, roll) {
   }
   w.emit({ t: "candy", id: p.id, kind, amount, nm: c.nm, sp: c.sp, item: d.id });
   return amount;
+}
+
+// Productos de agricultura como comida de compañeros (diseño del port: el original no tiene compañeros).
+//  hp: tomate / mp: uvas y uvas azules / atk: seta -> suben 1 punto permanente (tope FEED_CAP). El resto cura; el ginseng revive.
+export const FEED_CAP = 100;
+export const FEED = { 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
+  820: { heal: 20 }, 821: { heal: 25 }, 822: { heal: 30 }, 823: { mana: 20 }, 824: { heal: 40 }, 825: { heal: 50 }, 826: { heal: 60 }, 827: { mana: 30 }, 828: { heal: 80 }, 721: { revive: true } };
+export const isFeed = d => !!FEED[d.id];
+export function feed(w, p, d, destUid) {
+  const inst = (destUid && Inv.instOf(p, destUid)?.comp ? Inv.instOf(p, destUid) : null) || activeBall(p);
+  if (!inst) return null;                                                    // sin compañero: se come como comida normal
+  const fd = FEED[d.id], c = inst.comp;
+  if (fd.stat) {
+    c.fb = c.fb || { hp: 0, mp: 0, atk: 0 };
+    if (c.fb[fd.stat] >= FEED_CAP) return w.reject(p, { t: "use" }, "tu compañero no puede mejorar más con esto");
+    c.fb[fd.stat]++;
+    w.emit({ t: "candy", id: p.id, kind: "stat", stat: fd.stat, amount: 1, nm: c.nm, sp: c.sp, item: d.id });
+    return true;
+  }
+  const fake = { id: d.id, effectType: fd.revive ? 0 : fd.mana ? 5 : 4 };
+  return candy(w, p, fake, inst.uid, () => fd.heal || fd.mana || 0) === false ? false : true;
 }
 
 // Alt + clic derecho: el compañero va a esa casilla y se queda allí (hasta 15 s para llegar; si el dueño se aleja más de 14 casillas vuelve a seguirlo)

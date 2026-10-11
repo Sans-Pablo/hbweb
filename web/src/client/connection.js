@@ -241,7 +241,7 @@ export class NetConnection {
     if (o.cp) { e.nick = o.nk; e.clvl = o.cl; e.evoK = (o.ek || 0) / 100; e.dcls = o.dc || null; }
     if (o.ar) { e.arena = true; e.nick = o.nk; e.clvl = o.cl; }
     if (o.k === "npc" || o.k === "citizen") {
-      e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0; { const bx = o.bx || 0; e.clone = !!(bx & 1); e.crystal = !!(bx & 2); e.shield = !!(bx & 4); e.hasClones = !!(bx & 8); e.ghost = !!(bx & 16); e.wrath = o.wr || 0; e.owner = o.ow || 0; }
+      e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0; { const bx = o.bx || 0; e.clone = !!(bx & 1); e.crystal = !!(bx & 2); e.shield = !!(bx & 4); e.hasClones = !!(bx & 8); e.ghost = !!(bx & 16); e.wrath = o.wr || 0; e.owner = o.ow || 0; e.a2 = o.a2 || 0; e.crop = o.a2 ? o.a2 >> 8 : 0; }
       if (isNew || !e.cfg || e.kind !== o.k) { e.kind = o.k; e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }       // también si la id cambió de jugador a monstruo (invocaciones en Promise Land): sin cfg el render lanzaba una excepción
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);

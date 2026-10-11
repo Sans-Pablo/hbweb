@@ -18,6 +18,7 @@ import { groundTop } from "./ground.js";
 import { newInst } from "./itemsys.js";
 import * as Party from "./party.js";
 import * as Tut from "./tutorial.js";
+import { SKILL } from "../skills.js";
 import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
@@ -45,7 +46,7 @@ export function init(w, p, opts = {}) {
   if (!opts.keep) p.gold += 400 + lvl * 250;
   Tut.init(p, false);                                                    // un bot no hace el tutorial (el observador no debe verlo)
   w.recalc(p);
-  p.bot = { owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0 };
+  p.bot = { farmer: !opts.keep && !opts.owner && w.rng() < 0.3, owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0 };
   if (!opts.keep) errands(w, p, p.bot, true);
   p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp;
 }
@@ -272,7 +273,7 @@ function step(adv, w, p, b, tx, ty, run) {
 // Situaciones de los pensamientos en voz alta (burbuja pública `botsay`). No hay frases escritas: las dice el modelo de lenguaje (residents.thought); sin modelo no hay burbuja.
 const THOUGHTS = {
   target: "you spot a {m} and decide to attack it", hurt: "you are hurt and drink a potion", rest: "you have no potions and are resting to recover",
-  rested: "you feel better and go on", loot: "you see loot on the ground and go grab it", shop: "you are going shopping for better gear", follow: "you are following your party leader",
+  rested: "you feel better and go on", farm: "you are tending your crops: sowing seeds and working the hoe to harvest for trade", loot: "you see loot on the ground and go grab it", shop: "you are going shopping for better gear", follow: "you are following your party leader",
   wander: "all is quiet and you look for monsters", danger: "you see a {m} that is too strong for you and avoid it", dead: "you just died", level: "you just reached level {l}", party: "you thank someone for the party invite",
 };
 // Registro de lo que hace y piensa el bot: anillo de 80 líneas (`admin: vida`) y, si alguien lo observa, evento privado `botlog` que el servidor
@@ -394,6 +395,7 @@ function run(adv, w, p, b) {
     }
     if (best) { think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
   }
+  if (b.farmer && !b.rest && !b.travel && !owner && farm(adv, w, p, b)) return;
   // viaje planeado (p. ej. a Promise Land): anda hasta la casilla del teletransportador
   if (b.travel && b.travel.w !== w) b.travel = null;
   if (b.travel && !owner && !b.rest) {
@@ -428,6 +430,45 @@ function run(adv, w, p, b) {
   }
   if (b.wander && b.wander.until - w.time > 11000) think_(w, p, b, "wander", {}, 20000);
   if (b.wander) step(adv, w, p, b, b.wander.x, b.wander.y, false);
+}
+// Granjero (30% de los bots): compra azada y semillas, siembra en casillas de cultivo, cuida con la azada y recoge los productos
+// para comerciar luego con ellos. Reglas de la agricultura: systems/farming.js (HG.cpp ITEMEFFECTTYPE_ITEMFARM, combat.cpp).
+function farmTiles(w) {
+  if (!w._farmTiles) { const a = []; for (let y = 0; y < w.grid.h; y++) for (let x = 0; x < w.grid.w; x++) if (w.grid.farm(x, y)) a.push({ x, y }); w._farmTiles = a; }
+  return w._farmTiles;
+}
+function farm(adv, w, p, b) {
+  const tiles = farmTiles(w);
+  if (!tiles.length) return false;
+  if (!b.farmReady) {                                                       // equipo de labranza: azada y semillas con el oro propio
+    b.farmReady = true;
+    p.skills[SKILL.FARMING] = Math.max(p.skills[SKILL.FARMING] || 0, 40);
+    const hoe = w.data.item(232), seed = w.data.item(801);
+    if (hoe && !p.bag.some(i => i.id === 232) && p.gold > hoe.price) buy(w, p, hoe, 1);
+    if (seed && p.gold > seed.price * 2) buy(w, p, seed, 2);
+  }
+  const hoe = p.bag.find(i => i.id === 232), seeds = p.bag.find(i => w.data.item(i.id)?.effectType === 30);
+  if (!hoe && !seeds) return false;
+  const near = (x, y) => Math.max(Math.abs(x - p.x), Math.abs(y - p.y)) <= 1;
+  let crop = null, bd = 1e9;
+  for (const e of w.ents.values()) if (e.crop && !e.dead) { const d = dist(p, e); if (d < bd && d < 30) { crop = e; bd = d; } }
+  if (crop && hoe) {
+    if (!near(crop.x, crop.y)) { think_(w, p, b, "farm"); return step(adv, w, p, b, crop.x, crop.y, false) || true; }
+    if (p.eff.wtype !== 27) { tryEquip(w, p, b, hoe); return true; }
+    if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, crop.x, crop.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: crop.id }); }
+    return true;
+  }
+  if (seeds) {
+    if (w.time < (b.sowAt || 0)) return true;
+    for (let d = 1; d <= 8; d++) {                                         // casilla de cultivo libre al lado
+      const x = p.x + DX[d], y = p.y + DY[d];
+      if (w.grid.farm(x, y) && w.grid.free(x, y)) { p.dir = d; b.sowAt = w.time + 1500; adv.command(p.id, { t: "use", uid: seeds.uid }); return true; }
+    }
+    let best = null, bd2 = 1e9;
+    for (const t of tiles) { const d = dist(p, t); if (d < bd2 && d < 40 && w.grid.free(t.x, t.y)) { best = t; bd2 = d; } }
+    if (best) { think_(w, p, b, "farm"); step(adv, w, p, b, best.x, best.y, false); return true; }
+  }
+  return false;
 }
 function wanted(w, p, it) {
   const d = w.data.item(it.id);

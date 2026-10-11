@@ -91,7 +91,7 @@ export class Hud {
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
       case "petgo": if (ev.id === me) this.petOrder = { kind: "go", x: ev.x, y: ev.y, at: performance.now() }; break;
       case "pettarget": if (ev.id === me) this.petOrder = { kind: "atk", target: ev.target, at: performance.now() }; if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
-      case "candy": if (ev.id === me) this.log(ev.kind === "revive" ? (ev.nm || ev.sp) + " vuelve en sí con " + ev.amount + " de vida." : (ev.nm || ev.sp) + " recupera " + ev.amount + (ev.kind === "hp" ? " de vida." : " de maná."), "gold"); break;
+      case "candy": if (ev.id === me && ev.kind === "stat") this.log((ev.nm || ev.sp) + " gana +1 " + ({ hp: "de vida máxima", mp: "de maná máximo", atk: "de ataque" })[ev.stat] + ".", "gold"); else if (ev.id === me) this.log(ev.kind === "revive" ? (ev.nm || ev.sp) + " vuelve en sí con " + ev.amount + " de vida." : (ev.nm || ev.sp) + " recupera " + ev.amount + (ev.kind === "hp" ? " de vida." : " de maná."), "gold"); break;
       case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-evolve": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " está a punto de cambiar de tamaño…", "gold"); break;
       case "companion-resummon": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve más grande.", "gold"); break;

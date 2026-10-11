@@ -11,6 +11,23 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Agricultura (v0.51.0)",
+        "en": "Farming (v0.51.0)"
+      },
+      "items": [
+        {
+          "es": "Siembra semillas en casillas de cultivo y cuídalas con la azada. Los productos alimentan a tu summon (Tomate +1 vida, Uva +1 maná, Champiñón +1 ataque) o lo curan.",
+          "en": "Sow seeds on farm tiles and tend them with the hoe. Products feed your summon (Tomato +1 HP, Grapes +1 MP, Mushroom +1 attack) or heal it."
+        },
+        {
+          "es": "Algunos bots son granjeros y siembran y cosechan para comerciar.",
+          "en": "Some bots are farmers: they sow and harvest to trade."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Vista previa de summons (v0.50.8)",
         "en": "Summon preview (v0.50.8)"
       },

@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.51.0 · Agricultura (2026-10-11)
+
+- Agricultura como en el servidor original: semillas, casillas de cultivo, azada y cosecha.
+- Los productos alimentan al summon: Tomate +1 vida, Uva +1 maná, Champiñón +1 ataque; el resto lo cura y el Ginseng lo revive. Se ve en su ventana.
+- Algunos bots son granjeros: siembran y cosechan para comerciar.
+
 ## 0.50.8 · Vista previa de summons (2026-10-11)
 
 - Comprar una bola en el hospital abre una ventana con estadísticas (nivel 1 → 50), habilidades, historia breve y siluetas de las evoluciones; desde ahí se confirma la compra.
