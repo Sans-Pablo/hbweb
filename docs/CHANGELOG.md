@@ -2,6 +2,34 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.6 · Bots con armadura y conversación (2026-10-11)
+
+- Ctrl+0..9 abre la página correcta del libro de magia.
+- Las áreas (Blizzard…) ya no dañan a tus summons ni a los de tu grupo.
+- El brillo de «a punto de evolucionar» del summon aparece desde el 90 % de exp, no solo al final.
+- El grupo muestra el nivel de cada miembro.
+- Los bots hablan en los tratos aunque no haya modelo de lenguaje.
+- El minimapa siempre va en la esquina.
+- Grupo: el nivel de los miembros viaja en `party.lvls`.
+- Nuevo **Bestiario** (bestiario.html): ver cualquier criatura por etapas de evolución y direcciones, con sus efectos, sin entrar a jugar. Liche: los ojos ya no suben en los frames de ataque.
+
+- **Observar con el ratón**: en Promise Land, mover el cursor sobre un jugador enemigo lanzaba una excepción al elegir objetivo y congelaba el juego; corregido.
+- **Demon Lv 50** (nuevo aura): fuego en los puños, brasas y calor; sin aura en el suelo ni llamas tipo Fire Field. **Frost Lv 50** (nuevo aura): viento helado, copos y destellos de cristal (sin aura en el suelo ni cristales volando), más un destello de cristal con copos cayendo en la punta del báculo. **Liche Lv 50**: ojos también mirando abajo-izquierda y abajo-derecha, más abajo en la cabeza, y halo violeta con chispas en el orbe del báculo.
+- **Auras Demon/Frost** más sutiles (a la altura del Liche). **Summon al lanzar magia**: frase propia según la especie (Demon, Frost, Liche o genérica) con el nombre del hechizo, y si está en nivel máximo dibuja un círculo de runas de su color bajo los pies mientras castea (lo ven también los demás jugadores).
+- **Observar**: si el habitante observado desaparece del mundo (cambio de mapa, muerte, salida), el servidor espera 6 s antes de soltarte y el cliente vuelve solo a la lista, en vez de dejar la pantalla congelada. El bucle de dibujo ya no se detiene por un error puntual.
+- **Promise Land**: arreglado el cierre del cliente al entrar (una entidad ya conocida cambiaba de tipo sin recalcular su ficha).
+- **Liche Lv 50**: ojos más arriba y ocultos de espaldas.
+- **Bots**: ahora valoran también las armaduras (peso relativo a lo que llevan puesto; compran antes la pieza más floja), no solo armas especiales.
+- **Bots**: siguen el hilo de una conversación entre ellos (responden antes y con más probabilidad a quien participa del hilo).
+- **Bots**: el chat ambiental enlatado queda desactivado por defecto (sigue siendo interruptor en el panel de administración).
+
+## 0.50.5 · Auras de nivel 50 (2026-10-11)
+
+- **Demon Lv 50**: aura de fuego (brasa bajo los pies, llamas del Fire Field, brasas ascendentes).
+- **Liche Lv 50**: oscuridad (sombra, humo negro, ojos rojos, Armor Break inverso).
+- **Frost Lv 50**: viento helado en espiral con copos y destellos de cristal.
+- **Servidor**: arreglado el cierre del servidor al observar bots (referencia circular en el estado del bot observado); el tick ya no tumba el servidor y los fallos van a `server/data/crash.log`.
+
 ## 0.50.4 · Brillitos y Liche (2026-10-11)
 
 - **Liche**: conserva su color original, solo más oscuro.

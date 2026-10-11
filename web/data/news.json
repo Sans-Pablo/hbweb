@@ -10,26 +10,131 @@
   "news": [
     {
       "date": "2026-10-11",
-      "title": { "es": "Brillitos y Liche (v0.50.4)", "en": "Sparkles and Lich (v0.50.4)" },
+      "title": {
+        "es": "Bots con armadura y conversación (v0.50.6)",
+        "en": "Bots with armor and conversation (v0.50.6)"
+      },
       "items": [
-        { "es": "El Liche mantiene su color original, solo más oscuro.", "en": "The Lich keeps its original colour, just darker." },
-        { "es": "Los summons evolucionados sueltan brillitos (estilo armadura Merien) cada pocos segundos.", "en": "Evolved summons give off sparkles (Merien-armour style) every few seconds." }
+        {
+          "es": "Ctrl+0..9 abre la página correcta del libro de magia.",
+          "en": "Ctrl+0..9 opens the right magic book page."
+        },
+        {
+          "es": "Las áreas (Blizzard…) ya no dañan a tus summons ni a los de tu grupo.",
+          "en": "Area spells (Blizzard…) no longer hurt your summons or your party's."
+        },
+        {
+          "es": "El brillo de «a punto de evolucionar» del summon aparece desde el 90 % de exp, no solo al final.",
+          "en": "The summon \"about to evolve\" glow now starts at 90% exp."
+        },
+        {
+          "es": "El grupo muestra el nivel de cada miembro.",
+          "en": "The party shows each member's level."
+        },
+        {
+          "es": "Los bots hablan en los tratos aunque no haya modelo de lenguaje.",
+          "en": "Bots speak during trades even without a language model."
+        },
+        {
+          "es": "El minimapa siempre va en la esquina.",
+          "en": "The minimap is always in the corner."
+        },
+        {
+          "es": "Arreglado el cierre del cliente al entrar en Promise Land.",
+          "en": "Fixed the client crash when entering Promise Land."
+        },
+        {
+          "es": "Liche Lv 50: ojos más arriba y ocultos de espaldas.",
+          "en": "Level 50 Lich: eyes higher and hidden from behind."
+        },
+        {
+          "es": "Los bots también se interesan por armaduras, no solo armas.",
+          "en": "Bots now care about armor, not only weapons."
+        },
+        {
+          "es": "Los bots mantienen un hilo de conversación entre ellos.",
+          "en": "Bots follow a conversation thread among themselves."
+        },
+        {
+          "es": "El chat ambiental enlatado de los bots está desactivado por defecto.",
+          "en": "Bots canned ambient chat is off by default."
+        }
       ]
     },
     {
       "date": "2026-10-11",
-      "title": { "es": "Liche y brillo de evolucionados (v0.50.3)", "en": "Lich and evolved glow (v0.50.3)" },
+      "title": {
+        "es": "Auras de nivel 50 (v0.50.5)",
+        "en": "Level 50 auras (v0.50.5)"
+      },
       "items": [
-        { "es": "El Liche es más oscuro y saturado, sin el tono azulado.", "en": "The Lich is darker and more saturated, without the bluish tone." },
-        { "es": "Los summons evolucionados (Demon, Frost, Liche) destellan cada pocos segundos.", "en": "Evolved summons (Demon, Frost, Lich) flash every few seconds." }
+        {
+          "es": "Demon Lv 50: aura de fuego amenazante.",
+          "en": "Level 50 Demon: menacing fire aura."
+        },
+        {
+          "es": "Liche Lv 50: oscuridad con humo negro y ojos rojos.",
+          "en": "Level 50 Lich: darkness with black smoke and red eyes."
+        },
+        {
+          "es": "Frost Lv 50: viento helado con copos y destellos de cristal.",
+          "en": "Level 50 Frost: freezing wind with snowflakes and ice glints."
+        },
+        {
+          "es": "Arreglado: el servidor ya no se cae al observar bots.",
+          "en": "Fixed: the server no longer crashes when observing bots."
+        }
       ]
     },
     {
       "date": "2026-10-11",
-      "title": { "es": "EKs y summons caídos (v0.50.2)", "en": "EKs and fallen summons (v0.50.2)" },
+      "title": {
+        "es": "Brillitos y Liche (v0.50.4)",
+        "en": "Sparkles and Lich (v0.50.4)"
+      },
       "items": [
-        { "es": "El contador de EK (muertes de enemigos de la otra ciudad) ya no se reinicia al morir, y cuenta también las bajas hechas por summons y magias.", "en": "The EK counter (kills of players from the other city) no longer resets on death, and also counts kills made by summons and spells." },
-        { "es": "Los bots con meta de EKs van más a Promise Land y, si su summon cae allí, vuelven a la ciudad a revivirlo.", "en": "Bots with an EK goal go to Promise Land more often and, if their summon falls there, return to town to revive it." }
+        {
+          "es": "El Liche mantiene su color original, solo más oscuro.",
+          "en": "The Lich keeps its original colour, just darker."
+        },
+        {
+          "es": "Los summons evolucionados sueltan brillitos (estilo armadura Merien) cada pocos segundos.",
+          "en": "Evolved summons give off sparkles (Merien-armour style) every few seconds."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "Liche y brillo de evolucionados (v0.50.3)",
+        "en": "Lich and evolved glow (v0.50.3)"
+      },
+      "items": [
+        {
+          "es": "El Liche es más oscuro y saturado, sin el tono azulado.",
+          "en": "The Lich is darker and more saturated, without the bluish tone."
+        },
+        {
+          "es": "Los summons evolucionados (Demon, Frost, Liche) destellan cada pocos segundos.",
+          "en": "Evolved summons (Demon, Frost, Lich) flash every few seconds."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
+        "es": "EKs y summons caídos (v0.50.2)",
+        "en": "EKs and fallen summons (v0.50.2)"
+      },
+      "items": [
+        {
+          "es": "El contador de EK (muertes de enemigos de la otra ciudad) ya no se reinicia al morir, y cuenta también las bajas hechas por summons y magias.",
+          "en": "The EK counter (kills of players from the other city) no longer resets on death, and also counts kills made by summons and spells."
+        },
+        {
+          "es": "Los bots con meta de EKs van más a Promise Land y, si su summon cae allí, vuelven a la ciudad a revivirlo.",
+          "en": "Bots with an EK goal go to Promise Land more often and, if their summon falls there, return to town to revive it."
+        }
       ]
     },
     {

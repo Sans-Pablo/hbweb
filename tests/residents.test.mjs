@@ -57,7 +57,7 @@ const C = a.residents().find(b => b !== B && b !== A);
 a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0; C.res._tripAt = w.time + 1e9; C.res._pet = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null;
 a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
 assert.ok(!C.bot.owner, "aún no se fía");
-C.res.rel.Pablo = 5; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
+C.res.rel.Pablo = 5; C.res.followUntil = w.time + 20000; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); for (let k = 0; k < 18 && C.bot.owner !== hid; k++) tick(500);      // se comprueba cada medio segundo: otro grupo (consejo) podría reclutarla después
 assert.equal(C.bot.owner, hid, "acepta acompañar al amigo");
 C.res.followUntil = w.time + 100; tick(1000);
 assert.equal(C.bot.owner, null, "vuelve a su vida");

@@ -151,9 +151,10 @@ export function errands(w, p, b, first = false) {
   }
   // compras por catálogo: una pieza por recado (a la primera, un equipo completo)
   let bought = 0;
-  for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) {
-    const list = cat.gear.get(slot) || [], have = value(slot), budget = p.gold * (first ? 0.25 : 0.6);
-    if (b.saving && have > 0) continue;                                               // ahorrando para algo mejor: no se gasta en mejoras menores
+  const slots = [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS].sort((x, y) => value(x) - value(y));      // primero las casillas más flojas o vacías: las armaduras no quedan siempre detrás del arma
+  for (const slot of slots) {
+    const list = cat.gear.get(slot) || [], have = value(slot), budget = b.saving && want ? Math.min(p.gold * 0.6, p.gold - want.price - 60) : p.gold * (first ? 0.25 : 0.6);      // ahorrando: solo gasta lo que sobre del precio de la pieza deseada
+    if (b.saving && budget <= 0) continue;
     let got = false;
     for (const d of list.filter(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x)).slice(0, 6)) {      // prueba el siguiente si no puede cargarlo o no se lo puede poner (antes se atascaba para siempre con el más caro y peleaba sin arma)
       const inst = buy(w, p, d);

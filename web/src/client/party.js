@@ -38,7 +38,7 @@ export function registerParty(gui, api) {
         (inParty ? ["You are in a party. You can", "withdraw from the party or", "see the list of party members."] : ["You are not in a party.", "You can make a party with", "other players."]).forEach((s, i) => line(155 + i * 15, s));
       } else if (this.mode === 4) {
         line(95, lines[0]); line(110, lines[1]);
-        (me?.party?.names || []).forEach((n, i) => g.aligned(17, 270, 140 + 15 * i, n, INK));
+        (me?.party?.names || []).forEach((n, i) => g.aligned(17, 270, 140 + 15 * i, n + (me.party.lvls?.[i] ? "  Lv " + me.party.lvls[i] : ""), INK));
       } else lines.forEach((s, i) => line(base + i * 15 + (this.mode === 1 && i === 0 ? 0 : 0), s.replace("%s", this.name)));
       const hov = (x) => within(lx, ly, x, x + BTN.w, BTN.y, BTN.y + BTN.h);
       const put = (x, a, b) => g.put("dialogtext_1", hov(x) ? b : a, x, BTN.y);

@@ -93,7 +93,9 @@ export function wish(w, p, gear, bad = new Set(), usableFn = canWear) {
     for (const d of list) {
       if (bad.has(d.id) || !usableFn(p, d)) continue;
       const gain = itemLevel(d) - have;
-      if (gain > have * 0.15 + 1 && (!best || gain - d.price / 400 > best.gain - best.price / 400)) best = { d, gain, slot, price: d.price };
+      // puntuación RELATIVA a lo que ya lleva en esa casilla (un arma sube cifras enormes, una armadura pocas): así las armaduras también compiten, y una casilla vacía pesa mucho
+      const score = (gain / (have + 6)) * 40 + (have === 0 ? 12 : 0) - d.price / 400;
+      if (gain > have * 0.15 + 1 && (!best || score > best.score)) best = { d, gain, slot, price: d.price, score };
     }
   }
   return best;

@@ -10,7 +10,7 @@
 import { dist } from "../const.js";
 import * as Party from "./party.js";
 
-export const DEFAULTS = { on: false, minOnline: 10, pins: {}, afk: true, slips: true, chatter: true, typos: true, vets: 0.3 };
+export const DEFAULTS = { on: false, minOnline: 10, pins: {}, afk: true, slips: true, chatter: false, typos: true, vets: 0.3 };
 export const cfgOf = adv => (adv.human ||= { ...DEFAULTS, pins: {} });
 const hash = s => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 17);
 export const nowMs = adv => adv.nowFn ? adv.nowFn() : adv.farm.time;

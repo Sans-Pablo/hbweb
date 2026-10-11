@@ -56,6 +56,8 @@ export class Controller {
 
     addEventListener("keydown", e => {
       if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLElement && e.target !== document.body && /^(BUTTON|A|SELECT|SUMMARY)$/.test(e.target.tagName)) e.target.blur();      // un botón con el foco se «pulsaría» con la barra espaciadora o Intro
+      if ((e.key === " " || e.key === "Backspace" || e.key.startsWith("Arrow") || e.key === "PageDown") && !e.ctrlKey && !e.altKey) e.preventDefault();      // el navegador no desplaza ni retrocede la página
       if (ui.npcKey(e)) { e.preventDefault(); return; }       // el cuadro de cantidad se queda con el teclado
       if (!e.repeat) ui.unlockAudio();
       this.keys.add(e.key.toLowerCase());
@@ -85,8 +87,8 @@ export class Controller {
       if (e.dead || e.master) continue;                                     // un seguidor (compañero) no se ataca
       if (e.kind !== kind && !(kind === "npc" && this.enemyPlayer(e))) continue;   // en Promise Land también se pueden atacar los jugadores enemigos
       const [px, py] = posOf(e, time);
-      const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k));
-      const h = Math.max(30, this.r.mobHeight(key, f));
+      let h = 64;                                                          // jugador enemigo (Promise Land): no tiene ficha de monstruo, mide como en pickPlayer
+      if (e.cfg) { const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k)); h = Math.max(30, this.r.mobHeight(key, f)); }
       if (Math.abs(wx - px) > 20 || wy < py - h || wy > py + 14) continue;
       const d = Math.hypot(wx - px, wy - (py - h / 2));
       if (d < bestD) { bestD = d; best = e; }

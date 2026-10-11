@@ -90,7 +90,7 @@ const bkey = n => "bot:" + n.toLowerCase();
 // Humanización (systems/human.js): horarios de conexión según la hora real; el admin los controla desde el panel (cfg guardado en saves["sys:human"])
 adventure.hourFn = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
 adventure.nowFn = () => Date.now();
-{ const hc = Human.cfgOf(adventure), saved = saves["sys:human"]; if (saved) Object.assign(hc, saved, { pins: { ...(saved.pins || {}) } }); else hc.on = true; if (env.HB_HUMAN === "0") hc.on = false; else if (env.HB_HUMAN === "1") hc.on = true; }
+{ const hc = Human.cfgOf(adventure), saved = saves["sys:human"]; if (saved) Object.assign(hc, saved, { pins: { ...(saved.pins || {}) } }); else hc.on = true; if (!hc.chatV2) { hc.chatV2 = 1; hc.chatter = false; }      if (env.HB_HUMAN === "0") hc.on = false; else if (env.HB_HUMAN === "1") hc.on = true; }      // chatter: la charla ambiental enlatada es opcional (panel de admin), apagada por defecto
 function spawnResidents(n) {
   const have = new Set(adventure.residents().map(b => b.name));
   let made = 0;
@@ -431,6 +431,12 @@ function adminCmd(line, by) {
       const k = (rest[0] || "").toLowerCase(), v = store.versions(k), at = v[Number(rest[1] || 0)];
       if (byName(k)) return "Desconecta primero a " + k;
       return at && store.restore(k, at) ? "Personaje " + k + " restaurado a " + new Date(at).toLocaleString("es") : "No hay esa copia (usa: versions " + k + ")"; }
+    case "llevar": case "movebot": {        // llevar <habitante> <mapa>: lo manda a un mapa estático (pruebas de observación entre mapas)
+      const b = adventure.residents().find(r => r.name.toLowerCase() === (rest[0] || "").toLowerCase()), to = adventure.staticWorld(rest[1] || "");
+      if (!b || !to) return "Uso: llevar <habitante> <mapa>"; const from = adventure.worldFor(b.id);
+      const spot = Object.values(adventure.maps[to.map.id]?.meta.initial || {})[0] || to.start;
+      return from === to || adventure.transfer(b, from, to, spot) ? "Hecho." : "No se pudo.";
+    }
     case "habitantes": case "residents": {
       const R = adventure.residents();
       if (rest[0] && /^\d+$/.test(rest[0])) { const n = Math.min(40, +rest[0]); while (adventure.residents().length > n) { const b = adventure.residents().pop(); saves[bkey(b.name)] = adventure.saveOf(b.id); adventure.removePlayer(b.id); } spawnResidents(n); persist(true); return "Habitantes: " + adventure.residents().length; }
@@ -487,7 +493,7 @@ const r1 = v => Math.round(v * 10) / 10;
 // Estado completo del propio jugador (lo que usa toda la interfaz: mochila, magia, talentos, tutorial, compañeros...). Lo que predice el cliente
 // (posición, acción, vida) va aparte en los campos cortos para no pisar la predicción. JSON puro: sin funciones ni referencias.
 const OWN_SKIP = new Set(["id", "kind", "name", "x", "y", "fx", "fy", "dir", "act", "actStart", "actDur", "busyUntil", "lastMove", "lastAttack", "lastCombat", "dead", "hp"]);
-const ownReplacer = (k, v) => typeof v === "function" || v instanceof Map || v instanceof Set || (k[0] === "_") ? undefined : v;
+const ownReplacer = (k, v) => typeof v === "function" || v instanceof Map || v instanceof Set || (k[0] === "_") || k === "bot" ? undefined : v;   // "bot" = IA del residente: guarda entidades (target) que se apuntan entre sí -> referencia circular al observar
 function ownState(e) {
   const o = {};
   for (const k in e) if (!OWN_SKIP.has(k)) o[k] = e[k];
@@ -528,11 +534,15 @@ function itemsList(world) {
 
 // Eventos visibles para quien está cerca (efectos, sonidos, números de daño). Todo lo demás con `id` es privado de su dueño: tienda, tutorial,
 // talentos, arena, avisos, depuración... (un evento nuevo es privado por defecto: no se filtra nada por olvido, y no se gasta ancho de banda).
-const PUBLIC = new Set(["botsay", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "death", "spawn", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
+const PUBLIC = new Set(["botsay", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
   "bossfx", "bossmsg", "pickup", "teleport", "respawn", "recalled", "immune", "resist", "levelup", "weather", "time"]);
 
 let last = Date.now();
-setInterval(() => {
+// Un error en un tick no debe tirar el servidor (todos los jugadores perderían la conexión): se anota con su pila en data/crash.log y se sigue.
+// Si fallan más de 30 ticks en 10 s el estado ya no es fiable: se sale y el lanzador lo reinicia.
+const crashLog = (kind, e) => { try { fs.mkdirSync(STORE, { recursive: true }); fs.appendFileSync(path.join(STORE, "crash.log"), new Date().toISOString() + " " + kind + " " + (e && e.stack || e) + "\n"); } catch {} };
+const tickFails = [];
+const tickOnce = () => {
   const now = Date.now(), dt = Math.min(250, now - last);
   last = now;
   for (const c of clients) if (c.pid) processQueue(c);
@@ -554,9 +564,10 @@ setInterval(() => {
     const world = adventure.worldFor(vid);
     const me = world.ents.get(vid);
     const events = eventsByMap.get(world.map.id) || [];
-    if (!me) { if (c.watch) { c.watch = 0; adventure.watched.delete(vid); send(c, { t: "unwatched", why: "El habitante ya no está." }); } continue; }
+    if (!me) { if (c.watch && (c.lostAt = c.lostAt || now) && now - c.lostAt > 6000) { c.lostAt = 0; c.watch = 0; adventure.watched.delete(vid); send(c, { t: "unwatched", why: "El habitante ya no está." }); } continue; }
     const sh = shared(world);
     if (c.socket.writableLength > 1 << 20) continue;     // conexión atascada: saltar este envío
+    c.lostAt = 0;
     const mapChanged = c.mapId !== world.map.id;
     if (mapChanged) { c.sent.clear(); c.ownJs = null; c.itemsKey = null; c.mapId = world.map.id; }
     const changed = [], seen = new Set();
@@ -600,6 +611,13 @@ setInterval(() => {
     send(c, msg);
     for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l);              // lo que piensa y hace el habitante observado, en el chat
   }
+};
+setInterval(() => {
+  try { tickOnce(); } catch (e) {
+    const now = Date.now(); tickFails.push(now); while (tickFails.length && now - tickFails[0] > 10000) tickFails.shift();
+    if (tickFails.length === 1 || tickFails.length % 20 === 0) { console.error("Error en el tick (el servidor sigue):", e); crashLog("tick", e); }
+    if (tickFails.length > 30) { crashLog("tick-repetido", e); throw e; }
+  }
 }, TICK_MS);
 
 // ------------------------------------------------------------------ arranque
@@ -619,6 +637,6 @@ adventure.llm = openLlm(CFG.llm, env, console.log);          // siempre presente
 // consola del servidor: los mismos comandos que el chat de un admin
 if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("line", l => console.log(adminCmd(l, "consola")));
 // Cierre brusco (ventana cerrada, error inesperado): guardar todo antes de salir; el lanzador vuelve a arrancar el servidor
-process.on("uncaughtException", e => { console.error("Error inesperado:", e); try { persist(true); store.close(); } catch {} process.exit(1); });
-process.on("unhandledRejection", e => console.error("Promesa rechazada:", e));
+process.on("uncaughtException", e => { console.error("Error inesperado:", e); crashLog("uncaught", e); try { persist(true); store.close(); } catch {} process.exit(1); });
+process.on("unhandledRejection", e => { console.error("Promesa rechazada:", e); crashLog("rejection", e); });
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); informe.flush(); store.close(); setTimeout(() => process.exit(0), 150); });

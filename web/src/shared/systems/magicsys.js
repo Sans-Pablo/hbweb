@@ -117,8 +117,16 @@ function command(w, p, sp, id, x, y) {
   if (!n) return;
   if (x !== n.x || y !== n.y) n.dir = dirTo(n.x, n.y, x, y) || n.dir;
   if (n.dur && !(n.frozenUntil > w.time)) { w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack; }
-  w.emit({ t: "dummy-cast", id: p.id, nid: n.id, txt: sp.name.replace(/-/g, " ") + "!" });
+  const nm = sp.name.replace(/-/g, " "), L = CAST_LINES[n.name] || CAST_LINES._, l = L[Math.floor(w.rng() * L.length)];
+  w.emit({ t: "dummy-cast", id: p.id, nid: n.id, max: (n.clvl || 0) >= 50, sc: n.name, txt: nm + "!", es: l[0] + " ¡" + nm + "!", en: l[1] + " " + nm + "!" });
 }
+// frases del summon al lanzar la magia de su escuela (es, en), según su especie; el resto usa la genérica
+const CAST_LINES = {
+  Demon: [["¡Que arda todo!", "Let it all burn!"], ["¡Cenizas y gritos!", "Ashes and screams!"], ["¡El infierno responde!", "Hell answers!"]],
+  Frost: [["¡Congélense!", "Freeze!"], ["El invierno ha llegado…", "Winter has come…"], ["Frío eterno:", "Eternal cold:"]],
+  Liche: [["Las sombras obedecen…", "The shadows obey…"], ["Tu alma es mía.", "Your soul is mine."], ["Muere…", "Die…"]],
+  _: [["¡Allá voy!", "Here I go!"], ["¡Toma esto!", "Take this!"], ["¡Con todo mi poder!", "With all my might!"]],
+};
 
 const occ = (w, x, y) => { const oid = w.grid.occupant(x, y); return oid === undefined ? null : w.ents.get(oid) || null; };
 
@@ -162,6 +170,7 @@ function resolve(w, p, id, sp, x, y, cost) {
   // daño mágico a un monstruo: resistencia, absorción, protección, y la mitad de experiencia en golpes de zona
   const hurt = (tgt, n, d, k, half = false) => {
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
+    if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4) return null;     // invulnerables
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k) * schoolMult);

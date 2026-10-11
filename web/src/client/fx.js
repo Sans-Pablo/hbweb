@@ -18,6 +18,7 @@ export class Fx {
     this.rings = [];
     this.bolts = [];
     this.evo = new Map();            // id -> inicio de la animación de evolución (crece, encoge, crece, encoge y queda grande, con brillo)
+    this.scast = new Map();          // id del summon en nivel máximo -> {at, sc}: círculo de casteo mientras lanza la magia
     this.pop = new Map();            // id -> hora de la re-invocación (entrada con rebote del compañero que cambia de tamaño)
     this.sp = new SpellFx();         // efectos de hechizos del cliente original
     this.sp.hook = (n, x, y) => this.onSfx?.(n, x, y);
@@ -42,6 +43,7 @@ export class Fx {
         this.text(ev.id, String(ev.amount), mine ? "#ff5a4a" : "#fff3d6", ev.amount >= 8);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
+      case "dummy-cast": if (ev.max) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;

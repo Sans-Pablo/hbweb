@@ -7,3 +7,8 @@ Código: `shared/systems/bot.js`, `Adventure.spawnBot/botOp` (`adventure.js`), `
 - **Comportamiento** (`run`, cada 100 ms): reaparece solo 3 s tras morir; sigue al dueño (también al cambiar de mapa o entrar en la cripta); elige el monstruo más cercano que amenace al grupo, ignora los que lo matarían en 3 golpes y los jefes si nivel < 40; ataca a su alcance (`reachOf`), camina con A* (`path.js`); bebe RedPotion con < 45 % de vida y descansa hasta el 75 %; come con hambre; recoge oro y botín útil cercano; dice «Level N!».
 - **Recados** (cada 3,5 s fuera de combate, `errands`): reparte puntos (50 % Str, 30 % Vit, 20 % Dex), repone pociones y comida, se equipa lo que lleve si es mejor y **compra por catálogo** (sin ir a la tienda: usa el precio de Item.cfg y su oro; la prueba real es `Inv.equip`, si no puede usarlo lo devuelve) y vende lo que sobra. Al nacer: 400 + 250·nivel de oro y un equipo completo.
 - **Limitaciones**: no persisten (no se guardan), no lanzan magia ni usan summons, no hacen misiones ni usan el almacén; el servidor no los cuenta como conectados. Siguientes pasos naturales: perfiles (arquero, mago), tienda real, guardado y reaparición automática al arrancar el servidor para poblar el mundo.
+
+## Armaduras, hilos y chat ambiental (0.50.6)
+- `botitems.wish`: la ganancia se mide relativa a lo que ya lleva en el hueco (`gain/(have+6)`), así las armaduras compiten con las armas; `errands()` visita primero el hueco más flojo.
+- Hilos: `residents.noteThread`/`threadOf` recuerdan quién charla con quién; dentro del hilo la respuesta tiene enfriamiento 5 s, más alcance y prioridad.
+- `human.js`: `chatter` (chat ambiental enlatado) es falso por defecto; se activa con `/api/admin/human`.

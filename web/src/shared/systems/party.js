@@ -28,8 +28,8 @@ function note(reg, id, ev) { const [w] = byId(reg, id); if (w) w.emit({ ...ev, i
 const fail = (reg, id) => note(reg, id, { t: "party", k: 7, ok: 0 });
 
 function sync(reg, party) {
-  const names = party.members.map(id => byId(reg, id)[1]?.name).filter(Boolean);
-  for (const id of party.members) { const e = byId(reg, id)[1]; if (e) e.party = { id: party.id, names }; }
+  const es = party.members.map(id => byId(reg, id)[1]).filter(Boolean), names = es.map(e => e.name), lvls = es.map(e => e.level | 0);
+  for (const e of es) e.party = { id: party.id, names, lvls };
 }
 
 // JOINPARTY v1=1: p pide formar grupo con el jugador `name`
@@ -113,4 +113,5 @@ export function shareExp(w, p, xp) {
   if (near.length <= 1) { giveExp(w, p, xp); return; }
   const n = near.length, unit = Math.floor((xp + xp * Math.floor(n / MAX_MEMBERS)) / n + 0.5);      // la división entera n/8 es del original
   for (const m of near) giveExp(w, m, unit);
+  sync(reg, party);                                                       // refresca los niveles que se muestran en la lista
 }

@@ -52,12 +52,8 @@ export function dropItem(w, p, uid, amount) {
   return true;
 }
 
-export function dropGold(w, p, amount) {
-  amount = Math.min(p.gold, Math.floor(amount));
-  if (!(amount > 0)) return w.reject(p, { t: "drop" }, "sin oro");
-  p.gold -= amount;
-  groundPush(w, p.x, p.y, newInst(w, GOLD, amount));
-  return true;
+export function dropGold(w, p) {
+  return w.reject(p, { t: "drop" }, "el oro no se puede tirar: usa el intercambio");      // sin oro en el suelo: todo es compra, venta e intercambio
 }
 
 export function equipCmd(w, p, uid) {

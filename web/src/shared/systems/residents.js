@@ -248,16 +248,19 @@ export function onChat(adv, w, ev) {
   const human = w.ents.get(ev.id); if (!human) return;
   const fromBot = adv.bots.get(ev.id), depth = fromBot?.res ? (fromBot.res._depth ?? 0) : 0;
   if (adv.bots.has(ev.id)) {                                                          // un habitante habla a otro: solo del mismo bando, de cerca, con poca probabilidad y sin cadenas largas
-    if (!fromBot.res || depth >= 3 || w.rng() > 0.5) return;
+    if (!fromBot.res || depth >= 6) return;
   }
   const text = String(ev.text), low = text.toLowerCase();
+  const th = fromBot ? noteThread(adv, w, human, ev.text) : null;                       // HILO: lo dicho se apunta para que quien conteste sepa de qué se habla
+  if (fromBot && w.rng() > (th ? 0.85 : 0.5)) return;                                   // dentro de un hilo vivo casi siempre contestan; fuera, rara vez
   let best = null, bd = 1e9;
   for (const b of adv.bots.values()) {
-    if (b === human || !b.res || b.dead || adv.worldFor(b.id) !== w || b.res.reply) continue;
-    if (fromBot && (b.side !== fromBot.side || w.time - (b.res._rcd || -1e9) < 20000)) continue;
+    if (b === human || !b.res || b.dead || adv.worldFor(b.id) !== w || (b.res.reply && (fromBot || !b.res.reply.toBot))) continue;      // una persona tiene prioridad sobre la charla entre habitantes
+    const inThread = !!th && th.who.includes(b.name);
+    if (fromBot && (b.side !== fromBot.side || w.time - (b.res._rcd || -1e9) < (inThread ? 5000 : 20000))) continue;
     const named = low.includes(b.name.toLowerCase()), d = dist(b, human);
-    if (d > (fromBot ? 7 : named ? 40 : 10)) continue;
-    const s = d - (named ? 100 : 0);
+    if (d > (fromBot ? (inThread ? 10 : 7) : named ? 40 : 10)) continue;
+    const s = d - (named ? 100 : 0) - (inThread ? 50 : 0);
     if (s < bd) { best = b; bd = s; }
   }
   if (best) queueReply(adv, w, best, human, text, depth + 1);
@@ -304,17 +307,30 @@ function doAct(adv, w, p, rep) {
   else if (rep.act === "party_follow") { if (p.bot.owner == null) { p.bot.owner = h.id; r.followUntil = w.time + 5 * 60000; p.bot.partyAt = w.time + 3000; befriend(p, h.name, 1); blog(w, p, `Acompaño a ${h.name} (me lo pidió en el chat).`); } }
   else if (rep.act === "party_invite") { if (Party.request(w, p, h.name)) blog(w, p, `Invito a ${h.name} a un grupo (me lo pidió en el chat).`); }
 }
+// HILO DE CONVERSACIÓN entre habitantes: las últimas frases del grupo que charla (par de interlocutores, 45 s de vida). Quien contesta las recibe como contexto.
+function noteThread(adv, w, speaker, text) {
+  const T = (adv._threads ||= []), near = n => { const q = adv.bots.get([...adv.bots.keys()].find(k => adv.bots.get(k).name === n)); return q && dist(q, speaker) <= 8; };
+  let th = T.find(t => w.time - t.at < 45000 && (t.who.includes(speaker.name) || t.who.some(near)));
+  const fresh = !th;
+  if (!th) { th = { who: [], lines: [], at: w.time }; T.push(th); if (T.length > 12) T.shift(); }
+  if (!th.who.includes(speaker.name) && th.who.length < 4) th.who.push(speaker.name);
+  th.lines.push(speaker.name + ": " + String(text).slice(0, 118)); if (th.lines.length > 6) th.lines.shift(); th.at = w.time;
+  return fresh ? null : th;
+}
+const threadOf = (adv, w, a, b) => (adv._threads || []).find(t => w.time - t.at < 45000 && t.who.includes(a) && t.who.includes(b));
 function queueReply(adv, w, p, human, text, depth = 0) {
-  const r = p.res, lang = langOf(text), intent = intentOf(text), n = human.name;
+  const r = p.res, lang = langOf(text), n = human.name, intent = human.res && intentOf(text) === "party" ? "other" : intentOf(text);      // entre habitantes una frase suelta de «vamos» no forma grupo (eso lo deciden ellos en el consejo, council.js)
+  const th = human.res ? threadOf(adv, w, p.name, n) : null;
+  const ctx = th && th.lines.length > 1 ? "(Conversation so far: " + th.lines.slice(0, -1).join(" / ") + ") " : "";
   (r.hl ||= {})[n] = lang;
   befriend(p, n, 1); r.chats++; r._rcd = w.time;
   if (!human.res && typeof adv.llm === "function" && adv.llm.ready !== false) return askGrounded(adv, w, p, human, text, lang);
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 2 || w.rng() < 0.5 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
-  r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
+  r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth, toBot: !!human.res };
   if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // el modelo contesta a lo que dijo el interlocutor (sin él, calla)
     const rep = r.reply; rep.at += 3000; rep.text = "";
-    Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text })).then(t => { if (t && r.reply === rep) rep.text = cleanSay(t); }).catch(() => {});
+    Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text: ctx + text })).then(t => { if (t && r.reply === rep) rep.text = cleanSay(t); }).catch(() => {});
   }
 }
 
@@ -855,7 +871,22 @@ const worth = (w, i) => { const d = w.data.item(i.id); if (!d) return 1; const b
 const priceFor = (rel, total) => (rel >= 6 ? 0 : Math.floor(total * (rel >= 3 ? 0.7 : 1)));
 const nameOf = (w, i) => (w.data.item(i.id)?.display || w.data.item(i.id)?.name || "?");
 const langFor = (r, who) => r.hl?.[who] || r.lang;
-const say2 = (adv, w, p, key, who, extra = {}) => speak(adv, p, fmt(p, key, langFor(p.res, who), who, w, extra));
+// Sin modelo de lenguaje, en los tratos hablan con frases fijas (si no, el comprador no sabría qué quiere el habitante)
+const CANNED = {
+  tsell: ["{n}, te vendo esto: {i}, por {p} de oro.", "{n}, I'll sell you this: {i}, for {p} gold."], tgift: ["{n}, te regalo esto: {i}.", "{n}, here's a gift: {i}."],
+  toffer: ["Pongo {i} sobre la mesa, pido {p} de oro.", "I put {i} on the table, asking {p} gold."], tpay: ["Pongo {p} de oro por {i}.", "I put {p} gold for {i}."],
+  tconfirm: ["Trato hecho, confirmo.", "Deal, I confirm."], twait: ["{n}, ¿qué me ofreces?", "{n}, what do you offer?"], task: ["{n}, ¿qué te interesa?", "{n}, what are you after?"],
+  tbye: ["Será otra vez.", "Maybe next time."], tnothing: ["{n}, no tengo nada para ti ahora.", "{n}, I have nothing for you right now."], tno: ["{n}, ese precio no me conviene.", "{n}, that price doesn't suit me."],
+  tnoneed: ["{n}, eso no me hace falta ahora.", "{n}, I don't need that right now."], tcounter: ["{n}, mi objeto vale más que eso.", "{n}, my item is worth more than that."],
+};
+const say2 = (adv, w, p, key, who, extra = {}) => {
+  const c = CANNED[key];
+  if (c && (typeof adv.llm !== "function" || adv.llm.ready === false)) {
+    const t = c[langFor(p.res, who) === "en" ? 1 : 0].replace("{n}", who || "").replace("{i}", extra.i ?? "").replace("{p}", extra.p ?? "");
+    adv.command(p.id, { t: "say", text: t.slice(0, 118) }); return;
+  }
+  speak(adv, p, fmt(p, key, langFor(p.res, who), who, w, extra));
+};
 const wornIlvl = (w, p, d) => {
   const slot = d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos, uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined), i = uid !== undefined && Inv.instOf(p, uid);
   return i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0;

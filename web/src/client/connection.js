@@ -170,7 +170,7 @@ export class NetConnection {
     else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
     else if (m.t === "msg") this.events.push({ t: "chat", system: true, text: m.text, id: this.pid });
     else if (m.t === "kicked") this.kickMsg = m.msg;
-    else if (m.t === "unwatched") { this.events.push({ t: "chat", system: true, text: m.why || "Fin de la observación.", id: this.pid }); }
+    else if (m.t === "unwatched") { this.events.push({ t: "chat", system: true, text: m.why || "Fin de la observación.", id: this.pid }); setTimeout(() => { location.hash = "#observar"; location.reload(); }, 2500); }
   }
 
   onState(m) {
@@ -242,7 +242,7 @@ export class NetConnection {
     if (o.ar) { e.arena = true; e.nick = o.nk; e.clvl = o.cl; }
     if (o.k === "npc" || o.k === "citizen") {
       e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0; { const bx = o.bx || 0; e.clone = !!(bx & 1); e.crystal = !!(bx & 2); e.shield = !!(bx & 4); e.hasClones = !!(bx & 8); e.ghost = !!(bx & 16); e.wrath = o.wr || 0; e.owner = o.ow || 0; }
-      if (isNew) { e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }
+      if (isNew || !e.cfg || e.kind !== o.k) { e.kind = o.k; e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }       // también si la id cambió de jugador a monstruo (invocaciones en Promise Land): sin cfg el render lanzaba una excepción
     } else {
       e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
       if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }

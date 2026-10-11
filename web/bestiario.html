@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bestiario · Helbreath Web</title>
+<style>
+  :root { --stone:#15171b; --slab:#23262d; --edge:#3a3e47; --parch:#ece2c6; --muted:#9a937f; --brass:#d4ab52; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--stone); color:var(--parch); font:14px/1.4 "Segoe UI", system-ui, sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:10px 14px; background:var(--slab); border-bottom:1px solid var(--edge); position:sticky; top:0; z-index:2; }
+  header b { color:var(--brass); font:600 18px Georgia, serif; letter-spacing:.06em; }
+  label { display:flex; gap:6px; align-items:center; color:var(--muted); font-size:12px; }
+  select, input[type=number], button { background:#0d0f12; color:var(--parch); border:1px solid var(--edge); border-radius:4px; padding:4px 8px; font:inherit; }
+  button.on { border-color:var(--brass); color:var(--brass); }
+  #info { padding:6px 14px; color:var(--muted); font-size:12px; }
+  #wrap { overflow:auto; padding:8px 14px 30px; }
+  canvas { display:block; background:#2b2d33; border:1px solid var(--edge); }
+</style>
+</head>
+<body>
+<header>
+  <b>Bestiario</b>
+  <label>Criatura <select id="sp"></select></label>
+  <label>Vista <select id="mode"><option value="evo">Evolución (etapas × direcciones)</option><option value="dirs">Un nivel, 8 direcciones</option></select></label>
+  <label>Nivel <select id="lvl"></select></label>
+  <label>Acción <select id="act"><option value="stop">Reposo</option><option value="move">Andar</option><option value="attack">Atacar</option><option value="damage">Daño</option><option value="dying">Morir</option></select></label>
+  <label>Dirección <select id="dir"><option value="0">Todas</option></select></label>
+  <label>Zoom <select id="zoom"><option>1</option><option selected>1.5</option><option>2</option><option>3</option></select></label>
+  <label><input type="checkbox" id="comp" checked> Como summon</label>
+  <label><input type="checkbox" id="cast"> Círculo de casteo</label>
+  <label>Fondo <select id="bg"><option value="#2b2d33">Gris</option><option value="#0b0b10">Oscuro</option><option value="#6d8a4a">Hierba</option><option value="#b9a77a">Arena</option></select></label>
+</header>
+<div id="info">Cargando…</div>
+<div id="wrap"><canvas id="cv"></canvas></div>
+<canvas id="game" style="display:none"></canvas>
+<script type="module" src="src/client/bestiary.js"></script>
+</body>
+</html>

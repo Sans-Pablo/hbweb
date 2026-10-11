@@ -35,7 +35,7 @@ test("el botín mejora con la profundidad: menos oro, más equipo y mejores atri
     return { gold, gear, rare, drops };
   };
   const a = stat(0), b = stat(20);
-  assert.ok(b.gold / b.drops < a.gold / a.drops, "menos oro " + a.gold + "→" + b.gold);
+  assert.equal(a.gold + b.gold, 0, "el oro ya no cae");
   assert.ok(b.gear > a.gear, "más equipo " + a.gear + "→" + b.gear);
   assert.ok(b.rare / b.gear > a.rare / a.gear, "más raros");
 });

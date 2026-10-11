@@ -198,7 +198,7 @@ export class Renderer {
         if (s.groundInfo !== false && it.id !== 90 && d && !it.comp) {                            // atributos y precio de venta: para saber qué conviene recoger
           const info = attrLines(it.attr).join(" · "), price = sellPriceOf(d, it, isStack(d) ? it.count : 1);
           if (info) labels.push([x, y - 1, info, "#9fe39a"]);
-          if (price) labels.push([x, y - 1 + (info ? 13 : 0), "Venta " + price.toLocaleString("en") + " oro", "#f0d080"]);
+          if (price && s.groundCost !== false) labels.push([x, y - 1 + (info ? 13 : 0), "Venta " + price.toLocaleString("en") + " oro", "#f0d080"]);
         }
       }
     }
@@ -547,24 +547,110 @@ export class Renderer {
     }
     { const glow = Math.max(this.fx?.evoGlow?.(e.id) || 0, e.evoK > 0 ? e.evoK * (0.15 + 0.2 * Math.abs(Math.sin(performance.now() / 1000 * (1 + 10 * e.evoK) * Math.PI))) : 0);
       if (glow > 0 && !e.dead) spr.tinted(ctx, key, f, x, y, "#ffffff", Math.min(1, glow), "lighter"); }
-    if (e.comp && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche") && !e.dead) {                // summon evolucionado: brillitos como los de la armadura Merien, en ráfagas cada pocos segundos
-      const ph = ((time + e.id * 997) % 5000) / 1800;
-      if (ph < 1) {
-        const ep = Math.floor((time + e.id * 997) / 5000);
+    if (e.comp && e.clvl >= 50 && !e.dead && (e.name === "Demon" || e.name === "Frost" || e.name === "Liche")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
+      const sp = this.fx?.sp, seed = e.id * 997, T = time + seed, rnd = (k) => { const h = Math.sin(k * 12.9898 + e.id) * 43758.5453; return h - Math.floor(h); };
+      ctx.save(); ctx.globalAlpha = e.name === "Liche" ? 1 : 0.5;                              // Demon y Frost más sutiles, a la altura del Liche
+      if (e.name === "Demon") {                                                          // fuego amenazante: círculo infernal con pentagrama, lenguas de fuego, brasas y calor
+        const pulse = 0.5 + 0.5 * Math.sin(T / 260);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
-        for (let n = 0; n < 9; n++) {
-          const h1 = Math.sin((ep * 9 + n) * 12.9898 + e.id) * 43758.5453, h2 = Math.sin((ep * 9 + n) * 78.233 + e.id) * 12345.678;
-          const rx = h1 - Math.floor(h1), ry = h2 - Math.floor(h2), q = (ph * 1.6 - n * 0.07) ;
-          if (q < 0 || q > 0.55) continue;
-          const tw = Math.sin(q / 0.55 * Math.PI), r = 1.5 + 4.5 * tw, sx = x + (rx - 0.5) * 38, sy = y - 6 - ry * 40 - q * 14;
-          ctx.fillStyle = "rgba(255,246,200," + (0.9 * tw).toFixed(2) + ")";
+        ctx.restore();
+        spr.tinted(ctx, key, f, x, y, "#ff2a00", 0.12 + 0.12 * pulse, "lighter");
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+        { const HD = { 1: [[-14, -42], [16, -42]], 2: [[-27, -46]], 3: [[4, -40]], 4: [[-20, -33], [19, -45]], 5: [[-25, -42], [27, -42]], 6: [[-18, -48], [12, -33]], 7: [[-3, -40]], 8: [[-12, -44], [17, -40]] }[e.dir] || [];   // puños (relativos al pivote, leídos del sprite por dirección)
+          const st = Math.floor(T / 90);                                                  // llama en bloques de píxel: círculo de fuego que parpadea a pasos, sin degradados suaves
+          for (const [n, h] of HD.entries()) {
+            const hx = Math.round(x + h[0]), hy = Math.round(y + h[1]), fr2 = (k) => { const q = Math.sin((st + n * 7 + k * 13) * 12.9898) * 43758.5453; return q - Math.floor(q); };
+            ctx.fillStyle = "rgba(255,70,10,0.22)"; ctx.fillRect(hx - 7, hy - 5, 14, 10); ctx.fillRect(hx - 5, hy - 7, 10, 14);
+            for (let k = 0; k < 12; k++) {                                                // anillo de fuego de 12 pixeles
+              const an = k / 12 * Math.PI * 2, rr = 5 + (fr2(k) > 0.55 ? 1.5 : 0), px = Math.round(hx + Math.cos(an) * rr), py = Math.round(hy + Math.sin(an) * rr * 0.9);
+              ctx.fillStyle = fr2(k + 30) > 0.45 ? "rgba(255,190,50,0.85)" : "rgba(255,80,20,0.85)"; ctx.fillRect(px - 1, py - 1, 2, 2);
+              if (fr2(k + 60) > 0.75) { ctx.fillStyle = "rgba(255,120,30,0.7)"; ctx.fillRect(px - 1, py - 4, 2, 2); }
+            }
+            ctx.fillStyle = "rgba(255,230,120,0.9)"; ctx.fillRect(hx - 2, hy - 2, 4, 4);
+          } }
+        { const hg = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 46); hg.addColorStop(0, "rgba(255,80,10," + (0.1 + 0.07 * pulse).toFixed(2) + ")"); hg.addColorStop(1, "rgba(255,40,0,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y - 30, 46, 0, Math.PI * 2); ctx.fill(); }   // resplandor de calor
+        ctx.restore();
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        for (let n = 0; n < 9; n++) {                                                   // brasas ascendentes
+          const q = ((T / 1100 + rnd(n + 20)) % 1), px = x + (rnd(n + 40) - 0.5) * 34 + Math.sin(q * 6 + n) * 4, py = y - 4 - q * 58;
+          ctx.fillStyle = "rgba(" + (n % 2 ? "255,170,40" : "255,70,20") + "," + (0.85 * (1 - q)).toFixed(2) + ")";
+          ctx.fillRect(px, py, 2, 2 + (1 - q) * 2);
+        }
+        ctx.restore();
+      } else if (e.name === "Liche") {                                                   // oscuridad que da miedo: sombra bajo él, humo negro que sube, ojos ardientes (mirando hacia abajo, abajo-izquierda y abajo-derecha)
+        const pulse = 0.5 + 0.5 * Math.sin(T / 420);
+        ctx.save();
+        const g = ctx.createRadialGradient(x, y, 3, x, y, 40); g.addColorStop(0, "rgba(0,0,0," + (0.7 + 0.2 * pulse).toFixed(2) + ")"); g.addColorStop(0.6, "rgba(25,0,45,0.45)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + 2, 40, 18, 0, 0, Math.PI * 2); ctx.fill();
+        for (let n = 0; n < 9; n++) {                                                   // jirones de humo oscuro
+          const q = ((T / 2200 + rnd(n + 7)) % 1), px = x + (rnd(n + 30) - 0.5) * 36 + Math.sin(q * 5 + n * 2) * 7, py = y - 2 - q * 62, r = 6 + q * 9;
+          const sg = ctx.createRadialGradient(px, py, 0, px, py, r); sg.addColorStop(0, "rgba(8,0,18," + (0.5 * Math.sin(q * Math.PI)).toFixed(2) + ")"); sg.addColorStop(1, "rgba(8,0,18,0)");
+          ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "lighter";
+        const rest = mobSprite({ ...e, act: ACT.STOP }, 0, k => this.spr.frames(k)), eyeY = y - this.mobHeight(rest.key, rest.f) * 0.81, back = e.dir !== 4 && e.dir !== 5 && e.dir !== 6, ea = 0.55 + 0.4 * pulse, ex = e.dir === 4 ? 1 : e.dir === 6 ? -2 : 0;           // dos ojos rojos brillando en la oscuridad
+        if (!back) for (const dx0 of [-3, 3]) { const dx = dx0 + ex; const eg = ctx.createRadialGradient(x + dx, eyeY, 0, x + dx, eyeY, 5); eg.addColorStop(0, "rgba(255,40,40," + ea.toFixed(2) + ")"); eg.addColorStop(1, "rgba(120,0,40,0)"); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x + dx, eyeY, 6, 0, Math.PI * 2); ctx.fill(); }
+        const orb = this.orbPos(key, f);                                                // orbe violeta del báculo: halo que late y chispas que suben
+        if (orb) {
+          const ox = x + orb.x, oy = y + orb.y, op = 0.5 + 0.5 * Math.sin(T / 300);
+          const og = ctx.createRadialGradient(ox, oy, 0, ox, oy, 13 + 3 * op); og.addColorStop(0, "rgba(230,170,255," + (0.55 + 0.3 * op).toFixed(2) + ")"); og.addColorStop(0.45, "rgba(160,60,255," + (0.3 + 0.2 * op).toFixed(2) + ")"); og.addColorStop(1, "rgba(80,0,160,0)");
+          ctx.fillStyle = og; ctx.beginPath(); ctx.arc(ox, oy, 17, 0, Math.PI * 2); ctx.fill();
+          for (let n = 0; n < 5; n++) { const q = ((T / 900 + rnd(n + 60)) % 1); ctx.fillStyle = "rgba(210,130,255," + (0.9 * (1 - q)).toFixed(2) + ")"; ctx.fillRect(ox + (rnd(n + 70) - 0.5) * 12 + Math.sin(q * 7 + n) * 3, oy - q * 22, 2, 2); }
+        }
+        ctx.restore();
+      } else {                                                                           // Frost: viento helado en espiral, copos que arrastra y destellos de hielo
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+        for (let n = 0; n < 5; n++) {                                                   // ráfagas que orbitan el cuerpo
+          const lvl = n / 5, rx = 24 + (n % 2) * 8, base = T / (520 + n * 90) * (n % 2 ? -1 : 1) + n * 1.9, cy = y - 8 - lvl * 40;
+          for (let k = 0; k < 12; k++) {
+            const a = base - k * 0.09 * (n % 2 ? -1 : 1), al = 0.5 * (1 - k / 12);
+            ctx.strokeStyle = "rgba(" + (k < 3 ? "235,250,255" : "150,210,255") + "," + al.toFixed(2) + ")"; ctx.lineWidth = 2.2 - k * 0.12;
+            const a2 = a - 0.09 * (n % 2 ? -1 : 1);
+            ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * rx, cy + Math.sin(a) * rx * 0.38); ctx.lineTo(x + Math.cos(a2) * rx, cy + Math.sin(a2) * rx * 0.38); ctx.stroke();
+          }
+        }
+        for (let n = 0; n < 10; n++) {                                                  // copos arrastrados por el viento
+          const q = ((T / 1800 + rnd(n + 3)) % 1), px = x - 34 + q * 68 + Math.sin(q * 9 + n) * 4, py = y - 8 - rnd(n + 50) * 46 + Math.sin(q * 7 + n) * 5;
+          ctx.fillStyle = "rgba(230,248,255," + (0.8 * Math.sin(q * Math.PI)).toFixed(2) + ")"; ctx.fillRect(px, py, 2, 2);
+        }
+        for (let n = 0; n < 4; n++) {                                                   // destellos de cristal
+          const ph = ((T + n * 700) % 2800) / 2800, ep = Math.floor((T + n * 700) / 2800); if (ph > 0.35) continue;
+          const tw = Math.sin(ph / 0.35 * Math.PI), r = 2 + 5 * tw, sx = x + (rnd(ep * 4 + n + 60) - 0.5) * 38, sy = y - 6 - rnd(ep * 4 + n + 90) * 44;
+          ctx.fillStyle = "rgba(205,240,255," + (0.9 * tw).toFixed(2) + ")";
           ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx + r * 0.22, sy - r * 0.22); ctx.lineTo(sx + r, sy); ctx.lineTo(sx + r * 0.22, sy + r * 0.22);
           ctx.lineTo(sx, sy + r); ctx.lineTo(sx - r * 0.22, sy + r * 0.22); ctx.lineTo(sx - r, sy); ctx.lineTo(sx - r * 0.22, sy - r * 0.22); ctx.closePath(); ctx.fill();
         }
+        { const hg = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 48); hg.addColorStop(0, "rgba(120,200,255," + (0.12 + 0.06 * Math.sin(T / 380)).toFixed(2) + ")"); hg.addColorStop(1, "rgba(80,150,255,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y - 30, 48, 0, Math.PI * 2); ctx.fill(); }   // aura gélida
+        { const tp = this.tipPos(key, f);                                                 // báculo helado: cristal que late, anillo de escarcha y copos que caen de la punta
+          if (tp) {
+            const tx = x + tp.x, ty = y + tp.y, tpu = 0.5 + 0.5 * Math.sin(T / 330);
+            const sg = ctx.createRadialGradient(tx, ty, 0, tx, ty, 14 + 3 * tpu); sg.addColorStop(0, "rgba(235,252,255," + (0.65 + 0.25 * tpu).toFixed(2) + ")"); sg.addColorStop(0.45, "rgba(120,200,255," + (0.3 + 0.15 * tpu).toFixed(2) + ")"); sg.addColorStop(1, "rgba(60,130,255,0)");
+            ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(tx, ty, 17, 0, Math.PI * 2); ctx.fill();
+            const r2 = 3 + 5 * tpu; ctx.fillStyle = "rgba(230,250,255," + (0.5 + 0.4 * tpu).toFixed(2) + ")";
+            ctx.beginPath(); ctx.moveTo(tx, ty - r2 * 1.6); ctx.lineTo(tx + r2 * 0.2, ty - r2 * 0.2); ctx.lineTo(tx + r2 * 1.6, ty); ctx.lineTo(tx + r2 * 0.2, ty + r2 * 0.2); ctx.lineTo(tx, ty + r2 * 1.6); ctx.lineTo(tx - r2 * 0.2, ty + r2 * 0.2); ctx.lineTo(tx - r2 * 1.6, ty); ctx.lineTo(tx - r2 * 0.2, ty - r2 * 0.2); ctx.closePath(); ctx.fill();
+            for (let n = 0; n < 5; n++) { const q = ((T / 1200 + rnd(n + 160)) % 1); ctx.fillStyle = "rgba(210,242,255," + (0.9 * (1 - q)).toFixed(2) + ")"; ctx.fillRect(tx + (rnd(n + 170) - 0.5) * 14 + Math.sin(q * 6 + n) * 2, ty + 3 + q * 24, 2, 2); }
+          } }
         ctx.restore();
+        spr.tinted(ctx, key, f, x, y, "#9fd8ff", 0.07, "lighter");
       }
+      ctx.restore();
     }
 
+    { const cc = e.comp && !e.dead && this.fx?.scast?.get(e.id), ck = cc ? (performance.now() - cc.at) / 1700 : 2;      // círculo de casteo del summon en nivel máximo: runas que giran bajo sus pies
+      if (cc && ck >= 1) this.fx.scast.delete(e.id);
+      else if (cc) {
+        const col = { Demon: "255,90,30", Frost: "130,200,255", Liche: "190,100,255" }[cc.sc] || "255,220,120", a = Math.sin(Math.min(1, ck) * Math.PI) ** 0.6, R = 26 + 6 * Math.min(1, ck * 3), ry = 0.42, rot = ck * 5;
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+        ctx.strokeStyle = "rgba(" + col + "," + (0.75 * a).toFixed(2) + ")"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(x, y + 3, R, R * ry, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = 1; ctx.strokeStyle = "rgba(" + col + "," + (0.45 * a).toFixed(2) + ")";
+        ctx.beginPath(); ctx.ellipse(x, y + 3, R - 6, (R - 6) * ry, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); for (let n = 0; n <= 6; n++) { const q = rot + (n * 2 % 6 < 6 ? n : 0) * Math.PI / 3; const px = x + Math.cos(q) * (R - 3), py = y + 3 + Math.sin(q) * (R - 3) * ry; n ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
+        for (let n = 0; n < 12; n++) { const q = -rot * 0.7 + n * Math.PI / 6; ctx.fillStyle = "rgba(" + col + "," + (0.9 * a).toFixed(2) + ")"; ctx.fillRect(x + Math.cos(q) * (R + 4) - 1, y + 3 + Math.sin(q) * (R + 4) * ry - 1, n % 3 ? 2 : 3, n % 3 ? 2 : 3); }
+        const g = ctx.createRadialGradient(x, y + 3, 2, x, y + 3, R); g.addColorStop(0, "rgba(" + col + "," + (0.25 * a).toFixed(2) + ")"); g.addColorStop(1, "rgba(" + col + ",0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + 3, R, R * ry, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      } }
     if (sc !== 1) ctx.restore();
 
     // encima de todo: nombre y vida
@@ -605,6 +691,51 @@ export class Renderer {
     const ratio = st > 0 ? (base + (1 - base) * K[st - 1]) / size : 1;                  // tamaño de la etapa anterior / actual (para la animación de evolución)
     const pulse = e.evoK > 0 ? 1 + 0.05 * Math.sin(performance.now() / 1000 * (2 + 14 * e.evoK) * Math.PI) * (0.4 + e.evoK) : 1;     // último nivel antes de evolucionar: late cada vez más rápido
     return size * (this.fx?.popScale?.(e.id, ratio) ?? 1) * pulse;
+  }
+
+  // Orbe violeta del báculo del Liche: centroide de los píxeles violeta más altos del fotograma (relativo al pivote); se calcula una vez por fotograma
+  orbPos(key, f) {
+    const c = this._orb || (this._orb = new Map()), id = key + ":" + f;
+    if (c.has(id)) return c.get(id);
+    const fr = this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return null;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.spr.src(key);
+    const cv = this._orbCv || (this._orbCv = document.createElement("canvas"));
+    cv.width = w * k; cv.height = h * k;
+    const g = cv.getContext("2d", { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height);
+    g.drawImage(img, sx * k, sy * k, w * k, h * k, 0, 0, w * k, h * k);
+    const d = g.getImageData(0, 0, cv.width, cv.height).data, pts = [];
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i + 2] > 100 && d[i + 2] > d[i + 1] + 45 && d[i] > d[i + 1] + 10) { const q = i / 4; pts.push([q % cv.width, Math.floor(q / cv.width)]); }
+    let r = null;
+    if (pts.length > 3) {
+      const top = Math.min(...pts.map(p => p[1])), near = pts.filter(p => p[1] < top + 9 * k);
+      r = { x: pvx + near.reduce((a, p) => a + p[0], 0) / near.length / k, y: pvy + near.reduce((a, p) => a + p[1], 0) / near.length / k };
+    }
+    c.set(id, r); return r;
+  }
+
+  // Punta del báculo del Frost por fotograma (relativa al pivote): el báculo es lo único azul intenso del sprite; se toma el mayor trazo conexo y su extremo más alto
+  tipPos(key, f) {
+    const c = this._anc || (this._anc = new Map()), id = key + ":" + f;
+    if (c.has(id)) return c.get(id);
+    const fr = this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return null;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.spr.src(key);
+    const cv = this._orbCv || (this._orbCv = document.createElement("canvas"));
+    cv.width = w * k; cv.height = h * k;
+    const g = cv.getContext("2d", { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height);
+    g.drawImage(img, sx * k, sy * k, w * k, h * k, 0, 0, w * k, h * k);
+    const d = g.getImageData(0, 0, cv.width, cv.height).data, W = cv.width, H = cv.height, lab = new Int32Array(W * H), pts = [];
+    for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] > 200 && d[i * 4 + 2] - d[i * 4] > 70 && d[i * 4] < 110) { pts.push(i); lab[i] = -1; }
+    let best = null, nl = 0;
+    for (const i0 of pts) {
+      if (lab[i0] !== -1) continue;
+      const comp = [], st = [i0]; lab[i0] = ++nl;
+      while (st.length) { const i = st.pop(); comp.push(i); const px = i % W, py = (i - px) / W;
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const nx = px + dx, ny = py + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const j = ny * W + nx; if (lab[j] === -1) { lab[j] = nl; st.push(j); } } }
+      if (!best || comp.length > best.length) best = comp;
+    }
+    let r = null;
+    if (best && best.length >= 6) { let top = H; for (const i of best) top = Math.min(top, Math.floor(i / W)); let sx2 = 0, sy2 = 0, n = 0; for (const i of best) { const py = Math.floor(i / W); if (py < top + 3 * k) { sx2 += i % W; sy2 += py; n++; } } r = { x: pvx + sx2 / n / k, y: pvy + sy2 / n / k }; }
+    c.set(id, r); return r;
   }
 
   mobHeight(key, f) {

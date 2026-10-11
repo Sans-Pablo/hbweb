@@ -437,7 +437,8 @@ export class Gui {
     const kindOf = pet => pet.dcls ? ({ healer: "Healer", buffer: "Buffer", aura: "Aura" })[pet.dcls] + " Dummy" : SCHOOL_OF[pet.name] ? SCHOOL_NAMES[SCHOOL_OF[pet.name]] + " school" : pet.name === "Dummy" ? "Dummy" : "Combat";
     for (const name of [me.name, ...me.party.names.filter(n => n !== me.name)]) {
       const m = name === me.name ? me : ents.find(e => e.kind === "player" && e.name === name);
-      this.text(10, y, name + (m === me ? "  Lv " + me.level : ""), m ? "#fafadc" : "#8a8a8a", { shadow: true });
+      const lv = m === me ? me.level : (m?.level || me.party.lvls?.[me.party.names.indexOf(name)] || 0);
+      this.text(10, y, name + (lv ? "  Lv " + lv : ""), m ? "#fafadc" : "#8a8a8a", { shadow: true });
       if (m) {
         bar(10, y + 14, 96, 8, m.dead ? 0 : m.hp, m.maxHp, hpCol); this.text(112, y + 11, m.dead ? "dead" : m.hp + "/" + m.maxHp, "#e8e8d0", { shadow: true, size: 10 });
         if (m.maxMp) { bar(10, y + 25, 96, 5, m.mp, m.maxMp, mpCol); this.text(112, y + 23, Math.floor(m.mp) + "/" + m.maxMp, "#9fc2ff", { shadow: true, size: 9 }); }

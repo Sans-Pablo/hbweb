@@ -101,6 +101,7 @@ async function main() {
     useMagic: id => ui.useMagic(id),
     sys: () => ({ detail: flags.detail, sound: opts.sound, music: opts.music, whisper: flags.whisper, shout: flags.shout, soundVol: opts.soundVol, musicVol: opts.musicVol, trans: document.body.classList.contains("dialogtrans"), logoutCount: logout.n }),
     mods: () => opts,
+    setOpt: (k, v) => setOpt(k, v),
     setMod: (k, v) => { setOpt(k, v); hud.log(k + (v ? ' activado.' : ' desactivado.')); },
     setSys: o => {
       if ("detail" in o) { flags.detail = o.detail; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][o.detail]); }
@@ -241,13 +242,14 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, groundInfo: true, spellFx: true, hpBars: true };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
+  opts.autoAttack = true;                            // al entrar siempre con el ataque automático activado
   if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
   const optionsEl = document.getElementById("options");
   function applyOpts() {
-    view.showMinimap = opts.map; view.mapStyle = opts.mapStyle; view.showGrid = opts.grid;
+    view.showMinimap = opts.map; view.mapStyle = "corner"; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
     sound.setVolume?.(opts.soundVol);
     sound.setMusic?.(opts.music); sound.setMusicVolume?.(opts.musicVol);
@@ -393,7 +395,7 @@ async function main() {
       if (e.ctrlKey) {
         if (/^[0-9]$/.test(e.key)) {                                  // Ctrl+1..9,0: abre el libro de magia en ese círculo
           e.preventDefault();
-          const mg = gui.dialogs.get(3); mg.view = (+e.key + 9) % 10;
+          const mg = gui.dialogs.get(3); mg.view = (+e.key + 9) % 10; mg.keepView = true;
           if (!gui.isOpen(3)) gui.open(3); else gui.bringFront?.(3);
           return;
         }
@@ -431,7 +433,7 @@ async function main() {
         }
       }
       // cualquier otra tecla imprimible empieza a escribir en el chat
-      if (k.length === 1 && !e.metaKey) openChat();
+      if (k.length === 1 && !e.metaKey) { e.preventDefault(); openChat(); chatIn.value += k; chTag?.(); }         // se escribe a mano: así el navegador no interpreta la tecla («/» abre la búsqueda rápida, espacio desplaza la página…)
     },
     key(a) {
       switch (a) {
@@ -445,7 +447,7 @@ async function main() {
         }
         case "char": gui.toggle(1); break;
         case "inv": gui.toggle(2); break;
-        case "options": gui.toggle(19); break;
+        case "options": gui.toggle(60); break;
         case "skill": gui.toggle(15); break;
         case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
@@ -547,7 +549,15 @@ async function main() {
   const fpsEl = document.getElementById("fps");
   let buildTag = "";                                // versión y nombre de la compilación (data/version.json), junto a los fps
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { buildTag = " · v" + v.version + " " + v.name; }).catch(() => {});
+  // Un error en un fotograma no debe parar el juego (la pantalla se quedaba congelada): se anota una vez y el bucle sigue.
+  let loopErr = "";
   function loop(t) {
+    try { frame(t); } catch (e) {
+      const m = String(e && e.stack || e); if (m !== loopErr) { loopErr = m; console.error("[frame]", e); window.hbLoopError = m; }
+    }
+    requestAnimationFrame(loop);
+  }
+  function frame(t) {
     const dt = Math.min(100, t - last);             // si la pestaña estuvo oculta, no saltar
     last = t;
     frames++; fpsT += dt;
@@ -592,7 +602,7 @@ async function main() {
       if (ev.t === "disconnected") { const l = document.getElementById("lost"); if (ev.reason) l.querySelector("p").textContent = ev.reason; l.style.display = "grid"; }
     }
     const me = world.ents.get(pid);
-    if (!me) { requestAnimationFrame(loop); return; }      // aún no ha llegado el primer estado
+    if (!me) return;                                       // aún no ha llegado el primer estado
     ctl.update();
     voice?.update(world, me, assets.npcDb);
     tutorial.update(me, world);
@@ -600,7 +610,7 @@ async function main() {
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
+      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     hud.update(world, ctl.hoverEnt);
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
@@ -618,12 +628,12 @@ async function main() {
     }
     gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur, statusPanel: opts.statusPanel === true });
     canvas.style.cursor = opts.classicCursor ? "none" : ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
-    requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 
   // para pruebas automáticas
   window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };
+  window.hbFrame = frame;                           // pruebas automáticas: un fotograma a mano (la pestaña oculta no recibe requestAnimationFrame)
   window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, tutorial, mob };
   window.hbSound = sound;
 }

@@ -30,3 +30,5 @@
 - El clasificador de comandos del entorno puede agotar el tiempo; reintentar más tarde, no saltarse el sandbox.
 
 - **ui.json pierde los iconos generados**: `convert_all.py --only ui` regenera `web/data/ui.json` y borra `summons_icon`, `recall_icon` y `pet_*` (botones sin icono). Después hay que reejecutar `tools/make_crypt_assets.py`; `tests/uiicons.test.mjs` lo vigila.
+
+- **Observar bots tiraba el servidor**: `ownState` serializaba la entidad del bot observado con su `bot` (IA) y `bot.target` ↔ `target.bot` forman un ciclo → `JSON.stringify` lanzaba dentro del tick sin captura. Ahora `ownReplacer` omite la clave `bot`, el tick está protegido y los fallos van a `server/data/crash.log`.

@@ -42,4 +42,9 @@ if (pot && wp && !Object.values(A.equip).includes(wp.uid)) assert.ok(pot.y < wp.
 A.gold = 5; A.bot.bad.clear(); A.bot.errand = 0; for (const i of [...A.bag]) if (!Object.values(A.equip).includes(i.uid) && i.id !== red.id) A.bag.splice(A.bag.indexOf(i), 1);
 tick(6000);
 assert.ok(A.bot.wish === undefined || A.bot.wish === null || A.bot.wish.price > 0, "lista de deseos coherente");
+// 6. las armaduras también cuentan: con arma buena y el cuerpo desnudo, la lista de deseos pide una pieza de armadura (no otra arma)
+{ const C = { gear: new Map() }; const sw = data.named("LongSword"), sw2 = data.named("BroadSword"), arm = data.named("LeatherArmor(M)") || data.named("Hauberk(M)");
+  if (sw && sw2 && arm) { for (const k of Object.keys(A.equip)) delete A.equip[k]; const inst = add(A, "LongSword"); A.equip[sw.equipPos] = inst.uid; A.level = 40; A.gender = 1;
+    C.gear.set(sw.equipPos, [sw2]); C.gear.set(arm.equipPos, [arm]);
+    const wi = BI.wish(w, A, C.gear, new Set(), () => true); assert.ok(wi && wi.slot === arm.equipPos, "con el arma puesta y sin armadura, desea armadura: " + JSON.stringify(wi && wi.d.name)); } }
 console.log("OK botitems");

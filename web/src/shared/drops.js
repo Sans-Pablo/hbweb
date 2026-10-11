@@ -105,9 +105,12 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
   return ra ? { id, count: 1, attr: ra.attr, color: ra.color } : { id, count: 1 };
 }
 
+const NEVER_DROP = /Knight|Hero|SangAh/;
+
 export function rollKillDrop(rng, npc, opts = {}) {
   const r = rollKillDropRaw(rng, npc, opts);
-  if (!r || BANNED_ITEMS.has(r.id)) return null;
+  if (!r || r.id === GOLD || BANNED_ITEMS.has(r.id)) return null;                // el oro ya no cae: todo es compra, venta e intercambio
   const d = opts.data && opts.data.item(r.id);
+  if (d && NEVER_DROP.test(d.name)) return null;                              // equipo Knight, Hero y Sang-Ah: nunca cae de un monstruo
   return r.id !== GOLD && d && !usable(d) ? null : r;                         // red de seguridad: nada que un nivel 50 no pueda usar
 }
