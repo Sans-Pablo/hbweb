@@ -237,6 +237,7 @@ export class NetConnection {
     }
     e.dead = !!o.dead; e.hp = o.hp; e.maxHp = o.mh; e.name = o.name;
     e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
+    e.stall = o.stl ? { sid: o.stl[0], owner: o.stl[1], title: o.stl[2], n: o.stl[3] } : null;
     if (o.mm !== undefined) { e.mp = o.mp; e.maxMp = o.mm; }
     if (o.cp) { e.nick = o.nk; e.clvl = o.cl; e.evoK = (o.ek || 0) / 100; e.dcls = o.dc || null; }
     if (o.ar) { e.arena = true; e.nick = o.nk; e.clvl = o.cl; }

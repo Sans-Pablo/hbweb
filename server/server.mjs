@@ -109,6 +109,7 @@ function persist(force = false) {
   for (const [n, e] of adventure.offline || []) if (e.save) saves[bkey(n)] = e.save;                // los desconectados también se guardan
   saves["sys:human"] = Human.cfgOf(adventure);
   saves["sys:guilds"] = { list: exportGuilds(adventure.guildReg) };               // los guilds (systems/guild.js) viven en la misma base que los personajes
+  saves["sys:stalls"] = { list: adventure.stallDb };                              // puestos de jugador (systems/stall.js): siguen abiertos aunque el dueño se desconecte
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
 // Segunda ronda de análisis: al subir BOT_EPOCH todos los habitantes vuelven a nivel 1 y el informe se archiva y empieza vacío (una sola vez por época).
@@ -123,6 +124,7 @@ const informe = openReport(STORE, { version: VERSION.version, log });
 const botStats = openBotStats(adventure, log);
 adventure.report = r => { informe.add(r); botStats.idea(r); };               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
+if (Array.isArray(saves["sys:stalls"]?.list)) adventure.stallDb.push(...saves["sys:stalls"].list);
 spawnResidents(RESIDENTS);
 adventure._humBoot = true;
 setInterval(() => { try { if (adventure.residents().length + (adventure.offline?.size || 0) < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
@@ -524,6 +526,7 @@ function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
   if (e.role) o.rl = e.role;
+  if (e.stall) o.stl = [e.stall.sid, e.stall.name, e.stall.title, e.stall.items.length];            // puesto de jugador: nombre del dueño y rótulo (los objetos solo se piden al abrirlo)
   if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); if (e.dcls) o.dc = e.dcls; if (e.maxMpC) { o.mp = Math.floor(e.mp ?? 0); o.mm = e.maxMpC; } }
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }
   if (e.kind === "npc" || e.kind === "citizen") { o.type = e.type; o.sp = e.special; o.ph = r1(e.phase); if (e.boss) o.bs = e.boss; const bx = (e.clone ? 1 : 0) | (e.crystal ? 2 : 0) | (e.shield ? 4 : 0) | (e.hasClones ? 8 : 0) | (e.ghost ? 16 : 0); if (bx) o.bx = bx; if (e.wrath) o.wr = e.wrath; if (e.owner) o.ow = e.owner; if (e.crop) o.a2 = e.a2; }

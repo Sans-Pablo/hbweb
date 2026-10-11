@@ -732,11 +732,11 @@ export class Renderer {
     }
     const say = s.bubbles && s.bubbles.get(e.id);          // frase de un habitante (voice.js)
     if (say && performance.now() < say.until) this.bq.push(() => this.label(x, top - (hovered ? 26 : 4), say.text.length > 64 ? say.text.slice(0, 63) + "…" : say.text, "#ffe9a8", true));
-    if (hovered || e.arena || e.comp) {
+    if (hovered || e.arena || e.comp || e.stall) {
       overlays.push(() => {
-        const name = e.crop ? (CROP_NAMES[e.crop] || "Crop") : (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
+        const name = e.stall ? "Puesto de " + e.stall.owner : e.crop ? (CROP_NAMES[e.crop] || "Crop") : (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
         const owner = e.comp && e.master != null ? s.world.ents.get(e.master)?.name : null;
-        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
+        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + ")", "30,255,30"] : e.stall ? ["(" + e.stall.title + ")", "255,220,120"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
         this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }

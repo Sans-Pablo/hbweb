@@ -24,6 +24,7 @@ import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
 import * as Party from "./systems/party.js";
 import * as Trade from "./systems/trade.js";
+import * as Stall from "./systems/stall.js";
 import * as Guild from "./systems/guild.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
@@ -230,6 +231,11 @@ const COMMANDS = {
   tradegold: (w, p, cmd) => Trade.setGold(w, p, cmd.n),
   tradeok: (w, p) => Trade.confirm(w, p),
   tradecancel: (w, p) => Trade.cancel(w, p, ""),
+  stallopen: (w, p, cmd) => Stall.open(w, p, cmd),
+  stallview: (w, p, cmd) => Stall.viewCmd(w, p, cmd.sid),
+  stallbuy: (w, p, cmd) => Stall.buy(w, p, cmd),
+  stalltake: (w, p) => Stall.take(w, p),
+  stallclose: (w, p) => Stall.close(w, p),
   buy: (w, p, cmd) => Shop.buy(w, p, cmd),
   sellreq: (w, p, cmd) => Shop.sellRequest(w, p, cmd),
   sellconfirm: (w, p, cmd) => Shop.sellConfirm(w, p, cmd.uid, cmd.count | 0),

@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Puestos de jugadores (v0.52.0)",
+        "en": "Player stalls (v0.52.0)"
+      },
+      "items": [
+        {
+          "es": "Escribe /puesto en shop, warehouse o herrería para vender objetos a otros jugadores. Sin comisión; el puesto sigue abierto aunque te desconectes.",
+          "en": "Type /stall in the shop, warehouse or blacksmith to sell items to other players. No fee; the stall stays open after you disconnect."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Bots atascados en criptas (v0.51.3)",
         "en": "Bots stuck in crypts (v0.51.3)"
       },

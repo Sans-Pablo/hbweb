@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.52.0 · Puestos de jugadores (2026-10-11)
+
+- Nuevo: los jugadores abren puestos de venta en shop, warehouse y herrería (`/puesto`). Comisión 0, oro recogible por el dueño, el puesto queda abierto AFK y se guarda en el servidor. Protocolo 7.
+
 ## 0.51.3 · Bots atascados en criptas (2026-10-11)
 
 - Arreglo urgente: los habitantes que quedaban en una cripta sin expedición activa (o cuyo Recall se cancelaba al repetir la orden o moverse) se quedaban corriendo de un lado a otro sin matar esqueletos. Ahora adoptan la expedición y el Recall de la cripta se queda quieto los 3 s del canal sin reenviarse.

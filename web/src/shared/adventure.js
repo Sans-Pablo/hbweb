@@ -6,6 +6,7 @@ import { ACT, dist } from "./const.js";
 import { DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
 import { respawn } from "./systems/player.js";
 import { populate, spawnCitizen } from "./systems/citizens.js";
+import * as Stall from "./systems/stall.js";
 import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
@@ -36,6 +37,7 @@ export class Adventure {
     this.guildReg = makeGuildReg(() => this.worlds.values());       // guilds: persisten y cruzan mapas (systems/guild.js)
     this.partyReg = makeReg(() => this.worlds.values());       // grupos: cruzan mapas (systems/party.js)
     this.maps = options.maps || {};          // mapas estáticos de la ciudad: id -> { grid, meta }
+    this.stallDb = [];                                              // puestos de jugador (systems/stall.js); el servidor los guarda en saves["sys:stalls"]
     this.farm = new World({ ...options, ids: this.ids, teleports: this.maps.arefarm?.meta.teleports || [] });
     this.farm.map = { id: "arefarm", kind: "farm", name: "Aresfarm", portals: [] };
     this.farm.meta = this.maps.arefarm?.meta;
@@ -63,6 +65,7 @@ export class Adventure {
       guild: this.guildReg,
       friends: p => this.friendsOf(p),                                       // amigos conectados (afinidad ≥ 2, mismo bando) para ayudarles con el equipo
       thought: (p, sit) => Residents.thought(this, p, sit),               // burbuja de pensamiento: la genera el modelo de lenguaje
+      stalls: () => this.stallDb,
       logSink: (p, t) => this.logSink?.(p, t, w.time),                 // registro de acciones de los habitantes (server: panel de administración)
     };
   }
@@ -90,6 +93,7 @@ export class Adventure {
     w.clock = o.clock || null;
     for (const n of w.ents.values()) n.nextAct += this.time;
     if (!isArena) populate(w, meta, id);
+    for (const s of this.stallDb) if (s.map === id) Stall.spawn(w, s);                  // puestos de jugador guardados
     this.worlds.set(id, w);
     return w;
   }

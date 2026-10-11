@@ -22,6 +22,7 @@ import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
 import { registerParty } from "./party.js";
 import { registerTrade } from "./trade.js";
+import { registerStall } from "./stall.js";
 import { registerGuild } from "./guild.js";
 import { registerPetDialog } from "./petdialog.js";
 import { registerSummonPreview } from "./summonpreview.js";
@@ -143,6 +144,7 @@ async function main() {
     pick: cb => ui.partyPick(cb), cancelPick: () => ui.cancelPick(),
   });
   const tradeUi = registerTrade(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
+  const stallUi = registerStall(gui, { send: c => conn.send(c), log: (m, c) => hud.log(m, c) });
   const guildUi = registerGuild(gui, { me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c), autoInvite: () => ui.autoInvite() });
   registerPetDialog(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), me: () => world.ents.get(pid), send: c => conn.send(c), nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"), action: a => gui.onAction?.(a) });
   // tutorial para jugadores nuevos (shared/systems/tutorial.js): conversaciones con cara + objetivos, se puede saltar
@@ -364,6 +366,7 @@ async function main() {
       const me = world.ents.get(pid);
       if (!me || me.dead) return;
       if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 8) { hud.log("Too far to talk to " + cit.name + "."); return; }
+      if (cit.stall) { stallUi.setCtrl(!!ctl.keys.has("control")); if (Math.max(Math.abs(cit.x - me.x), Math.abs(cit.y - me.y)) > 4) hud.log("Acércate al puesto."); else stallUi.view(cit); return; }
       npcUi.clickNpc(cit, gui.mouse.x, gui.mouse.y);
       tutorial.noteTalk(cit);
       voice?.noteNpc(cit);
@@ -532,6 +535,7 @@ async function main() {
       else if (/^\/petname\s+\S/.test(t)) conn.send({ t: "petname", name: t.replace(/^\/petname\s+/, "") });
       else if (/^\/guild(\s|$)/.test(t)) guildUi.command(t);
       else if (/^\/trade(\s|$)/.test(t)) ui.autoTrade(t.slice(7).trim());
+      else if (t === "/puesto" || t === "/stall") stallUi.setup();
       else if (t === "/tutorial") tutorial.restart();
       else if (t === "/tutorial off") tutorial.skipAll();
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
@@ -596,7 +600,7 @@ async function main() {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
       tutorial.onEvent(ev);
-      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid)); tradeUi.onEvent(ev, world.ents.get(pid)); guildUi.onEvent(ev, world.ents.get(pid));
+      fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid)); tradeUi.onEvent(ev, world.ents.get(pid)); stallUi.onEvent(ev, world.ents.get(pid)); guildUi.onEvent(ev, world.ents.get(pid));
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
       if (ev.t === "tutdummy" && ev.id === pid) { const sp = assets.npcDb.Slime?.sprite; if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 3); }     // el limo de práctica: sus hojas con urgencia
