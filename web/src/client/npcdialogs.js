@@ -218,7 +218,7 @@ export function registerNpcDialogs(gui, api) {
   // ------------------------------------------------------------ 11: tienda
   const shop = {
     id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false,
-    begin(type, farm = false) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => farm ? /^(SeedBag(|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
+    begin(type, farm = false) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => farm ? /^(SeedBag[(]|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
     onOpen() { if (!this.rows.length) this.begin(this.type); },
     maxQty(me) { return Math.max(1, MAX_ITEMS - bagCount(me)); },
     price(me, row) { return listPrice(stat(me, "chr"), row.price); },

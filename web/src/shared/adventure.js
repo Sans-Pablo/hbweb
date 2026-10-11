@@ -196,7 +196,9 @@ export class Adventure {
     const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
     const idx = Residents.RESIDENT_NAMES.indexOf(name), side = idx >= 20 ? 2 : 1;           // 20 de Aresden y 20 de Elvine
     const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS } });
-    const p = this.farm.ents.get(id);
+    const at = this.locations.get(id);                                                          // la partida guardada puede dejarlo en el puesto (gshop_1f): se le vuelve a traer a la granja
+    const p = (at || this.farm).ents.get(id);
+    if (p && at && at !== this.farm) this.transfer(p, at, this.farm, this.farm.freeSpotNear(...(this.farm.home || this.farm.start)));
     p.side = side;
     const vet = save ? 0 : Human.arrivalLevel(this, name, h);
     Bot.init(this.farm, p, { level: save ? p.level : vet || 1 + (h % 4), keep: !!save });

@@ -99,7 +99,7 @@ function spawnResidents(n) {
     if (have.has(name)) continue;
     if (Human.isOffline(adventure, name)) continue;
     if (!adventure._humBoot && Human.restoreOffline(adventure, name, saves[bkey(name)])) continue;
-    try { adventure.spawnResident(name, saves[bkey(name)] || null); made++; } catch (e) { console.error("habitante " + name + ":", e.message); }
+    try { adventure.spawnResident(name, saves[bkey(name)] || null); made++; } catch (e) { console.error("habitante " + name + ":", e.stack); }
   }
   return made;
 }

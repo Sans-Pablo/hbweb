@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.55.1 · Arreglo de carga (2026-10-11)
+- Hotfix: la 0.55.0 no cargaba (expresión regular rota en la tienda del granjero). Arreglado.
+- Los habitantes (bots) ya no fallan al arrancar el servidor si su partida estaba en otro mapa.
+
 ## 0.55.0 · Doomy, hospital y granja (2026-10-11)
 - Doomy (sistema Dummy): nombres y colores por clase (Healer verde, Buff amarillo, Aura azul); barras de HP/maná/exp de los summons diferenciadas; indicador de zona menos intrusivo; Aura Doomy muestra HP/maná sobre el personaje (opción F12, visible a otros jugadores, evento `auramp`).
 - Hospital de compañeros: HP en las filas, nombre y color de Doomy, pestaña Ayuda. Tienda: al pasar el ratón se ve sprite, estadísticas completas y comparación con lo equipado. Summons: filas de evolución y clase Doomy en Info; dar de comer arrastrando el alimento al summon o con doble clic.
