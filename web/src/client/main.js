@@ -24,6 +24,7 @@ import { registerParty } from "./party.js";
 import { registerTrade } from "./trade.js";
 import { registerGuild } from "./guild.js";
 import { registerPetDialog } from "./petdialog.js";
+import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { setupNews } from "./news.js";
 import { Streamer } from "./streaming.js";
@@ -129,7 +130,9 @@ async function main() {
   };
   registerDialogs(gui, guiApi);
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
+  const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, me: () => world.ents.get(pid), send: c => conn.send(c) });
   const npcUi = registerNpcDialogs(gui, {
+    preview: (sp, npc) => summonPreview.show(sp, npc),
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
@@ -634,7 +637,7 @@ async function main() {
   // para pruebas automáticas
   window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };
   window.hbFrame = frame;                           // pruebas automáticas: un fotograma a mano (la pestaña oculta no recibe requestAnimationFrame)
-  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, tutorial, mob };
+  window.hb = { get world() { return conn.state; }, fx, conn, renderer, ctl, setMode, pid, gui, npcUi, summonPreview, tutorial, mob };
   window.hbSound = sound;
 }
 

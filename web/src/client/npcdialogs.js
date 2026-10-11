@@ -471,7 +471,7 @@ export function registerNpcDialogs(gui, api) {
     }
     pick(r) {
       if (this.tab === 2) api.send({ t: "candybuy", npc: trade.npc.id, item: r.candy, count: 1 });
-      else if (this.tab === 1) api.send({ t: "petbuy", npc: trade.npc.id, sp: r.sp });
+      else if (this.tab === 1) api.preview(r.sp, trade.npc.id);
       else if (r.up) api.send({ t: "petup", npc: trade.npc.id, uid: r.up });
       else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
     }

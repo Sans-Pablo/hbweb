@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.50.8 · Vista previa de summons (2026-10-11)
+
+- Comprar una bola en el hospital abre una ventana con estadísticas (nivel 1 → 50), habilidades, historia breve y siluetas de las evoluciones; desde ahí se confirma la compra.
+
 ## 0.50.7 · Bots y jefe glacial (2026-10-11)
 
 - Al volver a entrar reapareces donde cerraste sesión (mapas fijos; no en criptas ni arena).

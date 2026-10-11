@@ -11,6 +11,19 @@
     {
       "date": "2026-10-11",
       "title": {
+        "es": "Vista previa de summons (v0.50.8)",
+        "en": "Summon preview (v0.50.8)"
+      },
+      "items": [
+        {
+          "es": "Al comprar una bola en el hospital se abre una ventana con el summon: estadísticas, habilidades, un poco de historia y las siluetas de sus evoluciones (incluida la de nivel máximo).",
+          "en": "Buying a ball at the hospital opens a window with the summon: stats, abilities, short lore and silhouettes of its evolutions (including the max-level one)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "title": {
         "es": "Bots y jefe glacial (v0.50.7)",
         "en": "Bots and ice boss (v0.50.7)"
       },
