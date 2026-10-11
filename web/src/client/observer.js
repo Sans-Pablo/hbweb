@@ -6,6 +6,7 @@ const L = (es, en) => (getLang() === "en" ? en : es);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const SIDE = { 1: ["Aresden", "#e07a5f"], 2: ["Elvine", "#6fa8dc"], 0: ["—", "#bba"] };
 const ACT = { "muerto": "dead", "viaja": "travelling", "descansa": "resting", "sigue al líder": "following leader", "pasea": "wandering" };
+const ARCH = { warrior: ["Guerrero", "Warrior"], hunter: ["Cazador", "Hunter"], trader: ["Comerciante", "Trader"], wanderer: ["Viajero", "Wanderer"], scholar: ["Mago", "Mage"] };
 const act = a => (getLang() === "en" ? (a.startsWith("lucha: ") ? "fighting: " + a.slice(7) : ACT[a] || a) : a);
 
 export function pickBot(conn, { onCancel } = {}) {
@@ -31,7 +32,7 @@ export function pickBot(conn, { onCancel } = {}) {
     document.body.appendChild(box);
     const $ = s => box.querySelector(s), msg = $(".msg");
     const COLS = [["name", "Nombre", "Name"], ["side", "Bando", "Side"], ["lv", "Nv", "Lv"], ["map", "Mapa", "Map"], ["hp", "Vida", "HP"], ["str", "FUE", "STR"], ["vit", "VIT", "VIT"], ["dex", "DES", "DEX"], ["int", "INT", "INT"], ["mag", "MAG", "MAG"],
-      ["gold", "Oro", "Gold"], ["kills", "Bajas", "Kills"], ["ek", "PvP", "PvP"], ["party", "Grupo", "Party"], ["lang", "Idioma", "Lang"], ["act", "Haciendo", "Doing"], ["goal", "Meta", "Goal"]];
+      ["gold", "Oro", "Gold"], ["kills", "Bajas", "Kills"], ["ek", "PvP", "PvP"], ["arch", "Personalidad", "Personality"], ["guild", "Guild", "Guild"], ["party", "Grupo", "Party"], ["lang", "Idioma", "Lang"], ["act", "Haciendo", "Doing"], ["goal", "Meta", "Goal"]];
     let list = [], sort = "side", dir = 1, timer = 0;
     $("thead tr").innerHTML = COLS.map(([k, es, en]) => `<th data-k="${k}">${L(es, en)}</th>`).join("");
     const val = (b, k) => k === "hp" ? b.hp / Math.max(1, b.mh) : ["str", "vit", "dex", "int", "mag"].includes(k) ? b.st[k] : b[k];
@@ -40,7 +41,7 @@ export function pickBot(conn, { onCancel } = {}) {
       const rows = list.filter(b => (!f || b.side === f) && (!q || b.name.toLowerCase().includes(q) || b.map.toLowerCase().includes(q))).sort((a, b) => { const x = val(a, sort), y = val(b, sort); return (x > y ? 1 : x < y ? -1 : 0) * dir || a.name.localeCompare(b.name); });
       $("tbody").innerHTML = rows.map(b => { const [sn, sc] = SIDE[b.side] || SIDE[0];
         return `<tr class="row" data-id="${b.id}"><td><b>${esc(b.name)}</b></td><td style="color:${sc}">${sn}</td><td>${b.lv}</td><td>${esc(b.map)}</td><td><span class="hp"><i style="width:${Math.max(0, Math.round(100 * b.hp / Math.max(1, b.mh)))}%"></i></span> ${b.hp}/${b.mh}</td>` +
-          ["str", "vit", "dex", "int", "mag"].map(k => `<td>${b.st[k]}</td>`).join("") + `<td>${b.gold}</td><td>${b.kills}</td><td>${b.ek}</td><td>${b.party || "—"}</td><td>${b.lang === "en" ? "EN" : b.lang === "es" ? "ES" : ""}</td><td>${esc(act(b.act))}</td><td class="dim">${esc(b.goal)}</td></tr>`; }).join("");
+          ["str", "vit", "dex", "int", "mag"].map(k => `<td>${b.st[k]}</td>`).join("") + `<td>${b.gold}</td><td>${b.kills}</td><td>${b.ek}</td><td>${esc(ARCH[b.arch] ? L(ARCH[b.arch][0], ARCH[b.arch][1]) : b.arch || "")}</td><td>${esc(b.guild || "—")}</td><td>${b.party || "—"}</td><td>${b.lang === "en" ? "EN" : b.lang === "es" ? "ES" : ""}</td><td>${esc(act(b.act))}</td><td class="dim">${esc(b.goal)}</td></tr>`; }).join("");
       msg.textContent = rows.length + "/" + list.length;
     };
     const load = async () => { try { list = await conn.listBots(); render(); msg.style.color = ""; } catch (e) { msg.style.color = "#e8a"; msg.textContent = e.message; } };

@@ -60,6 +60,7 @@ export class Adventure {
       watched: this.watched,
       party: this.partyReg,
       guild: this.guildReg,
+      logSink: (p, t) => this.logSink?.(p, t, w.time),                 // registro de acciones de los habitantes (server: panel de administración)
     };
   }
 

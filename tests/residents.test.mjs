@@ -30,25 +30,28 @@ assert.ok(A.res.goal && A.res.mem.length >= 1 && R.storyOf(A, "es").includes(A.n
 assert.match(R.describe(A, "en"), /Level/);
 tick(5000);
 
+// sin frases escritas: todo lo que dicen lo genera el modelo de lenguaje (aquí, uno de prueba)
+a.llm = async ({ who, from, text }) => (from === "situation" ? "Frase de situación de " + who : "Soy " + who + ", respondo a " + from);
+
 // un jugador habla cerca: responde el más próximo, recuerda al jugador y habla en su idioma
 const hid = a.addPlayer("Pablo", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
 const me = w.ents.get(hid);
 const say = [], listen = () => { for (const e of w.drainEvents()) if (e.t === "chat") say.push(e); };
 a.relocate(A, w, [me.x + 2, me.y]);
 a.command(hid, { t: "say", text: "Hola, ¿quién eres?" });
+await new Promise(r => setImmediate(r));          // la respuesta del modelo llega entre ticks
 tick(6000); listen();
 const reply = say.find(e => e.id === A.id || a.bots.get(e.id)?.res?.rel?.Pablo);
 assert.ok(reply, "un habitante contesta");
 assert.ok(R.relOf(a.bots.get(reply.id), "Pablo") >= 1, "recuerda al jugador");
 
 // modelo de lenguaje: si responde a tiempo, su texto sustituye a la frase hecha
-a.llm = async ({ who, from }) => "Soy " + who + " y charlo contigo, " + from + ".";
+a.llm = async ({ who, from }) => (from === "situation" ? "situación" : "Soy " + who + " y charlo contigo, " + from + ".");
 const B = a.bots.get(reply.id); a.relocate(B, w, [me.x + 1, me.y]); say.length = 0;
 a.command(hid, { t: "say", text: B.name + ", ¿qué haces?" });
 await new Promise(r => setImmediate(r));            // la respuesta del modelo llega entre ticks
 tick(8000); listen();
 assert.ok(say.some(e => e.id === B.id && /charlo contigo, Pablo/.test(e.text)), "usa la voz del modelo: " + JSON.stringify(say.map(e => e.text)));
-a.llm = null;
 
 // grupo: solo acepta a quien ya conoce (≥3 charlas)
 const C = a.residents().find(b => b !== B && b !== A);
@@ -62,7 +65,7 @@ assert.equal(C.bot.owner, null, "vuelve a su vida");
 
 // metas: al cumplirla, recuerdo y meta nueva
 A.res.goal = { k: "level", n: A.level }; const g0 = A.res.mem.length; tick(2000);
-assert.ok(A.res.mem.some(m => /meta/.test(m.es)) && A.res.goal.n > A.level - 1 && A.res.mem.length > g0 - 1, "cumple y renueva su meta");
+assert.ok(A.res.mem.some(m => /meta/.test(m.es)) && A.res.mem.length > g0 - 1, "cumple y renueva su meta");
 
 // guardado y carga: la ficha (memoria, amigos) sobrevive; lo transitorio no se guarda
 A.res.rel.Lucía = 4; A.gold = 777;

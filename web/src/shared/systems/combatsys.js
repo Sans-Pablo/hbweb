@@ -8,6 +8,9 @@ import { strikeNpc, absorbOnHit } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
 import { extraWeaponWear } from "./weather.js";
+import { rollKillDrop } from "../drops.js";
+import { groundPush } from "./ground.js";
+import { newInst } from "./itemsys.js";
 import { auraDefense, auraExp, auraVamp } from "./dummy.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
@@ -68,8 +71,20 @@ export function hitPlayer(w, p, t) {
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   const wasAlive = !t.dead;
   damagePlayer(w, t, a.damage, p);
-  if (wasAlive && t.dead) { p.ek = (p.ek || 0) + 1; p.kills = (p.kills || 0) + 1; w.emit({ t: "pvpkill", id: p.id, victim: t.id, name: t.name }); }
+  if (wasAlive && t.dead) { p.ek = (p.ek || 0) + 1; p.kills = (p.kills || 0) + 1; w.emit({ t: "pvpkill", id: p.id, victim: t.id, name: t.name }); pvpBounty(w, p, t); }
   else knockback(w, p, t, a.damage);
+}
+
+// Promise Land: matar a un jugador enemigo compensa el riesgo (invento del port, para fomentar el combate): recompensa en oro según su nivel y su racha
+// de muertes, y su botín cae al suelo (como el de un monstruo de cripta profunda). Matar a quien lleva racha paga más.
+export function pvpBounty(w, k, v) {
+  const gold = Math.min(6000, Math.floor((150 + v.level * 45) * (1 + Math.min(5, v.ek || 0) * 0.25)));
+  k.gold = (k.gold || 0) + gold; v.ek = 0;
+  w.emit({ t: "bounty", id: k.id, victim: v.name, gold });
+  const base = w.npcDb.Troll;
+  if (!base) return;
+  const drop = rollKillDrop(w.rng, { type: base.type, cfg: base }, { rating: k.rating || 0, data: w.data, depth: 8 });
+  if (drop && w.data.item(drop.id)) groundPush(w, v.x, v.y, newInst(w, drop.id, drop.count, drop), true);
 }
 
 // Armas con bonificación fija (iCalculateAttackEffect): varitas de furia +1; espadón/hacha 847 de noche y 848 de día +4

@@ -35,6 +35,7 @@ import * as Residents from "../web/src/shared/systems/residents.js";
 import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
+import { openBotStats } from "./botstats.mjs";
 
 const PROTO = NET_PROTO;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -110,7 +111,8 @@ function resetResidents() {
 { const ef = path.join(STORE, "bots-epoch.txt"); let cur = ""; try { cur = fs.readFileSync(ef, "utf8").trim(); } catch {}
   if (cur !== BOT_EPOCH) { resetResidents(); try { fs.writeFileSync(ef, BOT_EPOCH); } catch {} log("[habitantes] época " + BOT_EPOCH + ": los habitantes empiezan de nuevo en nivel 1 y el informe anterior queda archivado."); } }
 const informe = openReport(STORE, { version: VERSION.version, log });
-adventure.report = r => informe.add(r);               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
+const botStats = openBotStats(adventure, log);
+adventure.report = r => { informe.add(r); botStats.idea(r); };               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 spawnResidents(RESIDENTS);
 setInterval(() => { try { if (adventure.residents().length < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
@@ -153,6 +155,15 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/api/admin/state") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     json(req, res, 200, adminState()); return;
+  }
+  if (url.pathname === "/api/admin/bots" || url.pathname === "/api/admin/botanalysis" || url.pathname === "/api/admin/botdetail") {
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    try {
+      if (url.pathname === "/api/admin/bots") json(req, res, 200, { bots: botStats.summaries() });
+      else if (url.pathname === "/api/admin/botanalysis") json(req, res, 200, botStats.analyze());
+      else json(req, res, 200, botStats.detail(url.searchParams.get("name") || "") || { error: "no existe" });
+    } catch (e) { json(req, res, 500, { error: e.message }); }
+    return;
   }
   if (url.pathname === "/api/admin/cmd" && req.method === "POST") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
@@ -487,7 +498,7 @@ function botList() {
     const w = adventure.worldFor(b.id), br = b.bot || {}, t = br.target;
     const st = b.dead ? "muerto" : br.travel ? "viaja" : t ? "lucha: " + String(t.name).replace(/-/g, " ") : br.rest ? "descansa" : br.owner != null ? "sigue al líder" : "pasea";
     return { id: b.id, name: b.name, side: b.side, lv: b.level, map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, mp: b.mp, mm: b.maxMp, st: b.stats, gold: b.gold, kills: b.kills || 0, ek: b.ek || 0,
-      lang: b.res?.lang || "", arch: b.res?.arch || "", goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)) };
+      lang: b.res?.lang || "", arch: b.res?.arch || "", guild: b.guild?.name || "", goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)) };
   }).sort((a, b) => (a.side - b.side) || (b.lv - a.lv) || a.name.localeCompare(b.name));
 }
 function itemsList(world) {

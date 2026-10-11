@@ -62,11 +62,11 @@ console.log("OK");
     const d = data.item(id); assert.ok(d, "existe " + id); assert.ok(usable(d), `${d.name} (${id}) usable por un guerrero nivel 50, tramo ${b}`);
   }
   assert.deepEqual([1, 5, 6, 10, 11, 15, 16, 20].map(cryptBand), [0, 0, 1, 1, 2, 2, 3, 3]);
-  const rng = seededRandom(5); let gear = 0;
+  const rng = seededRandom(5); let gear = 0, male = 0;
   for (let depth = 1; depth <= 20; depth++) for (let i = 0; i < 400; i++) {
     const r = rollKillDrop(rng, npc, { data, depth, month: 1, gender: 2 }); if (!r || r.id === 90) continue;
-    const d = data.item(r.id); assert.ok(d && usable(d), "drop inutilizable " + r.id); assert.ok(d.gender !== 1, "variante de mujer: " + d.name); gear++;
+    const d = data.item(r.id); assert.ok(d && usable(d), "drop inutilizable " + r.id); if (d.gender === 1) male++; gear++;
   }
-  assert.ok(gear > 500);
+  assert.ok(gear > 500); assert.ok(male > 0, "el botín ya no se limita al sexo del jugador");
   console.log("OK");
 }

@@ -85,7 +85,7 @@ export function killNpc(w, n, p) {
   n.noDieRemainExp = 0;
   Boss.onDeath(w, n);
   if (n.boss === 1 && !n.aux) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, w.data.named("SkeletonBones").id, 1, { color: CRIMSON_COLOR })));   // 100 % de probabilidad
-  const depth = w.map?.kind === "dungeon" ? w.map.level || 0 : 0;
+  const depth = w.map?.kind === "dungeon" ? w.map.level || 0 : w.pvp ? 7 : 0;      // Promise Land: botín de calidad de cripta media (premia el riesgo)
   const drop = n.noDrop ? null : rollKillDrop(w.rng, n, { rating: p?.rating || 0, data: w.data, addGold: p?.eff?.addGold || 0, depth, gender: p?.gender });
   if (drop && w.data.item(drop.id)) w.after(n.dur.dying * 0.6, () => groundPush(w, n.x, n.y, newInst(w, drop.id, drop.count, drop), true));
   if (n.boss && !n.aux && !n.clone && BOSS_UNIQUE[n.boss]) {      // cada rey suelta siempre un objeto único (de Item.cfg) ligado a su mecánica

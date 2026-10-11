@@ -552,6 +552,7 @@ export function registerNpcDialogs(gui, api) {
       case "candybought": api.log("Compras " + ev.count + " × " + ev.name + " por " + ev.price + " de oro."); break;
       case "petupgraded": api.log(ev.nm + " ha evolucionado: " + ev.from.replace(/-/g, " ") + " → " + ev.to + " (nivel 1)."); break;
       case "petbought": api.log("Compras la bola de " + ev.sp.replace(/-/g, " ") + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
+      case "bounty": api.log("Recompensa por derrotar a " + ev.victim + ": " + ev.gold + " de oro.", "gold"); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
       case "cantsell": {
         const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr, it.comp) : nm(ev.item);

@@ -9,7 +9,7 @@ import * as Inv from "../inventory.js";
 import { GOLD, MAX_ITEMS, isStack, itemWeight } from "../items.js";
 import { itemLevelOf } from "../itemlevel.js";
 
-export const RANGE = 10, MAX_OFFER = 8;
+export const RANGE = 10, MAX_OFFER = 4;
 const near = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) <= RANGE;
 const other = (w, p) => (p.trade ? w.ents.get(p.trade.with) : null);
 

@@ -5,7 +5,7 @@ export const helpText = () => [
   "say <texto> · resetpass <cuenta> <clave> · save · versions <cuenta> · restore <cuenta> <n> · restart · stop",
 ].join("\n");
 
-export const ADMIN_PAGE = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+const BASE_PAGE = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Helbreath Web · Administración</title>
 <style>
 :root{color-scheme:dark;--bg:#14110d;--card:#211b14;--line:#4a3d2a;--gold:#f0d27a;--txt:#e8dcc3}
@@ -36,3 +36,8 @@ $("#bsay").onclick=()=>{const v=$("#say").value.trim();if(v){run("say "+v);$("#s
 $("#cmd").onkeydown=e=>{if(e.key==="Enter")run($("#cmd").value)};$("#bsave").onclick=()=>run("save");$("#brest").onclick=()=>{if(confirm("¿Reiniciar el servidor? Los jugadores serán desconectados."))run("restart")};
 refresh();setInterval(refresh,4000);
 </script></body></html>`;
+
+// Sección «Bots» (lista con personalidad y guild, log de acciones, propuestas, análisis de comportamiento y afinidades): server/admin-bots.html
+import { readFileSync } from "node:fs";
+let BOTS = ""; try { BOTS = readFileSync(new URL("./admin-bots.html", import.meta.url), "utf8"); } catch {}
+export const ADMIN_PAGE = BASE_PAGE.replace("</body>", BOTS + "</body>");

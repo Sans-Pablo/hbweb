@@ -4,7 +4,7 @@
 //    cada minuto vuelve a comprobar, así que en cuanto Ollama arranca (o se instala) empieza a funcionar sin reiniciar el servidor.
 //  - Opcional: API de Anthropic (HB_LLM=anthropic y ANTHROPIC_API_KEY en el entorno; la clave NO se guarda en el repositorio).
 //  - Ajustes: server/config.json → "llm": {"provider":"ollama|anthropic|off","model":"…","url":"…"}; o HB_LLM / HB_LLM_MODEL / HB_LLM_URL.
-// Límites: una petición a la vez, ≥1,5 s entre peticiones y ≤20 por minuto, con tiempo máximo de 12 s.
+// Límites: una petición a la vez, ≥0,9 s entre peticiones y ≤40 por minuto, con tiempo máximo de 12 s.
 export function openLlm(cfg = {}, env = process.env, log = console.log) {
   const provider = String(env.HB_LLM || cfg.provider || "ollama").toLowerCase();
   const model = env.HB_LLM_MODEL || cfg.model || (provider === "anthropic" ? "claude-haiku-5-5" : "llama3.2:3b");
@@ -32,6 +32,12 @@ export function openLlm(cfg = {}, env = process.env, log = console.log) {
     if (task === "feedback") return es
       ? `Eres un jugador-probador de un RPG online de fantasía (port web de Helbreath). Te paso tus estadísticas de las últimas partidas. Da UNA sugerencia concreta de diseño o balance que se apoye en una cifra de esas estadísticas (qué falla o qué cambiarías y por qué), en español, máximo 180 caracteres. No menciones nombres de personajes, ni emojis ni comillas.`
       : `You are a playtester of a fantasy online RPG (a web port of Helbreath). I give you your stats from recent play. Give ONE concrete design or balance suggestion that cites a number from those stats (what is wrong or what you would change, and why), in English, max 180 characters. No character names, no emojis or quotes.`;
+    if (task === "reflect") return es
+      ? `Eres ${who}, un jugador-habitante de un RPG online de fantasía (port web de Helbreath). ${system} Te paso tus estadísticas y recuerdos recientes. Reflexiona como un jugador listo que aprende de sus errores y responde SOLO con un objeto JSON en una línea: {"lesson":"una frase corta en español con lo que has aprendido","avoid":["monstruos que deberías evitar por ahora"],"focus":["monstruos que te conviene cazar"],"caution":0-3}. Usa solo nombres de monstruos que aparezcan en tus datos.`
+      : `You are ${who}, a player-resident of a fantasy online RPG (a web port of Helbreath). ${system} I give you your stats and recent memories. Reflect like a smart player who learns from mistakes and reply ONLY with a one-line JSON object: {"lesson":"one short sentence in English about what you learned","avoid":["monsters you should avoid for now"],"focus":["monsters worth hunting"],"caution":0-3}. Only use monster names that appear in your data.`;
+    if (task === "say") return es
+      ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Te describo una situación en inglés; di en español UNA sola frase corta (máximo 100 caracteres), en personaje, como lo diría un jugador en el chat: natural, sin emojis, sin comillas y sin explicar la situación.`
+      : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} I describe a situation; say ONE short sentence (max 100 characters) in English, in character, the way a player would type it in chat: natural, no emojis, no quotes, without explaining the situation.`;
     return es
       ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Responde en español con UNA sola frase corta (máximo 90 caracteres), en personaje, sin emojis ni comillas. Si alguien te pregunta sinceramente si eres una IA o un bot, admítelo con naturalidad.`
       : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} Reply in English with ONE short sentence (max 90 characters), in character, no emojis or quotes. If someone sincerely asks whether you are an AI or a bot, admit it naturally.`;
@@ -42,17 +48,17 @@ export function openLlm(cfg = {}, env = process.env, log = console.log) {
     ask.ready = state.ready;
     if (!state.ready || busy) return null;
     while (stamps.length && now - stamps[0] > 60000) stamps.shift();
-    if (now - last < 1500 || stamps.length >= 20) return null;
+    if (now - last < 900 || stamps.length >= 40) return null;
     busy = true; last = now; stamps.push(now);
-    const sys = prompt(req), user = req.from + ": " + String(req.text).slice(0, 300), fb = req.task === "feedback", max = fb ? 180 : 110;
+    const sys = prompt(req), user = req.from + ": " + String(req.text).slice(0, 300), fb = req.task === "feedback" || req.task === "reflect", max = req.task === "reflect" ? 420 : fb ? 180 : 110;
     try {
       if (provider === "ollama") {
         const r = await timeout(12000, signal => fetch(url + "/api/chat", { method: "POST", signal, headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: model2, stream: false, options: { num_predict: fb ? 80 : 50, temperature: 0.8 }, messages: [{ role: "system", content: sys }, { role: "user", content: user }] }) }));
+          body: JSON.stringify({ model: model2, stream: false, options: { num_predict: req.task === "reflect" ? 140 : fb ? 80 : 50, temperature: 0.8 }, messages: [{ role: "system", content: sys }, { role: "user", content: user }] }) }));
         return clean((await r.json()).message?.content).slice(0, max) || null;
       }
       const r = await timeout(12000, signal => fetch("https://api.anthropic.com/v1/messages", { method: "POST", signal, headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: model2, max_tokens: fb ? 90 : 60, system: sys, messages: [{ role: "user", content: user }] }) }));
+        body: JSON.stringify({ model: model2, max_tokens: req.task === "reflect" ? 160 : fb ? 90 : 60, system: sys, messages: [{ role: "user", content: user }] }) }));
       return clean((await r.json()).content?.[0]?.text).slice(0, max) || null;
     } catch { state.ready = false; checkedAt = Date.now(); ask.ready = false; return null; } finally { busy = false; }
   };

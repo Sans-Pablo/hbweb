@@ -1,0 +1,72 @@
+<style>
+nav.tabs{display:flex;gap:8px;margin:0 0 14px}nav.tabs button.on{border-color:var(--gold);color:var(--gold)}
+#botsv{display:none}.bt td,.bt th{font-size:13px;cursor:default}.bt tr.brow:hover{background:#2c2418;cursor:pointer}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;background:#3a2f1e;font-size:12px;margin:1px}.sev3{color:#ff8a70}.sev2{color:#f0c060}.sev1{color:#b9d6a5}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}.bar{display:flex;align-items:center;gap:6px;margin:2px 0;font-size:13px}.bar i{display:block;height:10px;background:var(--gold);border-radius:3px}
+.hm{border-collapse:collapse}.hm td{width:16px;height:16px;padding:0;border:1px solid #1a150e}.hm th{font-size:10px;padding:0 2px;font-weight:400;white-space:nowrap}
+.log{font:12px ui-monospace,monospace;max-height:340px;overflow:auto;white-space:pre-wrap}.log div{border-bottom:1px solid #2c2418;padding:2px 0}.dim{opacity:.65}h3{color:var(--gold);margin:6px 0}
+.sub2 button{margin-right:6px}.sub2 button.on{border-color:var(--gold)}
+</style>
+<nav class="tabs"><button id="tsrv" class="on">Servidor</button><button id="tbots">Bots</button></nav>
+<div id="botsv">
+  <div class="card"><div class="row"><b style="color:var(--gold)">Bots</b><span class="dim" id="bsum"></span><input id="bq" placeholder="buscar nombre, guild, personalidad…"><button id="bref">Actualizar</button></div>
+    <table class="bt" id="bt"><thead><tr id="bth"></tr></thead><tbody></tbody></table></div>
+  <div class="card" id="bdet" style="display:none"></div>
+  <div class="card"><div class="row"><b style="color:var(--gold)">Análisis de comportamiento</b><span class="dim" id="asum"></span><button id="aref">Recalcular</button></div><div id="an"></div></div>
+</div>
+<script>
+(()=>{
+const $=s=>document.querySelector(s), tok=new URLSearchParams(location.search).get("token");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ARCH={warrior:"Guerrero",hunter:"Cazador",trader:"Comerciante",wanderer:"Viajero",scholar:"Mago"};
+document.querySelectorAll(".card").forEach(c=>{if(!c.closest("#botsv"))c.classList.add("srv")});
+const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadAn()}};
+$("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");
+const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
+let bots=[],sort="lv",dir=-1,cur=null,sub="log";
+$("#bth").innerHTML=COLS.map(([k,t])=>'<th data-k="'+k+'">'+t+'</th>').join("");
+const val=(b,k)=>k==="guild"?(b.guild?.name||""):k==="arch"?ARCH[b.arch]||b.arch:b[k];
+function renderBots(){const q=$("#bq").value.trim().toLowerCase();
+ const rows=bots.filter(b=>!q||[b.name,b.guild?.name,ARCH[b.arch],b.goal,b.act].join(" ").toLowerCase().includes(q)).sort((a,b)=>{const x=val(a,sort),y=val(b,sort);return (x>y?1:x<y?-1:0)*dir});
+ $("#bsum").textContent=rows.length+"/"+bots.length;
+ $("#bt tbody").innerHTML=rows.map(b=>'<tr class="brow" data-n="'+esc(b.name)+'"><td><b>'+esc(b.name)+'</b></td><td>'+b.lv+'</td><td>'+esc(ARCH[b.arch]||b.arch)+'</td><td>'+(b.guild?esc(b.guild.name)+(b.guild.rank===0?" ★":""):"—")+'</td><td class="dim">'+esc(b.goal)+'</td><td>'+esc(b.act)+'</td><td>'+b.gold+'</td><td>'+b.kills+'</td><td>'+b.deaths+'</td><td>'+(b.scare||"")+'</td><td>'+b.trades+'</td><td>'+Math.round(b.expMin)+'</td><td>'+(b.still>=2?'<span class="sev3">'+b.still+' min</span>':"")+'</td><td>'+b.ideasN+'</td></tr>').join("");}
+async function loadBots(){const r=await fetch("/api/admin/bots?token="+tok);if(!r.ok)return;bots=(await r.json()).bots;renderBots();if(cur)loadDet(cur,true)}
+$("#bth").onclick=e=>{const k=e.target.dataset.k;if(!k)return;dir=sort===k?-dir:-1;sort=k;renderBots()};
+$("#bq").oninput=renderBots;$("#bref").onclick=loadBots;$("#aref").onclick=loadAn;
+$("#bt tbody").onclick=e=>{const tr=e.target.closest("tr.brow");if(tr){cur=tr.dataset.n;loadDet(cur)}};
+const bars=(rows,fmt)=>rows.map(([k,v,t])=>'<div class="bar"><span style="min-width:120px">'+esc(k)+'</span><i style="width:'+Math.max(2,Math.min(180,v*1.8))+'px"></i>'+esc(t??fmt?.(v)??v)+'</div>').join("");
+async function loadDet(name,keep){const r=await fetch("/api/admin/botdetail?token="+tok+"&name="+encodeURIComponent(name));const d=await r.json();const box=$("#bdet");if(d.error){box.style.display="none";return}
+ box.style.display="block";
+ const lf=d.life,lb=(t,v,x)=>'<div class="bar"><span style="min-width:150px">'+t+'</span><i style="width:'+Math.max(2,v*1.6)+'px"></i>'+(x??v+"%")+"</div>";
+ const lifeHtml='<div style="margin-top:8px"><b>Metas de vida</b>'+lb("Bajas enemigas (PvP)",Math.min(100,lf.ek*2),lf.ek)+lb("Nivel máximo",lf.level)+lb("Terminar la cripta",lf.crypt)+lb("Summons al máximo ("+lf.petsN+" tiene)",lf.pets)+lb("Mejores objetos",lf.gear)+lb("Vida social",lf.social)+"</div>";
+ const tabs=[["log","Log de acciones ("+d.log.length+")"],["ideas","Propuestas de mejora ("+d.ideas.length+")"],["learn","Aprendizaje IA ("+d.insights.length+")"],["mem","Memoria"],["rel","Relaciones ("+d.rel.length+")"],["stats","Estadísticas"]];
+ let body="";
+ if(sub==="log")body='<div class="log">'+d.log.map(l=>'<div><span class="dim">'+Math.floor(l.t/60)+"m "+(l.t%60)+"s</span> "+esc(l.m)+"</div>").join("")+"</div>";
+ if(sub==="ideas")body=d.ideas.length?d.ideas.map(i=>'<div style="margin:6px 0"><span class="pill">'+esc(i.kind)+'</span> <b>'+esc(i.topic)+'</b> <span class="dim">nv '+i.lvl+" · "+esc(i.map)+'</span><br>'+esc(i.es||i.en)+(i.en&&i.es&&i.en!==i.es?'<br><span class="dim">EN: '+esc(i.en)+"</span>":"")+"</div>").join(""):'<span class="dim">Este bot aún no ha propuesto nada.</span>';
+ if(sub==="learn")body=d.insights.length?d.insights.map(i=>'<div style="margin:6px 0">🧠 <b>'+esc(i.t)+'</b> <span class="dim">nv '+i.lv+(i.avoid.length?" · evita: "+esc(i.avoid.join(", ")):"")+(i.focus.length?" · prioriza: "+esc(i.focus.join(", ")):"")+(i.caution?" · prudencia "+i.caution:"")+"</span></div>").join(""):'<span class="dim">Aún sin reflexiones (cada ~10 min si el modelo de lenguaje está activo).</span>';
+ if(sub==="mem")body=d.mem.map(m=>"<div>• "+esc(m)+"</div>").join("")||"—";
+ if(sub==="rel")body=d.rel.map(([n,v])=>'<span class="pill">'+esc(n)+" "+v+"</span>").join("")||"—";
+ if(sub==="stats")body='<div class="grid2"><div><h3>Presas</h3>'+bars(d.kinds.map(([k,v])=>[k,v,v]))+'</div><div><h3>Muertes por</h3>'+bars(d.qa.deaths.map(([k,v])=>[k,v,v]))+'</div><div><h3>Tiempo por actividad</h3>'+bars(Object.entries(d.states).map(([k,v])=>[k,v,v+"%"]))+'</div><div><h3>Aprendido (nv mínimo)</h3>'+(Object.entries(d.dlv).map(([k,v])=>'<span class="pill">'+esc(k)+" ≥ "+(v+3)+"</span>").join("")||"—")+"</div></div>";
+ box.innerHTML='<div class="row" style="justify-content:space-between"><h3 style="margin:0">'+esc(d.name)+" · nv "+d.lv+" · "+esc(ARCH[d.arch]||d.arch)+(d.guild?" · guild "+esc(d.guild.name)+(d.guild.rank===0?" (Guildmaster)":""):"")+'</h3><button id="xdet">Cerrar</button></div>'
+  +'<div class="dim" style="margin:4px 0">'+esc(d.story)+'</div><div>Meta: <b>'+esc(d.goal||"—")+'</b> · Haciendo: <b>'+esc(d.act)+"</b> en "+esc(d.map)+" ("+d.x+","+d.y+") · Oro "+d.gold+" · Almacén "+d.bank+" · Mochila "+d.bag+" · Summons: "+esc(d.summon.join(", ")||"—")+(d.party.length?" · Grupo con "+esc(d.party.join(", ")):"")+"</div>"
+  +lifeHtml+'<div class="sub2" style="margin:10px 0">'+tabs.map(([k,t])=>'<button data-s="'+k+'" class="'+(sub===k?"on":"")+'">'+t+"</button>").join("")+"</div>"+body;
+ $("#xdet").onclick=()=>{cur=null;box.style.display="none"};
+ box.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{sub=b.dataset.s;loadDet(name,true)});
+ if(!keep)box.scrollIntoView({behavior:"smooth"})}
+const heat=v=>v>0?"rgba(240,210,122,"+Math.min(1,v/8)+")":v<0?"rgba(220,80,60,"+Math.min(1,-v/4)+")":"transparent";
+async function loadAn(){const r=await fetch("/api/admin/botanalysis?token="+tok);if(!r.ok)return;const a=await r.json();$("#asum").textContent=a.n+" bots · "+new Date(a.at).toLocaleTimeString();
+ const pairRow=p=>'<div>'+esc(p.a)+" ↔ "+esc(p.b)+' <b>'+p.v.toFixed(1)+'</b> <span class="dim">('+p.ab+"/"+p.ba+")"+(p.sameGuild?" · mismo guild":"")+(p.sameArch?" · misma personalidad":"")+"</span></div>";
+ let h='<div class="grid2"><div><h3>Patrones</h3>'+(a.patterns.map(p=>"<div>• "+esc(p)+"</div>").join("")||"—")+'</div>'
+ +'<div><h3>Tiempo por actividad (media de todos)</h3>'+bars(a.acts.map(x=>[x.k,x.pct,x.pct+"%"]))+'</div>'
+ +'<div><h3>Presas más cazadas</h3>'+bars(a.topKinds.map(x=>[x.k,x.pct,x.n+" ("+x.pct+"%)"]))+'<h3>Muertes por</h3>'+bars(a.deathsBy.map(([k,v])=>[k,v,v]))+'</div>'
+ +'<div><h3>Por personalidad</h3><table><tr><th>Tipo</th><th>n</th><th>Nv</th><th>Muertes</th><th>XP/min</th></tr>'+a.archStats.map(s=>"<tr><td>"+esc(ARCH[s.arch]||s.arch)+"</td><td>"+s.n+"</td><td>"+s.lv+"</td><td>"+s.deaths+"</td><td>"+s.expMin+"</td></tr>").join("")+"</table></div></div>"
+ +'<h3>Anomalías ('+a.anomalies.length+')</h3>'+(a.anomalies.length?'<table class="bt"><tr><th>Gravedad</th><th>Bot</th><th>Qué pasa</th></tr>'+a.anomalies.map(x=>'<tr><td class="sev'+x.sev+'">'+"●".repeat(x.sev)+'</td><td><a href="#" data-b="'+esc(x.who)+'">'+esc(x.who)+"</a></td><td style=\"white-space:normal\">"+esc(x.what)+"</td></tr>").join("")+"</table>":'<div class="dim">Sin anomalías detectadas (hacen falta unos minutos de muestras).</div>')
+ +'<h3>Propuestas de mejora de los bots ('+a.ideas.length+')</h3>'+(a.ideas.map(i=>'<div style="margin:5px 0"><span class="pill">'+esc(i.kind)+"</span> ×"+i.n+" · "+i.bots.length+" bots — "+esc(i.es||i.en)+'<br><span class="dim">'+esc(i.topic)+" · "+esc(i.bots.slice(0,5).join(", "))+"</span></div>").join("")||'<div class="dim">Aún sin propuestas.</div>')
+ +'<h3>Afinidades</h3><div class="grid2"><div><b>Más afines</b>'+(a.best.map(pairRow).join("")||"—")+'</div><div><b>Rivalidades</b>'+(a.worst.map(pairRow).join("")||"<div class=dim>Ninguna todavía</div>")+'</div>'
+ +'<div><b>Grupos de afinidad</b>'+(a.clusters.map(c=>'<div>'+c.names.map(esc).join(", ")+' <span class="dim">· guilds: '+esc(c.guilds.join(", "))+"</span></div>").join("")||'<div class="dim">Sin grupos aún</div>')+'</div>'
+ +'<div><b>Afinidad media</b><div>Mismo guild: '+a.affinity.guild.toFixed(2)+" · distinto guild: "+a.affinity.other.toFixed(2)+"</div>"+a.affinity.byArch.slice(0,8).map(x=>'<div class="dim">'+esc(x.k.split("+").map(k=>ARCH[k]||k).join(" + "))+": "+x.v.toFixed(2)+" ("+x.n+")</div>").join("")+"</div></div>"
+ +'<h3>Mapa de afinidad</h3><div style="overflow:auto"><table class="hm"><tr><th></th>'+a.names.map((n,i)=>'<th title="'+esc(n)+'">'+esc(n.slice(0,2))+"</th>").join("")+"</tr>"+a.names.map((n,i)=>"<tr><th style=\"text-align:right\">"+esc(n)+"</th>"+a.matrix[i].map((v,j)=>'<td style="background:'+(i===j?"#333":heat(v))+'" title="'+esc(n)+" ↔ "+esc(a.names[j])+": "+v.toFixed(1)+'"></td>').join("")+"</tr>").join("")+"</table></div>";
+ $("#an").innerHTML=h;$("#an").querySelectorAll("[data-b]").forEach(x=>x.onclick=e=>{e.preventDefault();cur=x.dataset.b;loadDet(cur)})}
+setInterval(()=>{if($("#botsv").style.display==="block"){loadBots()}},8000);
+})();
+</script>

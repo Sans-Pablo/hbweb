@@ -11,7 +11,7 @@ sd = os.path.join(out, "ui")
 os.makedirs(sd, exist_ok=True)
 pak = PakFolder(os.path.join(hb, "SPRITES"))
 man = {}
-WANT = {"GameDialog": [0, 1, 2, 3, 6, 7], "GameDialog2": [6], "DialogText": [0, 1], "interface2": [0, 1, 2], "interface": [0, 1], "sprfonts": [0, 1]}
+WANT = {"GameDialog": [0, 1, 2, 3, 6, 7, 10], "GameDialog2": [6], "DialogText": [0, 1], "interface2": [0, 1, 2], "interface": [0, 1], "sprfonts": [0, 1]}
 for name, nths in WANT.items():
     if pak.data(name) is None:
         print("falta", name); continue

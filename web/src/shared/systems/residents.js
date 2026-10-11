@@ -16,6 +16,7 @@ import * as Guild from "./guild.js";
 import * as Inv from "../inventory.js";
 import { itemLevel } from "../itemlevel.js";
 import { EQUIP, ITYPE } from "../items.js";
+import * as Shop from "./shopsys.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -61,62 +62,60 @@ function befriend(p, who, n = 1) {
 // ---------------------------------------------------------------- objetivos de vida
 // Metas de combate: bajas de enemigos en Promise Land (pvp), dominar un foso de Promise Land (pit: aguantar su zona con el bando dueño) y bajar en la cripta (crypt).
 function newGoal(w, p) {
-  const r = p.res, kind = ["level", "gold", "kills", "friend", "pvp", "pvp", "pit", "crypt"][Math.floor(w.rng() * 8)];
+  // METAS DE VIDA (las mismas que perseguiría un jugador): muchas bajas enemigas (pvp), nivel máximo (level), terminar la cripta (crypt), muchos summons distintos
+  // al nivel máximo (pet), los mejores objetos (gear) y socializar (friend); el oro (gold) y los monstruos (kills) son paradas intermedias.
+  const r = p.res, kind = ["level", "level", "gold", "kills", "friend", "friend", "pvp", "pvp", "pit", "crypt", "crypt", "pet", "pet", "gear", "gear"][Math.floor(w.rng() * 15)];
   if (kind === "level") r.goal = { k: "level", n: p.level + 2 };
   else if (kind === "gold") r.goal = { k: "gold", n: p.gold + 800 + p.level * 300 };
   else if (kind === "kills") r.goal = { k: "kills", n: (p.kills || 0) + 25 };
   else if (kind === "pvp") r.goal = { k: "pvp", n: (p.ek || 0) + 3 + Math.floor(w.rng() * 3) };
   else if (kind === "pit") r.goal = { k: "pit", n: (r.qa.pvp.held || 0) + 180, zone: 1 + Math.floor(w.rng() * 12) };           // 180 s dominando el foso
-  else if (kind === "crypt") r.goal = { k: "crypt", n: Math.min(10, (p.delve?.deepest || 1) + 1) };
+  else if (kind === "crypt") r.goal = { k: "crypt", n: Math.min(20, (p.delve?.deepest || 1) + 1) };
+  else if (kind === "pet") r.goal = { k: "pet", n: Math.min(6, maxedPets(p) + 1) };
+  else if (kind === "gear") r.goal = { k: "gear", n: Math.round(avgIlvl(w, p)) + 3 };
   else r.goal = { k: "friend", n: Object.keys(r.rel).length + 2 };
 }
 export const goalText = (g, lang) => !g ? "" : lang === "en"
-  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, crypt: `reach crypt level ${g.n}` }[g.k]
-  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, crypt: `llegar al nivel ${g.n} de la cripta` }[g.k];
+  ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, pet: `have ${g.n} different summons at max level`, gear: `reach an average item level of ${g.n}`, crypt: `reach crypt level ${g.n}` }[g.k]
+  : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, pet: `tener ${g.n} summons distintos al nivel máximo`, gear: `llegar a un nivel de objeto medio de ${g.n}`, crypt: `llegar al nivel ${g.n} de la cripta` }[g.k];
+const maxedPets = p => new Set(p.bag.filter(i => i.comp && i.comp.lvl >= Sch.TRADE_LEVEL).map(i => i.comp.sp)).size;
+// nivel medio de objeto de lo que lleva puesto (arma, cuerpo, piernas, escudo, casco, brazos, pantalones)
+export function avgIlvl(w, p) {
+  let t = 0; for (const slot of [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS]) { const uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined), i = uid !== undefined && Inv.instOf(p, uid); if (i) t += itemLevel(w.data.item(i.id), i.attr, i.id); }
+  return t / 7;
+}
 function goalDone(p) {
   const g = p.res.goal;
-  return !g ? false : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
+  return !g ? false : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
     : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (p.delve?.deepest || 1) >= g.n : Object.keys(p.res.rel).length >= g.n;
 }
 
 // ---------------------------------------------------------------- frases
-const L = {
-  greet: [["¡Hola, {n}! Qué alegría verte.", "Hi, {n}! Good to see you."], ["Buenas, {n}. ¿Todo bien por aquí?", "Hey {n}. Everything fine?"]],
-  again: [["¡{n}! Cuánto tiempo.", "{n}! Long time no see."], ["Te recuerdo, {n}. ¿Cazamos juntos?", "I remember you, {n}. Hunt together?"]],
-  who: [["Soy {s}", "I'm {s}"]],
-  doing: [["Ando con una meta: {g}.", "I'm working on a goal: {g}."], ["Cazo un poco. Quiero {g}.", "Hunting a bit. I want to {g}."]],
-  from: [["Vengo de {o}.", "I come from {o}."]],
-  fear: [["Me dan miedo {f}… pero no se lo digas a nadie.", "I'm afraid of {f}… don't tell anyone."]],
-  thanks: [["De nada, {n}.", "Anytime, {n}."]],
-  bye: [["¡Hasta pronto, {n}!", "See you, {n}!"]],
-  yes: [["¡Vamos, {n}! Te sigo un rato.", "Let's go, {n}! I'll tag along for a while."]],
-  no: [["Ahora no puedo, {n}, tengo cosas que hacer.", "Can't right now, {n}, I have things to do."]],
-  shy: [["Aún no te conozco lo bastante, {n}. Charlemos antes.", "I don't know you well enough yet, {n}. Let's talk first."]],
-  bot: [["Pues sí, soy un habitante simulado de este servidor. Pero mis metas son de verdad… para mí.", "Yes, I'm a simulated resident of this server. But my goals are real… to me."]],
-  idle: [["Este sitio tiene su encanto.", "This place has its charm."], ["Hoy toca cazar.", "Today is for hunting."], ["¿Alguien más tiene hambre?", "Anyone else hungry?"], ["Mi arma y yo tenemos un trato.", "My weapon and I have an understanding."]],
-  level: [["¡Nivel {l}! Un paso más hacia lo que busco.", "Level {l}! One step closer to what I seek."]],
-  goal: [["¡Lo logré: {g}!", "I did it: {g}!"]],
-  died: [["Me han matado… la próxima vez tendré más cuidado.", "I got killed… I'll be more careful next time."]],
-  group: [["¿Cazamos juntos, {n}?", "Want to hunt together, {n}?"], ["Voy contigo, {n}, mejor en grupo.", "I'm with you, {n}, better as a group."]],
-  trip: [["Voy a Promise Land a probar suerte.", "Heading to Promise Land to try my luck."], ["Toca viaje a Promise Land. ¿Quién se apunta?", "Time for Promise Land. Who's in?"]],
-  taunt: [["¡Por mi bando! Fuera de aquí, {n}.", "For my side! Get out of here, {n}."], ["{n}, hoy no sales vivo de aquí.", "{n}, you're not leaving here alive."]],
-  win: [["¡Uno menos del otro bando!", "One less from the other side!"], ["Eso te pasa por entrar en Promise Land.", "That's what you get for coming to Promise Land."]],
-  lose: [["Me han ganado… la próxima será mía.", "They got me… next one's mine."]],
-  banter: [["¿Habéis visto los precios de la tienda? Todo sube.", "Seen the shop prices? Everything's getting dearer."], ["Hoy he matado un montón de {m}.", "Killed loads of {m} today."], ["Mi meta: {g}. ¿Y la tuya?", "My goal: {g}. And yours?"],
-    ["Dicen que la cripta está llena de esqueletos.", "They say the crypt is full of skeletons."], ["Necesito pociones. ¿Alguien sabe cuánto cuestan?", "I need potions. Anyone know the price?"], ["El herrero cobra caro, pero vale la pena.", "The blacksmith is pricey, but worth it."],
-    ["¿Alguien ha visto algún jefe por la cripta?", "Anyone seen a boss down in the crypt?"], ["Me duelen los pies de tanto cazar.", "My feet hurt from all this hunting."]],
-  banterr: [["Ja, justo lo que pensaba, {n}.", "Ha, just what I was thinking, {n}."], ["Yo ando por el nivel {l}.", "I'm around level {l} myself."], ["Cuéntame más, {n}.", "Tell me more, {n}."], ["Tienes razón, {n}.", "You're right, {n}."]],
-  tsell: [["Te vendo {i} por {p} de oro, {n}.", "I'll sell you {i} for {p} gold, {n}."]], tgift: [["{n}, toma, te regalo {i}.", "{n}, here, {i} is a gift."]],
-  tnoneed: [["Eso no me hace falta ahora, {n}.", "I don't need that right now, {n}."]], tbye: [["Otra vez será.", "Maybe next time."]], tdone: [["¡Trato hecho, {n}!", "Deal, {n}!"]],
-  task: [["¿Qué me ofreces, {n}?", "What do you offer me, {n}?"]], tnothing: [["No tengo nada que ofrecerte ahora, {n}.", "I've nothing to offer you right now, {n}."]], tno: [["No me compensa, {n}.", "Not worth it for me, {n}."]],
-  gchat: [["¿Todo bien por aquí, gente?", "All good here, folks?"], ["Voy por el nivel {l}. ¿Y vosotros?", "I'm at level {l}. How about you?"], ["Hoy el botín va flojo…", "Loot's been poor today…"], ["¡Buen trabajo, equipo!", "Nice work, team!"], ["Si alguien necesita equipo, lo hablamos en la tienda.", "If anyone needs gear, let's talk at the shop."], ["Cuidado con los monstruos fuertes.", "Watch out for the tough monsters."]],
-  gjoin: [["Me apunto.", "Count me in."], ["Voy con vosotros.", "I'm coming along."]], gskip: [["Hoy no puedo, suerte.", "Can't today, good luck."], ["Ahora estoy ocupado, a la próxima.", "Busy right now, next time."]],
-  gwelcome: [["¡Bienvenido al guild, {n}!", "Welcome to the guild, {n}!"]], gfound: [["¡Fundo el guild {g}! Quien quiera unirse, hablad conmigo.", "I'm founding the guild {g}! Talk to me to join."]],
-  gdanger: [["Cuidado con {m}: me mató a nivel {l}. No lo peleéis aún.", "Careful with {m}: it killed me at level {l}. Don't fight it yet."]],
-  gpit: [["La raid en el foso {m} fue mal: nos matan los enemigos. Evitadlo un rato.", "The raid at pit {m} went badly: enemies are killing us. Avoid it for a while."]],
-  gfoe: [["¡El guild {g} hace raid en Promise Land! Ojo.", "Guild {g} is raiding Promise Land! Watch out."]],
-  tinvite: [["¿Te vienes a cazar, {n}? Te mando invitación de grupo.", "Coming hunting, {n}? Sending you a party invite."]],
-  other: [["Interesante. Cuéntame más.", "Interesting. Tell me more."], ["Mm, no sé qué decirte, {n}.", "Hm, not sure what to say, {n}."]],
+// SITUACIONES (no frases): el habitante ya no tiene diálogos escritos; cada ocasión de hablar es una descripción de lo que pasa y el modelo de lenguaje
+// (adv.llm, server/llm.mjs) lo dice con su voz. Sin modelo, el habitante calla (las acciones no dependen de hablar).
+const SIT = {
+  greet: "you meet {n} and greet them warmly", again: "you meet {n} again, you remember them and suggest hunting together",
+  who: "someone asks who you are; answer with this: {s}", doing: "someone asks what you are doing; you are working on this goal: {g}",
+  from: "someone asks where you come from; you come from {o}", fear: "someone asks what you fear; you are afraid of {f} (say it as a secret)",
+  thanks: "{n} thanks you; reply kindly", bye: "{n} says goodbye; say goodbye", yes: "{n} asks you to join their party; you accept and will follow them a while",
+  no: "{n} asks you to join their party but you are busy with your own things; decline politely", shy: "{n} asks you to join their party but you barely know them; say you want to talk first",
+  bot: "someone asks if you are a real person or a bot; admit you are a simulated resident of this server, but your goals feel real to you",
+  idle: "say something short about your day, the place, hunting or your gear", level: "you just reached level {l}", goal: "you just achieved your goal: {g}",
+  died: "you just died and respawned; say you will be more careful", group: "invite {n} to hunt together",
+  trip: "you are heading to Promise Land to try your luck; maybe ask who joins", taunt: "taunt the enemy {n} before attacking",
+  win: "you just killed an enemy player in Promise Land; gloat briefly", lose: "an enemy player just killed you in Promise Land",
+  banter: "make small talk with other residents about shop prices, crypts, monsters you killed ({m}) or your goals", banterr: "reply to {n}'s small talk with a short natural answer",
+  tsell: "you offer to sell {n} this item: {i}, for {p} gold", tgift: "you give {n} this item as a gift: {i}", tnoneed: "{n} offers you something but you do not need it now",
+  toffer: "during a trade you put {i} on the table for {n} and ask {p} gold for it", tpay: "during a trade you put {p} gold on the table to pay {n} for {i}",
+  tconfirm: "you press confirm in the trade with {n} because the deal looks fair to you", tcounter: "{n}'s offer is lower than what your item is worth to you; ask for more or a better item",
+  twait: "you wait for {n} to put something on the trade table",
+  tbye: "the trade ended without a deal; say maybe next time", tdone: "you just closed a trade with {n}; say deal", task: "{n} is interested in trading; ask what they offer",
+  tnothing: "{n} wants to trade but you have nothing to offer", tno: "the price {n} offers is not worth it for you",
+  gchat: "chat casually with your guild mates (level {l}, loot, your day)", gjoin: "your guild proposes an activity and you join in", gskip: "your guild proposes an activity but you cannot go today",
+  gwelcome: "{n} just joined your guild; welcome them", gfound: "you just founded the guild {g}; invite others to talk to you to join",
+  gdanger: "warn your guild that {m} killed you at level {l} and they should avoid it for now", gpit: "warn your guild that the raid at pit {m} went badly because enemies are killing you",
+  gfoe: "warn that the guild {g} is raiding Promise Land and to watch out", tinvite: "invite {n} to hunt together and say you are sending a party invite",
+  other: "answer {n} briefly; you are not sure what to say",
 };
 export const langOf = text => (/[áéíóúñ¿¡]|\b(hola|que|qué|como|cómo|quien|quién|donde|dónde|grupo|gracias|adios|adiós|ayuda|vamos|ven)\b/i.test(text) ? "es" : "en");
 export function intentOf(text) {
@@ -132,20 +131,21 @@ export function intentOf(text) {
   if (/\b(hola|hello|hi|hey|buenas)\b/.test(t)) return "greet";
   return "other";
 }
-function fmt(p, key, lang, who, w, extra = {}) {
-  const l = L[key]; if (!l) return "";
-  const t = l[Math.floor(w.rng() * l.length)][lang === "en" ? 1 : 0], i = lang === "en" ? 1 : 0, r = p.res;
-  return t.replace("{n}", who || "").replace("{s}", storyOf(p, lang)).replace("{g}", goalText(r.goal, lang) || (lang === "en" ? "wander" : "pasear")).replace("{o}", r.origin[i])
+function fmt(p, key, lang, who, w, extra = {}) {                                   // -> "§" + descripción de la situación (la dice el modelo)
+  const t = SIT[key]; if (!t) return "";
+  const i = lang === "en" ? 1 : 0, r = p.res;
+  return "§" + t.replace("{n}", who || "").replace("{s}", storyOf(p, lang)).replace("{g}", goalText(r.goal, lang) || "wander").replace("{o}", r.origin[i])
     .replace("{f}", r.fear[i]).replace("{l}", p.level).replace("{i}", extra.i ?? "").replace("{p}", extra.p ?? "").replace("{m}", extra.m ?? "");
 }
 // Texto del contexto para un modelo de lenguaje (server/llm.mjs): quién es, qué ha vivido y qué quiere ahora.
 export function describe(p, lang) {
   const r = p.res, es = lang !== "en";
   const mem = r.mem.slice(-6).map(m => (es ? m.es : m.en)).join(" | ");
+  const lessons = (r.insights || []).slice(-3).map(i => i.t).join(" | ");
   const known = Object.entries(r.rel).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n]) => n).join(", ");
   return es
-    ? `${storyOf(p, "es")} Nivel ${p.level}. Meta actual: ${goalText(r.goal, "es") || "ninguna"}. Recuerdos recientes: ${mem || "ninguno"}. Conoce a: ${known || "nadie aún"}.`
-    : `${storyOf(p, "en")} Level ${p.level}. Current goal: ${goalText(r.goal, "en") || "none"}. Recent memories: ${mem || "none"}. Knows: ${known || "nobody yet"}.`;
+    ? `${storyOf(p, "es")} Nivel ${p.level}. Meta actual: ${goalText(r.goal, "es") || "ninguna"}. Recuerdos recientes: ${mem || "ninguno"}. Conoce a: ${known || "nadie aún"}.${lessons ? " Lo que he aprendido: " + lessons : ""}`
+    : `${storyOf(p, "en")} Level ${p.level}. Current goal: ${goalText(r.goal, "en") || "none"}. Recent memories: ${mem || "none"}. Knows: ${known || "nobody yet"}.${lessons ? " What I have learned: " + lessons : ""}`;
 }
 
 // ---------------------------------------------------------------- conexión con el bot
@@ -157,7 +157,32 @@ export function attach(w, p, saved) {
   p.res.lvl = p.level; p.res.kills0 = p.kills || 0;
   if (!p.res.mem.length) remember(p, "Llegué a Aresfarm buscando mi camino.", "I arrived in Aresfarm looking for my way.");
 }
-export function speak(adv, p, text) { if (text) adv.command(p.id, { t: "say", text: text.replace(/\s+/g, " ").slice(0, 118) }); }
+// Habla del habitante. `text` = "§situación" (o "@§…" para el chat de guild): se pide al modelo de lenguaje en cola (una petición a la vez, las más viejas se
+// descartan) y, si responde a tiempo, se dice; sin modelo no dice nada. Texto sin "§" se dice tal cual (solo lo escrito por el modelo o por un humano).
+export function speak(adv, p, text) {
+  if (!text) return;
+  const m = /^([@$!~]?)§(.*)$/s.exec(text);
+  if (!m) { adv.command(p.id, { t: "say", text: text.replace(/\s+/g, " ").slice(0, 118) }); return; }
+  if (typeof adv.llm !== "function" || adv.llm.ready === false) return;
+  const q = (adv._sayQ ||= []), w = adv.worldFor(p.id);
+  if (q.some(x => x.p === p && x.pre === m[1])) return;                                        // uno pendiente por habitante y canal
+  q.push({ p, pre: m[1], sit: m[2], at: w.time, lang: p.res.lang }); if (q.length > 14) q.shift();
+  pumpSay(adv);
+}
+function pumpSay(adv) {
+  if (adv._sayBusy) return;
+  const q = adv._sayQ || [];
+  while (q.length) {
+    const it = q.shift(), w = adv.worldFor(it.p.id);
+    if (it.p.dead || !w || w.time - it.at > 25000) continue;
+    adv._sayBusy = true;
+    const r = it.p.res, ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` : "";
+    Promise.resolve(adv.llm({ task: "say", who: it.p.name, lang: it.lang, system: describe(it.p, it.lang) + ctx, from: "situation", text: it.sit }))
+      .then(t => { if (t && !it.p.dead) adv.command(it.p.id, { t: "say", text: it.pre + String(t).replace(/\s+/g, " ").slice(0, 118) }); })
+      .catch(() => {}).finally(() => { adv._sayBusy = false; setTimeout(() => pumpSay(adv), 0); });
+    return;
+  }
+}
 const inFarm = (adv, p) => adv.worldFor(p.id) === adv.farm;
 
 // Eventos del mundo que le importan a un habitante (lo llama World.emit): chat, órdenes rechazadas, golpes recibidos, muertes y bajas.
@@ -222,8 +247,8 @@ function queueReply(adv, w, p, human, text, depth = 0) {
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 3 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
   r.reply = { at: w.time + 1200 + Math.floor(w.rng() * 1500), text: fmt(p, key, lang, n, w), follow: extra, to: n, lang, depth };
-  if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // modelo local: si responde a tiempo, sustituye a la frase hecha
-    const rep = r.reply; rep.at += 3000;
+  if (typeof adv.llm === "function" && adv.llm.ready !== false && intent !== "party") {                       // el modelo contesta a lo que dijo el interlocutor (sin él, calla)
+    const rep = r.reply; rep.at += 3000; rep.text = "";
     Promise.resolve(adv.llm({ who: p.name, lang, system: describe(p, lang), from: n, text })).then(t => { if (t && r.reply === rep) rep.text = String(t); }).catch(() => {});
   }
 }
@@ -252,7 +277,7 @@ export function think(adv, p) {
   if (p.level > r.lvl) { r.lvl = p.level; remember(p, "Subí al nivel " + p.level + ".", "Reached level " + p.level + "."); if (p.bot.owner == null && w.rng() < 0.7) speak(adv, p, fmt(p, "level", r.lang, "", w)); }
   if (goalDone(p)) {
     const g = goalText(r.goal, "es"), ge = goalText(r.goal, "en");
-    remember(p, "Cumplí mi meta: " + g + ".", "Achieved my goal: " + ge + "."); speak(adv, p, r.lang === "en" ? "I did it: " + ge + "!" : "¡Lo logré: " + g + "!"); newGoal(w, p);
+    remember(p, "Cumplí mi meta: " + g + ".", "Achieved my goal: " + ge + "."); speak(adv, p, fmt(p, "goal", r.lang, "", w)); newGoal(w, p);
   }
   qaTick(adv, w, p, r);
   // fuera de la granja (entró a una tienda o a la cripta pisando un teletransporte mientras paseaba): se queda un rato probando y vuelve
@@ -263,6 +288,8 @@ export function think(adv, p) {
   const tg = p.bot.target;                                                         // se burla del enemigo al que va a atacar
   if (tg?.kind === "player" && r._tauntId !== tg.id) { r._tauntId = tg.id; if (w.rng() < 0.5) speak(adv, p, fmt(p, "taunt", r.lang, tg.name, w)); }
   pits(adv, w, p, r);
+  if (r.scare && w.time - (r.scareAt || 0) > 480000) { r.scare--; r.scareAt = w.time; }          // el miedo a morir se va pasando
+  reflect(adv, w, p, r);
   partyAndTrade(adv, w, p, r);
   guildAI(adv, w, p, r, home);
   gather(adv, w, p, r, home);
@@ -285,11 +312,40 @@ export function think(adv, p) {
   }
 }
 
+// APRENDIZAJE CON EL MODELO: cada diez minutos aprox. el habitante «reflexiona» sobre su experiencia (muertes, presas, oro, recuerdos) y el modelo de lenguaje
+// le devuelve una lección y ajustes concretos: monstruos a evitar (`dlv`), a priorizar (`focus`) y cuánta prudencia (`scare`). La lección se guarda (`insights`)
+// y se incluye en lo que el modelo sabe de él, así que las conversaciones y las siguientes reflexiones lo tienen en cuenta. Sin modelo no hace nada.
+function reflect(adv, w, p, r) {
+  if (typeof adv.llm !== "function" || adv.llm.ready === false || p.dead || adv._reflecting) return;
+  if (w.time < (r._refAt ||= w.time + 90000 + Math.floor(w.rng() * 240000))) return;
+  const top = (o, n) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k} x${v}`).join(", ") || "none";
+  const text = `level ${p.level}, deaths ${r.deaths | 0}, killed by: ${top(r.qa?.deaths, 4)}; kills: ${top(p.kinds, 6)}; gold ${p.gold}; best item level ${Math.max(0, ...p.bag.map(i => itemLevel(w.data.item(i.id), i.attr, i.id) | 0))}; avoiding: ${Object.keys(r.dlv || {}).join(", ") || "none"}; goal ${goalText(r.goal, "en") || "none"}; memories: ${(r.mem || []).slice(-4).map(m => m.en).join(" / ")}`;
+  const known = new Set([...Object.keys(p.kinds || {}), ...Object.keys(r.qa?.deaths || {}), ...Object.keys(r.qa?.kills || {})].filter(k => w.npcDb[k]));
+  r._refAt = w.time + 480000 + Math.floor(w.rng() * 360000); adv._reflecting = true;
+  Promise.resolve(adv.llm({ task: "reflect", who: p.name, lang: r.lang, system: describe(p, r.lang), from: "stats", text })).then(t => {
+    if (!t) { r._refAt = w.time + 60000; return; }
+    let j = null; try { const m = /\{.*\}/s.exec(String(t)); j = m && JSON.parse(m[0]); } catch {}
+    if (!j || typeof j !== "object") return;
+    const lesson = String(j.lesson || "").slice(0, 160); if (lesson.length < 8) return;
+    const names = a => (Array.isArray(a) ? a : []).map(x => String(x).trim().replace(/ /g, "-")).filter(x => known.has(x)).slice(0, 4);
+    const avoid = names(j.avoid), focus = names(j.focus), caution = Math.max(0, Math.min(3, Math.round(+j.caution || 0)));
+    (r.insights ||= []).push({ t: lesson, avoid, focus, caution, at: Math.round(w.time / 1000), lv: p.level }); if (r.insights.length > 12) r.insights.shift();
+    for (const n of avoid) { (r.dlv ||= {}); if ((r.dlv[n] || 0) < p.level) r.dlv[n] = p.level; }
+    r.focus = Object.fromEntries(focus.map(n => [n, w.time + 20 * 60000]));
+    if (caution > (r.scare | 0)) { r.scare = caution; r.scareAt = w.time; }
+    blog(w, p, `🧠 Reflexión (IA): ${lesson}${avoid.length ? " · evito " + avoid.join(", ") : ""}${focus.length ? " · priorizo " + focus.join(", ") : ""}${caution ? " · prudencia " + caution : ""}`);
+    remember(p, "Aprendí: " + lesson, "Learned: " + lesson);
+  }).catch(() => {}).finally(() => { adv._reflecting = false; });
+}
+
 // APRENDIZAJE: al morir apunta qué lo mató y a qué nivel (bot.js tooStrong lo evita hasta llevar +3 niveles) y, en la cripta, en qué piso (la bajada
 // exige entonces 5 niveles más por cada muerte allí). Se guarda en la ficha del habitante (`dlv`, `dd`).
 function learnFromDeath(w, p, r) {
   const k0 = r._killer || r._lastHit, k = k0 && r._killBoss ? k0 + "*" + r._killBoss : k0;          // los jefes de la cripta se aprenden aparte de su especie
   if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[k] = Math.max(r.dlv[k] || 0, p.level); blog(w, p, `Aprendo: «${k}» me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
+  // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
+  const lostGold = Math.floor(p.gold * 0.1); p.gold -= lostGold; r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
+  blog(w, p, `Morir me cuesta: pierdo ${lostGold} de oro y experiencia; seré más prudente.`);
   if (w.map.kind === "dungeon") { (r.dd ||= {})[w.map.level] = (r.dd[w.map.level] || 0) + 1; blog(w, p, `Aprendo: morí en la cripta nivel ${w.map.level}; bajaré más fuerte.`); }
 }
 const adv_isPlayer = (w, name) => { for (const e of w.ents.values()) if (e.kind === "player" && e.name === name) return true; return false; };
@@ -436,7 +492,7 @@ function startDelve(adv, w, p, r, home) {
   b.travel = { x: spot[0], y: spot[1], w, until: w.time + 150000 };
   blog(w, p, `Planeo bajar a la cripta de esqueletos${r.goal?.k === "crypt" ? " (mi meta: nivel " + r.goal.n + ")" : ""}: voy a la entrada (${spot[0]},${spot[1]}).`);
   remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
-  if (w.rng() < 0.6) speak(adv, p, r.lang === "en" ? "Time to clear some skeletons in the crypt." : "Toca limpiar esqueletos en la cripta.");
+  if (w.rng() < 0.6) speak(adv, p, "§you are going down to the skeleton crypt to clear skeletons");
 }
 function delve(adv, w, p, r, home) {
   const b = p.bot, d = r._delve;
@@ -478,11 +534,33 @@ const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && s
 const ballOf = p => Comp.activeBall(p) || p.bag.find(i => i.comp && !i.comp.bad);
 const liveOf = (w, p) => { for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead) return e; return null; };
 const nurseOf = w => { for (const e of w.ents.values()) if (e.role === "pethospital") return e; return null; };
-function pickSpecies(p, r) { let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
+// MAGOS (arquetipo estudioso): coleccionan summons de las tres escuelas (fuego: Orc, hielo: Tentocle, rayo: Cannibal-Plant) y los van alternando para tirar magias variadas
+const MAGE_SPECIES = Object.keys(Sch.SCHOOL_OF).filter(sp => !Sch.isTier2(sp));
+const balls = p => p.bag.filter(i => i.comp && !i.comp.bad);
+const wantsMoreBalls = (p, r) => {            // metas de vida: muchos summons distintos; los magos reúnen las 3 escuelas pronto y los demás cuando los que tienen ya van altos
+  const bs = balls(p); if (p.level < 8 || p.gold < 1500) return false;
+  if (r.arch === "scholar") return bs.length < MAGE_SPECIES.length;
+  return bs.length > 0 && bs.length < 6 && p.gold >= 3000 && bs.every(i => i.comp.lvl >= Math.min(Sch.TRADE_LEVEL, 10 + bs.length * 8));
+};
+function pickSpecies(p, r) {
+  if (r.arch === "scholar") { const own = new Set(balls(p).map(i => i.comp.sp)), free = MAGE_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
+  let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
 function pets(adv, w, p, r, home) {
   if (p.dead || w.pvp || w.map.kind === "dungeon" || w.time < (r._petThink ||= 0)) return;
   r._petThink = w.time + 2500;
-  const b = p.bot, ball = ballOf(p), c = ball?.comp, live = liveOf(w, p);
+  const b = p.bot, live = liveOf(w, p);
+  const want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
+  const ball = want || ballOf(p), c = ball?.comp;
+  if (want && c.on) r._wantBall = 0;
+  // VARIOS SUMMONS: el mago alterna de escuela (otros hechizos); los demás entrenan al de menor nivel para llevarlos todos al máximo (meta «summons distintos al nivel máximo»)
+  if (live && balls(p).length > 1 && w.time - (r._schoolAt ||= w.time + 120000) > 0 && w.time - p.lastCombat > 4000 && !w.fightZone) {
+    const cur = Comp.activeBall(p), all = balls(p).filter(i => i !== cur && !i.comp.down);
+    let nx = null;
+    if (r.arch === "scholar") { const o = all.filter(i => Sch.SCHOOL_OF[i.comp.sp] && Sch.SCHOOL_OF[i.comp.sp] !== Sch.SCHOOL_OF[cur?.comp.sp]); nx = o[Math.floor(w.rng() * o.length)]; }
+    else { const o = all.filter(i => i.comp.lvl < Sch.TRADE_LEVEL).sort((x, y) => x.comp.lvl - y.comp.lvl)[0]; if (o && cur && (cur.comp.lvl >= Sch.TRADE_LEVEL || cur.comp.lvl >= o.comp.lvl + 4)) nx = o; }
+    r._schoolAt = w.time + 180000 + Math.floor(w.rng() * 180000);
+    if (cur && nx) { adv.command(p.id, { t: "use", uid: cur.uid }); r._wantBall = nx.uid; r._petUseAt = 0; blog(w, p, `Cambio de summon: guardo a ${cur.comp.nm} (nv ${cur.comp.lvl}) y saco a ${nx.comp.nm} (${nx.comp.sp} nv ${nx.comp.lvl}).`); return; }
+  }
   // ---- mantenimiento (en cualquier mapa menos Promise Land y la cripta)
   if (ball) {
     if ((!c.on || !live) && !c.down && !w.fightZone && w.time - (r._petUseAt || 0) > 12000) {          // invoca a su summon (también si la bola dice «fuera» y no hay summon: tras morir o viajar)
@@ -515,14 +593,15 @@ function pets(adv, w, p, r, home) {
     if (r._modeBack && w.time > r._modeBack) { r._modeBack = 0; adv.command(p.id, { t: "petmode", mode: "attack" }); }
   }
   // ---- ¿toca ir al hospital? sin summon, o con el summon caído/herido
-  const need = !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
+  const more = wantsMoreBalls(p, r);
+  const need = more ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
   if (!r._pet) {
     if (!need || r._trip || r._delve || p.bot.owner != null || w.time < (r._petAt ||= w.time + 20000 + Math.floor(w.rng() * 40000)) || w !== home || p.hp < p.maxHp * 0.5 || b.rest) return;
     const tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"), nurse = nurseOf(w);
     if (!nurse && !tp) { r._petAt = w.time + 600000; return; }
     r._pet = { until: w.time + 240000, done: 0, tp: tp ? { x: tp.x, y: tp.y } : null };
     blog(w, p, !ball ? "Voy a buscar un summon al hospital de compañeros." : "Llevo a mi summon al hospital de compañeros.");
-    if (!ball && w.rng() < 0.6) speak(adv, p, r.lang === "en" ? "I need a companion. Off to the pet hospital." : "Necesito un compañero. Voy al hospital de mascotas.");
+    if (!ball && w.rng() < 0.6) speak(adv, p, "§you need a summon companion and are heading to the pet hospital");
     return;
   }
   const d = r._pet;
@@ -533,7 +612,8 @@ function pets(adv, w, p, r, home) {
     if (dist(p, nurse) > 5) { if (!b.travel) { b.travel = { x: nurse.x, y: nurse.y + 1, w, until: w.time + 40000 }; b.path = null; b.goal = null; b.fails = 0; } return; }
     if (w.busy(p) || w.time - (d.cmdAt || 0) < 1500) return;
     d.cmdAt = w.time;
-    if (!ball) { if (d.bought) { r.petN = (r.petN | 0) + 1; d.bought = false; } const sp = pickSpecies(p, r); d.bought = true; adv.command(p.id, { t: "petbuy", npc: nurse.id, sp }); if (++d.done > 6) { r._pet = null; r._petAt = w.time + 300000; } return; }
+    d.n0 ??= balls(p).length;
+    if (!ball || (more && balls(p).length <= d.n0)) { if (d.bought) { r.petN = (r.petN | 0) + 1; d.bought = false; } const sp = pickSpecies(p, r); d.bought = true; adv.command(p.id, { t: "petbuy", npc: nurse.id, sp }); if (++d.done > 6) { r._pet = null; r._petAt = w.time + 300000; } return; }
     if (c.down || Comp.hpOf(p, c) < Comp.maxOf(p, c)) { adv.command(p.id, { t: "petheal", uid: ball.uid, npc: nurse.id }); if (++d.done > 4) { r._pet = null; r._petAt = w.time + 300000; } return; }
     d.leave = true; r._petUseAt = 0;
   } else if (d.tp && w === home && !d.in) {                                                     // camino a la tienda general de Aresden
@@ -615,9 +695,16 @@ function spareFor(w, p, q) {
     const d = w.data.item(i.id);
     if (!d || worn.has(i.uid) || i.comp || i.life === 0 || !canUse(q, d)) continue;
     const mine = itemLevel(d, i.attr, i.id), gain = mine - wornIlvl(w, q, d);
-    if (gain > 1 + mine * 0.15 && gain > bg && mine <= wornIlvl(w, p, d) * 1.0 + 1) { best = i; bg = gain; }       // le sirve a q y no es mejor que lo que yo llevo
+    if (gain > 1 + mine * 0.15 && gain > bg && (!canUse(p, d) || mine <= wornIlvl(w, p, d) * 1.0 + 1)) { best = i; bg = gain; }   // le sirve a q y a mí no me mejora (o no puedo usarlo: otro sexo/nivel)
   }
   return best;
+}
+// ALMACÉN: lo guardado para comerciar sale de él cuando alguien lo necesita (los habitantes lo hacen "de paso", como vender)
+function fromBank(w, p, q) {
+  if (!p.bank?.length) return;
+  let bi = -1, bg = 0;
+  p.bank.forEach((i, k) => { const d = w.data.item(i.id); if (!d || !canUse(q, d)) return; const mine = itemLevel(d, i.attr, i.id), gain = mine - wornIlvl(w, q, d); if (gain > 1 + mine * 0.15 && gain > bg) { bi = k; bg = gain; } });
+  if (bi >= 0) Shop.withdraw(w, p, { index: bi });
 }
 const usefulFor = (w, p, items) => items.some(i => { const d = w.data.item(i.id); return d && canUse(p, d) && itemLevel(d, i.attr, i.id) > wornIlvl(w, p, d) * 1.08 + 0.5; });
 
@@ -658,7 +745,7 @@ function partyAndTrade(adv, w, p, r) {
     const qb = adv.bots.has(q.id), rel = relOf(p, q.name);
     if (!qb && rel < 1) continue;
     if (qb && !group && w.rng() > 0.5) continue;
-    const it = spareFor(w, p, q); if (!it) continue;
+    fromBank(w, p, q); const it = spareFor(w, p, q); if (!it) continue;
     const total = worth(w, it); let ask = priceFor(rel, total);
     if (qb && ask > q.gold * 0.6) ask = rel >= 3 ? 0 : -1;                                   // el comprador no puede pagarlo: regalo si hay afinidad
     if (ask < 0) continue;
@@ -680,16 +767,18 @@ function tradeStep(adv, w, p, r) {
   const now = w.time, tr = (r._tr ||= { at: now, set: false, said: {} }), rel = relOf(p, o.name), deal = r._deal && r._deal.to === o.id ? r._deal : null;
   const mine = t.offer.map(u => Inv.instOf(p, u)).filter(Boolean), theirs = o.trade.offer.map(u => Inv.instOf(o, u)).filter(Boolean), tg = o.trade.gold;
   const once = k => !tr.said[k] && (tr.said[k] = true);
+  const names = list => list.map(i => (w.data.item(i.id)?.name || "item").replace(/-/g, " ") + ((i.count || 1) > 1 ? " x" + i.count : "")).join(", ");
+  const confirm = () => { if (!t.ok) { if (once("conf")) say2(adv, w, p, "tconfirm", o.name); Trade.confirm(w, p); } };
   const quit = key => { if (once("q")) say2(adv, w, p, key, o.name); Trade.cancel(w, p, ""); r._deal = null; };
   if (now - tr.at > 50000) return quit("tbye");
   if (deal) {                                                                              // yo propuse: ofrezco el objeto y espero el pago
-    if (!tr.set) { tr.set = true; Trade.setItem(w, p, deal.uid); return; }
+    if (!tr.set) { tr.set = true; Trade.setItem(w, p, deal.uid); const it = Inv.instOf(p, deal.uid); say2(adv, w, p, deal.ask ? "toffer" : "tgift", o.name, { i: it ? names([it]) : "", p: deal.ask }); return; }
     if (!mine.length) return quit("tbye");
-    if (tg >= deal.ask && !t.ok) Trade.confirm(w, p);
+    if (tg >= deal.ask) confirm();
     return;
   }
   const tw = theirs.reduce((a, i) => a + worth(w, i), 0), mw = mine.reduce((a, i) => a + worth(w, i), 0);
-  if (!mine.length && !theirs.length && tg === 0) { if (once("ask")) say2(adv, w, p, "task", o.name); return; }                 // espera a ver qué ponen
+  if (!mine.length && !theirs.length && tg === 0) { if (once("ask")) say2(adv, w, p, "task", o.name); else if (now - tr.at > 14000 && once("wait")) say2(adv, w, p, "twait", o.name); return; }                 // espera a ver qué ponen
   if (!mine.length && !theirs.length && tg > 0) {                                           // quieren comprarme algo: ofrezco algo que valga lo que pagan
     if (tr.set) return;
     let pick = null;
@@ -699,23 +788,24 @@ function tradeStep(adv, w, p, r) {
     return;
   }
   if (!mine.length && t.gold === 0 && theirs.length) {                                      // me ofrecen algo
-    if (tg > 0) { if (!t.ok) Trade.confirm(w, p); return; }                                   // con oro encima: es un regalo y me lo quedo
+    if (tg > 0) { confirm(); return; }                                   // con oro encima: es un regalo y me lo quedo
     if (!usefulFor(w, p, theirs) && rel < 5) return quit("tnoneed");
     const asked = o.res?._deal?.to === p.id ? o.res._deal.ask : priceFor(rel, tw);                // si me lo vende un habitante, pago lo que pide
     if (asked > p.gold * 0.6) return quit("tno");
     const pay = Math.min(Math.floor(p.gold * 0.6), asked);
-    if (pay > 0 && !tr.set) { tr.set = true; Trade.setGold(w, p, pay); return; }
-    if (!t.ok) Trade.confirm(w, p);
+    if (pay > 0 && !tr.set) { tr.set = true; Trade.setGold(w, p, pay); say2(adv, w, p, "tpay", o.name, { i: names(theirs), p: pay }); return; }
+    confirm();
     return;
   }
   const fair = tw >= mw * (rel >= 4 ? 0.7 : 0.95) - 1;                                       // ambos ponen algo: acepto si me compensa
-  if (fair) { if (!t.ok) Trade.confirm(w, p); }
+  if (fair) confirm();
+  else if (now - tr.at > 6000 && once("counter")) say2(adv, w, p, "tcounter", o.name);
   else if (now - tr.at > 12000) quit("tno");
 }
 // el trato salió bien: afinidad y recuerdo para los dos habitantes
 function tradeDone(adv, w, ev) {
   const a = w.ents.get(ev.id), b = w.ents.get(ev.with);
-  for (const [x, y] of [[a, b], [b, a]]) if (x?.res && y) { befriend(x, y.name, 2); remember(x, "Comercié con " + y.name + ".", "Traded with " + y.name + "."); if (w.rng() < 0.7) say2(adv, w, x, "tdone", y.name); x.res._deal = null; }
+  for (const [x, y] of [[a, b], [b, a]]) if (x?.res && y) { befriend(x, y.name, 2); x.res.trades = (x.res.trades | 0) + 1; remember(x, "Comercié con " + y.name + ".", "Traded with " + y.name + "."); if (w.rng() < 0.7) say2(adv, w, x, "tdone", y.name); x.res._deal = null; }
 }
 
 // ---- tertulia junto a la tienda: de vez en cuando varios habitantes se reúnen cerca de la puerta de la tienda general y charlan
@@ -751,7 +841,7 @@ function gather(adv, w, p, r, home) {
 // se avisan de lo que aprenden: monstruos que matan, fosos donde los matan y guilds enemigos que hacen raid.
 const GUILD_NAMES = ["Iron Oak", "Silver Wolves", "Crimson Order", "Dawn Watch", "Stormcallers", "Night Owls", "Brave Hearts", "Stone Wardens", "Golden Lanterns", "Ash and Ember", "Wild Hunt", "Rangers Rest", "Blue Banner", "Black Anvil", "Moon Harriers", "Last Lantern"];
 const ETHOS = { warrior: ["raid", "hunt"], hunter: ["crypt", "hunt"], trader: ["loot", "hunt"], wanderer: ["loot", "crypt"], scholar: ["crypt", "loot"] };
-const ACT_TXT = { crypt: ["¡Actividad: bajar a la cripta! Salimos en un minuto.", "Activity: crypt run! We leave in a minute."], raid: ["¡Actividad: raid en Promise Land! Salimos en un minuto.", "Activity: Promise Land raid! We leave in a minute."], loot: ["¡Actividad: salir a buscar botín! Salimos en un minuto.", "Activity: loot hunt! We leave in a minute."], hunt: ["¡Actividad: cacería en grupo! Salimos en un minuto.", "Activity: group hunt! We leave in a minute."] };
+const ACT_TXT = { crypt: "propose to your guild an activity: going down to the skeleton crypt together, leaving in a minute", raid: "propose to your guild an activity: a raid in Promise Land, leaving in a minute", loot: "propose to your guild an activity: hunting together to find loot, leaving in a minute" };
 const gsay = (adv, p, text) => speak(adv, p, "@" + text);
 const gline = (p, key, w, extra = {}, who = "") => fmt(p, key, p.res.lang, who, w, extra);
 const lessons = adv => (adv.lessons ||= { mobs: [], pits: new Map() });
@@ -811,7 +901,7 @@ function guildMaster(adv, w, p, r, home, G, members, bots) {
   // reclutar: cada ~7 min invita a alguien cercano sin guild que aprecia (bot o jugador)
   if (now >= (r._recAt ||= now + 120000) && Object.keys(G.members).length < 12) {
     r._recAt = now + 420000 + Math.floor(w.rng() * 240000);
-    for (const q of w.ents.values()) if (q.kind === "player" && q !== p && !q.dead && !q.guild && !q.guildQuery && q.side === p.side && dist(p, q) <= 9 && relOf(p, q.name) >= (adv.bots.has(q.id) ? 2 : 1)) { if (adv.command(p.id, { t: "guildinvite", name: q.name })) { speak(adv, p, r.lang === "en" ? `Want to join ${G.name}, ${q.name}?` : `¿Te unes a ${G.name}, ${q.name}?`); break; } }
+    for (const q of w.ents.values()) if (q.kind === "player" && q !== p && !q.dead && !q.guild && !q.guildQuery && q.side === p.side && dist(p, q) <= 9 && relOf(p, q.name) >= (adv.bots.has(q.id) ? 2 : 1)) { if (adv.command(p.id, { t: "guildinvite", name: q.name })) { speak(adv, p, `§invite ${q.name} to join your guild ${G.name}`); break; } }
   }
   // disuelve el guild si lleva mucho tiempo solo
   if (Object.keys(G.members).length === 1) { r._aloneAt ||= now; if (now - r._aloneAt > 25 * 60000 && w.rng() < 0.2) { blog(w, p, `Disuelvo el guild ${G.name}: nadie se unió.`); adv.command(p.id, { t: "guilddisband" }); r._aloneAt = 0; } } else r._aloneAt = 0;
@@ -824,7 +914,7 @@ function guildMaster(adv, w, p, r, home, G, members, bots) {
     let pit = null;
     if (kind === "raid") { const zones = FOSOS(adv).filter(z => !((lessons(adv).pits.get(z.id) || 0) > now)); pit = zones.length ? pickPit(adv, w, p, zones) : null; if (!pit) return; }
     G._act = { id: now, kind, at: now + 60000, until: now + 600000, pit: pit ? { id: pit.id, name: pit.name, rect: pit.rect } : null, yes: new Set([p.name]) };
-    gsay(adv, p, ACT_TXT[kind][r.lang === "en" ? 1 : 0]); blog(w, p, `Propongo al guild ${G.name}: ${kind}.`);
+    gsay(adv, p, "§" + ACT_TXT[kind]); blog(w, p, `Propongo al guild ${G.name}: ${kind}.`);
     r._gjoin = G._act;
   }
 }
@@ -842,7 +932,7 @@ function guildMember(adv, w, p, r, home, G, members) {
   if (now >= (r._gEvalAt ||= now + 600000 + Math.floor(w.rng() * 600000))) {
     r._gEvalAt = now + 900000 + Math.floor(w.rng() * 600000);
     const mates = members.filter(m => m !== p), avg = mates.length ? mates.reduce((a, m) => a + relOf(p, m.name), 0) / mates.length : 0, score = relOf(p, G.master) + avg + (r.gpart || 0) * 0.5;
-    if (score < 2.5 && w.rng() < 0.3) { blog(w, p, `Dejo el guild ${G.name}: no me siento a gusto (afinidad ${score.toFixed(1)}).`); gsay(adv, p, r.lang === "en" ? "I'm leaving the guild, take care." : "Dejo el guild, cuidaos."); remember(p, "Dejé el guild " + G.name + ".", "Left the guild " + G.name + "."); adv.command(p.id, { t: "guildleave" }); }
+    if (score < 2.5 && w.rng() < 0.3) { blog(w, p, `Dejo el guild ${G.name}: no me siento a gusto (afinidad ${score.toFixed(1)}).`); gsay(adv, p, "§you are leaving the guild; say a short goodbye"); remember(p, "Dejé el guild " + G.name + ".", "Left the guild " + G.name + "."); adv.command(p.id, { t: "guildleave" }); }
   }
 }
 // A la hora de la actividad, los apuntados salen a la vez

@@ -95,9 +95,7 @@ function rollKillDropRaw(rng, npc, { rates = DROP_RATES, rating = 0, month = new
   if (depth) {                                                                    // cripta: tabla propia, 70 % común / 25 % poco común / 5 % codiciado
     const t = CRYPT_LOOT[cryptBand(depth)], r = dice(rng, 1, 100);
     const e = pick(rng, r <= 70 ? t.common : r <= 95 ? t.uncommon : t.rare);
-    id = Array.isArray(e) ? e[gender === 2 ? 1 : 0] : e;
-    const g = data && data.item(id)?.gender;
-    if (g && g !== gender) { const c = pick(rng, t.common); id = Array.isArray(c) ? c[gender === 2 ? 1 : 0] : c; }      // objeto del otro sexo (p. ej. SangAh, solo hombre): cae uno común
+    id = Array.isArray(e) ? pick(rng, e) : e;                                       // sin límite de sexo: el botín cae de cualquier variante y los objetos que no se pueden usar se comercian
   } else if (dice(rng, 1, 10000) <= 6000) id = dice(rng, 1, 10000) <= 8000 ? pick(rng, MELEE[gen]) : WAND[gen];
   else id = resolve(rng, ARMOR[gen]);
   if (!id) return null;

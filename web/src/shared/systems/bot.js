@@ -18,6 +18,7 @@ import * as Party from "./party.js";
 import * as Tut from "./tutorial.js";
 import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
+import * as Shop from "./shopsys.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -94,14 +95,38 @@ function tryEquip(w, p, b, inst) {
   b.bad.add(inst.id); p.equip = before;                                // no le sirve (nivel, fuerza, atributo): se revende
   return false;
 }
-function sellExtra(w, p) {
+// MOCHILA: el peso es un problema, así que el bot clasifica lo que carga. Lo que le sirve (lo puesto, consumibles, summons) se queda; lo que no usa pero vale
+// (otro sexo o nivel, buen item level, precio alto) va al ALMACÉN (Howard) para usar más adelante o comerciar; lo demás es basura y se vende (mitad de precio).
+const KEEP_TYPES = t => t === ITYPE.EAT || t === ITYPE.USE_DEPLETE || t === ITYPE.ARROW;
+export function bagClass(w, p, i) {
+  const d = w.data.item(i.id);
+  if (!d || i.id === GOLD || i.comp) return "keep";
+  if (KEEP_TYPES(d.type) && (i.count || 1) <= 30) return "keep";
+  if (d.type === ITYPE.EQUIP) {
+    const mine = canWear(p, d), il = itemLevel(d, i.attr, i.id), cur = wornLevel(w, p, d);
+    if (mine && il > cur * 1.08 + 0.5 && i.life !== 0) return "keep";                 // me va a servir (el recado de equipo lo pondrá)
+    if (i.life === 0) return "sell";
+    if (!mine && (il >= 6 || (d.price || 0) >= 400)) return "store";                    // no puedo usarlo (género/nivel) pero otro sí: comerciar
+    if (mine && il >= cur * 0.8 && il >= 8) return "store";                            // casi tan bueno que lo que llevo: recambio / comercio
+    return "sell";
+  }
+  return (d.price || 0) >= 600 ? "store" : "sell";
+}
+const canWear = (p, d) => d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY;
+function wornLevel(w, p, d) {
+  const slot = d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos, uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined), i = uid !== undefined && Inv.instOf(p, uid);
+  return i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0;
+}
+function sellExtra(w, p, force = false) {
+  const load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
+  if (!force && load < 0.5 && p.bag.length < MAX_ITEMS - 12) return;                   // mochila holgada: no hace falta
   const worn = new Set(Object.values(p.equip));
   for (const i of [...p.bag]) {
-    if (worn.has(i.uid) || i.comp) continue;
+    if (worn.has(i.uid)) continue;
+    const k = bagClass(w, p, i);
+    if (k === "keep") continue;
     const d = w.data.item(i.id);
-    if (!d || i.id === GOLD || d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE || d.type === ITYPE.ARROW) continue;
-    if (p.bag.length < MAX_ITEMS - 8 && d.type !== ITYPE.EQUIP) continue;
-    if (p.bag.length < MAX_ITEMS - 8 && i.life !== 0) continue;
+    if (k === "store" && (p.bank?.length || 0) < 120 && Shop.deposit(w, p, { uid: i.uid, count: i.count })) continue;
     p.gold += Math.max(0, Math.floor((d.price > 0 ? d.price : 0) / 2) * (i.count || 1));
     Inv.removeFromBag(p, i.uid);
   }
@@ -160,6 +185,16 @@ export const tooStrong = (w, p, e) => {
   return hit * 4 > p.maxHp;
 };
 const hostile = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
+// ¿hay camino hasta el enemigo? (otro nivel de terreno: acantilado, agua, muro entre medias). Se cachea 4 s por enemigo; los inalcanzables no se eligen.
+function reachable(w, p, e) {
+  const b = p.bot, c = (b.reach ||= new Map()), hit = c.get(e.id);
+  if (dist(p, e) <= 1) return true;
+  if (hit && w.time < hit.until && dist(p, { x: hit.x, y: hit.y }) <= 3) return hit.ok;
+  const ok = findPath(w.grid, p.x, p.y, e.x, e.y, p.id, 2500, w.teleports).length > 0;
+  c.set(e.id, { ok, until: w.time + (ok ? 4000 : 8000), x: p.x, y: p.y });
+  if (c.size > 60) for (const [k, v] of c) if (w.time > v.until) c.delete(k);
+  return ok;
+}
 function pickTarget(w, p, owner) {
   let best = null, bs = 1e9;
   const rv = p.bot.revenge && p.bot.revenge.until > w.time && w.ents.get(p.bot.revenge.id);            // quien me ha golpeado, primero
@@ -175,8 +210,8 @@ function pickTarget(w, p, owner) {
     if (p.bot.ignore?.has(e.id) && e.target !== p.id) continue;                                         // inalcanzable hace un momento
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
-    const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(5, (p.kinds?.[e.name] || 0) / 8);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
-    if (s < bs) { best = e; bs = s; }
+    const s = d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
+    if (s < bs && reachable(w, p, e)) { best = e; bs = s; }
   }
   return best;
 }
@@ -221,6 +256,7 @@ const THOUGHTS = {
 export function blog(w, p, text) {
   const b = p.bot; if (!b) return;
   const l = (b.log ||= []); l.push(text); if (l.length > 80) l.shift();
+  w.hooks?.logSink?.(p, text);
   if (w.hooks?.watched?.has(p.id)) w.emit({ t: "botlog", id: p.id, text });
 }
 function think_(w, p, b, key, vars = {}, gap = 9000) {
@@ -256,10 +292,15 @@ function run(adv, w, p, b) {
     const ow = adv.locations.get(b.owner);
     owner = ow?.ents.get(b.owner) || null;
     if (!owner) b.owner = null;
-    else if (ow !== w) {                                                 // el dueño cambió de mapa: lo seguimos al cabo de un momento
+    else if (ow !== w) {                                                 // el dueño está en otro mapa: NO se teletransporta (los miembros de un grupo van a pie, como un jugador)
       b.lost = b.lost || w.time;
-      if (w.time - b.lost > 1500 && !owner.dead) { adv.transfer(p, w, ow, [owner.x, owner.y]); b.lost = 0; b.path = null; b.target = null; }
-      return;
+      if (ow.map.kind === "dungeon" && w.map.kind !== "dungeon" && !p.dead && !w.busy(p)) {        // va a la entrada de la cripta y baja con su grupo (enterCrypt lo mete en la cripta del grupo)
+        const tp = (adv.maps[w.map.id]?.meta.teleports || []).find(t => t.map === "middled1n"), spot = tp && w.freeSpotNear(tp.x, tp.y + 2);
+        if (spot && dist(p, { x: spot[0], y: spot[1] }) > 2) { if (!b.travel) { b.travel = { x: spot[0], y: spot[1], w, until: w.time + 60000 }; b.path = null; } }
+        else if (spot && w.time - (b.gateAt || 0) > 3000) { b.gateAt = w.time; adv.command(p.id, { t: "portal", portal: "mid-entry", restart: false }); }
+      }
+      if (w.time - b.lost > 120000) { b.owner = null; b.lost = 0; Party.leave(w, p, true); blog(w, p, "No consigo alcanzar a mi líder: dejo el grupo."); }
+      owner = null;                                                    // mientras tanto: viaje/caza normales, sin seguir a nadie
     } else b.lost = 0;
     if (owner && !p.party && w.time > (b.partyAt || 0)) { b.partyAt = w.time + 5000; Party.request(w, p, owner.name, true); think_(w, p, b, "party", {}, 0); }
   }
@@ -267,8 +308,8 @@ function run(adv, w, p, b) {
   if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
-  const hpf = p.hp / p.maxHp;
-  if (hpf < 0.45 && w.time - (b.potionAt || 0) > 1500) {
+  const hpf = p.hp / p.maxHp, fear = Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
+  if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
     if (pot) { b.potionAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}%: bebo una poción roja.`); think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
     if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: descanso.`); }
@@ -278,12 +319,26 @@ function run(adv, w, p, b) {
     const foe = [...w.ents.values()].find(e => e.kind === "player" && canFight(w, p, e) && dist(p, e) <= 9);
     if (foe) { b.recallAt = w.time; blog(w, p, `Poca vida y ${foe.name} (bando enemigo) cerca: intento Recall para huir.`); adv.command(p.id, { t: "recall" }); }
   }
+  // INSTINTO DE SUPERVIVENCIA: con poca vida y un enemigo encima no se queda quieto: sale con Recall (cripta/Promise Land) o corre alejándose de él
+  if (hpf < 0.32 + fear && w.time - (b.fleeAt || 0) > 700) {
+    let foe = null, fd = 1e9;
+    for (const e of w.ents.values()) { if (e.dead || e.master === p.id || e.aux || w.safeAt(e.x, e.y) || e.comp) continue; if (!(e.kind === "npc" || (e.kind === "player" && canFight(w, p, e)))) continue; const d = dist(p, e); if (d <= 7 && d < fd && (e.target === p.id || d <= 3)) { fd = d; foe = e; } }
+    if (foe) {
+      b.fleeAt = w.time; b.target = null; b.path = null;
+      if ((w.map.kind === "dungeon" || w.pvp) && w.time - (b.recallAt || 0) > 6000) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }
+      else {
+        let best = null, bs = dist(p, foe);
+        for (let d = 0; d < 8; d++) { const x = p.x + DX[d] * 2, y = p.y + DY[d] * 2, sx = p.x + DX[d], sy = p.y + DY[d]; if (w.grid.blocked(sx, sy) || !w.grid.inside?.(sx, sy) && false) continue; const sc = Math.max(Math.abs(x - foe.x), Math.abs(y - foe.y)); if (sc > bs && !w.teleports.has(w.grid.idx(sx, sy))) { bs = sc; best = [x, y]; } }
+        if (best) { if (!b.fled || w.time - b.fled > 8000) blog(w, p, `Vida ${Math.round(hpf * 100)}%: huyo de ${foe.name}.`); b.fled = w.time; step(adv, w, p, b, best[0], best[1], true); return; }
+      }
+    }
+  }
   if (b.rest && hpf > 0.75) { b.rest = false; blog(w, p, "Recuperado, sigo."); think_(w, p, b, "rested"); }
   // objetivo
   if (b.travel && w.time > b.travel.until) { if (!b.travel.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; b.path = null; }       // caduca aunque esté peleando por el camino
   if (b.ignore) for (const [id, until] of b.ignore) if (w.time > until) b.ignore.delete(id);
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
-  if (!b.rest && w.time >= b.tgtAt) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
+  if (!b.rest && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = b.rest || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
     if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
@@ -323,7 +378,7 @@ function run(adv, w, p, b) {
   if (!b.travel && w.time >= (b.huntAt || 0) && w.map.kind !== "dungeon") {                // sin nada a la vista: va a cazar donde hay monstruos (antes vagaba para siempre por el pueblo, junto a la herrería y la tienda)
     b.huntAt = w.time + 8000;
     let best = null, bd = 1e9;
-    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e) + Math.min(10, (p.kinds?.[e.name] || 0) / 6); if (d < bd) { bd = d; best = e; } }
+    for (const e of w.ents.values()) { if (!hostile(e) || w.safeAt(e.x, e.y) || tooStrong(w, p, e) || b.ignore?.has(e.id)) continue; const d = dist(p, e) + Math.min(10, (p.kinds?.[e.name] || 0) / 6); if (d < bd && (dist(p, e) > 40 || reachable(w, p, e))) { bd = d; best = e; } }
     if (best && bd > 14) {
       const spot = w.freeSpotNear(best.x, best.y);
       if (spot && !w.teleports.has(w.grid.idx(spot[0], spot[1]))) {
