@@ -53,8 +53,8 @@ Inv.removeFromBag(me, 9001); world.recalc(me);
 // botín: con las tasas del servidor original (1 / 1) cae algo en cada muerte
 let nDrops = 0, golds = 0;
 for (let i = 0; i < 2000; i++) { const d = rollKillDrop(rng, npcs[0]); if (d) { nDrops++; if (d.id === 90) golds++; } }
-assert(nDrops > 450 && nDrops < 750, "slime (monstruo débil): suelta algo en ~30 % de las bajas");
-assert(golds / nDrops > 0.55 && golds / nDrops < 0.65, "60 % de lo que cae es oro");
+assert(nDrops > 150 && nDrops < 300, "slime (monstruo débil): suelta objetos en ~10 % de las bajas (el oro ya no cae)");
+assert(golds === 0, "el oro no cae de los monstruos");
 
 // --- magia: aprender Magic-Missile, quitarse el escudo y matar un slime a hechizos
 {
