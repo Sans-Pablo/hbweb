@@ -28,6 +28,13 @@
     },
     {
       "date": "2026-10-12",
+      "title": { "es": "Armería (v0.61.1)", "en": "Armory (v0.61.1)" },
+      "items": [
+        { "es": "Nueva página armeria.html (enlazada desde el Bestiario): elige cualquier objeto y cambia matiz, saturación, brillo, contraste o reemplaza un color con cuentagotas. Descarga el PNG o guárdalo en art/armory/ (solo servidor local). No añade objetos al juego.", "en": "New armeria.html page (linked from the Bestiary): pick any item and change hue, saturation, brightness, contrast or replace a colour with an eyedropper. Download the PNG or save it to art/armory/ (local server only). It does not add items to the game." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Clases (v0.61.0)", "en": "Classes (v0.61.0)" },
       "items": [
         { "es": "Nuevo al crear personaje: Guerrero, Mago o Invocador (solo cambia los atributos iniciales). Los personajes antiguos son Guerreros.", "en": "New on character creation: Warrior, Mage or Summoner (only the starting attributes differ). Existing characters are Warriors." },

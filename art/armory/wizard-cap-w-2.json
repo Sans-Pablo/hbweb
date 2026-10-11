@@ -1,0 +1,18 @@
+{
+ "name": "wizard-cap-w-2",
+ "base": {
+  "id": 756,
+  "sheet": "ip18",
+  "frame": 4
+ },
+ "recipe": {
+  "h": 112,
+  "s": 241,
+  "b": 100,
+  "k": 181,
+  "on": false,
+  "src": "#808080",
+  "dst": "#c03030",
+  "tol": 60
+ }
+}

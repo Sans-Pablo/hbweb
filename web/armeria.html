@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armería · Helbreath Web</title>
+<style>
+  :root { --stone:#15171b; --slab:#23262d; --edge:#3a3e47; --parch:#ece2c6; --muted:#9a937f; --brass:#d4ab52; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--stone); color:var(--parch); font:14px/1.4 "Segoe UI", system-ui, sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:10px 14px; background:var(--slab); border-bottom:1px solid var(--edge); position:sticky; top:0; z-index:2; }
+  header b { color:var(--brass); font:600 18px Georgia, serif; letter-spacing:.06em; }
+  a { color:var(--brass); }
+  label { display:flex; gap:6px; align-items:center; color:var(--muted); font-size:12px; }
+  select, input, button { background:#0d0f12; color:var(--parch); border:1px solid var(--edge); border-radius:4px; padding:4px 8px; font:inherit; }
+  input[type=range], input[type=color] { padding:0; }
+  button:hover { border-color:var(--brass); }
+  main { display:grid; grid-template-columns:minmax(260px,380px) 1fr; gap:14px; padding:12px 14px 30px; }
+  #list { display:grid; grid-template-columns:repeat(auto-fill,minmax(54px,1fr)); gap:4px; max-height:78vh; overflow:auto; align-content:start; }
+  #list canvas { width:100%; aspect-ratio:1; background:#2b2d33; border:1px solid var(--edge); cursor:pointer; image-rendering:pixelated; }
+  #list canvas.sel { border-color:var(--brass); }
+  #ed { display:flex; flex-direction:column; gap:10px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+  .pair { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+  .pair canvas { background:#2b2d33; border:1px solid var(--edge); image-rendering:pixelated; cursor:crosshair; max-width:100%; }
+  #info, #info2 { color:var(--muted); font-size:12px; }
+  fieldset { border:1px solid var(--edge); border-radius:6px; }
+  legend { color:var(--brass); font-size:12px; }
+  code { color:var(--parch); }
+  @media (max-width:760px) { main { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <b>Armería</b>
+  <a href="bestiario.html">← Bestiario</a>
+  <label>Buscar <input id="q" placeholder="nombre o id" style="width:130px"></label>
+  <label>Categoría <select id="cat"></select></label>
+  <label>Fondo <select id="bg"><option value="#2b2d33">Gris</option><option value="#0b0b10">Oscuro</option><option value="#6d8a4a">Hierba</option><option value="#b9a77a">Arena</option></select></label>
+  <label>Zoom <select id="zoom"><option>4</option><option selected>6</option><option>8</option><option>10</option></select></label>
+</header>
+<main>
+  <div id="list"></div>
+  <div id="ed">
+    <div id="info">Cargando…</div>
+    <div class="pair"><div><div>Original (clic = cuentagotas)</div><canvas id="c0"></canvas></div><div><div>Editado</div><canvas id="c1"></canvas></div><div><div>Tamaño real</div><canvas id="c2"></canvas></div></div>
+    <fieldset><legend>Ajuste general</legend><div class="row">
+      <label>Matiz <input id="h" type="range" min="0" max="360" value="0"> <b id="ho">0°</b></label>
+      <label>Satur. <input id="s" type="range" min="0" max="300" value="100"> <b id="so">100%</b></label>
+      <label>Brillo <input id="b" type="range" min="20" max="200" value="100"> <b id="bo">100%</b></label>
+      <label>Contraste <input id="k" type="range" min="50" max="200" value="100"> <b id="ko">100%</b></label>
+    </div></fieldset>
+    <fieldset><legend>Reemplazar un color</legend><div class="row">
+      <label>Origen <input id="src" type="color" value="#808080"></label>
+      <label>Destino <input id="dst" type="color" value="#c03030"></label>
+      <label>Tolerancia <input id="tol" type="range" min="0" max="200" value="60"> <b id="to">60</b></label>
+      <label><input type="checkbox" id="on"> Activar</label>
+    </div></fieldset>
+    <div class="row">
+      <button id="reset">Reiniciar</button>
+      <label>Nombre <input id="nm" placeholder="p. ej. dagger-ruby" style="width:150px"></label>
+      <button id="dl">Descargar PNG</button>
+      <button id="save">Guardar en art/armory</button>
+      <span id="msg"></span>
+    </div>
+    <div id="info2">Los PNG guardados quedan en <code>art/armory/</code> con su receta (.json). Guardar solo funciona con el servidor local.</div>
+  </div>
+</main>
+<script type="module" src="src/client/armory.js"></script>
+</body>
+</html>

@@ -206,6 +206,19 @@ const server = http.createServer((req, res) => {
     json(req, res, 200, { t: Math.max(...m) });
     return;
   }
+  if (url.pathname === "/api/dev/armory" && req.method === "POST") {      // armería (web/armeria.html): sprite de objeto recoloreado -> art/armory/<nombre>.png + .json (receta), solo desde este PC
+    if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { res.writeHead(403); res.end(); return; }
+    let body = ""; req.on("data", d => { body += d; if (body.length > 4e6) req.destroy(); });
+    req.on("end", () => { try {
+      const o = JSON.parse(body), nm = String(o.name || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40), m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(o.png || "");
+      if (!nm || !m) throw new Error("nombre o PNG no válidos");
+      const dir = path.resolve(WEB, "..", "art", "armory"); fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, nm + ".png"), Buffer.from(m[1], "base64"));
+      fs.writeFileSync(path.join(dir, nm + ".json"), JSON.stringify({ name: nm, base: o.base, recipe: o.recipe }, null, 1));
+      json(req, res, 200, { ok: true, file: "art/armory/" + nm + ".png" });
+    } catch (e) { json(req, res, 400, { error: e.message }); } });
+    return;
+  }
   if (url.pathname === "/api/dev/cast" && req.method === "POST") {      // bestiario: ajustes del círculo de casteo -> web/data/cast_circle.json, solo desde este PC
     if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { res.writeHead(403); res.end(); return; }
     let body = ""; req.on("data", d => { body += d; if (body.length > 1e5) req.destroy(); });
