@@ -1,6 +1,9 @@
 # Changelog
 
 
+## 0.79.1 · Indicador de estados de los demás (2026-10-12)
+- Barras de tiempo restante sobre la cabeza de jugadores, monstruos y summons con Hold, Hielo, Confusión, Illusion, Armor Break, Inhibición o Veneno. El servidor publica `sx` en `pub()`. NET_PROTO 10.
+
 ## 0.79.0 · Summons psíquicos (2026-10-12)
 - Beholder (Movimiento), Centaurus (Interferencia) y Stalker (Territorio, evolución de Giant-Frog): control y debilitación sin daño directo, lanzamiento automático. Exigen el nuevo Psychic Controller (id 9004) en la mano; cualquier clase.
 - Estados nuevos: Illusion y Armor Break (+25 % daño recibido), campos sin daño, Confusion para monstruos. Panel de estados con cuenta atrás de ambos.

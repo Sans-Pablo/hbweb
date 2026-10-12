@@ -240,6 +240,7 @@ export class NetConnection {
     e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
     e.stall = o.stl ? { sid: o.stl[0], owner: o.stl[1], title: o.stl[2], n: o.stl[3] } : null;
     if (o.mm !== undefined) { e.mp = o.mp; e.maxMp = o.mm; }
+    if (!own) { if (o.sx) { e.st = {}; for (const k in o.sx) e.st[k] = { v: o.sx[k][0], until: o.sx[k][1] < 0 ? Infinity : w.time + o.sx[k][1] }; } else if (e.st) e.st = null; }          // estados de los demás con su tiempo restante (server pub: sx)
     if (o.cp) { e.nick = o.nk; e.clvl = o.cl; e.evoK = (o.ek || 0) / 100; e.dcls = o.dc || null; }
     if (o.ar) { e.arena = true; e.nick = o.nk; e.clvl = o.cl; }
     if (o.k === "npc" || o.k === "citizen") {

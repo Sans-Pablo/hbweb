@@ -799,6 +799,7 @@ function delve(adv, w, p, r, home) {
   d.go = false;
   const left = w.time > d.until || p.level < 2 || p.level < cryptNeed(r, w.map.level) - 2;          // aprendizaje: si este piso lo mató y aún no está listo, sale
   if (p.dead) return;
+  if (d.peek === w.map.level) { cryptRecall(adv, w, p, r, `Ya conozco la entrada del piso ${w.map.level}: vuelvo a prepararme.`); return; }
   if (w.map.boss && r._bossSeen !== w.map.id) {                                           // piso de jefe: antes de acercarse hace la cuenta; si no puede con él, sale (con la party, si la hay, cuenta lo que pegan los compañeros)
     const bs = [...w.ents.values()].find(e => e.boss && !e.aux && !e.dead);
     if (bs) {
@@ -813,9 +814,10 @@ function delve(adv, w, p, r, home) {
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
   if (w.cleared) {
     const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && (!nb || fightEstimate(w, p, nb, false, true).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
-    const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
+    const peek = !deeper && !!gate && w.map.level + 1 <= Quests.cryptCap(p);                       // v0.78.6: aunque aún no pueda con el siguiente, llega hasta su entrada (queda guardado como piso más hondo) y vuelve en Recall
+    const exit = deeper || peek ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
     if (!exit) return;
-    if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; else d.until = Math.max(d.until, w.time + 300000); blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
+    if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; else d.until = Math.max(d.until, w.time + 300000); if (peek) d.peek = w.map.level + 1; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : peek ? `Nivel ${w.map.level} despejado: llego hasta la entrada del ${w.map.level + 1} y vuelvo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
     else if (!b.travel || b.travel.x !== exit.x) { b.travel = { x: exit.x, y: exit.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; }
     return;
   }

@@ -552,6 +552,7 @@ function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
   if (e.role) o.rl = e.role;
+  if (e.st) { for (const k in e.st) { const u = e.st[k].until; if (u === Infinity || u > adventure.time) (o.sx ||= {})[k] = [e.st[k].v, u === Infinity ? -1 : Math.round(u - adventure.time)]; } }          // estados con tiempo restante (indicador de buffs/debuffs de los demás)
   if (e.stall) o.stl = [e.stall.sid, e.stall.name, e.stall.title, e.stall.items.length];            // puesto de jugador: nombre del dueño y rótulo (los objetos solo se piden al abrirlo)
   if (e.comp) { o.cp = 1; o.nk = e.nick; o.cl = e.clvl; o.mt = e.master; if (e.evoK) o.ek = Math.round(e.evoK * 100); if (e.dcls) o.dc = e.dcls; if (e.maxMpC) { o.mp = Math.floor(e.mp ?? 0); o.mm = e.maxMpC; } }
   if (e.arena) { o.ar = 1; o.nk = e.nick; o.cl = e.clvl; }

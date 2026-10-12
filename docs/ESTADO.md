@@ -5,6 +5,7 @@
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
 ## Backlog (actualizado en v0.70.0)
+- Hecho 0.79.x: summons psíquicos, modo 0 restricciones, pets más rápidas, indicador de estados de los demás. Pendiente: contramagias psíquicas, HD de Beholder/Centaurus/Stalker.
 **Hecho recientemente:** magia 102–172 y teleport (por diseño/Recall), Inhibición/Confusión, PvP, chat de gremio/grupo, susurros `/to`, bots que abren y compran en puestos, Python ya no es necesario.
 
 **A hacer (FIX), en el orden sugerido:**
@@ -155,4 +156,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] (v0.78.19) Supports (Healer/Buffer/Aura): solo aliados en Promise Land, inactivos en zona segura, críticos 12 % (Aura doble, Heal doble tick, Buffer masivo; 1 buff por vez), un solo sonido por buff de grupo, sin «Puesto de», Shift+clic invertido (izq. ir, der. atacar). Blizzard: la magia solo daña monstruos (`hurt` en magicsys.js); no hay daño mágico a jugadores.
 - [x] (v0.78.20) Pixie un poco más grande: `fit` 0.6 → 0.7 en evolutions.js.
 
-- [x] (hecho en local, sin publicar) Bots y criptas (v0.78.6): con un piso despejado (p. ej. el 10) y el siguiente fuera de alcance (jefe, nivel o tope de misiones), el bot ya no vuelve a entrar al piso despejado: se prepara y reintenta; cuando puede, arranca directamente en el siguiente guardado (`delve.cleared+1`).
+- [x] (hecho en local, sin publicar) Bots y criptas (v0.78.6): con un piso despejado (p. ej. el 10) y el siguiente fuera de alcance (jefe, nivel o tope de misiones), el bot ya no vuelve a entrar al piso despejado: se prepara y reintenta; cuando puede, arranca directamente en el siguiente guardado (`delve.cleared+1`).  Además, tras despejar sin poder bajar, llega hasta la entrada del piso siguiente y vuelve en Recall (queda guardado como más hondo).

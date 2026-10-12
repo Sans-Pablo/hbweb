@@ -34,6 +34,7 @@ export const CAST_CFG = { Liche: { color: "#be64ff", core: "#ebc8ff", bright: 0.
 fetch("data/cast_circle.json").then(r => r.ok ? r.json() : null).then(j => { if (j) for (const k in j) CAST_CFG[k] = { ...CAST_CFG[k], ...j[k] }; }).catch(() => {});
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(",");
 
+const STATE_COL = [["hold", "#ffd34d"], ["ice", "#6ac8ff"], ["confuse", "#c28aff"], ["illusion", "#ff8ad8"], ["armorbreak", "#ff6a6a"], ["inhibit", "#9aa0ff"], ["poison", "#7fe07f"]];
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;
@@ -299,8 +300,22 @@ export class Renderer {
     ctx.restore();
   }
 
+  // Indicador de debuffs con el tiempo que les queda (barras sobre la cabeza; psychic.js y demás)
+  stateBars(e, x, y, w) {
+    const ctx = this.ctx, top = y - (e.kind === "player" ? 70 : 52);
+    let i = 0;
+    for (const [k, col] of STATE_COL) {
+      const s = e.st[k]; if (!s || s.until === Infinity || s.until <= w.time) continue;
+      const f = Math.min(1, (s.until - w.time) / 10000);
+      ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(x - 13, top - i * 4, 26, 3);
+      ctx.fillStyle = col; ctx.fillRect(x - 12, top - i * 4 + 0.5, 24 * f, 2);
+      i++;
+    }
+  }
+
   // Auras de los escudos y del veneno (CheckActiveAura / CheckActiveAura2 del cliente original)
   auras(e, x, y, w, below) {
+    if (e.st && !below) this.stateBars(e, x, y, w);
     if (!e.st || !below) return;
     const sp = this.fx?.sp || null;
     if (!sp) return;
