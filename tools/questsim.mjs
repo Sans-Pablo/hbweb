@@ -20,9 +20,11 @@ const rs = () => a.residents();
 // QFULL=Mira → diario completo (con minuto) filtrado por QGREP, volcado al final
 const FULL = (process.env.QFULL || "").split(",").filter(Boolean), flog = {};
 if (FULL.length) a.logSink = (p, t, time) => { if (FULL.includes(p.name) && (!process.env.QGREP || new RegExp(process.env.QGREP).test(t))) (flog[p.name] ||= []).push(Math.round(time / 60000) + "m " + t.slice(0, 200)); };
+const { hazardAt: hzAt } = await import("../web/src/shared/systems/hazards.js"), haz = {};
 const t0 = Date.now(), done = {}, snap = [];
 for (let m = 1; m <= MIN; m++) {
-  for (let i = 0; i < 1200; i++) { a.tick(50); if (process.env.TRACE && m >= +process.env.TRACEFROM && i % 70 === 0) { const b = rs().find(x => x.name === process.env.TRACE); if (b) { const sig = Object.entries(b.equip).map(([sl, u]) => sl + ":" + (data.item(b.bag.find(x => x.uid === u)?.id)?.name)).join(" ") + " g" + b.gold; if (sig !== b._sig) { b._sig = sig; console.log("TRACE m" + m + "." + i + " " + sig); } } } }                                                   // 1 minuto simulado
+  for (let i = 0; i < 1200; i++) { a.tick(50); if (process.env.HAZ && i % 10 === 0) for (const b of rs()) { const w = a.worldFor(b.id); if (w.map.kind === "dungeon" && w.bfx?.length) { const k = haz[b.name] ||= { n: 0, on: 0 }; k.n++; if (hzAt(w, b.x, b.y)) { k.on++; const c = w.time < b.busyUntil ? "busy" : (b.bot.dodge && w.time - b.bot.dodge < 400) ? "dodging" : "other"; k[c] = (k[c] || 0) + 1; if (c === "other" && (k.nex = (k.nex || 0) + 1) < 4) k.ex = (k.ex || "") + JSON.stringify({ tgt: !!b.bot.target, path: b.bot.path?.length, ds: b.bot.dodge ? w.time - b.bot.dodge : null, t: b.bot.travel ? 1 : 0 }); } } }
+    if (process.env.TRACE && m >= +process.env.TRACEFROM && i % 70 === 0) { const b = rs().find(x => x.name === process.env.TRACE); if (b) { const sig = Object.entries(b.equip).map(([sl, u]) => sl + ":" + (data.item(b.bag.find(x => x.uid === u)?.id)?.name)).join(" ") + " g" + b.gold; if (sig !== b._sig) { b._sig = sig; console.log("TRACE m" + m + "." + i + " " + sig); } } } }                                                   // 1 minuto simulado
   if (process.env.WATCH) for (const b of rs()) { const has = b.equip[8] !== undefined || b.equip[9] !== undefined; if (b._had && !has) console.log('LOSTWEAPON ' + b.name + ' m' + m + ' ' + JSON.stringify(b.bot.log.slice(-4))); b._had = has; }
   if (m % 10 === 0 || m === MIN) {
     const row = rs().map(b => ({ n: b.name, c: b.quests?.cls, lv: b.level, q: b.quests?.n | 0, cur: Q.lineOf(b)[b.quests?.n | 0]?.id, pr: (() => { const cu = Q.lineOf(b)[b.quests?.n | 0]; return cu ? Q.progress(b, cu.goal).join("/") : ""; })(), k: b.delve?.king | 0, dp: b.delve?.deepest | 0, ek: b.ek | 0 }));
@@ -30,6 +32,7 @@ for (let m = 1; m <= MIN; m++) {
     console.log(`[${m} min · ${((Date.now() - t0) / 1000).toFixed(0)} s reales] ` + row.map(r => `${r.n}:${r.c?.[0]}L${r.lv} q${r.q}(${r.cur?.split(".")[1]} ${r.pr})`).join("  "));
   }
 }
+if (process.env.HAZ) console.log("HAZ " + JSON.stringify(globalThis.__hz));
 const out = rs().map(b => ({ name: b.name, cls: b.quests?.cls, level: b.level, n: b.quests?.n, t: b.quests?.t, ek: b.ek, deepest: b.delve?.deepest, king: b.delve?.king, goal: b.res?.goal, ideas: b.res?.ideas }));
 if (OUT) writeFileSync(OUT, JSON.stringify({ N, MIN, SEED, out, snap }, null, 1));
 // QLOG=Aldric,Doran node tools/questsim.mjs …  → vuelca el diario de esos habitantes (diagnóstico)

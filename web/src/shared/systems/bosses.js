@@ -85,7 +85,7 @@ function ember(w, n, t) {
   zone(w, { kind: "warn", x: t.x, y: t.y, r: 1, until: w.time + 1200, owner: n.id, col: "#ff5a1a" });
   w.after(1200, () => {
     if (n.dead) return;
-    for (const [x, y] of cells) zone(w, { kind: "ember", x, y, until: w.time + 6000, owner: n.id, next: w.time + 400, dmg: baseDmg(n) * 2 });
+    for (const [x, y] of cells) zone(w, { kind: "ember", x, y, until: w.time + 6000, owner: n.id, next: w.time + 900, dmg: baseDmg(n) * 2 });
   });
 }
 

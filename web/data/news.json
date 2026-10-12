@@ -10,6 +10,11 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Brasas con aviso (v0.64.3)", "en": "Embers with warning (v0.64.3)" },
+      "items": [ { "es": "Las brasas del jefe tardan más en hacer daño: da tiempo a esquivarlas.", "en": "Boss embers take longer to hurt: there is time to dodge." } ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Jefe del piso 5 más justo (v0.64.2)", "en": "Fairer floor-5 boss (v0.64.2)" },
       "items": [ { "es": "El jefe de la cripta tiene menos vida y menos esbirros.", "en": "The crypt boss has less health and fewer minions." } ]
     },
