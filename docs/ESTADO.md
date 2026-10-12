@@ -14,6 +14,15 @@
 5. Peso del repo: `web/data` ~450 MB y `.git` ~420 MB; evaluar Git LFS o un repo de datos aparte (antes de que crezca más).
 6. Fichas: revisar `companeros.md` y limpiar los "Pendiente" viejos de este fichero.
 
+**Backlog nuevo (pedido del usuario, v0.71.0):**
+- Órdenes a la mascota: usar la misma línea punteada que el personaje; rojo para atacar y un tono más claro para «moverse a ese lugar».
+- Cíclopes de Promise Land: darles las magias que tienen en el original para hacerlos más peligrosos.
+- Color del nombre de los objetos según rango (tiers, como en WoW).
+- Traducciones completas (es/en) de todo el juego.
+- Observador: ignorar las teclas F cuando se pulsan fuera de la pantalla del juego (F5 refresca la web sin querer).
+- Investigar por qué los personajes tienen más stats de los debidos: comparar con la fórmula del HB original y con la pérdida de nivel al morir (se mantiene la pérdida de nivel; si es por balance y está bien, se deja y se documenta).
+- Bots: ¿llevan demasiadas cosas en la bolsa, es preferencia suya y venden? Revisar `manage`/`stallSurplus` y documentar.
+
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 
 Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`, `node tests/net-walk.test.mjs`.
