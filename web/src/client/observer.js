@@ -1,6 +1,7 @@
 // MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) y se
 // entra a verlos jugar en vivo; el chat muestra lo que piensan y hacen. No hace falta cuenta y no se puede actuar. La lista se refresca sola.
 import { getLang } from "./i18n.js";
+import { KINDS } from "../shared/systems/leisure.js";
 
 export const L = (es, en) => (getLang() === "en" ? en : es);
 export const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -59,4 +60,4 @@ export function pickBot(conn, { onCancel } = {}) {
   });
 }
 
-export const MODES = { idle: ["Vagando / cazando", "Roaming / hunting"], fight: ["Peleando", "Fighting"], rest: ["Descansando", "Resting"], follow: ["Siguiendo a su líder", "Following its leader"], "delve-go": ["Yendo a la cripta", "Heading to the crypt"], delve: ["En la cripta", "In the crypt"], trip: ["De expedición", "On an expedition"], pit: ["Disputando un foso", "Contesting a pit"], pet: ["Cuidando a su summon", "Tending its summon"], travel: ["De viaje", "Travelling"], flee: ["Huyendo", "Fleeing"], dead: ["Muerto", "Dead"] };
+export const MODES = { idle: ["Vagando / cazando", "Roaming / hunting"], fight: ["Peleando", "Fighting"], rest: ["Descansando", "Resting"], follow: ["Siguiendo a su líder", "Following its leader"], "delve-go": ["Yendo a la cripta", "Heading to the crypt"], delve: ["En la cripta", "In the crypt"], trip: ["De expedición", "On an expedition"], pit: ["Disputando un foso", "Contesting a pit"], pet: ["Cuidando a su summon", "Tending its summon"], travel: ["De viaje", "Travelling"], flee: ["Huyendo", "Fleeing"], dead: ["Muerto", "Dead"], ...Object.fromEntries(Object.entries(KINDS).map(([k, v]) => [k, v])) };

@@ -24,3 +24,9 @@ Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (
 - **Equipo de cripta**: `recruitCrypt` invita hasta 2 habitantes libres cercanos (nv ±8, vida >70 %); un 25 % rechaza. Los seguidores bajan por el portal tras el líder.
 - **Observador dividido** (0.68.0): `web/observador.html` + `client/dashboard.js`. Cuatro cuadrantes: iframe `index.html?embed=1&o=ID#observar=ID` (modo embed en main.js: sin paneles, manda `{hbBrain,id,name}` por postMessage; la consulta distinta recarga solo el marco), plantel (`/api/bots`, cada 2 s), ficha (`brainHtml` de watchpanel.js, pestaña Charlas) y estadísticas (historial de 15 min por id en el cliente).
 - **Charla** (0.68.0): `speak` parte los textos largos (`splitSay`/`sayLong`, ≤108 por mensaje, máx. 4); `logTalk`/`talkCtx` guardan y devuelven la memoria de conversaciones (`res.talk`, 40). Test: `tests/bot-chat.test.mjs`.
+- **Ocio** (0.69.0): `systems/leisure.js` (pesca, granja, comercio, entreno, charla, backup de guild); `r._leis`, `r.lz[kind]`; se interrumpe con una petición humana (`_pend`). Pesca: `systems/fishing.js`. Tests: `leisure`, `fishing`.
+- **Arco** (0.69.0, invento): `isArcher` (bot.js) compra arco (76/75/617) y flechas (77); `botitems.judge` no los vende. Test: `archer.test.mjs`.
+- **Apoyo** (0.69.0, invento): `isSupport` (hash del nombre, estudiosos); compra MagicWand (256–258), lo mantiene en mano (`hasStaff`); `pickSpecies`/`SUPPORT_PLAN` en residents.js. Test: `support-bot.test.mjs`.
+- **Builds ajenos** (0.69.0, invento): `Builds.peerBest` copia el build con mejor exp/min de otro de su arquetipo (+15 %) y lo recomienda al guild. Test: `builds-peer.test.mjs`.
+
+- Vaivén: `bot.js#vaiven` descarta la meta si en 18 pasos solo se pisan 4 casillas o menos (test `vaiven`); al tercero seguido, Recall.

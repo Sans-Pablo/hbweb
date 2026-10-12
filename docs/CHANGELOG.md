@@ -2,6 +2,18 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.69.0 · Vida de bots (2026-10-12)
+- Pesca (`systems/fishing.js`): caña (105), peces vendibles y comida de mascotas carnívoras (los peces no se dan a los herbívoros).
+- Descansos de los bots (`systems/leisure.js`): entre peleas pescan, cultivan, comercian, entrenan a su summon, charlan con el guild o acuden al aviso de backup de un compañero (`lz` en el cerebro: veces, oro y tiempo por actividad). Ganan oro con la pesca y la venta.
+- Arco: los cazadores compran un arco y flechas, estudian arquería y disparan a distancia; las flechas no se venden.
+- Mago de apoyo: la mitad de los magos compra una varita mágica, la mantiene en la mano y coleccionan Healer, Buffer y Aura con los talentos de cada clase.
+- Builds: los bots copian el reparto de puntos que mejor rinde a otro de su personalidad y recomiendan el suyo al guild cuando es su mejor.
+- Observador dividido: dos cuadrantes arriba y uno abajo, redimensionables; datos de la página, juego limpio.
+- Sonido por arma y sexo (`client/audio.js`, el evento `attack` lleva `wt`): manos C1, cuerpo a cuerpo C2, arco C3; quejido de mujer C13 y muerte de mujer C15 (hombre C12 y C14). El código original no estaba a mano: los números son los de MapData.cpp/Game.cpp tal como los recuerda el port; revisar contra el original.
+- Observador: el juego del cuadrante vuelve a tener su interfaz completa (bolsa, chat, HUD); las teclas (F6 = bolsa, etc.) se reenvían al juego en vez de actuar sobre la página; los grupos son plegables, empiezan colapsados y muestran su líder y lo que hace.
+- Bots: detección de vaivén (`vaiven` en `bot.js`): si en 18 pasos solo pisan 4 casillas o menos sin llegar, descartan la meta (objetivo, viaje o paseo), se paran un momento y prueban otra cosa; al tercer vaivén seguido hacen Recall.
+- Tests: `fishing`, `leisure`, `archer`, `support-bot`, `builds-peer`, `vaiven`.
+
 ## 0.68.0 · Observador dividido (2026-10-12)
 - Bots: los mensajes largos ya no se cortan: se parten en varios mensajes (frases) con pausa entre ellos; el LLM puede escribir 1–2 frases (límite 230).
 - Bots: socializan más en el guild (charla cada 25–70 s, responden el 70 %) y tienen memoria de lo que hablan (`res.talk`/`talkN`, entra en el contexto del LLM y sale en el cerebro).

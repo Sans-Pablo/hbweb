@@ -6,6 +6,8 @@
 // Todo es determinista salvo `adv.llm` (solo existe en el servidor). El estado (`p.res`) se guarda en el save del habitante.
 import { dist } from "../const.js";
 import * as Party from "./party.js";
+import { isSupport } from "./bot.js";
+import { hasStaff } from "./dummy.js";
 import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
 import * as Council from "./council.js";
 import * as Human from "./human.js";
@@ -24,6 +26,7 @@ import * as Shop from "./shopsys.js";
 import { judge, stallable } from "./botitems.js";
 import * as Stall from "./stall.js";
 import * as Quests from "./quests.js";
+import * as Leisure from "./leisure.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -154,6 +157,7 @@ const SIT = {
   gwelcome: "{n} just joined your guild; welcome them", gfound: "you just founded the guild {g}; invite others to talk to you to join",
   gdanger: "warn your guild that {m} killed you at level {l} and they should avoid it for now", gpit: "warn your guild that the raid at pit {m} went badly because enemies are killing you",
   gfoe: "warn that the guild {g} is raiding Promise Land and to watch out", tinvite: "invite {n} to hunt together and say you are sending a party invite",
+  gbackup: "you are losing a fight in Promise Land; ask your guild for backup there, briefly", gbackupgo: "you answer {n}'s call for backup: you are on your way to Promise Land", gnobackup: "{n} asked for backup in Promise Land but you are busy or not in the mood; excuse yourself briefly",
   other: "answer {n} briefly; you are not sure what to say",
 };
 export const langOf = text => (/[áéíóúñ¿¡]|\b(hola|que|qué|como|cómo|quien|quién|donde|dónde|grupo|gracias|adios|adiós|ayuda|vamos|ven)\b/i.test(text) ? "es" : "en");
@@ -249,7 +253,7 @@ export function speak(adv, p, text) {
 // Modo actual del habitante (lo usan el cerebro y la lista de observar).
 export function modeOf(adv, p, w = adv.worldFor(p.id)) {
   const b = p.bot, r = p.res || {}, d = r._delve, t = r._trip, tgt = b.target != null ? w.ents.get(b.target?.id ?? b.target) : null;
-  return p.dead ? "dead" : b.rest ? "rest" : b.owner != null ? "follow" : d ? (d.go ? "delve-go" : "delve") : t ? (t.pit ? "pit" : "trip") : r._pet ? "pet" : b.travel ? "travel" : b.fleeAt && w.time - b.fleeAt < 3000 ? "flee" : tgt ? "fight" : "idle";
+  return p.dead ? "dead" : b.rest ? "rest" : b.owner != null ? "follow" : d ? (d.go ? "delve-go" : "delve") : t ? (t.pit ? "pit" : "trip") : r._pet ? "pet" : r._leis ? r._leis.kind : b.travel ? "travel" : b.fleeAt && w.time - b.fleeAt < 3000 ? "flee" : tgt ? "fight" : "idle";
 }
 const topN = (o, n) => Object.entries(o || {}).sort((x, y) => y[1] - x[1]).slice(0, n);
 // «Cerebro» del habitante observado: qué hace, qué piensa, qué mira y su ficha completa. Lo recibe el cliente en modo observar (≈1 vez por segundo).
@@ -291,7 +295,7 @@ export function brainOf(adv, p) {
     rel: Object.entries(r.rel || {}).sort((x, y) => y[1] - x[1]).slice(0, 8),
     guild: p.guild ? { name: p.guild.name, rank: p.guild.rank | 0, master: gd?.master || "", n: gd ? Object.keys(gd.members).length : 0 } : null,
     delveInfo: p.delve ? { deepest: p.delve.deepest | 0, king: p.delve.king | 0 } : null,
-    pet: r._pet ? 1 : 0, x: Math.round(p.x), y: Math.round(p.y),
+    lz: r.lz || {}, leis: r._leis ? r._leis.kind : "", pet: r._pet ? 1 : 0, x: Math.round(p.x), y: Math.round(p.y),
     talk: (r.talk || []).slice(-16).map(x => ({ ch: x.ch, who: x.who, me: x.me, text: x.text })), talkN: topN(r.talkN, 5),
   };
 }
@@ -499,6 +503,7 @@ export function think(adv, p) {
   guildAI(adv, w, p, r, home);
   gather(adv, w, p, r, home);
   stallAI(adv, w, p, r, home);
+  { const lh = leisureH(adv); Leisure.tick(adv, w, p, r, home, lh); Leisure.backupTick(adv, w, p, r, home, Guild.guildOf(w, p), lh); }
   pets(adv, w, p, r, home);
   rebuild(adv, w, p, r, home);
   expedition(adv, w, p, r, home);
@@ -810,14 +815,19 @@ const liveOf = (w, p) => { for (const e of w.ents.values()) if (e.comp && e.mast
 const nurseOf = w => { for (const e of w.ents.values()) if (e.role === "pethospital") return e; return null; };
 // MAGOS (arquetipo estudioso): coleccionan summons de las tres escuelas (fuego: Orc, hielo: Tentocle, rayo: Cannibal-Plant) y los van alternando para tirar magias variadas
 const MAGE_SPECIES = Object.keys(Sch.SCHOOL_OF).filter(sp => !Sch.isTier2(sp));
+// MAGO DE APOYO (INVENTO, v0.69): con báculo en la mano colecciona Healer, Buffer y Aura (se compran en el hospital) y gasta los talentos de cada clase; sin báculo sigue la escuela normal
+const SUPPORT_SPECIES = Object.keys(Tal.CLS_OF), SUPPORT_PLAN = { healer: ["dheal", "dgheal", "dheal", "dmassh"], buffer: ["dward", "dgward", "dpfm", "dberserk", "dmassb"], aura: ["dregen", "dexp", "ddef", "dmana", "dvamp"] };
+const supporter = (p, r) => r.arch === "scholar" && isSupport(p) && hasStaff(p);
 const balls = p => p.bag.filter(i => i.comp && !i.comp.bad);
 const wantsMoreBalls = (p, r) => {            // metas de vida: muchos summons distintos; los magos reúnen las 3 escuelas pronto y los demás cuando los que tienen ya van altos
   const bs = balls(p); if (p.level < 8 || p.gold < 1500) return false;
+  if (supporter(p, r)) return bs.filter(i => Tal.CLS_OF[i.comp.sp]).length < SUPPORT_SPECIES.length;
   if (r.arch === "scholar") return bs.length < MAGE_SPECIES.length;
   return bs.length > 0 && bs.length < 6 && p.gold >= 3000 && bs.every(i => i.comp.lvl >= Math.min(Sch.TRADE_LEVEL, 10 + bs.length * 8));
 };
 function pickSpecies(p, r) {
   if (qMissing(p)) return qSpecies(p);
+  if (supporter(p, r)) { const own = new Set(balls(p).map(i => i.comp.sp)), free = SUPPORT_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
   if (r.arch === "scholar") { const own = new Set(balls(p).map(i => i.comp.sp)), free = MAGE_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
   let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
 // oro que no se gasta en caprichos del summon (hechizos): lo justo para llenar de pociones (60 por poción) y no quedarse sin ellas
@@ -870,7 +880,7 @@ function pets(adv, w, p, r, home) {
       if ((r._petUseFails = (r._petUseFails | 0) + 1) >= 3 && !live) { c.bad = true; r._petUseFails = 0; r.petN = (r.petN | 0) + 1; report(adv, p, "bug", "summon:" + c.sp, `No consigo invocar a mi summon de especie ${c.sp} (la bola no lo saca nunca).`, `I can't summon my ${c.sp} companion (the ball never produces it).`); blog(w, p, `Mi summon ${c.sp} no se deja invocar: lo dejo y probaré otra especie.`); }
     } else if (live) r._petUseFails = 0;
     // talentos: gasta los puntos libres según su arquetipo
-    if (Tal.pointsFree(c) > 0) for (const id of TALENT_PLAN[r.arch] || TALENT_PLAN.hunter) if (!Tal.canLearn(c, id)) { adv.command(p.id, { t: "talent", uid: ball.uid, talent: id }); blog(w, p, `Gasto un punto de talento de ${c.nm} en «${Tal.talent(id).name}».`); break; }
+    if (Tal.pointsFree(c) > 0) for (const id of (Tal.isDummy(c) ? SUPPORT_PLAN[c.cls] : null) || TALENT_PLAN[r.arch] || TALENT_PLAN.hunter) if (!Tal.canLearn(c, id)) { adv.command(p.id, { t: "talent", uid: ball.uid, talent: id }); blog(w, p, `Gasto un punto de talento de ${c.nm} en «${Tal.talent(id).name}».`); break; }
     // los summons de escuela aprenden hechizos (barato primero) y los lanzan contra su objetivo
     const school = Sch.SCHOOL_OF[c.sp];
     if (school && w.magic) {
@@ -943,9 +953,11 @@ function rebuild(adv, w, p, r, home) {
     if (p.gold < Respec.respecCost(p) + 300 || w.time - r.bperf.t0 < 15 * 60000) return;                          // sin oro o sin haber probado el actual lo bastante
     const hist = r.builds || [], best = Math.max(0, ...hist.map(h => h.rate)), now = Builds.perf(p, w), poor = best > 0 && now < best * 0.85, curious = hist.length < 4 && w.rng() < 0.3;
     if (!poor && !curious) return;
-    const nb = Builds.nextBuild(p, w), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
+    const peer = w.rng() < 0.7 ? Builds.peerBest(p, [...w.ents.values()].filter(e => e.kind === "player" && e.res)) : null;
+    const nb = peer ? peer.name : Builds.nextBuild(p, w), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
     if (!tp) return;
-    r._reb = { until: w.time + 300000, nb, done: false, tp: { x: tp.x, y: tp.y } };
+    r._reb = { until: w.time + 300000, nb, peer, done: false, tp: { x: tp.x, y: tp.y } };
+    if (peer) { blog(w, p, `${peer.from} saca ${peer.rate} exp/min con el reparto «${Builds.BUILDS[nb].es}» y yo ${Math.round(now)}: copio su idea. Voy al mago a reiniciar mis estadísticas.`); remember(p, `${peer.from} me enseñó que el reparto «${Builds.BUILDS[nb].es}» rinde ${peer.rate} exp/min.`, `${peer.from} showed me that the «${nb}» build yields ${peer.rate} exp/min.`); return; }
     blog(w, p, `Quiero probar otro reparto de puntos (${Builds.BUILDS[nb].es}): ${poor ? `mi build actual rinde ${Math.round(now)} exp/min y he visto ${Math.round(best)}` : "tengo curiosidad por ver si rinde más"}. Voy al mago a reiniciar mis estadísticas.`);
     if (w.rng() < 0.6) speak(adv, p, `§you are going to the mage to reset your stats and try a new build (${Builds.BUILDS[nb].es.replace(/^./, c => c)})`);
     return;
@@ -962,7 +974,7 @@ function rebuild(adv, w, p, r, home) {
     if (!mage) { let m = null; for (const e of w.ents.values()) if (e.kind === "citizen" && e.type === Respec.RESPEC.mageType) m = e; if (m && !b.travel) { b.travel = { x: m.x, y: m.y + 1, w, until: w.time + 30000 }; b.path = null; b.goal = null; b.fails = 0; } else if (!m) r._reb = null; return; }
     if (w.busy(p) || w.time - (d.cmdAt || 0) < 2500) return;
     d.cmdAt = w.time;
-    Builds.closeBuild(p, w);
+    { const old = Builds.buildOf(p); Builds.closeBuild(p, w); const e = (p.res.builds || []).find(x => x.name === old), top = Math.max(0, ...(p.res.builds || []).map(x => x.rate)); if (e && e.rate > 0 && e.rate >= top && p.guild && w.rng() < 0.7) { blog(w, p, `Recomiendo el reparto «${Builds.BUILDS[old].es}»: me dio ${e.rate} exp/min.`); gsay(adv, p, `recommend your stat build «${Builds.BUILDS[old].es}» (it gave you ${e.rate} exp/min) to your guildmates`); } }
     if (adv.command(p.id, { t: "statreset" })) {
       d.done = true; p.res.build = d.nb; r.bperf = { name: d.nb, t0: w.time, exp0: p.exp }; b.errand = 0;
       blog(w, p, `Reinicié mis estadísticas y las reparto como «${Builds.BUILDS[d.nb].es}».`);
@@ -1278,6 +1290,7 @@ const ETHOS = { warrior: ["raid", "hunt"], hunter: ["crypt", "hunt"], trader: ["
 const ACT_TXT = { crypt: "propose to your guild an activity: going down to the skeleton crypt together, leaving in a minute", raid: "propose to your guild an activity: a raid in Promise Land, leaving in a minute", loot: "propose to your guild an activity: hunting together to find loot, leaving in a minute" };
 const gsay = (adv, p, text) => speak(adv, p, "@" + text);
 const gline = (p, key, w, extra = {}, who = "") => fmt(p, key, p.res.lang, who, w, extra);
+const leisureH = adv => ({ reg: () => adv.guildReg, blog, gsay, gchat: gchatLine, remember, befriend, line: gline, pitNear: (a, p) => FOSOS(a).find(z => p.x >= z.rect[0] - 8 && p.x <= z.rect[2] + 8 && p.y >= z.rect[1] - 8 && p.y <= z.rect[3] + 8) });
 const lessons = adv => (adv.lessons ||= { mobs: [], pits: new Map() });
 
 function guildAI(adv, w, p, r, home) {
@@ -1405,6 +1418,7 @@ function gchatLine(adv, w, p, G) {
 function onGuildChat(adv, w, ev) {
   const b = adv.bots.get(ev.id); if (!b?.res) return;
   const own = ev.name === b.name;
+  if (!own && !adv.bots.has([...w.ents.values()].find(q => q.kind === "player" && q.name === ev.name)?.id)) Leisure.humanCall(adv, w, Guild.guildOf(w, b), ev);
   logTalk(b, w, ev.name, ev.text, "g", own);
   if (own) return;
   const r = b.res, rel = relOf(b, ev.name);

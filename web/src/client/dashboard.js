@@ -25,10 +25,19 @@ function show(id) {
 }
 const order = () => { const { out, solo } = groups(roster, ""); return [...out.flatMap(x => x.m), ...solo]; };
 function step(d) { const l = order(); if (!l.length) return; const i = l.findIndex(b => b.id === sel); show(l[(i + d + l.length) % l.length].id); }
-addEventListener("keydown", e => { if (e.target.closest?.("input,textarea,select")) return; if (e.key === "[") step(-1); else if (e.key === "]") step(1); });
+// teclas: [ y ] cambian de habitante; el resto (F6 = bolsa, etc.) se reenvía al juego del marco como si estuviera enfocado
+const frame = () => $("game").querySelector("iframe");
+for (const t of ["keydown", "keyup"]) addEventListener(t, e => {
+  if (e.target.closest?.("input,textarea,select")) return;
+  if (t === "keydown" && (e.key === "[" || e.key === "]")) { step(e.key === "[" ? -1 : 1); return; }
+  const f = frame(); if (!f?.contentWindow || e.ctrlKey && /^[rwtnl]$/i.test(e.key)) return;
+  if (/^Fd+$/.test(e.key) || e.key === " " || e.key.startsWith("Arrow") || e.key === "Tab") e.preventDefault();      // el navegador no actúa sobre la página madre
+  const { key, code, shiftKey, ctrlKey, altKey, repeat } = e;
+  f.contentWindow.dispatchEvent(new f.contentWindow.KeyboardEvent(t, { key, code, shiftKey, ctrlKey, altKey, repeat, bubbles: true, cancelable: true }));
+});
 
 // ---- cuadrante 2: plantel ----
-let rkey = "";
+let rkey = ""; const open = new Set();                                          // grupos desplegados (por defecto todos colapsados)
 function rosterInit() {
   const r = $("roster");
   r.innerHTML = `<h3><b>👥 ${L("Habitantes", "Residents")}</b><span class="cnt"></span></h3>
@@ -36,7 +45,8 @@ function rosterInit() {
     <div class="body" style="padding:0"></div>`;
   r.querySelector(".q").oninput = e => { q = e.target.value; paintRoster(true); };
   r.querySelector(".s").onchange = e => { sideF = +e.target.value; paintRoster(true); };
-  r.onclick = e => { const row = e.target.closest(".r"); if (row && +row.dataset.id !== sel) show(+row.dataset.id); };
+  r.onclick = e => { const gh = e.target.closest(".g[data-g]"); if (gh) { const k = gh.dataset.g; open.has(k) ? open.delete(k) : open.add(k); paintRoster(true); return; }
+    const row = e.target.closest(".r"); if (row && +row.dataset.id !== sel) show(+row.dataset.id); };
 }
 function row(b) {
   const sc = (SIDE[b.side] || SIDE[0])[1];
@@ -45,10 +55,11 @@ function row(b) {
 }
 function paintRoster(force) {
   const list = roster.filter(b => !sideF || b.side === sideF), { out, solo } = groups(list, q);
-  const k = JSON.stringify([out, solo, sel, getLang()]); if (!force && k === rkey) return; rkey = k;
+  const k = JSON.stringify([out, solo, sel, getLang(), [...open]]); if (!force && k === rkey) return; rkey = k;
   const r = $("roster"), body = r.querySelector(".body"), top = body.scrollTop;
   r.querySelector(".cnt").textContent = list.length;
-  body.innerHTML = out.map(g => `<div class="g"><span>👥 ${L("Grupo de", "Party of")} ${esc(g.lead)}</span><span>${g.m.length}</span></div>` + g.m.map(row).join("")).join("")
+  body.innerHTML = out.map(g => { const ld = g.m.find(x => x.name === g.lead) || g.m[0], on = open.has(g.lead);
+      return `<div class="g" data-g="${esc(g.lead)}" style="cursor:pointer"><span>${on ? "▾" : "▸"} 👥 ${L("Grupo de", "Party of")} ${esc(g.lead)} <span style="text-transform:none;color:#998">· ${esc(modeName(ld))} · ${esc(ld.map)}</span></span><span>${g.m.length}</span></div>` + (on ? g.m.map(row).join("") : ""); }).join("")
     + (solo.length ? `<div class="g"><span>${L("En solitario", "Solo")}</span><span>${solo.length}</span></div>` + solo.map(row).join("") : "");
   body.scrollTop = top;
 }
@@ -119,6 +130,27 @@ function paintStats() {
   body.innerHTML = s; body.scrollTop = top;
 }
 
+// ---- divisores arrastrables (se recuerdan en este navegador) ----
+function splitters() {
+  const root = document.documentElement, K = "hb.obs.layout";
+  let sv = {}; try { sv = JSON.parse(localStorage.getItem(K) || "{}"); } catch {}
+  const set = (v, val) => { root.style.setProperty(v, val); sv[v] = val; };
+  for (const [v, val] of Object.entries(sv)) root.style.setProperty(v, val);
+  const drag = (el, axis, v, area, min, max) => el.addEventListener("pointerdown", e => {
+    e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add("drag"); document.body.classList.add("dragging");
+    const r = area().getBoundingClientRect(), mv = ev => {
+      const p = axis === "x" ? (ev.clientX - r.left) / r.width : (ev.clientY - r.top) / r.height;
+      set(v, (Math.min(max, Math.max(min, p)) * 100).toFixed(1) + "%");
+    };
+    const up = () => { el.classList.remove("drag"); document.body.classList.remove("dragging"); el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); try { localStorage.setItem(K, JSON.stringify(sv)); } catch {} };
+    el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up);
+  });
+  drag($("vs"), "x", "--c1", () => document.getElementById("app"), 0.25, 0.85);
+  drag($("hs"), "y", "--r1", () => document.getElementById("app"), 0.2, 0.85);
+  drag($("vs2"), "x", "--b1", () => $("bottom"), 0.15, 0.85);
+  for (const el of [$("vs"), $("hs"), $("vs2")]) el.ondblclick = () => { const v = el.id === "vs" ? "--c1" : el.id === "hs" ? "--r1" : "--b1"; root.style.removeProperty(v); delete sv[v]; try { localStorage.setItem(K, JSON.stringify(sv)); } catch {} };
+}
+
 // ---- arranque ----
 async function poll() {
   try { roster = (await (await fetch("/api/bots", { cache: "no-store" })).json()).list || []; sample(); paintRoster(); paintStats(); } catch { /* servidor un momento fuera: se reintenta */ }
@@ -127,6 +159,6 @@ addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !("hbBrain" in e.data) || e.data.id !== sel) return;
   brain = e.data.hbBrain; if (brain) { paintInfo(); $("game").querySelector(".who").textContent = brain.name + " · " + (MODES[brain.mode]?.[getLang() === "en" ? 1 : 0] || brain.mode) + " · " + brain.map; }
 });
-game(); rosterInit(); infoInit(); statsInit();
+splitters(); game(); rosterInit(); infoInit(); statsInit();
 poll().then(() => { if (sel) show(sel); else if (roster.length) show(order()[0].id); });
 setInterval(poll, POLL);

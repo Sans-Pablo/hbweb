@@ -26,11 +26,18 @@ import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
 import { allocate } from "./builds.js";
 import * as Comp from "./companion.js";
 import * as Sch from "./schools.js";
+import { hasStaff } from "./dummy.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
 const THINK_MS = 100, ERRAND_MS = 3500, TARGET_MS = 300;
-const SKIP_WEAPON = /Bow|Wand|Staff|Rod|Arrow|Hammer\(M\)|Pickaxe|Hoe/;
+const isBow = d => /Bow/.test(d.name) && d.skill === 6;
+export const isArcher = p => !!p.res && p.res.arch === "hunter";      // el cazador usa arco: dispara a cualquier distancia gastando flechas (combatsys.js)
+const isStaff = d => d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND;          // báculo/varita mágica: el summon de apoyo (Healer/Buffer/Aura) exige uno en la mano (dummy.js hasStaff)
+// Mago de apoyo (INVENTO): la mitad de los estudiosos (según el nombre) sigue la rama del invocador de apoyo: con el nivel que exige el báculo (30, Item.cfg) lo compra y adopta Healer, Buffer y Aura
+export const isSupport = p => { if (!p.res || p.res.arch !== "scholar") return false; let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 2 === 0; };
+const ARROW = 77, ARROWS_MAX = 150;
+const SKIP_WEAPON = /Wand|Staff|Rod|Arrow|Hammer\(M\)|Pickaxe|Hoe/;
 
 export const isBot = p => !!p?.bot;
 
@@ -128,14 +135,24 @@ export function errands(w, p, b, first = false) {
   // comida y pociones
   const potCap = p.res && p.level >= 15 ? Math.max(6, Math.min(40, Math.floor(p.gold / 60))) : 6;               // con oro de sobra lleva más pociones (aguantan más los jefes)
   if (cat.potion && countOf(p, cat.potion.id) < potCap) buy(w, p, cat.potion, potCap - countOf(p, cat.potion.id));
+  { const ar = w.data.item(ARROW), have = countOf(p, ARROW);          // arquero con arco puesto: lleva flechas de sobra (1 de oro cada una); sin ellas el arco no hace daño
+    if (ar && p.eff?.bow && have < ARROWS_MAX / 2) { const n = Math.min(ARROWS_MAX - have, Math.floor(p.gold / 4)); if (n > 10 && buy(w, p, ar, n)) blog(w, p, `Compro ${n} flechas: con el arco disparo desde lejos.`); } }
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
-  const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0);
+  const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
+  if (isSupport(p) && p.level >= 30 && !hasStaff(p) && !p.bag.some(i => isStaff(w.data.item(i.id)))) {          // sin báculo: compra el más barato que exige su nivel
+    const st = [...w.data.items.values()].filter(d => d && isStaff(d) && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
+    if (st && buy(w, p, st)) blog(w, p, `Compro ${st.name} (${st.price} de oro): para mantener a un summon de apoyo hace falta un báculo en la mano.`);
+  }
+  if (isArcher(p) && !p.bag.some(i => isBow(w.data.item(i.id))) && !p.eff?.bow) {          // sin arco: compra el mejor que pueda usar y pagar
+    const bow = [...w.data.items.values()].filter(d => d && isBow(d) && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
+    if (bow && buy(w, p, bow)) blog(w, p, `Compro un ${bow.name} (${bow.price} de oro): quiero pelear a distancia.`);
+  }
   const worn = slot => { const uid = p.equip[slot]; return uid !== undefined ? Inv.instOf(p, uid) : null; };
   const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
   const usable = d => d && d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
-    d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && SKIP_WEAPON.test(d.name));
+    d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && (SKIP_WEAPON.test(d.name) && !(isStaff(d) && isSupport(p)))) && (!isBow(d) || isArcher(p)) && (!isStaff(d) || isSupport(p)) && !(isSupport(p) && hasStaff(p) && !isStaff(d) && (d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND));          // con la varita en la mano no vuelve al sable
   studyManuals(w, p, b);
   let best = null;
   for (const i of p.bag) {
@@ -143,7 +160,7 @@ export function errands(w, p, b, first = false) {
     if (!usable(d) || (b.badUid ||= new Set()).has(i.uid) || i.life === 0 || Object.values(p.equip).includes(i.uid)) continue;
     if (d.equipPos === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;                  // un escudo expulsaría el arma a dos manos (y la vendería para recomprarla: bucle)
     const slot = slotOf(d), mine = ilv(i), cur = d.equipPos === EQUIP.TWOHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND)) + ilv(worn(EQUIP.LHAND))) : value(slot);
-    if (mine > cur * 1.08 + 0.5 && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
+    if ((mine > cur * 1.08 + 0.5 || (isArcher(p) && isBow(d) && !p.eff?.bow) || (isSupport(p) && isStaff(d) && !hasStaff(p))) && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
   }
   if (best) {
     if (tryEquip(w, p, b, best.i)) blog(w, p, `Me equipo ${w.data.item(best.i.id).name} (item level ${ilv(best.i)}).`);
@@ -295,7 +312,25 @@ function step(adv, w, p, b, tx, ty, run) {
   }
   if (!adv.command(p.id, { t: "move", dir: d, run: !!run && p.sp > 6 })) { b.path = null; b.fails++; return false; }
   b.fails = 0;
+  vaiven(adv, w, p, b, tx, ty);
   return true;
+}
+// Vaivén (INVENTO): si en sus últimos 18 pasos solo pisó 4 casillas o menos y no ha llegado, no puede alcanzar la meta (terreno, un monstruo en medio, otro camino…).
+// Como una persona, se para un momento, descarta esa meta (objetivo, viaje o paseo) y prueba otra cosa; si pasa otra vez en seguida, vuelve a la ciudad con Recall.
+export const OSC = { steps: 18, tiles: 4 };
+export function vaiven(adv, w, p, b, tx, ty) {
+  const tr = b.trail ||= [];
+  tr.push(p.x + "," + p.y); if (tr.length > OSC.steps) tr.shift();
+  if (tr.length < OSC.steps || w.time - p.lastCombat < 4000 || dist(p, { x: tx, y: ty }) <= 2 || new Set(tr).size > OSC.tiles) return;
+  tr.length = 0;
+  const again = w.time - (b.oscAt || -1e9) < 90000; b.oscAt = w.time; b.oscN = again ? (b.oscN | 0) + 1 : 1;
+  const t = b.target; if (t) (b.ignore ||= new Map()).set(t.id, w.time + 45000);
+  (b.avoid ||= []).push({ x: tx, y: ty, until: w.time + 60000 }); if (b.avoid.length > 6) b.avoid.shift();
+  blog(w, p, b.oscN >= 3 && !p.recallTok && w.map.kind !== "dungeon" ? "Sigo sin poder llegar: vuelvo a la ciudad." : `Voy y vengo por las mismas casillas sin llegar a (${tx},${ty}): lo dejo y pruebo otra cosa.`);
+  b.target = null; b.path = null; b.goal = null; b.fails = 0; b.travel = null; b.hold = w.time + 1200 + Math.floor(w.rng() * 2500);
+  const r = () => Math.floor(w.rng() * 25) - 12, s = w.freeSpotNear(p.x + r(), p.y + r());                // se aleja un poco para ver el obstáculo desde otro lado
+  b.wander = s && !w.teleports.has(w.grid.idx(s[0], s[1])) ? { x: s[0], y: s[1], until: w.time + 12000 } : null;
+  if (b.oscN >= 3 && !p.recallTok && w.map.kind !== "dungeon") { b.oscN = 0; adv.command(p.id, { t: "recall" }); }
 }
 // Pensamientos en voz alta (burbuja pública `botsay`): el bot cuenta qué ve y qué va a hacer. Personalidad inventada del port.
 // Situaciones de los pensamientos en voz alta (burbuja pública `botsay`). No hay frases escritas: las dice el modelo de lenguaje (residents.thought); sin modelo no hay burbuja.

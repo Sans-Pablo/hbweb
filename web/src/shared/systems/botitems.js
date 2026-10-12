@@ -25,6 +25,8 @@ export function judge(w, p, i, friends = []) {
   const d = w.data.item(i.id), count = i.count || 1;
   if (!d || i.id === GOLD || i.comp) return { act: "keep", value: 0, why: "es mío" };
   const sellPrice = Shop.sellPriceOf(d, i, count) || 0;
+  if (p.res?.arch === "hunter" && (i.id === 77 || (/Bow/.test(d.name) && d.skill === 6 && !p.eff?.bow))) return { act: "keep", value: sellPrice, why: "el cazador dispara con arco" };       // flechas y arco de repuesto (bot.js isArcher)
+  if (p.res?.arch === "scholar" && !p.eff?.wtype && d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND) return { act: "keep", value: sellPrice, why: "el invocador de apoyo necesita un báculo" };
   if (isConsumable(d)) {
     const cap = /Potion/.test(d.name) ? (p.res ? 40 : CAP.potion) : d.type === ITYPE.EAT ? CAP.food : CAP.other;
     if (count <= cap) return { act: "keep", value: sellPrice, why: "consumible que uso" };

@@ -189,14 +189,14 @@ export class Sound {
       case "levelup": if (ev.id === this.me) this.playRaw("E30", 1, 0); break;
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
-        else this.play(ev.bow ? "C3" : "C1", ev.id, 0.8);   // C3: arco (MapData.cpp, armas 40..59)
+        else this.play(ev.bow || ev.wt >= 40 ? "C3" : ev.wt > 0 ? "C2" : "C1", ev.id, 0.8);   // por arma (MapData.cpp): manos C1, armas cuerpo a cuerpo C2, arco C3 (40..59)
         break;
       case "damage":
         if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }
-        else { this.play("C5", ev.id); this.play("C12", ev.id, 0.8); }
+        else { this.play("C5", ev.id); this.play(e?.gender === 2 ? "C13" : "C12", ev.id, 0.8); }   // quejido: hombre C12, mujer C13
         break;
       case "death":
-        this.play(mob ? "M" + (mob + 3) : "C14", ev.id);
+        this.play(mob ? "M" + (mob + 3) : e?.gender === 2 ? "C15" : "C14", ev.id);   // muerte: hombre C14, mujer C15
         break;
       case "step":
         if (mob) this.play("M" + mob, ev.id, 0.35);

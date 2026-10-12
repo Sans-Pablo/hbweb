@@ -250,7 +250,10 @@ export function candy(w, p, d, destUid, roll) {
 // Productos de agricultura como comida de compañeros (diseño del port: el original no tiene compañeros).
 //  hp: tomate / mp: uvas y uvas azules / atk: seta -> suben 1 punto permanente (tope FEED_CAP). El resto cura; el ginseng revive.
 export const FEED_CAP = 100;
-export const FEED = { 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
+// Pescado (fishing.js): comida de carnívoros, cura según la pieza. 100 Fish, 101 RedFish, 102 GreenFish, 103 YellowFish, 570 RedCarp, 571 GreenCarp, 572 GoldCarp, 573 CrucianCarp, 575 Salmon
+export const FISH_FEED = { 100: 30, 573: 25, 103: 35, 102: 45, 101: 55, 575: 65, 570: 70, 571: 80, 572: 120 };
+export const NO_MEAT = ["Slime", "Giant-Ant", "Clay-Golem", "Stone-Golem", "Cannibal-Plant", "Frost", "Healer", "Buffer", "Aura"];   // no comen pescado
+export const FEED = { ...Object.fromEntries(Object.entries(FISH_FEED).map(([id, h]) => [id, { heal: h, fish: true }])), 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
   820: { heal: 20 }, 821: { heal: 25 }, 822: { heal: 30 }, 823: { mana: 20 }, 824: { heal: 40 }, 825: { heal: 50 }, 826: { heal: 60 }, 827: { mana: 30 }, 828: { heal: 80 }, 721: { revive: true } };
 // Gustos por especie (INVENTO del port): lo que le gusta cura/sube un 50% más (los puntos permanentes suben de 2 en 2), lo que no le apetece lo rechaza
 // y no se consume. El resto, normal. El Ginseng (revivir) nunca se rechaza. Ids: 820 Sandía, 821 Calabaza, 822 Ajo, 823 Cebada, 824 Zanahoria, 825 Rábano,
@@ -275,7 +278,8 @@ export const TASTE = {
   "Liche": { love: [832, 822], hate: [830, 828] },            // nigromante: setas y ajo amargo
   "Healer": { love: [824], hate: [] }, "Buffer": { love: [824], hate: [] }, "Aura": { love: [824], hate: [] },
 };
-export const tasteOf = (sp, id) => { const t = TASTE[sp]; return t?.love.includes(id) ? "love" : t?.hate.includes(id) ? "hate" : "ok"; };
+export const tasteOf = (sp, id) => { if (FISH_FEED[id]) return NO_MEAT.includes(sp) ? "hate" : "love";
+   const t = TASTE[sp]; return t?.love.includes(id) ? "love" : t?.hate.includes(id) ? "hate" : "ok"; };
 export const isFeed = d => !!FEED[d.id];
 export function feed(w, p, d, destUid) {
   const inst = (destUid && Inv.instOf(p, destUid)?.comp ? Inv.instOf(p, destUid) : null) || activeBall(p);

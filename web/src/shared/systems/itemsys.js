@@ -7,6 +7,7 @@ import { groundPush, groundTop, groundPop } from "./ground.js";
 import { toggleCompanion, dismissCompanion } from "./npcsys.js";
 import { isCandy, candy, isFeed, feed, activeBall } from "./companion.js";
 import * as Farming from "./farming.js";
+import * as Fishing from "./fishing.js";
 
 export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
@@ -102,7 +103,8 @@ export function useItem(w, p, uid, destUid) {
     w.recalc(p);
     return true;
   }
-  if (isFeed(d) && (destUid && Inv.instOf(p, destUid)?.comp || activeBall(p))) {   // productos de granja: comida de compañeros
+  if (d.id === Fishing.ROD) return Fishing.cast(w, p);                  // caña de pescar (fishing.js)
+  if (isFeed(d) && (destUid && Inv.instOf(p, destUid)?.comp || (!Fishing.isFish(d.id) && activeBall(p)))) {   // el pescado solo es de compañero si se arrastra a su bola (si no, se come)   // productos de granja: comida de compañeros
     if (feed(w, p, d, destUid) !== true) return false;
     if (isStack(d) && (inst.count || 1) > 1) inst.count--; else Inv.removeFromBag(p, uid);
     return true;

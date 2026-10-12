@@ -11,6 +11,47 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Vida de bots (v0.69.0)",
+        "en": "Bot life (v0.69.0)"
+      },
+      "items": [
+        {
+          "es": "Los bots descansan de pelear: pescan, cultivan, comercian, entrenan a su summon, charlan con el guild o acuden a un aviso de backup. Se ve en el observador.",
+          "en": "Bots take breaks from fighting: they fish, farm, trade, train their summon, chat with the guild or answer a backup call. Visible in the observer."
+        },
+        {
+          "es": "Pesca: caña, peces vendibles y comida para mascotas carnívoras.",
+          "en": "Fishing: rod, sellable fish and food for carnivorous pets."
+        },
+        {
+          "es": "Los cazadores usan arco y flechas. Hay magos de apoyo con varita y summons Healer, Buffer y Aura.",
+          "en": "Hunters use bow and arrows. Support mages carry a wand and summon Healer, Buffer and Aura."
+        },
+        {
+          "es": "Los bots copian y recomiendan builds de estadísticas según su rendimiento.",
+          "en": "Bots copy and recommend stat builds based on how well they perform."
+        },
+        {
+          "es": "Observador dividido: dos cuadrantes arriba y uno abajo, redimensionables.",
+          "en": "Split observer: two quadrants on top and one below, resizable."
+        },
+        {
+          "es": "Sonidos por arma (manos, cuerpo a cuerpo, arco) y voces femeninas al sufrir daño y morir.",
+          "en": "Per-weapon sounds (hands, melee, bow) and female voices when hurt and when dying."
+        },
+        {
+          "es": "Observador: el juego conserva su interfaz y las teclas (F6 bolsa…) llegan al juego; los grupos se pliegan y muestran qué hace el líder.",
+          "en": "Observer: the game keeps its UI and keys (F6 bag…) reach the game; parties fold and show what the leader is doing."
+        },
+        {
+          "es": "Los bots detectan cuando van y vienen por las mismas casillas y replantean su meta.",
+          "en": "Bots notice when they pace over the same tiles and rethink their goal."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Observador dividido (v0.68.0)",
         "en": "Split observer (v0.68.0)"
       },

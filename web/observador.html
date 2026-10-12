@@ -8,12 +8,16 @@
   :root { --bg:#0e0b05; --panel:#171208; --edge:#4a3f28; --ink:#f0e2b8; --dim:#998; --gold:#ffd76a; }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:12px/1.4 system-ui,sans-serif; overflow:hidden; }
-  #app { display:grid; height:100vh; gap:4px; padding:4px; grid-template-columns:270px minmax(0,1fr) 380px; grid-template-rows:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"roster game info" "roster game stats"; }
+  #app { display:grid; height:100vh; padding:4px; gap:0; grid-template-columns:var(--c1,68%) 6px minmax(0,1fr); grid-template-rows:var(--r1,58%) 6px minmax(0,1fr); }
+  #game { grid-area:1/1; } #roster { grid-area:1/3; } #hs { grid-area:2/1/3/4; } #bottom { grid-area:3/1/4/4; display:flex; min-height:0; } #vs { grid-area:1/2; }
+  #info { flex:0 0 var(--b1,50%); } #stats { flex:1; min-width:0; }
+  .split { background:#2a2312; border-radius:3px; transition:background .1s; } .split:hover, .split.drag { background:#8a7438; }
+  #vs, #vs2 { cursor:col-resize; } #hs { cursor:row-resize; } #vs2 { flex:0 0 6px; }
+  body.dragging { user-select:none; cursor:inherit; } body.dragging iframe { pointer-events:none; }
   .q { background:var(--panel); border:1px solid var(--edge); border-radius:6px; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
   .q > h3 { margin:0; padding:4px 8px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#b9a572; background:#1b1608; border-bottom:1px solid var(--edge); display:flex; gap:8px; align-items:center; }
   .q > h3 b { color:var(--gold); } .q > h3 .sp { margin-left:auto; }
   .body { overflow:auto; flex:1; min-height:0; padding:6px 8px; }
-  #roster { grid-area:roster; } #game { grid-area:game; } #info { grid-area:info; } #stats { grid-area:stats; }
   #game iframe { flex:1; width:100%; border:0; background:#000; } #game .empty { flex:1; display:grid; place-items:center; color:var(--dim); }
   input, select, button { background:#1b1810; color:var(--ink); border:1px solid #6b5a33; border-radius:6px; padding:3px 7px; font:inherit; }
   button { cursor:pointer; background:#2c2417; }
@@ -28,15 +32,16 @@
   .bar .tr { flex:1; height:8px; background:#2c2417; border-radius:4px; } .bar .tr i { display:block; height:100%; border-radius:4px; background:#6a9; } .bar .v { width:34px; text-align:right; }
   .sec { margin:8px 0 3px; color:#b9a572; font-size:11px; text-transform:uppercase; border-bottom:1px solid #3a2f18; }
   .spark { display:grid; grid-template-columns:70px 1fr 64px; align-items:center; gap:6px; } .spark svg { width:100%; height:26px; background:#120e06; border-radius:3px; }
-  @media (max-width: 1000px) { #app { grid-template-columns:200px 1fr; grid-template-rows:60vh 40vh 40vh; grid-template-areas:"roster game" "info info" "stats stats"; overflow:auto; } html, body { overflow:auto; } }
+  @media (max-width: 800px) { #app { grid-template-columns:1fr; grid-template-rows:60vh 50vh 50vh 50vh; } #game, #roster { grid-area:auto; } #hs, #vs, #vs2 { display:none; } #bottom { grid-area:auto; display:contents; } #info, #stats { flex:none; } html, body { overflow:auto; } }
 </style>
 </head>
 <body>
 <div id="app">
-  <section class="q" id="roster"></section>
   <section class="q" id="game"></section>
-  <section class="q" id="info"></section>
-  <section class="q" id="stats"></section>
+  <div class="split" id="vs" title="↔"></div>
+  <section class="q" id="roster"></section>
+  <div class="split" id="hs" title="↕"></div>
+  <div id="bottom"><section class="q" id="info"></section><div class="split" id="vs2" title="↔"></div><section class="q" id="stats"></section></div>
 </div>
 <script type="module" src="src/client/dashboard.js"></script>
 </body>

@@ -206,7 +206,7 @@ const COMMANDS = {
     p.busyUntil = w.time + ms;
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
-    w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), tx: t.x, ty: t.y });
+    w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, tx: t.x, ty: t.y });
     w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t) : Combat.playerHit(w, p, t)));
     return true;
   },

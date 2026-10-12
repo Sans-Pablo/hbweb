@@ -38,3 +38,13 @@ export function nextBuild(p, w) {
 }
 // Anota el rendimiento del build que deja
 export function closeBuild(p, w) { const cur = buildOf(p), rate = Math.round(perf(p, w)), h = (p.res.builds ||= []), e = h.find(x => x.name === cur); if (e) { e.rate = Math.round((e.rate + rate) / 2); e.n++; } else h.push({ name: cur, rate, n: 1 }); }
+// IDEAS DE LOS DEMÁS (INVENTO, v0.69): el reparto que mejor le ha rendido a otro habitante de su misma personalidad (mide exp/min en `res.builds`). Solo vale si supera con holgura lo mejor que él ha visto.
+export function peerBest(p, others) {
+  const cur = buildOf(p), mine = Math.max(0, ...(p.res.builds || []).map(h => h.rate));
+  let best = null;
+  for (const o of others) {
+    if (o === p || !o.res || o.res.arch !== p.res.arch) continue;
+    for (const h of o.res.builds || []) if (h.name !== cur && BUILDS[h.name] && h.rate > mine * 1.15 + 1 && (!p.quests || (h.name !== "glass" && h.name !== "agile")) && (!best || h.rate > best.rate)) best = { name: h.name, rate: h.rate, from: o.name };
+  }
+  return best;
+}

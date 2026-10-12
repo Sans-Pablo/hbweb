@@ -6,6 +6,7 @@ import { ITYPE, GOLD, MAX_ITEMS, BANNED_ITEMS, isStack, itemWeight } from "../it
 import * as Inv from "../inventory.js";
 import { realStats, parseAttr } from "../attributes.js";
 import { newInst } from "./itemsys.js";
+import { FISH_PRICE } from "./fishing.js";
 
 export const NPC = { SHOP: 15, MAGE: 19, WAREHOUSE: 20, BLACKSMITH: 24 };
 export const MAX_BANK = 200;                       // DEF_MAXBANKITEMS
@@ -60,7 +61,7 @@ function wearPrice(inst, d, count) {
 export function sellPriceOf(d, inst, count = 1) {
   const cat = d.category;
   let price;
-  if (cat >= 11 && cat <= 50) price = Math.trunc(d.price / 2) * count;
+  if (cat >= 11 && cat <= 50) price = (FISH_PRICE[d.id] ?? Math.trunc(d.price / 2)) * count;
   else if (cat >= 1 && cat <= 10) { if (!(inst.life > 0 || inst.life === undefined)) return 0; price = wearPrice(inst, d, count); }
   else return 0;
   return Math.min(Math.max(price, 1), MAX_PRICE);
@@ -71,7 +72,7 @@ export function sellValue(w, p, inst, count) {
   const d = w.data.item(inst.id);
   const cat = d.category;
   let price;
-  if (cat >= 11 && cat <= 50) price = Math.trunc(d.price / 2) * count;
+  if (cat >= 11 && cat <= 50) price = (FISH_PRICE[d.id] ?? Math.trunc(d.price / 2)) * count;
   else if (cat >= 1 && cat <= 10) {
     if (!(inst.life > 0)) return { cannot: 2 };
     price = wearPrice(inst, d, count);
