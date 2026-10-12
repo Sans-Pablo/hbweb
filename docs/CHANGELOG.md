@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.63.0 · El camino del invocador (2026-10-12)
+- Sistema de misiones: 22 por clase (Guerrero, Mago, Invocador), acto 1 hasta nivel 50. Diario con J y rastreador en pantalla; siempre queda un siguiente objetivo.
+- Hitos con objetos nuevos (9101–9111, emblemas 9121–9123). El báculo solo cae del Gold Skeleton tras la misión que lo habilita; la cripta y el comercio se abren por misiones.
+- Equilibrio: experiencia más lenta (PACE 0.3), cripta más dura; los bots residentes persiguen las misiones (medido con `tools/questsim.mjs`).
+
 ## 0.62.2 · Revisión de código (2026-10-12)
 - Servidor: una URL mal formada (`GET /%`) o un `Range` imposible ya no tumban el proceso (400/416).
 - Servidor: las cabeceras de túnel (`X-Forwarded-For`, `CF-Connecting-IP`) solo se creen si la conexión viene de loopback, así no se falsea la IP para saltar límites.

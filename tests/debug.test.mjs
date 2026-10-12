@@ -13,7 +13,7 @@ const meta = J("map.json"), npcDb = J("npc.json");
 const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
 setDungeonPalette(J("dungeon_palette.json"));
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL(meta.map + ".bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps: {} });
-const id = a.addPlayer("probador"), p = a.farm.ents.get(id);
+const id = a.addPlayer("probador"), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
 const dbg = c => a.command(id, { t: "dbg", ...c });
 const w = () => a.worldFor(id);
 

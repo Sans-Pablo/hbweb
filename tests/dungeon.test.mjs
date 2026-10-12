@@ -83,7 +83,7 @@ test("dificultad por nivel y jefes cada 5 niveles", () => {
 });
 
 test("entrada: el teletransportador de la granja a middled1n lleva directo a la cripta; bajar exige limpiar; elegir continuar o reiniciar", () => {
-  const a = session(), id = a.addPlayer("uno"), p = a.farm.ents.get(id);
+  const a = session(), id = a.addPlayer("uno"), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   assert.deepEqual(a.farm.map.portals, []);                         // ya no hay portales de entrada propios
   let { ok, w } = enter(a, id);
   assert.ok(ok); assert.equal(w.map.kind, "dungeon"); assert.equal(w.map.level, 1);
@@ -113,7 +113,7 @@ test("entrada: el teletransportador de la granja a middled1n lleva directo a la 
 });
 
 test("enemigos escalados, jefe y victoria en el nivel 20", () => {
-  const a = session(), id = a.addPlayer("dos"), p = a.farm.ents.get(id);
+  const a = session(), id = a.addPlayer("dos"), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   enter(a, id); p.delve.deepest = 4;
   const hp = w => Math.max(...[...w.ents.values()].filter(e => e.kind === "npc").map(e => e.maxHp));
   const base = Math.min(...[...a.worldFor(id).ents.values()].filter(e => e.kind === "npc").map(e => e.maxHp));
@@ -133,7 +133,7 @@ test("enemigos escalados, jefe y victoria en el nivel 20", () => {
 });
 
 test("morir en la cripta devuelve a Aresfarm y conserva el nivel alcanzado", () => {
-  const a = session(), id = a.addPlayer("tres"), p = a.farm.ents.get(id);
+  const a = session(), id = a.addPlayer("tres"), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   enter(a, id); clear(a, id); take(a, id, "down");
   const d = a.worldFor(id); d.killPlayer ? d.killPlayer(p) : (p.dead = true, p.deadAt = d.time);
   d.time += 2000; a.time = d.time;
@@ -143,7 +143,7 @@ test("morir en la cripta devuelve a Aresfarm y conserva el nivel alcanzado", () 
 });
 
 test("rey carmesí: Fire Field cada 20 % de vida perdida, inmune al fuego y hueso rojo seguro", () => {
-  const a = session(), id = a.addPlayer("tres"), p = a.farm.ents.get(id);
+  const a = session(), id = a.addPlayer("tres"), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   enter(a, id); p.delve.deepest = 4; clear(a, id); take(a, id, "down"); take(a, id, "return");
   p.delve.deepest = 5; assert.ok(enter(a, id, false).ok);
   const w = a.worldFor(id), boss = [...w.ents.values()].find(e => e.boss === 1);
@@ -164,6 +164,7 @@ test("party: todos entran a la misma cripta, bajan juntos y la cripta sobrevive 
   const a = session();
   const i1 = a.addPlayer("Uno", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
   const i2 = a.addPlayer("Dos", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
+  for (const i of [i1, i2]) { const q = a.worldFor(i).ents.get(i); q.quests.u.crypt = 20; }
   const party = { id: 77, names: ["Uno", "Dos"] };
   a.worldFor(i1).ents.get(i1).party = party; a.worldFor(i2).ents.get(i2).party = party;
   assert.ok(enter(a, i1).ok);

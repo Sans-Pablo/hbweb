@@ -8,6 +8,8 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado": "Gail only evolves companions of those who defeated the Golden King",
+  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Misión cumplida": "Quest complete", "de oro": "gold",
   "Guerrero": "Warrior", "Mago": "Mage", "Invocador": "Summoner", "ya tienes un summon de esa especie: deben ser distintos": "you already have a summon of that species: they must be different",
   "elige Healer, Buffer o Aura": "choose Healer, Buffer or Aura",
   // ---- 0.50.7
@@ -241,6 +243,7 @@ const PATTERNS = [
   [/^Absorción (física|mágica) \+(\d+) %$/, m => `${m[1] === "física" ? "Physical" : "Magic"} absorption +${m[2]}%`], [/^Daño de ataques seguidos \+(\d+)$/, m => `Combo damage +${m[1]}`],
   [/^Oro \+(\d+) %$/, m => `Gold +${m[1]}%`], [/^Daño (\d+d\d+.*)$/, m => `Damage ${m[1].replace("grandes", "large")}`],
   [/^demasiado pesado \(fuerza (\d+)\)$/, m => `too heavy (strength ${m[1]})`], [/^Habilidad (\d+)$/, m => `Skill ${m[1]}`],
+  [/^una fuerza antigua te impide bajar: cumple tus misiones (nivel máx. (d+))$/, m => "an ancient force stops you from descending: complete your quests (max level " + m[1] + ")"],
   [new RegExp("^Daño " + num + "–" + num + "$"), m => `Damage ${m[1]}–${m[2]}`],
 ];
 void num;

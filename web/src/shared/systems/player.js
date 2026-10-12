@@ -1,5 +1,6 @@
 // Jugador: creación, guardado, recalculo de atributos, reaparición.
 import * as Tut from "./tutorial.js";
+import * as Quests from "./quests.js";
 import * as Tal from "./talents.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
@@ -79,7 +80,8 @@ export function addPlayer(w, name, save = null, create = null) {
   Object.assign(p, { name, lastMove: -1e9, lastAttack: -1e9, lastCombat: -1e9, lastVitals: w.time, kills: 0, deadAt: 0 });
   newCharacter(w, p, create);
   if (save) loadSave(w, p, save);
-  Tut.restore(p, save || {}); if (!p.tut) Tut.init(p, !save);        // personaje nuevo: tutorial en curso; partida antigua sin tutorial: ya lo conoce
+  Tut.restore(p, save || {}); if (!p.tut) Tut.init(p, !save);
+  Quests.restore(p, save || {}); if (!p.quests) Quests.init(p);        // personaje nuevo: tutorial en curso; partida antigua sin tutorial: ya lo conoce
   recalc(w, p);
   p.hp = p.maxHp; p.mp = p.maxMp;
   initVitals(w, p);
@@ -131,7 +133,7 @@ export function saveOf(w, id) {
     level: p.level, exp: p.exp, pool: p.pool, gold: p.gold, kills: p.kills, ek: p.ek || 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
-    hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p),
+    hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p), quests: Quests.toSave(p),
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
   };
 }

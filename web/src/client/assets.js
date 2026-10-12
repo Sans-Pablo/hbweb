@@ -4,7 +4,6 @@
 import { GameData } from "../shared/data.js";
 import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
-import { masterRows } from "../shared/classgear.js";
 import { imgUrl, detectWebp } from "./imgurl.js";
 import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, setDungeonPalette } from "../shared/dungeon.js";
@@ -75,7 +74,6 @@ export async function loadAssets(onProgress) {
   }));
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
-  (shops[2] || (shops[2] = [])).push(...masterRows(data));
   // Solo se descarga lo común (objetos del suelo, interfaz del mundo); losetas y monstruos llegan por mapa (streaming.js).
   const images = {}, core = coreKeys(manifest, npcDb);
   let done = 0, next = 0;

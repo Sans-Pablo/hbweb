@@ -15,7 +15,7 @@ setDungeonPalette(json("dungeon_palette.json"));
 const farm = new Uint8Array(readFileSync(new URL("arefarm.bin", dir)));
 for (const k of [1, 2, 3, 4]) {
   const a = new Adventure({ grid: new Grid(meta.w, meta.h, farm), start: meta.start, npcDb, data, spawns: [], maps: {}, rng: seededRandom(30 + k) });
-  const id = a.addPlayer("rey" + k), p = a.farm.ents.get(id);
+  const id = a.addPlayer("rey" + k), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   assert.ok(a.command(id, { t: "dbg", op: "crypt", level: k * 5 }));
   const w = a.worldFor(id); p.hp = p.maxHp = 1e6;
   const boss = [...w.ents.values()].find(e => e.boss === k && !e.aux);

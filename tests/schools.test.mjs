@@ -18,7 +18,7 @@ let seed = 5; const rng = () => (seed = (seed * 16807) % 2147483647) / 214748364
 const data = new GameData({ items: J("items.json"), magic, npcs: npcDb });
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
 const id = w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 90, mag: 90, chr: 10 } });
-const A = w.ents.get(id); A.stats.str = 400; A.level = 50; w.recalc(A); A.hp = A.maxHp; A.mp = A.maxMp = 500; A.gold = 1e6;
+const A = w.ents.get(id); A.quests.u.trade = 1; A.stats.str = 400; A.level = 50; w.recalc(A); A.hp = A.maxHp; A.mp = A.maxMp = 500; A.gold = 1e6;
 A.stats.int = 100; A.magic = {};                                                               // las magias de escuela las da el summon: no hace falta aprenderlas
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);

@@ -11,6 +11,7 @@ import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
 import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
+import * as Quests from "./quests.js";
 import { foeOf } from "./npcsys.js";
 
 export const MAX_COMP_LEVEL = 50;
@@ -140,12 +141,14 @@ export function tradeUp(w, p, cmd) {
   if (!to) return w.reject(p, cmd, "esta especie no tiene versión superior");
   if (c.lvl < Sch.TRADE_LEVEL) return w.reject(p, cmd, "necesita nivel " + Sch.TRADE_LEVEL);
   if (c.down) return w.reject(p, cmd, "primero hay que revivirlo");
+  if (!Quests.canTrade(p)) return w.reject(p, cmd, "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado");
   for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) return w.reject(p, cmd, "guárdalo antes");
   const from = c.sp, ball = newInst(w, SPECIES[to][1]);
   ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack", spells: [...(c.spells || [])] };           // lo que le enseñaste se conserva
   Inv.removeFromBag(p, inst.uid);
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);
+  Quests.onTrade(w, p);
   w.emit({ t: "petupgraded", id: p.id, from, to, nm: c.nm, uid: ball.uid });
   return true;
 }
@@ -210,6 +213,7 @@ export function addExp(w, p, inst, xp) {
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
+    Quests.onPet(w, p);
     if (!Tal.isDummy(c) && SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);

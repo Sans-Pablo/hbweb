@@ -4,6 +4,7 @@ import { MAGIC_MODE } from "../shared/magic.js";
 import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
+import { createQuestUi } from "./questui.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
 import { NET_PROTO, dirTo } from "../shared/const.js";
@@ -95,7 +96,9 @@ async function main() {
   gui.setGameSprites(assets.sprites);
   const logout = { n: null, t: 0 };
   const chatLog = [];
+  const questUi = createQuestUi(() => world.ents.get(pid));
   const guiApi = {
+    quests: () => questUi.toggle(),
     stall: () => stallUi.setup(),
     chatLog,
     log: m => hud.log(m),
@@ -626,7 +629,7 @@ async function main() {
     for (const ev of events) {
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
-      tutorial.onEvent(ev);
+      tutorial.onEvent(ev); questUi.onEvent(ev, world.ents.get(pid), hud);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid)); tradeUi.onEvent(ev, world.ents.get(pid)); stallUi.onEvent(ev, world.ents.get(pid)); guildUi.onEvent(ev, world.ents.get(pid));
       voice?.onEvent(ev, world, world.ents.get(npcUi.trade?.npc?.id));
       if ((ev.t === "equip" || ev.t === "unequip") && ev.id === pid) warmEquip();
@@ -651,7 +654,7 @@ async function main() {
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
-    hud.update(world, ctl.hoverEnt);
+    hud.update(world, ctl.hoverEnt); questUi.render();
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();
     { const m = world.ents.get(pid); if (m?.dead && !ui.wasDead) gui.open(19); ui.wasDead = !!m?.dead; }      // GAME.cpp: al morir aparece el cuadro con Restart

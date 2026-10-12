@@ -16,6 +16,7 @@ import * as Tal from "./talents.js";
 import * as Dummy from "./dummy.js";
 import * as Inv from "../inventory.js";
 import * as Boss from "./bosses.js";
+import * as Quests from "./quests.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -81,7 +82,8 @@ export function killNpc(w, n, p) {
     xp = Math.round(xp * (1 + 0.8 / (1 + prev / 12)));
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
-    Comp.onKill(w, p, n, xp);                                    // contador de bolas y experiencia del compañero
+    Comp.onKill(w, p, n, xp);
+    Quests.onKill(w, p, n);                                      // misiones: contador y reyes derrotados                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
   Boss.onDeath(w, n);
@@ -93,6 +95,8 @@ export function killNpc(w, n, p) {
     const list = BOSS_UNIQUE[n.boss], id = list[R.dice(w.rng, 1, list.length) - 1];
     if (w.data.item(id)) w.after(n.dur.dying * 0.6 + 200, () => { const [ux, uy] = uniqueSpot(w, n); groundPush(w, ux, uy, newInst(w, id, 1), true); });
   }
+  const staff = Quests.bossStaff(w, p, n);                      // el Rey dorado suelta el báculo maestro de la clase (misión «El Rey dorado»)
+  if (staff) w.after(n.dur.dying * 0.6 + 400, () => { const [ux, uy] = uniqueSpot(w, n); groundPush(w, ux, uy, newInst(w, staff, 1), true); });
   n.gen.alive--;
   if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
   // Esqueleto común (no jefe, ni auxiliar, ni fantasma): con GHOST_CHANCE se levanta como fantasma cuando desaparece su cadáver. Se decide al

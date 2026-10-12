@@ -59,7 +59,7 @@ export function registerDialogs(gui, api) {
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      if (hit(15)) api.log("No hay misiones en esta versión.");
+      if (hit(15)) api.quests?.();
       else if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
       else if (hit(180)) { g.close(1); g.open(12); return true; }
       return false;

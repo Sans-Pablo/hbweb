@@ -23,6 +23,7 @@ import { EQUIP, ITYPE } from "../items.js";
 import * as Shop from "./shopsys.js";
 import { judge, stallable } from "./botitems.js";
 import * as Stall from "./stall.js";
+import * as Quests from "./quests.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -71,6 +72,7 @@ function befriend(p, who, n = 1) {
 function newGoal(w, p) {
   // METAS DE VIDA (las mismas que perseguiría un jugador): muchas bajas enemigas (pvp), nivel máximo (level), terminar la cripta (crypt), muchos summons distintos
   // al nivel máximo (pet), los mejores objetos (gear) y socializar (friend); el oro (gold) y los monstruos (kills) son paradas intermedias.
+  if (p.quests && w.rng() < 0.8) { const g = questGoal(w, p); if (g) { p.res.goal = { ...g, q: p.quests.n }; return; } }
   const r = p.res, kind = ["level", "level", "gold", "kills", "friend", "friend", "pvp", "pvp", "pit", "crypt", "crypt", "pet", "pet", "gear", "gear"][Math.floor(w.rng() * 15)];
   if (kind === "level") r.goal = { k: "level", n: p.level + 2 };
   else if (kind === "gold") r.goal = { k: "gold", n: p.gold + 800 + p.level * 300 };
@@ -85,6 +87,28 @@ function newGoal(w, p) {
 export const goalText = (g, lang) => !g ? "" : lang === "en"
   ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, pet: `have ${g.n} different summons at max level`, gear: `reach an average item level of ${g.n}`, crypt: g.king ? "kill the Golden Skeleton King and finish the crypts" : `reach crypt level ${g.n}` }[g.k]
   : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, pet: `tener ${g.n} summons distintos al nivel máximo`, gear: `llegar a un nivel de objeto medio de ${g.n}`, crypt: g.king ? "matar al Rey esqueleto dorado y terminar las criptas" : `llegar al nivel ${g.n} de la cripta` }[g.k];
+// La misión activa convertida en una meta de las de siempre (nivel, caza, cripta, pvp, summons). `q` = nº de misión: la meta se da por buena al pasar a la siguiente.
+function questGoal(w, p) {
+  const q = p.quests, cur = Quests.lineOf(p)[q.n]; if (!cur) return null;
+  const g = cur.goal, pr = Quests.progress(p, g);
+  switch (g.k) {
+    case "lvl": return { k: "level", n: g.n };
+    case "kill": return g.mon === "Skeleton" ? { k: "crypt", n: Math.min(5, q.u.crypt) } : { k: "kills", n: (p.kills || 0) + 30 };
+    case "kinds": return pr[0] >= 3 ? { k: "crypt", n: 1 } : { k: "kills", n: (p.kills || 0) + 40 };   // la granja da cuatro especies: la quinta está en la cripta
+    case "depth": return { k: "crypt", n: g.n };
+    case "boss": return { k: "crypt", n: Math.min(20, g.tier * 5), king: g.tier >= 4 };
+    case "staff": return { k: "crypt", n: 20, king: true };
+    case "king": return { k: "crypt", n: 20, king: true };
+    case "ek": return { k: "pvp", n: (p.ek || 0) + Math.max(1, Math.min(6, g.n - pr[0])) };
+    case "pet": case "trade": case "final": return { k: "pet", n: Math.min(6, maxedPets(p) + 1) };
+    default: return null;
+  }
+}
+// especie de la línea de la clase que le toca criar: Orc/Tentocle/Cannibal-Plant y, tras evolucionar, Demon/Frost/Liche
+const qSpecies = p => { const q = p.quests, P = q && Quests.PATH[q.cls]; if (!P || q.n >= Quests.ACT1_END) return null; return q.tr ? P.final : P.sp; };
+const qBall = p => { const sp = qSpecies(p); return sp ? p.bag.find(i => i.comp && i.comp.sp === sp && !i.comp.bad) || null : null; };
+const qEvolve = p => { const q = p.quests; return !!q && q.u.trade && !q.tr && q.n < Quests.ACT1_END && p.bag.some(i => i.comp && i.comp.sp === Quests.PATH[q.cls].sp && i.comp.lvl >= Sch.TRADE_LEVEL); };
+const qMissing = p => { const q = p.quests; return !!q && !q.tr && qSpecies(p) && !qBall(p) && p.level >= 2; };
 const maxedPets = p => new Set(p.bag.filter(i => i.comp && i.comp.lvl >= Sch.TRADE_LEVEL).map(i => i.comp.sp)).size;
 // nivel medio de objeto de lo que lleva puesto (arma, cuerpo, piernas, escudo, casco, brazos, pantalones)
 export function avgIlvl(w, p) {
@@ -93,7 +117,7 @@ export function avgIlvl(w, p) {
 }
 function goalDone(p) {
   const g = p.res.goal;
-  return !g ? false : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
+  return !g ? false : g.q !== undefined && p.quests && p.quests.n > g.q ? true : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
     : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (g.king ? (p.delve?.king | 0) > 0 : (p.delve?.deepest || 1) >= g.n) : Object.keys(p.res.rel).length >= g.n;
 }
 
@@ -597,6 +621,7 @@ function expedition(adv, w, p, r, home) {
     const ev = Council.evaluate(adv, p, CH, 1); kind = Council.bestOf(ev);
     if (w.time - (r._evalLog || 0) > 120000) { r._evalLog = w.time; blog(w, p, `Evalúo qué me conviene: ${Council.KINDS.map(k => k + " " + ev[k].s).join(", ")} → ${Council.labelOf(kind)} (${ev[kind].why}).`); }
   }
+  if (g === "crypt" && p.quests && !plan) kind = "crypt";                                           // misión de cripta: baja sí o sí (el consejo solo decide cuando no hay misión)
   if (kind === "hunt") { r._tripAt = plan ? plan.until : w.time + 90000; return; }                   // se queda cazando en la granja (la caza prefiere lo que más rinde)
   const pl = p.level >= 3 && kind === "pl";
   if (!pl) return startDelve(adv, w, p, r, home);
@@ -658,7 +683,7 @@ function delve(adv, w, p, r, home) {
   r._delveAt = w.time + 1500;
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
   if (w.cleared) {
-    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
+    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
     const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
     if (!exit) return;
     if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
@@ -692,6 +717,7 @@ const wantsMoreBalls = (p, r) => {            // metas de vida: muchos summons d
   return bs.length > 0 && bs.length < 6 && p.gold >= 3000 && bs.every(i => i.comp.lvl >= Math.min(Sch.TRADE_LEVEL, 10 + bs.length * 8));
 };
 function pickSpecies(p, r) {
+  if (qMissing(p)) return qSpecies(p);
   if (r.arch === "scholar") { const own = new Set(balls(p).map(i => i.comp.sp)), free = MAGE_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
   let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
 // En Promise Land un summon es media pelea: lo sacan (si no está), lo ponen en modo ataque y le señalan al rival (jugador o su summon). Así entrenan a sus summons contra los de los demás.
@@ -721,10 +747,12 @@ function pets(adv, w, p, r, home) {
   r._petThink = w.time + 2500;
   const b = p.bot, live = liveOf(w, p);
   const want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
-  const ball = want || ballOf(p), c = ball?.comp;
+  const qb = qBall(p);
+  if (!want && qb && !qb.comp.down && !qb.comp.on && Comp.activeBall(p) && !w.fightZone && w.time - p.lastCombat > 4000) { adv.command(p.id, { t: "use", uid: Comp.activeBall(p).uid }); r._wantBall = qb.uid; r._petUseAt = 0; }
+  const ball = want || (qb && !qb.comp.down ? qb : null) || ballOf(p), c = ball?.comp;
   if (want && c.on) r._wantBall = 0;
   // VARIOS SUMMONS: el mago alterna de escuela (otros hechizos); los demás entrenan al de menor nivel para llevarlos todos al máximo (meta «summons distintos al nivel máximo»)
-  if (live && balls(p).length > 1 && w.time - (r._schoolAt ||= w.time + 120000) > 0 && w.time - p.lastCombat > 4000 && !w.fightZone) {
+  if (live && !qb && balls(p).length > 1 && w.time - (r._schoolAt ||= w.time + 120000) > 0 && w.time - p.lastCombat > 4000 && !w.fightZone) {
     const cur = Comp.activeBall(p), all = balls(p).filter(i => i !== cur && !i.comp.down);
     let nx = null;
     if (r.arch === "scholar") { const o = all.filter(i => Sch.SCHOOL_OF[i.comp.sp] && Sch.SCHOOL_OF[i.comp.sp] !== Sch.SCHOOL_OF[cur?.comp.sp]); nx = o[Math.floor(w.rng() * o.length)]; }
@@ -765,7 +793,7 @@ function pets(adv, w, p, r, home) {
   }
   // ---- ¿toca ir al hospital? sin summon, o con el summon caído/herido
   const more = wantsMoreBalls(p, r);
-  const need = more ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
+  const need = more || qMissing(p) || qEvolve(p) ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
   if (!(!ball && p.bot.owner != null)) r._noBall = 0;          // cualquiera sin summon deja el grupo para ir a por uno (el mago, antes que nadie)
   else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > (r.arch === "scholar" ? 90000 : 150000)) { r._noBall = 0; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, r.arch === "scholar" ? "un mago sin su summon no sirve de nada: voy al hospital de compañeros" : "aún no tengo summon: voy al hospital de compañeros a por uno"); }          // los magos no se quedan sin summon por seguir a nadie
   if (!r._pet) {
@@ -786,7 +814,9 @@ function pets(adv, w, p, r, home) {
     if (w.busy(p) || w.time - (d.cmdAt || 0) < 1500) return;
     d.cmdAt = w.time;
     d.n0 ??= balls(p).length;
-    if (!ball || (more && balls(p).length <= d.n0)) { if (d.bought) { r.petN = (r.petN | 0) + 1; d.bought = false; } const sp = pickSpecies(p, r); d.bought = true; adv.command(p.id, { t: "petbuy", npc: nurse.id, sp }); if (++d.done > 6) { r._pet = null; r._petAt = w.time + 300000; } return; }
+    { const q = p.quests, qb = q && q.u.trade && !q.tr ? p.bag.find(i => i.comp && i.comp.sp === Quests.PATH[q.cls].sp && i.comp.lvl >= Sch.TRADE_LEVEL && !i.comp.down) : null;
+      if (qb) { if (qb.comp.on) { adv.command(p.id, { t: "use", uid: qb.uid }); return; } adv.command(p.id, { t: "petup", uid: qb.uid, npc: nurse.id }); blog(w, p, "Pido a Gail que evolucione a mi " + qb.comp.nm + " (misión de clase)."); return; } }
+    if (!ball || qMissing(p) || (more && balls(p).length <= d.n0)) { if (d.bought) { r.petN = (r.petN | 0) + 1; d.bought = false; } const sp = pickSpecies(p, r); d.bought = true; adv.command(p.id, { t: "petbuy", npc: nurse.id, sp }); if (++d.done > 6) { r._pet = null; r._petAt = w.time + 300000; } return; }
     if (c.down || Comp.hpOf(p, c) < Comp.maxOf(p, c)) { adv.command(p.id, { t: "petheal", uid: ball.uid, npc: nurse.id }); if (++d.done > 4) { r._pet = null; r._petAt = w.time + 300000; } return; }
     d.leave = true; r._petUseAt = 0;
   } else if (d.tp && w === home && !d.in) {                                                     // camino a la tienda general de Aresden

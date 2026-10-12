@@ -15,6 +15,7 @@ import { makeReg as makeGuildReg } from "./systems/guild.js";
 import * as Bot from "./systems/bot.js";
 import * as Human from "./systems/human.js";
 import * as Residents from "./systems/residents.js";
+import * as Quests from "./systems/quests.js";
 
 const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas", elvfarm: "Elvine Farm", "2ndmiddle": "Promise Land" };
 
@@ -195,12 +196,12 @@ export class Adventure {
   spawnResident(name, save = null) {
     const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
     const idx = Residents.RESIDENT_NAMES.indexOf(name), side = idx >= 20 ? 2 : 1;           // 20 de Aresden y 20 de Elvine
-    const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS } });
+    const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS }, cls: ["warrior", "mage", "summoner"][(idx < 0 ? h : idx) % 3] });
     const at = this.locations.get(id);                                                          // la partida guardada puede dejarlo en el puesto (gshop_1f): se le vuelve a traer a la granja
     const p = (at || this.farm).ents.get(id);
     if (p && at && at !== this.farm) this.transfer(p, at, this.farm, this.farm.freeSpotNear(...(this.farm.home || this.farm.start)));
     p.side = side;
-    const vet = save ? 0 : Human.arrivalLevel(this, name, h);
+    const vet = 0;                                                                              // las quests (systems/quests.js) se juegan desde el nivel 1: nadie llega ya veterano
     Bot.init(this.farm, p, { level: save ? p.level : vet || 1 + (h % 4), keep: !!save });
     const home = this.homeOf(p), c = home.home || FARM_HOME;
     const spot = home.freeSpotNear(c[0] + ((h >> 3) % 41) - 20, c[1] + ((h >> 9) % 41) - 20);
@@ -289,13 +290,14 @@ export class Adventure {
       return true;
     }
     this.runs.set(key, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.id, x: gate.x, y: gate.y } });
-    return this.descend(p, w, Math.min(dv.deepest, DUNGEON_LEVELS), true);
+    return this.descend(p, w, Math.min(dv.deepest, DUNGEON_LEVELS, Quests.cryptCap(p)), true);
   }
 
   // Crea el nivel `level` de la partida del jugador y lo traslada allí. El nivel anterior se descarta.
   descend(p, from, level, entering = false) {
     const key = from.map.kind === "dungeon" && from.runKey ? from.runKey : gkey(p);
     const run = this.runs?.get(key);
+    if (level > Quests.cryptCap(p)) return from.reject(p, { t: "portal" }, "una fuerza antigua te impide bajar: cumple tus misiones (nivel máx. " + Quests.cryptCap(p) + ")");
     if (!run || level > DUNGEON_LEVELS) { if (run && level > DUNGEON_LEVELS) return this.reject(p, from, "no hay más niveles"); return false; }
     const seed = levelSeed(run.seed, level), layout = generateLevel(seed, level);
     const d = new World({ grid: layout.grid, npcDb: from.npcDb, data: from.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
@@ -315,6 +317,7 @@ export class Adventure {
     if (previous && previous !== d) this.worlds.delete(previous.map.id);
     this.instances.set(key, d);
     p.delve.deepest = Math.max(p.delve.deepest, level);
+    Quests.onDepth(d, p, level);
     return true;
   }
   // Una cripta se descarta cuando no queda ningún jugador dentro (la comparte toda la party).

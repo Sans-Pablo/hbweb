@@ -19,6 +19,7 @@ import * as Companion from "./systems/companion.js";
 import * as Debug from "./systems/debug.js";
 import * as Arena from "./systems/arena.js";
 import * as Tutorial from "./systems/tutorial.js";
+import * as Quests from "./systems/quests.js";
 import { tickFields, tickPoison } from "./systems/fields.js";
 import { sget, sclear } from "./systems/status.js";
 import { tickSky } from "./systems/weather.js";
@@ -250,6 +251,7 @@ const COMMANDS = {
   petup: (w, p, cmd) => Companion.tradeUp(w, p, cmd),
   candybuy: (w, p, cmd) => Companion.buyCandy(w, p, cmd),
   tut: (w, p, cmd) => Tutorial.command(w, p, cmd),
+  quest: (w, p, cmd) => Quests.command(w, p, cmd),
   arenainfo: (w, p, cmd) => Arena.info(w, p, cmd),
   arenabet: (w, p, cmd) => Arena.bet(w, p, cmd),
   petname: (w, p, cmd) => Companion.rename(w, p, cmd.name),

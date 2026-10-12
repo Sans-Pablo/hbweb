@@ -18,7 +18,7 @@ const farm = new Uint8Array(readFileSync(new URL("arefarm.bin", dir)));
 
 function setup(level) {
   const a = new Adventure({ grid: new Grid(meta.w, meta.h, farm), start: meta.start, npcDb, data, spawns: [], maps: {}, rng: seededRandom(7 + level) });
-  const id = a.addPlayer("jefe" + level), p = a.farm.ents.get(id);
+  const id = a.addPlayer("jefe" + level), p = a.farm.ents.get(id); p.quests.u.crypt = 20; p.quests.u.trade = 1;
   assert.ok(a.command(id, { t: "dbg", op: "crypt", level }), "entra en el nivel " + level);
   const w = a.worldFor(id);
   const boss = [...w.ents.values()].find(e => e.boss && e.kind === "npc");
