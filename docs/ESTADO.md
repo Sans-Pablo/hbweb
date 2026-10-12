@@ -5,6 +5,7 @@
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
 ## Backlog (actualizado en v0.70.0)
+- [ ] (análisis, 2026-10-12) **Remaster tipo Diablo 2 Resurrected con los sprites de Helbreath:** hoy el HD es Scale2x×4 + suavizado (`tools/hdup.py`), sin detalle nuevo. Pendiente decidir: piloto con upscaler IA (Real-ESRGAN ncnn-vulkan, RTX 4060) en 3 muestras (cuerpo, monstruo, tile) y comparar en el Bestiario; luz/sombras dinámicas; HD manual solo para jefes/héroes.
 - Hecho 0.79.x: summons psíquicos, modo 0 restricciones, pets más rápidas, indicador de estados de los demás. Pendiente: contramagias psíquicas, HD de Beholder/Centaurus/Stalker.
 **Hecho recientemente:** magia 102–172 y teleport (por diseño/Recall), Inhibición/Confusión, PvP, chat de gremio/grupo, susurros `/to`, bots que abren y compran en puestos, Python ya no es necesario.
 
@@ -161,3 +162,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] Botín de los bots (v0.79.2): ya no recogen cualquier equipo del suelo (llenaban mochila y peso de basura y no cargaban lo bueno). `lootValue` (bot.js) lo juzga con `judge`: equipar > guardar/comerciar > vender solo si paga (más exigente con la mochila cargada); elige por valor/distancia, no por cercanía. Item level (itemlevel.js): cada atributo pesa según su efecto (afilado/antiguo/crítico/veneno en armas; absorción, defensa y resistencia mágica en armaduras; Light/Agile casi nada) en vez de un peso único. Test `bot-loot.test.mjs`.
 
 - [x] (informe, sin cambios) Verificación de magos/invocadores contra el original: el único sistema de invocación del original es el hechizo Summon-Creature (`HG.cpp` ~10933, `MAGICTYPE_SUMMON`) y ya está portado fiel en `npcsys.js` `summonFor` (monstruo según Magery, máximo Magery/20 seguidores, no en zona de lucha, 300 s). Las bolas/compañeros de escuela, los hechizos lanzados por el summon y el mago a distancia de los bots NO existen en el original: son diseño propio y se mantienen como tal.
+
+**Backlog nuevo (pedido del usuario, 2026-10-12, release de testers):** alcance = solo acto 1; servidor con Tailscale. Ver `docs/RELEASE_TESTERS.md`.
+- [ ] **Bots pulidos del todo:** arreglar lo que sale en `Informe de bots.md`: atascos en granjas (Aresfarm/Elvine), Recall interrumpido, sin flechas, summons lejos/sin volver, peso/mochila, `attack` sin objetivo, `learn` repetido, balance (muertes por Cyclops/Troll/Skeleton, revivir summon caro, oro sin sumideros, exp/min negativa con Slimes).

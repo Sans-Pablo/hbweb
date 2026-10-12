@@ -616,7 +616,7 @@ function qaTick(adv, w, p, r) {
   if (p.dead) return;
   // atascado (solo en la granja: dentro de tiendas y criptas el bot no sabe qué hacer y vuelve solo)
   if (w !== adv.homeOf(p)) { r._pt = w.time; r._px = -1; }       // quieto > 40 s sin descansar ni pelear = atascado
-  else if (r._px !== p.x || r._py !== p.y || b.rest || w.time - p.lastCombat < 6000 || w.busy(p) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; r._stuckN = 0; }
+  else if (r._px !== p.x || r._py !== p.y || b.rest || r._gather || r._leis || w.time - p.lastCombat < 6000 || w.busy(p) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; r._stuckN = 0; }
   else if (w.time - r._pt > 40000) {
     r._pt = w.time;
     b.path = null; b.goal = null; b.wander = null; b.target = null; b.fails = 0; b.ignore?.clear?.();          // se desatasca solo: olvida camino y objetivo y, a la segunda vez seguida, usa Recall (vuelve a la ciudad)
@@ -624,6 +624,7 @@ function qaTick(adv, w, p, r) {
     b.stuck = { why: "sin progreso", since: w.time - 40000 };
     report(adv, p, "bug", "stuck:" + (w.map.id || "") + ":" + (p.x >> 3) + "," + (p.y >> 3), `Me quedo parado/atascado cerca de (${p.x},${p.y}) en ${w.map.name || w.map.id}.`, `I'm stuck near (${p.x},${p.y}) in ${w.map.name || w.map.id}.`);
   }
+  if (b.stuck && w.time - (b.stuck.last ?? b.stuck.since) > 8000) b.stuck = null;                                // ya se resolvió: no es un bloqueo
   if (b.stuck && w.time - b.stuck.since > 30000) {                                      // detector de bloqueos (v0.77.0): munición, acción cancelada o sin progreso; queda en el informe y en `b.stuck`
     report(adv, p, "bug", "stuck-" + b.stuck.why, `Estoy bloqueado (${b.stuck.why}) desde hace ${Math.round((w.time - b.stuck.since) / 1000)} s en ${w.map.name || w.map.id}.`, `I'm blocked (${b.stuck.why}) for ${Math.round((w.time - b.stuck.since) / 1000)} s in ${w.map.name || w.map.id}.`);
     ObsStats.ask(adv, p, "stuck-" + b.stuck.why, "Bots bloqueados (" + b.stuck.why + "): revisar.", "Blocked bots (" + b.stuck.why + "): needs a look.");
@@ -747,7 +748,7 @@ function startDelve(adv, w, p, r, home) {
   let spot = tp ? w.freeSpotNear(tp.x, tp.y + 2) : null;
   if (!spot || w.teleports.has(w.grid.idx(spot[0], spot[1]))) spot = w.freeSpotNear(...(home.home || [b.home.x, b.home.y]));
   if (!spot) { r._tripAt = w.time + 60000; return; }
-  r._delve = { go: true, goUntil: w.time + 150000, until: w.time + (r.goal?.k === "crypt" && r.goal.king ? 900000 : 420000) + Math.floor(w.rng() * 300000), spot, tries: 0, lv: 0 };
+  r._delve = { go: true, t0: w.time, goUntil: w.time + 150000 + dist(p, { x: spot[0], y: spot[1] }) * 1200, until: w.time + (r.goal?.k === "crypt" && r.goal.king ? 900000 : 420000) + Math.floor(w.rng() * 300000), spot, tries: 0, lv: 0 };
   b.travel = { x: spot[0], y: spot[1], w, until: w.time + 150000 };
   blog(w, p, `Planeo bajar a la cripta de esqueletos${r.goal?.k === "crypt" ? " (mi meta: nivel " + r.goal.n + ")" : ""}: voy a la entrada (${spot[0]},${spot[1]}).`);
   remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
@@ -775,7 +776,7 @@ function cryptRecall(adv, w, p, r, es) {
   if (w.time - (r._rc || 0) <= 8000 || w.time < (p.recallCd || 0)) return;
   const hit = w.time - (p.lastCombat || -1e9) < 2500;                                  // v0.77.0: con un monstruo encima el canal se rompe: primero se defiende (no se queda quieto), y reintenta
   r._rc = w.time; blog(w, p, es); if (!hit) { b.hold = w.time + 3500; b.target = null; b.travel = null; b.path = null; }
-  r._rcN = (r._rcN | 0) + 1; if (r._rcN >= 4) { r._rcN = 0; report(adv, p, "bug", "crypt-exit", "Me cuesta salir de la cripta: el Recall se me interrumpe " + 4 + " veces seguidas.", "I struggle to leave the crypt: Recall gets interrupted 4 times in a row."); }
+  if (!hit) r._rcN = (r._rcN | 0) + 1; if (r._rcN >= 4) { r._rcN = 0; report(adv, p, "bug", "crypt-exit", "Me cuesta salir de la cripta: el Recall se me interrumpe " + 4 + " veces seguidas.", "I struggle to leave the crypt: Recall gets interrupted 4 times in a row."); }
   adv.command(p.id, { t: "recall" });
 }
 function delve(adv, w, p, r, home) {
@@ -783,9 +784,10 @@ function delve(adv, w, p, r, home) {
   if (w === home) {
     r._rcN = 0;
     if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
-    if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
-    if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
-    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, cl = p.delve?.cleared ?? Math.max(0, dp - 1);
+    if ((w.time > d.goUntil && dist(p, { x: d.spot[0], y: d.spot[1] }) > 5 && (w.time - p.lastCombat > 10000 || w.time > d.goUntil + 300000)) || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 + dist(p, { x: d.spot[0], y: d.spot[1] }) * 1000 }; b.path = null; b.goal = null; b.fails = 0; }
+    if ((dist(p, { x: d.spot[0], y: d.spot[1] }) <= 5 || w.time - d.t0 > 120000) && !p.dead && w.busy(p) && !(b.noFight > w.time)) b.noFight = w.time + 1500;                // en la entrada y peleando sin parar: suelta el combate un instante para poder usar el portal
+    if ((dist(p, { x: d.spot[0], y: d.spot[1] }) <= 5 || w.time - d.t0 > 120000) && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, cl = p.delve?.cleared ?? Math.max(0, dp - 1);
       let start = Math.min(cl + 1, 20);                                                            // elige el piso de inicio entre los despejados (el siguiente al último es el máximo): el más hondo cuyo jefe pueda vencer y cuyo nivel le alcance
       while (start > 1) { const bp = bossPreview(w, start); if ((!bp || fightEstimate(w, p, bp).ratio >= 1.3) && p.level >= cryptNeed(r, start) - 2) break; start--; }
       const cap = Quests.cryptCap(p);                                                              // v0.78.6: un piso ya despejado no se repite: si el siguiente aún no se puede (jefe o nivel) o el tope de misiones lo impide, no baja y vuelve a intentarlo más tarde

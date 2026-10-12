@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.79.3 · Bots pulidos (2026-10-12)
+- Recall de los bots: solo cuenta como interrupción si no les pegaban; en huida esperan el canal. Entrada a la cripta desde la granja sin depender de estar libres (`noFight`). Recados también en combate si no hay flechas; flechas antes que pociones; sin oro, el arquero suelta el arco. Detector de atascos con `stuck.last`. Test `bot-fixes`.
+
 ## 0.79.2 · Botín inteligente de los bots (2026-10-12)
 - Los bots juzgan el equipo del suelo con `judge` (`lootValue`): recogen lo que equipan o guardan, y solo venden lo que paga; elijen por valor/distancia. Item level pondera cada atributo por su efecto real. Dirección fija de Tailscale Funnel. Test `bot-loot`.
 

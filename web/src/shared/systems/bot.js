@@ -39,7 +39,7 @@ const isStaff = d => d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND; 
 // Mago de apoyo (INVENTO): la mitad de los estudiosos (según el nombre) sigue la rama del invocador de apoyo: con el nivel que exige el báculo (30, Item.cfg) lo compra y adopta Healer, Buffer y Aura
 export const isSupport = p => { if (!p.res || p.res.arch !== "scholar") return false; if (p.res.job === "support") return true; let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 2 === 0; };
 // Bloqueo registrado (v0.77.0): `b.stuck = {why, since}`; residents.js lo vuelca al informe si dura
-function stuck(w, p, b, why) { if (!b.stuck || b.stuck.why !== why) b.stuck = { why, since: w.time }; }
+function stuck(w, p, b, why) { if (!b.stuck || b.stuck.why !== why) b.stuck = { why, since: w.time }; b.stuck.last = w.time; }       // `last`: la última vez que seguía bloqueado (si ya se resolvió no se informa)
 const ARROW = 77, ARROWS_MAX = 150;
 const SKIP_WEAPON = /Wand|Staff|Rod|Arrow|Hammer\(M\)|Pickaxe|Hoe/;
 
@@ -136,11 +136,11 @@ export function errands(w, p, b, first = false) {
   if (p.dead) return;
   spendPoints(w, p);
   const cat = catalog(w.data);
+  { const ar = w.data.item(ARROW), have = countOf(p, ARROW);          // arquero con arco puesto: lleva flechas de sobra (1 de oro cada una); sin ellas el arco no hace daño
+    if (ar && p.eff?.bow && have < ARROWS_MAX / 2) { const n = Math.min(ARROWS_MAX - have, Math.floor(p.gold / 4)); if ((n > 10 || (have === 0 && n > 0)) && buy(w, p, ar, n)) blog(w, p, `Compro ${n} flechas: con el arco disparo desde lejos.`); } }
   // comida y pociones
   const potCap = p.res && p.level >= 15 ? Math.max(6, Math.min(40, Math.floor(p.gold / 60))) : 6;               // con oro de sobra lleva más pociones (aguantan más los jefes)
   if (cat.potion && countOf(p, cat.potion.id) < potCap) buy(w, p, cat.potion, potCap - countOf(p, cat.potion.id));
-  { const ar = w.data.item(ARROW), have = countOf(p, ARROW);          // arquero con arco puesto: lleva flechas de sobra (1 de oro cada una); sin ellas el arco no hace daño
-    if (ar && p.eff?.bow && have < ARROWS_MAX / 2) { const n = Math.min(ARROWS_MAX - have, Math.floor(p.gold / 4)); if (n > 10 && buy(w, p, ar, n)) blog(w, p, `Compro ${n} flechas: con el arco disparo desde lejos.`); } }
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
   feedSummons(w, p, t => blog(w, p, t), !p.res);                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
@@ -165,7 +165,7 @@ export function errands(w, p, b, first = false) {
     if (!usable(d) || (b.badUid ||= new Set()).has(i.uid) || i.life === 0 || Object.values(p.equip).includes(i.uid)) continue;
     if (d.equipPos === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;                  // un escudo expulsaría el arma a dos manos (y la vendería para recomprarla: bucle)
     const slot = slotOf(d), mine = ilv(i), cur = d.equipPos === EQUIP.TWOHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND)) + ilv(worn(EQUIP.LHAND))) : value(slot);
-    if ((mine > cur * 1.08 + 0.5 || (isArcher(p) && isBow(d) && !p.eff?.bow) || (isSupport(p) && isStaff(d) && !hasStaff(p))) && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
+    if ((mine > cur * 1.08 + 0.5 || (isArcher(p) && isBow(d) && !p.eff?.bow && (p.gold >= 4 || countOf(p, ARROW) > 0)) || (isSupport(p) && isStaff(d) && !hasStaff(p))) && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
   }
   if (best) {
     if (tryEquip(w, p, b, best.i)) blog(w, p, `Me equipo ${w.data.item(best.i.id).name} (item level ${ilv(best.i)}).`);
@@ -433,7 +433,7 @@ function run(adv, w, p, b) {
   }
   // recados
   const unarmed = p.equip[EQUIP.RHAND] === undefined && p.equip[EQUIP.TWOHAND] === undefined;         // el arma se rompió: no espera a la calma, se rearma ya (sin ella pegaba con 0 de daño)
-  if (w.time >= b.errand && (unarmed || w.time - p.lastCombat > 3500)) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
+  if (w.time >= b.errand && (unarmed || w.time - p.lastCombat > 3500 || (p.eff?.bow && !arrowOf(w, p)))) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp, fear = Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
@@ -454,6 +454,7 @@ function run(adv, w, p, b) {
     if (foe) {
       b.fleeAt = w.time; b.target = null; b.path = null;
       if ((w.map.kind === "dungeon" || w.pvp) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
+      else if (p.recallTok && fd >= 3 && w.time - (p.lastCombat || -1e9) > 1200) { b.hold = w.time + 800; return; }          // el Recall canaliza y el enemigo aún no le alcanza: quieto (correr lo cancelaría)
       else {
         let best = null, bs = dist(p, foe);
         for (let d = 0; d < 8; d++) { const x = p.x + DX[d] * 2, y = p.y + DY[d] * 2, sx = p.x + DX[d], sy = p.y + DY[d]; if (w.grid.blocked(sx, sy) || !w.grid.inside?.(sx, sy) && false) continue; const sc = Math.max(Math.abs(x - foe.x), Math.abs(y - foe.y)); if (sc > bs && !w.teleports.has(w.grid.idx(sx, sy))) { bs = sc; best = [x, y]; } }
@@ -476,11 +477,12 @@ function run(adv, w, p, b) {
   if (b.ignore) for (const [id, until] of b.ignore) if (w.time > until) b.ignore.delete(id);
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
   if ((!b.rest || defend) && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
-  const t = (b.rest && !defend) || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
+  const t = (b.rest && !defend) || b.noFight > w.time || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
     if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (p.eff?.bow && !arrowOf(w, p)) {                                                              // sin flechas: no sigue disparando al aire (eso cancela el Recall); compra o sale
       stuck(w, p, b, "sin flechas"); b.target = null; b.path = null;
+      if (p.gold < 4) { const bw = p.bag.find(i => isBow(w.data.item(i.id)) && Object.values(p.equip).includes(i.uid)); if (bw) { blog(w, p, "Sin flechas ni oro: me quito el arco."); adv.command(p.id, { t: "unequip", uid: bw.uid }); return; } }          // quien no es arquero y no puede pagar flechas no se queda bloqueado con un arco que no dispara
       if (!p.recallTok && w.time - (b.recallAt || 0) > 6000 && (w.map.kind === "dungeon" || w.pvp)) { b.recallAt = w.time; blog(w, p, "Me quedé sin flechas: salgo con Recall a comprar más."); adv.command(p.id, { t: "recall" }); }
       else if (!w.pvp && w.map.kind !== "dungeon") b.errand = 0;
       return;
