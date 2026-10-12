@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.79.9 · Observador sin caída silenciosa (2026-10-12)
+- `dashboard.js#apiBase`: si la sonda al servidor configurado falla y la página no es del propio servidor (GitHub Pages), usa igualmente la dirección de `server.json` en vez de pedir `/api` a github.io (404 mudo).
+
 ## 0.79.8 · Sprite Tool (2026-10-12)
 - `bestiario.html` pasa a llamarse «Sprite Tool». Personajes M/W (`@M`, `@W`) con piel, peinado, color, ropa interior y acciones; vista «Hojas sueltas» con todas las fuentes (sprites, players, equip, sprites_mod, fx, ui), filtro, pivote y hoja entera.
 

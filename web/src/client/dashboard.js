@@ -235,7 +235,7 @@ let baseP;
 const apiBase = () => baseP ||= (async () => {
   const q = new URLSearchParams(location.search).get("server");
   if (q) return q.replace(/[/]+$/, "");
-  try { const j = await fetch("data/server.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null); const u = String(j?.url || "").replace(/[/]+$/, ""); if (u) { const ok = await fetch(u + "/api/info", { cache: "no-store" }).then(r => r.ok, () => false); if (ok) return u; } } catch { /* mismo origen */ }
+  try { const j = await fetch("data/server.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null); const u = String(j?.url || "").replace(/[/]+$/, ""); if (u) { const ok = await fetch(u + "/api/info", { cache: "no-store" }).then(r => r.ok, () => false); if (ok) return u; const same = await fetch("api/info", { cache: "no-store" }).then(r => r.ok, () => false); if (!same) return u; } } catch { /* mismo origen */ }
   return "";
 })();
 const api = async p => fetch((await apiBase()) + p, { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } });
