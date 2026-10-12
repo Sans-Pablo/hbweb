@@ -558,11 +558,15 @@ function pub(e, own) {
 }
 
 function botList() {
+  const kids = new Map();                                                         // líder → cuántos seguidores tiene (grupo sin party formal)
+  for (const b of adventure.bots.values()) { const o = b.bot?.owner; if (o != null) kids.set(o, (kids.get(o) || 0) + 1); }
   return [...adventure.bots.values()].map(b => {
     const w = adventure.worldFor(b.id), br = b.bot || {}, t = br.target;
     const st = b.dead ? "muerto" : br.travel ? "viaja" : t ? "lucha: " + String(t.name).replace(/-/g, " ") : br.rest ? "descansa" : br.owner != null ? "sigue al líder" : "pasea";
+    const lead = br.owner != null ? (w.ents.get(br.owner) || adventure.bots.get(br.owner)) : null, gid = b.party?.id ? "p" + b.party.id : lead ? "l" + br.owner : kids.has(b.id) ? "l" + b.id : "";
     return { id: b.id, name: b.name, side: b.side, lv: b.level, map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, mp: b.mp, mm: b.maxMp, st: b.stats, gold: b.gold, kills: b.kills || 0, ek: b.ek || 0,
-      lang: b.res?.lang || "", arch: b.res?.arch || "", guild: b.guild?.name || "", goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)) };
+      lang: b.res?.lang || "", arch: b.res?.arch || "", guild: b.guild?.name || "", grank: b.guild ? b.guild.rank | 0 : -1, goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)),
+      mode: Residents.modeOf(adventure, b, w), grp: gid, lead: lead ? lead.name : (kids.has(b.id) ? b.name : ""), cls: b.quests?.cls || "", q: b.quests ? b.quests.n | 0 : 0, floor: w.map.kind === "dungeon" ? w.map.level : 0, pids: b.party?.names || null };
   }).sort((a, b) => (a.side - b.side) || (b.lv - a.lv) || a.name.localeCompare(b.name));
 }
 function itemsList(world) {

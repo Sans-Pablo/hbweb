@@ -5,7 +5,7 @@ import { Adventure } from "../web/src/shared/adventure.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { GameData } from "../web/src/shared/data.js";
 import { setDungeonPalette, seededRandom } from "../web/src/shared/dungeon.js";
-import { brainOf } from "../web/src/shared/systems/residents.js";
+import { brainOf, modeOf } from "../web/src/shared/systems/residents.js";
 const dir = new URL("../web/data/", import.meta.url), json = n => JSON.parse(readFileSync(new URL(n, dir)));
 const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
@@ -17,5 +17,9 @@ for (const p of a.residents()) {
   const b = brainOf(a, p);
   assert.equal(b.id, p.id); assert.ok(b.mode && b.map && b.lv >= 1 && Array.isArray(b.log) && Array.isArray(b.near) && b.goal);
   JSON.stringify(b);
+  // ficha completa del centro de observación
+  assert.ok(b.name === p.name && ["dead","rest","follow","delve-go","delve","pit","trip","pet","travel","flee","fight","idle"].includes(b.mode) && modeOf(a, p, a.worldFor(p.id)) === b.mode);
+  assert.ok(Array.isArray(b.quests) && b.quests.every(q => [0, 1, 2].includes(q.st)) && Array.isArray(b.mates) && Array.isArray(b.equip) && Array.isArray(b.skills) && Array.isArray(b.rel));
+  assert.ok(b.st && typeof b.ilvl === "number" && b.exp >= 0 && b.exp <= 100 && b.qa && b.qa.pvp && b.qa.pet && "guild" in b && "delveInfo" in b);
 }
 console.log("OK bot-brain");

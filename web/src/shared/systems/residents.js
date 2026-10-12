@@ -218,28 +218,52 @@ export function speak(adv, p, text) {
   q.push({ p, pre: m[1], sit: m[2], at: w.time, lang: p.res.lang }); if (q.length > 14) q.shift();
   pumpSay(adv);
 }
-// «Cerebro» del habitante observado: qué hace, qué piensa, qué mira. Lo recibe el cliente en modo observar (≈1 vez por segundo).
+// Modo actual del habitante (lo usan el cerebro y la lista de observar).
+export function modeOf(adv, p, w = adv.worldFor(p.id)) {
+  const b = p.bot, r = p.res || {}, d = r._delve, t = r._trip, tgt = b.target != null ? w.ents.get(b.target?.id ?? b.target) : null;
+  return p.dead ? "dead" : b.rest ? "rest" : b.owner != null ? "follow" : d ? (d.go ? "delve-go" : "delve") : t ? (t.pit ? "pit" : "trip") : r._pet ? "pet" : b.travel ? "travel" : b.fleeAt && w.time - b.fleeAt < 3000 ? "flee" : tgt ? "fight" : "idle";
+}
+const topN = (o, n) => Object.entries(o || {}).sort((x, y) => y[1] - x[1]).slice(0, n);
+// «Cerebro» del habitante observado: qué hace, qué piensa, qué mira y su ficha completa. Lo recibe el cliente en modo observar (≈1 vez por segundo).
 export function brainOf(adv, p) {
   const w = adv.worldFor(p.id), b = p.bot, r = p.res || {}, tgt = b.target != null ? w.ents.get(b.target?.id ?? b.target) : null;
-  const d = r._delve, t = r._trip;
-  const mode = p.dead ? "dead" : b.rest ? "rest" : b.owner != null ? "follow" : d ? (d.go ? "delve-go" : "delve") : t ? (t.pit ? "pit" : "trip") : r._pet ? "pet" : b.travel ? "travel" : b.fleeAt && w.time - b.fleeAt < 3000 ? "flee" : tgt ? "fight" : "idle";
-  const cur = p.quests && Quests.lineOf(p)[p.quests.n | 0];
+  const d = r._delve, mode = modeOf(adv, p, w);
+  const line = p.quests ? Quests.lineOf(p) : [], qn = p.quests ? p.quests.n | 0 : 0, cur = line[qn];
   const lead = b.owner != null ? w.ents.get(b.owner) : null;
   const near = [...w.ents.values()].filter(e => e !== p && !e.dead && dist(p, e) <= 12 && e.kind !== "citizen" && !e.aux).sort((x, y) => dist(p, x) - dist(p, y)).slice(0, 6).map(e => ({ n: e.name || e.type || "?", k: e.kind === "player" ? (e.side === p.side ? "ally" : "enemy") : e.comp ? "pet" : "mob", d: Math.round(dist(p, e)), hp: Math.round(100 * e.hp / Math.max(1, e.maxHp)) }));
   const red = w.data.named?.("RedPotion"), pots = red ? p.bag.reduce((n, i) => n + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
   const sk = p.eff?.skill, skv = sk != null ? (p.skills?.[sk] | 0) : null;
+  const nm = u => { const i = p.bag.find(x => x.uid === u), it = i && w.data.item(i.id); return it ? it.name : ""; };
+  const ilv = avgIlvl(w, p);
+  const gd = p.guild ? adv.guildReg?.guilds?.get(p.guild.name) : null;
+  const team = lead ? lead : members(adv, p) > 0 ? p : null;
+  const mates = team ? [team, ...[...adv.bots.values()].filter(x => x !== team && x.bot?.owner === team.id)] : [];
+  const qs = line.map((q, i) => ({ id: q.id, es: q.es || q.name || q.id, en: q.en || q.name || q.id, st: i < qn ? 2 : i === qn ? 1 : 0 }));
   return {
-    id: p.id, mode, lv: p.level, hp: p.hp, mhp: p.maxHp, mp: p.mp, mmp: p.maxMp, gold: p.gold, pots, map: w.map.id, floor: w.map.kind === "dungeon" ? w.map.level : 0, cls: p.quests?.cls || "",
+    id: p.id, name: p.name, side: p.side, mode, lv: p.level, hp: p.hp, mhp: p.maxHp, mp: p.mp, mmp: p.maxMp, gold: p.gold, pots, map: w.map.id, floor: w.map.kind === "dungeon" ? w.map.level : 0, cls: p.quests?.cls || "",
     goal: { es: goalText(r.goal, "es"), en: goalText(r.goal, "en") },
     quest: cur ? { id: cur.id, es: cur.es || cur.name || cur.id, en: cur.en || cur.name || cur.id, pr: Quests.progress(p, cur.goal) } : null,
+    quests: qs, qn,
     target: tgt ? { n: tgt.name || tgt.type || "?", hp: Math.round(100 * tgt.hp / Math.max(1, tgt.maxHp)), d: Math.round(dist(p, tgt)) } : null,
     delve: d ? { until: Math.max(0, Math.round((d.until - w.time) / 1000)), floor: d.lv | 0 } : null,
     team: lead ? { lead: lead.name, n: members(adv, lead) + 1 } : members(adv, p) > 0 ? { lead: p.name, n: members(adv, p) + 1 } : null,
+    mates: mates.map(x => ({ id: x.id, n: x.name, lv: x.level, hp: Math.round(100 * x.hp / Math.max(1, x.maxHp)), lead: x === team })),
     skill: skv, near,
     wish: b.wish || "",
     log: (b.log || []).slice(-14),
     mem: (r.mem || []).slice(-5).map(m => ({ es: m.es, en: m.en })),
     friends: Object.entries(r.rel || {}).sort((x, y) => y[1] - x[1]).slice(0, 4).map(([n, v]) => n + " " + v),
+    // ficha completa para analizar al bot
+    st: { ...p.stats }, exp: Math.round(100 * (p.exp - p.prevExp) / Math.max(1, p.nextExp - p.prevExp)), ilvl: Math.round(ilv), ek: p.ek | 0, kills: p.kills | 0,
+    arch: r.arch || "", origin: r.origin || "", motive: r.motive || "", fear: r.fear || "", quirk: r.quirk || "", lang: r.lang || "", bio: r.bio || "", chats: r.chats | 0,
+    equip: Object.entries(p.equip || {}).map(([sl, u]) => [+sl, nm(u)]).filter(x => x[1]),
+    skills: Object.entries(p.skills || {}).filter(x => x[1] > 0).map(([k, v]) => [+k, v | 0]).sort((x, y) => y[1] - x[1]).slice(0, 8),
+    bagN: p.bag.length, deaths: r.deaths | 0,
+    qa: { kills: topN(r.qa?.kills, 6), deaths: topN(r.qa?.deaths, 4), pvp: { ...(r.qa?.pvp || {}) }, pet: { ...(r.qa?.pet || {}) } },
+    rel: Object.entries(r.rel || {}).sort((x, y) => y[1] - x[1]).slice(0, 8),
+    guild: p.guild ? { name: p.guild.name, rank: p.guild.rank | 0, master: gd?.master || "", n: gd ? Object.keys(gd.members).length : 0 } : null,
+    delveInfo: p.delve ? { deepest: p.delve.deepest | 0, king: p.delve.king | 0 } : null,
+    pet: r._pet ? 1 : 0, x: Math.round(p.x), y: Math.round(p.y),
   };
 }
 export function thought(adv, p, sit) {                                                   // burbuja sobre la cabeza (evento botsay) con texto del modelo

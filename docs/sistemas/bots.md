@@ -18,6 +18,7 @@ Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (
 
 ## Cerebro, manuales, descenso y equipo (0.65.0)
 - **Cerebro**: en modo observar el servidor envía `{t:"brain", b}` cada segundo (`brainOf(adv,p)`, residents.js); el cliente lo pinta en `brainPanel` (observer.js). Test: `tests/bot-brain.test.mjs`.
+- **Centro de observación** (0.67.0): `client/watchpanel.js` — `rosterPanel` (plantel agrupado por `grp` de `botList`), `observerBar` (◀ ▶, teclas [ ]), `brainPanel` con pestañas. Cambiar de bot = recarga con `#observar=ID` (el `pid` se fija al cargar). `modeOf` en residents.js da el modo.
 - **Manuales**: `studyManuals` (bot.js) compra y usa el manual de la skill del arma/escudo si está a 0. Test: `bot-manuals.test.mjs`.
 - **Descenso**: cada piso nuevo suma 5 min a `_delve.until`; el tope lo siguen marcando `cryptCap` y `cryptNeed`.
 - **Equipo de cripta**: `recruitCrypt` invita hasta 2 habitantes libres cercanos (nv ±8, vida >70 %); un 25 % rechaza. Los seguidores bajan por el portal tras el líder.

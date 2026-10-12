@@ -35,7 +35,8 @@ import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
-import { pickBot, observerBar, brainPanel } from "./observer.js";
+import { pickBot } from "./observer.js";
+import { observerBar, rosterPanel, brainPanel } from "./watchpanel.js";
 import { SCHOOL_OF, spellSchool, taught } from "../shared/systems/schools.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
@@ -76,7 +77,7 @@ async function main() {
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   let world = conn.state;
-  if (conn.observing) { observerBar(conn); setInterval(() => brainPanel(conn), 500); }
+  if (conn.observing) { observerBar(conn); rosterPanel(conn); setInterval(() => brainPanel(conn), 500); }
   // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
   const stream = new Streamer(assets.sprites);
   status.style.display = "";
@@ -741,7 +742,9 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
       box.remove(); resolve(id);
     };
     if (watchBtn) watchBtn.onclick = observe;
-    if (online && location.hash === "#observar") observe();
+    const hashId = online && /^#observar=([0-9]+)/.exec(location.hash);
+    if (hashId) { box.style.display = "none"; conn.watch(+hashId[1]).then(id => { box.remove(); resolve(id); }, () => observe()); }
+    else if (online && location.hash === "#observar") observe();
     const submit = async () => {
       let name = user.value.trim().slice(0, 16);
       msg.textContent = "…";

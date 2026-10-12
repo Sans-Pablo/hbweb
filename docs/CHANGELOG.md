@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.67.0 · Centro de observación (2026-10-12)
+- Modo observar rehecho como pantalla compartida (`client/watchpanel.js`): plantel a la izquierda con todos los habitantes agrupados por party (👑 líder) y «en solitario», con qué hace cada uno (modo, mapa/piso, vida, guild), búsqueda y filtro de bando; un clic cambia de habitante (recarga con `#observar=ID`). Barra superior con ◀ ▶ (teclas [ y ]).
+- Panel «cerebro» con pestañas Resumen / Mente (personalidad, bio, todas las misiones, recuerdos) / Ficha (atributos, equipo por ranura, habilidades, historial, cripta, summon) / Social (party clicable, guild, amistades).
+- Servidor: `modeOf` (residents.js) y `brainOf`/`botList` con campos nuevos (grp, lead, mode, quests, mates, equip, guild…). Solo se añaden campos: sin cambio de `NET_PROTO`. Test ampliado: `tests/bot-brain.test.mjs`.
+
 ## 0.66.0 · Criptas en disputa (2026-10-12)
 - Causa de las «dos parties en la misma cripta»: (1) un bot seguidor sin party (`recruitCrypt`) abría su propia cripta con su id en vez de entrar a la de su líder; (2) quien dejaba la party dentro de una cripta privada se quedaba allí; (3) la clave de la cripta era el id de la party. Ahora el seguidor entra a la cripta del líder y `guardPrivate` saca de un piso privado a quien ya no es de la party (si todos pasan a la misma party nueva, el piso pasa a ser suyo).
 - Pisos 15–20 compartidos (`SHARED_FROM` en adventure.js): un único mundo por piso para Aresden y Elvine, con PvP (`w.pvp`, `map.shared`). Baja la party (o el jugador solo) y los rivales se quedan; se necesita despejar el piso para bajar; se descarta al quedar vacío. La salida devuelve al origen de cada jugador (`origins`).

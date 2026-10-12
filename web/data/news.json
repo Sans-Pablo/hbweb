@@ -10,6 +10,14 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Centro de observación (v0.67.0)", "en": "Observation center (v0.67.0)" },
+      "items": [
+        { "es": "Observar: panel de habitantes a la izquierda agrupado por party, con lo que hace cada bot; clic para cambiar de personaje (o ◀ ▶ / teclas [ y ]).", "en": "Observe: resident panel on the left grouped by party, showing what each bot is doing; click to switch character (or ◀ ▶ / [ and ] keys)." },
+        { "es": "El cerebro del bot ahora tiene pestañas: resumen, mente (personalidad, misiones, recuerdos), ficha (equipo, habilidades, historial) y social (party, guild, amistades).", "en": "The bot brain now has tabs: summary, mind (personality, quests, memories), sheet (gear, skills, record) and social (party, guild, relationships)." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Criptas en disputa (v0.66.0)", "en": "Contested crypts (v0.66.0)" },
       "items": [
         { "es": "Los pisos 15 a 20 de la cripta son compartidos: Aresden y Elvine coinciden en el mismo piso y hay PvP. Las parties se disputan el territorio para poder bajar. Los pisos 1 a 14 siguen siendo de tu party.", "en": "Crypt floors 15 to 20 are shared: Aresden and Elvine meet on the same floor with PvP enabled. Parties fight over the territory to go down. Floors 1 to 14 stay private to your party." },
