@@ -78,7 +78,7 @@
 - [x] (hecho en v0.78.0) **CI sin gh:** release.sh consulta por curl a la API de GitHub el estado del último workflow.
 - [x] (hecho en v0.78.0) **Fichas de 0.76.0:** escribir fichas de summonfood, sprite-retry y audio. → `summonfood.md`, `sprite-retry.md`, `audio.md`.
 
-- [ ] **Verificar contra el original** (cuando esté disponible): cifras de crítico/dash (`CRIT` en `combat.js`) y comportamiento de magos/invocadores a distancia.
+- [ ] **Verificar contra el original** (disponible en `HelbreathOriginal`, ver `ORIGINAL.md`): cifras de crítico/dash (`CRIT` en `combat.js`) y comportamiento de magos/invocadores a distancia.
 - [ ] **Artesanos:** solo producen comida y pescado, no caramelos.
 
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.

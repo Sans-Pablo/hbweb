@@ -1,6 +1,7 @@
 # hbweb — port web de Helbreath
 
 Port fiel del Helbreath original al navegador. Una sola regla manda: **el código original es la especificación**
+(Copia local en este PC: `C:\Users\sansp\Documents\HelbreathOriginal`, mapa en `docs/ORIGINAL.md`.)
 (`/root/HelbreathServer`: `Client/Game.cpp`, `HGServer/Game.cpp`, `Files/*.cfg`, `Helbreath/{SPRITES,MAPDATA,SOUNDS,MUSIC,CONTENTS}`).
 Antes de inventar una fórmula, un texto, una posición de interfaz o un número, se busca en el original y se cita
 (función o fichero) en el comentario del código.
@@ -44,7 +45,7 @@ Otro agente también empuja a `main`. Proceso completo y ahorro de tokens: `docs
 F1 muestra `web/data/news.json` (novedades, lista de pruebas, notas). Cada cambio visible se anota ahí en el mismo commit (`docs/sistemas/novedades.md`).
 
 ## Documentación
-`docs/ESTADO.md` estado y pendientes · `docs/FINDINGS.md` trampas · `docs/sistemas/*.md` una ficha por sistema.
+`docs/ORIGINAL.md` dónde está el código original en este PC · `docs/ESTADO.md` estado y pendientes · `docs/FINDINGS.md` trampas · `docs/sistemas/*.md` una ficha por sistema.
 
 ## Versión visible
 `web/data/version.json` ({version, name}) se muestra junto a los fps (arriba a la izquierda). Súbela en cada entrega para que los testers sepan qué build prueban.
