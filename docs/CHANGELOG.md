@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.66.0 · Criptas en disputa (2026-10-12)
+- Causa de las «dos parties en la misma cripta»: (1) un bot seguidor sin party (`recruitCrypt`) abría su propia cripta con su id en vez de entrar a la de su líder; (2) quien dejaba la party dentro de una cripta privada se quedaba allí; (3) la clave de la cripta era el id de la party. Ahora el seguidor entra a la cripta del líder y `guardPrivate` saca de un piso privado a quien ya no es de la party (si todos pasan a la misma party nueva, el piso pasa a ser suyo).
+- Pisos 15–20 compartidos (`SHARED_FROM` en adventure.js): un único mundo por piso para Aresden y Elvine, con PvP (`w.pvp`, `map.shared`). Baja la party (o el jugador solo) y los rivales se quedan; se necesita despejar el piso para bajar; se descarta al quedar vacío. La salida devuelve al origen de cada jugador (`origins`).
+- Cliente: `enemyPlayer` permite atacar a jugadores enemigos en criptas compartidas.
+- Test nuevo `tests/shared-crypt.test.mjs`.
+
 ## 0.65.0 · Cerebro de bots (2026-10-12)
 - Observar: ventana «Cerebro» (arriba a la derecha) con modo, objetivo, misión, expedición, equipo, a quién mira, diario de pensamientos, recuerdos y amigos. El servidor manda `brain` 1 vez por segundo solo a quien observa (`brainOf` en residents.js). Sin cambio de `NET_PROTO`: un cliente viejo ignora el mensaje.
 - Bots: compran y estudian el manual de la habilidad de su arma (y del escudo): con 0 % de skill fallaban casi todo (`studyManuals`).

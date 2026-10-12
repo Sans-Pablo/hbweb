@@ -23,3 +23,6 @@ Cada 20 % de vida perdida (80/60/40/20 %) enciende un Fire Field (hechizo 41) de
 
 ## Música y color (v0.19.4)
 La cripta usa `darkloop` (`sky.js trackFor`). Los monstruos llevan un tinte leve (alfa 0.14) del color del rey del tramo, `BOSS_COLORS[ceil(nivel/5)]`; el jefe, 0.5.
+
+## Pisos compartidos (v0.66.0)
+Desde el piso `SHARED_FROM` = 15 (hasta el 20, y solo con tope de cripta suficiente) la cripta no es de la party: hay **una instancia por piso** (`instances.get("S"+nivel)`, `map.shared`, `pvp = true`) donde coinciden Aresden y Elvine y las parties se disputan el territorio. `descendShared` baja solo al jugador y su party; los pisos 1–14 siguen siendo privados por party (`gkey`). El origen de salida de cada uno va en `Adventure.origins`. `guardPrivate` (1 s) expulsa de un piso privado a quien ya no está en la party dueña. Un seguidor sin party entra a la cripta de su líder. Test: `tests/shared-crypt.test.mjs`.

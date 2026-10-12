@@ -74,7 +74,7 @@ export class Controller {
   // ¿es un jugador al que puedo atacar aquí? (misma regla que combatsys.canFight, que es la que decide en el servidor)
   enemyPlayer(e) {
     const me = this.me, w = this.world;
-    if (!me || e.kind !== "player" || e === me || w.map?.id !== "2ndmiddle" || w.safeAt?.(me.x, me.y) || w.safeAt?.(e.x, e.y)) return false;
+    if (!me || e.kind !== "player" || e === me || !(w.map?.id === "2ndmiddle" || w.map?.shared) || w.safeAt?.(me.x, me.y) || w.safeAt?.(e.x, e.y)) return false;
     if (me.side > 0 && me.side === e.side) return false;
     return !(me.party && e.party && me.party.id === e.party.id);
   }

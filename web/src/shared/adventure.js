@@ -23,6 +23,7 @@ const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de
 export const FARM_HOME = [65, 75];
 export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
 
+export const SHARED_FROM = 15;   // desde este piso la cripta es una sola para los dos bandos (PvP): las parties se disputan el territorio
 const gkey = p => p.party ? "g" + p.party.id : p.id;   // clave de la cripta: la party comparte una
 export class Adventure {
   constructor(options) {
@@ -33,7 +34,8 @@ export class Adventure {
     this.locations = new Map();
     this.watched = new Set();               // ids de bots que alguien observa (modo observar): sus decisiones se mandan al chat
     this.bots = new Map();                  // jugadores simulados (systems/bot.js): id -> entidad
-    this.instances = new Map();             // una cripta por jugador durante la sesión
+    this.instances = new Map();             // una cripta por jugador durante la sesión (y «S<piso>»: los pisos compartidos)
+    this.origins = new Map();               // id de jugador → de dónde entró a la cripta (salida de los pisos compartidos)
     this.worlds = new Map();
     this.guildReg = makeGuildReg(() => this.worlds.values());       // guilds: persisten y cruzan mapas (systems/guild.js)
     this.partyReg = makeReg(() => this.worlds.values());       // grupos: cruzan mapas (systems/party.js)
@@ -238,7 +240,7 @@ export class Adventure {
       // dentro de la cripta: bajar (solo con el nivel despejado) o salir al mapa de origen
       if (gate.locked && (!w.cleared || [...w.ents.values()].some(e => e.kind === "npc" && !e.comp && !e.aux && !e.dead) || w.ghostsPending > 0)) return w.reject(p, cmd, "mata a todos los esqueletos para continuar");
       if (gate.target === "down") return this.descend(p, w, w.map.level + 1);
-      const o = w.map.origin, to = this.staticWorld(o.map);
+      const o = (w.map.shared && this.origins.get(p.id)) || w.map.origin, to = this.staticWorld(o.map);
       if (!to || !this.transfer(p, w, to, [o.x, o.y])) return w.reject(p, cmd, "salida ocupada");
       return true;
     }
@@ -282,6 +284,12 @@ export class Adventure {
       return false;
     }
     this.runs = this.runs || new Map();
+    const lead = p.bot?.owner != null && !p.party ? this.worldFor(p.bot.owner) : null;
+    if (lead && lead.map.kind === "dungeon" && lead.map.level < SHARED_FROM && lead.runKey && this.instances.get(lead.runKey) === lead) {      // seguidor sin party: entra en la cripta de su líder (antes abría una propia y había dos grupos distintos en el mismo piso)
+      const near = lead.start || lead.map.portals?.[0] || [p.x, p.y];
+      if (!this.transfer(p, w, lead, Array.isArray(near) ? near : [near.x, near.y])) return w.reject(p, cmd, "entrada ocupada");
+      return true;
+    }
     const key = gkey(p), live = this.instances.get(key), occupied = !!live && [...live.ents.values()].some(e => e.kind === "player" && e !== p);
     if (cmd.restart === true && !(occupied && p.party)) dv.deepest = 1;     // «reiniciar» no vale si la party ya está dentro: se entra a su cripta (antes se creaba otra y se descartaba la de los compañeros)
     if (live && p.party && (cmd.restart !== true || occupied)) {                  // la party entra siempre a la misma cripta
@@ -296,6 +304,7 @@ export class Adventure {
   // Crea el nivel `level` de la partida del jugador y lo traslada allí. El nivel anterior se descarta.
   descend(p, from, level, entering = false) {
     const key = from.map.kind === "dungeon" && from.runKey ? from.runKey : gkey(p);
+    if (level >= SHARED_FROM && level <= DUNGEON_LEVELS && level <= Quests.cryptCap(p)) return this.descendShared(p, from, level, key);
     const run = this.runs?.get(key);
     if (level > Quests.cryptCap(p)) return from.reject(p, { t: "portal" }, "una fuerza antigua te impide bajar: cumple tus misiones (nivel máx. " + Quests.cryptCap(p) + ")");
     if (!run || level > DUNGEON_LEVELS) { if (run && level > DUNGEON_LEVELS) return this.reject(p, from, "no hay más niveles"); return false; }
@@ -320,11 +329,54 @@ export class Adventure {
     Quests.onDepth(d, p, level);
     return true;
   }
+  // Pisos compartidos (≥ SHARED_FROM): un único mundo por piso para los dos bandos, con PvP. Entra la party (o el jugador) que baja; se descarta al quedar vacío.
+  descendShared(p, from, level, key) {
+    const sk = "S" + level, inDungeon = from.map.kind === "dungeon";
+    const origin = (inDungeon && from.map.shared ? this.origins.get(p.id) : this.runs?.get(key)?.origin) || this.origins.get(p.id) || { map: "arefarm", x: 134, y: 94 };
+    let d = this.instances.get(sk);
+    if (!d) {
+      const seed = levelSeed(Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, level), layout = generateLevel(seed, level);
+      d = new World({ grid: layout.grid, npcDb: from.npcDb, data: from.data, spawns: layout.spawns, start: layout.start, ids: this.ids, rng: this.options.rng || Math.random });
+      d.time = this.time; d.hooks = this.hooks(d); d.evHook = this.farm.evHook;
+      d.map = { id: "skeleton-" + (++this.serial), kind: "dungeon", name: "Cripta compartida · nivel " + level + " · " + layout.name, level, total: DUNGEON_LEVELS, boss: layout.boss, theme: layout.theme, seed, version: DUNGEON_VERSION, origin, portals: layout.portals, shared: true };
+      d.map.totalEnemies = d.map.remainingEnemies = [...d.ents.values()].filter(e => e.kind === "npc" && !e.comp).length;
+      for (const n of d.ents.values()) n.nextAct += this.time;
+      d.pvp = true; d.runKey = sk;
+      this.worlds.set(d.map.id, d); this.instances.set(sk, d);
+    }
+    const mine = e => e === p || (e.kind === "player" && p.party && e.party && e.party.id === p.party.id);
+    const group = inDungeon ? [...from.ents.values()].filter(e => e.kind === "player" && mine(e)) : [p];     // al bajar desde un piso compartido solo bajan los de tu party, no los rivales
+    if (!group.includes(p)) group.unshift(p);
+    for (const q of group) this.origins.set(q.id, origin);
+    if (!inDungeon) this.runs?.delete(key);      // el origen ya está en origins; en pisos compartidos no queda una run privada colgada
+    const privateKey = inDungeon && !from.map.shared ? from.runKey : null;
+    if (!this.transfer(p, from, d, d.start)) { if (!d.ents.size) { this.worlds.delete(d.map.id); this.instances.delete(sk); } return from.reject(p, { t: "portal" }, "entrada ocupada"); }
+    for (const q of group) if (q !== p) this.transfer(q, from, d, d.start);
+    if (privateKey) { const prev = this.instances.get(privateKey); if (prev === from && ![...from.ents.values()].some(e => e.kind === "player")) { this.worlds.delete(from.map.id); this.instances.delete(privateKey); this.runs?.delete(privateKey); } }
+    else if (inDungeon) this.dropIfEmpty(from);
+    p.delve.deepest = Math.max(p.delve.deepest, level);
+    Quests.onDepth(d, p, level);
+    return true;
+  }
+  // Un piso privado es de una party: quien se va de ella (o la deshace) no puede seguir dentro; si todos quedan en la misma party nueva, el piso pasa a ser suyo.
+  guardPrivate(w) {
+    if (!w.runKey || w.map.shared || w.map.level >= SHARED_FROM) return;
+    const ps = [...w.ents.values()].filter(e => e.kind === "player");
+    if (ps.length < 2) { if (ps.length === 1 && gkey(ps[0]) !== w.runKey && !this.instances.has(gkey(ps[0]))) this.rekey(w, gkey(ps[0])); return; }
+    const ks = new Set(ps.map(gkey));
+    if (ks.size === 1) { const k = [...ks][0]; if (k !== w.runKey && !this.instances.has(k)) this.rekey(w, k); return; }
+    for (const q of ps) if (gkey(q) !== w.runKey) {
+      const o = w.map.origin, to = o && this.staticWorld(o.map);
+      if (to && this.transfer(q, w, to, [o.x, o.y])) w.reject(q, { t: "portal" }, "ya no estás en el grupo de esta cripta: te sacan fuera");
+    }
+  }
+  rekey(w, k) { const run = this.runs?.get(w.runKey); this.instances.delete(w.runKey); this.runs?.delete(w.runKey); w.runKey = k; this.instances.set(k, w); if (run) this.runs.set(k, run); }
   // Una cripta se descarta cuando no queda ningún jugador dentro (la comparte toda la party).
   dropIfEmpty(d) {
     if (!d.runKey || [...d.ents.values()].some(e => e.kind === "player")) return;
     this.worlds.delete(d.map.id);
     if (this.instances.get(d.runKey) === d) { this.instances.delete(d.runKey); this.runs?.delete(d.runKey); }
+    if (d.map.shared) for (const [id, o] of [...this.origins]) if (!this.locations.has(id)) this.origins.delete(id);
   }
   reject(p, w, why) { return w.reject(p, { t: "portal" }, why); }
 
@@ -350,6 +402,7 @@ export class Adventure {
   tick(dt) {
     Human.tick(this);                                                                        // horarios de los habitantes (human.js; apagado salvo en el servidor)
     for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
+    if (this.time - (this._guardAt || 0) >= 1000) { this._guardAt = this.time; for (const w of [...this.instances.values()]) this.guardPrivate(w); }
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

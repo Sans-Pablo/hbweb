@@ -4,7 +4,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## web/src/shared
 
-- `adventure.js` · 370 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
+- `adventure.js` · 423 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 - `appearance.js` · 18 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `classgear.js` · 65 · Equipo por clase y báculos de escuela (v0.62.0). INVENTO del port: el original no restringe equipo por clase.
@@ -29,9 +29,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 272 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 480 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
-- `botitems.js` · 123 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
-- `builds.js` · 36 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
+- `bot.js` · 509 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `botitems.js` · 124 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
+- `builds.js` · 40 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
 - `combatsys.js` · 266 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 307 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
@@ -50,7 +50,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `party.js` · 117 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 176 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `quests.js` · 221 · Misiones del Acto I (v0.63.0). INVENTO del port: el original no tiene líneas de misiones.
-- `residents.js` · 1322 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 1370 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 20 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 216 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
@@ -74,7 +74,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 103 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
-- `connection.js` · 311 · Conexión con el "servidor". Dos implementaciones con la misma forma:
+- `connection.js` · 312 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 247 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 128 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `devtools.js` · 77 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
@@ -93,7 +93,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `names.js` · 13 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
 - `npcdialogs.js` · 624 · Cuadros de diálogo de los NPC de ciudad, como en el cliente original (Game.cpp):
-- `observer.js` · 70 · MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) 
+- `observer.js` · 102 · MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) 
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 106 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
 - `questui.js` · 67 · Diario de misiones y rastreador del HUD (v0.63.0). Todo sale del estado propio (me.quests) con las funciones compartidas de systems/quests.j
@@ -114,7 +114,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botstats.mjs` · 131 · Estadísticas y análisis de comportamiento de los habitantes (bots) para el panel de administración.
 - `llm.mjs` · 71 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
 - `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
-- `server.mjs` · 681 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `server.mjs` · 682 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
@@ -125,6 +125,8 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `blizzard-friendly.test.mjs` · 44 · Blizzard (área): no daña a los summons propios, sí a un monstruo ajeno.
 - `bosses.test.mjs` · 113 · Mecánicas únicas de los 4 jefes de la cripta (shared/systems/bosses.js). node tests/bosses.test.mjs
 - `bossloot.test.mjs` · 29 · Cada rey suelta siempre un único de Item.cfg. node tests/bossloot.test.mjs
+- `bot-brain.test.mjs` · 21 · El «cerebro» del habitante observado + descenso de cripta con reloj prorrogado + equipo de cripta.
+- `bot-manuals.test.mjs` · 37 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `bot.test.mjs` · 55 · BOT: jugador simulado. Entra en el grupo del admin, caza, sube de nivel, se equipa y recoge botín con las mismas órdenes que un cliente.
 - `botitems.test.mjs` · 50 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `bow.test.mjs` · 49 · Arco (HGServer/Game.cpp iClientMotion_Attack_Handler + iCalculateAttackEffect): dispara a cualquier distancia, gasta una
@@ -137,7 +139,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `debug.test.mjs` · 38 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
 - `dummy.test.mjs` · 186 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
 - `dungeon.test.mjs` · 186 · 
-- `exprate.test.mjs` · 9 · Ritmo de experiencia del port: cuesta mucho más llegar al nivel máximo (expRate en combatsys.js)
+- `exprate.test.mjs` · 10 · Ritmo de experiencia del port: cuesta mucho más llegar al nivel máximo (expRate en combatsys.js, escalado por PACE = 0.3 desde v0.63.0)
 - `farmer.test.mjs` · 17 · BUG-013: granjero de Aresfarm en (77,106) con rol "farmer" y aspecto de tendero (tipo 15).
 - `farming.test.mjs` · 97 · Agricultura (systems/farming.js): siembra, azada, cosecha, reglas del servidor original.
 - `ghost.test.mjs` · 56 · Esqueleto fantasma: un esqueleto común puede levantarse al desaparecer su cadáver. node tests/ghost.test.mjs
@@ -167,7 +169,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `remote-smooth.test.mjs` · 30 · Suavizado de pasos de otros jugadores online (connection.js: smoothRemote). node tests/remote-smooth.test.mjs
 - `residents-crypt.test.mjs` · 74 · Habitantes: bajan a la cripta de esqueletos, metas de bajas / foso / cripta y dominio de fosos en Promise Land.
 - `residents-learn.test.mjs` · 49 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
-- `residents-pets.test.mjs` · 68 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
+- `residents-pets.test.mjs` · 82 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `residents-social.test.mjs` · 62 · Habitantes sociales: comercian (regalo, venta, compra) con jugadores y entre ellos, aceptan/piden grupo, se reúnen en la tienda, equipan po
 - `residents-stall.test.mjs` · 37 · Habitantes con puesto: con la mochila llena de equipo que no usan van a la tienda, montan un puesto, vuelven, y luego regresan a cobrar y ce
 - `residents.test.mjs` · 93 · HABITANTES: ficha estable, objetivos, memoria, respuesta al chat (frase hecha y modelo), guardado/carga, acompañamiento y botclear.
@@ -175,6 +177,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `restorepos.test.mjs` · 22 · Al volver a entrar, el jugador reaparece donde cerró sesión (mapa fijo).
 - `schools-all.test.mjs` · 45 · Todas las magias de escuela se pueden enseñar y lanzar con un summon de nivel 50, y hacen daño. node tests/schools-all.test.mjs
 - `schools.test.mjs` · 127 · Escuelas de magia de los summons: el jugador lanza, el summon de la escuela paga y tira; sin regeneración (caramelo azul); cambio al nivel 
+- `shared-crypt.test.mjs` · 70 · Criptas: pisos privados por party (sin intrusos) y pisos compartidos (≥15) entre bandos con PvP. node tests/shared-crypt.test.mjs
 - `shop.test.mjs` · 81 · Tienda, herrero y almacén: compra, venta, reparación y depósito con las reglas del servidor original.
 - `sim.test.mjs` · 159 · Prueba de la simulación sin navegador: un "jugador" automático caza en la granja.
 - `sky.test.mjs` · 72 · Hora del día, clima y zonas sin ataque (HGServer/Game.cpp: _CheckDayOrNight, WhetherProcessor, _SetupNoAttackArea).
@@ -195,7 +198,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 ## tools
 
 - `bench.mjs` · 23 · Banco de pruebas de la simulación: N jugadores + N bots cazando en la granja con los generadores reales. node tools/bench.mjs [jugadores=20
-- `questsim.mjs` · 31 · Simulación acelerada de las misiones del Acto I con habitantes. node tools/questsim.mjs [bots=9] [minutos=240] [semilla=1] [salida.json]
+- `questsim.mjs` · 53 · Simulación acelerada de las misiones del Acto I con habitantes. node tools/questsim.mjs [bots=9] [minutos=240] [semilla=1] [salida.json]
 - `build_dungeon_palette.py` · 122 · (mapa, tema): las cámaras de cada rey usan el escenario de otro dungeon del original (ver convert_theme_maps.py)
 - `convert.py` · 291 · número de monstruo de "spot-mob-generator" -> nombre en NPC.cfg (HGServer/Game.cpp)
 - `convert_all.py` · 43 · 

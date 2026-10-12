@@ -10,6 +10,14 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Criptas en disputa (v0.66.0)", "en": "Contested crypts (v0.66.0)" },
+      "items": [
+        { "es": "Los pisos 15 a 20 de la cripta son compartidos: Aresden y Elvine coinciden en el mismo piso y hay PvP. Las parties se disputan el territorio para poder bajar. Los pisos 1 a 14 siguen siendo de tu party.", "en": "Crypt floors 15 to 20 are shared: Aresden and Elvine meet on the same floor with PvP enabled. Parties fight over the territory to go down. Floors 1 to 14 stay private to your party." },
+        { "es": "Arreglado: dos parties distintas podían acabar en la misma cripta (bots seguidores sin party y jugadores que dejaban la party dentro).", "en": "Fixed: two different parties could end up in the same crypt (follower bots without a party and players leaving the party inside)." }
+      ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Cerebro de bots (v0.65.0)", "en": "Bot brain (v0.65.0)" },
       "items": [ { "es": "Al observar un bot hay una ventana Cerebro: qué hace, qué piensa y qué mira. Los bots compran el manual de su arma (menos fallos), bajan más en la cripta y la hacen en equipo.", "en": "Observing a bot now shows a Brain window: what it does, thinks and sees. Bots buy their weapon manual (fewer misses), go deeper in the crypt and delve as a team." } ]
     },
