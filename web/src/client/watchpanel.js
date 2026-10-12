@@ -6,11 +6,11 @@ import { L, esc, SIDE, ARCH, MODES, act } from "./observer.js";
 
 export const watchTo = id => { location.hash = "#observar=" + id; location.reload(); };
 let roster = [];                                                                  // última lista del servidor (la comparten barra y plantel)
-const modeName = b => MODES[b.mode]?.[getLang() === "en" ? 1 : 0] || b.mode;
-const dot = m => ({ dead: "💀", fight: "⚔", rest: "💤", follow: "🐾", delve: "⛏", "delve-go": "⛏", trip: "🧭", pit: "🏴", travel: "🚶", flee: "💨", pet: "🩹" }[m] || "·");
+export const modeName = b => MODES[b.mode]?.[getLang() === "en" ? 1 : 0] || b.mode;
+export const dot = m => ({ dead: "💀", fight: "⚔", rest: "💤", follow: "🐾", delve: "⛏", "delve-go": "⛏", trip: "🧭", pit: "🏴", travel: "🚶", flee: "💨", pet: "🩹" }[m] || "·");
 
 // Grupos: party formal o líder con sus seguidores (campo `grp` del servidor); el resto va «en solitario».
-function groups(list, q) {
+export function groups(list, q) {
   q = q.trim().toLowerCase();
   const ok = b => !q || b.name.toLowerCase().includes(q) || b.map.toLowerCase().includes(q) || (b.guild || "").toLowerCase().includes(q);
   const g = new Map(), solo = [];
@@ -25,10 +25,10 @@ const ordered = list => { const { out, solo } = groups(list, ""); return [...out
 export function observerBar(conn) {
   const bar = document.createElement("div");
   bar.style.cssText = "position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:55;background:rgba(20,15,6,.92);color:#f0e2b8;border:1px solid #6b5a33;border-top:0;border-radius:0 0 8px 8px;padding:4px 12px;font:13px system-ui;display:flex;gap:8px;align-items:center";
-  bar.innerHTML = `<button data-a="prev" title="[">◀</button><span>👁 ${L("Observando a", "Watching")} <b style="color:#ffd76a">${esc(conn.watchName)}</b></span><button data-a="next" title="]">▶</button><button data-a="list">${L("Tabla completa", "Full table")}</button><button data-a="exit">${L("Salir", "Exit")}</button>`;
+  bar.innerHTML = `<button data-a="prev" title="[">◀</button><span>👁 ${L("Observando a", "Watching")} <b style="color:#ffd76a">${esc(conn.watchName)}</b></span><button data-a="next" title="]">▶</button><button data-a="split">${L("Panel dividido", "Split view")}</button><button data-a="list">${L("Tabla completa", "Full table")}</button><button data-a="exit">${L("Salir", "Exit")}</button>`;
   for (const b of bar.querySelectorAll("button")) b.style.cssText = "background:#2c2417;color:#f0e2b8;border:1px solid #6b5a33;border-radius:6px;padding:2px 8px;cursor:pointer";
   const step = d => { const l = ordered(roster); if (l.length < 2) return; const i = l.findIndex(b => b.id === conn.pid); watchTo(l[(i + d + l.length) % l.length].id); };
-  bar.onclick = e => { const a = e.target.dataset?.a; if (a === "list") { location.hash = "#observar"; location.reload(); } else if (a === "exit") { location.hash = ""; location.reload(); } else if (a === "prev") step(-1); else if (a === "next") step(1); };
+  bar.onclick = e => { const a = e.target.dataset?.a; if (a === "split") location.href = "observador.html#" + conn.pid; else if (a === "list") { location.hash = "#observar"; location.reload(); } else if (a === "exit") { location.hash = ""; location.reload(); } else if (a === "prev") step(-1); else if (a === "next") step(1); };
   addEventListener("keydown", e => { if (e.target.closest?.("input,textarea,select")) return; if (e.key === "[") step(-1); else if (e.key === "]") step(1); });
   document.body.appendChild(bar);
 }
@@ -72,7 +72,7 @@ const KIND = { ally: "🟢", enemy: "🔴", mob: "👹", pet: "🐾" };
 const SLOT = { 1: ["Cabeza", "Head"], 2: ["Cuerpo", "Body"], 3: ["Brazos", "Arms"], 4: ["Pantalón", "Pants"], 5: ["Botas", "Boots"], 6: ["Cuello", "Neck"], 7: ["Mano izq.", "Left hand"], 8: ["Mano der.", "Right hand"], 9: ["Dos manos", "Two-hand"], 10: ["Anillo D", "Ring R"], 11: ["Anillo I", "Ring L"], 12: ["Espalda", "Back"], 13: ["Cuerpo entero", "Full body"] };
 const SK = { 0: ["Minería", "Mining"], 1: ["Pesca", "Fishing"], 2: ["Agricultura", "Farming"], 3: ["Res. mágica", "Magic res."], 4: ["Magia", "Magic"], 5: ["Sin armas", "Hand"], 6: ["Arquería", "Archery"], 7: ["Espada corta", "Short sword"], 8: ["Espada larga", "Long sword"], 9: ["Esgrima", "Fencing"], 10: ["Hacha", "Axe"], 11: ["Escudo", "Shield"], 12: ["Alquimia", "Alchemy"], 13: ["Fabricación", "Crafting"], 14: ["Martillo", "Hammer"], 19: ["Fingir muerte", "Pretend dead"], 21: ["Bastón", "Staff"], 23: ["Res. veneno", "Poison res."] };
 const CLS = { warrior: ["Guerrero", "Warrior"], mage: ["Mago", "Mage"], summoner: ["Invocador", "Summoner"] };
-const TABS = [["res", "Resumen", "Summary"], ["mind", "Mente", "Mind"], ["gear", "Ficha", "Sheet"], ["soc", "Social", "Social"]];
+export const TABS = [["res", "Resumen", "Summary"], ["mind", "Mente", "Mind"], ["gear", "Ficha", "Sheet"], ["soc", "Social", "Social"], ["talk", "Charlas", "Talk"]];
 let tab = "res";
 export function brainPanel(conn) {
   let el = document.getElementById("brain");
@@ -89,11 +89,15 @@ export function brainPanel(conn) {
   }
   const b = conn.brain; if (!b) return;
   const key = JSON.stringify(b) + el.dataset.open + getLang() + tab; if (el._k === key) return; el._k = key;
+  el.innerHTML = brainHtml(b, tab, el.dataset.open === "1");
+}
+// Ficha en HTML (la usan el panel flotante y el panel dividido). data-a="tog|tab|go" lo atiende quien la pinte.
+export function brainHtml(b, tab, open = true) {
   const lang = getLang() === "en" ? 1 : 0, T = o => esc(o?.[lang ? "en" : "es"] ?? "");
   const P = (v, m, c, w = 70) => `<span style="display:inline-block;width:${w}px;height:7px;background:#3a2f1a;border-radius:3px;vertical-align:middle"><i style="display:block;height:100%;width:${Math.max(0, Math.min(100, 100 * v / Math.max(1, m)))}%;background:${c};border-radius:3px"></i></span>`;
   const [sn, sc] = SIDE[b.side] || SIDE[0];
-  const head = `<div style="display:flex;justify-content:space-between"><b style="color:#ffd76a">🧠 ${esc(b.name)} <span style="color:${sc};font-weight:400">${sn}</span></b><a data-a="tog" style="cursor:pointer;color:#b9a572">${el.dataset.open === "1" ? "▾" : "▸"}</a></div>`;
-  if (el.dataset.open !== "1") { el.innerHTML = head; return; }
+  const head = `<div style="display:flex;justify-content:space-between"><b style="color:#ffd76a">🧠 ${esc(b.name)} <span style="color:${sc};font-weight:400">${sn}</span></b><a data-a="tog" style="cursor:pointer;color:#b9a572">${open ? "▾" : "▸"}</a></div>`;
+  if (!open) return head;
   const sec = t => `<div style="margin-top:7px;color:#b9a572;font-size:11px;text-transform:uppercase;border-bottom:1px solid #3a2f18">${t}</div>`;
   const kv = (k, v) => `<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#998">${k}</span><span style="text-align:right">${v}</span></div>`;
   let h = head + `<div>${dot(b.mode)} <b>${MODES[b.mode]?.[lang] || b.mode}</b> · ${L("Nv", "Lv")} ${b.lv} ${esc(CLS[b.cls]?.[lang] || b.cls)} · ${esc(b.map)}${b.floor ? " (" + L("piso", "floor") + " " + b.floor + ")" : ""}</div>`;
@@ -124,10 +128,13 @@ export function brainPanel(conn) {
     if (b.qa.deaths.length) h += kv(L("Le matan", "Killed by"), nm(b.qa.deaths));
     if (b.delveInfo) h += kv(L("Cripta: más profundo / reyes", "Crypt: deepest / kings"), b.delveInfo.deepest + " / " + b.delveInfo.king);
     if (b.pet || b.qa.pet.kills || b.qa.pet.lost) h += kv("Summon", (b.pet ? "✔ " : "") + b.qa.pet.kills + " " + L("bajas", "kills") + " · " + b.qa.pet.lost + " " + L("caídas", "lost"));
+  } else if (tab === "talk") {
+    h += sec(L("Con quién habla más", "Talks most with")) + ((b.talkN || []).length ? b.talkN.map(([n, v]) => kv(esc(n), v)).join("") : "—");
+    h += sec(L("Memoria de conversaciones", "Conversation memory")) + ((b.talk || []).length ? b.talk.slice().reverse().map(t => `<div style="opacity:.92"><span style="color:#998">${t.ch === "g" ? "⚑" : "💬"}</span> <b style="color:${t.me ? "#ffd76a" : "#9cf"}">${esc(t.who)}</b>: ${esc(t.text)}</div>`).join("") : "—");
   } else {
     h += sec(L("Grupo", "Party")) + (b.mates.length ? b.mates.map(m => `<div><a data-a="go" data-id="${m.id}" style="cursor:pointer;color:${m.id === b.id ? "#ffd76a" : "#9cf"}">${m.lead ? "👑 " : ""}${esc(m.n)}</a> ${L("Nv", "Lv")}${m.lv} ${P(m.hp, 100, "#c33", 40)}</div>`).join("") : `<div>${L("En solitario", "Solo")}</div>`);
     h += sec("Guild") + (b.guild ? `<div>⚑ <b>${esc(b.guild.name)}</b> · ${b.guild.rank === 0 ? "Guildmaster" : "Guildsman"}</div>` + kv(L("Líder", "Master"), esc(b.guild.master)) + kv(L("Miembros", "Members"), b.guild.n) : "<div>—</div>");
     h += sec(L("Amistades", "Relationships")) + (b.rel.length ? b.rel.map(([n, v]) => kv(esc(n), v)).join("") : "—");
   }
-  el.innerHTML = h;
+  return h;
 }

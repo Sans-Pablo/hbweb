@@ -27,7 +27,7 @@ export function pickBot(conn, { onCancel } = {}) {
     <div class="bar"><span class="dim">${L("Elige uno para verlo jugar en vivo (solo se mira; su chat interno aparece en la ventana de chat).", "Pick one to watch live (view only; its inner log shows in the chat window).")}</span>
       <select class="side"><option value="0">${L("Todos los bandos", "All sides")}</option><option value="1">Aresden</option><option value="2">Elvine</option></select>
       <input class="q" placeholder="${L("buscar…", "search…")}" style="background:#1b1810;color:#f0e2b8;border:1px solid #6b5a33;border-radius:6px;padding:5px 8px;width:120px">
-      <button class="refresh">↻ ${L("Actualizar", "Refresh")}</button><button class="back">${L("Volver", "Back")}</button><span class="msg"></span></div>
+      <button class="refresh">↻ ${L("Actualizar", "Refresh")}</button><a href="observador.html" style="color:#ffd76a">${L("Panel dividido", "Split view")}</a><button class="back">${L("Volver", "Back")}</button><span class="msg"></span></div>
     <div class="wrap"><table><thead><tr></tr></thead><tbody></tbody></table></div>`;
     document.body.appendChild(box);
     const $ = s => box.querySelector(s), msg = $(".msg");

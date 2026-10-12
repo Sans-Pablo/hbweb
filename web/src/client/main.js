@@ -41,6 +41,7 @@ import { SCHOOL_OF, spellSchool, taught } from "../shared/systems/schools.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
+const EMBED = new URLSearchParams(location.search).has("embed");                  // marco del panel dividido (observador.html): solo el juego
 
 const store = {
   get(k, d) { try { return localStorage.getItem("hbweb." + k) ?? d; } catch { return d; } },
@@ -77,7 +78,8 @@ async function main() {
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   let world = conn.state;
-  if (conn.observing) { observerBar(conn); rosterPanel(conn); setInterval(() => brainPanel(conn), 500); }
+  if (conn.observing && EMBED) setInterval(() => parent.postMessage({ hbBrain: conn.brain, id: conn.pid, name: conn.watchName }, location.origin), 500);   // panel dividido: el marco solo muestra el juego; el resto lo pinta la página madre
+  else if (conn.observing) { observerBar(conn); rosterPanel(conn); setInterval(() => brainPanel(conn), 500); }
   // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
   const stream = new Streamer(assets.sprites);
   status.style.display = "";

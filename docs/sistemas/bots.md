@@ -22,3 +22,5 @@ Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (
 - **Manuales**: `studyManuals` (bot.js) compra y usa el manual de la skill del arma/escudo si está a 0. Test: `bot-manuals.test.mjs`.
 - **Descenso**: cada piso nuevo suma 5 min a `_delve.until`; el tope lo siguen marcando `cryptCap` y `cryptNeed`.
 - **Equipo de cripta**: `recruitCrypt` invita hasta 2 habitantes libres cercanos (nv ±8, vida >70 %); un 25 % rechaza. Los seguidores bajan por el portal tras el líder.
+- **Observador dividido** (0.68.0): `web/observador.html` + `client/dashboard.js`. Cuatro cuadrantes: iframe `index.html?embed=1&o=ID#observar=ID` (modo embed en main.js: sin paneles, manda `{hbBrain,id,name}` por postMessage; la consulta distinta recarga solo el marco), plantel (`/api/bots`, cada 2 s), ficha (`brainHtml` de watchpanel.js, pestaña Charlas) y estadísticas (historial de 15 min por id en el cliente).
+- **Charla** (0.68.0): `speak` parte los textos largos (`splitSay`/`sayLong`, ≤108 por mensaje, máx. 4); `logTalk`/`talkCtx` guardan y devuelven la memoria de conversaciones (`res.talk`, 40). Test: `tests/bot-chat.test.mjs`.

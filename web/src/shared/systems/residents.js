@@ -206,12 +206,40 @@ export function cleanSay(t) {
   else if (/^\s*[{[]/.test(s) || /"(?:do|say)"\s*:/.test(s)) s = s.replace(/"(?:do|say)"\s*:\s*"?[a-z_]*"?,?/gi, "").replace(/[{}[\]"]/g, "");
   return s.replace(/\s+/g, " ").trim();
 }
+// Parte un texto largo en mensajes de ≤ max caracteres cortando en frases (luego en comas/espacios): nunca se pierde el final.
+export function splitSay(text, max = 108) {
+  const out = []; let s = String(text || "").replace(/\s+/g, " ").trim();
+  while (s.length > max) {
+    let cut = Math.max(s.lastIndexOf(". ", max - 2), s.lastIndexOf("! ", max - 2), s.lastIndexOf("? ", max - 2)) + 1;
+    if (cut < max * 0.4) cut = Math.max(s.lastIndexOf(", ", max - 2), s.lastIndexOf("; ", max - 2)) + 1;
+    if (cut < max * 0.4) cut = s.lastIndexOf(" ", max - 2);
+    if (cut < 1) cut = max;
+    out.push(s.slice(0, cut).trim()); s = s.slice(cut).trim();
+  }
+  if (s) out.push(s);
+  return out.slice(0, 4);
+}
+// Dice un texto (con prefijo de canal opcional) en uno o varios mensajes seguidos, con una pausa de «tecleo» entre ellos.
+function sayLong(adv, p, pre, text, typo = true) {
+  const w = adv.worldFor(p.id), parts = splitSay(text, 118 - pre.length);
+  parts.forEach((t, i) => {
+    const go = () => { if (!p.dead) adv.command(p.id, { t: "say", text: pre + (typo && !pre && i === 0 ? Human.typo(adv, p, t) : t) }); };
+    if (i === 0 || typeof w.after !== "function") go(); else w.after(i * (1800 + t.length * 45), go);
+  });
+}
+// Memoria de charla: lo que se dijo entre habitantes (por canal), para que contesten con contexto y recuerden con quién hablaron.
+export function logTalk(p, w, who, text, ch, mine = false) {
+  const r = p.res; if (!r || !text) return;
+  const t = (r.talk ||= []); t.push({ at: w.time, who, ch, me: mine ? 1 : 0, text: String(text).slice(0, 160) }); if (t.length > 40) t.shift();
+  if (!mine && who) { const c = (r.talkN ||= {}); c[who] = (c[who] | 0) + 1; }
+}
+export const talkCtx = (p, ch, n = 6, who = "") => ((p.res?.talk) || []).filter(x => x.ch === ch && (!who || x.who === who)).slice(-n).map(x => (x.me ? p.name : x.who) + ": " + x.text).join(" / ");
 export function speak(adv, p, text) {
   if (!text) return;
   if (!/^[@$!~]?§/.test(text)) text = cleanSay(text);
   if (!text) return;
   const m = /^([@$!~]?)§(.*)$/s.exec(text);
-  if (!m) { adv.command(p.id, { t: "say", text: Human.typo(adv, p, text.replace(/\s+/g, " ").slice(0, 118)) }); return; }
+  if (!m) { const pm = /^([@$!~])(.*)$/s.exec(text); sayLong(adv, p, pm ? pm[1] : "", pm ? pm[2] : text); return; }
   if (typeof adv.llm !== "function" || adv.llm.ready === false) return;
   const q = (adv._sayQ ||= []), w = adv.worldFor(p.id);
   if (q.some(x => x.p === p && x.pre === m[1])) return;                                        // uno pendiente por habitante y canal
@@ -264,6 +292,7 @@ export function brainOf(adv, p) {
     guild: p.guild ? { name: p.guild.name, rank: p.guild.rank | 0, master: gd?.master || "", n: gd ? Object.keys(gd.members).length : 0 } : null,
     delveInfo: p.delve ? { deepest: p.delve.deepest | 0, king: p.delve.king | 0 } : null,
     pet: r._pet ? 1 : 0, x: Math.round(p.x), y: Math.round(p.y),
+    talk: (r.talk || []).slice(-16).map(x => ({ ch: x.ch, who: x.who, me: x.me, text: x.text })), talkN: topN(r.talkN, 5),
   };
 }
 export function thought(adv, p, sit) {                                                   // burbuja sobre la cabeza (evento botsay) con texto del modelo
@@ -280,9 +309,9 @@ function pumpSay(adv) {
     const it = q.shift(), w = adv.worldFor(it.p.id);
     if (it.p.dead || !w || w.time - it.at > 25000) continue;
     adv._sayBusy = true;
-    const r = it.p.res, ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` : "";
+    const r = it.p.res, gc = it.pre === "@" && it.p.guild ? talkCtx(it.p, "g", 8) : "", ctx = it.pre === "@" && it.p.guild ? ` You are in the guild ${it.p.guild.name}.` + (gc ? ` Recent guild chat (you remember it): ${gc}.` : "") : "";
     Promise.resolve(adv.llm({ task: "say", who: it.p.name, lang: it.lang, system: describe(it.p, it.lang) + ctx, from: "situation", text: it.sit }))
-      .then(t => { if (!t || it.p.dead) return; const tx = cleanSay(t).slice(0, 118); if (!tx) return; if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else adv.command(it.p.id, { t: "say", text: it.pre + (it.pre ? tx : Human.typo(adv, it.p, tx)) }); })
+      .then(t => { if (!t || it.p.dead) return; const tx = cleanSay(t).slice(0, 230); if (!tx) return; if (it.bubble) adv.worldFor(it.p.id).emit({ t: "botsay", id: it.p.id, es: tx, en: tx }); else sayLong(adv, it.p, it.pre, tx); })
       .catch(() => {}).finally(() => { adv._sayBusy = false; setTimeout(() => pumpSay(adv), 0); });
     return;
   }
@@ -376,8 +405,8 @@ function askGrounded(adv, w, p, human, text, lang) {
   Promise.resolve(adv.llm({ task: "act", who: p.name, lang, system: sys, from: n, text })).then(t => {
     if (!t || r.reply !== rep) return;
     let j = null; try { const m = /\{.*\}/s.exec(String(t)); j = m && JSON.parse(m[0]); } catch {}
-    if (j && typeof j === "object") { rep.text = cleanSay(j.say).slice(0, 118); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
-    else { rep.text = cleanSay(t).slice(0, 118); const a = /"do"\s*:\s*"([a-z_]+)/.exec(String(t))?.[1]; if (a && acts.some(x => x.split(" ")[0] === a)) rep.act = a; fallbackAct(); }
+    if (j && typeof j === "object") { rep.text = cleanSay(j.say).slice(0, 230); const a = String(j.do || "none").trim().split(/\s/)[0]; if (acts.some(x => x.split(" ")[0] === a)) rep.act = a; }
+    else { rep.text = cleanSay(t).slice(0, 230); const a =/"do"\s*:\s*"([a-z_]+)/.exec(String(t))?.[1]; if (a && acts.some(x => x.split(" ")[0] === a)) rep.act = a; fallbackAct(); }
   }).catch(() => fallbackAct());
   // si el modelo falla o no devuelve JSON, una petición clara de grupo se atiende igualmente (hechos reales, sin frases)
   function fallbackAct() { if (r.reply === rep && !rep.act && intentOf(text) === "party" && acts.some(x => x.startsWith("party_follow")) && relOf(p, n) >= 1) rep.act = "party_follow"; }
@@ -396,16 +425,17 @@ function noteThread(adv, w, speaker, text) {
   const fresh = !th;
   if (!th) { th = { who: [], lines: [], at: w.time }; T.push(th); if (T.length > 12) T.shift(); }
   if (!th.who.includes(speaker.name) && th.who.length < 4) th.who.push(speaker.name);
-  th.lines.push(speaker.name + ": " + String(text).slice(0, 118)); if (th.lines.length > 6) th.lines.shift(); th.at = w.time;
+  th.lines.push(speaker.name + ": " + String(text).slice(0, 160)); if (th.lines.length > 6) th.lines.shift(); th.at = w.time;
   return fresh ? null : th;
 }
 const threadOf = (adv, w, a, b) => (adv._threads || []).find(t => w.time - t.at < 45000 && t.who.includes(a) && t.who.includes(b));
 function queueReply(adv, w, p, human, text, depth = 0) {
   const r = p.res, lang = langOf(text), n = human.name, intent = human.res && intentOf(text) === "party" ? "other" : intentOf(text);      // entre habitantes una frase suelta de «vamos» no forma grupo (eso lo deciden ellos en el consejo, council.js)
   const th = human.res ? threadOf(adv, w, p.name, n) : null;
-  const ctx = th && th.lines.length > 1 ? "(Conversation so far: " + th.lines.slice(0, -1).join(" / ") + ") " : "";
+  const old = human.res ? talkCtx(p, "l", 4, n) : "", ctx = (th && th.lines.length > 1 ? "(Conversation so far: " + th.lines.slice(0, -1).join(" / ") + ") " : "") + (old && !th ? "(You talked to " + n + " before: " + old + ") " : "");
   (r.hl ||= {})[n] = lang;
   befriend(p, n, 1); r.chats++; r._rcd = w.time;
+  if (human.res) logTalk(p, w, n, text, "l");
   if (!human.res && typeof adv.llm === "function" && adv.llm.ready !== false) return askGrounded(adv, w, p, human, text, lang);
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 2 || w.rng() < 0.5 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
@@ -430,7 +460,7 @@ export function think(adv, p) {
   if (r.reply && w.time >= r.reply.at) {
     const rep = r.reply; r.reply = null;
     if (!p.dead) {
-      r._depth = rep.depth || 0; speak(adv, p, rep.text); if (rep.act) doAct(adv, w, p, rep);
+      r._depth = rep.depth || 0; if (rep.text && rep.toBot) logTalk(p, w, rep.to, rep.text, "l", true); speak(adv, p, rep.text); if (rep.act) doAct(adv, w, p, rep);
       if (rep.follow && !r.followUntil) { const h = [...w.ents.values()].find(e => e.kind === "player" && e.name === rep.to && !adv.bots.has(e.id)); if (h) { p.bot.owner = h.id; r.followUntil = w.time + 5 * 60000; remember(p, "Acompañé a " + rep.to + " un rato.", "Tagged along with " + rep.to + " for a while."); } }
     }
   }
@@ -1017,7 +1047,7 @@ const say2 = (adv, w, p, key, who, extra = {}) => {
   if (c && Array.isArray(c[0])) c = c[Math.floor(w.rng() * c.length)];
   if (c && (typeof adv.llm !== "function" || adv.llm.ready === false)) {
     const t = c[langFor(p.res, who) === "en" ? 1 : 0].replace("{n}", who || "").replace("{i}", extra.i ?? "").replace("{p}", extra.p ?? "");
-    adv.command(p.id, { t: "say", text: t.slice(0, 118) }); return;
+    sayLong(adv, p, "", t, false); return;
   }
   speak(adv, p, fmt(p, key, langFor(p.res, who), who, w, extra));
 };
@@ -1271,7 +1301,7 @@ function guildAI(adv, w, p, r, home) {
   const master = G.master === p.name;
   // ---- conversación por el chat de guild (un miembro cada cierto tiempo; el resto responde en onGuildChat)
   if (bots.length >= 2 && now >= (G._chatAt ||= now + 20000 + Math.floor(w.rng() * 40000)) && bots[Math.floor(w.rng() * bots.length)] === p) {
-    G._chatAt = now + 70000 + Math.floor(w.rng() * 110000); gsay(adv, p, gline(p, "gchat", w, { l: p.level }));
+    G._chatAt = now + 25000 + Math.floor(w.rng() * 45000); gsay(adv, p, gchatLine(adv, w, p, G));
   }
   // ---- bienvenida a quien entra
   for (const m of members) if (m !== p && !(G._greeted ||= new Set()).has(m.name)) { G._greeted.add(m.name); if (G._greeted.size > 1 && master && w.rng() < 0.9) gsay(adv, p, gline(p, "gwelcome", w, {}, m.name)); }
@@ -1364,11 +1394,25 @@ function guildLaunch(adv, w, p, r, home, G) {
   }
 }
 // Charla en el chat de guild: los demás responden a veces
+// Cada miembro conectado recibe el evento: lo apunta en su memoria de charla y, a menudo, contesta (con el modelo, usando lo hablado antes).
+const llmOn = adv => typeof adv.llm === "function" && adv.llm.ready !== false;
+function gchatLine(adv, w, p, G) {
+  if (!llmOn(adv)) return gline(p, "gchat", w, { l: p.level });
+  const past = talkCtx(p, "g", 4), topics = [`how your day is going (level ${p.level}, goal: ${goalText(p.res.goal, "en") || "none"})`, "something that happened to you recently", "a question for one of your guild mates", "a plan for the next hunt or crypt run", "a joke or a complaint about the monsters or the loot"];
+  const mem = (p.res.mem || []).slice(-3).map(m => m.en).join(" "), topic = topics[Math.floor(w.rng() * topics.length)];
+  return "§chat casually with your guild mates about " + topic + (mem ? ". Things you remember: " + mem : "") + (past ? ". If it fits, continue what was said before" : "");
+}
 function onGuildChat(adv, w, ev) {
-  const b = adv.bots.get(ev.id); if (!b?.res || ev.name === b.name || w.rng() > 0.3) return;
-  if (w.time < (b.res._grCd || 0)) return;
-  b.res._grCd = w.time + 40000;
-  b.res.greply = { at: w.time + 3000 + Math.floor(w.rng() * 5000), text: fmt(b, "banterr", b.res.lang, ev.name, w) };
+  const b = adv.bots.get(ev.id); if (!b?.res) return;
+  const own = ev.name === b.name;
+  logTalk(b, w, ev.name, ev.text, "g", own);
+  if (own) return;
+  const r = b.res, rel = relOf(b, ev.name);
+  if (!own && rel >= 0 && w.rng() < 0.12) remember(b, `${ev.name} dijo en el guild: «${String(ev.text).slice(0, 70)}»`, `${ev.name} said in guild chat: «${String(ev.text).slice(0, 70)}»`);
+  if (w.rng() > 0.7 || w.time < (r._grCd || 0)) return;
+  r._grCd = w.time + 12000; if (w.rng() < 0.3) befriend(b, ev.name, 1);
+  const text = llmOn(adv) ? "§in guild chat " + ev.name + " said: «" + String(ev.text).slice(0, 160) + "». Answer them naturally; you may react, ask something back or add your own experience" : fmt(b, "banterr", r.lang, ev.name, w);
+  r.greply = { at: w.time + 3000 + Math.floor(w.rng() * 7000), text };
 }
 // ---- lecciones compartidas
 function adopt(r, name, lvl) { if (!name) return; (r.dlv ||= {}); if ((r.dlv[name] || 0) < lvl) r.dlv[name] = lvl; }

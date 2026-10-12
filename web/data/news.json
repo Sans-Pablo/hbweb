@@ -10,86 +10,211 @@
   "news": [
     {
       "date": "2026-10-12",
-      "title": { "es": "Centro de observación (v0.67.0)", "en": "Observation center (v0.67.0)" },
+      "title": {
+        "es": "Observador dividido (v0.68.0)",
+        "en": "Split observer (v0.68.0)"
+      },
       "items": [
-        { "es": "Observar: panel de habitantes a la izquierda agrupado por party, con lo que hace cada bot; clic para cambiar de personaje (o ◀ ▶ / teclas [ y ]).", "en": "Observe: resident panel on the left grouped by party, showing what each bot is doing; click to switch character (or ◀ ▶ / [ and ] keys)." },
-        { "es": "El cerebro del bot ahora tiene pestañas: resumen, mente (personalidad, misiones, recuerdos), ficha (equipo, habilidades, historial) y social (party, guild, amistades).", "en": "The bot brain now has tabs: summary, mind (personality, quests, memories), sheet (gear, skills, record) and social (party, guild, relationships)." }
+        {
+          "es": "Nueva pantalla dividida /observador.html: juego en vivo del personaje elegido (solo ese cuadrante se recarga al cambiar), plantel, ficha y estadísticas con tendencias.",
+          "en": "New split screen /observador.html: live game of the chosen character (only that quadrant reloads on switch), roster, sheet and trend statistics."
+        },
+        {
+          "es": "Los bots ya no cortan sus mensajes: los largos se envían en varios mensajes.",
+          "en": "Bots no longer cut off their messages: long ones go out as several messages."
+        },
+        {
+          "es": "Los bots hablan más en el guild y recuerdan lo que conversan (pestaña Charlas).",
+          "en": "Bots chat more in the guild and remember their conversations (Talk tab)."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Criptas en disputa (v0.66.0)", "en": "Contested crypts (v0.66.0)" },
+      "title": {
+        "es": "Centro de observación (v0.67.0)",
+        "en": "Observation center (v0.67.0)"
+      },
       "items": [
-        { "es": "Los pisos 15 a 20 de la cripta son compartidos: Aresden y Elvine coinciden en el mismo piso y hay PvP. Las parties se disputan el territorio para poder bajar. Los pisos 1 a 14 siguen siendo de tu party.", "en": "Crypt floors 15 to 20 are shared: Aresden and Elvine meet on the same floor with PvP enabled. Parties fight over the territory to go down. Floors 1 to 14 stay private to your party." },
-        { "es": "Arreglado: dos parties distintas podían acabar en la misma cripta (bots seguidores sin party y jugadores que dejaban la party dentro).", "en": "Fixed: two different parties could end up in the same crypt (follower bots without a party and players leaving the party inside)." }
+        {
+          "es": "Observar: panel de habitantes a la izquierda agrupado por party, con lo que hace cada bot; clic para cambiar de personaje (o ◀ ▶ / teclas [ y ]).",
+          "en": "Observe: resident panel on the left grouped by party, showing what each bot is doing; click to switch character (or ◀ ▶ / [ and ] keys)."
+        },
+        {
+          "es": "El cerebro del bot ahora tiene pestañas: resumen, mente (personalidad, misiones, recuerdos), ficha (equipo, habilidades, historial) y social (party, guild, amistades).",
+          "en": "The bot brain now has tabs: summary, mind (personality, quests, memories), sheet (gear, skills, record) and social (party, guild, relationships)."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Cerebro de bots (v0.65.0)", "en": "Bot brain (v0.65.0)" },
-      "items": [ { "es": "Al observar un bot hay una ventana Cerebro: qué hace, qué piensa y qué mira. Los bots compran el manual de su arma (menos fallos), bajan más en la cripta y la hacen en equipo.", "en": "Observing a bot now shows a Brain window: what it does, thinks and sees. Bots buy their weapon manual (fewer misses), go deeper in the crypt and delve as a team." } ]
-    },
-    {
-      "date": "2026-10-12",
-      "title": { "es": "Summons que pelean (v0.64.4)", "en": "Summons that fight (v0.64.4)" },
-      "items": [ { "es": "Los habitantes ahora van al hospital de compañeros sin que el grupo los desvíe, pelean con su summon y reservan oro para pociones.", "en": "Residents now reach the pet hospital without the group pulling them away, fight alongside their summon and keep gold for potions." } ]
-    },
-    {
-      "date": "2026-10-12",
-      "title": { "es": "Brasas con aviso (v0.64.3)", "en": "Embers with warning (v0.64.3)" },
-      "items": [ { "es": "Las brasas del jefe tardan más en hacer daño: da tiempo a esquivarlas.", "en": "Boss embers take longer to hurt: there is time to dodge." } ]
-    },
-    {
-      "date": "2026-10-12",
-      "title": { "es": "Jefe del piso 5 más justo (v0.64.2)", "en": "Fairer floor-5 boss (v0.64.2)" },
-      "items": [ { "es": "El jefe de la cripta tiene menos vida y menos esbirros.", "en": "The crypt boss has less health and fewer minions." } ]
-    },
-    {
-      "date": "2026-10-12",
-      "title": { "es": "El camino del invocador (v0.63.0)", "en": "The summoner's path (v0.63.0)" },
+      "title": {
+        "es": "Criptas en disputa (v0.66.0)",
+        "en": "Contested crypts (v0.66.0)"
+      },
       "items": [
-        { "es": "Nuevo sistema de misiones por clase (tecla J): del nivel 1 al 50, subir un compañero, conseguir el báculo del Gold Skeleton e invocar la última evolución. Son difíciles.", "en": "New class quest lines (J key): from level 1 to 50, level a pet, get the Gold Skeleton staff and summon the final evolution. They are hard." },
-        { "es": "Experiencia y cripta reequilibradas.", "en": "Experience and crypt rebalanced." }
+        {
+          "es": "Los pisos 15 a 20 de la cripta son compartidos: Aresden y Elvine coinciden en el mismo piso y hay PvP. Las parties se disputan el territorio para poder bajar. Los pisos 1 a 14 siguen siendo de tu party.",
+          "en": "Crypt floors 15 to 20 are shared: Aresden and Elvine meet on the same floor with PvP enabled. Parties fight over the territory to go down. Floors 1 to 14 stay private to your party."
+        },
+        {
+          "es": "Arreglado: dos parties distintas podían acabar en la misma cripta (bots seguidores sin party y jugadores que dejaban la party dentro).",
+          "en": "Fixed: two different parties could end up in the same crypt (follower bots without a party and players leaving the party inside)."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Revisión de código (v0.62.2)", "en": "Code review (v0.62.2)" },
+      "title": {
+        "es": "Cerebro de bots (v0.65.0)",
+        "en": "Bot brain (v0.65.0)"
+      },
       "items": [
-        { "es": "Servidor más robusto: URLs mal formadas, rangos imposibles y órdenes con error ya no lo tumban ni lo desincronizan.", "en": "More robust server: malformed URLs, impossible ranges and failing commands no longer crash or desync it." }
+        {
+          "es": "Al observar un bot hay una ventana Cerebro: qué hace, qué piensa y qué mira. Los bots compran el manual de su arma (menos fallos), bajan más en la cripta y la hacen en equipo.",
+          "en": "Observing a bot now shows a Brain window: what it does, thinks and sees. Bots buy their weapon manual (fewer misses), go deeper in the crypt and delve as a team."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Ajuste de equipo (v0.62.1)", "en": "Gear tweaks (v0.62.1)" },
+      "title": {
+        "es": "Summons que pelean (v0.64.4)",
+        "en": "Summons that fight (v0.64.4)"
+      },
       "items": [
-        { "es": "Tentocle ya no necesita báculo: solo Frost, Liche y Demon. Los báculos maestros pierden el halo y las partículas; solo cambia el color, que ahora hace juego con el summon (Liche: morado oscuro).", "en": "Tentocle no longer needs a staff: only Frost, Lich and Demon do. Master staffs lose the halo and particles; only the tint remains, now matching the summon (Lich: dark purple)." },
-        { "es": "Todas las piezas de armadura tienen ya clase asignada (Hero = Guerrero; ropa básica = todas).", "en": "Every armor piece now has a class (Hero = Warrior; basic clothing = all)." }
+        {
+          "es": "Los habitantes ahora van al hospital de compañeros sin que el grupo los desvíe, pelean con su summon y reservan oro para pociones.",
+          "en": "Residents now reach the pet hospital without the group pulling them away, fight alongside their summon and keep gold for potions."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Equipo de clase (v0.62.0)", "en": "Class gear (v0.62.0)" },
+      "title": {
+        "es": "Brasas con aviso (v0.64.3)",
+        "en": "Embers with warning (v0.64.3)"
+      },
       "items": [
-        { "es": "Armaduras por clase: Mago (túnica, ChainHose, Wizard Hauberk, Wizard-Hat), Guerrero (placas, cualquier casco), Invocador (cuero, ChainHose, Hauberk, Wizard-Cap). Al pasar el ratón sobre un objeto verás «Solo para: …». Lo ya equipado no se quita.", "en": "Armour by class: Mage (robe, ChainHose, Wizard Hauberk, Wizard-Hat), Warrior (plate, any helmet), Summoner (leather, ChainHose, Hauberk, Wizard-Cap). Hover an item to see \"Only for: …\". Gear you already wear stays on." },
-        { "es": "Para invocar a Frost necesitas la Ice Wand equipada, al Liche el Darkness Staff y al Demon el Hero Staff (cada uno con el color de su summon).", "en": "To summon Frost/Tentocle you need the Ice Wand equipped, the Lich needs the Darkness Staff and the Demon the Hero Staff (each tinted like its summon)." },
-        { "es": "Nivel 50: el herrero vende por 1 de oro los báculos maestros (Master Ice Wand, Master Darkness Staff, Master Hero Staff), con halo y chispas de su color.", "en": "Level 50: the blacksmith sells the master staffs (Master Ice Wand, Master Darkness Staff, Master Hero Staff) for 1 gold, with a glow and sparks in their colour." },
-        { "es": "Los niveles del equipo se reajustaron al acto 1 (máximo 50).", "en": "Gear levels were rebalanced to act 1 (max 50)." }
+        {
+          "es": "Las brasas del jefe tardan más en hacer daño: da tiempo a esquivarlas.",
+          "en": "Boss embers take longer to hurt: there is time to dodge."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Armería (v0.61.1)", "en": "Armory (v0.61.1)" },
+      "title": {
+        "es": "Jefe del piso 5 más justo (v0.64.2)",
+        "en": "Fairer floor-5 boss (v0.64.2)"
+      },
       "items": [
-        { "es": "Nueva página armeria.html (enlazada desde el Bestiario): elige cualquier objeto y cambia matiz, saturación, brillo, contraste o reemplaza un color con cuentagotas. Descarga el PNG o guárdalo en art/armory/ (solo servidor local). No añade objetos al juego.", "en": "New armeria.html page (linked from the Bestiary): pick any item and change hue, saturation, brightness, contrast or replace a colour with an eyedropper. Download the PNG or save it to art/armory/ (local server only). It does not add items to the game." }
+        {
+          "es": "El jefe de la cripta tiene menos vida y menos esbirros.",
+          "en": "The crypt boss has less health and fewer minions."
+        }
       ]
     },
     {
       "date": "2026-10-12",
-      "title": { "es": "Clases (v0.61.0)", "en": "Classes (v0.61.0)" },
+      "title": {
+        "es": "El camino del invocador (v0.63.0)",
+        "en": "The summoner's path (v0.63.0)"
+      },
       "items": [
-        { "es": "Nuevo al crear personaje: Guerrero, Mago o Invocador (solo cambia los atributos iniciales). Los personajes antiguos son Guerreros.", "en": "New on character creation: Warrior, Mage or Summoner (only the starting attributes differ). Existing characters are Warriors." },
-        { "es": "El Invocador lleva 2 summons a la vez con 100 de carisma y 3 con 200, siempre de especies distintas.", "en": "The Summoner can have 2 summons at once with 100 charisma and 3 with 200, always of different species." }
+        {
+          "es": "Nuevo sistema de misiones por clase (tecla J): del nivel 1 al 50, subir un compañero, conseguir el báculo del Gold Skeleton e invocar la última evolución. Son difíciles.",
+          "en": "New class quest lines (J key): from level 1 to 50, level a pet, get the Gold Skeleton staff and summon the final evolution. They are hard."
+        },
+        {
+          "es": "Experiencia y cripta reequilibradas.",
+          "en": "Experience and crypt rebalanced."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Revisión de código (v0.62.2)",
+        "en": "Code review (v0.62.2)"
+      },
+      "items": [
+        {
+          "es": "Servidor más robusto: URLs mal formadas, rangos imposibles y órdenes con error ya no lo tumban ni lo desincronizan.",
+          "en": "More robust server: malformed URLs, impossible ranges and failing commands no longer crash or desync it."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Ajuste de equipo (v0.62.1)",
+        "en": "Gear tweaks (v0.62.1)"
+      },
+      "items": [
+        {
+          "es": "Tentocle ya no necesita báculo: solo Frost, Liche y Demon. Los báculos maestros pierden el halo y las partículas; solo cambia el color, que ahora hace juego con el summon (Liche: morado oscuro).",
+          "en": "Tentocle no longer needs a staff: only Frost, Lich and Demon do. Master staffs lose the halo and particles; only the tint remains, now matching the summon (Lich: dark purple)."
+        },
+        {
+          "es": "Todas las piezas de armadura tienen ya clase asignada (Hero = Guerrero; ropa básica = todas).",
+          "en": "Every armor piece now has a class (Hero = Warrior; basic clothing = all)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Equipo de clase (v0.62.0)",
+        "en": "Class gear (v0.62.0)"
+      },
+      "items": [
+        {
+          "es": "Armaduras por clase: Mago (túnica, ChainHose, Wizard Hauberk, Wizard-Hat), Guerrero (placas, cualquier casco), Invocador (cuero, ChainHose, Hauberk, Wizard-Cap). Al pasar el ratón sobre un objeto verás «Solo para: …». Lo ya equipado no se quita.",
+          "en": "Armour by class: Mage (robe, ChainHose, Wizard Hauberk, Wizard-Hat), Warrior (plate, any helmet), Summoner (leather, ChainHose, Hauberk, Wizard-Cap). Hover an item to see \"Only for: …\". Gear you already wear stays on."
+        },
+        {
+          "es": "Para invocar a Frost necesitas la Ice Wand equipada, al Liche el Darkness Staff y al Demon el Hero Staff (cada uno con el color de su summon).",
+          "en": "To summon Frost/Tentocle you need the Ice Wand equipped, the Lich needs the Darkness Staff and the Demon the Hero Staff (each tinted like its summon)."
+        },
+        {
+          "es": "Nivel 50: el herrero vende por 1 de oro los báculos maestros (Master Ice Wand, Master Darkness Staff, Master Hero Staff), con halo y chispas de su color.",
+          "en": "Level 50: the blacksmith sells the master staffs (Master Ice Wand, Master Darkness Staff, Master Hero Staff) for 1 gold, with a glow and sparks in their colour."
+        },
+        {
+          "es": "Los niveles del equipo se reajustaron al acto 1 (máximo 50).",
+          "en": "Gear levels were rebalanced to act 1 (max 50)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Armería (v0.61.1)",
+        "en": "Armory (v0.61.1)"
+      },
+      "items": [
+        {
+          "es": "Nueva página armeria.html (enlazada desde el Bestiario): elige cualquier objeto y cambia matiz, saturación, brillo, contraste o reemplaza un color con cuentagotas. Descarga el PNG o guárdalo en art/armory/ (solo servidor local). No añade objetos al juego.",
+          "en": "New armeria.html page (linked from the Bestiary): pick any item and change hue, saturation, brightness, contrast or replace a colour with an eyedropper. Download the PNG or save it to art/armory/ (local server only). It does not add items to the game."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Clases (v0.61.0)",
+        "en": "Classes (v0.61.0)"
+      },
+      "items": [
+        {
+          "es": "Nuevo al crear personaje: Guerrero, Mago o Invocador (solo cambia los atributos iniciales). Los personajes antiguos son Guerreros.",
+          "en": "New on character creation: Warrior, Mage or Summoner (only the starting attributes differ). Existing characters are Warriors."
+        },
+        {
+          "es": "El Invocador lleva 2 summons a la vez con 100 de carisma y 3 con 200, siempre de especies distintas.",
+          "en": "The Summoner can have 2 summons at once with 100 charisma and 3 with 200, always of different species."
+        }
       ]
     },
     {

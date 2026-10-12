@@ -39,11 +39,11 @@ export function openLlm(cfg = {}, env = process.env, log = console.log) {
       ? `Eres ${who}, un jugador-habitante de un RPG online de fantasía (port web de Helbreath). ${system} Te paso tus estadísticas y recuerdos recientes. Reflexiona como un jugador listo que aprende de sus errores y responde SOLO con un objeto JSON en una línea: {"lesson":"una frase corta en español con lo que has aprendido","avoid":["monstruos que deberías evitar por ahora"],"focus":["monstruos que te conviene cazar"],"caution":0-3}. Usa solo nombres de monstruos que aparezcan en tus datos.`
       : `You are ${who}, a player-resident of a fantasy online RPG (a web port of Helbreath). ${system} I give you your stats and recent memories. Reflect like a smart player who learns from mistakes and reply ONLY with a one-line JSON object: {"lesson":"one short sentence in English about what you learned","avoid":["monsters you should avoid for now"],"focus":["monsters worth hunting"],"caution":0-3}. Only use monster names that appear in your data.`;
     if (task === "say") return es
-      ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Te describo una situación en inglés; di en español UNA sola frase corta (máximo 100 caracteres), en personaje, como lo diría un jugador en el chat: natural, sin emojis, sin comillas y sin explicar la situación.`
-      : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} I describe a situation; say ONE short sentence (max 100 characters) in English, in character, the way a player would type it in chat: natural, no emojis, no quotes, without explaining the situation.`;
+      ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Te describo una situación en inglés; di en español una o dos frases cortas (máximo 200 caracteres en total), en personaje, como lo diría un jugador en el chat: natural, sin emojis, sin comillas y sin explicar la situación.`
+      : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} I describe a situation; say one or two short sentences (max 200 characters in total) in English, in character, the way a player would type it in chat: natural, no emojis, no quotes, without explaining the situation.`;
     return es
-      ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Responde en español con UNA sola frase corta (máximo 90 caracteres), en personaje, sin emojis ni comillas. Si alguien te pregunta sinceramente si eres una IA o un bot, admítelo con naturalidad.`
-      : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} Reply in English with ONE short sentence (max 90 characters), in character, no emojis or quotes. If someone sincerely asks whether you are an AI or a bot, admit it naturally.`;
+      ? `Eres ${who}, un habitante de Aresfarm en un videojuego de fantasía. ${system} Responde en español con una o dos frases cortas (máximo 180 caracteres en total), en personaje, sin emojis ni comillas. Si alguien te pregunta sinceramente si eres una IA o un bot, admítelo con naturalidad.`
+      : `You are ${who}, a resident of Aresfarm in a fantasy video game. ${system} Reply in English with one or two short sentences (max 180 characters in total), in character, no emojis or quotes. If someone sincerely asks whether you are an AI or a bot, admit it naturally.`;
   };
   const ask = async req => {
     const now = Date.now();
@@ -53,15 +53,15 @@ export function openLlm(cfg = {}, env = process.env, log = console.log) {
     while (stamps.length && now - stamps[0] > 60000) stamps.shift();
     if (now - last < 900 || stamps.length >= 40) return null;
     busy = true; last = now; stamps.push(now);
-    const sys = prompt(req), user = req.from + ": " + String(req.text).slice(0, 700), fb = req.task === "feedback" || req.task === "reflect" || req.task === "act", max = req.task === "reflect" || req.task === "act" ? 420 : fb ? 180 : 110;
+    const sys = prompt(req), user = req.from + ": " + String(req.text).slice(0, 700), fb = req.task === "feedback" || req.task === "reflect" || req.task === "act", max = req.task === "reflect" || req.task === "act" ? 420 : fb ? 180 : 230;
     try {
       if (provider === "ollama") {
         const r = await timeout(12000, signal => fetch(url + "/api/chat", { method: "POST", signal, headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: model2, stream: false, options: { num_predict: req.task === "reflect" || req.task === "act" ? 140 : fb ? 80 : 50, temperature: 0.8 }, messages: [{ role: "system", content: sys }, { role: "user", content: user }] }) }));
+          body: JSON.stringify({ model: model2, stream: false, options: { num_predict: req.task === "reflect" || req.task === "act" ? 140 : fb ? 80 : 90, temperature: 0.8 }, messages: [{ role: "system", content: sys }, { role: "user", content: user }] }) }));
         return clean((await r.json()).message?.content).slice(0, max) || null;
       }
       const r = await timeout(12000, signal => fetch("https://api.anthropic.com/v1/messages", { method: "POST", signal, headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: model2, max_tokens: req.task === "reflect" || req.task === "act" ? 160 : fb ? 90 : 60, system: sys, messages: [{ role: "user", content: user }] }) }));
+        body: JSON.stringify({ model: model2, max_tokens: req.task === "reflect" || req.task === "act" ? 160 : fb ? 90 : 110, system: sys, messages: [{ role: "user", content: user }] }) }));
       return clean((await r.json()).content?.[0]?.text).slice(0, max) || null;
     } catch { state.ready = false; checkedAt = Date.now(); ask.ready = false; return null; } finally { busy = false; }
   };

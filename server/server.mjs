@@ -160,6 +160,10 @@ const server = http.createServer((req, res) => {
     json(req, res, 200, { multiplayer: true, proto: PROTO, version: VERSION.version, name: VERSION.name, max: MAX_PLAYERS, players: [...clients].filter(c => c.pid).map(c => c.name).concat(adventure.residents().map(b => b.name)) });   // los habitantes (bots conectados según su horario) cuentan como conectados
     return;
   }
+  if (url.pathname === "/api/bots") {            // lista de habitantes para el panel dividido (web/observador.html); solo lectura
+    if (!OBSERVE) { json(req, res, 403, { error: "observar desactivado" }); return; }
+    json(req, res, 200, { list: botList(), time: Date.now() }); return;
+  }
   if (url.pathname === "/admin") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end("Solo desde el PC del servidor y con el token correcto."); return; }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" }); res.end(ADMIN_PAGE); return;

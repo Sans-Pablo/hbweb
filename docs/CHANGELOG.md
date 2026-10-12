@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.68.0 · Observador dividido (2026-10-12)
+- Bots: los mensajes largos ya no se cortan: se parten en varios mensajes (frases) con pausa entre ellos; el LLM puede escribir 1–2 frases (límite 230).
+- Bots: socializan más en el guild (charla cada 25–70 s, responden el 70 %) y tienen memoria de lo que hablan (`res.talk`/`talkN`, entra en el contexto del LLM y sale en el cerebro).
+- Observador dividido (`web/observador.html`): cuatro cuadrantes — juego en vivo (iframe; al cambiar de personaje solo se recarga ese cuadrante), plantel limpio por party, ficha del personaje (con pestaña Charlas) y estadísticas/tendencias (sparklines de HP/nivel/oro/bajas, tiempo por modo, rankings, bandos, mapas, guilds). Endpoint `/api/bots`.
+
 ## 0.67.0 · Centro de observación (2026-10-12)
 - Modo observar rehecho como pantalla compartida (`client/watchpanel.js`): plantel a la izquierda con todos los habitantes agrupados por party (👑 líder) y «en solitario», con qué hace cada uno (modo, mapa/piso, vida, guild), búsqueda y filtro de bando; un clic cambia de habitante (recarga con `#observar=ID`). Barra superior con ◀ ▶ (teclas [ y ]).
 - Panel «cerebro» con pestañas Resumen / Mente (personalidad, bio, todas las misiones, recuerdos) / Ficha (atributos, equipo por ranura, habilidades, historial, cripta, summon) / Social (party clicable, guild, amistades).
