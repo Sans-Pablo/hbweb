@@ -32,3 +32,13 @@
 - **ui.json pierde los iconos generados**: `convert_all.py --only ui` regenera `web/data/ui.json` y borra `summons_icon`, `recall_icon` y `pet_*` (botones sin icono). Después hay que reejecutar `tools/make_crypt_assets.py`; `tests/uiicons.test.mjs` lo vigila.
 
 - **Observar bots tiraba el servidor**: `ownState` serializaba la entidad del bot observado con su `bot` (IA) y `bot.target` ↔ `target.bot` forman un ciclo → `JSON.stringify` lanzaba dentro del tick sin captura. Ahora `ownReplacer` omite la clave `bot`, el tick está protegido y los fallos van a `server/data/crash.log`.
+
+- **Hojas IA (Real-ESRGAN, `tools/remaster_ia.py`) — lecciones del orge:**
+  - Limpiar píxeles oscuros come pelo, flecos, sombras de profundidad y monstruos oscuros (wyvern, troll). Tampoco se quita el negro de abajo: es sombra propia del modelo (ver la lección del orge más abajo); con lum<38 además se cortaban los tobillos.
+  - La mugre «volando» se filtra por fotograma: se descartan los trozos que no tocan el cuerpo (5 px) ni miden al menos el 15 % del trozo mayor.
+  - El alfa original es binario; se rehace aparte por fotograma (`build_alpha`). El suavizado debe leer solo el fotograma propio: con los vecinos dejaba tiras de 1 px en el borde del recuadro.
+  - Real-ESRGAN alisa la textura del pelaje y el alfa no la devuelve (idea pendiente: mezclar textura original o IA más suave).
+  - El WebP se guarda con `exact=True` (conserva el color bajo lo transparente): `--alpha` rehace solo el contorno sin repetir la IA (orge, 40 hojas: ~12 s; con IA ~37 s).
+  - Pendiente: wyvern, troll y sprites diminutos (gato, conejo, hormiga) pierden detalle con los umbrales de área; líneas rectas finas bajo los pies del orge: causa probable hallada y corregida (fotogramas vecinos, ver regla abajo); falta que Pablo lo confirme en el Bestiario.
+  - **Regla (causa confirmada de tiras rectas en el borde del recuadro):** los filtros por fotograma de `build_alpha` solo leen su propio recuadro; con el margen de relleno entraban píxeles del fotograma vecino. Ver reglas en `docs/sistemas/bestiario.md`.
+  - **Lección (orge, Pablo): el negro bajo los pies y entre las púas es sombra propia del modelo (la del garrote), no mugre.** El recorte de «sombra del suelo» (lum<14, 14 filas bajas) lo borraba; apagado con `black=0` en `clean_mask`. Antes de limpiar un tipo de píxel, pintar lo quitado en magenta sobre el original y comprobarlo a ojo; si hay duda, no borrar. Ver regla 2 en `docs/sistemas/bestiario.md`.

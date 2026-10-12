@@ -30,3 +30,10 @@ Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de
 - v0.78.18: hojas HD de uhealer/usorceress/ubuffer generadas con tools/make_support_hd.py.
 
 - **Modelos gráficos** (selector «Modelo», sin versión publicada): 1 Original, 2 HD actual (`sprites_hd`), 3 IA (`sprites_ia`, `tools/remaster_ia.py ESRGAN_DIR [prefijo…]`, Real-ESRGAN x4plus ncnn-vulkan; misma maqueta x4 que HD, el manifiesto `sprites_ia.json` lleva `dir`), 4 IA + luz (filtro CSS de contraste, bordes cálido/frío y sombra: **simulado**, la iluminación real iría en el renderer con mapas de normales). «Comparar los 4» dibuja un modelo por fila. `Sprites.modelFx` solo lo usa el Bestiario. `sprites_ia/` se ignora en git.
+
+## Reglas para generar hojas IA (`tools/remaster_ia.py`)
+1. **Aislar cada fotograma.** Las hojas están empaquetadas: cualquier filtro por fotograma (suavizado, desenfoque, morfología) debe leer solo su propio recuadro. Si lee el margen, entran píxeles del vecino y quedan tiras rectas de 1 px en el borde (causa confirmada en orge1, fotogramas 1 y 2).
+2. **No borrar negro.** Los píxeles casi negros bajo los pies y entre las púas son sombra propia del modelo (la del garrote), no mugre: el orge los perdía con el recorte de «sombra del suelo» (lum<14, 14 filas bajas). Está apagado (`black=0` en `clean_mask`); activarlo solo para un monstruo concreto con cuña de sombra plana comprobada. Nunca limpiar «oscuros» en general.
+3. Mugre suelta: por fotograma, descartar trozos que no toquen el cuerpo (5 px) ni midan el 15 % del mayor.
+4. El alfa original es binario: se rehace aparte; el WebP lleva `exact=True` para poder rehacer solo el alfa con `--alpha`.
+5. Tras regenerar, comprobar que cada fotograma tenga un solo componente (o piezas grandes legítimas, como las puntas del garrote).
