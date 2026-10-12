@@ -49,7 +49,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `itemsys.js` · 148 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
 - `leisure.js` · 204 · DESCANSOS DE LOS HABITANTES (INVENTO del port, no está en el original). Tras pelear un rato, el bot se toma un respiro y hace otra cosa:
 - `magicsys.js` · 359 · Lanzar y aprender hechizos.
-- `npcsys.js` · 458 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
+- `npcsys.js` · 463 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `obsstats.js` · 43 · Datos para el observador (INVENTO del port, 0.77.0): top de summons con su dueño y su ficha, estadísticas globales y las «peticiones»
 - `party.js` · 124 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `petskill.js` · 58 · Habilidad activa propia de cada especie de compañero (invento del port, 0.76.0). La lanza solo la IA, en combate, cuando hay maná y

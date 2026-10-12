@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.79.4 · Summons que no se pierden (2026-10-12)
+- Un summon a más de 40 casillas de su dueño se teletransporta a su lado aunque esté ocupado o con una orden vieja (`npcsys.js#followerThink`). Simulación de 12 bots × 240 min con 3 semillas sin avisos de bug.
+
 ## 0.79.3 · Bots pulidos (2026-10-12)
 - Recall de los bots: solo cuenta como interrupción si no les pegaban; en huida esperan el canal. Entrada a la cripta desde la granja sin depender de estar libres (`noFight`). Recados también en combate si no hay flechas; flechas antes que pociones; sin oro, el arquero suelta el arco. Detector de atascos con `stuck.last`. Test `bot-fixes`.
 

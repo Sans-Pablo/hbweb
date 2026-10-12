@@ -175,6 +175,7 @@ function followerThink(w, n) {
     }
   }
   if (n.comp && n.holdAt && dist(n, m) > 14) n.holdAt = null;                  // el dueño se aleja demasiado: vuelve a seguirlo
+  if (n.comp && dist(n, m) > 40) { n.goTo = null; n.holdAt = null; }           // orden vieja a un destino inalcanzable: el dueño manda
   if (n.comp && !n.goTo && !n.holdAt && dist(n, m) > 22 && !w.busy(n)) {         // se ha quedado atrás (el dueño corre, o cruzó una zona): lo alcanza junto a él
     const sp = w.freeSpotNear(m.x, m.y);
     if (sp) { w.grid.release(n.x, n.y, n.id); n.x = n.fx = sp[0]; n.y = n.fy = sp[1]; w.grid.occupy(n.x, n.y, n.id); n.act = ACT.STOP; n.actStart = w.time; n.actDur = 0; n.busyUntil = w.time; w.emit({ t: "teleport", id: n.id, x: n.x, y: n.y }); return; }
@@ -286,6 +287,10 @@ export function npcThink(w, n) {
   if (n.crystal) return;                                                       // los cristales del jefe glacial no actúan
   if (n.boss === 1 && !n.dead && !n.aux) crimsonPhase(w, n);
   if (n.boss && !n.aux && !n.dead) Boss.bossTick(w, n);
+  if (n.comp && !n.dead && w.time >= (n._farChk || 0)) {                       // un summon que pelea sin parar (siempre ocupado) nunca llega a pensar: si el dueño queda a >40 casillas, va a su lado
+    n._farChk = w.time + 1000; const m = w.ents.get(n.master);
+    if (m && !m.dead && dist(n, m) > 40) { const sp = w.freeSpotNear(m.x, m.y); if (sp) { w.grid.release(n.x, n.y, n.id); n.x = n.fx = sp[0]; n.y = n.fy = sp[1]; w.grid.occupy(n.x, n.y, n.id); n.act = ACT.STOP; n.actStart = w.time; n.actDur = 0; n.busyUntil = w.time; n.goTo = null; n.holdAt = null; w.emit({ t: "teleport", id: n.id, x: n.x, y: n.y }); return; } }
+  }
   if (n.dead || w.time < n.nextAct || w.busy(n)) return;
   if (n.master) { n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") || (n.chillUntil || 0) > w.time ? 1.5 : 1) * (n.leashF || 1); return followerThink(w, n); }
   n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1) * Boss.speedFactor(n);       // hielo: un 50 % más lento; la furia del jefe carmesí acelera
