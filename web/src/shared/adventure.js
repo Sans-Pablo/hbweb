@@ -293,8 +293,10 @@ export class Adventure {
   enterCrypt(p, w, gate, cmd) {
     if (!w.npcDb.Skeleton || !hasDungeonPalette()) return w.reject(p, cmd, "faltan los datos de la cripta; recarga la página");
     const dv = p.delve || (p.delve = { deepest: 1 });
-    if (dv.deepest > 1 && typeof cmd.restart !== "boolean") {
-      w.emit({ t: "dungeon-choice", id: p.id, deepest: dv.deepest, total: DUNGEON_LEVELS, portal: gate.id });
+    // dv.cleared = piso más hondo despejado: se puede empezar en cualquiera de los despejados o en el siguiente (cmd.level); al continuar se entra en el siguiente al último despejado, sin repetir su jefe
+    const maxStart = Math.max(dv.deepest, (dv.cleared | 0) + 1), pick = Number.isInteger(cmd.level);
+    if (maxStart > 1 && typeof cmd.restart !== "boolean" && !pick) {
+      w.emit({ t: "dungeon-choice", id: p.id, deepest: Math.min(maxStart, DUNGEON_LEVELS), total: DUNGEON_LEVELS, portal: gate.id });
       return false;
     }
     this.runs = this.runs || new Map();
@@ -312,7 +314,8 @@ export class Adventure {
       return true;
     }
     this.runs.set(key, { seed: Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0, origin: { map: w.map.id, x: gate.x, y: gate.y } });
-    return this.descend(p, w, Math.min(dv.deepest, DUNGEON_LEVELS, Quests.cryptCap(p)), true);
+    const first = pick ? Math.max(1, Math.min(cmd.level, maxStart)) : cmd.restart === true ? 1 : maxStart;
+    return this.descend(p, w, Math.min(first, DUNGEON_LEVELS, Quests.cryptCap(p)), true);
   }
 
   // Crea el nivel `level` de la partida del jugador y lo traslada allí. El nivel anterior se descarta.
@@ -423,7 +426,7 @@ export class Adventure {
       if (dungeon) w.map.remainingEnemies = [...w.ents.values()].filter(e => e.kind === "npc" && !e.comp && !e.aux && !e.dead).length + (w.ghostsPending || 0);
       if (dungeon && !w.cleared && w.map.remainingEnemies === 0) {
         w.cleared = true;
-        for (const p of w.ents.values()) if (p.kind === "player") { if (w.map.level >= DUNGEON_LEVELS && p.delve && !p.dead) p.delve.king = (p.delve.king | 0) + 1; w.emit({ t: "dungeon-cleared", id: p.id }); }   // piso 20 despejado = Rey esqueleto dorado abatido
+        for (const p of w.ents.values()) if (p.kind === "player") { if (p.delve) p.delve.cleared = Math.max(p.delve.cleared | 0, w.map.level); if (w.map.level >= DUNGEON_LEVELS && p.delve && !p.dead) p.delve.king = (p.delve.king | 0) + 1; w.emit({ t: "dungeon-cleared", id: p.id }); }   // piso 20 despejado = Rey esqueleto dorado abatido
       }
     }
     this.time = this.farm.time;

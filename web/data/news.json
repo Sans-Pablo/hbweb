@@ -1,10 +1,31 @@
 {
-  "build": "0.75.0",
+  "build": "0.76.0",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Compañeros activos y bots con oficio (v0.76.0)",
+        "en": "Active companions and bots with jobs (v0.76.0)"
+      },
+      "items": [
+        {
+          "es": "Cada compañero lanza una habilidad activa propia según su especie (cuesta maná y tiene enfriamiento).",
+          "en": "Each companion casts its own active skill by species (costs mana, has a cooldown)."
+        },
+        {
+          "es": "Hay 2 granjeros, 2 pescadores y 4 bots de apoyo (que prefieren entrenar en party); los bots descansan solo en ciudad o granja y dan comida a sus summons.",
+          "en": "There are 2 farmers, 2 fishers and 4 support bots (who prefer party training); bots rest only in town or on the farm and feed their summons."
+        },
+        {
+          "es": "Cripta: puedes elegir el nivel de inicio entre los despejados. Si un personaje se ve negro, la hoja se reintenta sola. Al volver a la pestaña ya no suenan todos los sonidos juntos.",
+          "en": "Crypt: you can pick the starting level among the cleared ones. If a character looks black, the sheet is retried automatically. Returning to the tab no longer plays all the sounds at once."
+        }
+      ]
+    },
     {
       "date": "2026-10-12",
       "title": {

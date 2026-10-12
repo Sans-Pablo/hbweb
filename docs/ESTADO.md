@@ -18,10 +18,26 @@
 - (hecho: ya existía en `renderer.drawPetOrder`) Órdenes a la mascota: usar la misma línea punteada que el personaje; rojo para atacar y un tono más claro para «moverse a ese lugar».
 - (hecho en v0.74.0) Cíclopes de Promise Land: darles las magias que tienen en el original para hacerlos más peligrosos.
 - (hecho en v0.74.0) Color del nombre de los objetos según rango (tiers, como en WoW).
-- Traducciones completas (es/en) de todo el juego.
+- (hecho en v0.75.0; la auditoría se arregló en v0.76.0) Traducciones completas (es/en) de todo el juego.
 - (hecho en v0.73.0) Observador: ignorar las teclas F cuando se pulsan fuera de la pantalla del juego (F5 refresca la web sin querer).
 - (hecho en v0.73.0) Stats de más: el original da 3 puntos por nivel (`bCheckLevelUp`, igual que aquí). La causa era la pérdida de nivel al morir: quitaba 3 puntos del fondo libre pero no de lo ya repartido, así que morir y volver a subir regalaba 3 puntos por nivel. Ahora el nivel perdido deja una *deuda* (`lvDebt`) que pagan los siguientes niveles (y el reinicio de stats); la pérdida de nivel se mantiene. Test `level-debt.test.mjs`. Los personajes ya inflados conservan lo que tienen.
 - (hecho en v0.73.0) Bots: sí vendían (`manage` en `botitems.js`), pero solo con carga ≥ 50 % o la mochila casi llena (38/50), así que llevaban 13-15 objetos de equipo sobrante. Ahora también ordenan al pasar de 14; los residentes se guardan hasta 8 para su puesto. Arreglado de paso: al vender se llevaban la caña de pescar de los residentes (`judge` la conserva).
+
+**Backlog nuevo (pedido del usuario, 2026-10-12, tras la v0.75.0):**
+- [x] (hecho en v0.76.0) **Proceso:** toda petición del usuario se anota aquí como tarea formal (con estado) antes de empezar, para poder retomar sin perder nada.
+- [x] (hecho en v0.76.0) **Cripta, progreso por niveles:** un bot superó el nivel 10 y salió de la cripta; al volver a entrar tiene que matar al jefe en vez de entrar en el nivel 11. Revisar cómo se guarda y se reanuda el progreso (`dungeon.js`, `adventure.js`, `bot.js`). → al volver se puede elegir el nivel de inicio entre los despejados (o el siguiente); continuar entra en el siguiente al último despejado. Test `crypt-start`.
+- [x] (hecho en v0.76.0) **Sprite negro:** a veces un personaje pierde su sprite y se ve negro. Reproducir (carga por mapa, caché de hojas) y arreglar. → PARCIAL: sin causa identificada; las hojas que fallan se reintentan solas. Test `sprite-retry`.
+- [x] (hecho en v0.76.0) **Observador, audio al volver de otra pestaña:** al recuperar el foco suenan muchos sonidos juntos (parece una muerte). Descartar los eventos acumulados mientras la pestaña estaba oculta (`audio.js`, `visibilitychange`). → al volver a la pestaña se descartan los sonidos acumulados.
+- [x] (hecho en v0.76.0) **Bots y summons:** que quieran subir de nivel a sus summons dándoles su comida favorita. → compran y dan comida (`summonfood.js`). Test `summon-food`.
+- [x] (hecho en v0.76.0) **Bots granjeros y pescadores:** aún no se ven; revisar los roles y por qué no se asignan (`bot.js`, `leisure.js`). → 2 granjeros y 2 pescadores fijos (`JOBS` en `residents.js`). Test `bot-jobs`.
+- [x] (hecho en v0.76.0) **Bots support:** bots que usen summons de apoyo (para estudiar su comportamiento) y que prefieran con fuerza entrenar en party. → 4 de apoyo (2 por bando) que prefieren entrenar en party. Test `bot-jobs`.
+- [x] (hecho en v0.76.0) **Bots, descanso en zona segura:** un bot descansaba en Promise Land mientras los monstruos le pegaban; es incorrecto. Rediseñar el sistema de descanso: solo en una zona segura (como mínimo sin monstruos cerca; ciudad, granja o tienda), nunca en pleno combate ni bajo ataque. Si hay monstruos cerca o recibe daño, deja de descansar y huye o se defiende (`bot.js`, `leisure.js`). Con test y ficha en `docs/sistemas/`. → solo en ciudad o granja; fuera vuelven con Recall y si les pegan se defienden. Test `bot-rest`.
+- [x] (hecho en v0.76.0) **Por confirmar (mensajes antiguos, sin verificar):** recordar la posición al desconectarse; auto-ataque activado al entrar; Guildmaster regala bota y capa del color del guild; línea fina en el borde de Promise Land; atacar a Elvine (personaje y summon); drops sin objetos knight/hero/sangh; reinicio del casteo F4 al cambiar de summon; sin cuadrado del suelo en el jefe de hielo; ojos del liche más arriba y juntos; teclas de los diálogos que activan atajos del explorador. → las 10 estaban hechas salvo Ctrl+E/G en los diálogos (arreglado: `isHotkey`); la línea fina del borde de Promise Land NO se pudo verificar ni reproducir.
+
+- [x] (hecho en v0.76.0) **Compañeros:** una habilidad activa propia por especie (`petskill.js`, test `petskill`).
+- [x] (hecho en v0.76.0) **Online:** scripts de Windows y túnel ngrok probados en este PC (ver `docs/ONLINE.md`; Tailscale y Cloudflare sin probar).
+- [x] (hecho en v0.76.0) **`tools/i18n_audit.mjs`:** tardaba minutos por una expresión regular con retroceso exponencial; ahora tarda menos de un segundo.
+- [ ] **Aplazado (decidido por el usuario):** tamaño del repo (LFS), tabla de tinte de pelo `m_wR`, verificación de CI (no hay `gh`), todo `docs/FUTURO.md`.
 
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 

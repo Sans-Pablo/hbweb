@@ -106,10 +106,19 @@ export class Sprites {
     this.hdm = hdManifest;
     this.hdi = {};
     // las imágenes que no se cargaron al principio (personajes) se piden la primera vez que se usan
+    // si una hoja falla o llega vacía (sprite negro), se vuelve a pedir tras una pausa, hasta 4 veces
+    const tries = {};
     this.img = new Proxy(images, {
       get(t, k) {
-        if (!(k in t) && typeof k === "string" && manifest[k]) { const i = new Image(); i.src = spriteUrl(manifest[k].png); t[k] = i; }
-        return t[k];
+        if (typeof k !== "string" || !manifest[k]) return t[k];
+        let i = t[k];
+        const broken = i && i.complete && !i.naturalWidth;
+        if (!i || (broken && (tries[k]?.n || 0) < 4 && performance.now() - (tries[k]?.at || 0) > 1500)) {
+          const n = (tries[k]?.n ?? -1) + 1;
+          tries[k] = { n, at: performance.now() };
+          i = new Image(); i.src = spriteUrl(manifest[k].png) + (n ? "&retry=" + n : ""); t[k] = i;
+        }
+        return i;
       },
     });
     this.sil = {};                         // siluetas negras para las sombras

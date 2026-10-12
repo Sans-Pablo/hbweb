@@ -13,10 +13,10 @@ for (const f of files(root)) {
   const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").split(/\r?\n/);
   src.forEach((line, i) => {
     const code = line.replace(/\/\/.*$/, "");
-    for (const m of code.matchAll(/(["'`])((?:\.|(?!\1).){6,}?)\1/g)) {
+    for (const m of code.matchAll(/(["'`])((?:\\.|(?!\1)[^\\\n]){6,}?)\1/g)) {
       const s = m[2], before = code.slice(0, m.index).trimEnd().slice(-1), after = code.slice(m.index + m[0].length).trimStart()[0];
-      if (before === "+" || after === "+" || /^[a-z]w*s*[=(]/.test(s)) continue;      // fragmentos de una concatenación: los cubre PATTERNS con la frase entera
-      if (!/\s/.test(s) || /\$\{/.test(s) || /^[\w./#:-]+$/.test(s) || !ES.test(s) || /^<|^\.|^\//.test(s)) continue;
+      if (before === "+" || after === "+" || /^[a-z]\w*\s*[=(]/.test(s)) continue;      // fragmentos de una concatenación: los cubre PATTERNS con la frase entera
+      if (!/\s/.test(s) || /[;{}()]/.test(s) || /\$\{/.test(s) || /^[\w./#:-]+$/.test(s) || !ES.test(s) || /^<|^\.|^\//.test(s)) continue;
       if (t(s) !== s) continue;
       if (!/[áéíóúñ¿¡]/i.test(s) && !/\b(el|la|los|las|tu|tus|puedes|tienes|has|falta|nivel|objeto|jugador|compañero)\b/i.test(s)) continue;
       const k = s; if (!out.has(k)) out.set(k, f.slice(root.length) + ":" + (i + 1));

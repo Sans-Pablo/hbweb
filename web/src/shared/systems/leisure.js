@@ -147,11 +147,13 @@ export function tick(adv, w, p, r, home, H) {
     return;
   }
   // ¿toca descansar? Solo cuando lleva un rato peleando
-  if (now < (r._lzAt ||= now + 60000 + Math.floor(w.rng() * 120000))) return;
-  if (busy(adv, w, p, r, home)) { r._lzAt = now + 15000; return; }
-  r._lzAt = now + FIGHT_PAUSE + Math.floor(w.rng() * 210000);
-  if (w.rng() < 0.15) return;                                                        // hoy no le apetece
-  const G = Guild.guildOf(w, p), kind = pick(w, p, r, G, H);
+  if (r.job === "farmer") return;                                                    // el granjero fijo no descansa: el campo es su oficio
+  const fisher = r.job === "fisher";                                                 // el pescador fijo pesca casi sin parar (vende al terminar cada tanda)
+  if (now < (r._lzAt ||= now + (fisher ? 3000 : 60000 + Math.floor(w.rng() * 120000)))) return;
+  if (busy(adv, w, p, r, home)) { r._lzAt = now + (fisher ? 4000 : 15000); return; }
+  r._lzAt = now + (fisher ? 6000 : FIGHT_PAUSE + Math.floor(w.rng() * 210000));
+  if (!fisher && w.rng() < 0.15) return;                                             // hoy no le apetece
+  const G = Guild.guildOf(w, p), kind = fisher ? "fish" : pick(w, p, r, G, H);
   begin(adv, w, p, r, home, kind, H);
 }
 

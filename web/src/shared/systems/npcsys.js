@@ -14,6 +14,7 @@ import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Dummy from "./dummy.js";
+import * as PetSkill from "./petskill.js";
 import * as Inv from "../inventory.js";
 import * as Boss from "./bosses.js";
 import * as Quests from "./quests.js";
@@ -212,7 +213,7 @@ function followerThink(w, n) {
     }
   }
   if (best) {
-    if (bd <= n.cfg.attackRange) return followerAttack(w, n, best);
+    if (bd <= n.cfg.attackRange) { const tcs = n.comp && Inv.instOf(m, n.ball)?.comp; if (tcs && !Tal.isDummy(tcs) && PetSkill.tryUse(w, n, m, best, tcs, petHurt)) return; return followerAttack(w, n, best); }
     const d = greedyStep(w.grid, n, best.x, best.y, dirTo);
     if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE);
     return;

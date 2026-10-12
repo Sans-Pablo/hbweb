@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.76.0 · Compañeros activos y bots con oficio (2026-10-12)
+- Compañeros: cada especie lanza una habilidad activa propia en combate (maná y enfriamiento; `petskill.js`, test `petskill`).
+- Bots: 2 granjeros y 2 pescadores fijos y 4 de apoyo (2 por bando) que prefieren entrenar en party (test `bot-jobs`); descansan solo en ciudad o granja (test `bot-rest`); compran y dan comida a sus summons (test `summon-food`).
+- Cripta: se puede elegir el nivel de inicio entre los despejados; ya no se vuelve a pelear contra el jefe de un nivel superado (test `crypt-start`).
+- Sprite negro: las hojas que fallan al cargar se reintentan solas (parcial, causa sin identificar; test `sprite-retry`). Audio: al volver a la pestaña se descartan los sonidos acumulados.
+- Diálogos: Ctrl+E y Ctrl+G ya no activan atajos del explorador.
+- `tools/i18n_audit.mjs` arreglado (antes tardaba minutos). `docs/ONLINE.md`: scripts de Windows y ngrok probados.
+
 ## 0.75.0 · Traducciones (2026-10-12)
 - Inglés completo de lo que faltaba: chat de bots y aliados, comentarista de la arena, mensajes de guild, misiones, capítulos, observador, panel de estadísticas, descripciones de caramelos y errores de aventura (`i18n.js`, plantillas `TPL` con datos).
 - Nueva herramienta `tools/i18n_audit.mjs` que lista las cadenas sin traducir.

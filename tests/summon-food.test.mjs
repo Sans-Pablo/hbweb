@@ -1,0 +1,34 @@
+// Bots: compran y dan a su summon la comida preferida de estadística; el principal primero; sin oro no compran
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { Adventure } from "../web/src/shared/adventure.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { GameData } from "../web/src/shared/data.js";
+import { DEBUG } from "../web/src/shared/systems/debug.js";
+import { seededRandom } from "../web/src/shared/dungeon.js";
+import * as C from "../web/src/shared/systems/companion.js";
+import { feedSummons, wanted, FOOD_PRICE } from "../web/src/shared/systems/summonfood.js";
+const dir = new URL("../web/data/", import.meta.url);
+const json = n => JSON.parse(readFileSync(new URL(n, dir)));
+const meta = json("map.json"), npcDb = json("npc.json");
+const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
+const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps: {}, rng: seededRandom(5) });
+DEBUG.enabled = true;
+const id = a.addPlayer("Admin", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
+a.command(id, { t: "dbg", op: "bot", n: 1, level: 25 });
+const [B] = [...a.bots.values()], w = a.farm;
+const ball = (uid, sp, on) => ({ uid, id: C.SPECIES[sp][1], count: 1, comp: { sp, lvl: 12, exp: 0, on, nm: sp, mode: "attack" } });
+B.bag = B.bag.filter(i => !i.comp);
+const main = ball(9101, "Amphis", true), second = ball(9102, "Orc", true);      // Amphis ama el champiñón (832, atk); Orc, maíz/calabaza (sin estadística)
+B.bag.push(main, second);
+assert.equal(wanted(main).id, 832);
+assert.equal(wanted(second), null, "lo que solo cura no cuenta");
+B.gold = 10; assert.equal(feedSummons(w, B), 0, "sin oro no compra");
+B.gold = 100000; const logs = [];
+const n = feedSummons(w, B, t => logs.push(t));
+assert.ok(n > 0 && main.comp.fb.atk > 0, "el principal sube su ataque");
+assert.equal(B.gold, 100000 - n * FOOD_PRICE, "paga cada pieza");
+assert.ok(logs.length === 1, "lo cuenta en su diario");
+for (let i = 0; i < 80; i++) feedSummons(w, B);
+assert.equal(main.comp.fb.atk, C.FEED_CAP, "se detiene en el tope");
+console.log("OK summon-food");

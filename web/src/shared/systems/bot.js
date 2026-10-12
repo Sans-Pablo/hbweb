@@ -25,6 +25,7 @@ import * as Shop from "./shopsys.js";
 import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
 import { allocate } from "./builds.js";
 import * as Comp from "./companion.js";
+import { feedSummons } from "./summonfood.js";
 import * as Sch from "./schools.js";
 import { hasStaff } from "./dummy.js";
 
@@ -35,7 +36,7 @@ const isBow = d => /Bow/.test(d.name) && d.skill === 6;
 export const isArcher = p => !!p.res && p.res.arch === "hunter";      // el cazador usa arco: dispara a cualquier distancia gastando flechas (combatsys.js)
 const isStaff = d => d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND;          // báculo/varita mágica: el summon de apoyo (Healer/Buffer/Aura) exige uno en la mano (dummy.js hasStaff)
 // Mago de apoyo (INVENTO): la mitad de los estudiosos (según el nombre) sigue la rama del invocador de apoyo: con el nivel que exige el báculo (30, Item.cfg) lo compra y adopta Healer, Buffer y Aura
-export const isSupport = p => { if (!p.res || p.res.arch !== "scholar") return false; let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 2 === 0; };
+export const isSupport = p => { if (!p.res || p.res.arch !== "scholar") return false; if (p.res.job === "support") return true; let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 2 === 0; };
 const ARROW = 77, ARROWS_MAX = 150;
 const SKIP_WEAPON = /Wand|Staff|Rod|Arrow|Hammer\(M\)|Pickaxe|Hoe/;
 
@@ -138,6 +139,7 @@ export function errands(w, p, b, first = false) {
   { const ar = w.data.item(ARROW), have = countOf(p, ARROW);          // arquero con arco puesto: lleva flechas de sobra (1 de oro cada una); sin ellas el arco no hace daño
     if (ar && p.eff?.bow && have < ARROWS_MAX / 2) { const n = Math.min(ARROWS_MAX - have, Math.floor(p.gold / 4)); if (n > 10 && buy(w, p, ar, n)) blog(w, p, `Compro ${n} flechas: con el arco disparo desde lejos.`); } }
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
+  feedSummons(w, p, t => blog(w, p, t));                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
   const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
@@ -366,6 +368,8 @@ export function think(adv, p) {
   b.next = w.time + THINK_MS;
   try { run(adv, w, p, b); } catch (e) { b.broken = true; console.error("bot " + p.name + " desactivado:", e); }
 }
+// Sitio donde un bot puede descansar: ciudad o granja (zona sin ataque), nunca Promise Land, cripta o arena
+export function restSafe(w, p) { return !w.pvp && w.map.kind !== "dungeon" && w.map.kind !== "arena" && w.safeAt(p.x, p.y); }
 function run(adv, w, p, b) {
   if (p.dead) {
     if (!b.deadSaid) { b.deadSaid = true; think_(w, p, b, "dead", {}, 0); }
@@ -432,12 +436,21 @@ function run(adv, w, p, b) {
     }
   }
   if (b.rest && hpf > 0.75) { b.rest = false; blog(w, p, "Recuperado, sigo."); think_(w, p, b, "rested"); }
+  // DESCANSO SOLO EN ZONA SEGURA (ciudad o granja): lejos de ella (Promise Land, cripta, campo abierto) vuelve con Recall antes de descansar;
+  // si algo le pega o hay un monstruo encima mientras tanto, deja de descansar y se defiende (el canal de Recall se rompe con cada golpe)
+  let defend = false;
+  if (b.rest && !owner && !restSafe(w, p)) {
+    const hit = w.time - (p.lastCombat || -1e9) < 2500;
+    if (hit) { defend = true; if (!b.restHurt || w.time - b.restHurt > 8000) blog(w, p, "Me atacan mientras descanso fuera de zona segura: me defiendo."); b.restHurt = w.time; }
+    else if (p.recallTok) { b.hold = w.time + 1500; return; }
+    else if (w.time - (b.recallAt || 0) > 6000) { b.recallAt = w.time; b.target = null; b.path = null; b.travel = null; blog(w, p, "Descansar aquí no es seguro: vuelvo a la zona segura con Recall."); adv.command(p.id, { t: "recall" }); return; }
+  }
   // objetivo
   if (b.travel && w.time > b.travel.until) { if (!b.travel.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; b.path = null; }       // caduca aunque esté peleando por el camino
   if (b.ignore) for (const [id, until] of b.ignore) if (w.time > until) b.ignore.delete(id);
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
-  if (!b.rest && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
-  const t = b.rest || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
+  if ((!b.rest || defend) && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
+  const t = (b.rest && !defend) || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
     if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (dist(p, t) <= reachOf(w, p, t)) {
@@ -473,7 +486,7 @@ function run(adv, w, p, b) {
     const o = w.freeSpotNear(p.x + 2, p.y + 2); if (o && !w.teleports.has(w.grid.idx(o[0], o[1]))) { step(adv, w, p, b, o[0], o[1], false); return; }
   }
   if (owner) { if (dist(p, owner) > 8) think_(w, p, b, "follow"); if (dist(p, owner) > 3) step(adv, w, p, b, owner.x, owner.y, dist(p, owner) > 7); return; }
-  if (b.rest || b.hold > w.time) return;
+  if ((b.rest && !defend) || b.hold > w.time) return;
   if (!b.travel && w.time >= (b.huntAt || 0) && w.map.kind !== "dungeon") {                // sin nada a la vista: va a cazar donde hay monstruos (antes vagaba para siempre por el pueblo, junto a la herrería y la tienda)
     b.huntAt = w.time + 8000;
     let best = null, bd = 1e9;
@@ -504,12 +517,13 @@ function farmTiles(w) {
 function farm(adv, w, p, b) {
   const tiles = farmTiles(w);
   if (!tiles.length) return false;
+  if (b.fixed === "farmer" && b.farmReady && w.time > (b.seedAt || 0) && !p.bag.some(i => w.data.item(i.id)?.effectType === 30)) { b.seedAt = w.time + 30000; b.farmReady = false; }      // el granjero fijo repone semillas
   if (!b.farmReady) {                                                       // equipo de labranza: azada y semillas con el oro propio
     b.farmReady = true;
     p.skills[SKILL.FARMING] = Math.max(p.skills[SKILL.FARMING] || 0, 40);
     const hoe = w.data.item(232), seed = w.data.item(801);
     if (hoe && !p.bag.some(i => i.id === 232) && p.gold > hoe.price) buy(w, p, hoe, 1);
-    if (seed && p.gold > seed.price * 2) buy(w, p, seed, 2);
+    if (seed && p.gold > seed.price * 2) buy(w, p, seed, b.fixed === "farmer" ? Math.min(6, Math.floor(p.gold / seed.price / 2)) : 2);
   }
   const hoe = p.bag.find(i => i.id === 232), seeds = p.bag.find(i => w.data.item(i.id)?.effectType === 30);
   if (!hoe && !seeds) return false;

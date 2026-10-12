@@ -22,7 +22,7 @@ Edita `web/data/server.json` con tu dirección (sin barra final) y súbelo a `ma
 ```
 GitHub Pages tarda ~2 minutos en publicarlo. A partir de ahí, **cualquiera que abra el enlace de GitHub ve la pantalla «Partida en línea»**, crea su cuenta (usuario + contraseña), su personaje, y juega con los demás. La dirección es fija: no hay que volver a tocar nada.
 
-> Estos pasos con ngrok/Tailscale/PowerShell no se han podido probar desde el entorno de desarrollo (Linux, sin Windows ni internet abierto); el servidor, el protocolo y los límites sí tienen tests (`tests/online.test.mjs`). Si algún paso falla, dime el mensaje y lo ajusto.
+> **Probado en un PC con Windows 11 (v0.76.0):** `tools/iniciar.ps1` e `instalar-online.ps1` no tienen errores de sintaxis; `server/config.json` es válido; el servidor arranca (`node server/server.mjs`, protocolo 7) y responde en `http://localhost:PUERTO/`; **ngrok** (v3.39) abre el túnel con el dominio fijo del `config.json` y la dirección pública llega al servidor del PC (`started tunnel`). Sin probar: Tailscale Funnel y Cloudflare (no instalados en ese PC), la instalación de Ollama/Node portátil y el flujo interactivo completo del `.bat` (descargas y preguntas). Un `GET /` sin cabeceras del navegador por el túnel devolvió 403; el acceso desde la web de GitHub (origen permitido) se verifica jugando. Nota: ese `config.json` tiene `"tunnel": "cloudflare"` y también `ngrokDomain`: si quieres ngrok, pon `"tunnel": "ngrok"`.
 
 ## Día a día
 - Abre **`Servidor online.bat`** y déjalo abierto mientras se juega. Intro en esa ventana apaga todo.

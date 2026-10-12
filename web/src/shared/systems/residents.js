@@ -31,6 +31,9 @@ import * as Leisure from "./leisure.js";
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
 export const RESIDENT_NAMES = NAMES;
+// OFICIOS FIJOS (0.76.0, INVENTO): entre los 40 habitantes, 2 granjeros, 2 pescadores y 4 de apoyo (2 por bando: 0-19 Aresden, 20-39 Elvine) que viven de su oficio
+export const JOBS = { Helga: "farmer", Nils: "farmer", Ivo: "fisher", Greta: "fisher", Petra: "support", Lyra: "support", Olga: "support", Yara: "support" };
+export const isCraft = r => r?.job === "farmer" || r?.job === "fisher";
 
 const ARCH = {
   warrior: { es: "guerrero", en: "warrior", talk: 0.4, brave: 1 }, hunter: { es: "cazador", en: "hunter", talk: 0.5, brave: 0.8 },
@@ -195,6 +198,8 @@ export function describe(p, lang) {
 export function attach(w, p, saved) {
   p.res = restore(p.name, saved);
   p.res.next = 0;
+  { const job = JOBS[p.name]; p.res.job = job || null; if (job === "support") p.res.arch = "scholar"; else if (job) p.res.arch = job === "fisher" ? "hunter" : "trader";
+    if (job && p.bot) { p.bot.farmer = job === "farmer"; p.bot.fixed = job; } }
   if (!p.res.goal) newGoal(w, p);
   if (!p.res.chr20) { p.res.chr20 = 1; if (p.level >= 15 && p.stats.chr < 20) p.pool += 20 - p.stats.chr; }       // una sola vez: los veteranos reciben los puntos de carisma que exige fundar un guild
   p.res.lvl = p.level; p.res.kills0 = p.kills || 0;
@@ -676,6 +681,7 @@ function expedition(adv, w, p, r, home) {
     blog(w, p, "Estoy en la cripta sin plan: la despejo o salgo.");
   }
   if (b.owner != null || r._pet) return;                                                   // los miembros de un grupo van donde va su líder
+  if (isCraft(r) && !r._delve && !r._trip) return;                                         // granjeros y pescadores no salen de expedición: viven de su oficio
   if (r._delve) return delve(adv, w, p, r, home);
   if (r._trip) {
     if (w === home && r._trip.go && w.time > r._trip.goUntil) { r._trip = null; r._tripAt = w.time + 120000; blog(w, p, "No llegué al teletransportador: cancelo la expedición."); return; }
@@ -766,9 +772,13 @@ function delve(adv, w, p, r, home) {
     if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
     if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
     if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
-    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, bp = bossPreview(w, dp), restart = !!bp && fightEstimate(w, p, bp).ratio < 1.3;       // si su piso más hondo es de jefe y no puede con él, empieza de cero
-      if (restart) blog(w, p, `Mi piso más hondo (${dp}) es de jefe y aún no puedo con él: empiezo la cripta desde el principio.`);
-      adv.command(p.id, { t: "portal", portal: "mid-entry", restart }); }
+    if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, cl = p.delve?.cleared ?? Math.max(0, dp - 1);
+      let start = Math.min(cl + 1, 20);                                                            // elige el piso de inicio entre los despejados (el siguiente al último es el máximo): el más hondo cuyo jefe pueda vencer y cuyo nivel le alcance
+      while (start > 1) { const bp = bossPreview(w, start); if ((!bp || fightEstimate(w, p, bp).ratio >= 1.3) && p.level >= cryptNeed(r, start) - 2) break; start--; }
+      const restart = start === 1;
+      if (start < cl + 1) blog(w, p, `Tengo despejado hasta el piso ${cl}, pero aún no estoy listo para el ${cl + 1}: empiezo en el piso ${start}.`);
+      else if (cl > 0) blog(w, p, `Tengo despejado hasta el piso ${cl}: empiezo en el ${start}, sin repetir el jefe.`);
+      adv.command(p.id, { t: "portal", portal: "mid-entry", restart, level: start }); }
     return;
   }
   if (w.map.kind !== "dungeon") return;
@@ -1010,9 +1020,10 @@ function pits(adv, w, p, r) {
 }
 // Grupos de hasta 4 del mismo bando: el de más nivel lidera, los demás lo siguen (party real) y se disuelven al cabo de un rato para mezclarse.
 function social(adv, w, p, r) {
-  const b = p.bot;
-  if (w.time < (r._socAt ||= w.time + 15000 + Math.floor(w.rng() * 20000))) return;
-  r._socAt = w.time + 25000;
+  const b = p.bot, sup = r.job === "support";
+  if (isCraft(r)) return;
+  if (w.time < (r._socAt ||= w.time + (sup ? 5000 : 15000) + Math.floor(w.rng() * 20000))) return;
+  r._socAt = w.time + (sup ? 8000 : 25000);
   if (b.owner != null && !r.followUntil) {                                      // miembro: ¿toca disolver?
     if (adv.bots.get(b.owner)?.res && w.time > (r._leaveAt || 0)) { blog(w, p, "Dejo el grupo para ir por mi cuenta un rato."); b.owner = null; Party.leave(w, p, true); }
     return;
@@ -1020,14 +1031,15 @@ function social(adv, w, p, r) {
   if (b.owner != null || r.followUntil || r._trip || r._pet || p.dead || b.rest) return;
   let best = null, bd = 99;
   for (const q of adv.bots.values()) {
-    if (q === p || !q.res || q.dead || q.side !== p.side || adv.worldFor(q.id) !== w || q.bot.owner != null || q.res.followUntil || q.res._trip || q.res._pet) continue;
+    if (q === p || !q.res || q.dead || q.side !== p.side || adv.worldFor(q.id) !== w || q.bot.owner != null || q.res.followUntil || q.res._trip || q.res._pet || q.res.job) continue;     // los de oficio no entran en grupos corrientes
     const d = dist(p, q);
-    if (d > 20 || Math.abs(q.level - p.level) > 10 || members(adv, p) + members(adv, q) + 2 > 4) continue;
+    if (d > (sup ? 45 : 20) || Math.abs(q.level - p.level) > (sup ? 40 : 10) || members(adv, p) + members(adv, q) + 2 > 4) continue;
     if (d < bd) { best = q; bd = d; }
   }
-  if (!best || w.rng() > 0.5) return;
-  const lead = best.level > p.level || (best.level === p.level && members(adv, best) > members(adv, p)) ? best : p, mem = lead === p ? best : p;
-  mem.bot.owner = lead.id; mem.res._leaveAt = w.time + 600000 + Math.floor(w.rng() * 900000); mem.bot.partyAt = 0;
+  if (!best || (!sup && w.rng() > 0.5)) return;
+  // el de apoyo siempre se une como miembro (curar y reforzar), se queda mucho más y busca grupo cada pocos segundos
+  const lead = sup ? best : best.level > p.level || (best.level === p.level && members(adv, best) > members(adv, p)) ? best : p, mem = lead === p ? best : p;
+  mem.bot.owner = lead.id; mem.res._leaveAt = w.time + (sup ? 1500000 + Math.floor(w.rng() * 900000) : 600000 + Math.floor(w.rng() * 900000)); mem.bot.partyAt = 0;
   blog(w, mem, `Me uno al grupo de ${lead.name} (nv ${lead.level}).`); blog(w, lead, `${mem.name} (nv ${mem.level}) se une a mi grupo.`);
   remember(mem, "Me uní al grupo de " + lead.name + ".", "Joined " + lead.name + "'s party."); remember(lead, mem.name + " se unió a mi grupo.", mem.name + " joined my party.");
   if (w.rng() < 0.6) speak(adv, lead, fmt(lead, "group", lead.res.lang, mem.name, w));

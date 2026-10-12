@@ -16,7 +16,12 @@ export class Sound {
     this.track = "maintm";
     this.mode = "remastered";
     this.last = new Map();
+    // al volver a la pestaña la simulación se pone al día y dispara de golpe todos los eventos acumulados: se descartan los sonidos mientras
+    // la pestaña está oculta y durante un instante tras volver
+    this.quietUntil = 0;
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => { this.quietUntil = document.hidden ? Infinity : performance.now() + 1200; });
   }
+  get quiet() { return (typeof document !== "undefined" && document.hidden) || performance.now() < this.quietUntil; }
 
   // Carga bajo demanda: sonidos del mapa en el que se entra (monstruos). Si el audio aún no se ha desbloqueado, se guardan para entonces.
   prefetch(names) {
@@ -133,7 +138,7 @@ export class Sound {
   }
 
   async play(name, id, vol = 1) {
-    if (!this.ctx || !this.on) return;
+    if (!this.ctx || !this.on || this.quiet) return;
     // no repetir el mismo sonido de la misma fuente más de una vez cada 60 ms
     const k = name + ":" + id, now = performance.now();
     if (now - (this.last.get(k) || 0) < 60) return;
@@ -168,7 +173,7 @@ export class Sound {
     this.playRaw(name, Math.max(0, 1 - d / 14), Math.max(-1, Math.min(1, (tx - me.x) / 12)));
   }
   async playRaw(name, gain, pan) {
-    if (!this.ctx || !this.on) return;
+    if (!this.ctx || !this.on || this.quiet) return;
     const buf = await this.buffer(name); if (!buf) return;
     const s = this.ctx.createBufferSource(); s.buffer = buf;
     const g = this.ctx.createGain(); g.gain.value = gain;

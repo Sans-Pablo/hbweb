@@ -413,7 +413,7 @@ async function main() {
       if (ent && (ent.kind === "npc" || (ent.kind === "player" && ent.id !== pid))) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
     },
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adhmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adeghmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
