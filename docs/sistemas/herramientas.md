@@ -12,3 +12,10 @@ INVENTO del port, solo para testers. Código: `client/devtools.js` (panel), `sha
 | Mundo | `sky` (día/noche/auto + clima 0–3) |
 
 Los mensajes salen en el chat como `[test] …`. Test: `tests/debug.test.mjs`.
+
+## Reset all
+Botón de «Personaje»: `dbg resetall` → `Adventure.resetAll()` recorre todos los personajes (jugador, bots y habitantes, en cualquier mapa) y llama a `player.resetCharacter`: nivel 1, atributos de partida (clase o `BOT_STATS`), objetos iniciales, sin oro, banco, compañeros ni misiones; los habitantes olvidan su historia. Pide confirmación. Test: `debug.test.mjs`.
+
+
+## Reiniciar bots desde 0
+Botón `botsnew` (con confirmación). `Adventure.restartBots()` quita todos los bots y habitantes, vacía `adv.offline`, borra sus puestos de `stallDb` y llama a `adventure.onBotsRestart(nombres)`; el servidor borra entonces `saves[bkey(n)]` de los 40 habitantes y guarda. Después recrea el mismo número de habitantes, nuevos (nivel 1-4, sin historia). No toca a los jugadores humanos (para eso, Reset all). Test: `tests/debug.test.mjs`.

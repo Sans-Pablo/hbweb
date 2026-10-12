@@ -5,6 +5,7 @@
 //    estadísticas de su clase (specStats). Reiniciar los talentos cuesta oro (en el hospital).
 import { dice } from "../rules.js";
 import { sget } from "./status.js";
+import { fixLegacy } from "./evolutions.js";
 import { SCHOOL_OF, MP_BASE, TIER_MULT, isTier2 } from "./schools.js";
 
 export const BRANCHES = ["support", "damage", "tank"];
@@ -52,6 +53,7 @@ export const SPECIES_OF = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
 export const isDummy = c => !!CLS_OF[c.sp];
 // Bolas guardadas antes de 0.58: eran «Dummy» + clase (o sin clase). Pasan a su especie propia.
 export function fixSupport(c) {
+  fixLegacy(c);                                                                    // especie desaparecida (p. ej. Frost → Beholder, evolutions.js)
   if (c.sp === "Dummy") c.sp = SPECIES_OF[c.cls] || "Healer";
   if (CLS_OF[c.sp]) { c.cls = CLS_OF[c.sp]; c.fixed = true; }
   return c;

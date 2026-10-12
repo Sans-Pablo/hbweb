@@ -7,7 +7,8 @@ import * as Inv from "../inventory.js";
 import { GOLD, MAX_ITEMS, isStack, itemWeight } from "../items.js";
 import { spawnCitizen } from "./citizens.js";
 
-export const MAPS = new Set(["gshop_1f", "wrhus_1f", "bsmith_1f"]);
+export const MAPS = new Set(["wrhus_1f"]);          // solo en los warehouses (los más grandes: así los puestos no bloquean las entradas)
+export const TTL = 24 * 3600 * 1000;                // un puesto dura 24 h; al caducar (o al quedar vacío) se cierra y lo suyo vuelve al dueño
 export const MAX_ITEMS_STALL = 8, MAX_PER_MAP = 12, RANGE = 4, MAX_PRICE = 10000000, SKIN = "Howard";
 const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const db = w => w.hooks?.stalls?.() || null;
@@ -19,7 +20,38 @@ const view = (w, p, e) => {
     items: s.items.map(({ inst: i, price }) => ({ uid: i.uid, id: i.id, count: i.count || 1, attr: i.attr || 0, life: i.life, price })) };
 };
 
+// cierra el puesto (sin objetos o caducado): quita la entidad y deja el registro «closed» con lo que quede; tick() se lo entrega al dueño cuando esté en el mundo
+function shut(w, s) {
+  s.closed = true;
+  const e = find(w, s.sid);
+  if (e) { e.dead = true; w.grid.release(e.x, e.y, e.id); w.ents.delete(e.id); w.emit({ t: "remove", id: e.id }); }
+}
+function settle(w, s) {                                            // entrega un puesto cerrado al dueño si está aquí y le caben los objetos
+  const p = [...w.ents.values()].find(e => e.kind === "player" && e.name.toLowerCase() === s.owner); if (!p || p.dead) return;
+  const list = db(w);
+  if (s.items.length) {
+    let weight = 0, slots = p.bag.length;
+    for (const { inst: i } of s.items) { const d = w.data.item(i.id); weight += itemWeight(d, isStack(d) ? i.count : 1); if (!(isStack(d) && p.bag.some(x => x.id === i.id))) slots++; }
+    if (slots > MAX_ITEMS || Inv.totalWeight(p, w.data) + weight > Inv.maxLoad(p)) return;
+    for (const { inst } of s.items) Inv.addToBag(p, w.data, inst);
+  }
+  p.gold += s.gold; w.recalc(p);
+  say(w, p, "expired", { gold: s.gold, items: s.items.length });
+  list.splice(list.indexOf(s), 1);
+}
+export function tick(w) {
+  const list = db(w); if (!list) return;
+  for (const s of [...list]) {
+    if (s.map === w.map.id && !s.closed) {
+      if (s.until > w.time + TTL) s.until = w.time + TTL;           // el reloj del mundo puede haber vuelto atrás tras reiniciar el servidor
+      if (w.time >= (s.until ?? (s.until = w.time + TTL)) || !MAPS.has(s.map)) shut(w, s);
+    }
+    if (s.closed) settle(w, s);
+  }
+}
+
 export function spawn(w, s) {
+  if (s.closed) return null;
   const n = spawnCitizen(w, SKIN, s.x, s.y, "stall");
   if (!n) return null;
   s.x = n.x; s.y = n.y; n.stall = s;
@@ -30,13 +62,13 @@ export const DOOR_GAP = 8;          // un puesto no se abre a menos de 8 casilla
 export function open(w, p, cmd) {
   const list = db(w); if (!list) return false;
   const rej = why => w.reject(p, { t: "stallopen" }, why);
-  if (!MAPS.has(w.map.id)) return rej("aquí no se pueden abrir puestos (solo shop, warehouse y herrería)");
+  if (!MAPS.has(w.map.id)) return rej("aquí no se pueden abrir puestos (solo en los warehouses)");
   // BUG-012: ni sobre una entrada/teletransporte ni cerca (el puesto taparía la puerta); el hueco del puesto queda a ≥ 2 casillas
   for (const t of w.teleports.values()) if (Math.max(Math.abs(t.x - p.x), Math.abs(t.y - p.y)) <= DOOR_GAP) return rej("no puedes abrir un puesto junto a una entrada o teletransporte");
   const key = p.name.toLowerCase();
   if (p.dead || p.trade) return rej("ahora no puedes abrir un puesto");
-  if (list.some(s => s.owner === key)) return rej("ya tienes un puesto abierto");
-  if (list.filter(s => s.map === w.map.id).length >= MAX_PER_MAP) return rej("no queda sitio para más puestos aquí");
+  if (list.some(s => s.owner === key && !s.closed)) return rej("ya tienes un puesto abierto");
+  if (list.filter(s => s.map === w.map.id && !s.closed).length >= MAX_PER_MAP) return rej("no queda sitio para más puestos aquí");
   const want = Array.isArray(cmd.items) ? cmd.items.slice(0, MAX_ITEMS_STALL) : [];
   const seen = new Set(), take = [];
   for (const o of want) {
@@ -49,7 +81,7 @@ export function open(w, p, cmd) {
   }
   if (!take.length) return rej("pon algún objeto a la venta");
   const spot = w.freeSpotNear(p.x, p.y, 2); if (!spot) return rej("no hay sitio libre junto a ti");
-  const s = { sid: w.nextItem++, owner: key, name: p.name, map: w.map.id, x: spot[0], y: spot[1], title: String(cmd.title || "").replace(/[^\p{L}\p{N} .,!'-]/gu, "").slice(0, 24) || "En venta", items: [], gold: 0 };
+  const s = { sid: w.nextItem++, owner: key, name: p.name, map: w.map.id, x: spot[0], y: spot[1], title: String(cmd.title || "").replace(/[^\p{L}\p{N} .,!'-]/gu, "").slice(0, 24) || "En venta", items: [], gold: 0, until: w.time + TTL };
   for (const { i, n, price, d } of take) {
     let inst = i;
     if (isStack(d) && n < (i.count || 1)) { i.count -= n; inst = { ...i, uid: w.nextItem++, count: n }; } else Inv.removeFromBag(p, i.uid);
@@ -85,12 +117,12 @@ export function buy(w, p, cmd) {
   p.gold -= cost; s.gold += cost;
   Inv.addToBag(p, w.data, got); w.recalc(p);
   w.emit({ t: "stallsale", id: p.id, item: got.id, count: n, price: cost, owner: s.name, seller: s.owner });
-  say(w, p, "view", view(w, p, e));
+  if (!s.items.length) shut(w, s); else say(w, p, "view", view(w, p, e));
   return true;
 }
 
 export function take(w, p) {
-  const s = (db(w) || []).find(x => x.owner === p.name.toLowerCase() && x.map === w.map.id);
+  const s = (db(w) || []).find(x => x.owner === p.name.toLowerCase() && x.map === w.map.id && !x.closed);
   if (!s) return w.reject(p, { t: "stalltake" }, "no tienes puesto aquí");
   if (!s.gold) return true;
   p.gold += s.gold; say(w, p, "took", { gold: s.gold }); s.gold = 0;
@@ -99,7 +131,7 @@ export function take(w, p) {
 }
 
 export function close(w, p) {
-  const list = db(w), key = p.name.toLowerCase(), s = list?.find(x => x.owner === key && x.map === w.map.id);
+  const list = db(w), key = p.name.toLowerCase(), s = list?.find(x => x.owner === key && x.map === w.map.id && !x.closed);
   if (!s) return w.reject(p, { t: "stallclose" }, "no tienes puesto aquí");
   const inst = s.items.map(r => r.inst);
   let weight = 0, slots = p.bag.length;
@@ -116,4 +148,4 @@ export function close(w, p) {
 }
 
 // Para los habitantes: puestos de este mapa con algo a la venta
-export const stallsOf = (w) => [...w.ents.values()].filter(e => e.role === "stall" && e.stall?.items.length);
+export const stallsOf = (w) => [...w.ents.values()].filter(e => e.role === "stall" && e.stall?.items.length && !e.stall.closed);

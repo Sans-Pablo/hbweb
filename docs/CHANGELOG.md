@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 0.79.0 · Summons psíquicos (2026-10-12)
+- Beholder (Movimiento), Centaurus (Interferencia) y Stalker (Territorio, evolución de Giant-Frog): control y debilitación sin daño directo, lanzamiento automático. Exigen el nuevo Psychic Controller (id 9004) en la mano; cualquier clase.
+- Estados nuevos: Illusion y Armor Break (+25 % daño recibido), campos sin daño, Confusion para monstruos. Panel de estados con cuenta atrás de ambos.
+- Herramientas: modo «0 restricciones» (sin báculo ni tope de nivel de mascota). Mascotas un 25 % más rápidas. NET_PROTO 9.
+- Test `psychic`, ficha `docs/sistemas/psiquico.md`.
 ## 0.78.0 · Observador de 4 paneles, artesanos y combate de rango (2026-10-12)
 - Observador: 4 paneles elegibles sin recargar el juego, panel «Personajes» por clase y oficio.
 - Bots: 8 artesanos (2 granjeros y 2 pescadores por bando) con puesto; los demás les compran la comida de sus summons. Los magos mantienen distancia mientras el summon lanza hechizos; los supports ya invocan su summon de apoyo.

@@ -14,6 +14,7 @@ import { groundPush, groundTop, groundPop } from "./ground.js";
 import * as Inv from "../inventory.js";
 import * as Sch from "./schools.js";
 import * as Tal from "./talents.js";
+import { look } from "./evolutions.js";
 
 // RequestStudyMagicHandler: hace falta Int >= ReqInt y pagar el coste (negativo = no se vende).
 // Con escuelas (MAGIC_MODE.schools) el libro es del SUMMON: el personaje le enseña un hechizo de su escuela si tiene la Int (2 x nivel del hechizo),
@@ -118,7 +119,7 @@ function command(w, p, sp, id, x, y) {
   if (!n) return;
   if (x !== n.x || y !== n.y) n.dir = dirTo(n.x, n.y, x, y) || n.dir;
   if (n.dur && !(n.frozenUntil > w.time)) { w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack; }
-  const nm = sp.name.replace(/-/g, " "), L = CAST_LINES[n.name] || CAST_LINES._, l = L[Math.floor(w.rng() * L.length)];
+  const nm = sp.name.replace(/-/g, " "), L = CAST_LINES[look(n.name)] || CAST_LINES._, l = L[Math.floor(w.rng() * L.length)];
   w.emit({ t: "dummy-cast", id: p.id, nid: n.id, max: (n.clvl || 0) >= 50, lvl: n.clvl || 0, sc: n.name, txt: nm + "!", es: l[0] + " ¡" + nm + "!", en: l[1] + " " + nm + "!" });
 }
 // frases del summon al lanzar la magia de su escuela (es, en), según su especie; el resto usa la genérica

@@ -202,7 +202,7 @@ export function registerDialogs(gui, api) {
   const TAB_X = [30, 43, 61, 86, 106, 121, 142, 169, 202, 222];                // posiciones de la marca del círculo (sprfonts 20..29)
   const TAB_HIT = [[16, 38], [39, 56], [57, 81], [82, 101], [102, 116], [117, 137], [138, 165], [166, 197], [198, 217], [218, 239]];
   const asCaster = me => ({ skills: me.skills || {}, stats: me.stats, level: me.level, eff: me.eff || {} });
-  // El libro solo muestra las magias de la escuela del summon elegido (Orc/Demon fuego, Tentocle/Frost hielo, Cannibal-Plant/Liche rayo)
+  // El libro solo muestra las magias de la escuela del summon elegido (Orc/Demon fuego, Tutelary-Angel/Frost hielo, Skeleton/Liche rayo)
   const bookSchool = me => { const b = me.bag && me.bag.find(i => i.comp && i.comp.on); return b ? { sp: b.comp.sp, lvl: b.comp.lvl, comp: b.comp, school: SCHOOL_OF[b.comp.sp] || null } : null; };
   const spellsOf = (me, view) => {
     const out = [], bs = bookSchool(me);
@@ -229,7 +229,7 @@ export function registerDialogs(gui, api) {
         y += 18;
       }
       if (!list.length) {
-        const empty = !bs || !bs.school ? ["This is your summon's spellbook.", "Choose a school summon: Orc (fire),", "Tentocle (ice) or Cannibal-Plant", "(lightning), then teach it spells at", "the Sorcerer (your Int pays for it)."] : ["Your " + SCHOOL_NAMES[bs.school] + " summon knows no spells", "in this circle. Teach it at the Sorcerer."];
+        const empty = !bs || !bs.school ? ["This is your summon's spellbook.", "Choose a school summon: Orc (fire),", "Pixie (ice) or Skeleton", "(lightning), then teach it spells at", "the Sorcerer (your Int pays for it)."] : ["Your " + SCHOOL_NAMES[bs.school] + " summon knows no spells", "in this circle. Teach it at the Sorcerer."];
         empty.forEach((t, i) => g.aligned(3, 256, 100 + 15 * i, t, "#000"));
       }
       g.put("interface_1", 19, 30, 250);
@@ -280,7 +280,7 @@ export function registerDialogs(gui, api) {
         g.text(200, 72 + y, String(int).padStart(3, " "), col, { bold: true }); g.text(236, 72 + y, String(gold).padStart(5, " "), col, { bold: true });
         y += 18;
       }
-      if (!this.list(me).length) (!bs || !bs.school ? ["Choose a school summon first:", "Orc (fire), Tentocle (ice) or", "Cannibal-Plant (lightning)."] : ["No spells of your " + SCHOOL_NAMES[bs.school] + " school", "in this circle."]).forEach((t, i) => g.aligned(0, 304, 100 + 15 * i, t, INK));
+      if (!this.list(me).length) (!bs || !bs.school ? ["Choose a school summon first:", "Orc (fire), Pixie (ice) or", "Skeleton (lightning)."] : ["No spells of your " + SCHOOL_NAMES[bs.school] + " school", "in this circle."]).forEach((t, i) => g.aligned(0, 304, 100 + 15 * i, t, INK));
       g.put("interface_1", 19, 55, 250);
       g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
       g.aligned(0, 304, 270, "Smn Lv = level your SUMMON needs (not yours).", INK, { size: 10 }); g.aligned(0, 304, 284, "Teach your summon a new spell.", INK, { size: 10 });

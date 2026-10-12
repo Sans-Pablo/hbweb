@@ -10,6 +10,7 @@ import * as R from "./rules.js";
 import * as Player from "./systems/player.js";
 import * as Respec from "./systems/respec.js";
 import * as Combat from "./systems/combatsys.js";
+import { CRIT } from "./combat.js";
 import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals, runStepsPerSp } from "./systems/vitals.js";
@@ -140,9 +141,9 @@ export class World {
       }
       for (const e of this.ents.values()) {
         if (e.kind === "npc") { if (!(this.dbgFreeze && !e.master)) Npc.npcThink(this, e); }
-        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); }
+        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); Combat.chargeCritTick(this, e); }
       }
-      if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); }
+      if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); Stall.tick(this); }
       if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); groundSweep(this); }
       Arena.tickArena(this);
       tickSky(this);
@@ -153,6 +154,8 @@ export class World {
 const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode", "petgo"]);
 const FOR_DEAD = new Set(["respawn", "say"]);
 
+// _iGetAttackType / OBJECTATTACKMOVE del cliente original: el crítico y el dash exigen maestría 100 en la habilidad del arma.
+const mastered = p => (p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= CRIT.mastery;
 const COMMANDS = {
   respawn(w, p) { const ok = Player.respawn(w, p); if (ok && Companion.activeBall(p) && !w.fightZone) Npc.spawnCompanion(w, p); return ok; },          // al reaparecer vuelve el summon elegido (al morir el dueño desaparecía y la bola seguía «fuera»)
   say(w, p, cmd) {
@@ -178,7 +181,7 @@ const COMMANDS = {
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");
     if (w.time - p.lastMove < LIMITS.moveMs) return w.reject(p, cmd, "demasiado rápido");
-    if (sget(w, p, "confuse") && w.rng() < 0.5) cmd = { ...cmd, dir: 1 + Math.floor(w.rng() * 8) };      // confundido: la mitad de los pasos van al azar
+    if ((sget(w, p, "confuse") || sget(w, p, "illusion")) && w.rng() < 0.5) cmd = { ...cmd, dir: 1 + Math.floor(w.rng() * 8) };      // confundido: la mitad de los pasos van al azar
     const run = !!cmd.run && p.sp >= 1;                       // sin resistencia no se corre
     const slow = sget(w, p, "ice") || (p.chillUntil || 0) > w.time ? 1.5 : 1;                 // helado (suelo del rey glacial, tormenta de hielo): un 50 % más lento
     if (!w.tryStep(p, cmd.dir, (run ? PLAYER.runMs : PLAYER.walkMs) * slow, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
@@ -202,7 +205,7 @@ const COMMANDS = {
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
     const reach = Combat.reachOf(w, p, t), gap = dist(p, t);
     // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
-    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && w.time - (p.lastRun || -1e9) < PLAYER.runMs * 3 && p.sp >= 2;
+    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && w.time - (p.lastRun || -1e9) < PLAYER.runMs * 3 && p.sp >= 2 && mastered(p);
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
@@ -211,7 +214,7 @@ const COMMANDS = {
       if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
       p.sp -= 1; p.lastMove = w.time; lead = PLAYER.runMs;
     }
-    const crit = !!cmd.crit && (p.superAttack | 0) > 0;       // CRÍTICO (Alt + clic): gasta una carga de super ataque
+    const crit = !!cmd.crit && (p.superAttack | 0) > 0 && mastered(p);       // CRÍTICO (Alt + clic): gasta una carga de super ataque
     if (crit) p.superAttack -= 1;
     const ms = attackMs(p);
     const go = () => {

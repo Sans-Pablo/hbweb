@@ -76,7 +76,7 @@ assert.ok(Math.abs(o2.mp - mpSaved) < 2, "no se rellena al volver a invocarlo");
 assert.ok(w.command(A.id, { t: "use", uid: orc.uid }));
 
 // general: sin magia
-const sk = buy("Skeleton"); assert.equal(S.schoolOfSpecies("Skeleton"), null);
+const sk = buy("Slime"); assert.equal(S.schoolOfSpecies("Slime"), null);
 // cambio al nivel 50
 orc.comp.lvl = 49; A.hp = A.maxHp;
 assert.equal(w.command(A.id, { t: "petup", npc: nurse.id, uid: orc.uid }), false, "hace falta nivel 50");
@@ -89,7 +89,7 @@ assert.ok(S.taught(dem.comp, 20), "lo aprendido se conserva al evolucionar");
 dem.comp.lvl = 50;
 assert.ok(C.statsOf(A, dem.comp).hp > hpOrc && T.maxMp(dem.comp) > mpOrc, "Demon más vida y maná");
 assert.equal(w.command(A.id, { t: "petbuy", npc: nurse.id, sp: "Demon" }), false, "las especies superiores no se compran");
-assert.equal(S.TIER2.Orc, "Demon"); assert.equal(S.TIER2.Tentocle, "Frost"); assert.equal(S.TIER2["Cannibal-Plant"], "Liche");
+assert.equal(S.TIER2.Orc, "Demon"); assert.equal(S.TIER2["Tutelary-Angel"], "Frost"); assert.equal(S.TIER2.Skeleton, "Liche");
 // los talentos de hechizo de los summons normales ya no existen
 assert.equal(T.TALENTS.filter(t => t.spell != null && !t.dummy).length, 0);
 // nivel mínimo del summon por hechizo, y solo magia de escuela
@@ -117,7 +117,7 @@ assert.ok(A.bag.filter(i => i.id === 781).reduce((a, i) => a + (i.count || 1), 0
 assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 999, count: 1 }), false, "solo los caramelos");
 A.gold = 0; assert.equal(w.command(A.id, { t: "candybuy", npc: nurse.id, item: 780, count: 1 }), false, "sin oro");
 // equilibrio: Int máxima 100, maná del hechizo según su nivel y el maná del summon alcanza para varios lanzamientos de los mejores
-for (const [school, sps] of [["fire", ["Orc", "Demon"]], ["ice", ["Tentocle", "Frost"]], ["lightning", ["Cannibal-Plant", "Liche"]]]) {
+for (const [school, sps] of [["fire", ["Orc", "Demon"]], ["ice", ["Tutelary-Angel", "Frost"]], ["lightning", ["Skeleton", "Liche"]]]) {
   const ids = Object.keys(S.unlockLevels(magic, school)).map(Number);
   for (const id of ids) { assert.ok(S.spellInt(magic, school, id) <= 100 && S.spellInt(magic, school, id) >= 10); assert.ok(S.spellMana(magic, school, id) >= 4 && S.spellMana(magic, school, id) <= 80); assert.ok(S.spellGold(magic, school, id) <= 20000); }
   const best = Math.max(...ids.map(id => S.spellMana(magic, school, id))), first = Math.min(...ids.map(id => S.spellMana(magic, school, id)));

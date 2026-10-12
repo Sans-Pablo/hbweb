@@ -102,6 +102,10 @@ export function registerTrade(gui, api) {
   gui.register(dlg);
   const open = () => { if (!gui.isOpen(33)) gui.open(33); else gui.front?.(33); };
   return {
+    drop(uid) {                                              // objeto de la mochila arrastrado y soltado sobre la ventana: lo ofrece (como el clic)
+      if (dlg.mode !== "trade" || !dlg.st || dlg.st.mine.items.length >= 4 || dlg.st.mine.items.some(i => i.uid === uid)) return;
+      api.send({ t: "tradeset", uid });
+    },
     start(name) { api.send({ t: "tradereq", name }); dlg.mode = "wait"; dlg.name = name; open(); },
     onEvent(ev, me) {
       if (ev.id !== me?.id) return;

@@ -31,9 +31,9 @@ export class Controller {
       if (e.button === 2 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { ui.closeMinimap(); return; }   // clic derecho cierra el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
-      if (e.shiftKey && e.button === 0) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Shift + clic: orden de ataque al compañero
+      if (e.shiftKey && e.button === 2) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Shift + clic derecho: orden de ataque al compañero
       if (e.altKey && e.button === 0) { const en = this.target().ent; if (en && (en.kind === "npc" || (en.kind === "player" && en.id !== this.me?.id))) { this.critNext = true; this.intent = { t: "attack", id: en.id }; this.path = []; return; } }   // Alt + clic: ataque crítico (el «super ataque» del original)
-      if (e.shiftKey && e.button === 2) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Shift + clic derecho: el compañero va a esa casilla
+      if (e.shiftKey && e.button === 0) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Shift + clic izquierdo: el compañero va a esa casilla
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
       this.down = true; this.noHold = false;
@@ -234,7 +234,7 @@ export class Controller {
         if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send(this.atk(t));
         return;
       }
-      if (run && gap === reach + 1 && reach < 4 && me.sp >= 2 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
+      if (run && gap === reach + 1 && reach < 4 && me.sp >= 2 && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
         this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);

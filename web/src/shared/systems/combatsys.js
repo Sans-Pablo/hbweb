@@ -38,19 +38,21 @@ export function reachOf(w, p, t) {
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
 
-// Barra de crítico: cada golpe que acierta la carga; llena, da una carga de super ataque (p.superAttack, tope nivel/10 y al menos 1).
-// La armadura con chargeCrit (npcStrikes) suma cargas por su lado. Alt + clic gasta una carga (world.js, attack).
-export function chargeCrit(p) {
-  p.critBar = (p.critBar || 0) + CRIT.barPerHit;
-  if (p.critBar >= CRIT.barFull) { p.critBar -= CRIT.barFull; p.superAttack = Math.min(Math.max(1, Math.floor(p.level / 10)), (p.superAttack || 0) + 1); }
+// Cargas de super ataque (p.superAttack, tope nivel/10): una cada 13 pasadas del reloj de 3 s (HG.cpp ~2422, contador > 12) y una cada
+// 15 golpes recibidos (combat.cpp ~1196, contador > 14); la armadura con chargeCrit suma cargas por su lado. Alt + clic gasta una carga (world.js, attack).
+export function addSuperCharge(p) { p.superAttack = Math.min(Math.floor(p.level / 10), (p.superAttack || 0) + 1); }
+export function chargeCritTick(w, p) {
+  if (w.time - (p.tCrit ?? (p.tCrit = w.time)) < CRIT.periodMs) return;
+  p.tCrit = w.time;
+  if (((p.critCount = (p.critCount || 0) + 1)) >= CRIT.periodTicks) { p.critCount = 0; addSuperCharge(p); }
 }
+function chargeCritHit(p) { if (((p.critHits = (p.critHits || 0) + 1)) >= CRIT.hitsTaken) { p.critHits = 0; addSuperCharge(p); } }
 export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
   const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
-  chargeCrit(p);
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
   const skill = p.eff.wtype === 0 ? 5 : p.eff.skill;
@@ -76,7 +78,6 @@ export function hitPlayer(w, p, t, fx = {}) {
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
   const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
-  chargeCrit(p);
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
   wearWeapon(w, p);
@@ -169,8 +170,10 @@ export function damagePlayer(w, p, dmg, from, elem) {
   if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
   if (elem) { const pf = sget(w, p, "pfm"); if (pf) dmg = Math.max(0, Math.round(dmg * (100 - pf) / 100)); }       // Protection From Magic (Dummy buffer)
   const ad = auraDefense(w, p); if (ad) dmg = Math.max(0, Math.round(dmg * (100 - ad) / 100));              // aura de defensa del Dummy
+  { const ab = sget(w, p, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico
   p.hp -= dmg;
   p.lastCombat = w.time;
+  if (dmg > 0 && !p.dead) chargeCritHit(p);
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });
   if (p.hp <= 0) {
     p.hp = 0; p.dead = true; p.deadAt = w.time;
@@ -218,7 +221,7 @@ export function npcStrikes(w, n, t) {
   knockback(w, n, t, a.damage);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
-  if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) t.superAttack = Math.min(Math.floor(t.level / 10), (t.superAttack || 0) + 1);
+  if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) addSuperCharge(t);
 }
 
 // Contraataque (iCalculateAttackEffect): con 1/3 de probabilidad un monstruo herido se vuelve contra el atacante;
@@ -236,6 +239,7 @@ function retarget(w, n, p) {
 export function damageNpc(w, n, dmg, p, skill, half = false) {
   dmg = Boss.mitigate(w, n, dmg, p, skill == null ? "spell" : "hit");     // jefes: escudo, clones, reflejo
   if (dmg <= 0) return;
+  { const ab = sget(w, n, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico: más daño recibido
   n.hp -= dmg;
   p.lastCombat = w.time;
   const vamp = auraVamp(w, p);                                          // Vampiric Aura del Dummy: parte del daño vuelve como vida

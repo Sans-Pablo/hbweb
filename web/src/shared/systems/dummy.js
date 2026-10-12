@@ -21,18 +21,21 @@ const rank = (c, id) => Tal.rankOf(c, id);
 // Porcentajes de aura: crecen con el nivel del Dummy; el rango (1..5) los lleva del 60 % al 100 % del máximo del nivel
 const AURA_PER_LEVEL = { dregen: 0.10, dexp: 0.8, ddef: 0.6, dmana: 0.08, dvamp: 0.16, dstam: 0.08 };            // al nivel 50 con rango 5: 5 %/s de vida, 40 % de exp, 30 % menos daño, 4 %/s de maná y de estamina
 export const auraPct = (c, id) => { const r = rank(c, id), mx = Tal.TALENTS.find(t => t.id === id).max; return r ? Math.round(AURA_PER_LEVEL[id] * c.lvl * (0.5 + 0.5 * r / mx) * 100) / 100 : 0; };      // BUG-016: 8 rangos por aura (49 puntos al nivel 50 se gastan enteros: 6×8+3+1); el rango máximo da el 100 %
+export const CRIT_CHANCE = 0.12;                                           // Healer: doble curación; Buffer: buff a todos; Aura: pulso doble
 const MASS_CD = 60000, MASS_AURA_MS = 20000;
 
 // Dueño + grupo (mismo mundo) + compañeros de todos ellos + (si se da el círculo n, r) CUALQUIER jugador o compañero vivo dentro del círculo, sea o no del grupo
+// En Promise Land (w.pvp) solo cuentan los ALIADOS: la party o los del mismo bando (los viajeros sin bando son enemigos de todos). Fuera de allí nadie es enemigo.
+export const isAlly = (w, m, e) => !w.pvp || e === m || (m.party && e.party && m.party.id === e.party.id) || (m.side > 0 && m.side === e.side);
 function members(w, m, n, r) {
   const out = [m], seen = new Set([m.id]), gid = m.party?.id;
   const add = e => { if (!seen.has(e.id)) { seen.add(e.id); out.push(e); } };
   for (const e of w.ents.values()) {
     if (e.dead || e === m) continue;
-    if (e.kind === "player" && ((gid && e.party?.id === gid) || (n && inRange(n, e, r)))) add(e);
+    if (e.kind === "player" && isAlly(w, m, e) && ((gid && e.party?.id === gid) || (n && inRange(n, e, r)))) add(e);
   }
   const ids = new Set(out.map(e => e.id));
-  for (const e of w.ents.values()) if (e.comp && !e.dead && !e.dummy && (ids.has(e.master) || (n && inRange(n, e, r)))) add(e);
+  for (const e of w.ents.values()) if (e.comp && !e.dead && !e.dummy && (ids.has(e.master) || (n && inRange(n, e, r))) && (!w.pvp || ids.has(e.master))) add(e);
   return out;
 }
 // Personalidad (invento): espíritu aprendiz del Encantador (Eidolon). Nervioso, leal y muy dramático con su cuerpo de luz; presume de lo que hace,
@@ -70,11 +73,12 @@ function healAmount(w, c, id, rk, m) {
   const sp = w.magic[id];
   return Math.round((dice(w.rng, sp.v4, sp.v5) + sp.v6 + c.lvl) * (1 + 0.25 * (rk - 1)) * chrFactor(m?.stats?.chr));
 }
-function doHeal(w, n, c, id, who, rk, mult = 1, m = null) {
+function doHeal(w, n, c, id, who, rk, mult = 1, m = null, crit = false) {
   if (c.cls === "healer" && n.dur && !w.busy(n)) { n.dir = dirTo(n.x, n.y, who.x, who.y); w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack; }          // el healer hace el gesto de atacar al curar
   const amount = Math.round(healAmount(w, c, id, rk, m) * mult);
   who.hp = Math.min(who.maxHp, who.hp + amount);
   w.emit({ t: "heal", id: who.id, amount, by: n.id });
+  if (crit) { who.hp = Math.min(who.maxHp, who.hp + amount); w.emit({ t: "heal", id: who.id, amount, by: n.id, crit: 1 }); }       // crítico: segundo tick de curación
 }
 
 // Estado de un buff en `who`: devuelve true si ya lo tiene (no se repite)
@@ -85,11 +89,11 @@ const BUFFS = [
   { tal: "dberserk", key: "berserk", v: 1, spell: 50, ms: rk => 20000 + 3000 * (rk - 1), fight: true },
 ];
 const has = (w, who, b, c) => { const cur = sget(w, who, b.key); return cur >= (typeof b.v === "function" ? b.v(rank(c, b.tal), c) : b.v) - (b.key === "pfm" ? 5 : 0); };
-function applyBuff(w, n, c, b, who) {
+function applyBuff(w, n, c, b, who, quiet = false) {
   const rk = rank(c, b.tal), v = typeof b.v === "function" ? b.v(rk, c) : b.v;
   sset(w, who, b.key, v, b.ms(rk));
   talk(w, n, b.key === "pfm" ? "pfm" : b.key === "berserk" ? "berserk" : "ward", SPELL_NAME[b.spell]);
-  Tal.emitCast(w, n, b.spell, who.x, who.y);
+  if (!quiet) Tal.emitCast(w, n, b.spell, who.x, who.y);
 }
 
 export const RES_CD = rk => 180000 - 40000 * (rk - 1);
@@ -113,6 +117,7 @@ export function think(w, n, m, c) {
   n.dummy = true;
   n.dcls = c.cls || null;
   if (!c.cls || !w.magic) return;
+  if (w.pvp && w.safeAt(n.x, n.y)) return;                                  // zona sin ataque de Promise Land: sin habilidades hasta pisar suelo de combate
   const r = radiusOf(c.lvl, c.cls), mem = members(w, m, n, r), near = mem.filter(e => inRange(n, e, r));
   const foe = [...w.ents.values()].filter(e => e.kind === "npc" && !e.dead && !e.master && !e.cfg.actionLimit && cheb(n, e) <= 12).sort((a, b) => cheb(n, a) - cheb(n, b))[0], hostiles = !!foe;
   n.cd = n.cd || {};
@@ -120,7 +125,9 @@ export function think(w, n, m, c) {
   // auras: cada segundo, a todos los que estén dentro del radio (mass: doble durante 20 s)
   if (c.cls === "aura" && w.time >= (n.auraAt || 0)) {
     n.auraAt = w.time + 1000;
-    const k = w.time < (n.massUntil || 0) ? 2 : 1;
+    const crit = w.rng() < CRIT_CHANCE;                                    // crítico: este pulso del aura vale el doble
+    if (crit) w.emit({ t: "dummy-crit", id: m.id, nid: n.id, cls: "aura" });
+    const k = (w.time < (n.massUntil || 0) ? 2 : 1) * (crit ? 2 : 1);
     const sta = auraPct(c, "dstam") * k, vp = auraPct(c, "dvamp") * k, hp = auraPct(c, "dregen") * k, mp = auraPct(c, "dmana") * k, ex = auraPct(c, "dexp") * k, df = Math.min(60, auraPct(c, "ddef") * k);
     if (w.time >= (n.auraSayAt || 0)) {
       n.auraSayAt = w.time + 8000;
@@ -161,7 +168,8 @@ export function think(w, n, m, c) {
       if (bs.length && mem.filter(e => bs.some(b => !has(w, e, b, c))).length >= 2) {
         n.mp -= 40; n.cd.mass = w.time + MASS_CD; n.castAt = w.time;
         talk(w, n, "mass", "MASS Buff", {}, true);
-        for (const e of mem) for (const b of bs) if (!(b.key === "protect" && b.v === 3 && sget(w, e, "protect") >= 4)) applyBuff(w, n, c, b, e);
+        for (const e of mem) for (const b of bs) if (!(b.key === "protect" && b.v === 3 && sget(w, e, "protect") >= 4)) applyBuff(w, n, c, b, e, true);
+        Tal.emitCast(w, n, bs[0].spell, n.x, n.y);                                  // un solo destello/sonido para todo el MASS
         w.emit({ t: "dummy-mass", id: m.id, cls: c.cls });
         return;
       }
@@ -178,8 +186,8 @@ export function think(w, n, m, c) {
   if (c.cls === "healer") {
     const hurt = near.filter(e => frac(e) < 0.8).sort((a, b) => frac(a) - frac(b))[0];
     if (!hurt) return;
-    if (rank(c, "dgheal") && frac(hurt) < 0.45 && Tal.ready(w, n, 21)) { talk(w, n, "gheal", "Great Heal", {}, true); doHeal(w, n, c, 21, hurt, rank(c, "dgheal"), 1, m); Tal.emitCast(w, n, 21, hurt.x, hurt.y); Tal.pay(w, n, 21, 2500); return; }
-    if (rank(c, "dheal") && frac(hurt) < 0.75 && Tal.ready(w, n, 1)) { talk(w, n, "heal", "Heal", {}, true); doHeal(w, n, c, 1, hurt, rank(c, "dheal"), 1, m); Tal.emitCast(w, n, 1, hurt.x, hurt.y); Tal.pay(w, n, 1, 2000); }
+    if (rank(c, "dgheal") && frac(hurt) < 0.45 && Tal.ready(w, n, 21)) { const cr = w.rng() < CRIT_CHANCE; if (cr) w.emit({ t: "dummy-crit", id: m.id, nid: n.id, cls: "healer" }); doHeal(w, n, c, 21, hurt, rank(c, "dgheal"), 1, m, cr); Tal.emitCast(w, n, 21, hurt.x, hurt.y); Tal.pay(w, n, 21, 2500); return; }
+    if (rank(c, "dheal") && frac(hurt) < 0.75 && Tal.ready(w, n, 1)) { const cr = w.rng() < CRIT_CHANCE; if (cr) w.emit({ t: "dummy-crit", id: m.id, nid: n.id, cls: "healer" }); doHeal(w, n, c, 1, hurt, rank(c, "dheal"), 1, m, cr); Tal.emitCast(w, n, 1, hurt.x, hurt.y); Tal.pay(w, n, 1, 2000); }
     return;
   }
   if (c.cls === "buffer" && hostiles) {
@@ -187,7 +195,12 @@ export function think(w, n, m, c) {
       if (!rank(c, b.tal) || !Tal.ready(w, n, b.spell)) continue;
       const who = near.find(e => !has(w, e, b, c) && !(b.key === "protect" && b.v === 3 && sget(w, e, "protect") >= 4));
       if (!who) continue;
-      applyBuff(w, n, c, b, who); Tal.pay(w, n, b.spell, 2500);
+      if (w.rng() < CRIT_CHANCE) {                                                  // crítico (critical mass buff): bufea a todos los del círculo, con un solo sonido
+        w.emit({ t: "dummy-crit", id: m.id, nid: n.id, cls: "buffer" });
+        for (const e of near) if (!has(w, e, b, c) && !(b.key === "protect" && b.v === 3 && sget(w, e, "protect") >= 4)) applyBuff(w, n, c, b, e, true);
+        Tal.emitCast(w, n, b.spell, n.x, n.y);
+      } else applyBuff(w, n, c, b, who);                                           // normal: de uno en uno
+      Tal.pay(w, n, b.spell, 2500);
       return;
     }
   }
@@ -220,4 +233,4 @@ export const auraExp = (w, e) => (e.aura && e.aura.until > w.time ? e.aura.exp :
 
 // Invocar y mantener a un Dummy exige un báculo (Dummy Enchanter): arma de mano con apariencia 34..39 en Item.cfg (varitas y báculos mágicos).
 export const STAFF_MSG = "para invocar a un summon de apoyo necesitas un báculo en la mano";
-export const hasStaff = p => { const t = p.eff?.wtype || 0; return t >= 34 && t < 40; };
+export const hasStaff = p => { if (p.free) return true; const t = p.eff?.wtype || 0; return t >= 34 && t < 40; };

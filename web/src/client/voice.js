@@ -2,6 +2,7 @@
 // Invento propio del port (el original no habla): por eso nunca toca reglas, solo pinta burbujas.
 // Sin DOM: se prueba desde Node (tests/voice.test.mjs). El azar es del cliente (no afecta a la simulación).
 import { sizeStep } from "../shared/systems/companion.js";
+import { look } from "../shared/systems/evolutions.js";
 const ROLE = { 15: "shop", 19: "mage", 20: "warehouse", 24: "blacksmith" };   // shopsys.js NPC
 const BUBBLE_MS = 4500;
 
@@ -167,12 +168,12 @@ export class Voice {
         else this.me(this.d.companion.dismiss.me, "pdismiss", 0.6, 4000);
         break;
       case "companion-lvl": if (ev.id === this.pid) {
-        const ms = (ev.lvl === 50 && this.d.companion.milestone50?.[ev.sp]) || this.d.companion.milestone?.[ev.lvl];  // niveles 10, 25, 40 y 50; en el 50 Liche/Demon/Frost tienen frase propia
+        const ms = (ev.lvl === 50 && this.d.companion.milestone50?.[look(ev.sp)]) || this.d.companion.milestone?.[ev.lvl];  // niveles 10, 25, 40 y 50; en el 50 Liche/Demon/Frost tienen frase propia
         if (ms) this.talkPet(world, "milestone", "pmile", { chance: 1, cool: 0, first: "pet", list: [ms] });
         else this.talkPet(world, "levelup", "plvl", { chance: 1, cool: 2000, first: "pet" });
       } break;
       case "companion-resummon": if (ev.id === this.pid) {                              // cambio de tamaño: al reaparecer, frase propia de la etapa
-        const st = this.d.companion.evolve?.[sizeStep(ev.lvl)];
+        const st = this.d.companion.evolve?.[sizeStep(ev.lvl, ev.sp)];
         if (st) setTimeout(() => this.talkPet(world, "evolve", "pevo", { chance: 1, cool: 0, first: "me", list: [st] }), 900);
       } break;
       case "pettarget": if (ev.id === this.pid) {                                        // Alt + clic: el personaje da la orden y el compañero responde

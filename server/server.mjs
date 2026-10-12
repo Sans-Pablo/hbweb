@@ -127,6 +127,7 @@ adventure.report = r => { informe.add(r); botStats.idea(r); };               // 
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 if (Array.isArray(saves["sys:stalls"]?.list)) adventure.stallDb.push(...saves["sys:stalls"].list);
 spawnResidents(RESIDENTS);
+adventure.onBotsRestart = names => { for (const n of names) delete saves[bkey(n)]; persist(true); };      // F1 «Reiniciar bots»: se borran también las partidas guardadas
 adventure._humBoot = true;
 setInterval(() => { try { if (adventure.residents().length + (adventure.offline?.size || 0) < RESIDENTS && spawnResidents(RESIDENTS)) log("[habitantes] repuestos hasta " + adventure.residents().length); } catch {} }, 60000).unref();      // siempre hay habitantes: si alguno falta, se repone
 persist(true);                                          // sus nombres quedan reservados desde el primer momento

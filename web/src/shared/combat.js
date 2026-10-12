@@ -37,18 +37,41 @@ export function playerStrike(rng, p) {
   return { sm: Math.max(1, sm), l: Math.max(1, l), hit };
 }
 
-// Ataque crítico («super ataque», m_bSuperAttackMode) y ataque en carrera (bIsDash). OJO: el código original (HGServer/Game.cpp,
-// iCalculateAttackEffect) no está en este equipo: las cifras son una aproximación de diseño, a contrastar con él (docs/sistemas/critico-dash.md).
-export const CRIT = { ignoreDef: 40, mult: 1.5, dashMult: 1.3, barPerHit: 6, barFull: 100 };
+// Ataque crítico («super ataque», m_bSuperAttackMode) y ataque en carrera (bIsDash). Cifras del original
+// (HGServerConsole char/combat.cpp ~222-290; HG.cpp CheckClientResponseTime ~2422; client Game.cpp _iGetAttackType). Ver docs/sistemas/critico-dash.md.
+// Cargas: +1 cada 13 pasadas del reloj de 3 s (contador > 12), +1 cada 15 golpes recibidos (contador > 14); tope nivel/10; el crítico exige maestría 100.
+export const CRIT = { periodMs: 3000, periodTicks: 13, hitsTaken: 15, mastery: 100, dashHit: 20 };
+const SKILL = { ARCHERY: 6, SHORTSWORD: 7, LONGSWORD: 8, AXE: 10, HAMMER: 14, STAFF: 21 };
+// Bonos de crítico (nivel/100 del daño + los de cada habilidad) y de dash sobre el golpe {sm, l, hit} (combat.cpp: iAP_SM, iAP_L, iAttackerHitRatio).
+export function critDashBonus(a, level, skill, crit, dash) {
+  const up = f => { a.sm = f(a.sm); a.l = f(a.l); };
+  if (crit) {
+    up(v => v + Math.floor(v * (level / 100) + 0.5));
+    switch (skill) {
+      case SKILL.ARCHERY: case SKILL.LONGSWORD: up(v => v + Math.floor(v / 10)); a.hit += 30; break;
+      case SKILL.SHORTSWORD: up(v => v * 2); break;
+      case SKILL.AXE: up(v => v + Math.floor(v / 5)); break;
+      case SKILL.HAMMER: up(v => v + Math.floor(v / 5)); a.hit += 20; break;
+      case SKILL.STAFF: up(v => v + Math.floor(v / 5)); a.hit += 50; break;
+    }
+    a.hit += 100;
+  }
+  if (dash) {
+    a.hit += CRIT.dashHit;
+    if (skill === SKILL.LONGSWORD) up(v => v + Math.floor(v / 10));
+    else if (skill === SKILL.AXE || skill === SKILL.HAMMER) up(v => v + Math.floor(v / 5));
+  }
+  return a;
+}
 // Golpe de un jugador a un monstruo. Devuelve {hit, damage}.
 // ctx (opcional): { berserk, protect (estado del objetivo, 1..5), bonus (armas especiales) } — ver iCalculateAttackEffect.
 export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   const a = playerStrike(rng, p);
   const miss = () => { p.combo = 0; return { hit: false, damage: 0 }; };
   const bow = p.eff.wtype >= 40;
+  if (ctx.crit || ctx.dash) critDashBonus(a, p.level | 0, p.eff.wtype === 0 ? 5 : p.eff.skill, ctx.crit, ctx.dash);
   if (bow && ctx.protect === 1) return { hit: false, damage: 0 };                 // Protección contra flechas: la flecha se pierde sin tocar el combo
   let defense = n.cfg.defenseRatio;
-  if (ctx.crit) defense = Math.floor(defense * (1 - CRIT.ignoreDef / 100));        // ataque crítico: ignora parte de la defensa
   if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
   if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
   if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
@@ -63,8 +86,6 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
   if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 5) return { hit: true, damage: 0 };   // invulnerables
   let dmg = n.cfg.size === 0 ? sm : l;
-  if (ctx.crit) dmg = Math.floor(dmg * CRIT.mult);                                  // crítico (super ataque) y carrera (dash): bonos de daño
-  if (ctx.dash) dmg = Math.floor(dmg * CRIT.dashMult);
   if (n.absDamage < 0) {
     dmg = Math.floor(dmg - dmg * (Math.abs(n.absDamage) / 100));
     if (dmg < 0) dmg = 1;

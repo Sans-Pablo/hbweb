@@ -12,6 +12,8 @@ import * as Party from "./party.js";
 import { sget } from "./status.js";
 import { addField, DYN } from "./fields.js";
 import * as Comp from "./companion.js";
+import * as Psy from "./psychic.js";
+import { PSY_OF } from "./evolutions.js";
 import * as Tal from "./talents.js";
 import * as Dummy from "./dummy.js";
 import * as PetSkill from "./petskill.js";
@@ -145,6 +147,7 @@ export function summonFor(w, p, v1, free) {
   return n;
 }
 
+const PET_MOVE = 0.75;                                                          // las mascotas andan un 25 % más deprisa que el monstruo de su especie (pedido de los testers: iban lentas)
 function followerThink(w, n) {
   if ((n.frozenUntil || 0) > w.time || (n.stunUntil || 0) > w.time) return;     // congelado o aturdido por un jefe
   const m = w.ents.get(n.master);
@@ -153,7 +156,7 @@ function followerThink(w, n) {
     const dc = n.comp && Inv.instOf(m, n.ball)?.comp;
     if (!(dc && Tal.isDummy(dc) && Dummy.rescue(w, n, m, dc))) return killNpc(w, n, null);
     Tal.regen(w, n, dc);
-    if (dist(n, m) > 1) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE); }
+    if (dist(n, m) > 1) { const d = greedyStep(w.grid, n, m.x, m.y, dirTo); if (d) w.tryStep(n, d, Math.round(n.dur.move * PET_MOVE), ACT.MOVE); }
     return;
   }
   let tc = null;
@@ -162,7 +165,7 @@ function followerThink(w, n) {
     if (tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
       tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
     }
-    const need = tc && STAFF_FOR[tc.sp];                                                  // Frost/Tentocle, Liche y Demon exigen su báculo en la mano (classgear.js)
+    const need = tc && STAFF_FOR[tc.sp];                                                  // las especies superiores con báculo (evolutions.js) exigen su báculo en la mano (classgear.js)
     if (need && !staffOk(m, w.data, need)) {
       tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, STAFF_MSG[need]); return;
     }
@@ -180,7 +183,7 @@ function followerThink(w, n) {
   // normal poco a poco (se suaviza con la zancada anterior), así no hay saltos de velocidad ni teletransportes salvo que se pierda de vista.
   const away = dist(n, m), want = n.comp && !n.goTo && !n.holdAt && away > 3 ? Math.max(0.5, 1 - (away - 3) * 0.06) : 1;
   n.leashF = Math.max(0.5, Math.min(1, (n.leashF ?? 1) + Math.max(-0.12, Math.min(0.08, want - (n.leashF ?? 1)))));
-  const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE); return !!d; };
+  const toGoal = g => { const d = greedyStep(w.grid, n, g.x, g.y, dirTo); if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.comp ? PET_MOVE : 1) * (n.leashF || 1)), ACT.MOVE); return !!d; };
   if (n.comp && n.goTo) {                                                     // Alt + clic derecho: ir a esa casilla y quedarse allí
     const g = n.goTo;
     if (tc && Tal.isDummy(tc)) Dummy.think(w, n, m, tc);
@@ -194,6 +197,7 @@ function followerThink(w, n) {
     if (anchor && dist(n, anchor) > (n.holdAt ? 0 : 2)) toGoal(anchor);
     return;
   }
+  if (tc && PSY_OF[tc.sp]) Psy.think(w, n, m, tc);                         // summon psíquico: lanza solo sus hechizos de control (psychic.js)
   let best = null, bd = 1e9;
   // Objetivo marcado por el dueño (Alt + clic): se ataca aunque el compañero esté en paz; sin objetivo, solo en modo ataque
   const ct = n.comp && n.cTarget && w.ents.get(n.cTarget);
@@ -215,7 +219,7 @@ function followerThink(w, n) {
   if (best) {
     if (bd <= n.cfg.attackRange) { const tcs = n.comp && Inv.instOf(m, n.ball)?.comp; if (tcs && !Tal.isDummy(tcs) && PetSkill.tryUse(w, n, m, best, tcs, petHurt)) return; return followerAttack(w, n, best); }
     const d = greedyStep(w.grid, n, best.x, best.y, dirTo);
-    if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.leashF || 1)), ACT.MOVE);
+    if (d) w.tryStep(n, d, Math.round(n.dur.move * (n.comp ? PET_MOVE : 1) * (n.leashF || 1)), ACT.MOVE);
     return;
   }
   const anchor = n.comp && n.holdAt ? n.holdAt : m;
@@ -286,6 +290,7 @@ export function npcThink(w, n) {
   if (n.master) { n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") || (n.chillUntil || 0) > w.time ? 1.5 : 1) * (n.leashF || 1); return followerThink(w, n); }
   n.nextAct = w.time + n.cfg.actionTime * (sget(w, n, "ice") ? 1.5 : 1) * Boss.speedFactor(n);       // hielo: un 50 % más lento; la furia del jefe carmesí acelera
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
+  if ((sget(w, n, "confuse") || sget(w, n, "illusion")) && w.rng() < 0.5) { w.tryStep(n, 1 + Math.floor(w.rng() * 8), n.dur.move, ACT.MOVE); return; }       // confundido: la mitad de los pasos al azar (psychic.js)
   let t = n.target ? w.ents.get(n.target) : null;
   if (t && (t.dead || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
   if (!t) {                                                                    // el más cercano entre jugadores y compañeros (los demás seguidores no atraen)
@@ -355,7 +360,7 @@ function refreshCompanion(w, n, m) {
   const c = inst.comp, st = Comp.statsOf(m, c);
   n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
   { const k = (c.exp || 0) / Comp.need(c.lvl);   // solo el último 10% de la experiencia
-      n.evoK = !Tal.isDummy(c) && Comp.SIZE_STAGES.includes(c.lvl + 1) && k >= 0.9 ? Math.max(0.01, Math.min(1, (k - 0.9) / 0.1)) : 0; }          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
+      n.evoK = !Tal.isDummy(c) && Comp.stagesOf(c.sp).includes(c.lvl + 1) && k >= 0.9 ? Math.max(0.01, Math.min(1, (k - 0.9) / 0.1)) : 0; }          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
   // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
   if (!n.hpInit) { n.hpInit = true; n.maxHp = st.hp; n.hp = Math.max(1, Math.min(st.hp, c.hp ?? st.hp)); }
   else if (n.maxHp !== st.hp) { const k = n.hp / n.maxHp; n.maxHp = st.hp; n.hp = Math.max(1, Math.round(st.hp * k)); }

@@ -11,7 +11,7 @@ for (const sp of Object.keys(SPECIES)) {
   if (i.school && !i.spells.length) bad.push("sin hechizos " + sp);
 }
 const o = infoOf(p, "Orc", magic);
-if (o.school !== "fire" || o.evo.tier2?.sp !== "Demon" || o.evo.stages.length !== 4 || !o.evo.stages[3].final) bad.push("orc " + JSON.stringify(o.evo));
+if (o.school !== "fire" || o.evo.tier2?.sp !== "Demon" || o.evo.stages.length !== 2 || !o.evo.stages[1].final) bad.push("orc " + JSON.stringify(o.evo));
 if (evolutionsOf("Slime").tier2) bad.push("slime no evoluciona de especie");
 console.log(bad.length ? "FALLO " + bad.join("; ") : "OK summoninfo");
 process.exit(bad.length ? 1 : 0);

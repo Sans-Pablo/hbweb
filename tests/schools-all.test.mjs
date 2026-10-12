@@ -20,7 +20,7 @@ A.level = 50; A.stats.str = 400; A.stats.int = 100; A.stats.mag = 100; w.recalc(
 { const st = newInst(w, 861); Inv.addToBag(A, w.data, st); assert.ok(Inv.equip(A, w.data, st.uid).ok, "Ice Wand en la mano"); w.recalc(A); A.hp = A.maxHp; }
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
-for (const [school, sp] of [["fire", "Orc"], ["ice", "Tentocle"], ["lightning", "Cannibal-Plant"]]) {
+for (const [school, sp] of [["fire", "Orc"], ["ice", "Tutelary-Angel"], ["lightning", "Skeleton"]]) {
   { const r = w.command(A.id, { t: "petbuy", npc: nurse.id, sp }); assert.ok(r); }
   const ball = A.bag.filter(i => i.comp?.sp === sp).pop(); ball.comp.lvl = 50;
   for (const b of A.bag) if (b.comp) b.comp.on = false;

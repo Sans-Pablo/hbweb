@@ -2,6 +2,7 @@
 // (CSprite::PutSpriteFast, PutShadowSprite, PutTransSprite del cliente original).
 
 import { GameData } from "../shared/data.js";
+import { PSYCHIC_ITEM } from "../shared/classgear.js";
 import { Grid } from "../shared/grid.js";
 import { setData } from "./names.js";
 import { imgUrl, detectWebp } from "./imgurl.js";
@@ -74,6 +75,8 @@ export async function loadAssets(onProgress) {
   }));
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
+  const pcRow = data.items?.get?.(PSYCHIC_ITEM.id);                                                     // Psychic Controller en el herrero (classgear.js)
+  if (pcRow && shops[2] && !shops[2].some(r => r.name === pcRow.name)) shops[2].push(pcRow);
   // Solo se descarga lo común (objetos del suelo, interfaz del mundo); losetas y monstruos llegan por mapa (streaming.js).
   const images = {}, core = coreKeys(manifest, npcDb);
   let done = 0, next = 0;

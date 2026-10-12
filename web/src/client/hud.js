@@ -1,4 +1,5 @@
 import { DUMMY_NAMES } from "../shared/systems/talents.js";
+import { shown } from "../shared/systems/evolutions.js";
 import { imgUrl } from "./imgurl.js";
 import { MAGIC_MODE } from "../shared/magic.js";
 import { talent as talentDef } from "../shared/systems/talents.js";
@@ -81,7 +82,7 @@ export class Hud {
     const me = this.conn.pid;
     const who = id => world.ents.get(id);
     switch (ev.t) {
-      case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || ev.sp.replace(/-/g, " ")) + " te acompaña." : (ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve a la bola."); break;
+      case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || shown(ev.sp)) + " te acompaña." : (ev.nm || shown(ev.sp)) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
       case "dbg": if (ev.id === me) this.log("[test] " + ev.msg, "gold"); break;
       case "talent": if (ev.id === me) this.log(ev.nm + " aprende " + (talentName(ev.talent)) + " (" + ev.rank + ").", "gold"); break;
@@ -94,11 +95,11 @@ export class Hud {
       case "petgo": if (ev.id === me) this.petOrder = { kind: "go", x: ev.x, y: ev.y, at: performance.now() }; break;
       case "pettarget": if (ev.id === me) this.petOrder = { kind: "atk", target: ev.target, at: performance.now() }; if (ev.id === me) this.log("Ordenas a " + (ev.nm || "tu compañero") + " atacar a " + (ev.tn || "el objetivo") + "."); break;
       case "candy": if (ev.id === me && ev.kind === "stat") this.log((ev.nm || ev.sp) + " gana +" + (ev.amount || 1) + " " + ({ hp: "de vida máxima", mp: "de maná máximo", atk: "de ataque" })[ev.stat] + ".", "gold"); else if (ev.id === me) this.log(ev.kind === "revive" ? (ev.nm || ev.sp) + " vuelve en sí con " + ev.amount + " de vida." : (ev.nm || ev.sp) + " recupera " + ev.amount + (ev.kind === "hp" ? " de vida." : " de maná."), "gold"); break;
-      case "companion-lost": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
-      case "companion-evolve": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " está a punto de cambiar de tamaño…", "gold"); break;
-      case "companion-resummon": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " vuelve más grande.", "gold"); break;
+      case "companion-lost": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
+      case "companion-evolve": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " está a punto de cambiar de tamaño…", "gold"); break;
+      case "companion-resummon": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " vuelve más grande.", "gold"); break;
       case "petskill": if (ev.id === me) this.log(ev.nm + ": " + ev.skill + "!", "gold"); break;
-      case "companion-lvl": if (ev.id === me) this.log((ev.nm || ev.sp.replace(/-/g, " ")) + " sube al nivel " + ev.lvl + ".", "gold"); break;
+      case "companion-lvl": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
       case "death":
         if (ev.id === me) this.log("Has muerto.", "bad");
@@ -125,8 +126,8 @@ export class Hud {
       case "scan": if (ev.id === me) this.log(ev.text.trim(), "gold"); break;
       case "teleport": if (ev.id === me) this.log("Vuelves al punto de inicio."); break;
       case "status": if (ev.id === me) {
-        const names = { hold: "paralizado", ice: "congelado", protect: "protegido", invis: "invisible", berserk: "en furia", poison: "envenenado", confuse: "confuso" };
-        const bad = ev.key === "hold" || ev.key === "ice" || ev.key === "poison" || ev.key === "confuse";
+        const names = { hold: "paralizado", ice: "congelado", protect: "protegido", invis: "invisible", berserk: "en furia", poison: "envenenado", confuse: "confuso", illusion: "bajo una ilusión", armorbreak: "con la armadura rota", inhibit: "inhibido" };
+        const bad = ["hold", "ice", "poison", "confuse", "illusion", "armorbreak", "inhibit"].includes(ev.key);
         this.log(ev.on ? "Estás " + names[ev.key] + "." : "Ya no estás " + names[ev.key] + ".", ev.on && bad ? "bad" : "");
       } break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con el HP lleno."); break;
@@ -187,7 +188,7 @@ export class Hud {
       }
       L.push(pos + (d.levelLimit ? " · nivel " + d.levelLimit : "") + (d.gender === 1 ? " · hombre" : d.gender === 2 ? " · mujer" : ""));
       const cl = classLabel(d); if (cl) L.push('<span style="color:' + (me && !classOk(me, d) ? "#e39a9a" : "#9fe39a") + '">Solo para: ' + cl + "</span>");
-      if (d.family) L.push('<span style="color:#9fe39a">' + (d.master ? "Báculo maestro: " : "Báculo de escuela: ") + ({ ice: "controla a Frost", dark: "controla al Liche", fire: "controla al Demon" })[d.family] + "</span>");
+      if (d.family) L.push('<span style="color:#9fe39a">' + (d.master ? "Báculo maestro: " : "Báculo de escuela: ") + ({ ice: "controla a Frost", dark: "controla al Liche", fire: "controla al Demon", psychic: "controla a Beholder, Centaurus y Stalker" })[d.family] + "</span>");
       const rs = realStats(d, it);
       L.push("Fuerza necesaria " + Math.ceil(rs.weight / 100) + " · durabilidad " + it.life + "/" + rs.maxLife);
       for (const l of attrLines(it.attr)) L.push('<span style="color:#9fe39a">' + l + "</span>");
@@ -226,7 +227,7 @@ export class Hud {
 
   // bola de compañero (shared/systems/companion.js): especie, nivel, experiencia y daño compartido con el dueño
   describeBall(it, me) {
-    const kindOf = c => DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
+    const kindOf = c => DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : shown(c.sp);
     const c = it.comp, st = companionStats(me, c), nx = companionNeed(c.lvl);
     return [
       "Compañero: " + (c.nm ? c.nm + " (" + kindOf(c) + ")" : kindOf(c)) + " · nivel " + c.lvl + (c.on ? " · <b>activo</b>" : ""),
@@ -274,7 +275,7 @@ export class Hud {
     if (this.bookKey === key) return;
     this.bookKey = key;
     // el libro es del summon elegido: sus hechizos aprendidos (Elegir) y los que el personaje puede enseñarle (Aprender: Int y oro)
-    let html = school ? "" : "<p>Elige un summon de escuela (Orc fuego, Tentocle hielo, Cannibal-Plant rayo) y enséñale hechizos con tu Int y tu oro.</p>";
+    let html = school ? "" : "<p>Elige un summon de escuela (Orc fuego, Pixie hielo, Skeleton rayo) y enséñale hechizos con tu Int y tu oro.</p>";
     for (const id of Object.keys(M).map(Number).sort((a, b) => a - b)) {
       const m = M[id]; if (!school || spellSchool(m) !== school) continue;
       const need = spellLevel(M, school, id, c.sp); if (need == null) continue;

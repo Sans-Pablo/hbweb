@@ -15,7 +15,7 @@ const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 setDungeonPalette(json("dungeon_palette.json"));
 const maps = {};
-for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "gshop_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
+for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "wrhus_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps, rng: seededRandom(33) });
 a.report = () => {};
 const run = (ms, f) => { for (let i = 0; i < ms / 50; i++) { a.tick(50); if (f?.()) return true; } return false; };
@@ -28,7 +28,7 @@ assert.ok(st.length === 2 && st.every(r => r.price === Math.abs(data.item(r.i.id
 H.hp = H.maxHp; H.res._stallAt = 1; H.res._petAt = H.res._gatherAt = 1e12;
 const stallOf = () => a.stallDb.find(s => s.owner === "helga");
 assert.ok(run(150000, () => !!stallOf()), "el granjero abre puesto; log: " + H.bot.log.slice(-5).join(" | "));
-const s = stallOf(); assert.equal(s.map, "gshop_1f"); assert.ok(s.items.length === 2 && s.items.every(r => !H.bag.some(i => i.uid === r.inst.uid)));
+const s = stallOf(); assert.equal(s.map, "wrhus_1f"); assert.ok(s.items.length === 2 && s.items.every(r => !H.bag.some(i => i.uid === r.inst.uid)));
 // un bot con summon que ama el champiñón (832) quiere esa fila y no la de otro
 const ball = { uid: 9101, id: C.SPECIES["Amphis"][1], count: 1, comp: { sp: "Amphis", lvl: 12, exp: 0, on: true, nm: "Amphis", mode: "attack" } };
 A.bag = A.bag.filter(i => !i.comp); A.bag.push(ball); A.gold = 5000;

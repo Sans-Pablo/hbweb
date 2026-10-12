@@ -20,8 +20,8 @@ export const CLASS_LINE = { warrior: "warrior", mage: "mage", summoner: "summone
 // especie de compañero, báculo y summon final de cada clase
 export const PATH = {
   warrior: { sp: "Orc", final: "Demon", staff: 9003, family: "fire" },
-  mage: { sp: "Tentocle", final: "Frost", staff: 9001, family: "ice" },
-  summoner: { sp: "Cannibal-Plant", final: "Liche", staff: 9002, family: "dark" },
+  mage: { sp: "Tutelary-Angel", final: "Frost", staff: 9001, family: "ice" },
+  summoner: { sp: "Skeleton", final: "Liche", staff: 9002, family: "dark" },
 };
 export const CRYPT_START = 5;                       // sin misiones solo se baja hasta el rey carmesí (nivel 5)
 
@@ -57,8 +57,8 @@ export function applyQuestItems(items) {
 const T = (es, en) => ({ es, en });
 function build(cls) {
   const P = PATH[cls], sp = P.sp, fin = P.final;
-  const speciesName = { Orc: T("Orco", "Orc"), Tentocle: T("Tentocle", "Tentocle"), "Cannibal-Plant": T("Planta caníbal", "Cannibal Plant") }[sp];
-  const finalName = { Demon: T("Demon", "Demon"), Frost: T("Frost", "Frost"), Liche: T("Liche", "Lich") }[fin];
+  const speciesName = { Orc: T("Orco", "Orc"), "Tutelary-Angel": T("Ángel tutelar", "Tutelary Angel"), Skeleton: T("Esqueleto", "Skeleton") }[sp] || T(sp, sp);
+  const finalName = { Demon: T("Demon", "Demon"), Frost: T("Frost", "Frost"), Liche: T("Liche", "Lich") }[fin] || T(fin, fin);
   const warrior = cls === "warrior", mage = cls === "mage";
   const Q = (id, ch, title, text, goal, rew = {}, up = null) => ({ id: cls + "." + id, ch, title, text, goal, rew, up });
   return [

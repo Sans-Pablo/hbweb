@@ -71,7 +71,7 @@ function catalog(data) {
   if (c) return c;
   c = { gear: new Map(), potion: null, foods: [] };
   for (const d of data.items.values()) {
-    if (!d || !(d.price > 0) || !d.name) continue;
+    if (!d || !(d.price > 0) || !d.name || d.family === "psychic") continue;                       // el Psychic Controller no es un arma de combate para los bots
     if (d.type === ITYPE.EQUIP && d.equipPos > 0 && d.equipPos <= EQUIP.FULLBODY && d.equipPos !== EQUIP.NECK && d.equipPos !== EQUIP.RFINGER && d.equipPos !== EQUIP.LFINGER && d.equipPos !== EQUIP.BACK && d.equipPos !== EQUIP.FULLBODY) {
       if ((d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND) && SKIP_WEAPON.test(d.name)) continue;
       if (d.effectType === EFFECT.ATTACK_SPECABLTY || d.effectType === EFFECT.DEFENSE_SPECABLTY) continue;
@@ -147,7 +147,7 @@ export function errands(w, p, b, first = false) {
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
   const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
   if (isSupport(p) && p.level >= 30 && !hasStaff(p) && !p.bag.some(i => isStaff(w.data.item(i.id)))) {          // sin báculo: compra el más barato que exige su nivel
-    const st = [...w.data.items.values()].filter(d => d && isStaff(d) && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
+    const st = [...w.data.items.values()].filter(d => d && isStaff(d) && d.family !== "psychic" && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
     if (st && buy(w, p, st)) blog(w, p, `Compro ${st.name} (${st.price} de oro): para mantener a un summon de apoyo hace falta un báculo en la mano.`);
   }
   if (isArcher(p) && !p.bag.some(i => isBow(w.data.item(i.id))) && !p.eff?.bow) {          // sin arco: compra el mejor que pueda usar y pagar

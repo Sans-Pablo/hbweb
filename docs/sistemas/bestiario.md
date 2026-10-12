@@ -15,3 +15,16 @@ Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de
 
 ## Magia de monstruos (v0.74.0)
 `npcsys.NPC_SPELLS`: el Cíclope (magicLevel 5, 450 de maná) lanza Fire Ball (20) o Fire Strike (30) a jugadores a 4-6 casillas (melé: ataca normal). Gasta el maná del hechizo y recupera 4/s; acierto = `magicHitRatio`+25. INVENTO: el `NpcMagicHandler` original no está en el repo, así que la tabla es del port. Test `npc-cast`.
+
+- **Cyclops Lv 50 eléctrico** (v0.78.1, invento del port): con «Como summon» y nivel ≥ 50 `renderer.js` dibuja arcos, chispas y halo azul en las pinzas. `clawPos()` localiza las pinzas por fotograma buscando los píxeles plateados (claros y sin color) del sprite, separados en izquierda/derecha; no usa `anchors.json`. Al morir (v0.78.3) descargas recorren la silueta del cuerpo y se apagan en ~2,5 s; de espaldas las pinzas se estiman por la silueta.
+  - v0.78.6: al atacar, el halo de las pinzas crece y chispas convergen hacia ellas (carga leve, fase `pa` del ataque).
+  - v0.78.11: progresión (el arco entre pinzas solo al 50) (nace al 45 % del tamaño, 63 %, 82 %, 100 %) por niveles: tamaño en 10/20/30 (`companion.stagesOf`, tamaño real al 30), 30 solo mini destello en pinzas, 40 + efecto en el cuerpo, 50 + rayos de las pinzas y el resto.
+- **Pixie por niveles** (v0.78.12, invento del port): `stagesOf("Tutelary-Angel")` = [10,20,30] (como el Cyclops, tamaños 45/63/82/100 %). Efectos solo con «Como summon»: Lv 30 destello blanco en las puntas de las alas y motas; Lv 40 parpadeo azul hielo y motas orbitando; Lv 50 halo y copos de luz. Usa `clawPos()` solo para rellenar `_cbox` (silueta) y se ancla a esa caja más el hover.
+
+- Panel «Sonidos de la Pixie» (v0.78.14, `web/src/client/bestiary-sounds.js`): botones que reproducen WAV originales de `data/sfx` agrupados por uso (campanilla, chispa/aleteo, zumbido, crecer, invocar, morir) más la lista completa C/E/M. Solo para elegir a oído; aún no se asignan a eventos.
+
+- Panel «Sonidos de la Pixie» (v0.78.14, `web/src/client/bestiary-sounds.js`): botones que reproducen WAV originales de `data/sfx` agrupados por uso (campanilla, chispa/aleteo, zumbido, crecer, invocar, morir) más la lista completa C/E/M. Solo para elegir a oído; aún no se asignan a eventos.
+- Pixie HD generada con `tools/make_pixie_hd.py` (×4 sobre las hojas `ututelarangel*`).
+- Sonidos en juego (`client/audio.js`): E46 al subir, +E30 al crecer (10/20/30), +E36/E19 en 30/40/50, M62 al perderla.
+- v0.78.17: Healer/Buffer/Aura en el Bestiario con sus efectos de nivel 30/40/50 (verde cruces y halo, amarillo escudos-rombo y runa, azul ondas y resplandor).
+- v0.78.18: hojas HD de uhealer/usorceress/ubuffer generadas con tools/make_support_hd.py.

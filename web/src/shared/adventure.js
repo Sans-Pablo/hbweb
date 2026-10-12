@@ -4,7 +4,7 @@ import { activeBall } from "./systems/companion.js";
 import { World } from "./world.js";
 import { ACT, dist } from "./const.js";
 import { DUNGEON_LEVELS, DUNGEON_VERSION, generateLevel, levelSeed, hasDungeonPalette } from "./dungeon.js";
-import { respawn } from "./systems/player.js";
+import { respawn, resetCharacter } from "./systems/player.js";
 import { populate, spawnCitizen, EXTRA_CITIZENS } from "./systems/citizens.js";
 import * as Stall from "./systems/stall.js";
 import { ARENA } from "./systems/arena.js";
@@ -68,6 +68,7 @@ export class Adventure {
       arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
       player: id => this.worldFor(id).ents.get(id),
       bot: (p, c) => this.botOp(p, c),
+      resetAll: () => this.resetAll(), restartBots: () => this.restartBots(),
       watched: this.watched,
       party: this.partyReg,
       guild: this.guildReg,
@@ -213,6 +214,33 @@ export class Adventure {
     Residents.attach(home, p, save?.res);
     this.bots.set(id, p);
     return p;
+  }
+  // F1 → Reset all: cada personaje (humano o bot) vuelve al principio; los habitantes olvidan su historia y vuelven a elegir meta
+  resetAll() {
+    let n = 0;
+    for (const [id] of this.locations) {
+      const w = this.worldFor(id), p = w?.ents.get(id); if (!p || p.kind !== "player") continue;
+      resetCharacter(w, p, p.bot ? Bot.BOT_STATS : null);
+      if (p.bot) { Bot.init(w, p, { level: 1, owner: p.bot.owner }); if (p.res) { p.res = null; Residents.attach(w, p, null); } }
+      n++;
+    }
+    return n;
+  }
+  // F1 → Reiniciar bots: todos los bots y habitantes desaparecen (con sus puestos, historia y partida guardada) y nacen otros nuevos del nivel 1, como en un servidor recién creado.
+  restartBots() {
+    const names = new Set(), n0 = this.residents().length;
+    for (const [id, b] of [...this.bots]) names.add(b.name.toLowerCase());
+    for (const k of this.offline?.keys() || []) names.add(k.toLowerCase());
+    for (const sRec of [...this.stallDb]) if (names.has(sRec.owner)) {
+      this.stallDb.splice(this.stallDb.indexOf(sRec), 1);
+      for (const w of [this.farm, ...this.worlds.values()]) for (const e of [...w.ents.values()]) if (e.stall === sRec || e.stall?.sid === sRec.sid) w.ents.delete(e.id);
+    }
+    for (const [id] of [...this.bots]) if (this.bots.has(id)) this.removePlayer(id);
+    this.offline?.clear();
+    this.onBotsRestart?.([...Residents.RESIDENT_NAMES]);
+    let made = 0;
+    for (const name of Residents.RESIDENT_NAMES) { if (made >= n0) break; try { this.spawnResident(name, null); made++; } catch {} }
+    return Math.max(1, made);
   }
   residents() { return [...this.bots.values()].filter(b => b.res); }
   botOp(p, c) {

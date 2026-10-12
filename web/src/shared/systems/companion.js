@@ -17,8 +17,10 @@ import { foeOf } from "./npcsys.js";
 export const MAX_COMP_LEVEL = 50;
 // Tamaño por etapas: el compañero cambia de tamaño al llegar a estos niveles (10 joven, 25 veterano, 40 élite, 50 tamaño real).
 // Al cruzar uno se emite `companion-evolve` y, pasado un momento, se vuelve a invocar con efecto (npcsys.evolveCompanion).
-export const SIZE_STAGES = [10, 25, 40, 50];
-export const sizeStep = lvl => SIZE_STAGES.filter(l => (lvl || 1) >= l).length;
+export const SIZE_STAGES = [25, 50];
+// Cyclops y Pixie (invento del port): crecen en 10, 20 y 30 (tamaño real al 30); electricidad leve al 30, destello blanco al 40 y todo al 50.
+export const stagesOf = sp => sp === "Cyclops" || sp === "Tutelary-Angel" ? [10, 20, 30] : SIZE_STAGES;
+export const sizeStep = (lvl, sp) => stagesOf(sp).filter(l => (lvl || 1) >= l).length;
 // Nombres aleatorios (sílabas): cada compañero tiene el suyo, fijado al nacer la bola
 const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "Pip", "Rok", "Sil", "Tor", "Vex", "Zan", "Bol", "Cro", "Dun", "Fiz", "Gor"];
 const SYL_B = ["bo", "ra", "ki", "mo", "tu", "lo", "na", "zi", "ko", "pa", "du", "ri", "so", "ga", "fi"];
@@ -28,7 +30,9 @@ export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)
 export const SPECIES = {
   "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
   "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655],
-  "Tentocle": [900, 654], "Cannibal-Plant": [900, 655], "Demon": [0, 652], "Frost": [0, 654], "Liche": [0, 655], "Healer": [500, 652], "Buffer": [500, 652], "Aura": [500, 652],     // escuelas (schools.js); Demon/Frost/Liche solo por cambio al nivel 50
+  "Tentocle": [900, 654], "Tutelary-Angel": [900, 655], "Cannibal-Plant": [900, 655], "Scorpion": [600, 652], "Guard": [700, 654], "Dark-Elf": [800, 654], "Unicorn": [900, 655], "Giant-Frog": [700, 653],
+  "Demon": [0, 652], "Frost": [0, 654], "Beholder": [0, 654], "Liche": [0, 655], "Giant-Crayfish": [0, 653], "Temple-Knight": [0, 655], "Elf-Master": [0, 654], "Centaurus": [0, 655], "Stalker": [0, 654],
+  "Healer": [500, 652], "Buffer": [500, 652], "Aura": [500, 652],     // las especies superiores (0 muertes) salen de evolutions.js: solo por cambio al nivel 50, no se compran
 };
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
@@ -207,14 +211,14 @@ export function resetTalents(w, p, cmd) {
 }
 
 export function addExp(w, p, inst, xp) {
-  const c = inst.comp, cap = Math.min(MAX_COMP_LEVEL, p.level);
+  const c = inst.comp, cap = p.free ? MAX_COMP_LEVEL : Math.min(MAX_COMP_LEVEL, p.level);
   if (xp <= 0 || c.lvl >= cap) return;
   c.exp += xp;
   while (c.lvl < cap && c.exp >= need(c.lvl)) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
     Quests.onPet(w, p);
-    if (!Tal.isDummy(c) && SIZE_STAGES.includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl) }); }
+    if (!Tal.isDummy(c) && stagesOf(c.sp).includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl, c.sp) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }
@@ -252,7 +256,7 @@ export function candy(w, p, d, destUid, roll) {
 export const FEED_CAP = 100;
 // Pescado (fishing.js): comida de carnívoros, cura según la pieza. 100 Fish, 101 RedFish, 102 GreenFish, 103 YellowFish, 570 RedCarp, 571 GreenCarp, 572 GoldCarp, 573 CrucianCarp, 575 Salmon
 export const FISH_FEED = { 100: 30, 573: 25, 103: 35, 102: 45, 101: 55, 575: 65, 570: 70, 571: 80, 572: 120 };
-export const NO_MEAT = ["Slime", "Giant-Ant", "Clay-Golem", "Stone-Golem", "Cannibal-Plant", "Frost", "Healer", "Buffer", "Aura"];   // no comen pescado
+export const NO_MEAT = ["Slime", "Giant-Ant", "Clay-Golem", "Stone-Golem", "Cannibal-Plant", "Beholder", "Giant-Crayfish", "Healer", "Buffer", "Aura"];   // no comen pescado
 export const FEED = { ...Object.fromEntries(Object.entries(FISH_FEED).map(([id, h]) => [id, { heal: h, fish: true }])), 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
   820: { heal: 20 }, 821: { heal: 25 }, 822: { heal: 30 }, 823: { mana: 20 }, 824: { heal: 40 }, 825: { heal: 50 }, 826: { heal: 60 }, 827: { mana: 30 }, 828: { heal: 80 }, 721: { revive: true } };
 // Gustos por especie (INVENTO del port): lo que le gusta cura/sube un 50% más (los puntos permanentes suben de 2 en 2), lo que no le apetece lo rechaza
@@ -275,7 +279,19 @@ export const TASTE = {
   "Cannibal-Plant": { love: [829, 820], hate: [] },           // planta: sol y agua
   "Demon": { love: [829, 830], hate: [820] },                 // rey del inframundo: vino y rojo
   "Frost": { love: [831, 825], hate: [829, 822] },            // hielo: azul y frío
+  "Tutelary-Angel": { love: [831, 824], hate: [829] },        // espíritu puro: azul y dulce
+  "Beholder": { love: [820, 832], hate: [827] },              // ojo de las profundidades
   "Liche": { love: [832, 822], hate: [830, 828] },            // nigromante: setas y ajo amargo
+  "Scorpion": { love: [822, 824], hate: [820, 830] },         // desierto: seco y amargo
+  "Guard": { love: [826, 828], hate: [832] },                 // soldado: ración abundante
+  "Dark-Elf": { love: [830, 827], hate: [826] },              // elfo: uva y hierbas
+  "Unicorn": { love: [820, 824, 831], hate: [822] },          // dulce y puro
+  "Giant-Crayfish": { love: [820, 825], hate: [829] },
+  "Temple-Knight": { love: [828, 826], hate: [832] },
+  "Elf-Master": { love: [830, 831], hate: [826] },
+  "Centaurus": { love: [824, 826], hate: [822] },
+  "Giant-Frog": { love: [820, 825], hate: [830] },            // anfibio: carne y frío
+  "Stalker": { love: [827, 832], hate: [824] },              // acechador: caza y setas
   "Healer": { love: [824], hate: [] }, "Buffer": { love: [824], hate: [] }, "Aura": { love: [824], hate: [] },
 };
 export const tasteOf = (sp, id) => { if (FISH_FEED[id]) return NO_MEAT.includes(sp) ? "hate" : "love";

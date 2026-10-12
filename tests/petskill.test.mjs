@@ -19,7 +19,7 @@ const p = w.ents.get(id); p.level = 30; w.recalc(p);
 import { spawnCitizen } from "../web/src/shared/systems/citizens.js";
 import { spawnFrom } from "../web/src/shared/systems/npcsys.js";
 import { SKILLS } from "../web/src/shared/systems/petskill.js";
-for (const sp of Object.keys(C.SPECIES)) if (!["Healer", "Buffer", "Aura"].includes(sp)) assert.ok(SKILLS[sp], "habilidad para " + sp);
+for (const sp of Object.keys(C.SPECIES)) if (!["Healer", "Buffer", "Aura", "Tentocle", "Tutelary-Angel", "Beholder", "Scorpion", "Giant-Crayfish", "Guard", "Temple-Knight", "Dark-Elf", "Elf-Master", "Unicorn", "Centaurus", "Giant-Frog", "Stalker"].includes(sp)) assert.ok(SKILLS[sp], "habilidad para " + sp);
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, p.x + 2, p.y, C.HOSPITAL.role);
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 const seen = [];

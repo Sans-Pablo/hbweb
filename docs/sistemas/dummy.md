@@ -23,3 +23,10 @@ INVENTO del port (no existe en el original). Son tres especies independientes (`
 
 ## 0.58.0 — Especies independientes
 - Ya no hay un «Dummy» que cambie de clase o de sprite: la bola se compra como Healer, Buffer o Aura y nace con su sprite y su clase fijos (`Tal.CLS_OF`/`SPECIES_OF`). Las bolas antiguas `sp:"Dummy"` se migran al cargar (`Tal.fixSupport`). El NPC `Dummy` queda solo para el cristal del jefe.
+- v0.78.17: efectos visuales de los summons de apoyo a nivel 30/40/50 (renderer.js).
+- v0.78.18: sprites HD de los summons de apoyo (tools/make_support_hd.py).
+
+## Aliados y críticos (v0.78.19)
+- En Promise Land (`w.pvp`) solo se atiende a uno mismo, al grupo y al mismo bando (`isAlly`); en zona segura no actúan.
+- `CRIT_CHANCE` 12 %: Aura pulso ×2, Healer segundo tick de curación, Buffer buff masivo (normal: un objetivo por vez). Evento `dummy-crit`.
+- Un grupo de buffs emite un solo `spell` (un sonido).

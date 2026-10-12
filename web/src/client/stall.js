@@ -105,7 +105,7 @@ export function registerStall(gui, api) {
   gui.register(dlg);
   const show = () => { if (!gui.isOpen(48)) gui.open(48); };
   return {
-    setup() { if (api.mapId && !MAPS.has(api.mapId())) { api.log("Los puestos solo se pueden montar dentro de la tienda (shop), el almacén (warehouse) o la herrería (blacksmith).", "bad"); return; } dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.footer = "Clic: poner a la venta (pide el precio por unidad); otro clic lo quita."; dlg.view = 0; show(); },
+    setup() { if (api.mapId && !MAPS.has(api.mapId())) { api.log("Los puestos solo se pueden montar dentro de un warehouse.", "bad"); return; } dlg.mode = "setup"; dlg.set = []; dlg.st = null; dlg.title = "Montar un puesto"; dlg.footer = "Clic: poner a la venta (pide el precio por unidad); otro clic lo quita."; dlg.view = 0; show(); },
     view(cit) { api.send({ t: "stallview", sid: cit.stall.sid }); },
     setCtrl(v) { dlg.ctrl = v; },
     onEvent(ev, me) {
@@ -113,9 +113,10 @@ export function registerStall(gui, api) {
       if (ev.t === "stallsale") { api.log("Compras " + (ev.count > 1 ? ev.count + " × " : "") + itemName(ev.item) + " a " + ev.owner + " por " + comma(ev.price) + " de oro.", "gold"); return; }
       if (ev.t !== "stall") return;
       switch (ev.k) {
-        case "view": dlg.mode = ev.mine ? "mine" : "view"; dlg.st = ev; dlg.title = ev.mine ? "Tu puesto" : "Puesto de " + ev.owner; dlg.footer = ev.mine ? "Cobras con «Recoger oro». Seguirá abierto aunque te desconectes." : "Clic en una fila para comprar (Ctrl = toda la pila). Comisión 0."; show(); break;
+        case "view": dlg.mode = ev.mine ? "mine" : "view"; dlg.st = ev; dlg.title = ev.mine ? "Tu puesto" : ev.owner; dlg.footer = ev.mine ? "Cobras con «Recoger oro». Seguirá abierto aunque te desconectes." : "Clic en una fila para comprar (Ctrl = toda la pila). Comisión 0."; show(); break;
         case "opened": gui.close(48); api.log("Tu puesto está abierto: sigue vendiendo aunque te desconectes.", "gold"); break;
         case "closed": gui.close(48); api.log("Puesto cerrado." + (ev.gold ? " Recoges " + comma(ev.gold) + " de oro." : ""), "gold"); break;
+        case "expired": api.log("Tu puesto se ha cerrado: lo que quedaba (objetos y oro) vuelve a ti.", "gold"); break;
         case "took": api.log("Recoges " + comma(ev.gold) + " de oro del puesto.", "gold"); break;
         case "nogold": api.log("No tienes oro suficiente.", "bad"); break;
         case "cantcarry": api.log("No cabe en tu mochila.", "bad"); break;

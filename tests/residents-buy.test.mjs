@@ -15,7 +15,7 @@ const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 setDungeonPalette(json("dungeon_palette.json"));
 const maps = {};
-for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "gshop_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
+for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "wrhus_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps, rng: seededRandom(33) });
 a.report = () => {};
 a.report = (...x) => {}; 
@@ -27,12 +27,13 @@ buyer.gold = 20000; buyer.bag.length = 0; home.recalc(buyer); buyer.hp = buyer.m
 const pick = Object.entries(json("items.json")).find(([id, d]) => d.type === ITYPE.EQUIP && (d.price || 0) > 50 && Inv.canCarry(buyer, data, d, 1) && judge(home, buyer, newInst(home, +id, 1), []).act === "equip");
 assert.ok(pick, "hay un objeto que mejora el equipo del comprador");
 Inv.addToBag(s1, data, newInst(home, +pick[0], 1));
-const tp = (a.maps.arefarm.meta.teleports || []).find(t => t.map === "gshop_1f"); assert.ok(tp);
-const sw = a.worldFor(s1.id); const shop = a.staticWorld ? a.staticWorld("gshop_1f") : null;
+const tp = (a.maps.arefarm.meta.teleports || []).find(t => t.map === "wrhus_1f"); assert.ok(tp);
+const sw = a.worldFor(s1.id); const shop = a.staticWorld ? a.staticWorld("wrhus_1f") : null;
 a.transfer(s1, sw, shop, shop.freeSpotNear(62, 50) || [62, 50]);
 assert.ok(a.command(s1.id, { t: "stallopen", title: "Ocasion", items: [{ uid: s1.bag.find(i => i.id === +pick[0]).uid, price: 100, count: 1 }] }), "el vendedor abre el puesto");
 s1.res._stall = { until: a.time + 5000, done: true, back: a.time + 1 };
-buyer.res._buyAt = 1; buyer.res._stallAt = 1e12; buyer.res._petAt = 1e12; buyer.res._gatherAt = 1e12;
+a.transfer(buyer, a.worldFor(buyer.id), shop, shop.freeSpotNear(64, 50) || [64, 50]); buyer.res._stall = { tp: { x: tp.x, y: tp.y }, until: a.time + 120000, buy: true };          // el comprador ya está en el Almacén (el trayecto es largo y por el camino puede mejorar su equipo)
+buyer.res._buyAt = 1e12; buyer.res._stallAt = 1e12; buyer.res._petAt = 1e12; buyer.res._gatherAt = 1e12;
 
 
 assert.ok(run(240000, () => a.stallDb.find(x => x.owner === "aldric").items.length === 0 && buyer.gold < 20000), "el comprador adquiere el objeto; registro: " + buyer.bot.log.filter(l => /tienda|puesto|Cambio/.test(l)).join(" | ") + " map=" + a.worldFor(buyer.id).map.id + " st=" + JSON.stringify(buyer.res._stall));

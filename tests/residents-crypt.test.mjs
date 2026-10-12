@@ -72,3 +72,14 @@ for (const side of [1, 2]) {
 }
 
 console.log("OK residents-crypt");
+
+// v0.78.6: un habitante con el piso 10 despejado y sin poder con el 11 no repite el 10 (ni sale a elegirlo): se queda preparándose
+{
+  const a = mk(31);
+  a.spawnResident("Aldric");
+  const b = a.residents().find(x => x.name === "Aldric"), home = a.homeOf(b);
+  b.level = 12; b.exp = 1e7; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.delve = { deepest: 10, cleared: 10 }; b.res.goal = { k: "crypt", n: 3 }; b.res._tripAt = 1;
+  const seen = new Set();
+  for (let i = 0; i < 20 * 60 * 5; i++) { a.tick(50); const ww = a.worldFor(b.id); if (ww.map.kind === "dungeon") seen.add(ww.map.level); }
+  assert.ok(!seen.has(10), "no repite el piso 10 ya despejado: " + [...seen] + " · " + (b.bot.log || []).slice(-4).join(" | "));
+}

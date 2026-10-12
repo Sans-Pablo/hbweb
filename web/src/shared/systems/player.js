@@ -11,6 +11,7 @@ import { MAGIC_MODE } from "../magic.js";
 import { newInst } from "./itemsys.js";
 import { restore as restoreArena } from "./arena.js";
 import * as Guild from "./guild.js";
+import { dismissCompanion } from "./npcsys.js";
 
 const LEGACY = { red: 91, bigred: 92, blue: 93, green: 95 };     // partidas guardadas con el formato antiguo
 
@@ -73,6 +74,16 @@ function newCharacter(w, p, create) {
   give("Dagger"); give("Map"); give("RedPotion"); give("BluePotion"); give("GreenPotion");
   give("WoodShield", true);
   give(p.gender === 1 ? "KneeTrousers(M)" : "Chemise(W)", true);
+}
+
+// Vuelta al principio (F1 → «Reset all», invento del port): nivel 1, atributos de partida, objetos iniciales, sin oro, banco, compañeros ni misiones.
+// Conserva nombre, clase, aspecto y bando. `stats` = atributos base de ese personaje al nacer (los de la clase, o los de los bots).
+export function resetCharacter(w, p, stats) {
+  for (const b of p.bag) if (b.comp?.on) { b.comp.on = false; dismissCompanion(w, p, b.uid); }
+  Object.assign(p, { kills: 0, ek: 0, lvDebt: 0, respecs: 0, hunt: undefined, delve: undefined, kinds: undefined, god: false, deadAt: 0, dead: false });
+  newCharacter(w, p, { gender: p.gender, look: p.look, persona: p.persona, cls: p.cls, side: p.side, stats: stats || PRESETS[p.cls] || PRESETS.warrior });
+  Tut.init(p, !p.bot); Quests.init(p);
+  recalc(w, p); p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100;
 }
 
 export function addPlayer(w, name, save = null, create = null) {

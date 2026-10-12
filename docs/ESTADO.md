@@ -72,14 +72,20 @@
 
 **Backlog nuevo (respuestas del usuario, v0.78.0):**
 - [x] (hecho en v0.78.0) **Controles, Shift para el compañero:** Shift+clic izquierdo = atacar con el compañero y Shift+clic derecho = ir a esa casilla (hoy es Alt).
-- [x] (hecho en v0.78.0) **Críticos con Alt:** Alt+clic = ataque crítico (super ataque del original, con barra que se carga al golpear); citar la fórmula de HGServer/Game.cpp. → aproximación de diseño: faltan las cifras originales. Ficha `critico-dash.md`, test `crit-dash`.
+- [x] (hecho en v0.78.0) **Críticos con Alt:** Alt+clic = ataque crítico (super ataque del original, con barra que se carga al golpear); citar la fórmula de HGServer/Game.cpp. → cifras del original verificadas (local, sin publicar). Ficha `critico-dash.md`, test `crit-dash`.
 - [x] (hecho en v0.78.0) **Dash:** atacar mientras se corre: avanza y golpea con bono, como en el original. → ídem.
 - [x] (hecho en v0.78.0) **Correr por defecto:** el personaje corre por defecto en cada sesión; Ctrl+R alterna.
 - [x] (hecho en v0.78.0) **CI sin gh:** release.sh consulta por curl a la API de GitHub el estado del último workflow.
 - [x] (hecho en v0.78.0) **Fichas de 0.76.0:** escribir fichas de summonfood, sprite-retry y audio. → `summonfood.md`, `sprite-retry.md`, `audio.md`.
 
-- [ ] **Verificar contra el original** (disponible en `HelbreathOriginal`, ver `ORIGINAL.md`): cifras de crítico/dash (`CRIT` en `combat.js`) y comportamiento de magos/invocadores a distancia.
+- [x] (hecho en local, sin publicar) **Indicador de órdenes de la pet:** usa las mismas pelotitas que el camino del personaje: rojo = atacar, celeste claro = ir a la casilla (antes línea discontinua gris/roja).
+- [x] (hecho en local, sin publicar) **F1 «Reset all»:** botón en Herramientas que devuelve a todos (jugador y bots/habitantes) al nivel 1 con atributos de partida, objetos iniciales, sin oro/banco/compañeros/misiones, como un servidor recién arrancado. Test en `debug.test.mjs`.
+
+- [x] (hecho en local, sin publicar) **F1 «Reiniciar bots desde 0»:** botón que borra todos los bots y habitantes (con sus puestos y partidas guardadas en el servidor) y crea un juego de habitantes completamente nuevo, como un servidor recién arrancado.
+- [x] (hecho en local, sin publicar) **Trade/tiendas (4 puntos):** (1) la ventana de trade parece rota: no se pueden arrastrar ni añadir objetos, y los bots tampoco; (2) una tienda sin objetos se cierra sola; (3) las tiendas caducan (24 h); (4) los puestos solo se montan en los warehouses (los grandes) para no bloquear entradas.
+- [ ] **Verificar contra el original** (disponible en `HelbreathOriginal`, ver `ORIGINAL.md`): ~~cifras de crítico/dash~~ (hecho en local: `CRIT` ya es el original) y comportamiento de magos/invocadores a distancia (el original no tiene IA de jugadores-bot: es diseño propio, solo hay que mantenerlo coherente con las reglas de magia y de invocación del original).
 - [ ] **Artesanos:** solo producen comida y pescado, no caramelos.
+- [x] (hecho en local, sin publicar) **Balls con evoluciones (decidido con el usuario):** tabla única de datos `base → {evolución, escuela}` que lean companion/schools/residents/bot/arena/talents/summoninfo y los diálogos del cliente, en vez de las copias a mano de `SPECIES`/`SCHOOL_OF`/`TIER2`. Cadenas pedidas: **Skeleton → Liche** (Skeleton toma el lugar de la Cannibal-Plant como base de la escuela de rayo; Cannibal-Plant queda como bola normal); **Tutelary-Angel → Frost** (hielo, Frost recupera Ice Storm; el ángel crece vía campo `fit` a ~90 % del personaje) y **Tentocle → Beholder** (sin skills ni magia); Dark-Elf → Elf Master, Unicorn → Centaurus, Scorpion → Giant-Crayfish, Guard → Temple Knight (todos sin skills). Elf Master (tipo 84, sprite `uelfmaster`) y Temple Knight (tipo 46, sprite `utk`/`TK` en el cliente original) no están en `Npc.cfg`: hay que crearles entrada de NPC (`Guard-*` es tipo 21, sprite `uguard`). Centaurus es el nombre del original. Hecho: `shared/systems/evolutions.js`, ficha `docs/sistemas/evoluciones.md`, test `evolutions.test.mjs`.
 
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 
@@ -135,3 +141,18 @@ Streaming por mapa (`docs/sistemas/carga.md`): arranque ~39 MB (antes ~131 MB so
 ## Arco, mirar con el botón derecho, F1 (oct 2026)
 Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho sobre el suelo gira sin andar, F1 = novedades/pruebas (sin la ayuda original). Pendiente de la fidelidad total: críticos, ataque en carrera, Firebow/Direction-Bow, reputación, zonas de lucha, PvP, Confusion/Inhibition/Resurrection, menús de los NPC restantes.
 - Compañeros (Cazador): ver docs/sistemas/companeros.md
+
+- [x] Cyclops Lv 50 eléctrico (v0.78.1–0.78.6): arcos en las pinzas; menos rayos y estimación de pinzas de espaldas (dirs 1 y 8); apagado al morir, chispa mínima en vida y carga de poder al atacar. Ver `docs/sistemas/bestiario.md`.
+- [x] Cyclops por niveles (v0.78.11): crece en 10/20/30, 30 mini destello en pinzas, 40 + cuerpo, 50 rayos y full. Ver `docs/sistemas/bestiario.md`.
+- [x] Pixie por niveles (v0.78.12–13, aparece como «Pixie» en el Bestiario): crece en 10/20/30; efectos solo en 30 (destellos en alas), 40 (cuerpo y motas orbitando) y 50 (halo y copos). Pendiente: HD real (hoja rehecha); hoy usa el reescalado x4 automático. Ver `docs/sistemas/bestiario.md`.
+- [x] Sonidos de la Pixie en el Bestiario (v0.78.14): panel con botones para oír candidatos; pendiente que Pablo elija cuáles y asignarlos (crecer, invocar, morir, auras 30/40/50).
+- [x] (hecho en local, sin publicar) **No puedo comprar balls:** causa real: el servidor online (`iniciar.ps1 -Modo online`, puerto 8088) seguía ejecutando el código viejo, donde Tutelary-Angel aún era una evolución («no disponible»). Solución: reiniciar el proceso `node server.mjs` (el script lo relanza solo) después de cambiar `shared/*`. Además: el hospital ya no lista especies sin NPC (Orc-Mage) y el test `summon-buy-all.test.mjs` compra todas las especies, comprueba su ficha y las invoca. Verificado con el servidor reiniciado: las 8 bases se compran, Frost y Beholder se rechazan.
+- [x] (hecho en local, sin publicar) **Pixie y 3 tamaños:** Tutelary-Angel se muestra como «Pixie» (`NICK`/`shown` en evolutions.js; la clave de datos no cambia), `fit` 0.9→0.6 (menos pixelado) y flota ~10 px sobre el suelo (`hover` en renderer.js, sombra abajo). Crecimiento de 5 a 3 tamaños (`SIZE_STAGES=[25,50]`, K `[0,0.5,1]`, vista previa `SCALES`); Unicorn, Dark-Elf y Guard nacen al 85 % (`BIRTH` en `petScale`). Tests actualizados (summon-size, summoninfo). Pendiente: revisar a ojo el vuelo y el tamaño del Pixie.
+- [x] (v0.78.15) Pixie HD: hojas `ututelarangel*` ×4 automáticas (`tools/make_pixie_hd.py`); rehacerlas a mano sigue opcional. Panel de sonidos del Bestiario abierto por defecto.
+- [x] (v0.78.16) Sonidos de la Pixie en el juego (`audio.js`, eventos companion-lvl/companion-lost: E46, E30, E36+E19, M62). Falta: sonido al invocarla y aura continua si Pablo lo pide.
+- [x] (v0.78.17) Healer, Buffer y Aura al nivel 50: efectos por clase desde el 30 (renderer.js, bloque `e.dcls`) y visibles en el Bestiario (`dcls` en `ent()`). Pendiente si Pablo lo pide: sonidos propios.
+- [x] (v0.78.18) Healer, Buffer y Aura en HD (`tools/make_support_hd.py`, hojas uhealer/usorceress/ubuffer en sprites_hd/). Regla: siempre HD al pedir modelos.
+- [x] (v0.78.19) Supports (Healer/Buffer/Aura): solo aliados en Promise Land, inactivos en zona segura, críticos 12 % (Aura doble, Heal doble tick, Buffer masivo; 1 buff por vez), un solo sonido por buff de grupo, sin «Puesto de», Shift+clic invertido (izq. ir, der. atacar). Blizzard: la magia solo daña monstruos (`hurt` en magicsys.js); no hay daño mágico a jugadores.
+- [x] (v0.78.20) Pixie un poco más grande: `fit` 0.6 → 0.7 en evolutions.js.
+
+- [x] (hecho en local, sin publicar) Bots y criptas (v0.78.6): con un piso despejado (p. ej. el 10) y el siguiente fuera de alcance (jefe, nivel o tope de misiones), el bot ya no vuelve a entrar al piso despejado: se prepara y reintenta; cuando puede, arranca directamente en el siguiente guardado (`delve.cleared+1`).

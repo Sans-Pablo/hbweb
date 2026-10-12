@@ -1,6 +1,7 @@
 // Vista previa de un summon antes de comprar su bola en el hospital de compañeros (INVENTO del port): estadísticas, hechizos,
 // una leyenda corta y, abajo, las siluetas de sus evoluciones (¿quién es ese Pokémon?) para anunciar que hay más al llegar al nivel máximo.
 import { ClassicDialog, INK, DARK, RED, WHITE } from "./classicdialog.js";
+import { shown } from "../shared/systems/evolutions.js";
 import { infoOf } from "../shared/systems/summoninfo.js";
 import { HOSPITAL, TASTE } from "../shared/systems/companion.js";
 import { mobSprite } from "./anim.js";
@@ -9,12 +10,12 @@ import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
 
 const BUY = { x: 14, y: 264, w: 150, h: 18 };
-const SCALES = [0.62, 0.74, 0.87, 1];                       // crecimiento aproximado de las etapas (renderer.js)
+const SCALES = [0.7, 0.85, 1];                       // crecimiento aproximado de las etapas (renderer.js)
 
 export function registerSummonPreview(gui, api) {
   const dlg = new class extends ClassicDialog {
     constructor() { super({ id: 45, title: "Summon", footer: "" }); this.sp = null; this.npc = null; }
-    show(sp, npc) { this.sp = sp; this.npc = npc; this.cls = CLS_OF[sp] || null; this.title = DUMMY_NAMES[this.cls] || sp.replace(/-/g, " "); gui.open(45); }
+    show(sp, npc) { this.sp = sp; this.npc = npc; this.cls = CLS_OF[sp] || null; this.title = DUMMY_NAMES[this.cls] || shown(sp); gui.open(45); }
     // sprite de reposo de la especie, escalado para caber en `box` y anclado a los pies (ax, ay); `sil`: solo silueta
     sprite(g, sp, ax, ay, box, k = 1, sil = false, cls = null) {
       const cfg = api.npc(sp); if (!cfg || !g.spr) return;

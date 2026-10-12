@@ -184,3 +184,16 @@ console.log("OK dummy");
   for (const k of ["healer", "buffer", "aura"]) assert.ok(T.BALL_COLORS[k] && T.DUMMY_NAMES[k], "color y nombre de " + k);
   console.log("OK dummy ball colors");
 }
+
+// Promise Land (w.pvp): los supports solo actúan sobre aliados (grupo o mismo bando); críticos de 12 %
+{
+  assert.equal(D.CRIT_CHANCE, 0.12);
+  w.pvp = false; assert.ok(D.isAlly(w, A, Z), "fuera de PvP todos son aliados");
+  w.pvp = true;
+  assert.ok(D.isAlly(w, A, A) && D.isAlly(w, A, B), "uno mismo y el grupo");
+  const Y = mk("Ypsilon"); const s0 = [A.side, Y.side]; A.side = 1; Y.side = 2; assert.ok(!D.isAlly(w, A, Y), "un jugador de fuera no es aliado en PvP");
+  Y.side = 1; assert.ok(D.isAlly(w, A, Y), "mismo bando");
+  Y.side = 2; assert.ok(!D.isAlly(w, A, Y), "bando distinto"); [A.side, Y.side] = s0;
+  w.pvp = false;
+  console.log("OK dummy pvp allies");
+}

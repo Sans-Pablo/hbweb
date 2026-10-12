@@ -32,7 +32,7 @@ const roleOf = c => Tal.spec(c) || "none";
 // ---------------------------------------------------------------- luchadores
 // Mismo cálculo que un compañero de verdad (companion.statsOf). Los gladiadores pelean con "movimientos":
 //  - todos: Golpe crítico (14 %), Power Strike (x2,2), Guard (reduce el daño), Second Wind (cura una vez) y Frenzy (doble ritmo con poca vida);
-//  - las especies de escuela (Orc/Demon fuego, Tentocle/Frost hielo, Cannibal-Plant/Liche rayo) lanzan los hechizos de Magic.cfg de su escuela
+//  - las especies de escuela (Orc/Demon fuego, Tutelary-Angel/Frost hielo, Skeleton/Liche rayo) lanzan los hechizos de Magic.cfg de su escuela
 //    que su nivel desbloquea (Sch.spellLevel), pagando maná; el maná del combate se recupera deprisa para que el espectáculo no se apague.
 const MOVES = { power: { lvl: 1, cd: 5500, mul: 2.2 }, guard: { lvl: 8, cd: 13000, ms: 3200, taken: 0.45 }, wind: { lvl: 15, heal: 0.25 }, frenzy: { lvl: 20, cd: 24000, ms: 5000 } };
 function fighterOf(w, p, c, key, extra = {}) {

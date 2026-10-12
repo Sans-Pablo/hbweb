@@ -33,6 +33,17 @@ assert.ok(dbg({ op: "crypt", level: 7 })); assert.equal(w().map.level, 7); asser
 dbg({ op: "clear" }); assert.ok(w().cleared);
 assert.ok(dbg({ op: "goto", map: "arefarm" })); assert.equal(w(), a.farm);
 dbg({ op: "sky", day: 2, weather: 1 }); a.tick(100); assert.equal(w().dayOrNight, 2);
+// reset all: vuelta al principio de jugador y bots
+const bot = a.spawnBot(null, { level: 12 }); assert.ok(bot.level >= 12); dbg({ op: "level", n: 30 }); dbg({ op: "gold", n: 9999 });
+const rr = dbg({ op: "resetall" }); assert.ok(rr); assert.equal(p.level, 1); assert.equal(p.exp, 0 + p.exp); assert.equal(p.pool, 0); assert.equal(p.stats.str, 14); assert.ok(p.gold === 0);
+assert.ok(!p.bag.some(i => i.comp), "sin bolas"); assert.equal(followersOf(w(), p).filter(e => e.comp).length, 0); assert.equal(bot.level, 1);
+// reiniciar bots: todos nuevos (otro id, nivel 1) y el servidor recibe los nombres para borrar sus partidas
+let wiped = null; a.onBotsRestart = ns => { wiped = ns; };
+const res0 = a.spawnResident(a.residents().length ? a.residents()[0].name : "Aldric", null); res0.level = 20; res0.gold = 5000;
+const nRes = a.residents().length, oldIds = new Set(a.bots.keys());
+assert.ok(dbg({ op: "botsnew" })); assert.equal(a.residents().length, nRes); assert.ok(wiped && wiped.length > 0);
+for (const id of a.bots.keys()) assert.ok(!oldIds.has(id), "bot nuevo");
+assert.ok([...a.bots.values()].every(b => b.level <= 4 && b.gold !== 5000));
 // desactivadas
 DEBUG.enabled = false; assert.equal(dbg({ op: "level", n: 5 }), false); DEBUG.enabled = true;
 console.log("OK");

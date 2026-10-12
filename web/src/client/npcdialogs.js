@@ -4,6 +4,7 @@
 //   31 lista de venta (DrawDialogBox_SellList)       17 cantidad (DrawDialogBox_QueryDropItemAmount)
 // Todo el estado de la compra-venta vive aquí; la simulación (shared/systems/shopsys.js) hace de servidor.
 import { itemDef, itemName, itemSet, packKey, iconKey } from "./names.js";
+import { shown } from "../shared/systems/evolutions.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
@@ -468,7 +469,7 @@ export function registerNpcDialogs(gui, api) {
     constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], footer: "Un caído no se invoca hasta revivirlo." }); }
     // BUG-008: texto de la pestaña de ayuda (cada elemento es un párrafo; se ajusta al ancho del cuadro)
     static HELP = ["CUIDADOS: cura a los heridos (2 de oro por punto de vida) o revive a los caídos (más caro).",
-      "EVOLUCIÓN: Orc, Tentocle y Cannibal-Plant nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
+      "EVOLUCIÓN: Orc, Pixie y Skeleton nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
       "BOLAS: compra una bola de nivel 1; previsualiza antes.",
       "CARAMELOS: rojo vida, azul maná, verde revive. Arrástralos al compañero.",
       "COMIDA: la de la granja da mejoras permanentes; arrástrala al compañero o a su bola.",
@@ -477,11 +478,11 @@ export function registerNpcDialogs(gui, api) {
     rows(me) {
       if (this.tab === 3) return [];
       if (this.tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
-      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp)).map(sp => ({ sp, ball: { id: SPECIES[sp][1], comp: { sp, ...(CLS_OF[sp] ? { cls: CLS_OF[sp] } : {}) } }, text: (CLS_OF[sp] ? DUMMY_NAMES[CLS_OF[sp]] : sp.replace(/-/g, " ")) + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
-      const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || i.comp.sp) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
+      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp) && (api.hasNpc?.(sp) ?? true)).map(sp => ({ sp, ball: { id: SPECIES[sp][1], comp: { sp, ...(CLS_OF[sp] ? { cls: CLS_OF[sp] } : {}) } }, text: (CLS_OF[sp] ? DUMMY_NAMES[CLS_OF[sp]] : shown(sp)) + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
+      const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || shown(i.comp.sp)) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
       return ups.concat(me.bag.filter(i => i.comp).map(i => {
         const c = i.comp, hp = hpOf(me, c), mx = maxOf(me, c), st = c.down ? "Inconsciente" : hp < mx ? "Herido " + hp + "/" + mx : "Sano";
-        const kind = c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : c.sp.replace(/-/g, " ");
+        const kind = c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : shown(c.sp);
         return { uid: i.uid, ball: i, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
       }));
     }
@@ -522,7 +523,7 @@ export function registerNpcDialogs(gui, api) {
       if (this.wait) return g.aligned(0, this.w, 120, "…", INK);
       if (!o || o.none) return this.wrap(g, t("Necesitas un compañero (bola) sano para combatir."), this.w - 50, 11).forEach((l, i) => g.aligned(0, this.w, 110 + i * 14, l, INK, { size: 11 }));
       if (o.busy) return g.aligned(0, this.w, 110, "Hay un combate en curso…", INK);
-      const line = (k, p, y) => { g.text(this.mx, y, k.nm + (k.champion ? " ★" : ""), INK, { size: 11, bold: true }); g.text(this.mx, y + 12, k.sp.replace(/-/g, " ") + " nv " + k.lvl + " · " + this.roleName(k.role) + " · " + Math.round(p * 100) + " %", INK, { size: 10 }); };
+      const line = (k, p, y) => { g.text(this.mx, y, k.nm + (k.champion ? " ★" : ""), INK, { size: 11, bold: true }); g.text(this.mx, y + 12, shown(k.sp) + " nv " + k.lvl + " · " + this.roleName(k.role) + " · " + Math.round(p * 100) + " %", INK, { size: 10 }); };
       line(o.a, o.pa, 64); g.text(this.w - 44, 80, "VS", RED, { size: 11, bold: true }); line(o.b, o.pb, 92);
       g.text(this.mx, 116, "Apuesta: " + this.amount + " de oro  (" + o.min + " – " + o.max + ")", DARK, { size: 10 });
     }
@@ -571,8 +572,8 @@ export function registerNpcDialogs(gui, api) {
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
       case "candybought": api.log("Compras " + ev.count + " × " + ev.name + " por " + ev.price + " de oro."); break;
-      case "petupgraded": api.log(ev.nm + " ha evolucionado: " + ev.from.replace(/-/g, " ") + " → " + ev.to + " (nivel 1)."); break;
-      case "petbought": api.log("Compras la bola de " + (DUMMY_NAMES[ev.cls] || ev.sp.replace(/-/g, " ")) + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
+      case "petupgraded": api.log(ev.nm + " ha evolucionado: " + shown(ev.from) + " → " + ev.to + " (nivel 1)."); break;
+      case "petbought": api.log("Compras la bola de " + (DUMMY_NAMES[ev.cls] || shown(ev.sp)) + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bounty": api.log("Recompensa por derrotar a " + ev.victim + ": " + ev.gold + " de oro.", "gold"); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
       case "cantsell": {

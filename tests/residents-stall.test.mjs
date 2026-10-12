@@ -15,7 +15,7 @@ const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 setDungeonPalette(json("dungeon_palette.json"));
 const maps = {};
-for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "gshop_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
+for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "wrhus_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps, rng: seededRandom(33) });
 a.report = () => {};
 const run = (ms, f) => { for (let i = 0; i < ms / 50; i++) { a.tick(50); if (f?.()) return true; } return false; };
@@ -28,7 +28,7 @@ for (const id of heavy) Inv.addToBag(b, data, newInst(home, id, 1));
 b.hp = b.maxHp; b.res._stallAt = 1; b.res._petAt = 1e12; b.res._gatherAt = 1e12;
 const stallOf = () => a.stallDb.find(s => s.owner === "aldric");
 assert.ok(run(120000, () => !!stallOf()), "monta un puesto; registro: " + b.bot.log.slice(-6).join(" | "));
-const s = stallOf(); assert.equal(s.map, "gshop_1f"); assert.ok(s.items.length >= 3 && s.items.every(r => r.price >= 1));
+const s = stallOf(); assert.equal(s.map, "wrhus_1f"); assert.ok(s.items.length >= 3 && s.items.every(r => r.price >= 1));
 assert.ok(run(30000, () => a.worldFor(b.id) === home), "vuelve a la granja");
 assert.ok(b.res._stall == null);
 // alguien le compra y él vuelve a cobrar

@@ -20,7 +20,6 @@ export const SKILLS = {
   "Cyclops":         { name: "Stomp",         kind: "hit",   mult: 2.5, mp: 20, cd: 10000 },
   "Troll":           { name: "Regenerate",    kind: "mend",  pct: 0.35, mp: 20, cd: 22000 },
   "Orge":            { name: "Smash",         kind: "hit",   mult: 3.2, mp: 24, cd: 12000 },
-  "Tentocle":        { name: "Lash",          kind: "aoe",   mult: 0.9, r: 2, mp: 18, cd: 10000 },
   "Cannibal-Plant":  { name: "Devour",        kind: "leech", mult: 1.5, pct: 0.08, mp: 18, cd: 14000 },
   "Demon":           { name: "Inferno",       kind: "aoe",   mult: 1.6, r: 2, mp: 30, cd: 12000 },
   "Frost":           { name: "Ice Storm",     kind: "aoe",   mult: 1.4, r: 3, mp: 30, cd: 12000 },

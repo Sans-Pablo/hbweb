@@ -170,6 +170,8 @@ export class Sound {
     if (!me) return this.play(name, this.me);
     const d = Math.max(Math.abs(tx - me.x), Math.abs(ty - me.y));
     if (d > 14) return;
+    // varias magias casi a la vez (buffs a un grupo) suenan como una sola: mismo sonido, como mucho cada 250 ms
+    const now = performance.now(), k = "at:" + name; if (now - (this.last.get(k) || 0) < 250) return; this.last.set(k, now);
     this.playRaw(name, Math.max(0, 1 - d / 14), Math.max(-1, Math.min(1, (tx - me.x) / 12)));
   }
   async playRaw(name, gain, pan) {
@@ -192,6 +194,15 @@ export class Sound {
       case "drop": if (ev.r >= 2) { const m = this.world.ents.get(this.me); if (m && Math.max(Math.abs(m.x - ev.x), Math.abs(m.y - ev.y)) <= 14) this.playRaw(ev.r === 3 ? "E30" : "E12", 1, 0); } break;
       case "pickup": if (ev.id === this.me) this.playRaw(ev.item === 90 ? "E12" : "E20", 1, 0); break;
       case "levelup": if (ev.id === this.me) this.playRaw("E30", 1, 0); break;
+      // Pixie (Tutelary-Angel): campanilla suave al subir (E46), subida E30 al crecer en 10/20/30 y destello de cristal (E36+E19) al ganar efectos en 30/40/50; al perderla, aleteo apagado (M62)
+      case "companion-lvl":
+        if (ev.id === this.me && ev.sp === "Tutelary-Angel") {
+          this.playRaw("E46", 0.8, 0);
+          if (ev.lvl % 10 === 0 && ev.lvl <= 30) setTimeout(() => this.playRaw("E30", 0.7, 0), 250);
+          if (ev.lvl % 10 === 0 && ev.lvl >= 30) { setTimeout(() => this.playRaw("E36", 0.8, 0), 300); setTimeout(() => this.playRaw("E19", 0.6, 0), 520); }
+        }
+        break;
+      case "companion-lost": if (ev.id === this.me && ev.sp === "Tutelary-Angel") this.playRaw("M62", 0.7, 0); break;
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
         else this.play(ev.bow || ev.wt >= 40 ? "C3" : ev.wt > 0 ? "C2" : "C1", ev.id, 0.8);   // por arma (MapData.cpp): manos C1, armas cuerpo a cuerpo C2, arco C3 (40..59)

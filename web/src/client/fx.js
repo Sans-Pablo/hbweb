@@ -1,4 +1,5 @@
 import { itemName } from "./names.js";
+import { look } from "../shared/systems/evolutions.js";
 // Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 // No influyen en el juego; solo leen los eventos de la simulación.
 import { posOf } from "./anim.js";
@@ -43,7 +44,7 @@ export class Fx {
         this.text(ev.id, String(ev.amount), mine ? "#ff5a4a" : "#fff3d6", ev.amount >= 8);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
-      case "dummy-cast": if (ev.max || (ev.lvl >= 30 && (ev.sc === "Demon" || ev.sc === "Liche" || ev.sc === "Frost"))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
+      case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;
@@ -58,7 +59,8 @@ export class Fx {
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);
         break;
       }
-      case "heal": this.text(ev.id, "+" + ev.amount, "#7fe07f"); break;
+      case "heal": this.text(ev.id, "+" + ev.amount, ev.crit ? "#c8ffc8" : "#7fe07f", !!ev.crit); break;
+      case "dummy-crit": this.text(ev.nid, "CRITICAL!", ev.cls === "healer" ? "#7fff7f" : ev.cls === "buffer" ? "#ffe84a" : "#7fc4ff", true, -18); break;
       case "auramp": this.text(ev.id, "+" + ev.amount, "#7fa6ff", false, -10); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
       case "resist": this.text(ev.id, "resiste", "#a9b4c2"); break;

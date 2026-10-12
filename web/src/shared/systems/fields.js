@@ -7,11 +7,11 @@ import { damagePlayer } from "./combatsys.js";
 
 export const DYN = { FIRE: 1, ICESTORM: 8, SPIKE: 9, PCLOUD: 10, FIRE3: 14 };
 
-export function addField(w, type, x, y, ms, v1 = 0, owner = 0) {
+export function addField(w, type, x, y, ms, v1 = 0, owner = 0, nd = false) {
   if (!w.grid.inside(x, y)) return false;
   if (!w.dyn) w.dyn = [];
   if (w.dyn.some(f => f.x === x && f.y === y)) return false;          // una casilla, un objeto (bSetDynamicObject)
-  const f = { id: w.nextId++, type, x, y, until: w.time + ms, v1, owner, born: w.time };
+  const f = { id: w.nextId++, type, x, y, until: w.time + ms, v1, owner, born: w.time, nd };
   w.dyn.push(f);
   w.emit({ t: "field", id: f.id, type, x, y, ms, v1 });
   return true;
@@ -49,6 +49,14 @@ function hit(w, e, dmg, f) {
   if (sget(w, e, "hold")) sclear(w, e, "hold");
 }
 
+// Campos psíquicos (psychic.js, nd = sin daño): solo controlan. Fuego: raíz breve (con inmunidad posterior); pinchos y nube: ralentizan
+function ndEffect(w, e, f) {
+  if (e.kind === "citizen" || (f.owner && w.ents.get(f.owner)?.master === e.id)) return;
+  if (f.type === DYN.FIRE || f.type === DYN.FIRE3) {
+    if (!sget(w, e, "hold") && !sget(w, e, "rootimm") && !(e.boss) && !(e.kind === "npc" && e.cfg.magicLevel >= 6)) { sset(w, e, "hold", 1, 1500); sset(w, e, "rootimm", 1, 6000); }
+  } else if (!sget(w, e, "ice") && !iceResisted(w, e)) sset(w, e, "ice", 1, 4000);
+}
+
 export function tickFields(w) {
   if (!w.dyn || !w.dyn.length) return;
   for (const f of [...w.dyn]) {
@@ -62,6 +70,7 @@ export function tickFields(w) {
     for (let iy = f.y - R; iy <= f.y + R; iy++) for (let ix = f.x - R; ix <= f.x + R; ix++) {
       const e = at(w, ix, iy);
       if (!e || e.dead) continue;
+      if (f.nd) { ndEffect(w, e, f); continue; }
       if (f.type === DYN.ICESTORM) {
         hit(w, e, dice(w.rng, 3, 3) + 5, f);
         if (!e.dead && !sget(w, e, "ice") && !iceResisted(w, e)) sset(w, e, "ice", 1, 20000);

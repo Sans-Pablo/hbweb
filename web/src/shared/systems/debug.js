@@ -31,8 +31,13 @@ const OPS = {
   points(w, p, c) { p.pool += num(c.n, 0, 1000, 0); say(w, p, "Points to assign: " + p.pool); },
   stat(w, p, c) { if (!(c.key in p.stats)) return; p.stats[c.key] = num(c.n, 1, 500, 10); w.recalc(p); say(w, p, c.key + " = " + p.stats[c.key]); },
   heal(w, p) { p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100; say(w, p, "HP, MP, SP and hunger full"); },
+  // Modo «0 restricciones»: sin báculo/Psychic Controller, sin tope de nivel del dueño al subir al summon (classgear.staffOk, dummy.hasStaff, companion.addExp)
+  free(w, p) { p.free = !p.free; say(w, p, p.free ? "0 restrictions: on (no staff, no level cap for pets)" : "0 restrictions: off"); },
   god(w, p) { p.god = !p.god; say(w, p, p.god ? "Invulnerable: on" : "Invulnerable: off"); },
   skills(w, p, c) { const n = num(c.n, 0, 100, 50); for (const k of Object.keys(SKILL_NAMES)) p.skills[k] = n; w.recalc(p); say(w, p, "All skills set to " + n); },
+  // todos (jugadores y habitantes, en todos los mapas) vuelven al nivel 1 con sus atributos de partida, como al arrancar el servidor
+  resetall(w, p) { const n = w.hooks?.resetAll?.(); say(w, p, n ? "Reset all: " + n + " character(s) back to level 1" : "Reset all not available here"); },
+  botsnew(w, p) { const n = w.hooks?.restartBots?.(); say(w, p, n ? "Bots restarted from scratch (" + n + " new residents)" : "Not available here"); },
   // ---- objetos
   give(w, p, c) {
     const d = c.name ? w.data.named(String(c.name)) : w.data.item(num(c.id, 0, 99999)), n = num(c.count, 1, 10000, 1);

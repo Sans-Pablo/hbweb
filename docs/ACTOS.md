@@ -73,6 +73,46 @@ Todas son efectos de dibujo (sin lógica), como las tres existentes. «Existe» 
 
 Regla de dibujo: usar los mismos recursos que las tres auras actuales (gradientes, partículas simples, `tinted` con `lighter`) y escalar la intensidad por tier para que un T2 se note menos que un T5.
 
+### 3.2 Evoluciones cortas (2 formas): pedidas y propuestas
+
+Pares directos bola → forma final, sin pasar por las 5 etapas. Encajan con «no todas necesitan full evoluciones»: el summon evoluciona al nv 50 como hoy y la segunda forma gana el aura de nv 50. Todos los sprites ya están convertidos (✔) salvo Elf/Master Elf, que hay que verificar contra `Npc.cfg` y el cliente original.
+
+**Pedidas**
+
+| Base | Evolución | Escuela / rol | Nota |
+|---|---|---|---|
+| Elf | Master Elf (ElfMaster) | Naturaleza o Sustento (arco y curación ligera) | Verificar `Npc.cfg` y sprite; hoy ElfMaster figura como «libre» (§3, ideas clave). |
+| Tentocle | Beholder | Hielo → control | Ojo: Tentocle ya es la base de Hielo (→ Ice-Golem → Frost). Beholder pasaría a ser un camino alternativo del mismo summon, no una línea nueva. |
+| Skeleton | Liche | Mente → rayo oscuro | Skeleton hoy abre Mente (→ Zombie). Liche es la forma final de Rayo: habría que decidir si comparten forma o se crea una skin propia. |
+| Unicorn | Centaurus | Sustento → arquero sagrado | Unicorn es T3 de Sustento; aquí pasa a ser base. Centaurus hoy es T5 de Rayo. |
+| Scorpion | Giant-Crayfish | Veneno | Scorpion era T2 de Veneno; al ser base, Amphis queda como alternativa. |
+
+Los cuatro últimos reutilizan formas que ya están en otras líneas. Opciones: (a) la misma especie sirve de forma final de dos líneas (el sprite no cambia, sí el set de magias según la escuela del summon); (b) se quita de la línea larga. Se recomienda (a): la escuela la fija la primera magia, no la especie.
+
+**Propuestas nuevas** (todas con sprite ✔; la forma final siempre es más grande o más rara que la base)
+
+| Base | Evolución | Escuela / rol | Por qué |
+|---|---|---|---|
+| Amphis | Claw-Turtle | Veneno / tanque | Anfibio → coraza. |
+| Giant-Frog | Giant-Lizard | Veneno → hielo | Escalado natural de anfibio a reptil grande. |
+| Rabbit | Rudolph | Sustento | Ambos son «amables»: base y forma festiva. |
+| Cat | Dark-Elf | Ilusión / sigilo | Felino ágil → sombra. |
+| Slime | Giant-Plant | Rayo / tanque de apoyo | Bicho blando → planta carnívora (línea Rayo). |
+| Giant-Ant | Giant-Crayfish | Veneno / físico | Artrópodo → crustáceo con pinzas. |
+| Zombie | Hellclaw | Control | No-muerto → demonio de garra. |
+| Stone-Golem | Ice-Golem | Tierra → hielo | Mismo cuerpo, cambia el elemento. |
+| Clay-Golem | Mountain-Giant | Tierra | Golem pequeño → gigante. |
+| Orc | Cyclops | Fuego / físico | Salto de un solo paso en vez de pasar por Hellbound. |
+| Troll | Ettin | Físico | Gigante de una cabeza → de dos. |
+| DireBoar | Minotaurs | Físico | Bestia con colmillos → bestia con cuernos. |
+| Orge | WereWolf | Físico / sigilo | Brutote → forma salvaje. |
+| Stalker | Tigerworm | Sigilo → veneno | Cazador silencioso → depredador. |
+| Gagoyle | Nizie | Control → ilusión | Piedra viva → hechicera. |
+| Giant-Lizard | Wyvern | Hielo / aire | Reptil → draconiano. |
+| Wyvern | Fire-Wyvern | Cambio de elemento (hielo ↔ fuego) | Mismo cuerpo, otra escuela. |
+
+Pendiente de decisión (ver §7): si estos pares conviven con las líneas largas (el jugador elige corta o larga) o las sustituyen.
+
 ## 4. Poderes reservados por acto
 
 Multiplicadores de `DISENO_EVOLUCIONES.md` (T1 ×1/1/1 · T2 ×1,4/1,2/1,6 · T3 ×1,9/1,45/2,4 · T4 ×2,5/1,7/3,4 · T5 ×3,2/2,0/4,5 en vida/daño/maná). Poderes por escuela y acto (ids de `Magic.cfg`):

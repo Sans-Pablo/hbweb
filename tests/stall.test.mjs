@@ -14,7 +14,7 @@ let seed = 9; const rng = () => (seed = (seed * 16807) % 2147483647) / 214748364
 const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
 const db = [];
 const mkWorld = id => { const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] }); w.map = { id, kind: "indoor", portals: [] }; w.hooks = { ...(w.hooks || {}), stalls: () => db }; return w; };
-const w = mkWorld("gshop_1f");
+const w = mkWorld("wrhus_1f");
 const mk = n => { const id = w.addPlayer(n, null, { gender: 1, stats: { str: 40, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }); return w.ents.get(id); };
 const A = mk("Alfa"), B = mk("Beta");
 B.x = A.x + 1; B.y = A.y; w.drainEvents();
@@ -50,10 +50,20 @@ B.gold = 5; w.drainEvents(); w.command(B.id, { t: "stallbuy", sid: db[0].sid, ui
 assert.ok(w.drainEvents().some(e => e.k === "nogold")); assert.equal(db[0].items.find(r => r.inst.id === 91).inst.count, 1, "sin oro no se vende");
 assert.ok(!w.command(A.id, { t: "stallbuy", sid: db[0].sid, uid: pu, count: 1 }), "no compras en tu puesto");
 // persistencia: el registro se serializa y se vuelve a levantar en otro mundo
-const saved = JSON.parse(JSON.stringify(db)), w2 = mkWorld("gshop_1f");
+const saved = JSON.parse(JSON.stringify(db)), w2 = mkWorld("wrhus_1f");
 assert.ok(Stall.spawn(w2, saved[0]) && [...w2.ents.values()].some(e => e.role === "stall"));
 // recoger oro y cerrar
 assert.ok(w.command(A.id, { t: "stalltake" })); assert.equal(A.gold, 360); assert.equal(db[0].gold, 0);
 assert.ok(w.command(A.id, { t: "stallclose" })); assert.equal(db.length, 0);
 assert.ok(![...w.ents.values()].some(e => e.role === "stall")); assert.equal(A.bag.find(i => i.id === pots.id).count, potsBase - 3);
+// se cierra solo al venderse el último objeto, y el oro queda para el dueño
+{ const sw2 = give(A, "LongSword"); A.gold = 0; B.gold = 1000;
+  assert.ok(w.command(A.id, { t: "stallopen", items: [{ uid: sw2.uid, price: 50 }] })); const sid = db[0].sid;
+  assert.ok(w.command(B.id, { t: "stallbuy", sid, uid: sw2.uid, count: 1 }));
+  Stall.tick(w); assert.ok(!db.some(x => x.sid === sid && !x.closed) || A.gold === 50, "vendido el último: el puesto se cierra y entrega el oro");
+  assert.equal(db.filter(x => x.owner === "alfa").length, 0, "no queda registro"); assert.equal(A.gold, 50); assert.ok(![...w.ents.values()].some(e => e.role === "stall")); }
+// caduca a las 24 h: el puesto se cierra y los objetos vuelven al dueño
+{ const sw3 = give(A, "LongSword"); assert.ok(w.command(A.id, { t: "stallopen", items: [{ uid: sw3.uid, price: 50 }] }));
+  assert.ok(!A.bag.some(i => i.uid === sw3.uid)); w.time += Stall.TTL + 1000; Stall.tick(w); Stall.tick(w);
+  assert.equal(db.length, 0, "caducado"); assert.ok(A.bag.some(i => i.uid === sw3.uid), "el objeto vuelve a la mochila"); }
 console.log("OK stall");

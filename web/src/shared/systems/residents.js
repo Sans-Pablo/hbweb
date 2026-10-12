@@ -119,7 +119,7 @@ function questGoal(w, p) {
     default: return null;
   }
 }
-// especie de la línea de la clase que le toca criar: Orc/Tentocle/Cannibal-Plant y, tras evolucionar, Demon/Frost/Liche
+// especie de la línea de la clase que le toca criar: la base de su clase (quests.js PATH) y, tras evolucionar, su especie superior
 const qSpecies = p => { const q = p.quests, P = q && Quests.PATH[q.cls]; if (!P || q.n >= Quests.ACT1_END) return null; return q.tr ? P.final : P.sp; };
 const qBall = p => { const sp = qSpecies(p); return sp ? p.bag.find(i => i.comp && i.comp.sp === sp && !i.comp.bad) || null : null; };
 const qEvolve = p => { const q = p.quests; return !!q && q.u.trade && !q.tr && q.n < Quests.ACT1_END && p.bag.some(i => i.comp && i.comp.sp === Quests.PATH[q.cls].sp && i.comp.lvl >= Sch.TRADE_LEVEL); };
@@ -788,9 +788,10 @@ function delve(adv, w, p, r, home) {
     if (dist(p, { x: d.spot[0], y: d.spot[1] }) <= 2 && !p.dead && !w.busy(p) && w.time - (d.cmdAt || 0) > 3000) { d.cmdAt = w.time; r._noPrey = 0; d.tries++; const dp = p.delve?.deepest || 1, cl = p.delve?.cleared ?? Math.max(0, dp - 1);
       let start = Math.min(cl + 1, 20);                                                            // elige el piso de inicio entre los despejados (el siguiente al último es el máximo): el más hondo cuyo jefe pueda vencer y cuyo nivel le alcance
       while (start > 1) { const bp = bossPreview(w, start); if ((!bp || fightEstimate(w, p, bp).ratio >= 1.3) && p.level >= cryptNeed(r, start) - 2) break; start--; }
+      const cap = Quests.cryptCap(p);                                                              // v0.78.6: un piso ya despejado no se repite: si el siguiente aún no se puede (jefe o nivel) o el tope de misiones lo impide, no baja y vuelve a intentarlo más tarde
+      if (cl > 0 && (start < cl + 1 || cl + 1 > cap)) { r._delve = null; r._tripAt = w.time + 240000; blog(w, p, `Tengo despejado hasta el piso ${cl}, pero aún no puedo con el ${cl + 1}: no repito el ${cl}, me preparo más.`); return; }
       const restart = start === 1;
-      if (start < cl + 1) blog(w, p, `Tengo despejado hasta el piso ${cl}, pero aún no estoy listo para el ${cl + 1}: empiezo en el piso ${start}.`);
-      else if (cl > 0) blog(w, p, `Tengo despejado hasta el piso ${cl}: empiezo en el ${start}, sin repetir el jefe.`);
+      if (cl > 0) blog(w, p, `Tengo despejado hasta el piso ${cl}: empiezo en el ${start}, sin repetir el jefe.`);
       adv.command(p.id, { t: "portal", portal: "mid-entry", restart, level: start }); }
     return;
   }
@@ -832,11 +833,11 @@ function delve(adv, w, p, r, home) {
 // Cada habitante prueba una especie distinta (salen de `Comp.SPECIES`; así se ejercitan todas). El hospital (Gail) está en la tienda general de Aresden
 // y al aire libre en Elvine Farm. Los avisos van al informe de probadores (`report`).
 const TALENT_PLAN = { warrior: ["hide", "iron", "taunt", "regen"], hunter: ["might", "frenzy", "might"], trader: ["hide", "might"], wanderer: ["might", "hide", "iron"], scholar: ["mind", "might", "hide"] };
-const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && !Tal.CLS_OF[sp]);           // Demon/Frost/Liche solo por cambio y el Dummy exige un báculo
+const PET_SPECIES = Object.keys(Comp.SPECIES).filter(sp => !Sch.isTier2(sp) && !Tal.CLS_OF[sp]);           // las especies superiores solo por cambio y el Dummy exige un báculo
 const ballOf = p => Comp.activeBall(p) || p.bag.find(i => i.comp && !i.comp.bad);
 const liveOf = (w, p) => { for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead) return e; return null; };
 const nurseOf = w => { for (const e of w.ents.values()) if (e.role === "pethospital") return e; return null; };
-// MAGOS (arquetipo estudioso): coleccionan summons de las tres escuelas (fuego: Orc, hielo: Tentocle, rayo: Cannibal-Plant) y los van alternando para tirar magias variadas
+// MAGOS (arquetipo estudioso): coleccionan summons de las tres escuelas (las bases de las escuelas de evolutions.js) y los van alternando para tirar magias variadas
 const MAGE_SPECIES = Object.keys(Sch.SCHOOL_OF).filter(sp => !Sch.isTier2(sp));
 // MAGO DE APOYO (INVENTO, v0.69): con báculo en la mano colecciona Healer, Buffer y Aura (se compran en el hospital) y gasta los talentos de cada clase; sin báculo sigue la escuela normal
 const SUPPORT_SPECIES = Object.keys(Tal.CLS_OF), SUPPORT_PLAN = { healer: ["dheal", "dgheal", "dheal", "dmassh"], buffer: ["dward", "dgward", "dpfm", "dberserk", "dmassb"], aura: ["dregen", "dexp", "ddef", "dmana", "dvamp"] };
@@ -1270,7 +1271,7 @@ function gather(adv, w, p, r, home) {
 // ---------------------------------------------------------------- puestos (INVENTO del port: systems/stall.js)
 // Con la mochila llena de equipo que no le sirve, el habitante entra en la tienda, monta un puesto con precios razonables y vuelve a sus cosas;
 // más tarde regresa a recoger el oro (y cierra el puesto si ya no queda nada). Los jugadores le compran aunque él no esté.
-const stallOf = (adv, p) => (adv.stallDb || []).find(x => x.owner === p.name.toLowerCase());
+const stallOf = (adv, p) => (adv.stallDb || []).find(x => x.owner === p.name.toLowerCase() && !x.closed);
 // 0.78.0 (INVENTO): los artesanos (granjero/pescador) venden en el puesto lo que cosechan o pescan, al precio de Item.cfg en valor absoluto (el original guarda con signo negativo lo que no vende la tienda; sin precio: SFood.FOOD_PRICE)
 export const produceStock = (w, p) => p.bag.filter(i => Comp.FEED[i.id] && !i.comp).map(i => ({ i, price: Math.max(1, Math.abs(w.data.item(i.id)?.price) || SFood.FOOD_PRICE) })).slice(0, Stall.MAX_ITEMS_STALL);
 // ¿le sirve esta fila de un puesto a un bot con summon? comida de estadística que su bola aún acepta (summonfood.wanted) o un caramelo; devuelve cuántas piezas comprar
@@ -1297,7 +1298,7 @@ function stallAI(adv, w, p, r, home) {
       if (!b.travel && !b.target) { b.travel = { x: st.tp.x, y: st.tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
       return;
     }
-    if (w.map.id !== "gshop_1f") { r._stall = null; return; }
+    if (w.map.id !== "wrhus_1f") { r._stall = null; return; }
     if (!st.done && st.buy) {                                                                 // comprador: se acerca al puesto que le interesa y compra lo que le mejora el equipo
       st.done = true; st.back = now + 4000;
       const me = p.name.toLowerCase();
@@ -1342,9 +1343,9 @@ function stallAI(adv, w, p, r, home) {
   }
   if (w === home && now >= (r._buyAt ||= now + 200000 + (hash(p.name) % 200000))) {                // ¿hay algo a la venta que le mejore el equipo y pueda pagar?
     r._buyAt = now + 120000;
-    const me = p.name.toLowerCase(), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
+    const me = p.name.toLowerCase(), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "wrhus_1f");
     const want = tp && !(b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || b.travel || w.pvp || p.hp < p.maxHp * 0.7) &&
-      (adv.stallDb || []).some(sd => sd.owner !== me && sd.map === "gshop_1f" && sd.items.some(x => foodWanted(w, p, x) || x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"));
+      (adv.stallDb || []).some(sd => sd.owner !== me && sd.map === "wrhus_1f" && !sd.closed && sd.items.some(x => foodWanted(w, p, x) || x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"));
     if (want) {
       r._buyAt = now + 600000;
       r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000, buy: true };
@@ -1355,7 +1356,7 @@ function stallAI(adv, w, p, r, home) {
   if (w !== home || now < (r._stallAt ||= now + 240000 + (hash(p.name) % 300000))) return;
   r._stallAt = now + 30000;                                                                   // ocupado: reintenta pronto
   if (b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || p.hp < p.maxHp * 0.7 || b.travel || w.pvp) return;
-  const mine = stallOf(adv, p), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"); if (!tp) return;
+  const mine = stallOf(adv, p), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "wrhus_1f"); if (!tp) return;
   if (isCraft(r)) { if (produceStock(w, p).length < (mine ? 1 : 2)) return; r._stallAt = now + 150000; r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000 }; b.travel = { x: tp.x, y: tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0; blog(w, p, "Llevo mi cosecha al puesto de la tienda."); return; }
   if (!mine && stallSurplus(w, p).length < (p.bag.length >= 40 ? 1 : 3)) return;                // monta puesto con ≥3 objetos que le sobran (o 1 si la mochila casi está llena)
   if (mine && !mine.gold && mine.items.length && w.rng() < 0.7) return;                        // nada que cobrar: casi nunca vuelve

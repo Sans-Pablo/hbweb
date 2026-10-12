@@ -56,5 +56,8 @@ json.dump(manifest, open(man_path, "w"), separators=(",", ":"))
 # Supports independientes (INVENTO): tres especies propias clonadas de Dummy, cada una con su sprite de hechicera (ver tools/make_summon_sprites.py)
 for _sp, _spr in (("Healer", "uhealer"), ("Buffer", "usorceress"), ("Aura", "ubuffer")):
     if "Dummy" in npcs: npcs[_sp] = dict(npcs["Dummy"], sprite=_spr)
+# Especies de compañero sin ficha propia en NPC.cfg como monstruo (INVENTO, ver shared/systems/evolutions.js): clon de Dummy con el sprite de unidad del pak (convert_units.py)
+for _sp, _spr in (("Guard", "uguard"), ("Elf-Master", "uelfmaster"), ("Temple-Knight", "utk"), ("Tutelary-Angel", "ututelarangel3")):
+    if "Dummy" in npcs: npcs[_sp] = dict(npcs["Dummy"], sprite=_spr)
 json.dump(npcs, open(npc_path, "w"), indent=1)
 print("monstruos:", len(done), "sprites; fichas NPC:", len(npcs))

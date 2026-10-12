@@ -3,7 +3,7 @@
 //    encaja en ninguna regla es libre. tests/classgear.test.mjs lista todos para que no quede ninguno sin clasificar.
 //  - Niveles: las armas y armaduras con levelLimit > 30 se comprimen a 31..50 (acto 1, nivel máximo 50): applyGear al construir GameData.
 //  - Báculos: BerserkWand = Ice Wand (hielo), ResurWand = Darkness Staff (oscuridad), BlackMageTemple = Hero Staff (fuego). Los summons
-//    Frost, Liche y Demon exigen en la mano su báculo (o el maestro de su familia, ids 9001..9003 inventados).
+//    Las especies superiores con familia (evolutions.js: Demon, Beholder, Liche) exigen en la mano su báculo (o el maestro de su familia, ids 9001..9003 inventados).
 export const CLASSES = ["warrior", "mage", "summoner"];
 const W = "warrior", M = "mage", S = "summoner";
 
@@ -27,7 +27,10 @@ export const MAX_GEAR_LEVEL = 50;
 export const remapLevel = L => (L <= 30 ? L : Math.min(MAX_GEAR_LEVEL, 30 + Math.round((L - 30) * (MAX_GEAR_LEVEL - 30) / 90)));
 
 // ---- báculos: familia → ids. Los 9xxx son los maestros (nivel 50, 1 de oro, mismo sprite con tinte más fuerte y efecto)
-export const FAMILIES = { ice: [861, 862, 9001], dark: [865, 866, 9002], fire: [746, 9003] };
+export const FAMILIES = { ice: [861, 862, 9001], dark: [865, 866, 9002], fire: [746, 9003], psychic: [9004] };
+// Psychic Controller (invento): la Kloness Wand (863, sprite 17 fotograma 5) como mando de los summons psíquicos. Cualquier clase puede llevarla
+// (también el mago: cambia de arma a cambio de control PvP). Sin ella en la mano los summons psíquicos no se mantienen. Se vende en el herrero.
+export const PSYCHIC_ITEM = { id: 9004, from: 863, display: "Psychic Controller", family: "psychic", price: 3000 };
 export const MASTERS = {
   9001: { from: 861, family: "ice", display: "Master Ice Wand", tint: 19 },
   9002: { from: 865, family: "dark", display: "Master Darkness Staff", tint: 20 },
@@ -40,12 +43,12 @@ export const isMaster = id => id in MASTERS;
 export const masterRows = data => Object.keys(MASTERS).map(id => data.items.get ? data.items.get(+id) : data.byId?.get(+id)).filter(Boolean);
 export const MASTER_LEVEL = 50;
 // Qué báculo exige cada especie de summon
-export const STAFF_FOR = { Frost: "ice", Liche: "dark", Demon: "fire" };
-export const STAFF_MSG = { ice: "necesitas la Ice Wand en la mano", dark: "necesitas el Darkness Staff en la mano", fire: "necesitas el Hero Staff en la mano" };
+export { STAFF_FOR } from "./systems/evolutions.js";                                  // especie superior → familia de báculo (tabla única)
+export const STAFF_MSG = { ice: "necesitas la Ice Wand en la mano", dark: "necesitas el Darkness Staff en la mano", fire: "necesitas el Hero Staff en la mano", psychic: "necesitas el Psychic Controller en la mano" };
 
 // ¿tiene el jugador en la mano el báculo de esa familia? (los bots lo ignoran)
 export function staffOk(p, data, family) {
-  if (!family || p.bot) return true;
+  if (!family || p.bot || p.free) return true;
   const uid = p.equip?.[8], inst = uid !== undefined && p.bag.find(b => b.uid === uid);
   return !!inst && familyOf(inst.id) === family;
 }
@@ -61,5 +64,7 @@ export function applyGear(items) {
     const src = items[m.from]; if (!src) continue;
     items[id] = { ...src, name: m.display.replace(/ /g, ""), display: m.display, tint: m.tint, family: m.family, master: true, price: 1, levelLimit: MASTER_LEVEL, buyLevel: MASTER_LEVEL, v4: 30, maxLife: 30000 };
   }
+  const pc = PSYCHIC_ITEM, ps = items[pc.from];
+  if (ps) items[pc.id] = { ...ps, name: pc.display.replace(/ /g, ""), display: pc.display, family: pc.family, price: pc.price, levelLimit: 1, buyLevel: 0, maxLife: 30000, cls: undefined };
   return items;
 }

@@ -143,7 +143,7 @@ async function main() {
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
   const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, item: id => assets.data.item?.(id), me: () => world.ents.get(pid), send: c => conn.send(c) });
   const npcUi = registerNpcDialogs(gui, {
-    preview: (sp, npc, cls) => summonPreview.show(sp, npc, cls),
+    preview: (sp, npc, cls) => summonPreview.show(sp, npc, cls), hasNpc: sp => !!assets.npcDb[sp],
     me: () => world.ents.get(pid), pid, send: c => conn.send(c), log: m => hud.log(m),
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
@@ -213,6 +213,7 @@ async function main() {
       if (pet) { conn.send({ t: "use", uid: inst.uid, dest: pet.ball }); return; }
     }
     if (!dlg && y < 548 && dropOnCitizen(inst.uid, x, y, cx, cy)) return;
+    if (dlg && dlg.id === 33) { tradeUi.drop(inst.uid); return; }           // sobre la ventana de intercambio: ofrecerlo
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
     } else if (dlg && dlg.id === 2) {                            // en la mochila: soltar en esa posición (y quitar si estaba equipado)
@@ -408,11 +409,11 @@ async function main() {
       voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
-    // Shift + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
+    // Shift + clic derecho sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
     petGo(x, y) { conn.send({ t: "petgo", x, y }); },
     petOrder(ent) {
       if (ent && (ent.kind === "npc" || (ent.kind === "player" && ent.id !== pid))) conn.send({ t: "pettarget", target: ent.id });
-      else hud.log("Shift + clic sobre un monstruo para que tu compañero lo ataque.");
+      else hud.log("Shift + clic derecho sobre un monstruo para que tu compañero lo ataque.");
     },
     isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adeghmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto

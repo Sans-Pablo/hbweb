@@ -13,6 +13,7 @@
   label { display:flex; gap:6px; align-items:center; color:var(--muted); font-size:12px; }
   select, input[type=number], button { background:#0d0f12; color:var(--parch); border:1px solid var(--edge); border-radius:4px; padding:4px 8px; font:inherit; }
   button.on { border-color:var(--brass); color:var(--brass); }
+  #snd { padding:4px 14px; font-size:12px; } #snd .sg { margin:4px 0; } #snd button { margin:1px; padding:2px 6px; font-size:11px; cursor:pointer; } #snd button.on { background:#7bd; color:#000; } #snd-now { color:var(--muted); margin-left:8px; }
   #info { padding:6px 14px; color:var(--muted); font-size:12px; }
   #wrap { overflow:auto; padding:8px 14px 30px; }
   canvas { display:block; background:#2b2d33; border:1px solid var(--edge); }
@@ -45,9 +46,11 @@
   </span>
   <label>Fondo <select id="bg"><option value="#2b2d33">Gris</option><option value="#0b0b10">Oscuro</option><option value="#6d8a4a">Hierba</option><option value="#b9a77a">Arena</option></select></label>
 </header>
+<details id="snd" open><summary>Sonidos de la Pixie (clic para oír) <span id="snd-now"></span></summary><div id="snd-body"></div></details>
 <div id="info">Cargando…</div>
 <div id="wrap"><canvas id="cv"></canvas></div>
 <canvas id="game" style="display:none"></canvas>
 <script type="module" src="src/client/bestiary.js"></script>
+<script type="module" src="src/client/bestiary-sounds.js?v=14"></script>
 </body>
 </html>

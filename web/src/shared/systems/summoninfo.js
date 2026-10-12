@@ -1,7 +1,8 @@
 // Ficha de un summon para la ventana de vista previa de la tienda de bolas (INVENTO del port): estadísticas, hechizos,
 // leyenda y etapas de evolución. Solo lectura: no toca el mundo.
-import { SIZE_STAGES, MAX_COMP_LEVEL, statsOf } from "./companion.js";
+import { stagesOf, MAX_COMP_LEVEL, statsOf } from "./companion.js";
 import { SCHOOL_OF, TIER2, SCHOOL_NAMES, unlockLevels, spellLevel } from "./schools.js";
+import { CHAINS } from "./evolutions.js";
 
 // Leyenda breve de cada especie (en español; i18n.js trae la inglesa)
 export const LORE = {
@@ -17,20 +18,24 @@ export const LORE = {
   "Cyclops": "Gigante de un solo ojo. Ve poco, pero golpea con la fuerza de una avalancha.",
   "Troll": "Brutal y terco, se cura de heridas que matarían a cualquiera.",
   "Orge": "Un ogro enorme y glotón. Fiel a quien le da de comer.",
+  "Tutelary-Angel": "Ángel de luz fría. Vela por su amo y aprende la magia de hielo con la sabiduría (Int).",
   "Tentocle": "Criatura de las aguas heladas. Sus tentáculos guardan el frío de las profundidades.",
   "Cannibal-Plant": "Planta voraz que crece con las tormentas. Cada rayo la hace más fuerte.",
-  "Demon": "Forma superior del Orc: un señor del fuego que ha dominado las llamas.",
-  "Frost": "Forma superior del Tentocle: un espíritu de hielo eterno.",
-  "Liche": "Forma superior de la Planta Caníbal: un nigromante que domina el rayo.",
+  "Scorpion": "Cazador del desierto. Su aguijón es lento, pero no perdona.",
+  "Guard": "Soldado de la ciudad. Disciplinado, resistente y leal a su puesto.",
+  "Dark-Elf": "Elfo de las sombras. Sigiloso y orgulloso, aprende deprisa las artes de su pueblo.",
+  "Unicorn": "Criatura pura y esquiva. Quien gana su confianza no la pierde.",
+  "Giant-Frog": "Anfibio enorme de las ciénagas. Salta, observa y espera el momento justo.",
   "Healer": "Summon de apoyo: cura al aliado más herido del círculo. Frágil y silencioso; pelo verde.",
   "Buffer": "Summon de apoyo: escudos, protección y berserk para quien esté en su círculo. Frágil y silencioso; pelo amarillo.",
   "Aura": "Summon de apoyo: auras de regeneración, experiencia, defensa… para todos en su círculo. Frágil y silencioso; pelo azul.",
 };
+for (const c of CHAINS) LORE[c.evo] = c.es;                                  // la ficha de cada especie superior sale de evolutions.js
 export const loreOf = sp => LORE[sp] || "Un compañero misterioso. Crece contigo y guarda secretos.";
 
 // Etapas: crecimientos de tamaño (niveles de SIZE_STAGES; la última coincide con el nivel máximo) y, en las escuelas, la especie superior
 export function evolutionsOf(sp) {
-  const stages = SIZE_STAGES.map(lvl => ({ lvl, sp, final: lvl === MAX_COMP_LEVEL }));
+  const stages = stagesOf(sp).map(lvl => ({ lvl, sp, final: lvl === MAX_COMP_LEVEL }));
   const up = TIER2[sp];
   return { stages, tier2: up ? { sp: up, lvl: MAX_COMP_LEVEL } : null };
 }

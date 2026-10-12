@@ -16,3 +16,10 @@ Los jugadores abren un puesto de venta en `gshop_1f`, `wrhus_1f` y `bsmith_1f` (
 
 ## Artesanos (v0.78.0)
 - Los granjeros y pescadores abren puesto con existencias limitadas al precio de `Item.cfg` y los demás bots les compran la comida de sus summons. Ver `artesanos.md`; test `craft-stall.test.mjs`.
+
+## Ciclo de vida (local, tras v0.78.0)
+- Solo se abren en `wrhus_1f` (`Stall.MAPS`); en cualquier otro mapa se rechaza.
+- Al venderse el último objeto el puesto se cierra y entrega el oro al dueño.
+- Caduca a las 24 h (`Stall.TTL`): se cierra y los objetos y el oro vuelven al dueño (`settle`).
+- Trade: arrastrar un objeto de la mochila a la ventana lo añade (`drop(uid)` en `client/trade.js`); los bots también ofrecen.
+- Tests: `stall.test.mjs` (cierre y caducidad), `residents-buy.test.mjs`.
