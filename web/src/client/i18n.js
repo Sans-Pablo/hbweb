@@ -247,6 +247,73 @@ const PATTERNS = [
   [new RegExp("^Daño " + num + "–" + num + "$"), m => `Damage ${m[1]}–${m[2]}`],
 ];
 void num;
+// ---- cadenas añadidas (auditoría tools/i18n_audit.mjs)
+Object.assign(EN, {
+  "Guardar círculo": "Save circle", "Volumen de la música": "Music volume", "Menú clásico": "Classic menu",
+  "Tu compañero": "Your companion", " está en paz: solo te sigue.": " is at peace: it only follows you.", "el objetivo": "the target", " de maná.": " mana.",
+  "¡Objeto único! ": "Unique item! ", "¡Objeto raro! ": "Rare item! ",
+  "Caramelo: cura la vida de tu compañero.": "Candy: heals your companion's health.", "Caramelo: devuelve maná a tu compañero.": "Candy: restores your companion's mana.",
+  "Caramelo: revive a tu compañero inconsciente.": "Candy: revives your fainted companion.", "vida máxima": "max health", "maná máximo": "max mana",
+  "revive a tu compañero inconsciente.": "revives your fainted companion.",
+  "Suelta el tinte encima del objeto que quieres teñir.": "Drop the dye onto the item you want to dye.", "No hay ningún jugador cerca.": "There is no player nearby.",
+  "Has revivido a ": "You revived ", "Has curado a ": "You healed ",
+  "sigue al líder": "follows the leader", "Elige uno para verlo jugar en vivo (solo se mira; su chat interno aparece en la ventana de chat).": "Pick one to watch them play live (view only; their inner chat shows in the chat window).",
+  "Todos los bandos": "All sides", "Siguiendo a su líder": "Following their leader", "Yendo a la cripta": "Heading to the crypt", "En la cripta": "In the crypt", "De expedición": "On an expedition",
+  "Capítulo 1 · Despertar": "Chapter 1 · Awakening", "Capítulo 2 · El pacto": "Chapter 2 · The pact", "Capítulo 3 · Ascensión": "Chapter 3 · Ascension",
+  "Nivel 1 → nivel 50": "Level 1 → level 50", "Pelea cuerpo a cuerpo y comparte tu experiencia.": "Fights in melee and shares your experience.",
+  "¿Seguro? Pulsa de nuevo": "Sure? Press again", "¡Me atacan!": "I'm under attack!",
+  "Res. mágica": "Magic res.", "Nivel medio de objetos": "Average item level", "Más cazados": "Most hunted", "Cripta: más profundo / reyes": "Crypt: deepest / kings", "Con quién habla más": "Who talks the most",
+  "faltan los datos de la cripta": "crypt data is missing", "mapa no disponible (puede estar cargándose)": "map unavailable (it may still be loading)",
+  "Falta la paleta de la cripta": "The crypt palette is missing", "No hay ventana válida en los mapas originales": "No valid window in the original maps",
+  "Sigo sin poder llegar: vuelvo a la ciudad.": "I still can't get there: heading back to town.", "No consigo alcanzar a mi líder: dejo el grupo.": "I can't reach my leader: leaving the party.",
+  "cañón de cristal": "glass cannon", "esa especie no existe en los datos (Orc-Mage no está en NPC.cfg)": "that species does not exist in the data (Orc-Mage is not in NPC.cfg)", "casilla no válida": "invalid slot",
+  "cazar en la granja": "hunt on the farm", "bajar a la cripta": "go down to the crypt",
+  "¡Aguanta, que te remiendo!": "Hang on, I'll patch you up!", "¡Ya voy, ya voy!": "Coming, coming!", "¡Esto me deja sin brillo!": "This drains my glow!",
+  "¡Toda la luz que tengo para ti!": "All the light I have for you!", "¡No te me mueras ahora!": "Don't you die on me now!", "¡Escudo arriba, jefe!": "Shield up, boss!",
+  "Te cubro las espaldas.": "I've got your back.", "¡Que la magia rebote!": "Let the magic bounce back!", "Protección mágica, por si acaso.": "Magic protection, just in case.",
+  "¡A darles con todo!": "Hit them with everything!", "¡Rabia, rabia, rabia!": "Rage, rage, rage!", "Os cuido a todos desde aquí.": "I'll look after you all from here.",
+  "Pegaos a mí, que os protejo.": "Stick close, I'll protect you.", "¡TODO LO QUE TENGO, AHORA!": "EVERYTHING I HAVE, NOW!", "¡Vamos todos juntos!": "All together now!",
+  "¡Levántate, aún no hemos terminado!": "Get up, we're not done yet!", "¡De pie, que yo soy un espíritu y sigo aquí!": "On your feet, I'm a spirit and I'm still here!",
+  "¡Ni se te ocurra quedarte ahí tumbado!": "Don't you dare stay lying there!",
+  "¡Que soy de luz, no me peguen!": "I'm made of light, don't hit me!", "¡Me estoy apagando!": "I'm fading out!", "¡Auxilio, me desvanezco!": "Help, I'm vanishing!",
+  "¡Me atacan! ¡Me atacan!": "I'm being attacked! I'm being attacked!", "Qué tranquilo está esto... demasiado.": "It's so quiet here... too quiet.",
+  "¿Alguien ha oído ese susurro? Me da cosa.": "Did anyone hear that whisper? It creeps me out.", "Me han dicho que los espíritus también tienen sueños.": "I've heard spirits have dreams too.",
+  "Aquí me tienes, listo para lo que sea.": "Here I am, ready for anything.", "¡NOOO! ¡Aguanta, voy!": "NOOO! Hang on, I'm coming!", "¡Jefe! ¡No te vayas!": "Boss! Don't go!",
+  "tu aliado": "your ally", "para invocar a un summon de apoyo necesitas un báculo en la mano": "to summon a support summon you need a staff in hand",
+  "los viajeros no pueden fundar guilds": "travelers cannot found guilds", "nombre no válido (3-20 letras, cifras, espacio, _ o -)": "invalid name (3-20 letters, digits, space, _ or -)",
+  "solo el Guildmaster invita": "only the Guildmaster invites", "el guild está lleno": "the guild is full", "solo el Guildmaster disuelve el guild": "only the Guildmaster disbands the guild",
+  "solo el Guildmaster expulsa": "only the Guildmaster expels", "no es de tu guild": "not in your guild", "solo el Guildmaster elige los colores": "only the Guildmaster picks the colors", "no tienes guild": "you have no guild",
+  "hasta mañana!": "see you tomorrow!", "ya estoy aquí": "I'm here", "qué me he perdido?": "what did I miss?", "me llaman al teléfono": "I'm getting a phone call", "voy a por un café": "going for a coffee",
+  "perdón, ya volví": "sorry, I'm back", "qué calor hace hoy": "it's so hot today", "alguien sabe dónde se consigue buen equipo?": "does anyone know where to get good gear?",
+  "me duele el dedo de tanto clicar": "my finger hurts from all the clicking", "esto de subir de nivel no se acaba nunca": "this leveling never ends", "ayer vi un jefe enorme en la cripta": "yesterday I saw a huge boss in the crypt",
+  "los slimes ya me dan pena": "I feel sorry for the slimes now", "quién se apunta a Promise Land?": "who's up for Promise Land?", "tengo la mochila hecha un lío": "my backpack is a mess",
+  "qué buen día para cazar": "what a great day to hunt", "los orcos pegan fuerte, cuidado": "orcs hit hard, careful",
+  "elige el objeto que quieres teñir": "pick the item you want to dye", "ese tinte no sirve para este objeto": "that dye doesn't work on this item",
+  "Charlando con el guild": "Chatting with the guild", "sin caña": "no fishing rod", "no llego a la orilla": "can't reach the shore",
+  "¡Que arda todo!": "Let it all burn!", "¡Cenizas y gritos!": "Ashes and screams!", "¡El infierno responde!": "Hell answers!", "El invierno ha llegado…": "Winter has come…", "Frío eterno:": "Eternal cold:",
+  "Las sombras obedecen…": "The shadows obey…", "Tu alma es mía.": "Your soul is mine.", "¡Allá voy!": "Here I come!", "¡Toma esto!": "Take this!", "¡Con todo mi poder!": "With all my power!",
+  "Prueba de que has sobrevivido al campo.": "Proof that you survived the field.", "Abre las criptas hasta el rey carmesí.": "Clear the crypts up to the crimson king.",
+  "Corazón Carmesí": "Crimson Heart", "Trofeo del Rey esqueleto carmesí.": "Trophy of the crimson Skeleton King.", "Abre las criptas hasta el nivel 10.": "Clear the crypts up to level 10.",
+  "Corazón Umbrío": "Umbral Heart", "Trofeo del Rey esqueleto umbrío.": "Trophy of the umbral Skeleton King.", "Abre las criptas hasta el nivel 15.": "Clear the crypts up to level 15.",
+  "¡Se acaba la paciencia, los golpes duelen cada vez más!": "Patience runs out, the blows hurt more and more!",
+});
+// plantillas con {datos}: se convierten en patrones
+const TPL = [
+  ["¡Empieza el combate! {a} contra {b}.", "The fight begins! {a} versus {b}."], ["¡Se abre el telón! {a} y {b} se miden.", "The curtain rises! {a} and {b} size each other up."],
+  ["¡Primera sangre para {x}!", "First blood for {x}!"], ["¡{x} golpea primero!", "{x} strikes first!"], ["¡Golpe crítico de {x}!", "Critical hit by {x}!"], ["¡Qué golpe de {x}!", "What a blow by {x}!"],
+  ["¡{x} suelta un Power Strike!", "{x} unleashes a Power Strike!"], ["¡{x} lanza {s}!", "{x} casts {s}!"], ["¡{x} se cubre con Guard!", "{x} covers up with Guard!"], ["¡{x} entra en Frenzy!", "{x} goes into a Frenzy!"],
+  ["¡{x} recupera el aliento!", "{x} catches their breath!"], ["¡{x} está al límite!", "{x} is at the limit!"], ["¡{x} tambalea, le queda muy poca vida!", "{x} staggers, barely any health left!"],
+  ["¡Remontada! {x} le da la vuelta al combate.", "Comeback! {x} turns the fight around."], ["¡{x} gana el combate!", "{x} wins the fight!"], ["¡Victoria de {x}!", "Victory for {x}!"],
+  ["¡Ahí viene un {mn}! ¡Yo no he visto nada!", "Here comes a {mn}! I saw nothing!"], ["Eh... ¿ese {mn} viene hacia aquí?", "Uh... is that {mn} coming this way?"],
+  ["¡{who} está fatal! ¡Aguanta!", "{who} is in bad shape! Hang on!"], ["¡Cuidado con {who}, que no llega!", "Watch out for {who}, they're not going to make it!"],
+  ["¡Un {mn} me persigue! ¡Mamá!", "A {mn} is chasing me! Mommy!"], ["¡Cuidado! ¡{mn} a la vista!", "Careful! {mn} in sight!"],
+];
+for (const [es, en] of TPL) {
+  const re = new RegExp("^" + es.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\{(\w+)\}/g, "(.+)") + "$");
+  const order = [...es.matchAll(/\{(\w+)\}/g)].map(m => m[1]);
+  PATTERNS.push([re, m => en.replace(/\{(\w+)\}/g, (_, k) => m[order.indexOf(k) + 1] ?? "")]);
+}
+
 
 const cache = new Map();
 export function t(s) {

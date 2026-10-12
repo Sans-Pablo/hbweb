@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.75.0 · Traducciones (2026-10-12)
+- Inglés completo de lo que faltaba: chat de bots y aliados, comentarista de la arena, mensajes de guild, misiones, capítulos, observador, panel de estadísticas, descripciones de caramelos y errores de aventura (`i18n.js`, plantillas `TPL` con datos).
+- Nueva herramienta `tools/i18n_audit.mjs` que lista las cadenas sin traducir.
+
 ## 0.74.0 · Cíclopes y rangos (2026-10-12)
 - Los Cíclopes lanzan Fire Ball / Fire Strike a distancia, con maná propio (`npcsys.npcCast`, test `npc-cast`).
 - El nombre de los objetos toma el color de su rango (mágico/raro/único) en tooltip, detalle de la bolsa y casilla (`gui.js`, `hud.js`, `main.js`).

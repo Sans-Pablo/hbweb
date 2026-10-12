@@ -1,13 +1,23 @@
 {
-  "build": {
-    "es": "Versión de pruebas · octubre 2026",
-    "en": "Test build · October 2026"
-  },
+  "build": "0.75.0",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Traducciones (v0.75.0)",
+        "en": "Translations (v0.75.0)"
+      },
+      "items": [
+        {
+          "es": "Más textos traducidos al inglés: chat de bots y aliados, comentarios de la arena, guilds, misiones y observador.",
+          "en": "More text translated to English: bot and ally chat, arena commentary, guilds, quests and observer."
+        }
+      ]
+    },
     {
       "date": "2026-10-12",
       "title": {
