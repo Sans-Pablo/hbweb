@@ -10,6 +10,11 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Jefe del piso 5 más justo (v0.64.2)", "en": "Fairer floor-5 boss (v0.64.2)" },
+      "items": [ { "es": "El jefe de la cripta tiene menos vida y menos esbirros.", "en": "The crypt boss has less health and fewer minions." } ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "El camino del invocador (v0.63.0)", "en": "The summoner's path (v0.63.0)" },
       "items": [
         { "es": "Nuevo sistema de misiones por clase (tecla J): del nivel 1 al 50, subir un compañero, conseguir el báculo del Gold Skeleton e invocar la última evolución. Son difíciles.", "en": "New class quest lines (J key): from level 1 to 50, level a pet, get the Gold Skeleton staff and summon the final evolution. They are hard." },

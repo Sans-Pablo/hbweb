@@ -78,7 +78,7 @@ test("dificultad por nivel y jefes cada 5 niveles", () => {
   const e = level => generateLevel(levelSeed(1, level), level).spawns.find(s => !s.boss).scale;
   assert.ok(e(10).hp > e(1).hp * 2 && e(10).dmg > e(1).dmg && e(20).exp > e(10).exp);
   const b = generateLevel(levelSeed(1, 5), 5).spawns.find(s => s.boss);
-  assert.equal(b.boss, 1); assert.ok(b.scale.hp > 3.5 * e(5).hp);
+  assert.equal(b.boss, 1); assert.ok(b.scale.hp > 2.5 * e(5).hp);
   assert.deepEqual([5, 10, 15, 20].map(l => generateLevel(levelSeed(1, l), l).spawns.find(s => s.boss).boss), [1, 2, 3, 4]);
 });
 

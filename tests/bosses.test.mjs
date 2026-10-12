@@ -41,7 +41,7 @@ const auxOf = (w, boss, f) => [...w.ents.values()].filter(e => e.owner === boss.
   assert.ok(sget(w, p, "hold"), "el rugido aturde al 50 %");
   assert.ok(B.speedFactor(boss) < 0.8, "con la mitad de vida ataca más rápido");
   const bones = auxOf(w, boss, "heals"); assert.equal(bones.length, 6, "3 huesos por cada 20 % perdido (80 % y 60 %)");
-  assert.ok(bones.every(e => w.killNpc && e.maxHp < boss.maxHp / 10));
+  assert.ok(bones.every(e => w.killNpc && e.maxHp < boss.maxHp / 6));
   const hp0 = boss.hp; w.killNpc(bones[0], null); assert.ok(boss.hp > hp0, "un hueso muerto cura al jefe");
   tick(15000);
   assert.ok(zonesOf(w, "ember").length > 0 || zonesOf(w, "warn").length > 0, "brasas bajo el jugador");
@@ -73,7 +73,7 @@ const auxOf = (w, boss, f) => [...w.ents.values()].filter(e => e.owner === boss.
   boss.hp = Math.floor(boss.maxHp * 0.79); tick(100);
   const cr = auxOf(w, boss, "crystal"); assert.equal(cr.length, 3, "3 cristales al 80 %");
   assert.ok(boss.shield && B.mitigate(w, boss, 500, p) === 0, "escudo: inmune");
-  assert.ok(cr.every(c => c.maxHp < boss.maxHp / 20));
+  assert.ok(cr.every(c => c.maxHp < boss.maxHp / 12));
   for (const c of cr.slice(0, 2)) w.killNpc(c, null);
   assert.ok(boss.shield, "con un cristal vivo sigue el escudo");
   w.killNpc(cr[2], null);

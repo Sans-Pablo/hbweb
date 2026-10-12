@@ -2,6 +2,10 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.64.2 · Jefe del piso 5 más justo (2026-10-12)
+- Jefes de cripta: vida ×(2+tier) en vez de ×(3+tier) y 4 esbirros en vez de 6. Los bots morían una y otra vez en el piso 5 (hasta 9 muertes). Medido: 4–7 de 12 pasan del Rey carmesí en 480 min (antes 2–4).
+- Bots: el cálculo para bajar al jefe usa la vida máxima (tras curarse), no la actual.
+
 ## 0.64.1 · Recall sin cancelarse (2026-10-12)
 - Los bots no relanzan Recall mientras el canal está abierto (el segundo comando lo cancelaba).
 

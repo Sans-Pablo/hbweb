@@ -179,7 +179,7 @@ export function errands(w, p, b, first = false) {
 // compañeros cercanos) y no con el nivel a secas: un nivel 50 sin arma no le hace cosquillas. Es el «cálculo» que haría un jugador mirando su equipo.
 const avgOf = r => (r[0] + r[1]) / 2;
 export const dpsOf = q => avgOf(damageRange(q)) * 0.6;
-export function fightEstimate(w, p, e, solo = false) {                       // solo: sin contar a los jugadores de al lado (antes de bajar a la cripta se va sin ellos)
+export function fightEstimate(w, p, e, solo = false, full = false) {                       // solo: sin contar a los jugadores de al lado (antes de bajar a la cripta se va sin ellos)
   let ally = 0, n = 0;
   for (const q of w.ents.values()) {
     if (!solo && q !== p && q.kind === "player" && !q.dead && q.side === p.side && dist(p, q) <= 14) { ally += dpsOf(q); n++; }
@@ -188,14 +188,14 @@ export function fightEstimate(w, p, e, solo = false) {                       // 
   const foeHit = (e.cfg.attackDiceThrow || 1) * ((e.cfg.attackDiceRange || 1) + 1) / 2 * (e.dmgMul || 1) * 0.65, foeDps = foeHit * 0.8 / Math.max(0.9, (e.cfg.actionTime || 1500) / 1000);
   const ttk = e.hp / Math.max(0.5, dpsOf(p) + ally), taken = foeDps * ttk / (1 + n * 0.7);
   const red = w.data.named("RedPotion"), pots = red ? p.bag.reduce((a, i) => a + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
-  const budget = p.hp + pots * Math.min(80, p.maxHp * 0.4);
+  const budget = (full ? p.maxHp : p.hp) + pots * Math.min(80, p.maxHp * 0.4);
   return { ttk, taken, budget, ratio: budget / Math.max(1, taken), allies: n };
 }
 // el jefe que habrá en el piso `level` de la cripta (misma escala que dungeon.js), para decidir ANTES de bajar
 export function bossPreview(w, level) {
   const cfg = w.npcDb.Skeleton; if (!cfg || level % 5) return null;
   const tier = Math.min(4, level / 5), sc = { hp: 1 + .18 * (level - 1), dmg: 1 + .06 * (level - 1) };
-  return { cfg, hp: Math.round(cfg.hitDice * 5.75 * sc.hp * (3 + tier)), dmgMul: sc.dmg * (1 + .15 * tier) };
+  return { cfg, hp: Math.round(cfg.hitDice * 5.75 * sc.hp * (2 + tier)), dmgMul: sc.dmg * (1 + .15 * tier) };
 }
 export const fightOk = (w, p, e) => fightEstimate(w, p, e).ratio >= 1.3;
 export const tooStrong = (w, p, e) => {

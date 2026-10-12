@@ -690,7 +690,7 @@ function delve(adv, w, p, r, home) {
   r._delveAt = w.time + 1500;
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
   if (w.cleared) {
-    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
+    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb, false, true).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
     const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
     if (!exit) return;
     if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
