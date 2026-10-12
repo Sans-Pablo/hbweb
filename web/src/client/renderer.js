@@ -739,9 +739,10 @@ export class Renderer {
     if (hovered || e.arena || e.comp || e.stall) {
       overlays.push(() => {
         const name = e.stall ? "Puesto de " + e.stall.owner : e.crop ? (CROP_NAMES[e.crop] || "Crop") : (e.special && remaster ? "★ " : "") + ((e.comp || e.arena) ? (e.nick || e.name) + (e.clvl ? " Lv " + e.clvl : "") : e.crystal ? "Cristal de hielo" : e.ghost ? "Fantasma skeleton" : e.boss ? BOSS_NAMES[e.boss] : e.name);
-        const owner = e.comp && e.master != null ? s.world.ents.get(e.master)?.name : null;
-        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + (e.dcls ? " · " + DUMMY_NAMES[e.dcls] : "") + ")", e.dcls ? hexRgb(DUMMY_COLORS[e.dcls]) : "30,255,30"] : e.stall ? ["(" + e.stall.title + ")", "255,220,120"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
-        this.origName(x, y, [[name, e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
+        const ownerE = e.comp && e.master != null ? s.world.ents.get(e.master) : null, owner = ownerE?.name || null;
+        const mineSide = s.me?.side || 0, foeSummon = !!ownerE && ownerE.id !== s.pid && (ownerE.arena || ownerE.pk > 0 || (mineSide > 0 && ownerE.side > 0 && ownerE.side !== mineSide));   // summon de un enemigo: nombre en rojo (_iGetFOE)
+        const side = e.crop ? ["(Crop)", "30,255,30"] : e.comp ? ["(" + (owner || "Friendly") + (e.dcls ? " · " + DUMMY_NAMES[e.dcls] : "") + ")", e.dcls ? hexRgb(DUMMY_COLORS[e.dcls]) : foeSummon ? "255,0,0" : "30,255,30"] : e.stall ? ["(" + e.stall.title + ")", "255,220,120"] : e.kind === "citizen" ? ["(Friendly)", "30,255,30"] : ["(Enemy)", "255,0,0"];          // el compañero muestra el nombre de su dueño          // DRAW_OBJECT_NAME89 / 90
+        this.origName(x, y, [[name, foeSummon ? "255,60,60" : e.special && remaster ? AURA[e.special] : "255,255,255"], side]);
       });
     }
   }

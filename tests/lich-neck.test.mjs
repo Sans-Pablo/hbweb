@@ -1,0 +1,28 @@
+// Collar del Lich (648): ahorra maná del summon, no del personaje; los demás collares de MS siguen ahorrando el del personaje.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { World } from "../web/src/shared/world.js";
+import { GameData } from "../web/src/shared/data.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { newInst } from "../web/src/shared/systems/itemsys.js";
+import * as Inv from "../web/src/shared/inventory.js";
+import * as Tal from "../web/src/shared/systems/talents.js";
+const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
+const npcDb = J("npc.json");
+const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
+let seed = 5; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
+const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
+const id = w.addPlayer("Nigromante", null, { gender: 1, stats: { str: 10, vit: 20, dex: 10, int: 30, mag: 30, chr: 10 } });
+const p = w.ents.get(id); p.level = 40; w.recalc(p);
+const wear = nm => { const d = [...data.items.values()].find(x => x.name === nm); const i = newInst(w, d.id); Inv.addToBag(p, data, i); const r = Inv.equip(p, data, i.uid); assert.ok(r.ok, r.why); w.recalc(p); };
+wear("NecklaceOfLiche");
+assert.equal(p.eff.summonSave, 15, "el collar ahorra maná del summon");
+assert.equal(p.eff.manaSave, 0, "y no el del personaje");
+const pet = { master: p.id, mp: 100 };
+assert.equal(Tal.saved(w, pet, 20), 17, "20 de maná cuestan 17 con el 15 %");
+assert.equal(Tal.saved(w, { master: null }, 20), 20, "sin dueño no hay ahorro");
+assert.equal(Tal.saved(w, { master: p.id }, 1), 1, "nunca baja de 1");
+wear("MagicNecklace(MS10)");
+assert.equal(p.eff.manaSave, 10, "el collar de MS normal sigue ahorrando el del personaje");
+console.log("OK lich-neck");

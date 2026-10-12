@@ -12,6 +12,7 @@ import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
 import * as Council from "./council.js";
 import * as Human from "./human.js";
 import * as Builds from "./builds.js";
+import * as ObsStats from "./obsstats.js";
 import * as Respec from "./respec.js";
 import { canFight } from "./combatsys.js";
 import * as Comp from "./companion.js";
@@ -226,7 +227,7 @@ export function splitSay(text, max = 108) {
     out.push(s.slice(0, cut).trim()); s = s.slice(cut).trim();
   }
   if (s) out.push(s);
-  return out.slice(0, 4);
+  return out.slice(0, 10);
 }
 // Dice un texto (con prefijo de canal opcional) en uno o varios mensajes seguidos, con una pausa de «tecleo» entre ellos.
 function sayLong(adv, p, pre, text, typo = true) {
@@ -274,7 +275,8 @@ export function brainOf(adv, p) {
   const ilv = avgIlvl(w, p);
   const gd = p.guild ? adv.guildReg?.guilds?.get(p.guild.name) : null;
   const team = lead ? lead : members(adv, p) > 0 ? p : null;
-  const mates = team ? [team, ...[...adv.bots.values()].filter(x => x !== team && x.bot?.owner === team.id)] : [];
+  const pn = p.party?.names || [];                                                 // party formal: sus miembros que sean bots (más uno mismo)
+  const mates = pn.length > 1 ? [p, ...[...adv.bots.values()].filter(x => x !== p && pn.includes(x.name))] : team ? [team, ...[...adv.bots.values()].filter(x => x !== team && x.bot?.owner === team.id)] : [];
   const qs = line.map((q, i) => ({ id: q.id, es: q.es || q.name || q.id, en: q.en || q.name || q.id, st: i < qn ? 2 : i === qn ? 1 : 0 }));
   return {
     id: p.id, name: p.name, side: p.side, mode, lv: p.level, hp: p.hp, mhp: p.maxHp, mp: p.mp, mmp: p.maxMp, gold: p.gold, pots, map: w.map.id, floor: w.map.kind === "dungeon" ? w.map.level : 0, cls: p.quests?.cls || "",
@@ -284,7 +286,8 @@ export function brainOf(adv, p) {
     target: tgt ? { n: tgt.name || tgt.type || "?", hp: Math.round(100 * tgt.hp / Math.max(1, tgt.maxHp)), d: Math.round(dist(p, tgt)) } : null,
     delve: d ? { until: Math.max(0, Math.round((d.until - w.time) / 1000)), floor: d.lv | 0 } : null,
     team: lead ? { lead: lead.name, n: members(adv, lead) + 1 } : members(adv, p) > 0 ? { lead: p.name, n: members(adv, p) + 1 } : null,
-    mates: mates.map(x => ({ id: x.id, n: x.name, lv: x.level, hp: Math.round(100 * x.hp / Math.max(1, x.maxHp)), lead: x === team })),
+    mates: mates.map(x => ({ id: x.id, n: x.name, lv: x.level, hp: Math.round(100 * x.hp / Math.max(1, x.maxHp)), lead: x === (pn.length > 1 ? p : team), map: adv.worldFor(x.id)?.map?.name || "" })),
+    party: pn.length > 1 ? pn : null,
     skill: skv, near,
     wish: b.wish || "",
     log: (b.log || []).slice(-14),
@@ -617,8 +620,14 @@ function qaTick(adv, w, p, r) {
     r._pt = w.time;
     b.path = null; b.goal = null; b.wander = null; b.target = null; b.fails = 0; b.ignore?.clear?.();          // se desatasca solo: olvida camino y objetivo y, a la segunda vez seguida, usa Recall (vuelve a la ciudad)
     if ((r._stuckN = (r._stuckN | 0) + 1) >= 2 && !p.recallTok) { r._stuckN = 0; blog(w, p, "Sigo atascado: uso Recall."); adv.command(p.id, { t: "recall" }); } else b.hold = w.time + 500;
+    b.stuck = { why: "sin progreso", since: w.time - 40000 };
     report(adv, p, "bug", "stuck:" + (w.map.id || "") + ":" + (p.x >> 3) + "," + (p.y >> 3), `Me quedo parado/atascado cerca de (${p.x},${p.y}) en ${w.map.name || w.map.id}.`, `I'm stuck near (${p.x},${p.y}) in ${w.map.name || w.map.id}.`);
   }
+  if (b.stuck && w.time - b.stuck.since > 30000) {                                      // detector de bloqueos (v0.77.0): munición, acción cancelada o sin progreso; queda en el informe y en `b.stuck`
+    report(adv, p, "bug", "stuck-" + b.stuck.why, `Estoy bloqueado (${b.stuck.why}) desde hace ${Math.round((w.time - b.stuck.since) / 1000)} s en ${w.map.name || w.map.id}.`, `I'm blocked (${b.stuck.why}) for ${Math.round((w.time - b.stuck.since) / 1000)} s in ${w.map.name || w.map.id}.`);
+    ObsStats.ask(adv, p, "stuck-" + b.stuck.why, "Bots bloqueados (" + b.stuck.why + "): revisar.", "Blocked bots (" + b.stuck.why + "): needs a look.");
+    b.stuck = null;
+  } else if (b.stuck && w.time - b.stuck.since > 90000) b.stuck = null;
   if (p.weight > p.maxLoad * 0.92) report(adv, p, "comfort", "weight", `Voy casi al límite de peso (${p.weight}/${p.maxLoad}) y no lo he visto avisar.`, `I'm near the weight limit (${p.weight}/${p.maxLoad}) and nothing warned me.`);
   { const pb = p.bag.find(i => i.comp);                                                    // le pone un nombre propio a su summon (una vez): más cariño
     if (pb && !r.petNamed) { r.petNamed = 1; const PETN = ["Bruno", "Luna", "Kiko", "Sombra", "Nube", "Rayo", "Chispa", "Toby", "Mochi", "Fénix", "Copo", "Ámbar", "Trufa", "Thor", "Milo", "Nala", "Bola", "Pipo"]; if (Comp.rename(w, p, PETN[Math.floor(w.rng() * PETN.length)])) { blog(w, p, `Le pongo nombre a mi summon: ${pb.comp.nm}.`); remember(p, "Bauticé a mi summon " + pb.comp.nm + ".", "I named my summon " + pb.comp.nm + "."); } } }
@@ -763,12 +772,15 @@ function cryptRecall(adv, w, p, r, es) {
   const b = p.bot;
   if (p.recallTok) { b.hold = w.time + 1500; return; }
   if (w.time - (r._rc || 0) <= 8000 || w.time < (p.recallCd || 0)) return;
-  r._rc = w.time; blog(w, p, es); b.hold = w.time + 3500; b.target = null; b.travel = null; b.path = null;
+  const hit = w.time - (p.lastCombat || -1e9) < 2500;                                  // v0.77.0: con un monstruo encima el canal se rompe: primero se defiende (no se queda quieto), y reintenta
+  r._rc = w.time; blog(w, p, es); if (!hit) { b.hold = w.time + 3500; b.target = null; b.travel = null; b.path = null; }
+  r._rcN = (r._rcN | 0) + 1; if (r._rcN >= 4) { r._rcN = 0; report(adv, p, "bug", "crypt-exit", "Me cuesta salir de la cripta: el Recall se me interrumpe " + 4 + " veces seguidas.", "I struggle to leave the crypt: Recall gets interrupted 4 times in a row."); }
   adv.command(p.id, { t: "recall" });
 }
 function delve(adv, w, p, r, home) {
   const b = p.bot, d = r._delve;
   if (w === home) {
+    r._rcN = 0;
     if (!d.go) { r._delve = null; r._tripAt = w.time + 120000; return; }
     if (w.time > d.goUntil || d.tries > 6) { r._delve = null; r._tripAt = w.time + 150000; blog(w, p, "No consigo entrar en la cripta: cancelo la bajada."); report(adv, p, "bug", "cryptentry", "No consigo entrar en la cripta desde mi granja.", "I can't get into the crypt from my farm."); return; }
     if (dist(p, { x: d.spot[0], y: d.spot[1] }) > 2 && !b.travel && !p.dead) { b.travel = { x: d.spot[0], y: d.spot[1], w, until: w.time + 60000 }; b.path = null; b.goal = null; b.fails = 0; }
@@ -884,7 +896,8 @@ function pets(adv, w, p, r, home) {
   }
   // ---- mantenimiento (en cualquier mapa menos Promise Land y la cripta)
   if (ball) {
-    if ((!c.on || !live) && !c.down && !w.fightZone && w.time - (r._petUseAt || 0) > 12000) {          // invoca a su summon (también si la bola dice «fuera» y no hay summon: tras morir o viajar)
+    if (live && (b.rest || p.recallTok) && w.time - (r._petUseAt || 0) > 12000) { r._petUseAt = w.time; adv.command(p.id, { t: "use", uid: ball.uid }); blog(w, p, "Guardo a mi summon para descansar/viajar."); }
+    else if ((!c.on || !live) && !c.down && !w.fightZone && !b.rest && !p.recallTok && p.mp >= Math.min(20, p.maxMp * 0.2) && w.time - (r._petUseAt || 0) > 12000) {          // invoca a su summon (también si la bola dice «fuera» y no hay summon: tras morir o viajar)
       if (c.on && !live && (r.deaths | 0) > (r._petDeaths | 0)) { r._petDeaths = r.deaths | 0; report(adv, p, "bug", "pet-after-death", `Tras morir y reaparecer mi summon ${c.nm} no vuelve solo: la bola sigue «fuera» pero no hay summon hasta que la uso otra vez.`, `After dying and respawning my summon ${c.nm} doesn't come back by itself: the ball still says «out» but there is no summon until I use it again.`); }
       r._petUseAt = w.time; adv.command(p.id, { t: "use", uid: ball.uid });
       if ((r._petUseFails = (r._petUseFails | 0) + 1) >= 3 && !live) { c.bad = true; r._petUseFails = 0; r.petN = (r.petN | 0) + 1; report(adv, p, "bug", "summon:" + c.sp, `No consigo invocar a mi summon de especie ${c.sp} (la bola no lo saca nunca).`, `I can't summon my ${c.sp} companion (the ball never produces it).`); blog(w, p, `Mi summon ${c.sp} no se deja invocar: lo dejo y probaré otra especie.`); }
@@ -960,7 +973,17 @@ function rebuild(adv, w, p, r, home) {
   if (!r._reb) {
     if (w !== home || p.level < 12 || r._trip || r._delve || r._pet || b.owner != null || b.rest || b.travel || p.hp < p.maxHp * 0.7 || w.time < (r._rebAt ||= w.time + 600000 + Math.floor(w.rng() * 600000))) return;
     r._rebAt = w.time + 900000 + Math.floor(w.rng() * 600000);
-    if (p.gold < Respec.respecCost(p) + 300 || w.time - r.bperf.t0 < 15 * 60000) return;                          // sin oro o sin haber probado el actual lo bastante
+    const sig = Builds.itemSig(p), fit = Builds.fitByItems(p), forced = !r.forcedDone || (r.sig && r.sig !== sig && fit.build !== Builds.buildOf(p));      // v0.77.0: un reinicio obligatorio por bot y otro si cambia el ítem clave
+    r.sig ||= sig;
+    if (p.gold < Respec.respecCost(p) + 300 || (!forced && w.time - r.bperf.t0 < 15 * 60000) || (forced && !Builds.canRespecToday(r, w))) return;       // sin oro, sin probar lo bastante o tope diario
+    if (forced) {
+      const tp0 = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
+      if (!tp0) return;
+      r._reb = { until: w.time + 300000, nb: fit.build, arch: fit.arch, forced: true, done: false, tp: { x: tp0.x, y: tp0.y } };
+      blog(w, p, `Reviso mi equipo (${sig === "bow" ? "arco" : sig === "staff" ? "báculo" : "cuerpo a cuerpo"}) y mi clase: voy al mago a reiniciar mis estadísticas y repartirlas como «${Builds.BUILDS[fit.build].es}».`);
+      ObsStats.ask(adv, p, "forced-respec", "Reinicio de estadísticas obligatorio: sería útil poder cambiar de clase sin pasar por el mago.", "Mandatory stat reset: it would help to change class without going to the mage.");
+      return;
+    }
     const hist = r.builds || [], best = Math.max(0, ...hist.map(h => h.rate)), now = Builds.perf(p, w), poor = best > 0 && now < best * 0.85, curious = hist.length < 4 && w.rng() < 0.3;
     if (!poor && !curious) return;
     const peer = w.rng() < 0.7 ? Builds.peerBest(p, [...w.ents.values()].filter(e => e.kind === "player" && e.res)) : null;
@@ -986,7 +1009,7 @@ function rebuild(adv, w, p, r, home) {
     d.cmdAt = w.time;
     { const old = Builds.buildOf(p); Builds.closeBuild(p, w); const e = (p.res.builds || []).find(x => x.name === old), top = Math.max(0, ...(p.res.builds || []).map(x => x.rate)); if (e && e.rate > 0 && e.rate >= top && p.guild && w.rng() < 0.7) { blog(w, p, `Recomiendo el reparto «${Builds.BUILDS[old].es}»: me dio ${e.rate} exp/min.`); gsay(adv, p, `recommend your stat build «${Builds.BUILDS[old].es}» (it gave you ${e.rate} exp/min) to your guildmates`); } }
     if (adv.command(p.id, { t: "statreset" })) {
-      d.done = true; p.res.build = d.nb; r.bperf = { name: d.nb, t0: w.time, exp0: p.exp }; b.errand = 0;
+      d.done = true; p.res.build = d.nb; if (d.forced) { r.forcedDone = true; r.sig = Builds.itemSig(p); r.rsN = (r.rsN | 0) + 1; if (d.arch && d.arch !== p.res.arch) { blog(w, p, `Cambio de clase: de ${p.res.arch} a ${d.arch} según mis ítems.`); p.res.arch = d.arch; } } r.bperf = { name: d.nb, t0: w.time, exp0: p.exp }; b.errand = 0;
       blog(w, p, `Reinicié mis estadísticas y las reparto como «${Builds.BUILDS[d.nb].es}».`);
       remember(p, "Reinicié mis estadísticas para probar un reparto «" + Builds.BUILDS[d.nb].es + "».", "I reset my stats to try a different build: " + d.nb + ".");
       for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });

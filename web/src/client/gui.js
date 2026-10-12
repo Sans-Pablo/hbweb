@@ -453,7 +453,7 @@ export class Gui {
       if (m) {
         bar(10, y + 14, 96, 8, m.dead ? 0 : m.hp, m.maxHp, hpCol); this.text(112, y + 11, m.dead ? "dead" : m.hp + "/" + m.maxHp, "#e8e8d0", { shadow: true, size: 10 });
         if (m.maxMp) { bar(10, y + 25, 96, 5, m.mp, m.maxMp, mpCol); this.text(112, y + 23, Math.floor(m.mp) + "/" + m.maxMp, "#9fc2ff", { shadow: true, size: 9 }); }
-      } else this.text(10, y + 14, "(otro mapa)", "#8a8a8a", { shadow: true, size: 10 });
+      } else this.text(10, y + 14, me.party.maps?.[me.party.names.indexOf(name)] || "?", "#8a8a8a", { shadow: true, size: 10 });         // nombre del mapa donde está
       y += m && m.maxMp ? 38 : 28;
       const pet = m && ents.find(e => e.comp && e.master === m.id && !e.dead);
       if (pet) {

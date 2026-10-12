@@ -133,7 +133,7 @@ export function brainHtml(b, tab, open = true) {
     h += sec(L("Con quién habla más", "Talks most with")) + ((b.talkN || []).length ? b.talkN.map(([n, v]) => kv(esc(n), v)).join("") : "—");
     h += sec(L("Memoria de conversaciones", "Conversation memory")) + ((b.talk || []).length ? b.talk.slice().reverse().map(t => `<div style="opacity:.92"><span style="color:#998">${t.ch === "g" ? "⚑" : "💬"}</span> <b style="color:${t.me ? "#ffd76a" : "#9cf"}">${esc(t.who)}</b>: ${esc(t.text)}</div>`).join("") : "—");
   } else {
-    h += sec(L("Grupo", "Party")) + (b.mates.length ? b.mates.map(m => `<div><a data-a="go" data-id="${m.id}" style="cursor:pointer;color:${m.id === b.id ? "#ffd76a" : "#9cf"}">${m.lead ? "👑 " : ""}${esc(m.n)}</a> ${L("Nv", "Lv")}${m.lv} ${P(m.hp, 100, "#c33", 40)}</div>`).join("") : `<div>${L("En solitario", "Solo")}</div>`);
+    h += sec(L("Grupo", "Party")) + (b.mates.length ? b.mates.map(m => `<div><a data-a="go" data-id="${m.id}" style="cursor:pointer;color:${m.id === b.id ? "#ffd76a" : "#9cf"}">${m.lead ? "👑 " : ""}${esc(m.n)}</a> ${L("Nv", "Lv")}${m.lv} ${P(m.hp, 100, "#c33", 40)} <span style="color:#998">${esc(m.map || "")}</span></div>`).join("") : `<div>${L("En solitario", "Solo")}</div>`);
     h += sec("Guild") + (b.guild ? `<div>⚑ <b>${esc(b.guild.name)}</b> · ${b.guild.rank === 0 ? "Guildmaster" : "Guildsman"}</div>` + kv(L("Líder", "Master"), esc(b.guild.master)) + kv(L("Miembros", "Members"), b.guild.n) : "<div>—</div>");
     h += sec(L("Amistades", "Relationships")) + (b.rel.length ? b.rel.map(([n, v]) => kv(esc(n), v)).join("") : "—");
   }

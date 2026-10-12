@@ -22,4 +22,7 @@ for (const p of a.residents()) {
   assert.ok(Array.isArray(b.quests) && b.quests.every(q => [0, 1, 2].includes(q.st)) && Array.isArray(b.mates) && Array.isArray(b.equip) && Array.isArray(b.skills) && Array.isArray(b.rel));
   assert.ok(b.st && typeof b.ilvl === "number" && b.exp >= 0 && b.exp <= 100 && b.qa && b.qa.pvp && b.qa.pet && "guild" in b && "delveInfo" in b);
 }
+// party formal: los miembros (bots) salen en la ficha, con el nombre de su mapa
+{ const [x, y] = a.residents(); x.party = y.party = { id: 9, names: [x.name, y.name], lvls: [x.level, y.level], maps: ["", ""] };
+  const b = brainOf(a, x); assert.deepEqual(b.mates.map(m => m.n).sort(), [x.name, y.name].sort(), "party formal en mates"); assert.ok(b.mates.every(m => typeof m.map === "string" && m.map)); assert.equal(b.party.length, 2); }
 console.log("OK bot-brain");

@@ -150,7 +150,7 @@ export function think(w, n, m, c) {
   // MASS (60 s de recarga, a todo el grupo del mapa; cuesta el triple del hechizo base)
   if (w.time >= (n.cd.mass || 0)) {
     if (c.cls === "healer" && rank(c, "dmassh") && mem.filter(e => frac(e) < 0.6).length >= 2 && n.mp >= Tal.manaOf(w, 21) * 3) {
-      n.mp -= Tal.manaOf(w, 21) * 2; n.cd.mass = w.time + MASS_CD; n.castAt = w.time;
+      n.mp -= Tal.saved(w, n, Tal.manaOf(w, 21) * 2); n.cd.mass = w.time + MASS_CD; n.castAt = w.time;
       talk(w, n, "mass", "MASS Great Heal", {}, true);
       for (const e of mem) { doHeal(w, n, c, 21, e, Math.max(1, rank(c, "dgheal")), 1.2, m); Tal.emitCast(w, n, 21, e.x, e.y); }
       w.emit({ t: "dummy-mass", id: m.id, cls: c.cls });

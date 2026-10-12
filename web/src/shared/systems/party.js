@@ -28,8 +28,15 @@ function note(reg, id, ev) { const [w] = byId(reg, id); if (w) w.emit({ ...ev, i
 const fail = (reg, id) => note(reg, id, { t: "party", k: 7, ok: 0 });
 
 function sync(reg, party) {
-  const es = party.members.map(id => byId(reg, id)[1]).filter(Boolean), names = es.map(e => e.name), lvls = es.map(e => e.level | 0);
-  for (const e of es) e.party = { id: party.id, names, lvls };
+  const at = party.members.map(id => byId(reg, id)).filter(x => x[1]), es = at.map(x => x[1]), names = es.map(e => e.name), lvls = es.map(e => e.level | 0);
+  const maps = at.map(x => x[0]?.map?.name || "");                         // mapa de cada miembro (el visor de grupo lo muestra cuando no está contigo)
+  for (const e of es) e.party = { id: party.id, names, lvls, maps };
+}
+// refresca lo que ven los miembros (niveles y mapas) tras un cambio de mapa
+export function refresh(w, p) {
+  if (!p.party) return;
+  const reg = regOf(w), pt = reg.parties.get(p.party.id);
+  if (pt) sync(reg, pt);
 }
 
 // JOINPARTY v1=1: p pide formar grupo con el jugador `name`

@@ -117,12 +117,17 @@ export const spellsOf = c => TALENTS.filter(t => t.spell != null && rankOf(c, t.
 
 // ------------------------------------------------------------------ lanzamiento (IA del compañero)
 export const manaOf = (w, id) => (w.magic?.[id]?.mana ?? 20);
+// Maná que paga el summon: el Collar del Lich de su dueño (eff.summonSave) lo reduce
+export function saved(w, n, cost) {
+  const o = n.master != null ? w.ents.get(n.master) : null, s = o?.eff?.summonSave || 0;
+  return s > 0 ? Math.max(1, Math.floor(cost - cost * s / 100)) : cost;
+}
 export function emitCast(w, n, id, x, y) {
   const sp = w.magic?.[id];
   w.emit({ t: "spell", id: n.id, spell: id, x, y, attr: sp?.attr, type: sp?.type });
 }
 export function pay(w, n, id, cd) {
-  n.mp -= manaOf(w, id);
+  n.mp -= saved(w, n, manaOf(w, id));
   n.cd = n.cd || {}; n.cd[id] = w.time + cd;
   n.castAt = w.time;
 }

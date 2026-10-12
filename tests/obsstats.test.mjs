@@ -1,0 +1,22 @@
+// Estadísticas del observador (0.77.0): globales, peticiones de los bots y top de summons.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { Adventure } from "../web/src/shared/adventure.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { GameData } from "../web/src/shared/data.js";
+import { setDungeonPalette, seededRandom } from "../web/src/shared/dungeon.js";
+import * as ObsStats from "../web/src/shared/systems/obsstats.js";
+const dir = new URL("../web/data/", import.meta.url), json = n => JSON.parse(readFileSync(new URL(n, dir)));
+const meta = json("map.json"), npcDb = json("npc.json");
+const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
+setDungeonPalette(json("dungeon_palette.json"));
+const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: json("arefarm.spawns.json"), maps: {}, rng: seededRandom(3) });
+for (const n of ["Aldric", "Cora", "Brann"]) a.spawnResident(n);
+for (let i = 0; i < 600; i++) a.tick(50);
+const [x, y] = a.residents();
+ObsStats.ask(a, x, "k", "falta algo", "missing"); ObsStats.ask(a, y, "k", "falta algo", "missing"); ObsStats.ask(a, x, "j", "otra", "other");
+const r = ObsStats.requests(a); assert.equal(r[0].key, "k"); assert.equal(r[0].n, 2); assert.deepEqual(r[0].who.sort(), [x.name, y.name].sort());
+const g = ObsStats.globals(a); assert.equal(g.bots, 3); assert.ok(g.avgLv >= 1 && typeof g.stuck === "number");
+assert.ok(Array.isArray(ObsStats.summons(a)));
+JSON.stringify({ g, r, s: ObsStats.summons(a) });
+console.log("OK obsstats");

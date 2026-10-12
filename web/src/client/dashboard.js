@@ -152,14 +152,72 @@ function splitters() {
   for (const el of [$("vs"), $("hs"), $("vs2")]) el.ondblclick = () => { const v = el.id === "vs" ? "--c1" : el.id === "hs" ? "--r1" : "--b1"; root.style.removeProperty(v); delete sv[v]; try { localStorage.setItem(K, JSON.stringify(sv)); } catch {} };
 }
 
+// ---- cuadrante 5: estadísticas globales y peticiones de los bots (testers) ----
+let st = { global: {}, requests: [], summons: [] }, selSum = 0;
+const kv = o => Object.entries(o || {}).sort((a, c) => c[1] - a[1]);
+function globInit() { $("glob").innerHTML = `<h3><b>🌐 ${L("Global y peticiones", "Global & requests")}</b></h3><div class="body"></div>`; }
+function paintGlob() {
+  const body = $("glob").querySelector(".body"), g = st.global || {}, top = body.scrollTop, mn = m => (MODES[m]?.[getLang() === "en" ? 1 : 0] || m);
+  let s = `<div class="fx"><span>${L("Habitantes", "Residents")}</span><span>${g.bots ?? 0} (${L("muertos", "dead")} ${g.dead ?? 0})</span><span>${L("Nivel medio / máx.", "Avg / max level")}</span><span>${g.avgLv ?? 0} / ${g.maxLv ?? 0}</span><span>${L("Oro total", "Total gold")}</span><span>${g.gold ?? 0}</span><span>${L("Bajas / enemy kills", "Kills / enemy kills")}</span><span>${g.kills ?? 0} / ${g.ek ?? 0}</span><span>${L("Parties", "Parties")}</span><span>${g.parties ?? 0}</span><span>Summons</span><span>${g.summons ?? 0}</span><span>${L("Atascados", "Stuck")}</span><span>${g.stuck ?? 0}</span></div>`;
+  s += `<div class="sec">${L("Clases (misiones)", "Classes (quests)")}</div>` + bars(kv(g.cls), "#c9a24a");
+  s += `<div class="sec">${L("Arquetipos", "Archetypes")}</div>` + bars(kv(g.arch), "#a6c");
+  s += `<div class="sec">${L("Qué prefieren hacer (deseos)", "What they prefer (wishes)")}</div>` + bars(kv(g.wish).slice(0, 8), "#6a9");
+  s += `<div class="sec">${L("Peticiones de los testers (bots)", "Tester requests (bots)")}</div>`;
+  s += st.requests.length ? st.requests.map(r => `<div style="margin:3px 0"><b style="color:#ffd76a">×${r.n}</b> ${esc(getLang() === "en" ? r.en : r.es)} <span style="color:#998">— ${esc(r.who.slice(0, 5).join(", "))}${r.who.length > 5 ? "…" : ""}</span></div>`).join("") : `<span style="color:#998">${L("Sin peticiones todavía", "No requests yet")}</span>`;
+  body.innerHTML = s; body.scrollTop = top;
+}
+
+// ---- cuadrante 6: top de summons y ficha ----
+function summInit() {
+  const e = $("summ"); e.innerHTML = `<h3><b>🐾 Top summons</b><span class="cnt"></span></h3><div class="body"></div>`;
+  e.onclick = ev => { const r = ev.target.closest("[data-sid]"); if (r) { selSum = +r.dataset.sid; paintSumm(); } const o = ev.target.closest("[data-oid]"); if (o) show(+o.dataset.oid); };
+}
+const talLine = t => Object.entries(t || {}).filter(([, v]) => v).map(([k, v]) => k + " " + v).join(", ") || "—";
+function paintSumm() {
+  const body = $("summ").querySelector(".body"), top = body.scrollTop, l = st.summons || [], x = l.find(m => m.id === selSum) || l[0];
+  $("summ").querySelector(".cnt").textContent = l.length;
+  let s = l.slice(0, 15).map(m => `<div class="row2${x && m.id === x.id ? " me" : ""}" data-sid="${m.id}"><span><b style="color:${(SIDE[m.side] || SIDE[0])[1]}">${esc(m.nm)}</b> <span style="color:#998">${esc(m.sp)}</span></span><span>${L("Nv", "Lv")}${m.lvl}</span><span style="color:#998">${esc(m.owner)}</span></div>`).join("") || `<span style="color:#998">${L("Sin summons fuera", "No summons out")}</span>`;
+  if (x) {
+    const p = (v, mx) => `${v}/${mx}`;
+    s += `<div class="sec">${L("Ficha de", "Sheet of")} ${esc(x.nm)}</div><div class="fx">` + [
+      [L("Especie", "Species"), x.sp], [L("Dueño", "Owner"), `<a data-oid="${x.oid}" style="cursor:pointer;color:#9cf">${esc(x.owner)}</a>${x.bot ? " 🤖" : ""}`], [L("Clase", "Class"), x.cls || "—"], [L("Nivel", "Level"), `${x.lvl} (${x.exp}/${x.need} exp)`],
+      ["HP", p(x.hp, x.mhp)], ["MP", p(x.mp, x.mmp)], [L("Daño", "Damage"), `${x.dmg} (${L("cuota", "share")} ${x.share}%)`], [L("Modo", "Mode"), x.mode], [L("Mapa", "Map"), x.map],
+      [L("Habilidad", "Skill"), x.skill || "—"], [L("Talentos", "Talents"), `${x.spent} · ${talLine(x.tal)}`], [L("Factores", "Factors"), `dmg ×${x.f.dmg} hp ×${x.f.hp} mp ×${x.f.mp} ${L("recibido", "taken")} ×${x.f.taken}`], [L("Ahorro de MP", "MP saving"), x.save + "%"],
+    ].map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join("") + `</div>`;
+  }
+  body.innerHTML = s; body.scrollTop = top;
+}
+
+// ---- disposición de paneles: cada hueco elige su panel (se puede dejar vacío); se guarda en este navegador ----
+const PANELS = { game: ["🎮 En vivo", "🎮 Live"], roster: ["👥 Habitantes", "👥 Residents"], info: ["🧠 Personaje", "🧠 Character"], stats: ["📈 Estadísticas", "📈 Statistics"], glob: ["🌐 Global y peticiones", "🌐 Global & requests"], summ: ["🐾 Top summons", "🐾 Top summons"] };
+const DEF = ["game", "roster", "info", "stats"], KP = "hb.obs.panels";
+let slots = DEF.slice(); try { const v = JSON.parse(localStorage.getItem(KP) || "null"); if (Array.isArray(v) && v.length === 4 && v.every(x => !x || PANELS[x]) && new Set(v.filter(Boolean)).size === v.filter(Boolean).length) slots = v; } catch {}
+function place() {
+  const pool = $("pool");
+  for (const id of Object.keys(PANELS)) pool.appendChild($(id));
+  slots.forEach((id, i) => { const el = $("s" + (i + 1)); el.dataset.empty = L("(vacío: elige un panel en otro hueco)", "(empty: pick a panel in another slot)"); if (id) el.appendChild($(id)); });
+  for (const id of Object.keys(PANELS)) { const h = $(id).querySelector("h3"); if (!h) continue; h.querySelector(".pick")?.remove();
+    const i = slots.indexOf(id); if (i < 0) continue;
+    const sel = document.createElement("select"); sel.className = "pick"; sel.title = L("Cambiar este panel", "Change this panel");
+    sel.innerHTML = Object.entries(PANELS).map(([k, n]) => `<option value="${k}"${k === id ? " selected" : ""}>${n[getLang() === "en" ? 1 : 0]}</option>`).join("") + `<option value="">${L("— vacío —", "— empty —")}</option>`;
+    sel.onchange = () => pick(i, sel.value); h.appendChild(sel); }
+}
+function pick(i, id) {
+  const j = id ? slots.indexOf(id) : -1; if (j >= 0) slots[j] = slots[i]; slots[i] = id;
+  try { localStorage.setItem(KP, JSON.stringify(slots)); } catch {}
+  place(); paintAll(); if (sel && slots.includes("game")) show(sel);               // mover el marco lo recarga
+}
+function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); }
+
 // ---- arranque ----
 async function poll() {
   try { roster = (await (await fetch("/api/bots", { cache: "no-store" })).json()).list || []; sample(); paintRoster(); paintStats(); } catch { /* servidor un momento fuera: se reintenta */ }
+  try { st = await (await fetch("/api/stats", { cache: "no-store" })).json(); paintGlob(); paintSumm(); } catch { /* idem */ }
 }
 addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !("hbBrain" in e.data) || e.data.id !== sel) return;
   brain = e.data.hbBrain; if (brain) { paintInfo(); $("game").querySelector(".who").textContent = brain.name + " · " + (MODES[brain.mode]?.[getLang() === "en" ? 1 : 0] || brain.mode) + " · " + brain.map; }
 });
-splitters(); game(); rosterInit(); infoInit(); statsInit();
+splitters(); game(); rosterInit(); infoInit(); statsInit(); globInit(); summInit(); place();
 poll().then(() => { if (sel) show(sel); else if (roster.length) show(order()[0].id); });
 setInterval(poll, POLL);

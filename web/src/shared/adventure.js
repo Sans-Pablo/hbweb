@@ -10,7 +10,7 @@ import * as Stall from "./systems/stall.js";
 import { ARENA } from "./systems/arena.js";
 import * as Comp from "./systems/companion.js";
 import { DEBUG } from "./systems/debug.js";
-import { makeReg } from "./systems/party.js";
+import { makeReg, refresh as partyRefresh } from "./systems/party.js";
 import { makeReg as makeGuildReg } from "./systems/guild.js";
 import * as Bot from "./systems/bot.js";
 import * as Human from "./systems/human.js";
@@ -411,6 +411,7 @@ export class Adventure {
     to.ents.set(p.id, p);
     if (!p.dead) to.grid.occupy(p.x, p.y, p.id);
     this.locations.set(p.id, to);
+    partyRefresh(to, p);
     to.emit({ t: "mapchange", id: p.id, name: to.map.name, seed: to.map.seed });
     if (activeBall(p) && to.map.kind !== "arena") spawnCompanion(to, p);                      // el compañero elegido te sigue al nuevo mapa
     return true;

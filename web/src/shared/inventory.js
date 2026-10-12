@@ -100,7 +100,7 @@ export function recalc(p, data) {
   const s = p.stats;
   const fx = {
     sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
-    defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, resistMagic: 0,
+    defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, summonSave: 0, resistMagic: 0,
     addDR: 0, addHP: 0, addSP: 0, addMP: 0, addMR: 0, addPR: 0, addAbsMD: 0, addCD: 0, addExp: 0, addGold: 0,
     castBonus: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0, prot: { light: 0, fire: 0, ice: 0, poison: 0 },
   };
@@ -128,6 +128,7 @@ export function recalc(p, data) {
         break;
       case EFFECT.ADDEFFECT:
         if (d.v1 === 1) fx.resistMagic += d.v2;
+        else if (d.v1 === 2 && inst.id === 648) fx.summonSave = Math.min(80, (fx.summonSave || 0) + d.v2);          // NecklaceOfLiche: ahorra maná del summon, no del personaje
         else if (d.v1 === 2) fx.manaSave = Math.min(80, fx.manaSave + d.v2);
         else if (d.v1 === 3) fx.addPhys += d.v2;
         else if (d.v1 === 4) fx.defense += d.v2;

@@ -157,7 +157,7 @@ function resolve(w, p, id, sp, x, y, cost) {
   if (sch) {                                                          // paga y lanza el summon de la escuela
     const mana = Sch.spellMana(w.magic, sch, id) ?? Tal.manaOf(w, id);
     if (!sm || (sm.mp ?? 0) < mana) { w.emit({ t: "nomagic", id: p.id }); return; }
-    sm.mp -= mana;
+    sm.mp -= Tal.saved(w, sm, mana);
     const comp = Inv.instOf(p, sm.ball)?.comp;
     if (comp) { comp.mp = Math.floor(sm.mp); schoolMult = Tal.factors(comp).spell * (Sch.isTier2(comp.sp) ? Sch.TIER_MULT.dmg : 1) * Sch.levelPower(comp.lvl); schoolPower = Sch.spellPower(comp.lvl); }
     sm.castAt = w.time;

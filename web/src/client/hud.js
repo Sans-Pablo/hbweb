@@ -332,7 +332,7 @@ export class Hud {
         ["Recuperación de SP", e.addSP, " %"], ["Recuperación de MP", e.addMP, " %"], ["Resistencia mágica", e.addMR, " %"],
         ["Resistencia al veneno", e.addPR, " %"], ["Absorción física", ar, " %"], ["Absorción mágica", e.addAbsMD, " %"],
         ["Daño de ataques seguidos", e.addCD, ""], ["Experiencia", e.addExp, " %"], ["Oro", e.addGold, " %"],
-        ["Ahorro de MP", e.manaSave, " %"], ["Probabilidad de lanzar magia", e.castBonus, " %"],
+        ["Ahorro de MP", e.manaSave, " %"], ["Ahorro de MP del summon", e.summonSave, " %"], ["Probabilidad de lanzar magia", e.castBonus, " %"],
         ["Daño convertido en MP", e.transMana, " %"], ["Probabilidad de crítico", e.chargeCrit, " %"]];
       const sec = SEC.filter(r => r[1]).map(([n, v, u]) => `<div class="row"><span>${n}</span><b>+${v}${u}</b><i></i></div>`).join("");
       const html = `<h3>${me.name} <small>nivel ${me.level}</small></h3>

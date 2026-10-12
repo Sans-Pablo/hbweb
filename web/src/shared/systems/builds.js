@@ -48,3 +48,17 @@ export function peerBest(p, others) {
   }
   return best;
 }
+// CLASE POR ÍTEMS (INVENTO, v0.77.0): lo que lleva puesto decide la clase: arco → cazador (ágil), báculo → invocador (arcano), con summon activo → invocador,
+// el resto → guerrero (cañón de cristal; con misiones, vanguardia). Se reevalúa cuando cambia el arma; devuelve {arch, build}.
+export function fitByItems(p) {
+  const t = p.eff?.wtype || 0;
+  if (p.eff?.bow) return p.quests ? { arch: "warrior", build: buildOf(p) } : { arch: "hunter", build: "agile" };
+  if (t >= 34 && t < 40) return { arch: "scholar", build: "arcane" };
+  if (p.res?.arch === "scholar" || p.companion || p.summon) return { arch: "scholar", build: "summoner" };
+  return { arch: "warrior", build: p.quests ? "vanguard" : "glass" };
+}
+// Firma del equipo clave (arma en mano); cambia cuando encuentra un ítem de otra clase
+export const itemSig = p => (p.eff?.bow ? "bow" : (p.eff?.wtype || 0) >= 34 && (p.eff?.wtype || 0) < 40 ? "staff" : "melee");
+// Tope diario de reinicios por bot
+export const DAILY_CAP = 2;
+export function canRespecToday(r, w) { const d = Math.floor(w.time / 86400000); if (r.rsDay !== d) { r.rsDay = d; r.rsN = 0; } return r.rsN < DAILY_CAP; }

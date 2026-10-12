@@ -5,6 +5,7 @@
 //   mend: cura al propio compañero        leech: golpe + cura al dueño
 import { dist } from "../const.js";
 import { sset } from "./status.js";
+import { saved } from "./talents.js";
 
 export const SKILLS = {
   "Slime":           { name: "Acid Splash",   kind: "aoe",   mult: 0.8, r: 1, mp: 12, cd: 9000 },
@@ -33,7 +34,7 @@ export const ready = (w, n, s) => !!s && (n.mp || 0) >= s.mp && w.time >= (n.ski
 export function tryUse(w, n, owner, t, c, hurt) {
   const s = skillOf(c);
   if (!s || t.kind !== "npc" || !ready(w, n, s) || dist(n, t) > Math.max(2, n.cfg.attackRange)) return false;
-  n.mp -= s.mp; n.skillAt = w.time + s.cd; n.castAt = w.time;
+  n.mp -= saved(w, n, s.mp); n.skillAt = w.time + s.cd; n.castAt = w.time;
   const base = Math.max(1, Math.round(n.dmgNow || 1)), dmg = Math.max(1, Math.round(base * (s.mult || 1)));
   w.emit({ t: "petskill", id: owner ? owner.id : n.id, nid: n.id, nm: c.nm || c.sp, skill: s.name, kind: s.kind, x: t.x, y: t.y });
   if (s.kind === "hit" || s.kind === "drain" || s.kind === "leech") {

@@ -39,6 +39,25 @@
 - [x] (hecho en v0.76.0) **`tools/i18n_audit.mjs`:** tardaba minutos por una expresión regular con retroceso exponencial; ahora tarda menos de un segundo.
 - [ ] **Aplazado (decidido por el usuario):** tamaño del repo (LFS), tabla de tinte de pelo `m_wR`, verificación de CI (no hay `gh`), todo `docs/FUTURO.md`.
 
+**Backlog nuevo (pedido del usuario, 2026-10-12, tras la v0.76.0):**
+- [x] (hecho en v0.77.0) **Observador, party members:** no se ven los miembros de la party en el menú del observador.
+- [x] (hecho en v0.77.0) **Observador, party: mapa:** en el visor de party no poner «(otro mapa)»: mostrar el nombre del mapa donde está cada miembro.
+- [x] (hecho en v0.77.0) **Observador, estadísticas globales:** pantalla con estadísticas globales, los *requests* de los bots y qué prefieren: los bots son testers y deben decirnos qué mejorar.
+- [x] (hecho en v0.77.0) **Observador, top summons:** top de summons con sus dueños en el panel, y una ficha de cada summon con todos sus stats.
+- [x] (hecho en v0.77.0) **Observador, layout propio:** elegir qué pantallas ver y definir/guardar el layout de la web a gusto del usuario.
+- [x] (hecho en v0.77.0) **Bots, skill reset:** que los bots puedan hacer skill reset en algún NPC.
+- [x] (hecho en v0.77.0) **Bots, change stat obligatorio:** forzar a todos los bots a un change stat para revisar armas, clase y build.
+- [x] (hecho en v0.77.0) **Bots, variedad de clases:** balancear clases y roles para ver más variedad y no solo warriors: cada bot elige según sus ítems (si encuentra un buen ítem de warrior resetea y sigue de warrior); puede pasar a summoner o support por decisión propia.
+- [x] (hecho en v0.77.0) **Bots, mensajes largos:** si un mensaje del bot supera el límite de caracteres de Helbreath, partirlo en varios mensajes en vez de truncarlo.
+- [x] (hecho en v0.77.0) **Bots, salir de la cripta:** a los bots aún les cuesta salir de la cripta; revisar.
+- [x] (hecho en v0.77.0) **Bots, summon fuera:** si un bot tiene summon, mantenerlo invocado en el mundo para darle exp, sobre todo los de apoyo, que dependen de la exp ganada en party.
+- [x] (hecho en v0.77.0) **Bots, defender aliados:** si hay una pelea cerca, unirse a defender a los aliados y, sobre todo, intentar quedarse con el último golpe (*enemy kill*).
+- [x] (hecho en v0.77.0) **Bots, flechas:** un bot peleaba sin flechas y no podía recallear porque seguir pegando cancelaba la acción. Debe razonar: comprar más al quedarse corto y llegar a mazmorras y zonas PvP con el equipo listo; no seguir atacando sin munición.
+- [x] (hecho en v0.77.0) **Sistema, detección de bots bloqueados:** detector de bloqueos (bot atascado en una acción que se cancela, sin munición, sin progreso) que lo registre en el informe.
+- [x] (hecho en v0.77.0) **Collar del lich:** el Liche Neck debe ahorrar maná del summon, no del personaje.
+- [x] (hecho en v0.77.0) **Bolas de summon, colores:** cambiar los colores de las bolas: hoy heal es verde, buff amarilla y aura azul. → ya eran magenta/naranja/violeta; sin cambios
+- [x] (hecho en v0.77.0) **Summon enemigo, nombre rojo:** el nombre del summon enemigo debe verse en rojo.
+
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 
 Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`, `node tests/net-walk.test.mjs`.

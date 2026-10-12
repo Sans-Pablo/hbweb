@@ -32,16 +32,17 @@
   .bar .tr { flex:1; height:8px; background:#2c2417; border-radius:4px; } .bar .tr i { display:block; height:100%; border-radius:4px; background:#6a9; } .bar .v { width:34px; text-align:right; }
   .sec { margin:8px 0 3px; color:#b9a572; font-size:11px; text-transform:uppercase; border-bottom:1px solid #3a2f18; }
   .spark { display:grid; grid-template-columns:70px 1fr 64px; align-items:center; gap:6px; } .spark svg { width:100%; height:26px; background:#120e06; border-radius:3px; }
-  @media (max-width: 800px) { #app { grid-template-columns:1fr; grid-template-rows:60vh 50vh 50vh 50vh; } #game, #roster { grid-area:auto; } #hs, #vs, #vs2 { display:none; } #bottom { grid-area:auto; display:contents; } #info, #stats { flex:none; } html, body { overflow:auto; } }
+  @media (max-width: 800px) { #app { grid-template-columns:1fr; grid-template-rows:60vh 50vh 50vh 50vh; } #s1, #s2 { grid-area:auto; } #hs, #vs, #vs2 { display:none; } #bottom { grid-area:auto; display:contents; } #s3, #s4 { flex:none; } html, body { overflow:auto; } }
 </style>
 </head>
 <body>
 <div id="app">
-  <section class="q" id="game"></section>
+  <div class="slot" id="s1"></div>
   <div class="split" id="vs" title="↔"></div>
-  <section class="q" id="roster"></section>
+  <div class="slot" id="s2"></div>
   <div class="split" id="hs" title="↕"></div>
-  <div id="bottom"><section class="q" id="info"></section><div class="split" id="vs2" title="↔"></div><section class="q" id="stats"></section></div>
+  <div id="bottom"><div class="slot" id="s3"></div><div class="split" id="vs2" title="↔"></div><div class="slot" id="s4"></div></div>
+  <div id="pool"><section class="q" id="game"></section><section class="q" id="roster"></section><section class="q" id="info"></section><section class="q" id="stats"></section><section class="q" id="glob"></section><section class="q" id="summ"></section></div>
 </div>
 <script type="module" src="src/client/dashboard.js"></script>
 </body>

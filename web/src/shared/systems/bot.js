@@ -12,7 +12,7 @@ import { findPath, greedyStep } from "../path.js";
 import { EQUIP, ITYPE, EFFECT, MAX_ITEMS } from "../items.js";
 import * as Inv from "../inventory.js";
 import * as R from "../rules.js";
-import { reachOf, MAX_LEVEL } from "./combatsys.js";
+import { reachOf, MAX_LEVEL, arrowOf } from "./combatsys.js";
 import { damageRange } from "../combat.js";
 import { groundTop } from "./ground.js";
 import { newInst, useItem } from "./itemsys.js";
@@ -37,6 +37,8 @@ export const isArcher = p => !!p.res && p.res.arch === "hunter";      // el caza
 const isStaff = d => d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND;          // báculo/varita mágica: el summon de apoyo (Healer/Buffer/Aura) exige uno en la mano (dummy.js hasStaff)
 // Mago de apoyo (INVENTO): la mitad de los estudiosos (según el nombre) sigue la rama del invocador de apoyo: con el nivel que exige el báculo (30, Item.cfg) lo compra y adopta Healer, Buffer y Aura
 export const isSupport = p => { if (!p.res || p.res.arch !== "scholar") return false; if (p.res.job === "support") return true; let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 2 === 0; };
+// Bloqueo registrado (v0.77.0): `b.stuck = {why, since}`; residents.js lo vuelca al informe si dura
+function stuck(w, p, b, why) { if (!b.stuck || b.stuck.why !== why) b.stuck = { why, since: w.time }; }
 const ARROW = 77, ARROWS_MAX = 150;
 const SKIP_WEAPON = /Wand|Staff|Rod|Arrow|Hammer\(M\)|Pickaxe|Hoe/;
 
@@ -263,6 +265,12 @@ function reachable(w, p, e) {
   if (c.size > 60) for (const [k, v] of c) if (w.time > v.until) c.delete(k);
   return ok;
 }
+// DEFENDER ALIADOS (v0.77.0): un monstruo que pelea contra un aliado cercano (otro jugador que no puedo atacar) vale más; si está casi muerto, más aún (quedarse el último golpe)
+export function allyBonus(w, p, e) {
+  const a = e.kind === "npc" && e.target != null && e.target !== p.id ? w.ents.get(e.target) : null;
+  if (!a || a.kind !== "player" || a.dead || dist(p, a) > 10 || canFight(w, p, a)) return 0;
+  return 5 + (e.hp < e.maxHp * 0.35 ? 4 : 0);
+}
 function pickTarget(w, p, owner) {
   let best = null, bs = 1e9;
   const rv = p.bot.revenge && p.bot.revenge.until > w.time && w.ents.get(p.bot.revenge.id);            // quien me ha golpeado, primero
@@ -284,7 +292,7 @@ function pickTarget(w, p, owner) {
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
     const shielded = e.crystal && [...w.ents.values()].some(o => o.boss && o.shield && !o.dead && dist(o, e) <= 20);
-    const s = (shielded ? -20 : 0) - (e.target === p.id || e.kind !== "npc" ? 0 : mobBonus(p, e)) + d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
+    const s = (shielded ? -20 : 0) - allyBonus(w, p, e) - (e.target === p.id || e.kind !== "npc" ? 0 : mobBonus(p, e)) + d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
     if (s < bs && reachable(w, p, e)) { best = e; bs = s; }
   }
   return best;
@@ -453,7 +461,15 @@ function run(adv, w, p, b) {
   const t = (b.rest && !defend) || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
     if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
+    if (p.eff?.bow && !arrowOf(w, p)) {                                                              // sin flechas: no sigue disparando al aire (eso cancela el Recall); compra o sale
+      stuck(w, p, b, "sin flechas"); b.target = null; b.path = null;
+      if (!p.recallTok && w.time - (b.recallAt || 0) > 6000 && (w.map.kind === "dungeon" || w.pvp)) { b.recallAt = w.time; blog(w, p, "Me quedé sin flechas: salgo con Recall a comprar más."); adv.command(p.id, { t: "recall" }); }
+      else if (!w.pvp && w.map.kind !== "dungeon") b.errand = 0;
+      return;
+    }
+    if (p.recallTok && b.recallAt && w.time - b.recallAt < 12000) { b.hold = w.time + 800; stuck(w, p, b, "Recall en curso"); return; }   // el Recall se rompe si sigue pegando
     if (dist(p, t) <= reachOf(w, p, t)) {
+      b.stuck = null;
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }
     } else if (!step(adv, w, p, b, t.x, t.y, dist(p, t) > 5) && b.fails > 8) {          // no hay camino hasta él (vallado, otra zona): lo descarta un rato
       (b.ignore ||= new Map()).set(t.id, w.time + 20000); b.target = null; b.fails = 0; b.path = null;

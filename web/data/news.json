@@ -1,10 +1,31 @@
 {
-  "build": "0.76.0",
+  "build": "0.77.0",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Observador a medida y bots con criterio (v0.77.0)",
+        "en": "Custom observer and smarter bots (v0.77.0)"
+      },
+      "items": [
+        {
+          "es": "El observador deja elegir y guardar qué paneles ver; hay estadísticas globales, peticiones de los bots y top de summons con ficha.",
+          "en": "The observer lets you pick and save which panels to show; there are global stats, bot requests and a top of summons with a sheet."
+        },
+        {
+          "es": "Los bots cambian de clase según sus ítems, defienden a sus aliados, mantienen su summon fuera, no disparan sin flechas y avisan cuando se quedan bloqueados.",
+          "en": "Bots change class by their items, defend allies, keep their summon out, don't shoot without arrows and report when they get stuck."
+        },
+        {
+          "es": "El collar del lich ahorra maná del summon, no del personaje.",
+          "en": "The lich necklace saves summon mana, not the character's."
+        }
+      ]
+    },
     {
       "date": "2026-10-12",
       "title": {

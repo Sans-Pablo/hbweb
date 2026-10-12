@@ -32,6 +32,7 @@ import { openStore } from "./store.mjs";
 import { openLlm } from "./llm.mjs";
 import { openReport } from "./report.mjs";
 import * as Residents from "../web/src/shared/systems/residents.js";
+import * as ObsStats from "../web/src/shared/systems/obsstats.js";
 import * as Human from "../web/src/shared/systems/human.js";
 import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
@@ -163,6 +164,10 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/api/bots") {            // lista de habitantes para el panel dividido (web/observador.html); solo lectura
     if (!OBSERVE) { json(req, res, 403, { error: "observar desactivado" }); return; }
     json(req, res, 200, { list: botList(), time: Date.now() }); return;
+  }
+  if (url.pathname === "/api/stats") {            // estadísticas globales, peticiones de los bots-testers y top de summons (panel del observador)
+    if (!OBSERVE) { json(req, res, 403, { error: "observar desactivado" }); return; }
+    json(req, res, 200, { global: ObsStats.globals(adventure), requests: ObsStats.requests(adventure), summons: ObsStats.summons(adventure), time: Date.now() }); return;
   }
   if (url.pathname === "/admin") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end("Solo desde el PC del servidor y con el token correcto."); return; }
