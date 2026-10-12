@@ -10,6 +10,11 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Summons que pelean (v0.64.4)", "en": "Summons that fight (v0.64.4)" },
+      "items": [ { "es": "Los habitantes ahora van al hospital de compañeros sin que el grupo los desvíe, pelean con su summon y reservan oro para pociones.", "en": "Residents now reach the pet hospital without the group pulling them away, fight alongside their summon and keep gold for potions." } ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Brasas con aviso (v0.64.3)", "en": "Embers with warning (v0.64.3)" },
       "items": [ { "es": "Las brasas del jefe tardan más en hacer daño: da tiempo a esquivarlas.", "en": "Boss embers take longer to hurt: there is time to dodge." } ]
     },

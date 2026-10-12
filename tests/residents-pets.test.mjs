@@ -66,3 +66,17 @@ console.log("OK residents-pets");
   const pet2 = [...a.farm.ents.values()].find(e => e.comp && e.master === id);
   assert.ok(pet2 && Math.max(Math.abs(pet2.x - p.x), Math.abs(pet2.y - p.y)) <= 22, "el summon alcanza al dueño");
 }
+
+// la estimación de pelea cuenta el daño del summon vivo (y su escudo), y el oro de pociones no se gasta en hechizos
+{
+  const { fightEstimate, bossPreview } = await import("../web/src/shared/systems/bot.js"), { potReserve } = await import("../web/src/shared/systems/residents.js");
+  a.spawnResident("Sorcha"); const m = a.residents().find(x => x.name === "Sorcha"), w = a.worldFor(m.id);
+  m.level = 30; m.stats.int = 45; w.recalc(m); m.hp = m.maxHp; m.gold = 0;
+  const bp = bossPreview(w, 5), solo = fightEstimate(w, m, bp, true);
+  const ball = { uid: 9991, id: data.named("Orc")?.id ?? 0, comp: { sp: "Tentocle", lvl: 30, nm: "T", on: true, hp: 999 } };
+  const pet = { id: 9992, kind: "npc", comp: ball.comp, master: m.id, dead: false, x: m.x, y: m.y, cfg: { actionTime: 1500, attackDiceThrow: 1, attackDiceRange: 4 } };
+  w.ents.set(pet.id, pet);
+  const withPet = fightEstimate(w, m, bp, true); w.ents.delete(pet.id);
+  assert.ok(withPet.ttk < solo.ttk && withPet.taken < solo.taken, "con summon vivo la pelea dura menos y duele menos (" + solo.ttk.toFixed(0) + "s → " + withPet.ttk.toFixed(0) + "s)");
+  assert.ok(potReserve({ level: 30 }) >= 1500 && potReserve({ level: 80 }) === 2400, "reserva de oro para pociones");
+}

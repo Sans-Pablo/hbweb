@@ -28,7 +28,7 @@ assert.equal(a.residents().length, 3, "se queda el mínimo conectado: " + a.resi
 const gone = [...a.offline.keys()][0]; assert.ok(a.offline.get(gone).save?.res, "su partida queda guardada");
 H.configure(a, { pins: { [gone]: "on" } }); tick(10000);
 assert.ok(a.residents().some(p => p.name === gone), "el admin lo fuerza a conectarse"); assert.ok(!a.offline.has(gone));
-H.configure(a, { pins: { [gone]: "off" } }); tick(40000);
+H.configure(a, { pins: { [gone]: "off" } }); for (let k = 0; k < 14 && a.residents().some(p => p.name === gone); k++) tick(20000);   // si está en un encargo (hospital de compañeros) termina antes de irse
 assert.ok(!a.residents().some(p => p.name === gone), "y también a salir");
 const st = H.status(a); assert.equal(st.online + st.offline, 8); assert.equal(st.bots.find(b => b.name === gone).pin, "off");
 // AFK: se queda quieto y vuelve

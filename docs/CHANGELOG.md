@@ -2,6 +2,12 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.64.4 · Summons que pelean (2026-10-12)
+- Bots: el cálculo de pelea (`fightEstimate`) cuenta el daño real del summon vivo (golpe de su nivel, +60 % si es de escuela) y que reparte los golpes. Antes usaba la ficha del monstruo.
+- Bots: el encargo del hospital de compañeros ya no lo interrumpe el grupo (arrastraba al bot lejos de Gail) y el simulador carga `gshop_1f`.
+- Bots: los hechizos del summon dejan una reserva de oro para pociones (`potReserve`).
+- `tools/questsim.mjs`: `PETS=1` y `DEATHS=1`.
+
 ## 0.64.3 · Brasas con aviso (2026-10-12)
 - Las brasas del jefe hacen su primer daño a los 900 ms (antes 400): da tiempo a apartarse. Los bots se quedaban sobre el fuego. Medido: 5–9 de 12 pasan del Rey carmesí en 480 min.
 - `tools/questsim.mjs`: `HAZ=1` mide el tiempo sobre peligros.

@@ -11,7 +11,7 @@ const meta = json("map.json"), npcDb = json("npc.json");
 const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
 setDungeonPalette(json("dungeon_palette.json"));
 const maps = {};
-for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
+for (const id of ["arefarm", "elvfarm", "2ndmiddle", "middled1n", "gshop_1f"]) { const mm = json("maps/" + id + ".json"); maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/" + id + ".bin", dir)))) }; }
 const N = +(process.argv[2] || 9), MIN = +(process.argv[3] || 240), SEED = +(process.argv[4] || 1), OUT = process.argv[5];
 const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: json("arefarm.spawns.json"), maps, rng: seededRandom(SEED) });
 const NAMES = ["Aldric", "Cora", "Brann", "Isolde", "Doran", "Mira", "Kael", "Sorcha", "Tamsin", "Orin", "Vesna", "Hale", "Nyra", "Garrick", "Lysa", "Perrin", "Edda", "Torvald"];
@@ -32,7 +32,6 @@ for (let m = 1; m <= MIN; m++) {
     console.log(`[${m} min · ${((Date.now() - t0) / 1000).toFixed(0)} s reales] ` + row.map(r => `${r.n}:${r.c?.[0]}L${r.lv} q${r.q}(${r.cur?.split(".")[1]} ${r.pr})`).join("  "));
   }
 }
-if (process.env.HAZ) console.log("HAZ " + JSON.stringify(globalThis.__hz));
 const out = rs().map(b => ({ name: b.name, cls: b.quests?.cls, level: b.level, n: b.quests?.n, t: b.quests?.t, ek: b.ek, deepest: b.delve?.deepest, king: b.delve?.king, goal: b.res?.goal, ideas: b.res?.ideas }));
 if (OUT) writeFileSync(OUT, JSON.stringify({ N, MIN, SEED, out, snap }, null, 1));
 // QLOG=Aldric,Doran node tools/questsim.mjs …  → vuelca el diario de esos habitantes (diagnóstico)
@@ -43,6 +42,8 @@ if (process.env.DIAG) {
   for (const b of rs()) { const w = a.worldFor(b.id), bp = bossPreview(w, 5), e = fightEstimate(w, b, bp, true), red = data.named("RedPotion"), pots = b.bag.reduce((s, i) => s + (red && i.id === red.id ? i.count || 1 : 0), 0);
     console.log(`DIAG ${b.name} ${b.quests?.cls} L${b.level} hp${b.maxHp} dps${dpsOf(b).toFixed(1)} ilvl${avgIlvl(w, b).toFixed(0)} oro${b.gold} pots${pots} bossHp${bp.hp} ttk${e.ttk.toFixed(0)}s taken${e.taken.toFixed(0)} ratio${e.ratio.toFixed(2)} str${b.stats.str} vit${b.stats.vit} dex${b.stats.dex} int${b.stats.int} mag${b.stats.mag}`); }
 }
+if (process.env.DEATHS) for (const b of rs()) console.log("DEATHS " + b.name + " " + b.quests?.cls + " g" + b.gold + " " + JSON.stringify(b.res?.qa?.deaths) + " kills " + JSON.stringify(Object.entries(b.res?.qa?.kills||{}).sort((x,y)=>y[1]-x[1]).slice(0,3)));
+if (process.env.PETS) for (const b of rs()) { const w = a.worldFor(b.id), live = [...w.ents.values()].filter(e => e.comp && e.master === b.id); console.log("PETS " + b.name + " " + b.quests?.cls + " L" + b.level + " " + w.map.id + " bolas[" + b.bag.filter(i => i.comp).map(i => i.comp.sp + " L" + i.comp.lvl + (i.comp.on ? " ON" : "")).join(",") + "] vivos " + live.length + " kills " + (b.res?.qa?.pet?.kills | 0) + " lvls " + (b.res?.qa?.pet?.lvls | 0) + " caidos " + (b.res?.qa?.pet?.lost | 0)); }
 for (const n of FULL) console.log("== LOG " + n + String.fromCharCode(10) + (flog[n] || []).slice(-(+process.env.QN || 60)).join(String.fromCharCode(10)));
 // GEAR=1 → equipo puesto de cada habitante
 if (process.env.GEAR) for (const b of rs()) { const w = a.worldFor(b.id); console.log("GEAR " + b.name + " L" + b.level + " " + Object.entries(b.equip).map(([s, u]) => { const i = b.bag.find(x => x.uid === u), d = i && data.item(i.id); return d ? d.name + "(" + (d.damage ? JSON.stringify(d.damage) : "") + ")" : null; }).filter(Boolean).join(", ") + " dmg " + JSON.stringify(Object.keys(b.eff||{}).length ? b.eff.sm : "")); }

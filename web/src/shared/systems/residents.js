@@ -727,6 +727,8 @@ function pickSpecies(p, r) {
   if (qMissing(p)) return qSpecies(p);
   if (r.arch === "scholar") { const own = new Set(balls(p).map(i => i.comp.sp)), free = MAGE_SPECIES.filter(sp => !own.has(sp)); if (free.length) return free[(r.petN | 0) % free.length]; }
   let h = 0; for (const c of p.name) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PET_SPECIES[(h + (r.petN | 0)) % PET_SPECIES.length]; }
+// oro que no se gasta en caprichos del summon (hechizos): lo justo para llenar de pociones (60 por poción) y no quedarse sin ellas
+export const potReserve = p => Math.min(2400, 300 + p.level * 40);
 // En Promise Land un summon es media pelea: lo sacan (si no está), lo ponen en modo ataque y le señalan al rival (jugador o su summon). Así entrenan a sus summons contra los de los demás.
 function pvpPets(adv, w, p, r) {
   if (p.dead || w.time < (r._pvpPetAt ||= 0)) return;
@@ -782,7 +784,7 @@ function pets(adv, w, p, r, home) {
       if (w.time - (r._teachAt || 0) > 20000) {
         r._teachAt = w.time;
         const ids = Object.entries(Sch.unlockLevels(w.magic, school)).filter(([id, lv]) => !Sch.taught(c, id) && lv <= c.lvl).sort((x, y) => x[1] - y[1]);
-        for (const [id] of ids) if (p.stats.int >= Sch.spellInt(w.magic, school, id) && p.gold >= Sch.spellGold(w.magic, school, id)) { adv.command(p.id, { t: "learn", spell: +id }); break; }
+        for (const [id] of ids) if (p.stats.int >= Sch.spellInt(w.magic, school, id) && p.gold >= Sch.spellGold(w.magic, school, id) + potReserve(p)) { adv.command(p.id, { t: "learn", spell: +id }); break; }
       }
       const n = live;
       let t = b.target?.kind === "npc" ? b.target : null;                                // sin objetivo propio: el monstruo más cercano al summon (él también pelea solo)
@@ -802,7 +804,7 @@ function pets(adv, w, p, r, home) {
   const more = wantsMoreBalls(p, r);
   const need = more || qMissing(p) || qEvolve(p) ? true : !ball ? p.level >= 2 && p.gold >= 20 : (c.down || (!live && Comp.hpOf(p, c) < Comp.maxOf(p, c) * 0.5)) && p.gold >= Comp.treatCost(p, c) && !c.bad;
   if (!(!ball && p.bot.owner != null)) r._noBall = 0;          // cualquiera sin summon deja el grupo para ir a por uno (el mago, antes que nadie)
-  else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > (r.arch === "scholar" ? 90000 : 150000)) { r._noBall = 0; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, r.arch === "scholar" ? "un mago sin su summon no sirve de nada: voy al hospital de compañeros" : "aún no tengo summon: voy al hospital de compañeros a por uno"); }          // los magos no se quedan sin summon por seguir a nadie
+  else if (!r._pet && p.level >= 2 && p.gold >= 20 && w === home && w.time - (r._noBall ||= w.time) > (r.arch === "scholar" ? 90000 : 150000)) { r._noBall = 0; r._petAt = w.time; const lead = adv.bots.get(p.bot.owner) || w.ents.get(p.bot.owner); CH.leave(adv, p, lead || { name: "?" }, r.arch === "scholar" ? "un mago sin su summon no sirve de nada: voy al hospital de compañeros" : "aún no tengo summon: voy al hospital de compañeros a por uno"); }          // los magos no se quedan sin summon por seguir a nadie
   if (!r._pet) {
     if (!need || r._trip || r._delve || p.bot.owner != null || w.time < (r._petAt ||= w.time + 20000 + Math.floor(w.rng() * 40000)) || w !== home || p.hp < p.maxHp * 0.5 || b.rest) return;
     const tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"), nurse = nurseOf(w);
@@ -910,10 +912,10 @@ function social(adv, w, p, r) {
     if (adv.bots.get(b.owner)?.res && w.time > (r._leaveAt || 0)) { blog(w, p, "Dejo el grupo para ir por mi cuenta un rato."); b.owner = null; Party.leave(w, p, true); }
     return;
   }
-  if (b.owner != null || r.followUntil || r._trip || p.dead || b.rest) return;
+  if (b.owner != null || r.followUntil || r._trip || r._pet || p.dead || b.rest) return;
   let best = null, bd = 99;
   for (const q of adv.bots.values()) {
-    if (q === p || !q.res || q.dead || q.side !== p.side || adv.worldFor(q.id) !== w || q.bot.owner != null || q.res.followUntil || q.res._trip) continue;
+    if (q === p || !q.res || q.dead || q.side !== p.side || adv.worldFor(q.id) !== w || q.bot.owner != null || q.res.followUntil || q.res._trip || q.res._pet) continue;
     const d = dist(p, q);
     if (d > 20 || Math.abs(q.level - p.level) > 10 || members(adv, p) + members(adv, q) + 2 > 4) continue;
     if (d < bd) { best = q; bd = d; }
@@ -990,7 +992,7 @@ function partyAndTrade(adv, w, p, r) {
     const q = r._pq; r._pq = null;
     const f = w.ents.get(q.from), human = f && f.kind === "player" && !adv.bots.has(f.id);
     if (p.partyQuery) {
-      const yes = !!f && !p.dead && !r._trip && !r._delve && (human ? relOf(p, f.name) >= 1 || w.rng() < 0.7 : w.rng() < 0.8);
+      const yes = !!f && !p.dead && !r._trip && !r._delve && !r._pet && (human ? relOf(p, f.name) >= 1 || w.rng() < 0.7 : w.rng() < 0.8);
       Party.answer(w, p, yes ? 1 : 0);
       if (human && f) { befriend(p, f.name, yes ? 2 : 0); if (yes) { if (b.owner == null) { b.owner = f.id; r.followUntil = now + 10 * 60000; b.partyAt = now + 5000; } say2(adv, w, p, "yes", f.name); remember(p, "Me uní al grupo de " + f.name + ".", "Joined " + f.name + "'s party."); } else say2(adv, w, p, "no", f.name); }
     }

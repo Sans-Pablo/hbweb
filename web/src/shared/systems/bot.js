@@ -24,6 +24,8 @@ import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
 import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
 import { allocate } from "./builds.js";
+import * as Comp from "./companion.js";
+import * as Sch from "./schools.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -179,14 +181,19 @@ export function errands(w, p, b, first = false) {
 // compañeros cercanos) y no con el nivel a secas: un nivel 50 sin arma no le hace cosquillas. Es el «cálculo» que haría un jugador mirando su equipo.
 const avgOf = r => (r[0] + r[1]) / 2;
 export const dpsOf = q => avgOf(damageRange(q)) * 0.6;
+// daño por segundo de un summon vivo: golpe de su nivel (Comp.statsOf) por ritmo de ataque; los de escuela suman sus hechizos (≈ +60 %)
+export function petDps(p, q) {
+  const st = Comp.statsOf(p, q.comp), hit = st.dmg || 0, rate = Math.max(0.9, (q.cfg?.actionTime || 1500) / 1000);
+  return hit / rate * 0.6 * (Sch.SCHOOL_OF[q.comp.sp] ? 1.6 : 1);
+}
 export function fightEstimate(w, p, e, solo = false, full = false) {                       // solo: sin contar a los jugadores de al lado (antes de bajar a la cripta se va sin ellos)
-  let ally = 0, n = 0;
+  let ally = 0, n = 0, pet = false;
   for (const q of w.ents.values()) {
     if (!solo && q !== p && q.kind === "player" && !q.dead && q.side === p.side && dist(p, q) <= 14) { ally += dpsOf(q); n++; }
-    else if (q.comp && q.master === p.id && !q.dead && q.cfg) ally += (q.cfg.attackDiceThrow || 1) * ((q.cfg.attackDiceRange || 1) + 1) / 2 * 0.5 / Math.max(0.9, (q.cfg.actionTime || 1500) / 1000);   // el compañero también pega
+    else if (q.comp && q.master === p.id && !q.dead && q.cfg) { ally += petDps(p, q); pet = true; }   // el compañero también pega (con el daño de SU nivel, no el de su ficha de monstruo)
   }
   const foeHit = (e.cfg.attackDiceThrow || 1) * ((e.cfg.attackDiceRange || 1) + 1) / 2 * (e.dmgMul || 1) * 0.65, foeDps = foeHit * 0.8 / Math.max(0.9, (e.cfg.actionTime || 1500) / 1000);
-  const ttk = e.hp / Math.max(0.5, dpsOf(p) + ally), taken = foeDps * ttk / (1 + n * 0.7);
+  const ttk = e.hp / Math.max(0.5, dpsOf(p) + ally), taken = foeDps * ttk / (1 + n * 0.7 + (pet ? 0.3 : 0));       // el summon también reparte los golpes del rival
   const red = w.data.named("RedPotion"), pots = red ? p.bag.reduce((a, i) => a + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
   const budget = (full ? p.maxHp : p.hp) + pots * Math.min(80, p.maxHp * 0.4);
   return { ttk, taken, budget, ratio: budget / Math.max(1, taken), allies: n };
