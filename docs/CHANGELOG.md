@@ -2,6 +2,9 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.64.1 · Recall sin cancelarse (2026-10-12)
+- Los bots no relanzan Recall mientras el canal está abierto (el segundo comando lo cancelaba).
+
 ## 0.64.0 · Bots hacia el final (2026-10-12)
 - Residentes: llevan hasta 40 pociones si tienen oro, ya no cambian escudo por arma a dos manos ni entre dos armas a dos manos (bucles que vaciaban el oro), y las lecciones de muerte caducan a los 20 min para no quedarse sin presa.
 - Cripta: jefes más suaves (vida +18 %/piso, daño +6 %/piso); `bossPreview` de los bots sincronizado. Medido: 5 de 12 bots pasan del Rey carmesí en 480 min (antes ninguno).

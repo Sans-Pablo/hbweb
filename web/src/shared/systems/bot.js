@@ -356,7 +356,7 @@ function run(adv, w, p, b) {
     if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: descanso.`); }
     b.rest = true;
   }
-  if (w.pvp && hpf < 0.35 && w.time - (b.recallAt || 0) > 6000) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
+  if (w.pvp && hpf < 0.35 && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
     const foe = [...w.ents.values()].find(e => e.kind === "player" && canFight(w, p, e) && dist(p, e) <= 9);
     if (foe) { b.recallAt = w.time; blog(w, p, `Poca vida y ${foe.name} (bando enemigo) cerca: intento Recall para huir.`); adv.command(p.id, { t: "recall" }); }
   }
@@ -366,7 +366,7 @@ function run(adv, w, p, b) {
     for (const e of w.ents.values()) { if (e.dead || e.master === p.id || e.aux || w.safeAt(e.x, e.y) || e.comp) continue; if (!(e.kind === "npc" || (e.kind === "player" && canFight(w, p, e)))) continue; const d = dist(p, e); if (d <= 7 && d < fd && (e.target === p.id || d <= 3)) { fd = d; foe = e; } }
     if (foe) {
       b.fleeAt = w.time; b.target = null; b.path = null;
-      if ((w.map.kind === "dungeon" || w.pvp) && w.time - (b.recallAt || 0) > 6000) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }
+      if ((w.map.kind === "dungeon" || w.pvp) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
       else {
         let best = null, bs = dist(p, foe);
         for (let d = 0; d < 8; d++) { const x = p.x + DX[d] * 2, y = p.y + DY[d] * 2, sx = p.x + DX[d], sy = p.y + DY[d]; if (w.grid.blocked(sx, sy) || !w.grid.inside?.(sx, sy) && false) continue; const sc = Math.max(Math.abs(x - foe.x), Math.abs(y - foe.y)); if (sc > bs && !w.teleports.has(w.grid.idx(sx, sy))) { bs = sc; best = [x, y]; } }
