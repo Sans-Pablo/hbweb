@@ -13,3 +13,7 @@ web/data/webp.json
 server/data/
 server/config.json
 server/data/
+
+# versión IA de los enemigos (tools/remaster_ia.py)
+web/data/sprites_ia/
+web/data/sprites_ia.json

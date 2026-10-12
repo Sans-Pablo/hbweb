@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.79.5 · Recado de flechas sin apuntar al aire (2026-10-12)
+- Un arquero sin flechas que va a comprar deja de apuntar a monstruos durante 5 s (si no le están pegando), así no queda marcado como bloqueado. Summon lejano: el teletransporte corre aunque esté siempre ocupado peleando.
+
 ## 0.79.4 · Summons que no se pierden (2026-10-12)
 - Un summon a más de 40 casillas de su dueño se teletransporta a su lado aunque esté ocupado o con una orden vieja (`npcsys.js#followerThink`). Simulación de 12 bots × 240 min con 3 semillas sin avisos de bug.
 

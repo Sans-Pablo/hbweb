@@ -35,3 +35,4 @@ Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (
 
 - **Pulido 0.79.3**: Recall solo cuenta interrupciones sin golpes (`cryptRecall`); `b.noFight` frena el combate al ir a la cripta (`delve`); recados en combate sin flechas; arquero sin oro ni flechas suelta el arco; `stuck.last` evita informes de atascos ya resueltos. Test: `bot-fixes.test.mjs`.
 - **0.79.4**: summon a >40 casillas del dueño se teletransporta (ignora ocupado/orden vieja). Simsim 3 semillas limpias.
+- **0.79.5**: sin flechas con oro: `noFight` 5 s mientras va a comprar.

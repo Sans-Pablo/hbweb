@@ -133,7 +133,7 @@ export class Sprites {
     const h = this.hd && this.hdm[key];
     if (h) {
       let i = this.hdi[key];
-      if (!i) { i = this.hdi[key] = new Image(); i.src = imgUrl("data/sprites_hd/" + h.png) + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[key] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + ASSET_VERSION; }
       if (i.complete && i.naturalWidth > 0) return [i, h.k];
     }
     return [this.img[key], 1];
@@ -142,7 +142,7 @@ export class Sprites {
   preloadHd(keys) {
     return Promise.all(keys.filter(k => this.hdm[k]).map(k => new Promise(res => {
       const h = this.hdm[k]; let i = this.hdi[k];
-      if (!i) { i = this.hdi[k] = new Image(); i.src = imgUrl("data/sprites_hd/" + h.png) + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[k] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + ASSET_VERSION; }
       if (i.complete) return res();
       i.addEventListener("load", res, { once: true }); i.addEventListener("error", res, { once: true });
     })));
@@ -181,9 +181,10 @@ export class Sprites {
     if (!fr) return;
     if (!this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key);
-    if (this.recolor) { ctx.save(); ctx.filter = this.recolor; }      // solo el bestiario: matiz/saturación/brillo para probar paletas
+    const flt = [this.recolor, this.modelFx].filter(Boolean).join(" ");      // modelFx: solo el bestiario (modelo «IA + luz»)
+    if (flt) { ctx.save(); ctx.filter = flt; }      // solo el bestiario: matiz/saturación/brillo para probar paletas
     ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
-    if (this.recolor) ctx.restore();
+    if (flt) ctx.restore();
   }
 
   // Pelo teñido: el color del original se suma a los píxeles (PutSpriteRGB); aquí se mezcla con el tono base

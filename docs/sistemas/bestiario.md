@@ -28,3 +28,5 @@ Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de
 - Sonidos en juego (`client/audio.js`): E46 al subir, +E30 al crecer (10/20/30), +E36/E19 en 30/40/50, M62 al perderla.
 - v0.78.17: Healer/Buffer/Aura en el Bestiario con sus efectos de nivel 30/40/50 (verde cruces y halo, amarillo escudos-rombo y runa, azul ondas y resplandor).
 - v0.78.18: hojas HD de uhealer/usorceress/ubuffer generadas con tools/make_support_hd.py.
+
+- **Modelos gráficos** (selector «Modelo», sin versión publicada): 1 Original, 2 HD actual (`sprites_hd`), 3 IA (`sprites_ia`, `tools/remaster_ia.py ESRGAN_DIR [prefijo…]`, Real-ESRGAN x4plus ncnn-vulkan; misma maqueta x4 que HD, el manifiesto `sprites_ia.json` lleva `dir`), 4 IA + luz (filtro CSS de contraste, bordes cálido/frío y sombra: **simulado**, la iluminación real iría en el renderer con mapas de normales). «Comparar los 4» dibuja un modelo por fila. `Sprites.modelFx` solo lo usa el Bestiario. `sprites_ia/` se ignora en git.

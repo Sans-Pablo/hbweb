@@ -42,7 +42,17 @@ function ensure(name) {
   const keys = []; for (let k = 0; k < (units[name]?.n || 40); k++) keys.push(sp + k);
   stream.wantAll(keys, 3);
 }
-const SAVE = ["sp", "mode", "lvl", "act", "dir", "zoom", "comp", "cast", "bg", "rc-h", "rc-s", "rc-b"], LS = "hb_bestiary_sel";   // la selección sobrevive a recargar la página
+// Modelos gráficos: 0 original, 1 HD actual (sprites_hd), 2 IA (sprites_ia, tools/remaster_ia.py), 3 IA + luz (filtro de contraste/borde cálido, simulado)
+const spr = assets.sprites, hdIa = await fetch("data/sprites_ia.json").then(r => r.json()).catch(() => ({}));
+const MODELS = [
+  { name: "1 · Original", hd: false, hdm: {}, hdi: {}, fx: "" },
+  { name: "2 · HD actual", hd: true, hdm: spr.hdm, hdi: spr.hdi, fx: "" },
+  { name: "3 · IA (Real-ESRGAN)", hd: true, hdm: { ...spr.hdm, ...hdIa }, hdi: {}, fx: "" },
+  { name: "4 · IA + luz (simulada)", hd: true, hdm: { ...spr.hdm, ...hdIa }, hdi: {}, fx: "contrast(1.12) saturate(1.08) brightness(1.04) drop-shadow(2px 0 1px #ffb86a66) drop-shadow(-2px 0 1px #6aa0ff44) drop-shadow(0 6px 5px #0009)" },
+];
+MODELS[3].hdi = MODELS[2].hdi;          // misma imagen cargada: solo cambia el filtro
+const useModel = i => { const m = MODELS[i]; spr.hd = m.hd; spr.hdm = m.hdm; spr.hdi = m.hdi; spr.modelFx = m.fx; };
+const SAVE = ["sp", "mode", "model", "lvl", "act", "dir", "zoom", "comp", "cast", "bg", "rc-h", "rc-s", "rc-b"], LS = "hb_bestiary_sel";   // la selección sobrevive a recargar la página
 const store = () => { try { const o = {}; for (const id of SAVE) o[id] = $(id).type === "checkbox" ? $(id).checked : $(id).value; localStorage.setItem(LS, JSON.stringify(o)); } catch {} };
 try { const o = JSON.parse(localStorage.getItem(LS) || "{}"); for (const id of SAVE) if (id in o) { if ($(id).type === "checkbox") $(id).checked = !!o[id]; else $(id).value = o[id]; } } catch {}
 for (const id of SAVE) $(id).addEventListener("change", store);
@@ -90,14 +100,15 @@ function frame(t) {
   const cw = Math.round(150 * zoom), ch = Math.round(210 * zoom);
   const lv0 = +$("lvl").value, lvls = lv0 ? [lv0] : mode === "evo" ? (name === "Cyclops" || name === "Tutelary-Angel" || CLS_OF[name] ? [1, 10, 20, 30, 40, 50] : STAGES) : [50];
   const dirs = one ? [one] : [1, 2, 3, 4, 5, 6, 7, 8];
-  const W = cw * dirs.length, H = ch * lvls.length;
+  const cmp = $("model").value === "cmp", rows = cmp ? [[lv0 || 50, 0], [lv0 || 50, 1], [lv0 || 50, 2], [lv0 || 50, 3]] : lvls.map(l => [l, +$("model").value]);
+  const W = cw * dirs.length, H = ch * rows.length;
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   ctx.fillStyle = $("bg").value; ctx.fillRect(0, 0, W, H);
   world.time = t;
   r.ctx = ctx;
   const gridCell = (c0, r0) => { ctx.strokeStyle = "#ffffff12"; ctx.strokeRect(c0 * cw + .5, r0 * ch + .5, cw - 1, ch - 1); };
-  lvls.forEach((lv, ri) => dirs.forEach((d, ci) => {
-    gridCell(ci, ri);
+  rows.forEach(([lv, mi], ri) => dirs.forEach((d, ci) => {
+    gridCell(ci, ri); useModel(mi);
     const e = ent(name, lv, d, act, t); e.id = 100 + ri * 10 + d;     // id estable: los efectos aleatorios no saltan de un fotograma a otro
     if ($("cast").checked) fx.scast.set(e.id, { at: performance.now() - (t % 1700), sc: /^(Demon|Beholder|Frost|Liche)/i.test(name) ? name[0].toUpperCase() + name.slice(1).toLowerCase().replace(/[^a-z].*/, "") : "" });
     ctx.save(); ctx.beginPath(); ctx.rect(ci * cw, ri * ch, cw, ch); ctx.clip();
@@ -106,7 +117,7 @@ function frame(t) {
     try { r.drawEntity(e, 0, 0, { world, fx, hoverEnt: null, bubbles: null, pid: -1 }, ov); } catch (er) { $("info").textContent = "Error: " + er.message; }
     ctx.restore();
     ctx.fillStyle = "#ffffffaa"; ctx.font = "11px sans-serif";
-    ctx.fillText((mode === "evo" || lv0 ? "Lv " + lv + " · " : "") + "dir " + d, ci * cw + 4, ri * ch + 12);
+    ctx.fillText((cmp ? MODELS[mi].name + " · " : mode === "evo" || lv0 ? "Lv " + lv + " · " : "") + "dir " + d, ci * cw + 4, ri * ch + 12);
   }));
   r.ctx = r.canvas.getContext("2d");
   if (!$("info").textContent.startsWith("Error")) $("info").textContent = `${name} · tipo ${cfgOf(name).type} · hojas ${stream.done}/${stream.total} cargadas · etapas de tamaño en los niveles ${SIZE_STAGES.join(", ")}; Demon: ceniza <10, ojos rojos y estela de fuego al caminar 10, pulso de brasa y grietas 20, brillo en el borde, venas y Tremor de fuego 30, ondas de calor y chispas 40, máximo 50 (fisuras de lava al castear desde 30). Frost: gris azulado <10, huellas y vaho 10, nieve y niebla 20, ojos azules, báculo, brillo y nova de hielo con copo de nieve bajo los pies 30, cristales 40, viento en espiral, halo y venas 50. Liche: tamaño Lv 10, báculo 20, humo y círculo 30, ojos 50. Cyclops: electricidad en las pinzas en el nivel 50. Pixie: tamaño 10, 20 y 30; destellos en las alas 30, brillo y motas 40, halo y copos 50. Healer (verde): motas 30, cruces de curación 40, halo, pulso de curación en el suelo y brillo 50. Buffer (amarillo): motas 30, escudos-rombo en órbita 40, runa hexagonal giratoria y rayos 50. Aura (azul): ondas en el suelo 30, volutas 40, tres ondas, resplandor y rayos 50.`;

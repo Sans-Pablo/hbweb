@@ -484,7 +484,7 @@ function run(adv, w, p, b) {
       stuck(w, p, b, "sin flechas"); b.target = null; b.path = null;
       if (p.gold < 4) { const bw = p.bag.find(i => isBow(w.data.item(i.id)) && Object.values(p.equip).includes(i.uid)); if (bw) { blog(w, p, "Sin flechas ni oro: me quito el arco."); adv.command(p.id, { t: "unequip", uid: bw.uid }); return; } }          // quien no es arquero y no puede pagar flechas no se queda bloqueado con un arco que no dispara
       if (!p.recallTok && w.time - (b.recallAt || 0) > 6000 && (w.map.kind === "dungeon" || w.pvp)) { b.recallAt = w.time; blog(w, p, "Me quedé sin flechas: salgo con Recall a comprar más."); adv.command(p.id, { t: "recall" }); }
-      else if (!w.pvp && w.map.kind !== "dungeon") b.errand = 0;
+      else if (!w.pvp && w.map.kind !== "dungeon") { b.errand = 0; if (w.time - p.lastCombat > 3000) b.noFight = w.time + 5000; }       // va a comprar sin apuntar al aire
       return;
     }
     if (p.recallTok && b.recallAt && w.time - b.recallAt < 12000) { b.hold = w.time + 800; stuck(w, p, b, "Recall en curso"); return; }   // el Recall se rompe si sigue pegando
