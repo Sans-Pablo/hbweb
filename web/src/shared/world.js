@@ -178,6 +178,7 @@ const COMMANDS = {
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");
     if (w.time - p.lastMove < LIMITS.moveMs) return w.reject(p, cmd, "demasiado rápido");
+    if (sget(w, p, "confuse") && w.rng() < 0.5) cmd = { ...cmd, dir: 1 + Math.floor(w.rng() * 8) };      // confundido: la mitad de los pasos van al azar
     const run = !!cmd.run && p.sp >= 1;                       // sin resistencia no se corre
     const slow = sget(w, p, "ice") || (p.chillUntil || 0) > w.time ? 1.5 : 1;                 // helado (suelo del rey glacial, tormenta de hielo): un 50 % más lento
     if (!w.tryStep(p, cmd.dir, (run ? PLAYER.runMs : PLAYER.walkMs) * slow, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");

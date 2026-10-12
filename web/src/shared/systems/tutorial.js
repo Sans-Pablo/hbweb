@@ -96,9 +96,6 @@ export const STEPS = [
     L("p", "Ahora úsala: abre la mochila y haz doble clic en la bola. Tu compañero aparecerá a tu lado; vuelve a usarla para guardarlo.", "Now use it: open your bag and double-click the ball. Your companion will appear beside you; use it again to put it away."),
   ], goal: { k: "petuse", es: "Invoca a tu compañero", en: "Summon your companion", hint: { es: "Doble clic sobre la bola (F6)", en: "Double-click the ball (F6)" } },
     after: [L("p", "Con F10 abres sus talentos, y si cae en combate, tráemelo: lo curo por un precio. Alt + clic en un monstruo le ordena atacar.", "F10 opens its talents, and if it falls in battle, bring it to me: I heal it for a price. Alt + click on a monster orders it to attack.")] },
-  { id: "arena", lines: [
-    L("k", "¿Tu compañero te parece fuerte? Yo soy Kennedy: organizo combates entre summons. Apuesta oro y mira quién gana desde la grada. La casa se queda un diezmo, ¿eh?", "Do you think your companion is strong? I am Kennedy: I organise fights between summons. Bet gold and watch who wins from the stands. The house keeps a tenth, mind."),
-  ] },
   { id: "crypt", lines: [
     L("g", "Y ahora lo importante. Al norte de la granja está el teletransportador de las criptas: veinte niveles de esqueletos, cada uno más oscuro y con un jefe al final.", "And now what matters. North of the farm lies the teleporter to the crypts: twenty levels of skeletons, each darker than the last and with a boss at the end."),
     L("g", "Mata a todos los esqueletos de un nivel para abrir el portal que baja. Cuanto más profundo, mejor botín… y más miedo. Los jefes sueltan objetos únicos.", "Kill every skeleton on a level to open the portal down. The deeper you go, the better the loot... and the greater the fear. Bosses drop unique items."),

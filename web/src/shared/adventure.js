@@ -244,6 +244,7 @@ export class Adventure {
       if (!to || !this.transfer(p, w, to, [o.x, o.y])) return w.reject(p, cmd, "salida ocupada");
       return true;
     }
+    if (cmd.t === "say" && /^\/(to|w)\s+\S+\s+\S/i.test(cmd.text || "")) return this.whisper(p, cmd.text);
     if (cmd.t === "dbg" && DEBUG.enabled && (cmd.op === "goto" || cmd.op === "crypt")) return this.debugTravel(p, w, cmd);
     if (cmd.t === "respawn" && w !== this.homeOf(p)) {
       if (!p.dead || w.time - p.deadAt < 600) return false;
@@ -254,6 +255,18 @@ export class Adventure {
       return ok;
     }
     return w.command(id, cmd);
+  }
+
+  // Susurro «/to nombre texto» (INVENTO del port, el original lo tenía en el cliente): llega a ese jugador estés donde estés; los dos lo ven en su registro. El destinatario puede silenciarlos (opción Whisper).
+  whisper(p, raw) {
+    const m = /^\/(?:to|w)\s+(\S+)\s+([\s\S]+)$/i.exec(raw), text = m[2].trim().slice(0, 120), key = m[1].toLowerCase();
+    let t = null;
+    for (const w of this.worlds.values()) for (const e of w.ents.values()) if (e.kind === "player" && !e.dead && e.name?.toLowerCase() === key && e !== p) t = [w, e];
+    const w0 = this.worldFor(p.id);
+    if (!t) return w0.reject(p, { t: "say" }, "no hay nadie con ese nombre");
+    t[0].emit({ t: "whisper", id: t[1].id, name: p.name, text });
+    w0.emit({ t: "whisper", id: p.id, to: t[1].name, text });
+    return true;
   }
 
   // Herramientas de prueba: ir a cualquier mapa exportado o saltar a un nivel de la cripta (sin pasar por las restricciones de viaje)

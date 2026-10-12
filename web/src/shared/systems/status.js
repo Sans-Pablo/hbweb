@@ -21,4 +21,4 @@ export function sclear(w, e, key) {
   w.emit({ t: "status", id: e.id, key, v, on: false });
 }
 
-export const BUFFS = ["hold", "ice", "protect", "invis", "berserk", "confuse", "pfm"];
+export const BUFFS = ["hold", "ice", "protect", "invis", "berserk", "confuse", "inhibit", "pfm"];

@@ -7,9 +7,9 @@ Los jugadores abren un puesto de venta en `gshop_1f`, `wrhus_1f` y `bsmith_1f` (
 - Compra: clic en el puesto (a ≤4 casillas), clic en la fila; Ctrl compra la pila. **Comisión 0**: el oro va al puesto y el dueño lo recoge con "Recoger oro".
 - El puesto sigue abierto sin el dueño (AFK) y se persiste en `saves["sys:stalls"]` (`adventure.stallDb`). Cerrar devuelve objetos y oro.
 - Comandos: `stallopen`, `stallview`, `stallbuy`, `stalltake`, `stallclose`. Protocolo `NET_PROTO` = 7. Eventos `stall` y `stallsale`.
-- Test: `tests/stall.test.mjs`. Pendiente: que los bots abran puestos y compren (`stallsOf` listo).
+- Test: `tests/stall.test.mjs`. Los bots abren puestos y compren (ver Habitantes).
 
 ## Habitantes (v0.54.0)
 - `stallAI` (`systems/residents.js`): cada 4–9 min libres, si un habitante tiene ≥3 objetos sobrantes (`stallSurplus`, vía `judge`/`stallable`), viaja a `gshop_1f`, abre puesto (rótulo propio, precio ≥ 2× venta NPC ±), vuelve a la granja y más tarde regresa a recoger oro/cerrar. Se aborta a los 120 s o si lo reclutan. `manage` no vende los 8 mejores sobrantes de un habitante (`stallKeep`).
-- Test: `tests/residents-stall.test.mjs`. Pendiente: que los bots compren en puestos.
+- Test: `tests/residents-stall.test.mjs`. `tests/residents-buy.test.mjs`: cada ~3–6 min un habitante libre visita un puesto ajeno de `gshop_1f` y compra un objeto que `judge` manda equipar, si el oro (70 %) y `Inv.canCarry` lo permiten.
 - **Puerta libre**: el puesto no se abre a ≤8 casillas de un teletransporte (`Stall.DOOR_GAP`); los puestos de los bots se apartan a más de esa distancia.

@@ -26,7 +26,7 @@ const shopBin = new Uint8Array(readFileSync(new URL("maps/gshop_1f.bin", dir))),
   const g = new Grid(huntMeta.w, huntMeta.h, huntBin), [x0, y0, x1, y1] = ARENA.field;
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) assert.ok(!g.blocked(x, y), `arena despejada ${x},${y}`);
   assert.ok(!g.blocked(...ARENA.watch), "sitio del espectador libre");
-  assert.ok(EXTRA_CITIZENS[ARENA.shop].some(c => c.name === ARENA.npc && c.role === ARENA.role), "Kennedy en la tienda");
+  // Kennedy ya no está en la tienda (arena aplazada a futuro, docs/FUTURO.md): el test lo coloca a mano
   assert.notEqual(ARENA.npc, "McGaffin");
 }
 
@@ -124,7 +124,7 @@ assert.equal(p.arenaHist.length, 1);
   const pid = adv.addPlayer("espectador"), pl = adv.farm.ents.get(pid); pl.gold = 50000; pl.level = 20;
   const shop = adv.staticWorld("gshop_1f"); assert.ok(shop, "tienda cargada");
   assert.ok(adv.transfer(pl, adv.farm, shop, [51, 41]));
-  const k = [...shop.ents.values()].find(e => e.role === ARENA.role); assert.ok(k && k.name === "Kennedy");
+  const k = spawnCitizen(shop, ARENA.npc, 55, 43, ARENA.role, "Howard"); assert.ok(k && k.name === "Kennedy");
   const bl = newInst(shop, 653); bl.comp = { sp: "Skeleton", lvl: 12, exp: 0, on: false, nm: "Bruboto", mode: "attack", tal: { hide: 2, fireball: 1 } };
   Inv.addToBag(pl, data, bl);
   const log = []; for (const wd of [shop, adv.staticWorld("huntzone1")]) { const e0 = wd.emit.bind(wd); wd.emit = e => { log.push(e); e0(e); }; }

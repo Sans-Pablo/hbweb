@@ -524,6 +524,7 @@ async function main() {
   $id("btn-tutorial").onclick = () => { optionsEl.classList.remove("open"); tutorial.restart(); };
   $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
+  hud.canWhisper = () => flags.whisper;
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
   gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
@@ -584,6 +585,7 @@ async function main() {
         hud.log("Clima: " + w.weather);
       }
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
+      else if (/^\/(to|w)\s+\S+\s*$/i.test(t)) hud.log("Uso: /to nombre texto");
       else if (t) { flags.lastChat = t; flags.chPrefix = /^[!$@]/.test(t) ? t[0] : ""; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
@@ -744,9 +746,6 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
       box.remove(); resolve(id);
     };
     if (watchBtn) watchBtn.onclick = observe;
-    const hashId = online && /^#observar=([0-9]+)/.exec(location.hash);
-    if (hashId) { box.style.display = "none"; conn.watch(+hashId[1]).then(id => { box.remove(); resolve(id); }, () => observe()); }
-    else if (online && location.hash === "#observar") observe();
     const submit = async () => {
       let name = user.value.trim().slice(0, 16);
       msg.textContent = "…";
@@ -776,8 +775,11 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
         resolve(id);
       } catch (e) { msg.textContent = e.message; }
     };
-    go.onclick = submit;
+    if (go) go.onclick = submit;
     box.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") submit(); };
+    const hashId = online && /^#observar=([0-9]+)/.exec(location.hash);
+    if (hashId) { box.style.display = "none"; conn.watch(+hashId[1]).then(id => { box.remove(); resolve(id); }, () => observe()); }
+    else if (online && location.hash === "#observar") observe();
   });
 }
 

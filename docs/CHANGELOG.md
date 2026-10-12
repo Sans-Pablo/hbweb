@@ -2,6 +2,14 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.70.0 · Cierre de pendientes (2026-10-12)
+- Magia: Inhibición (efecto 16) impide lanzar hechizos y Confusión (31/32) hace caminar al azar la mitad de los pasos (`magicsys.js`, `status.js`, `world.js`); test `magic-pvp`.
+- Bots compradores: de vez en cuando un habitante visita un puesto ajeno de `gshop_1f` y compra un objeto que puede usar, si le alcanza el oro y la carga (`residents.js`); test `residents-buy`.
+- Susurros: `/to nombre texto` (o `/w`) llega a cualquier jugador conectado, con eco al remitente (`adventure.whisper`); test `whisper`.
+- Arena: se quita el NPC Kennedy y el paso del tutorial; la arena completa pasa a `docs/FUTURO.md`.
+- Tests: se corrige el test intermitente de residentes; el observador ya no lanza errores de consola.
+- Herramientas: `tools/version_web.mjs` sustituye a la versión en Python (no hace falta Python).
+
 ## 0.69.0 · Vida de bots (2026-10-12)
 - Pesca (`systems/fishing.js`): caña (105), peces vendibles y comida de mascotas carnívoras (los peces no se dan a los herbívoros).
 - Descansos de los bots (`systems/leisure.js`): entre peleas pescan, cultivan, comercian, entrenan a su summon, charlan con el guild o acuden al aviso de backup de un compañero (`lz` en el cerebro: veces, oro y tiempo por actividad). Ganan oro con la pesca y la venta.

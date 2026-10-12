@@ -93,6 +93,7 @@ export function cast(w, p, cmd) {
   if (!pre && w.busy(p)) return w.reject(p, cmd, "ocupado");
   if (w.time - (p.lastCast ?? -1e9) < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido");
   const sp = usable(w, p, cmd); if (!sp) return false;
+  if (sget(w, p, "inhibit")) return w.reject(p, cmd, "inhibido");
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
   const cost = M.manaCost(p, sp);
@@ -315,7 +316,29 @@ function resolve(w, p, id, sp, x, y, cost) {
       if (target && !resist(w, target, power))
         w.emit({ t: "scan", id: p.id, text: target.kind === "player" ? ` Player: ${target.name} HP:${target.hp} MP:${target.mp}.` : ` NPC: ${target.name} HP:${target.hp} MP:0` });
       break;
-    default: break;                                                    // 16, 31, 32: solo afectan a otros jugadores
+    case 16:                                                           // Confusion / Illusion: el jugador se mueve al azar (la mitad de los pasos); no sobre uno mismo
+      if (target && target !== p && target.kind === "player" && !target.dead && !resist(w, target, power)) sset(w, target, "confuse", sp.v4, secs);
+      else if (target && target !== p) w.emit({ t: "resist", id: target.id });
+      break;
+    case 31:                                                           // Inhibition Casting: el jugador no puede lanzar hechizos
+      if (target && target !== p && target.kind === "player" && !target.dead && !resist(w, target, power)) sset(w, target, "inhibit", 1, (sp.last || sp.v4) * 1000);
+      else if (target && target !== p) w.emit({ t: "resist", id: target.id });
+      break;
+    case 32: {                                                         // Resurrection: levanta a un jugador caído de la casilla (el original lo pide con un cuadro; aquí es directo)
+      const down = [...w.ents.values()].find(e => e.kind === "player" && e.dead && e.x === x && e.y === y && e !== p);
+      if (!down) break;
+      const spot = w.grid.free(x, y, down.id) ? [x, y] : w.freeSpotNear(x, y);
+      if (!spot) break;
+      down.x = down.fx = spot[0]; down.y = down.fy = spot[1];
+      w.grid.occupy(down.x, down.y, down.id);
+      down.dead = false; down.st = {};
+      down.hp = Math.max(1, Math.round(down.maxHp * Math.min(1, 0.2 + 0.1 * sp.v4)));
+      w.setAct(down, 0, 0); down.busyUntil = 0;
+      w.emit({ t: "respawn", id: down.id, by: p.id });
+      w.emit({ t: "resurrected", id: down.id, by: p.id });
+      break;
+    }
+    default: break;
   }
   w.emit({ t: "spell", id: sm ? sm.id : p.id, spell: id, x, y, attr: sp.attr, type: sp.type });
 }

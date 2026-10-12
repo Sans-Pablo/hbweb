@@ -15,8 +15,8 @@ Código: `server/server.mjs` (servidor), `server/accounts.mjs` (cuentas y límit
 
 ## Pendiente / límites conocidos
 - Un único servidor y un único proceso; sin recuperación de clave por correo (el admin usa `resetpass`).
-- El chat es del mapa (como en local); no hay susurros ni gremios.
-- PvP no existe todavía: la simulación local no lo tiene.
+- El chat es del mapa; hay chat de gremio y de grupo, y susurros con `/to nombre texto` (`adventure.whisper`, test `whisper`).
+- PvP existe (`canFight`, recompensa); los scripts de Windows y los túneles no están probados.
 - Los scripts de Windows (`tools/servidor-online.ps1`) y los túneles ngrok/Tailscale no se han podido probar en el entorno de desarrollo.
 
 ## Suavizado de movimiento remoto (0.25.2)

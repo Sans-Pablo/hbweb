@@ -130,6 +130,7 @@ export class Hud {
       } break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con el HP lleno."); break;
       case "chat": this.log(ev.system ? ev.text : (ev.ch === "shout" ? "[Shout] " : ev.ch === "side" ? "[Side] " : "") + ev.name + ": " + ev.text, ev.system ? "gold" : ev.ch === "shout" ? "shout" : ev.ch === "side" ? "side" : "chat"); break;
+      case "whisper": if (ev.id === me && (ev.to || this.canWhisper?.() !== false)) this.log(ev.to ? "[To " + ev.to + "] " + ev.text : "[" + ev.name + " whispers] " + ev.text, "party"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;
     }
   }

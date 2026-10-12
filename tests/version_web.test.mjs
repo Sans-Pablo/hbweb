@@ -1,0 +1,25 @@
+import assert from "assert";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { versionWeb } from "../tools/version_web.mjs";
+
+const root = fs.mkdtempSync(path.join(os.tmpdir(), "vw-"));
+const put = (f, s) => fs.writeFileSync(path.join(root, f), s);
+const get = f => fs.readFileSync(path.join(root, f), "utf8");
+put("index.html", '<script type="module" src="./src/main.js"></script><script type="module">import { R } from "./src/renderer.js";</script>');
+fs.mkdirSync(path.join(root, "src"));
+put("src/main.js", 'import { R } from "./renderer.js"; import "../shared/data.js"; fetch("data/map.json");');
+put("src/renderer.js", "export { X } from '../shared/dungeon.js';");
+assert.equal(versionWeb(root, "commit1"), 3);
+assert.ok(get("index.html").includes("./src/main.js?v=commit1"));
+assert.ok(get("index.html").includes("./src/renderer.js?v=commit1"));
+assert.ok(get("src/main.js").includes("../shared/data.js?v=commit1"));
+assert.ok(get("src/renderer.js").includes("../shared/dungeon.js?v=commit1"));
+assert.ok(get("src/main.js").includes('fetch("data/map.json")'));
+assert.equal(versionWeb(root, "commit1"), 0);
+assert.equal(versionWeb(root, "commit2"), 3);
+assert.ok(!get("src/main.js").includes("commit1"));
+assert.throws(() => versionWeb(root, 'bad"revision'));
+fs.rmSync(root, { recursive: true });
+console.log("OK version_web");

@@ -15,4 +15,4 @@ Modo de prueba: `MAGIC_MODE.free` (sin maná ni requisitos); los tests lo desact
 | 4, 5, 6, 20 | sin efecto | sin hechizos en `Magic.cfg` que afecten a monstruos |
 
 ## Pendiente
-Efectos visuales 102–172 de los tipos 19–33 que aún no tengan sprite; teletransporte entre mapas por hechizo; PvP.
+Nada. Efectos 102–172 sin sprite: por diseño no se dibujan; el teletransporte entre mapas se cubre con Recall; PvP existe (ver online.md); Inhibición y Confusión implementadas (test magic-pvp).

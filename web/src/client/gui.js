@@ -482,7 +482,7 @@ export class Gui {
     if (st.pfm && left(st.pfm.until) > 0) { magRed = st.pfm.v; add("Protection From Magic", "magic dmg -" + st.pfm.v + "%", left(st.pfm.until), "#b9a3ff"); }
     if (st.berserk && left(st.berserk.until) > 0) add("Berserk", "damage x2", left(st.berserk.until), "#ff9a6a");
     if (st.invis && left(st.invis.until) > 0) add("Invisibility", "unseen", left(st.invis.until), "#d8d8d8");
-    for (const [k, nm, e] of [["hold", "Paralyzed", "can't move"], ["ice", "Frozen", "can't move"], ["confuse", "Confused", "random moves"], ["poison", "Poisoned", "losing HP"]]) if (st[k] && left(st[k].until) > 0) add(nm, e, left(st[k].until), "#ff6a6a");
+    for (const [k, nm, e] of [["hold", "Paralyzed", "can't move"], ["ice", "Frozen", "can't move"], ["confuse", "Confused", "random moves"], ["inhibit", "Inhibited", "can't cast"], ["poison", "Poisoned", "losing HP"]]) if (st[k] && left(st[k].until) > 0) add(nm, e, left(st[k].until), "#ff6a6a");
     if (au) {
       const t = Math.max(0, (au.until - now) / 1000), by = (au.by || "Aura Summon") + (au.x2 ? " x2" : "");
       if (au.def) { dmgRed = au.def; add("Defense Aura", "damage taken -" + au.def + "%", t, "#8fd68f"); }

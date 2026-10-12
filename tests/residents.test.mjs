@@ -39,7 +39,8 @@ const me = w.ents.get(hid);
 const say = [], listen = () => { for (const e of w.drainEvents()) if (e.t === "chat") say.push(e); };
 a.relocate(A, w, [me.x + 2, me.y]);
 a.command(hid, { t: "say", text: "Hola, ¿quién eres?" });
-await new Promise(r => setImmediate(r));          // la respuesta del modelo llega entre ticks
+const flush = async () => { for (let k = 0; k < 50; k++) { await new Promise(r => setTimeout(r, 2)); if (!a._sayBusy && !(a._sayQ && a._sayQ.length) && k > 2) break; } };   // cede hasta que el LLM falso y la cola de habla acaben (determinista bajo carga)
+await flush();          // la respuesta del modelo llega entre ticks
 tick(6000); listen();
 const reply = say.find(e => e.id === A.id || a.bots.get(e.id)?.res?.rel?.Pablo);
 assert.ok(reply, "un habitante contesta");
@@ -48,19 +49,19 @@ assert.ok(R.relOf(a.bots.get(reply.id), "Pablo") >= 1, "recuerda al jugador");
 // modelo de lenguaje: si responde a tiempo, su texto sustituye a la frase hecha
 const B = a.bots.get(reply.id); a.relocate(B, w, [me.x + 1, me.y]); say.length = 0;
 a.command(hid, { t: "say", text: B.name + ", ¿qué haces?" });
-await new Promise(r => setImmediate(r));            // la respuesta del modelo llega entre ticks
+await flush();            // la respuesta del modelo llega entre ticks
 tick(8000); listen();
 assert.ok(say.some(e => e.id === B.id && /charlo contigo, Pablo/.test(e.text)), "usa la voz del modelo: " + JSON.stringify(say.map(e => e.text)));
 
 // grupo: solo acepta a quien ya conoce (≥3 charlas)
 const C = a.residents().find(b => b !== B && b !== A);
-a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0; C.res._tripAt = w.time + 1e9; C.res._stallAt = w.time + 1e9; C.res._stall = null; C.res._pet = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null;
-a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); tick(9000);
-assert.ok(!C.bot.owner, "aún no se fía");
-C.res.rel.Pablo = 5; C.res._delve = null; C.res._delveAt = w.time + 1e9; C.res._plan = null; C.res.followUntil = w.time + 20000; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await new Promise(r => setImmediate(r)); for (let k = 0; k < 18 && C.bot.owner !== hid; k++) tick(500);      // se comprueba cada medio segundo: otro grupo (consejo) podría reclutarla después
+C.res.rel.Pablo = 0; a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0; C.res._tripAt = w.time + 1e9; C.res._stallAt = w.time + 1e9; C.res._stall = null; C.res._pet = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null;
+a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await flush(); tick(9000);
+assert.notEqual(C.bot.owner, hid, "aún no se fía");   // otro habitante sí puede reclutarlo: lo que importa es que no sigue al jugador
+C.res.rel.Pablo = 5; C.res._delve = null; C.res._delveAt = w.time + 1e9; C.res._plan = null; C.res.followUntil = w.time + 20000; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await flush(); for (let k = 0; k < 18 && C.bot.owner !== hid; k++) tick(500);      // se comprueba cada medio segundo: otro grupo (consejo) podría reclutarla después
 assert.equal(C.bot.owner, hid, "acepta acompañar al amigo");
 C.res.followUntil = w.time + 100; tick(1000);
-assert.equal(C.bot.owner, null, "vuelve a su vida");
+assert.notEqual(C.bot.owner, hid, "vuelve a su vida");
 
 // metas: al cumplirla, recuerdo y meta nueva
 A.res.goal = { k: "level", n: A.level }; const g0 = A.res.mem.length; tick(2000);

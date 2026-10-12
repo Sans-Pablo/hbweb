@@ -1248,7 +1248,20 @@ function stallAI(adv, w, p, r, home) {
       return;
     }
     if (w.map.id !== "gshop_1f") { r._stall = null; return; }
-    if (!st.done) {
+    if (!st.done && st.buy) {                                                                 // comprador: se acerca al puesto que le interesa y compra lo que le mejora el equipo
+      st.done = true; st.back = now + 4000;
+      const me = p.name.toLowerCase();
+      for (const e of Stall.stallsOf(w)) {
+        if (e.stall.owner === me) continue;
+        const row = e.stall.items.find(x => x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"); if (!row) continue;
+        const sp = w.freeSpotNear(e.x + 1, e.y + 1); if (sp) adv.relocate(p, w, sp);
+        const __r = adv.command(p.id, { t: "stallbuy", sid: e.stall.sid, uid: row.inst.uid, count: row.inst.count || 1 })
+        if (__r) {
+          remember(p, "Compré en el puesto de " + e.stall.name + ".", "I bought something at " + e.stall.name + "'s stall.");
+          blog(w, p, "Compro en el puesto de " + e.stall.name + " algo que me mejora el equipo."); break;
+        }
+      }
+    } else if (!st.done) {
       st.done = true; st.back = now + 4000;
       // BUG-012: el puesto no se monta junto a la puerta; se aparta a más de Stall.DOOR_GAP casillas de cualquier teletransporte
       const nearTp = (x, y) => [...w.teleports.values()].some(t => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) <= Stall.DOOR_GAP);
@@ -1268,6 +1281,18 @@ function stallAI(adv, w, p, r, home) {
       }
     } else if (now >= st.back) { r._stall = null; adv.transfer(p, w, home, home.home); b.home = { x: p.x, y: p.y }; b.path = null; b.target = null; }
     return;
+  }
+  if (w === home && now >= (r._buyAt ||= now + 200000 + (hash(p.name) % 200000))) {                // ¿hay algo a la venta que le mejore el equipo y pueda pagar?
+    r._buyAt = now + 120000;
+    const me = p.name.toLowerCase(), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
+    const want = tp && !(b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || b.travel || w.pvp || p.hp < p.maxHp * 0.7) &&
+      (adv.stallDb || []).some(sd => sd.owner !== me && sd.map === "gshop_1f" && sd.items.some(x => x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"));
+    if (want) {
+      r._buyAt = now + 600000;
+      r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000, buy: true };
+      b.travel = { x: tp.x, y: tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0;
+      blog(w, p, "Voy a la tienda: hay en un puesto algo que me mejora el equipo."); return;
+    }
   }
   if (w !== home || now < (r._stallAt ||= now + 240000 + (hash(p.name) % 300000))) return;
   r._stallAt = now + 30000;                                                                   // ocupado: reintenta pronto

@@ -1,5 +1,7 @@
 # Arena de apuestas
 
+> **APLAZADA (v0.70.0).** Kennedy ya no está en la tienda y el tutorial no la menciona; el código se conserva sin uso. Ver `docs/FUTURO.md`.
+
 INVENTO del port (sin equivalente en el original). Código: `shared/systems/arena.js`; cliente: cuadro 44 en `client/npcdialogs.js`. Test: `tests/arena.test.mjs`.
 
 ## Qué es

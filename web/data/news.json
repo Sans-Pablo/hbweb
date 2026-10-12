@@ -11,6 +11,31 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Cierre de pendientes (v0.70.0)",
+        "en": "Loose ends (v0.70.0)"
+      },
+      "items": [
+        {
+          "es": "Susurros: escribe /to nombre texto para hablar en privado con cualquier jugador conectado.",
+          "en": "Whispers: type /to name text to talk privately to any connected player."
+        },
+        {
+          "es": "Los habitantes también compran en los puestos de la tienda.",
+          "en": "Residents now buy from the stalls in the shop."
+        },
+        {
+          "es": "Inhibición y Confusión afectan de verdad: no se puede lanzar magia / se camina al azar.",
+          "en": "Inhibition and Confusion now work: no spellcasting / random walking."
+        },
+        {
+          "es": "Se quita el NPC Kennedy de la arena (la arena completa queda para el futuro).",
+          "en": "Arena NPC Kennedy removed (the full arena is left for the future)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Vida de bots (v0.69.0)",
         "en": "Bot life (v0.69.0)"
       },
