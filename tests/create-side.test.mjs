@@ -1,0 +1,22 @@
+// Creación de personaje: el bando elegido (Aresden/Elvine) se aplica y el nuevo de Elvine empieza en su granja.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { sanitizeCreate } from "../web/src/shared/systems/player.js";
+import { Adventure } from "../web/src/shared/adventure.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { GameData } from "../web/src/shared/data.js";
+assert.equal(sanitizeCreate({}).side, 1, "por defecto Aresden");
+assert.equal(sanitizeCreate({ side: 2 }).side, 2);
+assert.equal(sanitizeCreate({ side: 9 }).side, 1, "valor raro = Aresden");
+const dir = new URL("../web/data/", import.meta.url);
+const json = n => JSON.parse(readFileSync(new URL(n, dir)));
+const meta = json("map.json"), npcDb = json("npc.json");
+const data = new GameData({ items: json("items.json"), magic: json("magic.json"), npcs: npcDb });
+const mm = json("maps/elvfarm.json"), maps = { elvfarm: { meta: mm, grid: new Grid(mm.w, mm.h, new Uint8Array(readFileSync(new URL("maps/elvfarm.bin", dir)))) } };
+const a = new Adventure({ grid: new Grid(meta.w, meta.h, new Uint8Array(readFileSync(new URL("arefarm.bin", dir)))), start: meta.start, npcDb, data, spawns: [], maps, rng: () => 0.5 });
+const stats = { str: 10, vit: 10, dex: 10, int: 10, mag: 10, chr: 10 };
+const ar = a.addPlayer("Ana", null, { gender: 1, stats, side: 1 }), el = a.addPlayer("Elo", null, { gender: 1, stats, side: 2 });
+assert.equal(a.worldFor(ar).map.id, "arefarm");
+assert.equal(a.worldFor(el).ents.get(el).side, 2);
+assert.equal(a.worldFor(el).map.id, "elvfarm", "el de Elvine empieza en su granja");
+console.log("OK create-side");

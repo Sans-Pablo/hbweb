@@ -5,7 +5,7 @@ export const DYE_RGB = ["", "#6a6aff", "#c8c8a0", "#ffc83c", "#ff5a2e", "#3caa3c
   "#82c8ff", "#5a2a96", "#ff5a1e", "#2a9cff", "#8a1fd0", "#ff3a00"];      // 16..21: tintes fijos de los báculos de escuela (shared/classgear.js): hielo, oscuridad, fuego; y los tres maestros, más intensos
 export const DEFAULT_LOOK = { skin: 2, hair: 1, hairCol: 0, under: 0 };
 
-// Color del pelo (m_wR/G/B de Game.cpp, 16 tonos). Valores de pantalla aproximados.
+// Color del pelo (m_wR/G/B de Game.cpp, 16 tonos). Se SUMAN al píxel (PutSpriteRGB); los valores exactos de la tabla no están a mano: son aproximados.
 export const HAIR_COLORS = [
   ["Natural", null], ["Azul índigo", "#6a6ae0"], ["Oliva", "#8f8f70"], ["Dorado", "#e0b040"],
   ["Carmesí", "#d84a30"], ["Verde", "#4a9a4a"], ["Gris", "#9a9a9a"], ["Aguamarina", "#6fb4b8"],
@@ -70,7 +70,7 @@ export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
   spr.put(ctx, uk, d * fpd + f, x, y);
   if (!(ap && ap.helm)) {
     const col = HAIR_COLORS[look.hairCol][1];
-    if (col) spr.tintedHair(ctx, hk, d * hpd + f, x, y, col);
+    if (col) spr.tintedHair(ctx, hk, d * hpd + f, x, y, col, true);
     else spr.put(ctx, hk, d * hpd + f, x, y);
   }
   if (ap) {

@@ -175,7 +175,7 @@ export class Sprites {
   }
 
   // Pelo teñido: el color del original se suma a los píxeles (PutSpriteRGB); aquí se mezcla con el tono base
-  tintedHair(ctx, key, f, x, y, rgb) {
+  tintedHair(ctx, key, f, x, y, rgb, add = false) {
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
@@ -184,9 +184,11 @@ export class Sprites {
     g.globalCompositeOperation = "source-over";
     g.clearRect(0, 0, W, H);
     g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
-    g.globalCompositeOperation = "multiply";        // oscurece/colorea el pelo gris original
+    g.globalCompositeOperation = add ? "lighter" : "multiply";        // add (pelo): PutSpriteRGB SUMA el color al píxel (con tope 255); si no, multiplica (tintes de ropa)
+    g.globalAlpha = add ? 0.55 : 1;
     g.fillStyle = rgb;
     g.fillRect(0, 0, W, H);
+    g.globalAlpha = 1;
     g.globalCompositeOperation = "destination-in";  // y recorta de nuevo a la forma del pelo
     g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
     ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);

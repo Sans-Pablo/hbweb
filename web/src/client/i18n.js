@@ -41,7 +41,7 @@ const EN = {
   "Ese nombre ya existe en este navegador.": "That name already exists in this browser.", "No existe esa cuenta. Pulsa «Crear cuenta».": "That account does not exist. Press “Create account”.",
   "Contraseña incorrecta.": "Wrong password.", "Ese archivo no es una partida de Helbreath Web.": "That file is not a Helbreath Web save.",
   "No se pudo conectar con el servidor.": "Could not connect to the server.", "Partida en línea": "Online game", " · aún no hay nadie": " · nobody here yet",
-  "Personalidad": "Personality", "Prudente": "Cautious", "Bromista": "Joker", "Decidido": "Bold",
+  "Bando": "Side", "Personalidad": "Personality", "Prudente": "Cautious", "Bromista": "Joker", "Decidido": "Bold",
   "Cauto y reflexivo: avisa de los peligros y habla con calma.": "Careful and thoughtful: warns about dangers and speaks calmly.",
   "Charlatán y socarrón: comenta todo con humor.": "Chatty and cheeky: comments on everything with humour.",
   "Directo y valiente: pocas palabras y mucha acción.": "Direct and brave: few words, lots of action.",

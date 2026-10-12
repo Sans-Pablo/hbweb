@@ -4,7 +4,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## web/src/shared
 
-- `adventure.js` · 436 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
+- `adventure.js` · 437 · Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 - `appearance.js` · 18 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `classgear.js` · 65 · Equipo por clase y báculos de escuela (v0.62.0). INVENTO del port: el original no restringe equipo por clase.
@@ -50,7 +50,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `magicsys.js` · 358 · Lanzar y aprender hechizos.
 - `npcsys.js` · 427 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 117 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
-- `player.js` · 176 · Jugador: creación, guardado, recalculo de atributos, reaparición.
+- `player.js` · 177 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `quests.js` · 221 · Misiones del Acto I (v0.63.0). INVENTO del port: el original no tiene líneas de misiones.
 - `residents.js` · 1477 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 20 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
@@ -70,7 +70,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `accounts.js` · 49 · Cuentas locales (la prueba es de un jugador y sin servidor): nombre + contraseña.
 - `anim.js` · 75 · Qué sprite y qué fotograma toca dibujar para cada entidad en cada momento.
 - `armory.js` · 117 · Armería: editor de sprites de objetos (armeria.html). Recolorea el sprite de mochila de cualquier objeto de Item.cfg
-- `assets.js` · 264 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
+- `assets.js` · 266 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
 - `audio.js` · 207 · Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
 - `bestiary.js` · 112 · Bestiario: página de pruebas visuales (bestiario.html). Dibuja cualquier criatura con el mismo drawEntity del juego,
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
@@ -78,7 +78,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 312 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 247 · Entrada del jugador -> intenciones -> órdenes al servidor.
-- `create.js` · 128 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
+- `create.js` · 129 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `dashboard.js` · 164 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
 - `devtools.js` · 77 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
@@ -126,6 +126,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `archer.test.mjs` · 34 · Arquero: un habitante cazador se equipa un arco, compra flechas, estudia el manual de arquería y sigue con ellas tras pelear.
 - `arena.test.mjs` · 173 · Arena de apuestas: simulación, cuotas con margen de la casa, combate en directo y cobro. node tests/arena.test.mjs
 - `assets.test.mjs` · 100 · Decodifica las hojas RGBA reales, incluidos los filtros PNG. Sin dependencias de navegador.
+- `backup.test.mjs` · 14 · Backup de guild (leisure.js): quien pide refuerzos fija el aviso con enfriamiento; las palabras clave se reconocen.
 - `bag-stack.test.mjs` · 29 · Pociones apilables: se juntan por id, el uso gasta una unidad y la partida antigua se fusiona al cargar.
 - `blizzard-friendly.test.mjs` · 44 · Blizzard (área): no daña a los summons propios, sí a un monstruo ajeno.
 - `bosses.test.mjs` · 113 · Mecánicas únicas de los 4 jefes de la cripta (shared/systems/bosses.js). node tests/bosses.test.mjs
@@ -142,6 +143,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `cleansay.test.mjs` · 7 · cleanSay: el texto del LLM nunca debe llegar al chat con restos de JSON.
 - `combat.test.mjs` · 115 · Fórmulas de combate contra HGServer/Game.cpp iCalculateAttackEffect (jugador -> monstruo).
 - `companion.test.mjs` · 85 · Compañeros: obtención en la tienda, selección, estadísticas compartidas, experiencia, guardado.
+- `create-side.test.mjs` · 22 · Creación de personaje: el bando elegido (Aresden/Elvine) se aplica y el nuevo de Elvine empieza en su granja.
 - `data.test.mjs` · 50 · Coherencia de los datos generados (web/data): lo que un conversor deja a medias suele romper el juego mucho después.
 - `debug.test.mjs` · 38 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
 - `dummy.test.mjs` · 186 · Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.

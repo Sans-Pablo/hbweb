@@ -2,6 +2,11 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.71.0 · Bando y pelo (2026-10-12)
+- Creación de personaje: se elige el bando (Aresden/Elvine); el de Elvine empieza en Elvine Farm (`player.js`, `adventure.addPlayer`, `create.js`); test `create-side`.
+- Tinte de pelo: el color se suma al píxel como `PutSpriteRGB` (antes se multiplicaba); los valores exactos de la tabla del original no están disponibles y siguen siendo aproximados.
+- Test `backup` (aviso de refuerzos del guild); el vaivén ya tenía el suyo. Revisado `audio.js`: sin cambios.
+
 ## 0.70.0 · Cierre de pendientes (2026-10-12)
 - Magia: Inhibición (efecto 16) impide lanzar hechizos y Confusión (31/32) hace caminar al azar la mitad de los pasos (`magicsys.js`, `status.js`, `world.js`); test `magic-pvp`.
 - Bots compradores: de vez en cuando un habitante visita un puesto ajeno de `gshop_1f` y compra un objeto que puede usar, si le alcanza el oro y la carga (`residents.js`); test `residents-buy`.

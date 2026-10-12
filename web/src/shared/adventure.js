@@ -166,6 +166,7 @@ export class Adventure {
     const id = this.farm.addPlayer(name, save, create);
     const pl = this.farm.ents.get(id); if (pl && !pl.side) pl.side = 1;       // nadie empieza de «viajero»: Aresfarm es de Aresden, como los habitantes (así pueden invitarte a party y guild)
     this.locations.set(id, this.farm);
+    if (pl && !save && pl.side === 2) { const ef = this.staticWorld("elvfarm"); if (ef && ef !== this.farm) this.transfer(pl, this.farm, ef, ef.home); }      // personaje nuevo de Elvine: empieza en su granja
     const at = save?.pos;                                                      // vuelve donde cerró sesión (mapas fijos; las criptas son por jugador y no se restauran)
     if (at && at.map && at.map !== "arefarm" && at.map !== ARENA.map && Number.isFinite(at.x) && Number.isFinite(at.y) && pl) {
       const to = this.staticWorld(at.map);

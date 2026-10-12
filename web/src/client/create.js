@@ -16,7 +16,7 @@ export function createCharacter(spr, defaultName) {
   const root = document.getElementById("create");
   let cls = "warrior";
   const st = { ...PRESETS.warrior };
-  const c = { name: validCharName(defaultName) ? defaultName : "", gender: 1 + rnd(2), skin: 1 + rnd(3), hair: rnd(8), hairCol: rnd(16), under: rnd(8), persona: rnd(3) };
+  const c = { name: validCharName(defaultName) ? defaultName : "", gender: 1 + rnd(2), skin: 1 + rnd(3), hair: rnd(8), hairCol: rnd(16), under: rnd(8), persona: rnd(3), side: 1 };
   const left = () => 70 - STATS.reduce((a, [k]) => a + st[k], 0);
 
   root.innerHTML = `<div class="box">
@@ -46,6 +46,7 @@ export function createCharacter(spr, defaultName) {
     ["skin", "Piel", () => SKIN_NAMES[c.skin], v => (c.skin = v < 1 ? 3 : v > 3 ? 1 : v)],
     ["hair", "Peinado", () => "Estilo " + (c.hair + 1), v => (c.hair = (v + 8) % 8)],
     ["hairCol", "Color de pelo", () => HAIR_COLORS[c.hairCol][0], v => (c.hairCol = (v + 16) % 16)],
+    ["side", "Bando", () => (c.side === 1 ? "Aresden" : "Elvine"), v => (c.side = v < 1 ? 2 : v > 2 ? 1 : v)],
     ["persona", "Personalidad", () => PERSONAS[c.persona].name, v => (c.persona = (v + 3) % 3)],
     ["under", "Ropa interior", () => UNDER_NAMES[c.under], v => (c.under = (v + 8) % 8)],
   ];
@@ -119,7 +120,7 @@ export function createCharacter(spr, defaultName) {
         if (!validCharName(name)) { msg.textContent = "Nombre no válido: hasta 10 letras o números, sin espacios ni símbolos."; return; }
         cancelAnimationFrame(raf);
         root.style.display = "none"; root.innerHTML = "";
-        resolve({ name, cls, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under, persona: PERSONAS[c.persona].id });
+        resolve({ name, cls, stats: { ...st }, gender: c.gender, skin: c.skin, hair: c.hair, hairCol: c.hairCol, under: c.under, side: c.side, persona: PERSONAS[c.persona].id });
       }
     };
     root.onkeydown = e => e.stopPropagation();

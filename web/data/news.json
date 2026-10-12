@@ -11,6 +11,23 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Bando y pelo (v0.71.0)",
+        "en": "Side and hair (v0.71.0)"
+      },
+      "items": [
+        {
+          "es": "Al crear personaje eliges Aresden o Elvine; los de Elvine empiezan en Elvine Farm.",
+          "en": "When creating a character you pick Aresden or Elvine; Elvine characters start in Elvine Farm."
+        },
+        {
+          "es": "El color del pelo ahora se suma al sprite, como en el original.",
+          "en": "Hair colour is now added to the sprite, as in the original."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Cierre de pendientes (v0.70.0)",
         "en": "Loose ends (v0.70.0)"
       },

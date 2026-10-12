@@ -40,6 +40,7 @@ export function sanitizeCreate(c) {
     stats, cls: CLASSES.includes(c.cls) ? c.cls : "warrior",
     gender: clampInt(c.gender, 1, 2, 1),
     persona: "wjd".includes(c.persona) && c.persona.length === 1 ? c.persona : null,      // personalidad (tono de las frases)
+    side: c.side === 2 ? 2 : 1,                                                                  // bando elegido al crear (Aresden 1, Elvine 2)
     look: { skin: clampInt(c.skin, 1, 3, 2), hair: clampInt(c.hair, 0, 7, 1), hairCol: clampInt(c.hairCol, 0, 15, 0), under: clampInt(c.under, 0, 7, 0) },
   };
 }
@@ -57,7 +58,7 @@ function newCharacter(w, p, create) {
   Object.assign(p, {
     gender: c.gender, look: c.look, persona: c.persona, cls: c.cls,
     stats: c.stats,
-    level: 1, exp: R.expForLevel(1), pool: 0, side: 0,
+    level: 1, exp: R.expForLevel(1), pool: 0, side: c.side,
     bag: [], equip: {}, bank: [], gold: 0, ssn: {}, magic: allSpells(w),
   });
   const s = p.stats;

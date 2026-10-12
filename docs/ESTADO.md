@@ -8,8 +8,7 @@
 **Hecho recientemente:** magia 102–172 y teleport (por diseño/Recall), Inhibición/Confusión, PvP, chat de gremio/grupo, susurros `/to`, bots que abren y compran en puestos, Python ya no es necesario.
 
 **A hacer (FIX), en el orden sugerido:**
-1. Pruebas que faltan: backup de guild y detección de vaivén (bots); doble check de `audio.js` y cerrar sonidos.
-2. Creación de personaje: elegir bando Aresden/Elvine; tinte de pelo fiel (el original suma RGB al píxel).
+1. (hecho en v0.71.0: tests de backup/vaivén, audio revisado, bando al crear y tinte aditivo; falta la tabla exacta m_wR del original)
 3. Compañeros: habilidades por especie y compañero en multijugador (snapshot).
 4. Online: probar y documentar los scripts de Windows y los túneles.
 5. Peso del repo: `web/data` ~450 MB y `.git` ~420 MB; evaluar Git LFS o un repo de datos aparte (antes de que crezca más).
@@ -37,7 +36,7 @@ Sustituye a la entrega 1 (nueve salas). Ver [sistemas/cripta.md](sistemas/cripta
 ## Creación de personaje
 - Pantalla de creación (`client/create.js`) tras crear la cuenta: nombre (≤10, reglas del original), 10 puntos entre atributos de 10 a 14, plantillas Guerrero/Mago/Sacerdote, género, 3 pieles, 8 peinados, 16 colores de pelo y 8 de ropa interior, con vista previa que gira.
 - `tools/convert_players.py` exporta los sprites (6 cuerpos, 16 peinados, 16 ropas interiores) a `data/players.json`; se cargan bajo demanda.
-- Pendiente: el tinte del pelo es una aproximación (el original suma RGB al píxel); el bando (Aresden/Elvine) aún no se elige.
+- Pendiente: el tinte del pelo es una aproximación (el original suma RGB al píxel); el bando se elige desde la v0.71.0.
 
 ## Cliente original: teclas y ratón (fase 1)
 Teclas y ratón copiados de `Client/Game.cpp` (OnKeyUp/CommandProcessor): F1 ayuda, F2/F3 atajos (Ctrl+F2/F3 asigna lo último usado), F4 hechizo elegido,
