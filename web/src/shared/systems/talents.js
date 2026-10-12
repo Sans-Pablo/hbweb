@@ -26,7 +26,7 @@ export const TALENTS = [
 export const DUMMY_BRANCHES = ["healer", "buffer", "aura"];
 export const DUMMY_BRANCH_NAMES = { healer: "Healer", buffer: "Buffer", aura: "Aura" };
 export const DUMMY_NAMES = { healer: "Healer Summon", buffer: "Buffer Summon", aura: "Aura Summon" };       // BUG-020: nombre por clase (la especie es Healer, Buffer o Aura)
-export const BALL_COLORS = { healer: "#d02a72", buffer: "#f28a14", aura: "#7b3fe0" };       // bola de cada clase: contrasta con el pelo del sprite (verde→magenta, azul→naranja, amarillo→violeta)
+export const BALL_COLORS = { healer: "#4fe05a", buffer: "#f2d83a", aura: "#4aa0ff" };       // bola de cada clase: verde (heal), amarilla (buff) y azul (aura), como el nombre y el círculo
 export const DUMMY_COLORS = { healer: "#4fe05a", buffer: "#f2d83a", aura: "#4aa0ff" };       // verde, amarillo, azul
 TALENTS.push(
   { id: "dheal", br: "healer", tier: 0, max: 5, dummy: true, name: "Heal", spell: 1, desc: "Heals the weakest ally in range" },

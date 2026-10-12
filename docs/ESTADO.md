@@ -55,8 +55,10 @@
 - [x] (hecho en v0.77.0) **Bots, flechas:** un bot peleaba sin flechas y no podía recallear porque seguir pegando cancelaba la acción. Debe razonar: comprar más al quedarse corto y llegar a mazmorras y zonas PvP con el equipo listo; no seguir atacando sin munición.
 - [x] (hecho en v0.77.0) **Sistema, detección de bots bloqueados:** detector de bloqueos (bot atascado en una acción que se cancela, sin munición, sin progreso) que lo registre en el informe.
 - [x] (hecho en v0.77.0) **Collar del lich:** el Liche Neck debe ahorrar maná del summon, no del personaje.
-- [x] (hecho en v0.77.0) **Bolas de summon, colores:** cambiar los colores de las bolas: hoy heal es verde, buff amarilla y aura azul. → ya eran magenta/naranja/violeta; sin cambios
+- [x] (hecho en v0.77.0) **Bolas de summon, colores:** cambiar los colores de las bolas: hoy heal es verde, buff amarilla y aura azul. → corregido en v0.77.1: las bolas son verde (heal), amarilla (buff) y azul (aura), como el nombre y el círculo
 - [x] (hecho en v0.77.0) **Summon enemigo, nombre rojo:** el nombre del summon enemigo debe verse en rojo.
+
+- [x] (hecho en v0.77.1) **Observador, web rota:** la página del observador no se veía bien (las ranuras no tenían posición en la rejilla y el contenedor oculto se pintaba encima). Arreglado en `web/observador.html`.
 
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 

@@ -19,7 +19,7 @@ INVENTO del port (no existe en el original). Son tres especies independientes (`
 - Test: `tests/dummy.test.mjs` («OK dummy vamp/res»).
 
 ## Bolas
-- Nombre por clase (`DUMMY_NAMES`: Healer/Buffer/Aura Summon) en tienda, mochila, hospital, tooltip y chat; color propio (`BALL_COLORS`: magenta/naranja/violeta) y el sprite del summon dentro (`client/compicon.js`).
+- Nombre por clase (`DUMMY_NAMES`: Healer/Buffer/Aura Summon) en tienda, mochila, hospital, tooltip y chat; color propio (`BALL_COLORS`: verde/amarilla/azul) y el sprite del summon dentro (`client/compicon.js`).
 
 ## 0.58.0 — Especies independientes
 - Ya no hay un «Dummy» que cambie de clase o de sprite: la bola se compra como Healer, Buffer o Aura y nace con su sprite y su clase fijos (`Tal.CLS_OF`/`SPECIES_OF`). Las bolas antiguas `sp:"Dummy"` se migran al cargar (`Tal.fixSupport`). El NPC `Dummy` queda solo para el cristal del jefe.

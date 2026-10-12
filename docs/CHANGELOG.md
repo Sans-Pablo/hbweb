@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.77.1 · Arreglos del observador y colores de bola (2026-10-12)
+- Observador: arreglada la maquetación de las 4 ranuras (antes los paneles se solapaban).
+- Bolas de apoyo: verde (heal), amarilla (buff) y azul (aura).
+
 ## 0.77.0 · Observador a medida y bots con criterio (2026-10-12)
 - Observador: layout con 4 paneles elegibles y guardados, estadísticas globales y peticiones de los bots (`/api/stats`), top de summons con ficha, mapa por nombre en la party, nombre rojo del summon enemigo.
 - Bots: reinicio de estadísticas obligatorio una vez y de nuevo si cambia el arma clave (tope diario), clase por ítems (guerrero/cazador/invocador/apoyo); summon fuera con maná; defienden aliados y buscan el último golpe; sin flechas no disparan (compran o hacen Recall) y no cancelan el Recall; detector de bloqueos; reintento de Recall en la cripta.
