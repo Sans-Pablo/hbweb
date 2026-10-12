@@ -11,6 +11,23 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Cíclopes y rangos (v0.74.0)",
+        "en": "Cyclops and item ranks (v0.74.0)"
+      },
+      "items": [
+        {
+          "es": "Los Cíclopes lanzan bolas y rayos de fuego a distancia: no te quedes a 5 casillas.",
+          "en": "Cyclops now cast fire balls and strikes from range: don't linger 5 tiles away."
+        },
+        {
+          "es": "El nombre de los objetos se colorea según su rango (azul mágico, amarillo raro, naranja único) en el tooltip y la bolsa.",
+          "en": "Item names are coloured by rank (blue magic, yellow rare, orange unique) in the tooltip and the bag."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Stats y bots (v0.73.0)",
         "en": "Stats and bots (v0.73.0)"
       },

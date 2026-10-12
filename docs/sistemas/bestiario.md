@@ -12,3 +12,6 @@ Dibuja cualquier criatura de `npc.json` con el mismo `Renderer.drawEntity` del j
 Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de mochila (`packKey`) de cualquier objeto de `items.json` y lo recolorea: matiz, saturación, brillo, contraste y reemplazo de un color (cuentagotas sobre el original, tolerancia, destino). Exporta PNG o lo guarda con `POST /api/dev/armory` (solo loopback) en `art/armory/<nombre>.png` + `.json` con la receta.
 - No crea objetos en el juego: eso exigiría nuevos IDs de Item.cfg (autoritativos). Los PNG son material para spritelab/arte.
 - Sin test propio (herramienta visual de solo lectura; el endpoint solo escribe en `art/armory/`).
+
+## Magia de monstruos (v0.74.0)
+`npcsys.NPC_SPELLS`: el Cíclope (magicLevel 5, 450 de maná) lanza Fire Ball (20) o Fire Strike (30) a jugadores a 4-6 casillas (melé: ataca normal). Gasta el maná del hechizo y recupera 4/s; acierto = `magicHitRatio`+25. INVENTO: el `NpcMagicHandler` original no está en el repo, así que la tabla es del port. Test `npc-cast`.

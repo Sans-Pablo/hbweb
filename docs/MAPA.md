@@ -48,7 +48,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `itemsys.js` · 148 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
 - `leisure.js` · 200 · DESCANSOS DE LOS HABITANTES (INVENTO del port, no está en el original). Tras pelear un rato, el bot se toma un respiro y hace otra cosa:
 - `magicsys.js` · 358 · Lanzar y aprender hechizos.
-- `npcsys.js` · 427 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
+- `npcsys.js` · 452 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `party.js` · 117 · Grupos (party), como el original. Cliente: Client/Game.cpp (DlgBoxClick_Party, DrawDialogBox_Party, DEF_NOTIFY_PARTY, GetExp en el servidor)
 - `player.js` · 177 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `quests.js` · 221 · Misiones del Acto I (v0.63.0). INVENTO del port: el original no tiene líneas de misiones.
@@ -91,7 +91,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 89 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 791 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 793 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 13 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -170,6 +170,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `net-observe.test.mjs` · 32 · Modo observar: sin cuenta, se pide la lista de habitantes, se elige uno y se recibe el mundo desde su posición; las órdenes se ignoran.
 - `net-persist.test.mjs` · 23 · Cuenta y personaje nuevos sobreviven a matar el servidor de golpe (SIGKILL) nada más entrar.
 - `net-walk.test.mjs` · 36 · Ritmo de pasos con servidor real y latencia: mide cuántas veces el servidor corrige la posición.
+- `npc-cast.test.mjs` · 28 · El Cíclope lanza Fire Ball / Fire Strike a distancia, gasta maná y no lo hace con melé ni fuera de alcance. node tests/npc-cast.test.mjs
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `party.test.mjs` · 94 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
 - `path.test.mjs` · 41 · A* con arrays tipados: caminos válidos, de coste óptimo (frente a Dijkstra), reutilizables entre búsquedas y rodeando ocupados. node test

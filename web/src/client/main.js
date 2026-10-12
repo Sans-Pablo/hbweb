@@ -1,6 +1,7 @@
 // Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 // el jugador y mueve el bucle de juego.
 import { MAGIC_MODE } from "../shared/magic.js";
+import { rarityOf, RARITY_COLOR } from "../shared/rarity.js";
 import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
@@ -180,7 +181,8 @@ async function main() {
   gui.describe = uid => {
     const me = world.ents.get(pid), it = me && me.bag.find(i => i.uid === uid); if (!it) return null;
     const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
-    return { name: itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : ""), lines };
+    const rar = rarityOf(it.id, it.attr);      // color del nombre por rango (normal/mágico/raro/único), como en el suelo
+    return { name: itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : ""), lines, ...(rar ? { color: RARITY_COLOR[rar] } : {}) };
   };
   // BUG-009: ficha de un objeto de tienda (sin instancia): sprite, estadísticas y comparación con lo que llevas puesto en esa ranura
   gui.describeDef = (id, inst) => {

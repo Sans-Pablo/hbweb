@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.74.0 · Cíclopes y rangos (2026-10-12)
+- Los Cíclopes lanzan Fire Ball / Fire Strike a distancia, con maná propio (`npcsys.npcCast`, test `npc-cast`).
+- El nombre de los objetos toma el color de su rango (mágico/raro/único) en tooltip, detalle de la bolsa y casilla (`gui.js`, `hud.js`, `main.js`).
+- Las órdenes a la mascota ya usaban línea punteada (roja = atacar, clara = moverse); anotado en el backlog.
+
 ## 0.73.0 · Stats y bots (2026-10-12)
 - Puntos de estadística: al perder nivel por morir se descuentan los puntos ya gastados (`lvDebt`, `combatsys.deathPenalty/giveExp`, `respec.js`); antes volver a subir regalaba puntos. Test `level-debt`.
 - Bots: venden antes (la bolsa se ordena con 36 huecos libres de margen) y conservan la caña de pescar (`botitems.js`).

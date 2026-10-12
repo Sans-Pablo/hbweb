@@ -48,14 +48,14 @@ export function spawnFrom(w, g) {
 }
 
 // Explosivos (Game.cpp ~10919, NpcMagicHandler): al morir lanzan Fire Strike (30) o Mass Fire Strike (61) sobre su casilla, con acierto 100.
-function explode(w, n, spell) {
+function explode(w, n, spell, cx = n.x, cy = n.y) {
   const sp = w.magic?.[spell]; if (!sp) return;
-  w.emit({ t: "explode", id: n.id, x: n.x, y: n.y, spell });
+  w.emit({ t: "explode", id: n.id, x: cx, y: cy, spell });
   for (const e of [...w.ents.values()]) {
-    if (e.kind !== "player" || e.dead || Math.abs(e.x - n.x) > sp.v2 || Math.abs(e.y - n.y) > sp.v3) continue;
+    if (e.kind !== "player" || e.dead || Math.abs(e.x - cx) > sp.v2 || Math.abs(e.y - cy) > sp.v3) continue;
     const pr = sget(w, e, "protect");
     if (pr === 5 || (pr === 2 && R.dice(w.rng, 1, 2) === 1)) continue;
-    const centre = e.x === n.x && e.y === n.y;
+    const centre = e.x === cx && e.y === cy;
     let dmg = centre ? R.dice(w.rng, sp.v4, sp.v5) + sp.v6 : R.dice(w.rng, sp.v7, sp.v8) + sp.v9;
     if (pr === 2) dmg = Math.floor(dmg / 2);
     damagePlayer(w, e, Math.max(0, dmg), n, "fire");
@@ -296,6 +296,7 @@ export function npcThink(w, n) {
     }
   }
   if (t) {
+    if (npcCast(w, n, t)) return;
     if (dist(n, t) <= n.cfg.attackRange) return npcAttack(w, n, t);
     const d = greedyStep(w.grid, n, t.x, t.y, dirTo);
     if (d) w.tryStep(n, d, n.dur.move, ACT.MOVE);
@@ -307,6 +308,30 @@ export function npcThink(w, n) {
     if (nx >= x1 - 2 && nx <= x2 + 2 && ny >= y1 - 2 && ny <= y2 + 2) w.tryStep(n, d, n.dur.move, ACT.MOVE);
     else n.dir = d;
   }
+}
+
+// Magia de monstruo. INVENTO (el NpcMagicHandler original no está en el repo): el Cíclope (magicLevel 5, 450 de maná, acierto mágico 50)
+// lanza Fire Ball (20) o Fire Strike (30) a los jugadores a distancia, gasta maná y lo recupera con el tiempo.
+export const NPC_SPELLS = { Cyclops: [20, 30] };
+export const NPC_CAST_RANGE = 6;
+function npcCast(w, n, t) {
+  const list = NPC_SPELLS[n.name]; if (!list || t.kind !== "player" || n.master || n.aux) return false;
+  const d = dist(n, t); if (d <= n.cfg.attackRange || d > NPC_CAST_RANGE) return false;
+  const mx = n.cfg.maxMana || 0, regen = (w.time - (n.mpAt ?? w.time)) / 1000 * 4;      // 4 de maná por segundo
+  n.mp = Math.min(mx, (n.mp ?? mx) + regen); n.mpAt = w.time;
+  const spell = list.filter(id => w.magic?.[id] && w.magic[id].mana <= n.mp).pop();
+  if (spell === undefined || w.rng() > 0.5) return false;
+  const sp = w.magic[spell]; n.mp -= sp.mana;
+  n.dir = dirTo(n.x, n.y, t.x, t.y);
+  w.setAct(n, ACT.ATTACK, n.dur.attack); n.busyUntil = w.time + n.dur.attack;
+  w.emit({ t: "spell", id: n.id, spell, x: t.x, y: t.y, attr: sp.attr, type: sp.type });
+  const cx = t.x, cy = t.y;
+  w.after(n.dur.attack * 0.5, () => {
+    if (n.dead) return;
+    if (w.rng() * 100 >= (n.cfg.magicHitRatio || 50) + 25) { w.emit({ t: "miss", id: t.id, from: n.id }); return; }       // acierto mágico del NPC.cfg (+25 del port para que no falle la mitad)
+    explode(w, n, spell, cx, cy);
+  });
+  return true;
 }
 
 function npcAttack(w, n, t) {

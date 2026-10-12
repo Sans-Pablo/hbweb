@@ -12,7 +12,7 @@ import { FEED, tasteOf, statsOf as companionStats, need as companionNeed } from 
 import { SCHOOL_OF, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
-import { PROT_CAP, PROT_OVERRIDE } from "../shared/rarity.js";
+import { PROT_CAP, PROT_OVERRIDE, rarityOf, RARITY_COLOR } from "../shared/rarity.js";
 import { damageRange } from "../shared/combat.js";
 import { realStats, attrLines } from "../shared/attributes.js";
 
@@ -249,7 +249,7 @@ export class Hud {
         ico = `<span class="ico" style="width:${w}px;height:${h}px;background:url(${imgUrl("data/sprites/" + this.sprites.m[packKey(d)].png)}) -${sx}px -${sy}px;transform:scale(${k})"></span>`;
       }
       const eq = this.isEquipped(me, it.uid), dead = d.type === ITYPE.EQUIP && it.life === 0;
-      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr, it.comp)}">${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
+      html += `<button class="cell${eq ? " eq" : ""}${this.sel === it.uid ? " sel" : ""}${dead ? " broken" : ""}" data-uid="${it.uid}" title="${itemName(it.id, it.attr, it.comp)}"${rarityOf(it.id, it.attr) ? ` style="box-shadow:inset 0 0 0 1px ${RARITY_COLOR[rarityOf(it.id, it.attr)]}"` : ""}>${ico}${it.count > 1 ? "<b>" + it.count + "</b>" : ""}</button>`;
     }
     $("#inv .grid").innerHTML = html;
     const it = me.bag.find(i => i.uid === this.sel);
@@ -260,7 +260,7 @@ export class Hud {
     if (it.comp) acts += `<button data-act="use">${it.comp.on ? "Guardar" : "Invocar"}</button>`;
     else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE) acts += '<button data-act="use">Usar</button>';
     acts += '<button data-act="drop">Tirar</button>';
-    $("#inv .detail").innerHTML = `<h4${it.attr ? ' style="color:#9fe39a"' : ""}>${itemName(it.id, it.attr, it.comp)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
+    $("#inv .detail").innerHTML = `<h4${rarityOf(it.id, it.attr) ? ` style="color:${RARITY_COLOR[rarityOf(it.id, it.attr)]}"` : ""}>${itemName(it.id, it.attr, it.comp)}${it.count > 1 ? " x" + it.count : ""}</h4>${this.describe(it, me).map(l => "<p>" + l + "</p>").join("")}<div class="acts">${acts}</div>`;
   }
 
   renderBook(me) {

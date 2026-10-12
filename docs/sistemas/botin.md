@@ -25,3 +25,6 @@ Caen junto al cadáver (`uniqueSpot`) a los 0,6·morir + 200 ms. Fuente: `shared
 
 ## Tabla de la cripta (v0.19.3)
 `CRYPT_LOOT` en `shared/drops.js`: 4 tramos (niveles 1-5, 6-10, 11-15, 16-20) × común 70 % / poco común 25 % / codiciado 5 %. Solo objetos con nivel exigido ≤ 50 y peso ≤ 16100 (fuerza 161 = 14 + 3×49 de un guerrero); `usable()` filtra además cualquier otro botín. Las variantes de sexo se eligen por `p.gender`; si el objeto es del otro sexo (SangAh, solo hombre) cae uno común.
+
+## Color por rango (v0.74.0)
+El nombre del objeto toma el color de su rareza (`RARITY_COLOR`: normal, mágico azul, raro amarillo, único naranja) en el suelo, en el tooltip (`gui.describe` → `info.color`), en el detalle de la bolsa y con un borde en la casilla (`hud.js`).
