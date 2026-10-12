@@ -24,3 +24,6 @@ Código: `server/server.mjs` (servidor), `server/accounts.mjs` (cuentas y límit
 
 ## Cuentas por IP
 Sin límite de cuentas por IP (0.28.0): tras el túnel todos comparten IP. `maxRegistersPerHour` ya no se usa.
+
+## Copias de seguridad y reinicio (0.79.6)
+`store.backup()` hace `VACUUM INTO server/data/backups/hb-AAAA-MM-DD.sqlite` (una por día, conserva 7), al arrancar y cada 6 h. Si `listen` da EADDRINUSE, `server.mjs` reintenta cada 1 s hasta 30 veces. Test: `tests/store-backup.test.mjs`. Restaurar: parar el servidor y copiar la copia sobre `hb.sqlite`.

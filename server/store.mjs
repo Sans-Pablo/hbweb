@@ -56,6 +56,17 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
   }
   st.versions = k => db.prepare("SELECT at FROM history WHERE k=? ORDER BY at DESC").all(k).map(r => r.at);
   st.restore = (k, at) => { const r = db.prepare("SELECT v FROM history WHERE k=? AND at=?").get(k, at); if (!r) return false; st.saves[k] = JSON.parse(r.v); st.flush(true); return true; };
+  // Copia diaria de hb.sqlite (VACUUM INTO, consistente con WAL) en <dir>/backups/hb-AAAA-MM-DD.sqlite; conserva las últimas `keep`.
+  st.backup = (keep = 7) => {
+    try {
+      const bd = path.join(dir, "backups"); fs.mkdirSync(bd, { recursive: true });
+      const out = path.join(bd, "hb-" + new Date().toISOString().slice(0, 10) + ".sqlite");
+      if (fs.existsSync(out)) return null;
+      st.flush(true); db.exec("VACUUM INTO '" + out.replace(/'/g, "''") + "'");
+      for (const old of fs.readdirSync(bd).filter(n => /^hb-.*.sqlite$/.test(n)).sort().slice(0, -keep)) { try { fs.unlinkSync(path.join(bd, old)); } catch {} }
+      return out;
+    } catch (e) { log("backup falló: " + e.message); return null; }
+  };
   st.close = () => { try { st.flush(true); db.close(); } catch {} };
   return st;
 }
@@ -64,6 +75,6 @@ function jsonStore(accountsFile, savesFile, log) {
   log("[bd] node:sqlite no disponible (hace falta Node 22.5 o superior): se usa el modo JSON antiguo");
   const st = { kind: "json", accounts: readJson(accountsFile, {}), saves: readJson(savesFile, {}) };
   st.flush = () => { writeJson(accountsFile, st.accounts); writeJson(savesFile, st.saves); return 0; };
-  st.versions = () => []; st.restore = () => false; st.close = () => { try { st.flush(); } catch {} };
+  st.versions = () => []; st.restore = () => false; st.backup = () => null; st.close = () => { try { st.flush(); } catch {} };
   return st;
 }

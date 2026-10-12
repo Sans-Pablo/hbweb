@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.79.6 · Servidor más robusto (2026-10-12)
+- Copia diaria de `hb.sqlite` en `server/data/backups/` (7 días; al arrancar y cada 6 h). Si el puerto está ocupado al reiniciar, el servidor reintenta hasta 30 s en vez de caer en bucle. Test `store-backup`.
+
 ## 0.79.5 · Recado de flechas sin apuntar al aire (2026-10-12)
 - Un arquero sin flechas que va a comprar deja de apuntar a monstruos durante 5 s (si no le están pegando), así no queda marcado como bloqueado. Summon lejano: el teletransporte corre aunque esté siempre ocupado peleando.
 

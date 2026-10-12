@@ -4,6 +4,47 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
+## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
+
+### P0 · Bloqueantes antes de invitar a nadie
+- [x] (0.79.6) Servidor: bucle EADDRINUSE al reiniciar (esperar al puerto o salir limpio) y reinicio para cargar `shared/*`.
+- [ ] Protocolo/versión: comprobar que clientes viejos reciben el aviso de recargar.
+- [x] (0.79.6) Cuentas: backups diarios de `hb.sqlite`; el límite de registro queda ilimitado por decisión del propietario.
+- [ ] Comprobar que el cliente de GitHub Pages conecta con `https://pablo.tail495855.ts.net`.
+- [ ] Bots: atasco en Aresfarm (61,77); `cryptentry`, `crypt-exit`, `pet-far`/`pet-missing` residuales.
+- [ ] Criterio de listo: 8 h con 40 bots sin avisos de «bloqueado» ni caídas.
+
+### P1 · Experiencia del tester
+- [ ] Tutorial y primeras 2 horas (creación, tienda, primera cripta).
+- [ ] Cierre claro del acto 1 (rey de la cripta + mensaje).
+- [ ] Avisos de peso y mochila llena + botón «vender basura».
+- [ ] Cuenta atrás del Recall en pantalla.
+- [ ] Guía corta para testers (cómo entrar, qué probar, cómo reportar) y canal de reporte.
+- [ ] `attack` a objetivo muerto: ignorar en silencio (6600 rechazos).
+- [ ] Bucle de `learn` repetido de los bots.
+
+### P2 · Balance
+- [ ] Cyclops/Troll/Skeleton a nivel 32-50 contra `NPC.cfg` (¿equipo del bot o monstruo?).
+- [ ] Revivir al summon menos caro (escala con su nivel).
+- [ ] Sumideros de oro (reparar, teñir, apuestas, mejora de equipo).
+- [ ] Exp/min negativa y farmeo de Slimes.
+- [ ] Summon sube lento (40 % de la exp) en 14 bots.
+
+### P3 · Fidelidad al original
+- [ ] Verificar contra el original el comportamiento de magos/invocadores a distancia.
+- [ ] Magia pendiente: tipos 4-7, 8-18, 19-33 y mago de la ciudad.
+- [ ] Artesanos: también caramelos.
+- [ ] Contramagias psíquicas.
+
+### P4 · Visual y contenido
+- [ ] HD de Beholder, Centaurus y Stalker.
+- [ ] Sonidos de la Pixie: elegir y asignar.
+- [ ] Remaster tipo Diablo 2 (piloto werewolf hecho; decidir upscaler IA, luz dinámica, HD manual de jefes).
+
+### P5 · Aplazado a propósito
+- [ ] Tamaño del repo (LFS), tinte de pelo `m_wR`, verificación de CI, `docs/FUTURO.md`.
+- [ ] Fuera del primer release: arena, mapas de Elvine/nieve, rediseño de sonido, LFS, actos 2+ y final.
+
 ## Backlog (actualizado en v0.70.0)
 - [ ] (análisis, 2026-10-12) **Remaster tipo Diablo 2 Resurrected con los sprites de Helbreath:** hoy el HD es Scale2x×4 + suavizado (`tools/hdup.py`), sin detalle nuevo. Pendiente decidir: piloto con upscaler IA (Real-ESRGAN ncnn-vulkan, RTX 4060) en 3 muestras (cuerpo, monstruo, tile) y comparar en el Bestiario; luz/sombras dinámicas; HD manual solo para jefes/héroes. **Piloto hecho 2026-10-12 con el werewolf** (walk, 8 dir): `pruebas/werewolf-remaster/` (vídeos 4 niveles y original vs nuevo). Pendiente decidir si se sigue. **Lote enemigos 2026-10-12:** `tools/remaster_ia.py` genera `web/data/sprites_ia/` (+`sprites_ia.json`, derivados no versionados) para todos los enemigos de `npc.json` (Real-ESRGAN x4plus); el Bestiario tiene selector «Modelo» (Original / HD actual / IA / IA + luz simulada) y «Comparar los 4» en filas. Sin publicar.
 - Hecho 0.79.x: summons psíquicos, modo 0 restricciones, pets más rápidas, indicador de estados de los demás. Pendiente: contramagias psíquicas, HD de Beholder/Centaurus/Stalker.

@@ -124,8 +124,8 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botstats.mjs` · 131 · Estadísticas y análisis de comportamiento de los habitantes (bots) para el panel de administración.
 - `llm.mjs` · 71 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
 - `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
-- `server.mjs` · 697 · Servidor online de Helbreath Web (Node.js, sin dependencias).
-- `store.mjs` · 69 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
+- `server.mjs` · 704 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `store.mjs` · 80 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
 
@@ -220,6 +220,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `sky.test.mjs` · 72 · Hora del día, clima y zonas sin ataque (HGServer/Game.cpp: _CheckDayOrNight, WhetherProcessor, _SetupNoAttackArea).
 - `sprite-retry.test.mjs` · 16 · Sprite negro: una hoja que falla o llega vacía se vuelve a pedir (hasta 4 veces) en vez de quedarse rota
 - `stall.test.mjs` · 69 · Puestos de jugador (systems/stall.js): abrir en shop/warehouse/herrería, comprar sin comisión, recoger oro, cerrar y persistir.
+- `store-backup.test.mjs` · 17 · Copia de seguridad diaria del almacén SQLite: crea backups/hb-AAAA-MM-DD.sqlite, una por día, y se puede reabrir.
 - `store.test.mjs` · 46 · Almacén SQLite: persistencia, solo filas cambiadas, importación de los JSON antiguos, historial y restauración.
 - `streaming.test.mjs` · 57 · Carga bajo demanda: qué recursos pide cada mapa y que no se baja lo que no hace falta.
 - `summon-buy-all.test.mjs` · 32 · Todas las bolas que vende el hospital se pueden comprar, invocar y previsualizar (incluidas las nuevas de evolutions.js). node tests/summon-
@@ -273,7 +274,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `mkvoice_companion.py` · 41 · 
 - `mkvoice_fear.py` · 83 · 
 - `mkvoice_phases.py` · 63 · evolve: línea al volver a invocar al compañero tras cambiar de tamaño (niveles 10, 25, 40, 50 = pasos 1..4)
-- `remaster_ia.py` · 56 · 
+- `remaster_ia.py` · 93 · 
 - `remaster_music.py` · 203 · 
 - `serve.py` · 75 · 
 - `tile_table.py` · 24 · (archivo .pak, índice inicial, cantidad)

@@ -676,6 +676,13 @@ setInterval(() => {
 }, TICK_MS);
 
 // ------------------------------------------------------------------ arranque
+{ const b = store.backup?.(); if (b) console.log("  Copia de seguridad: " + b); setInterval(() => store.backup?.(), 6 * 3600000).unref(); }
+// Puerto ocupado (reinicio rápido: el proceso anterior aún no lo soltó): reintenta unos segundos en vez de caer en bucle
+let listenTries = 0;
+server.on("error", e => {
+  if (e.code === "EADDRINUSE" && ++listenTries <= 30) { console.log("Puerto " + PORT + " ocupado; reintento " + listenTries + "/30…"); setTimeout(() => server.listen(PORT, "0.0.0.0"), 1000); }
+  else throw e;
+});
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Helbreath Web ${VERSION.version} «${VERSION.name}» - servidor online (protocolo ${PROTO})`);
   console.log("  En este PC:        http://localhost:" + PORT + "/");
