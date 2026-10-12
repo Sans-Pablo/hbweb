@@ -2,7 +2,20 @@
 
 **Hecho:** granja de Aresden jugable; combate con fórmulas del servidor original; ítems originales (568 de Item.cfg), mochila de 50 casillas, peso, equipar con requisitos, absorción por parte del cuerpo, durabilidad (solo con bando), botín con las tasas originales (1/1), habilidades con maestría, resistencia, hambre; opciones (Esc), mapa tipo Diablo II, correr con R, guardado en el navegador.
 
-**Pendiente (por orden):** magia (Magic.cfg), resto de monstruos y mapas, portales, NPC y tiendas, reparación, atributos raros de ítems, arco y flechas, grupos y PvP. Gráficos y música congelados hasta que todo sea fiel.
+**Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
+
+## Backlog (actualizado en v0.70.0)
+**Hecho recientemente:** magia 102–172 y teleport (por diseño/Recall), Inhibición/Confusión, PvP, chat de gremio/grupo, susurros `/to`, bots que abren y compran en puestos, Python ya no es necesario.
+
+**A hacer (FIX), en el orden sugerido:**
+1. Pruebas que faltan: backup de guild y detección de vaivén (bots); doble check de `audio.js` y cerrar sonidos.
+2. Creación de personaje: elegir bando Aresden/Elvine; tinte de pelo fiel (el original suma RGB al píxel).
+3. Compañeros: habilidades por especie y compañero en multijugador (snapshot).
+4. Online: probar y documentar los scripts de Windows y los túneles.
+5. Peso del repo: `web/data` ~450 MB y `.git` ~420 MB; evaluar Git LFS o un repo de datos aparte (antes de que crezca más).
+6. Fichas: revisar `companeros.md` y limpiar los "Pendiente" viejos de este fichero.
+
+**Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 
 Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`, `node tests/net-walk.test.mjs`.
 
