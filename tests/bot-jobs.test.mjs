@@ -1,4 +1,4 @@
-// Oficios fijos de los habitantes (0.76.0): 2 granjeros, 2 pescadores y 4 de apoyo (2 por bando) que buscan grupo.
+// Oficios fijos de los habitantes (0.76.0): 4 granjeros, 4 pescadores (2+2 por bando) y 4 de apoyo (2 por bando) que buscan grupo.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Adventure } from "../web/src/shared/adventure.js";
@@ -19,7 +19,7 @@ const run = (ms, f) => { for (let i = 0; i < ms / 50; i++) { a.tick(50); if (f?.
 import { JOBS } from "../web/src/shared/systems/residents.js";
 import { isSupport } from "../web/src/shared/systems/bot.js";
 const count = j => Object.values(JOBS).filter(x => x === j).length;
-assert.equal(count("farmer"), 2); assert.equal(count("fisher"), 2); assert.equal(count("support"), 4);
+assert.equal(count("farmer"), 4); assert.equal(count("fisher"), 4); assert.equal(count("support"), 4);
 const bySide = { 1: 0, 2: 0 };
 for (const n of Object.keys(JOBS)) if (JOBS[n] === "support") bySide[RESIDENT_NAMES.indexOf(n) >= 20 ? 2 : 1]++;
 assert.deepEqual(bySide, { 1: 2, 2: 2 }, "2 de apoyo por bando");

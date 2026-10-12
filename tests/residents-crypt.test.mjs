@@ -27,7 +27,7 @@ const run = (a, ms) => { for (let i = 0; i < ms / 50; i++) a.tick(50); };
 
 // los habitantes bajan a la cripta (Aresden por el teletransportador, Elvine desde su granja) y cazan esqueletos
 for (const side of [1, 2]) {
-  const a = mk(5 + side), n = side === 1 ? "Aldric" : "Cora";
+  const a = mk(5 + side), n = side === 1 ? "Aldric" : "Dain";
   a.spawnResident(n);
   const b = a.residents().find(x => x.name === n), w = a.worldFor(b.id);
   b.level = 12; b.exp = 1e7; b.stats.str = 60; b.stats.vit = 70; b.stats.dex = 40; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.res.goal = { k: "crypt", n: 3 }; b.res._tripAt = 1;

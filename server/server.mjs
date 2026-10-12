@@ -574,7 +574,7 @@ function botList() {
     const st = b.dead ? "muerto" : br.travel ? "viaja" : t ? "lucha: " + String(t.name).replace(/-/g, " ") : br.rest ? "descansa" : br.owner != null ? "sigue al líder" : "pasea";
     const lead = br.owner != null ? (w.ents.get(br.owner) || adventure.bots.get(br.owner)) : null, gid = b.party?.id ? "p" + b.party.id : lead ? "l" + br.owner : kids.has(b.id) ? "l" + b.id : "";
     return { id: b.id, name: b.name, side: b.side, lv: b.level, map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, mp: b.mp, mm: b.maxMp, st: b.stats, gold: b.gold, kills: b.kills || 0, ek: b.ek || 0,
-      lang: b.res?.lang || "", arch: b.res?.arch || "", guild: b.guild?.name || "", grank: b.guild ? b.guild.rank | 0 : -1, goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)),
+      lang: b.res?.lang || "", job: b.res?.job || "", arch: b.res?.arch || "", guild: b.guild?.name || "", grank: b.guild ? b.guild.rank | 0 : -1, goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)),
       mode: Residents.modeOf(adventure, b, w), grp: gid, lead: lead ? lead.name : (kids.has(b.id) ? b.name : ""), cls: b.quests?.cls || "", q: b.quests ? b.quests.n | 0 : 0, floor: w.map.kind === "dungeon" ? w.map.level : 0, pids: b.party?.names || null };
   }).sort((a, b) => (a.side - b.side) || (b.lv - a.lv) || a.name.localeCompare(b.name));
 }
@@ -586,7 +586,7 @@ function itemsList(world) {
 
 // Eventos visibles para quien está cerca (efectos, sonidos, números de daño). Todo lo demás con `id` es privado de su dueño: tienda, tutorial,
 // talentos, arena, avisos, depuración... (un evento nuevo es privado por defecto: no se filtra nada por olvido, y no se gasta ancho de banda).
-const PUBLIC = new Set(["botsay", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
+const PUBLIC = new Set(["botsay", "crit", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
   "bossfx", "bossmsg", "pickup", "teleport", "respawn", "recalled", "immune", "resist", "levelup", "weather", "time"]);
 
 let last = Date.now();

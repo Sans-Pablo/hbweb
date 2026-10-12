@@ -284,9 +284,10 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
+  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
+  opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)
   opts.autoAttack = true;                            // al entrar siempre con el ataque automático activado
   if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
   const optionsEl = document.getElementById("options");
@@ -407,11 +408,11 @@ async function main() {
       voice?.noteNpc(cit);
     },
     npcKey: e => npcUi.key(e),
-    // Alt + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
+    // Shift + clic izquierdo sobre un monstruo: el compañero lo ataca (también en paz). Invento del port.
     petGo(x, y) { conn.send({ t: "petgo", x, y }); },
     petOrder(ent) {
       if (ent && (ent.kind === "npc" || (ent.kind === "player" && ent.id !== pid))) conn.send({ t: "pettarget", target: ent.id });
-      else hud.log("Alt + clic sobre un monstruo para que tu compañero lo ataque.");
+      else hud.log("Shift + clic sobre un monstruo para que tu compañero lo ataque.");
     },
     isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adeghmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto

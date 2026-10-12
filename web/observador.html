@@ -9,9 +9,10 @@
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:12px/1.4 system-ui,sans-serif; overflow:hidden; }
   #app { display:grid; height:100vh; padding:4px; gap:0; grid-template-columns:var(--c1,68%) 6px minmax(0,1fr); grid-template-rows:var(--r1,58%) 6px minmax(0,1fr); }
-  .slot { display:flex; flex-direction:column; min-width:0; min-height:0; } .slot > .q { flex:1; } #pool { display:none; }
+  .slot { min-width:0; min-height:0; } #stage { position:absolute; left:0; top:0; width:0; height:0; } #stage > .q { position:absolute; display:none; }
   #s1 { grid-area:1/1; } #s2 { grid-area:1/3; } #hs { grid-area:2/1/3/4; } #bottom { grid-area:3/1/4/4; display:flex; min-height:0; } #vs { grid-area:1/2; }
   #s3 { flex:0 0 var(--b1,50%); } #s4 { flex:1; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; padding:5px 7px; } .chips a { cursor:pointer; padding:1px 7px; border-radius:10px; border:1px solid #6b5a33; background:#2c2417; } .chips a.on { background:#6b5a33; color:var(--gold); }
   .split { background:#2a2312; border-radius:3px; transition:background .1s; } .split:hover, .split.drag { background:#8a7438; }
   #vs, #vs2 { cursor:col-resize; } #hs { cursor:row-resize; } #vs2 { flex:0 0 6px; }
   body.dragging { user-select:none; cursor:inherit; } body.dragging iframe { pointer-events:none; }
@@ -33,7 +34,7 @@
   .bar .tr { flex:1; height:8px; background:#2c2417; border-radius:4px; } .bar .tr i { display:block; height:100%; border-radius:4px; background:#6a9; } .bar .v { width:34px; text-align:right; }
   .sec { margin:8px 0 3px; color:#b9a572; font-size:11px; text-transform:uppercase; border-bottom:1px solid #3a2f18; }
   .spark { display:grid; grid-template-columns:70px 1fr 64px; align-items:center; gap:6px; } .spark svg { width:100%; height:26px; background:#120e06; border-radius:3px; }
-  @media (max-width: 800px) { #app { grid-template-columns:1fr; grid-template-rows:60vh 50vh 50vh 50vh; } #s1, #s2 { grid-area:auto; } #hs, #vs, #vs2 { display:none; } #bottom { grid-area:auto; display:contents; } #s3, #s4 { flex:none; } html, body { overflow:auto; } }
+  @media (max-width: 800px) { #app { grid-template-columns:1fr; grid-template-rows:60vh 50vh 50vh 50vh; } #s1, #s2 { grid-area:auto; } #hs, #vs, #vs2 { display:none; } #bottom { grid-area:auto; display:contents; } #s3, #s4 { flex:none; height:50vh; } html, body { overflow:auto; } }
 </style>
 </head>
 <body>
@@ -43,7 +44,7 @@
   <div class="slot" id="s2"></div>
   <div class="split" id="hs" title="↕"></div>
   <div id="bottom"><div class="slot" id="s3"></div><div class="split" id="vs2" title="↔"></div><div class="slot" id="s4"></div></div>
-  <div id="pool"><section class="q" id="game"></section><section class="q" id="roster"></section><section class="q" id="info"></section><section class="q" id="stats"></section><section class="q" id="glob"></section><section class="q" id="summ"></section></div>
+  <div id="stage"><section class="q" id="game"></section><section class="q" id="roster"></section><section class="q" id="info"></section><section class="q" id="stats"></section><section class="q" id="glob"></section><section class="q" id="summ"></section><section class="q" id="chars"></section></div>
 </div>
 <script type="module" src="src/client/dashboard.js"></script>
 </body>

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.78.0 · Observador de 4 paneles, artesanos y combate de rango (2026-10-12)
+- Observador: 4 paneles elegibles sin recargar el juego, panel «Personajes» por clase y oficio.
+- Bots: 8 artesanos (2 granjeros y 2 pescadores por bando) con puesto; los demás les compran la comida de sus summons. Los magos mantienen distancia mientras el summon lanza hechizos; los supports ya invocan su summon de apoyo.
+- Controles: Shift+clic ordena al summon; Alt+clic = crítico; dash al atacar corriendo; correr por defecto (Ctrl+R alterna). Cifras de crítico/dash aproximadas (original no disponible). NET_PROTO 8.
+- `release.sh` consulta el CI por curl. Fichas de 0.76.0 (summonfood, sprite-retry, audio).
+- Tests `crit-dash`, `craft-stall`, `support-summon`, `mage-kite`.
+
 ## 0.77.1 · Arreglos del observador y colores de bola (2026-10-12)
 - Observador: arreglada la maquetación de las 4 ranuras (antes los paneles se solapaban).
 - Bolas de apoyo: verde (heal), amarilla (buff) y azul (aura).

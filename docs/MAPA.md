@@ -8,7 +8,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `appearance.js` · 18 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `classgear.js` · 65 · Equipo por clase y báculos de escuela (v0.62.0). INVENTO del port: el original no restringe equipo por clase.
-- `combat.js` · 98 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
+- `combat.js` · 104 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
 - `const.js` · 67 · Constantes del juego compartidas por la simulación (el futuro servidor) y el cliente.
 - `data.js` · 19 · Datos del juego (generados por tools/convert.py a partir de los .cfg del servidor).
 - `drops.js` · 116 · Botín al morir un monstruo: NpcDeadItemGenerator (HGServer/Game.cpp:47297).
@@ -23,17 +23,17 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
-- `world.js` · 311 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
+- `world.js` · 332 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
 
 ## web/src/shared/systems
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
 - `bosses.js` · 272 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 574 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bot.js` · 601 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `botitems.js` · 128 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
 - `builds.js` · 64 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 271 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 281 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 311 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `council.js` · 102 · CONSEJO DE GRUPO (INVENTO del port). Cuando varios habitantes van juntos, qué hacen lo decide una discusión, como entre jugadores de verda
 - `debug.js` · 126 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
@@ -46,7 +46,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `hazards.js` · 30 · Peligros del suelo que un jugador esquiva: campos de fuego/hielo/veneno de los hechizos (fields.js) y las zonas de los jefes de la cripta (b
 - `human.js` · 192 · HUMANIZACIÓN de los habitantes (INVENTO del port, no está en el original): que no parezcan máquinas 24 h.
 - `itemsys.js` · 148 · Recoger, tirar, equipar y usar objetos (iClientMotion_GetItem_Handler, DropItemHandler, UseItemHandler).
-- `leisure.js` · 202 · DESCANSOS DE LOS HABITANTES (INVENTO del port, no está en el original). Tras pelear un rato, el bot se toma un respiro y hace otra cosa:
+- `leisure.js` · 204 · DESCANSOS DE LOS HABITANTES (INVENTO del port, no está en el original). Tras pelear un rato, el bot se toma un respiro y hace otra cosa:
 - `magicsys.js` · 358 · Lanzar y aprender hechizos.
 - `npcsys.js` · 453 · Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 - `obsstats.js` · 43 · Datos para el observador (INVENTO del port, 0.77.0): top de summons con su dueño y su ficha, estadísticas globales y las «peticiones»
@@ -54,13 +54,13 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `petskill.js` · 59 · Habilidad activa propia de cada especie de compañero (invento del port, 0.76.0). La lanza solo la IA, en combate, cuando hay maná y
 - `player.js` · 177 · Jugador: creación, guardado, recalculo de atributos, reaparición.
 - `quests.js` · 221 · Misiones del Acto I (v0.63.0). INVENTO del port: el original no tiene líneas de misiones.
-- `residents.js` · 1512 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
+- `residents.js` · 1536 · HABITANTES: bots que viven en el servidor (INVENTO del port, no está en el original). Cada uno es un jugador simulado (systems/bot.js) con:
 - `respec.js` · 21 · REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) dev
 - `schools.js` · 62 · Escuelas de magia de los summons. INVENTO del port (petición del diseñador); los hechizos son los de Magic.cfg tal cual.
 - `shopsys.js` · 217 · Tienda, herrero y almacén (HGServer/Game.cpp): RequestPurchaseItemHandler, ReqSellItemHandler,
 - `stall.js` · 119 · PUESTOS de jugador (INVENTO del port): un personaje deja objetos a la venta en un puesto fijo dentro de las tiendas (shop, warehouse, herrer
 - `status.js` · 24 · Estados mágicos (m_cMagicEffectStatus + eventos de liberación diferida del servidor original).
-- `summonfood.js` · 36 · COMIDA DE SUMMONS PARA LOS BOTS (INVENTO del port). Un bot con summon le compra y le da su comida preferida (companion.js#TASTE.love) para m
+- `summonfood.js` · 37 · COMIDA DE SUMMONS PARA LOS BOTS (INVENTO del port). Un bot con summon le compra y le da su comida preferida (companion.js#TASTE.love) para m
 - `summoninfo.js` · 45 · Ficha de un summon para la ventana de vista previa de la tienda de bolas (INVENTO del port): estadísticas, hechizos,
 - `talents.js` · 153 · Árbol de talentos y hechizos del compañero. INVENTO del port (sin equivalente en el original); los hechizos son los de Magic.cfg
 - `trade.js` · 102 · COMERCIO entre jugadores y habitantes (INVENTO del port, a partir del cuadro de intercambio del original: DEF_COMMONTYPE_EXCHANGEITEMTOCHAR 
@@ -80,9 +80,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `classicdialog.js` · 103 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 312 · Conexión con el "servidor". Dos implementaciones con la misma forma:
-- `controller.js` · 247 · Entrada del jugador -> intenciones -> órdenes al servidor.
+- `controller.js` · 261 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 129 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
-- `dashboard.js` · 223 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
+- `dashboard.js` · 243 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
 - `devtools.js` · 77 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
@@ -94,7 +94,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 89 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 793 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 794 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
 - `names.js` · 13 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
@@ -138,7 +138,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bot-brain.test.mjs` · 28 · El «cerebro» del habitante observado + descenso de cripta con reloj prorrogado + equipo de cripta.
 - `bot-chat.test.mjs` · 17 · Charla de los habitantes: mensajes largos partidos sin perder el final y memoria de lo hablado.
 - `bot-forced-respec.test.mjs` · 13 · v0.77.0: la clase por ítems y el tope diario de reinicios (builds.js)
-- `bot-jobs.test.mjs` · 40 · Oficios fijos de los habitantes (0.76.0): 2 granjeros, 2 pescadores y 4 de apoyo (2 por bando) que buscan grupo.
+- `bot-jobs.test.mjs` · 40 · Oficios fijos de los habitantes (0.76.0): 4 granjeros, 4 pescadores (2+2 por bando) y 4 de apoyo (2 por bando) que buscan grupo.
 - `bot-manuals.test.mjs` · 37 · Habitantes y summons: compran su compañero en el hospital (Aresden: tienda general; Elvine: Gail al aire libre), lo invocan, le dan talento
 - `bot-rest.test.mjs` · 40 · Descanso de los bots solo en zona segura (ciudad o granja): fuera de ella vuelven con Recall; si les pegan, se defienden.
 - `bot.test.mjs` · 55 · BOT: jugador simulado. Entra en el grupo del admin, caza, sube de nivel, se equipa y recoge botín con las mismas órdenes que un cliente.
@@ -150,7 +150,9 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `cleansay.test.mjs` · 7 · cleanSay: el texto del LLM nunca debe llegar al chat con restos de JSON.
 - `combat.test.mjs` · 115 · Fórmulas de combate contra HGServer/Game.cpp iCalculateAttackEffect (jugador -> monstruo).
 - `companion.test.mjs` · 85 · Compañeros: obtención en la tienda, selección, estadísticas compartidas, experiencia, guardado.
+- `craft-stall.test.mjs` · 40 · Artesanos (0.78.0): los granjeros y pescadores venden en un puesto lo que cosechan/pescan al precio de Item.cfg; otros bots con summon les c
 - `create-side.test.mjs` · 22 · Creación de personaje: el bando elegido (Aresden/Elvine) se aplica y el nuevo de Elvine empieza en su granja.
+- `crit-dash.test.mjs` · 65 · Crítico (Alt + clic) y dash (atacar corriendo) — 0.78.0. Números de diseño (el Game.cpp original no estaba disponible): ver docs/sistem
 - `crypt-start.test.mjs` · 44 · Cripta: piso de inicio elegible entre los despejados; tras despejar el 10 y salir se entra en el 11 (sin repetir el jefe)
 - `data.test.mjs` · 50 · Coherencia de los datos generados (web/data): lo que un conversor deja a medias suele romper el juego mucho después.
 - `debug.test.mjs` · 38 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
@@ -168,6 +170,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `level-debt.test.mjs` · 28 · Morir y volver a subir no regala puntos de atributo: lo gastado de niveles perdidos se paga con los siguientes niveles.
 - `lich-neck.test.mjs` · 28 · Collar del Lich (648): ahorra maná del summon, no del personaje; los demás collares de MS siguen ahorrando el del personaje.
 - `loot.test.mjs` · 72 · 
+- `mage-kite.test.mjs` · 34 · Mago de rango (0.78.0): un estudioso (no de apoyo) con summon de escuela vivo y con maná mantiene la distancia y retrocede; sin maná en el
 - `magic-prep.test.mjs` · 40 · Elegir un hechizo en el libro empieza la animación de lanzar; el clic lo suelta sobre el objetivo.
 - `magic-pvp.test.mjs` · 39 · Hechizos solo contra jugadores: Confusion (16), Inhibition Casting (31) y Resurrection (32).
 - `magic-types.test.mjs` · 65 · Tipos de hechizo con estados: paralizar, hielo, escudo, invisibilidad, campos, veneno, línea.
@@ -218,6 +221,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `summon.test.mjs` · 23 · Summon Creature (Game.cpp ~18660): seguidor según Magery, límite magery/20, ataca monstruos, sin experiencia ni botín.
 - `summoninfo.test.mjs` · 17 · 
 - `support-bot.test.mjs` · 32 · Mago de apoyo: un estudioso del grupo de apoyo compra una varita mágica, se la equipa y no la vende (la exige el summon Healer/Buffer/Aura)
+- `support-summon.test.mjs` · 26 · Los magos de apoyo (Healer/Buffer/Aura) llegan a invocar un summon de apoyo (0.78.0: antes la bola de la misión o la de escuela lo impedía
 - `talents.test.mjs` · 61 · Árbol de talentos del compañero (3 ramas), hechizos del compañero y jugador sin magia.
 - `trade.test.mjs` · 53 · Comercio entre jugadores (systems/trade.js) e item level (itemlevel.js): invitar, ofrecer, confirmar, cambio atómico, cancelar, peso y dist
 - `tutorial.test.mjs` · 131 · Tutorial: guion íntegro (es+en), estado en la partida, concesiones y recorrido completo del flujo del cliente. node tests/tutorial.test.mjs

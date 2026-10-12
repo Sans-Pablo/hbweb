@@ -37,6 +37,9 @@ export function playerStrike(rng, p) {
   return { sm: Math.max(1, sm), l: Math.max(1, l), hit };
 }
 
+// Ataque crítico («super ataque», m_bSuperAttackMode) y ataque en carrera (bIsDash). OJO: el código original (HGServer/Game.cpp,
+// iCalculateAttackEffect) no está en este equipo: las cifras son una aproximación de diseño, a contrastar con él (docs/sistemas/critico-dash.md).
+export const CRIT = { ignoreDef: 40, mult: 1.5, dashMult: 1.3, barPerHit: 6, barFull: 100 };
 // Golpe de un jugador a un monstruo. Devuelve {hit, damage}.
 // ctx (opcional): { berserk, protect (estado del objetivo, 1..5), bonus (armas especiales) } — ver iCalculateAttackEffect.
 export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
@@ -45,6 +48,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   const bow = p.eff.wtype >= 40;
   if (bow && ctx.protect === 1) return { hit: false, damage: 0 };                 // Protección contra flechas: la flecha se pierde sin tocar el combo
   let defense = n.cfg.defenseRatio;
+  if (ctx.crit) defense = Math.floor(defense * (1 - CRIT.ignoreDef / 100));        // ataque crítico: ignora parte de la defensa
   if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
   if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
   if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
@@ -59,6 +63,8 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
   if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 5) return { hit: true, damage: 0 };   // invulnerables
   let dmg = n.cfg.size === 0 ? sm : l;
+  if (ctx.crit) dmg = Math.floor(dmg * CRIT.mult);                                  // crítico (super ataque) y carrera (dash): bonos de daño
+  if (ctx.dash) dmg = Math.floor(dmg * CRIT.dashMult);
   if (n.absDamage < 0) {
     dmg = Math.floor(dmg - dmg * (Math.abs(n.absDamage) / 100));
     if (dmg < 0) dmg = 1;

@@ -13,3 +13,6 @@ Los jugadores abren un puesto de venta en `gshop_1f`, `wrhus_1f` y `bsmith_1f` (
 - `stallAI` (`systems/residents.js`): cada 4–9 min libres, si un habitante tiene ≥3 objetos sobrantes (`stallSurplus`, vía `judge`/`stallable`), viaja a `gshop_1f`, abre puesto (rótulo propio, precio ≥ 2× venta NPC ±), vuelve a la granja y más tarde regresa a recoger oro/cerrar. Se aborta a los 120 s o si lo reclutan. `manage` no vende los 8 mejores sobrantes de un habitante (`stallKeep`).
 - Test: `tests/residents-stall.test.mjs`. `tests/residents-buy.test.mjs`: cada ~3–6 min un habitante libre visita un puesto ajeno de `gshop_1f` y compra un objeto que `judge` manda equipar, si el oro (70 %) y `Inv.canCarry` lo permiten.
 - **Puerta libre**: el puesto no se abre a ≤8 casillas de un teletransporte (`Stall.DOOR_GAP`); los puestos de los bots se apartan a más de esa distancia.
+
+## Artesanos (v0.78.0)
+- Los granjeros y pescadores abren puesto con existencias limitadas al precio de `Item.cfg` y los demás bots les compran la comida de sus summons. Ver `artesanos.md`; test `craft-stall.test.mjs`.

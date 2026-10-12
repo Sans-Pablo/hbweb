@@ -135,9 +135,10 @@ Copiado del cliente original (`CommandProcessor`) **[FIEL]**, salvo lo indicado.
 | Pasar el cursor sobre un objeto | Muestra sus estadísticas. |
 | Rueda del ratón | Zoom (solo modo Remastered). |
 | Mayús + arrastrar un objeto | Agrupa en la misma casilla los objetos del mismo tipo. |
-| Alt + clic izquierdo sobre un monstruo | **[INVENTO]** Ordenas a tu summon atacar a ese monstruo (aunque esté en modo Peace). |
-| Alt + clic derecho en el suelo | **[INVENTO]** Tu summon va a esa casilla y se queda allí (vuelve a seguirte si te alejas más de 14 casillas). |
+| Mayús + clic izquierdo sobre un monstruo | **[INVENTO]** Ordenas a tu summon atacar a ese monstruo (aunque esté en modo Peace). |
+| Mayús + clic derecho en el suelo | **[INVENTO]** Tu summon va a esa casilla y se queda allí (vuelve a seguirte si te alejas más de 14 casillas). |
 | Mantener Alt | Muestra las etiquetas de los objetos del suelo (modo Remastered). |
+| Alt + clic izquierdo sobre un monstruo | **[INVENTO]** Ataque crítico si tienes carga de «super ataque» (la barra se llena golpeando). Atacar corriendo a una casilla del alcance = dash (avanza y golpea con bonus). |
 
 El **ataque automático** (opción, o `/auto`) hace que el clic izquierdo sobre un monstruo lo ataque sin necesidad de Ctrl.
 
@@ -173,7 +174,7 @@ Combinaciones con Ctrl:
 | Tecla | Efecto |
 |---|---|
 | Ctrl + 1…9, 0 | Abre el libro de magia en ese círculo (el 0 abre el círculo 10). |
-| Ctrl + R | **Alterna correr / andar.** No se usa Mayús para correr. |
+| Ctrl + R | **Alterna correr / andar** (se empieza siempre corriendo). No se usa Mayús para correr. |
 | Ctrl + A | Modo de ataque automático (alterna). |
 | Ctrl + D | Cambia el nivel de detalle gráfico (bajo / medio / alto). |
 | Ctrl + M | Muestra / oculta el mapa. |
@@ -507,7 +508,7 @@ durante las pruebas). Matar monstruos ya no da bolas. La bola guarda el nivel, l
 - Al guardarse, el summon se desvanece en 1 segundo.
 - Si cambias de mapa, el summon te sigue.
 - Una bola de un summon caído se ve en escala de grises.
-- **Alt + clic izquierdo**: ordena atacar a un monstruo; **Alt + clic derecho**: va a una casilla (sección 2.1).
+- **Mayús + clic izquierdo**: ordena atacar a un monstruo; **Mayús + clic derecho**: va a una casilla (sección 2.1).
 
 ### 7.2 Cuadro Summons (F10)
 
@@ -519,7 +520,7 @@ y un nombre con nivel.
 
 El símbolo ATQ/PAZ del panel (o el botón de modo) alterna:
 - **Attack**: el summon ataca a los enemigos.
-- **Peace**: no ataca por su cuenta. Con **Alt + clic izquierdo** sobre un monstruo, lo ataca igualmente.
+- **Peace**: no ataca por su cuenta. Con **Mayús + clic izquierdo** sobre un monstruo, lo ataca igualmente.
 
 ### 7.4 Nivel y experiencia
 

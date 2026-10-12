@@ -17,7 +17,8 @@ export function wanted(inst) {
 }
 
 // Compra (o gasta de la mochila) y da comida a las bolas activas, la principal primero. Devuelve cuántas piezas dio.
-export function feedSummons(w, p, log) {
+// market=false (habitantes, 0.78.0): no compra «de la nada»; solo gasta la comida que ya lleva (la compró en un puesto de granjero/pescador)
+export function feedSummons(w, p, log, market = true) {
   if (p.dead) return 0;
   let given = 0;
   for (const inst of Comp.activeBalls(p)) {
@@ -25,7 +26,7 @@ export function feedSummons(w, p, log) {
     while (given < PER_ERRAND && (want = wanted(inst))) {
       const d = w.data.item(want.id); if (!d) break;
       const own = p.bag.find(i => i.id === want.id);
-      if (!own && p.gold < FOOD_PRICE + RESERVE) break;
+      if (!own && (!market || p.gold < FOOD_PRICE + RESERVE)) break;
       if (Comp.feed(w, p, d, inst.uid) !== true) break;                                  // lo rechazó o no puede más: no se gasta nada
       if (own) { if ((own.count || 1) > 1) own.count--; else Inv.removeFromBag(p, own.uid); } else p.gold -= FOOD_PRICE;
       n++; given++;

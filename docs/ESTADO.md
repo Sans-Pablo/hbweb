@@ -60,6 +60,27 @@
 
 - [x] (hecho en v0.77.1) **Observador, web rota:** la página del observador no se veía bien (las ranuras no tenían posición en la rejilla y el contenedor oculto se pintaba encima). Arreglado en `web/observador.html`.
 
+**Backlog nuevo (pedido del usuario, 2026-10-12, tras la v0.77.1):**
+- [x] (hecho en v0.78.0) **Bots, magos y magias de pets:** los magos deben usar las magias que enseñan las pets y luego pelear con el báculo. → mantienen distancia con el summon vivo y con maná; sin maná, báculo. INVENTO: el original no estaba disponible. Test `mage-kite`; ficha en `companeros.md`.
+- [x] (hecho en v0.78.0) **Bots, summoners a distancia:** los summoners también son personajes de rango; revisar cómo se comportan en el juego original. → mismo comportamiento de rango (aproximación, original no verificable).
+- [x] (hecho en v0.78.0) **Bots, support sin summon:** aún no se ha visto invocar a ningún support; investigar por qué. → causa: la bola de misión y el combate reciente bloqueaban el cambio; ahora alternan. Test `support-summon`.
+
+**Backlog nuevo (pedido del usuario, 2026-10-12, observador y economía):**
+- [x] (hecho en v0.78.0) **Observador, 4 paneles sin recargar:** siempre 4 paneles, elegir qué panel ver en cada uno y redimensionar; al cambiar de panel NO se recarga la página ni el iframe del juego. → panel por ranura sin recargar el iframe del juego.
+- [x] (hecho en v0.78.0) **Observador, selección de personaje:** panel de selección de personaje: ver quiénes son magos, warriors, etc. y filtrar por profesión para seguir a farmers y pescadores. → panel «Personajes» por clase/oficio.
+- [x] (hecho en v0.78.0) **Bots, farmers y pescadores por ciudad:** 2 farmers y 2 pescadores por ciudad; hacen su actividad y venden sus productos a los otros bots, que compran en su tienda y mejoran sus pets. → 8 artesanos con puesto; los demás les compran. Ficha `artesanos.md`, test `craft-stall`.
+
+**Backlog nuevo (respuestas del usuario, v0.78.0):**
+- [x] (hecho en v0.78.0) **Controles, Shift para el compañero:** Shift+clic izquierdo = atacar con el compañero y Shift+clic derecho = ir a esa casilla (hoy es Alt).
+- [x] (hecho en v0.78.0) **Críticos con Alt:** Alt+clic = ataque crítico (super ataque del original, con barra que se carga al golpear); citar la fórmula de HGServer/Game.cpp. → aproximación de diseño: faltan las cifras originales. Ficha `critico-dash.md`, test `crit-dash`.
+- [x] (hecho en v0.78.0) **Dash:** atacar mientras se corre: avanza y golpea con bono, como en el original. → ídem.
+- [x] (hecho en v0.78.0) **Correr por defecto:** el personaje corre por defecto en cada sesión; Ctrl+R alterna.
+- [x] (hecho en v0.78.0) **CI sin gh:** release.sh consulta por curl a la API de GitHub el estado del último workflow.
+- [x] (hecho en v0.78.0) **Fichas de 0.76.0:** escribir fichas de summonfood, sprite-retry y audio. → `summonfood.md`, `sprite-retry.md`, `audio.md`.
+
+- [ ] **Verificar contra el original** (cuando esté disponible): cifras de crítico/dash (`CRIT` en `combat.js`) y comportamiento de magos/invocadores a distancia.
+- [ ] **Artesanos:** solo producen comida y pescado, no caramelos.
+
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 
 Especificaciones en `docs/` (items_spec.md). Pruebas: `node tests/sim.test.mjs`, `node tests/net-walk.test.mjs`.

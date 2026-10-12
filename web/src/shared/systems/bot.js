@@ -28,6 +28,7 @@ import * as Comp from "./companion.js";
 import { feedSummons } from "./summonfood.js";
 import * as Sch from "./schools.js";
 import { hasStaff } from "./dummy.js";
+import * as Tal from "./talents.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -141,7 +142,7 @@ export function errands(w, p, b, first = false) {
   { const ar = w.data.item(ARROW), have = countOf(p, ARROW);          // arquero con arco puesto: lleva flechas de sobra (1 de oro cada una); sin ellas el arco no hace daño
     if (ar && p.eff?.bow && have < ARROWS_MAX / 2) { const n = Math.min(ARROWS_MAX - have, Math.floor(p.gold / 4)); if (n > 10 && buy(w, p, ar, n)) blog(w, p, `Compro ${n} flechas: con el arco disparo desde lejos.`); } }
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
-  feedSummons(w, p, t => blog(w, p, t));                              // comida preferida del summon (principal primero): sube sus estadísticas
+  feedSummons(w, p, t => blog(w, p, t), !p.res);                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
   const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
@@ -296,6 +297,23 @@ function pickTarget(w, p, owner) {
     if (s < bs && reachable(w, p, e)) { best = e; bs = s; }
   }
   return best;
+}
+// Mago de rango (0.78.0, INVENTO: el código original no está en esta máquina y no se pudo comprobar cómo juega un mago/invocador del juego original): con un summon de escuela vivo
+// y maná en él (>= 20 % y para el hechizo más barato) mantiene 6-8 casillas con el monstruo y deja que el summon lance los hechizos (residents.js los lanza); con el monstruo a <= 3 retrocede;
+// sin maná en el summon, pelea cuerpo a cuerpo (con báculo si lo lleva en la mochila).
+export const MAGE_RANGE = { min: 6, max: 8, flee: 3, manaPct: 0.2 };
+export function rangedMage(w, p) {
+  if (!p.res || p.res.arch !== "scholar" || isSupport(p)) return null;
+  const c = Comp.activeBall(p)?.comp; if (!c || !c.on || !Sch.SCHOOL_OF[c.sp]) return null;
+  let n = null; for (const e of w.ents.values()) if (e.comp && e.master === p.id && !e.dead) { n = e; break; }
+  if (!n) return null;
+  const top = Tal.maxMp(c), mp = n.mp ?? top;
+  return mp >= Math.max(10, top * MAGE_RANGE.manaPct) ? n : null;
+}
+function wieldStaff(adv, w, p, b) {              // sin maná en el summon: pelea con un báculo/varita si lo tiene en la mochila
+  if (hasStaff(p) || w.time - (b.staffAt || 0) < 15000) return;
+  const it = p.bag.find(i => { const d = w.data.item(i.id); return d && isStaff(d) && itemLevel(d) <= p.level; });
+  if (it) { b.staffAt = w.time; adv.command(p.id, { t: "use", uid: it.uid }); blog(w, p, "Sin maná en mi summon: peleo con el báculo."); }
 }
 function step(adv, w, p, b, tx, ty, run) {
   if (w.time - p.lastMove < LIMITS.moveMs || w.busy(p)) return true;
@@ -468,6 +486,15 @@ function run(adv, w, p, b) {
       return;
     }
     if (p.recallTok && b.recallAt && w.time - b.recallAt < 12000) { b.hold = w.time + 800; stuck(w, p, b, "Recall en curso"); return; }   // el Recall se rompe si sigue pegando
+    if (t.kind === "npc" && !p.eff?.bow && !b.travel) {
+      if (rangedMage(w, p)) {
+        const d = dist(p, t);
+        if (d <= MAGE_RANGE.flee || d < MAGE_RANGE.min) {                       // se acerca: retrocede en línea contraria
+          const sx = Math.sign(p.x - t.x), sy = Math.sign(p.y - t.y), o = w.freeSpotNear(p.x + (sx || 1) * 3, p.y + (sy || 1) * 3);
+          if (o && step(adv, w, p, b, o[0], o[1], d <= MAGE_RANGE.flee)) { if (w.time - (b.kiteLog || 0) > 15000) { b.kiteLog = w.time; blog(w, p, `Retrocedo: ${t.name} se acerca y mi summon lanza los hechizos.`); } return; }
+        } else if (d <= MAGE_RANGE.max) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }       // a distancia: espera a que el summon lance
+      } else if (p.res?.arch === "scholar" && !isSupport(p) && Comp.activeBall(p)) wieldStaff(adv, w, p, b);
+    }
     if (dist(p, t) <= reachOf(w, p, t)) {
       b.stuck = null;
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }

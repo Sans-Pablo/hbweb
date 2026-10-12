@@ -184,6 +184,7 @@ const COMMANDS = {
     if (!w.tryStep(p, cmd.dir, (run ? PLAYER.runMs : PLAYER.walkMs) * slow, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
     if (run && (p.runSteps = (p.runSteps || 0) + 1) >= runStepsPerSp(p.level)) { p.runSteps = 0; p.sp -= 1; }
     p.lastMove = w.time;
+    if (run) p.lastRun = w.time;                              // el dash exige haber corrido hace un instante
     // al llegar a una casilla de teletransporte, el servidor original (RequestTeleportHandler) te manda al destino
     const tp = w.teleports.get(w.grid.idx(p.x, p.y));
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
@@ -199,16 +200,36 @@ const COMMANDS = {
     if (!t || t.dead || (t.kind !== "npc" && !Combat.canFight(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
-    if (dist(p, t) > Combat.reachOf(w, p, t)) return w.reject(p, cmd, "lejos");
+    const reach = Combat.reachOf(w, p, t), gap = dist(p, t);
+    // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
+    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && w.time - (p.lastRun || -1e9) < PLAYER.runMs * 3 && p.sp >= 2;
+    if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
+    let lead = 0;
+    if (dash) {
+      if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
+      p.sp -= 1; p.lastMove = w.time; lead = PLAYER.runMs;
+    }
+    const crit = !!cmd.crit && (p.superAttack | 0) > 0;       // CRÍTICO (Alt + clic): gasta una carga de super ataque
+    if (crit) p.superAttack -= 1;
     const ms = attackMs(p);
+    const go = () => {
+      if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t)) return;
+      p.dir = dirTo(p.x, p.y, t.x, t.y) || p.dir;
+      w.setAct(p, ACT.ATTACK, ms);
+      p.busyUntil = w.time + ms;
+      p.lastAttack = p.lastCombat = w.time;
+      w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, tx: t.x, ty: t.y });
+      w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
+    };
+    if (lead) { p.busyUntil = w.time + lead + ms; p.lastCombat = w.time; w.after(lead, go); return true; }
     w.setAct(p, ACT.ATTACK, ms);
     p.busyUntil = w.time + ms;
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
     w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, tx: t.x, ty: t.y });
-    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t) : Combat.playerHit(w, p, t)));
+    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
     return true;
   },
   prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),

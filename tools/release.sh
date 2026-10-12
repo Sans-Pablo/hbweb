@@ -18,12 +18,13 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PcjV2utGChnwb1EzsfPttA"
 git pull -q --rebase origin main
 git push -q origin main
-sleep 15
-id=$(gh run list --repo Sans-Pablo/hbweb --limit 1 --json databaseId -q '.[0].databaseId')
+# estado del último workflow por la API pública de GitHub (sin `gh`: no está instalado; el repo es público)
+api="https://api.github.com/repos/Sans-Pablo/hbweb/actions/runs?per_page=1"
+last() { curl -fsS -H "Accept: application/vnd.github+json" "$api" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const r=(JSON.parse(d).workflow_runs||[])[0];console.log(r?r.id+" "+r.status+" "+(r.conclusion||"-"):"? ? ?")})'; }
 for i in 1 2 3 4 5 6; do
-  s=$(gh run view "$id" --repo Sans-Pablo/hbweb --json status,conclusion -q '.status+" "+.conclusion')
-  case "$s" in "completed success") echo "✓ CI publicado: v$v «$name» → https://sans-pablo.github.io/hbweb/ (verifica data/version.json?v=N con WebFetch)"; exit 0;;
-    completed*) echo "✗ CI falló: $s (gh run view $id --log-failed)"; exit 1;; esac
+  read -r id st co < <(last 2>/dev/null || echo "? ? ?")
+  case "$st $co" in "completed success") echo "✓ CI publicado: v$v «$name» → https://sans-pablo.github.io/hbweb/ (verifica data/version.json?v=N)"; exit 0;;
+    completed*) echo "✗ CI falló: $st $co (https://github.com/Sans-Pablo/hbweb/actions/runs/$id)"; exit 1;; esac
   sleep 20
 done
-echo "… CI sigue en curso (run $id); repite: gh run view $id --repo Sans-Pablo/hbweb"
+echo "… CI sigue en curso o sin respuesta de la API (run $id); mira https://github.com/Sans-Pablo/hbweb/actions"

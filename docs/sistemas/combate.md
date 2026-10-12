@@ -30,7 +30,7 @@ Origen: `HGServer/Game.cpp` `iCalculateAttackEffect` (línea ~52318). Auditado e
 La lluvia reduce el acierto de los arcos (5/10/25 %) y aumenta el desgaste de las armas cuerpo a cuerpo; ver [mundo.md](mundo.md).
 
 ## Pendiente (no portado)
-- Ataque crítico / super ataque (modos 20–30, `m_bSuperAttackMode`, maestría 100), ataque en carrera (`bIsDash`), Firebow (873) y Direction-Bow (874).
+- Crítico y dash portados en 0.78.0 como aproximación (ver `critico-dash.md`; faltan las cifras originales). Pendiente: Firebow (873) y Direction-Bow (874).
 - Retroceso (≥ 40 de daño físico sobre el jugador) portado: `knockback` en combatsys; falta en monstruos con `actionLimit 4`.
 - Reputación (Kloness), zonas de lucha, PvP, habilidades especiales (`SpecialAbility`).
 

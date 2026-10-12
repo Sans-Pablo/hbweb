@@ -42,3 +42,7 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 ## Coste de invocar (v0.60: % del maná máximo = nivel del summon; F10 Info lista gustos/rechazos; manuales dan 100 %)
 Invocar (usar la bola) cuesta maná del dueño igual al nivel del summon (`toggleCompanion`, npcsys.js). Sin maná: rechazo. Guardarlo es gratis; los bots no pagan. Test: `tests/summon-mana.test.mjs`.
 - **Varios a la vez** (v0.61.0): ver [clases.md](clases.md).
+
+## Mago de rango y apoyo (v0.78.0)
+- **Mago de apoyo**: saca un summon de apoyo (Healer/Buffer/Aura) y lo alterna con el de la misión (4 min fuera, 8 min de ciclo); antes la bola de misión o la de escuela lo impedían y nunca se veía invocar apoyo. Test `support-summon.test.mjs`.
+- **Mago de rango (INVENTO, no verificable)**: el original no estaba en la máquina, así que no se comprobó cómo juega un mago/invocador del juego original. Un estudioso que no es de apoyo, con summon de escuela vivo y maná en él (≥ 20 %), mantiene 6–8 casillas del monstruo y retrocede si se acerca a ≤ 3 mientras el summon lanza los hechizos; sin maná pelea cuerpo a cuerpo (con báculo si lo lleva). `bot.js#rangedMage`, test `mage-kite.test.mjs`.

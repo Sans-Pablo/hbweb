@@ -1,10 +1,35 @@
 {
-  "build": "0.77.1",
+  "build": "0.78.0",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-12",
+      "title": {
+        "es": "Observador de 4 paneles, artesanos y combate de rango (v0.78.0)",
+        "en": "4-panel observer, craftsmen and ranged combat (v0.78.0)"
+      },
+      "items": [
+        {
+          "es": "El observador tiene 4 paneles elegibles sin recargar y un panel de personajes por clase y oficio.",
+          "en": "The observer has 4 selectable panels with no reload and a character panel by class and profession."
+        },
+        {
+          "es": "Granjeros y pescadores venden en su puesto; los demás bots les compran comida para sus summons.",
+          "en": "Farmers and fishers sell at their stalls; other bots buy food for their summons."
+        },
+        {
+          "es": "Los magos mantienen distancia mientras su summon lanza hechizos; los supports invocan su summon de apoyo.",
+          "en": "Mages keep their distance while their summon casts; supports summon their support ball."
+        },
+        {
+          "es": "Controles: Shift+clic ordena al summon, Alt+clic ataque crítico, dash al atacar corriendo, correr por defecto (Ctrl+R alterna). Las cifras de crítico y dash son aproximadas.",
+          "en": "Controls: Shift+click commands the summon, Alt+click critical, dash when attacking while running, run by default (Ctrl+R toggles). Critical/dash numbers are approximate."
+        }
+      ]
+    },
     {
       "date": "2026-10-12",
       "title": {

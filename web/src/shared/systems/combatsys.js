@@ -4,7 +4,7 @@ import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
 import * as Inv from "../inventory.js";
 import { EQUIP, ITYPE } from "../items.js";
-import { strikeNpc, absorbOnHit } from "../combat.js";
+import { strikeNpc, absorbOnHit, CRIT } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
 import { extraWeaponWear } from "./weather.js";
@@ -38,12 +38,20 @@ export function reachOf(w, p, t) {
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
 
-export function playerHit(w, p, t) {
+// Barra de crítico: cada golpe que acierta la carga; llena, da una carga de super ataque (p.superAttack, tope nivel/10 y al menos 1).
+// La armadura con chargeCrit (npcStrikes) suma cargas por su lado. Alt + clic gasta una carga (world.js, attack).
+export function chargeCrit(p) {
+  p.critBar = (p.critBar || 0) + CRIT.barPerHit;
+  if (p.critBar >= CRIT.barFull) { p.critBar -= CRIT.barFull; p.superAttack = Math.min(Math.max(1, Math.floor(p.level / 10)), (p.superAttack || 0) + 1); }
+}
+export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  chargeCrit(p);
+  if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
   const skill = p.eff.wtype === 0 ? 5 : p.eff.skill;
   const lethal = t.hp - r.damage <= 0;
@@ -62,12 +70,14 @@ export function canFight(w, p, t) {
 }
 // Multiplicador del daño entre jugadores (invento del port): subido para que un duelo se decida en unos 15-25 golpes, no en minutos; las pets y las pociones deciden el resto.
 export const PVP_DMG = 1.7;
-export function hitPlayer(w, p, t) {
+export function hitPlayer(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
-  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather });
+  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  chargeCrit(p);
+  if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
   wearWeapon(w, p);
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);

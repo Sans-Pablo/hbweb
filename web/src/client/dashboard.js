@@ -135,7 +135,7 @@ function paintStats() {
 function splitters() {
   const root = document.documentElement, K = "hb.obs.layout";
   let sv = {}; try { sv = JSON.parse(localStorage.getItem(K) || "{}"); } catch {}
-  const set = (v, val) => { root.style.setProperty(v, val); sv[v] = val; };
+  const set = (v, val) => { root.style.setProperty(v, val); sv[v] = val; layout(); };
   for (const [v, val] of Object.entries(sv)) root.style.setProperty(v, val);
   const drag = (el, axis, v, area, min, max) => el.addEventListener("pointerdown", e => {
     e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add("drag"); document.body.classList.add("dragging");
@@ -149,7 +149,7 @@ function splitters() {
   drag($("vs"), "x", "--c1", () => document.getElementById("app"), 0.25, 0.85);
   drag($("hs"), "y", "--r1", () => document.getElementById("app"), 0.2, 0.85);
   drag($("vs2"), "x", "--b1", () => $("bottom"), 0.15, 0.85);
-  for (const el of [$("vs"), $("hs"), $("vs2")]) el.ondblclick = () => { const v = el.id === "vs" ? "--c1" : el.id === "hs" ? "--r1" : "--b1"; root.style.removeProperty(v); delete sv[v]; try { localStorage.setItem(K, JSON.stringify(sv)); } catch {} };
+  for (const el of [$("vs"), $("hs"), $("vs2")]) el.ondblclick = () => { const v = el.id === "vs" ? "--c1" : el.id === "hs" ? "--r1" : "--b1"; root.style.removeProperty(v); delete sv[v]; layout(); try { localStorage.setItem(K, JSON.stringify(sv)); } catch {} };
 }
 
 // ---- cuadrante 5: estadísticas globales y peticiones de los bots (testers) ----
@@ -189,35 +189,55 @@ function paintSumm() {
 }
 
 // ---- disposición de paneles: cada hueco elige su panel (se puede dejar vacío); se guarda en este navegador ----
-const PANELS = { game: ["🎮 En vivo", "🎮 Live"], roster: ["👥 Habitantes", "👥 Residents"], info: ["🧠 Personaje", "🧠 Character"], stats: ["📈 Estadísticas", "📈 Statistics"], glob: ["🌐 Global y peticiones", "🌐 Global & requests"], summ: ["🐾 Top summons", "🐾 Top summons"] };
+const PANELS = { game: ["🎮 En vivo", "🎮 Live"], roster: ["👥 Habitantes", "👥 Residents"], info: ["🧠 Personaje", "🧠 Character"], stats: ["📈 Estadísticas", "📈 Statistics"], glob: ["🌐 Global y peticiones", "🌐 Global & requests"], summ: ["🐾 Top summons", "🐾 Top summons"], chars: ["🧑‍🌾 Personajes", "🧑‍🌾 Characters"] };
 const DEF = ["game", "roster", "info", "stats"], KP = "hb.obs.panels";
-let slots = DEF.slice(); try { const v = JSON.parse(localStorage.getItem(KP) || "null"); if (Array.isArray(v) && v.length === 4 && v.every(x => !x || PANELS[x]) && new Set(v.filter(Boolean)).size === v.filter(Boolean).length) slots = v; } catch {}
+let slots = DEF.slice(); try { const v = JSON.parse(localStorage.getItem(KP) || "null"); if (Array.isArray(v) && v.length === 4 && v.every(x => PANELS[x]) && new Set(v).size === 4) slots = v; } catch {}   // siempre 4 paneles distintos
+// Los paneles nunca cambian de padre (mover un iframe en el DOM lo recarga): viven en #stage y se colocan encima de su hueco con coordenadas.
 function place() {
-  const pool = $("pool");
-  for (const id of Object.keys(PANELS)) pool.appendChild($(id));
-  slots.forEach((id, i) => { const el = $("s" + (i + 1)); el.dataset.empty = L("(vacío: elige un panel en otro hueco)", "(empty: pick a panel in another slot)"); if (id) el.appendChild($(id)); });
-  for (const id of Object.keys(PANELS)) { const h = $(id).querySelector("h3"); if (!h) continue; h.querySelector(".pick")?.remove();
-    const i = slots.indexOf(id); if (i < 0) continue;
-    const sel = document.createElement("select"); sel.className = "pick"; sel.title = L("Cambiar este panel", "Change this panel");
-    sel.innerHTML = Object.entries(PANELS).map(([k, n]) => `<option value="${k}"${k === id ? " selected" : ""}>${n[getLang() === "en" ? 1 : 0]}</option>`).join("") + `<option value="">${L("— vacío —", "— empty —")}</option>`;
-    sel.onchange = () => pick(i, sel.value); h.appendChild(sel); }
+  for (const id of Object.keys(PANELS)) { const h = $(id).querySelector("h3"); if (!h) continue; let sl = h.querySelector(".pick");
+    if (!sl) { sl = document.createElement("select"); sl.className = "pick"; sl.title = L("Cambiar este panel", "Change this panel"); h.appendChild(sl);
+      sl.innerHTML = Object.entries(PANELS).map(([k, n]) => `<option value="${k}">${n[getLang() === "en" ? 1 : 0]}</option>`).join(""); sl.onchange = () => pick(slots.indexOf(id), sl.value); }
+    sl.value = id; }
+  layout();
+}
+function layout() {
+  const sx = scrollX, sy = scrollY;
+  for (const id of Object.keys(PANELS)) { const el = $(id), i = slots.indexOf(id); if (i < 0) { el.style.display = "none"; continue; }
+    const r = $("s" + (i + 1)).getBoundingClientRect(); Object.assign(el.style, { display: "flex", left: r.left + sx + "px", top: r.top + sy + "px", width: r.width + "px", height: r.height + "px" }); }
 }
 function pick(i, id) {
-  const j = id ? slots.indexOf(id) : -1; if (j >= 0) slots[j] = slots[i]; slots[i] = id;
+  if (i < 0 || slots[i] === id) return;
+  const j = slots.indexOf(id); if (j >= 0) slots[j] = slots[i]; slots[i] = id;                       // si ya estaba en otro hueco, se intercambian
   try { localStorage.setItem(KP, JSON.stringify(slots)); } catch {}
-  place(); paintAll(); if (sel && slots.includes("game")) show(sel);               // mover el marco lo recarga
+  place(); paintAll();                                                                              // el marco no se toca: no se recarga
 }
-function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); }
+// ---- panel de personajes: por clase y oficio, con filtros y contadores (para seguir a granjeros y pescadores) ----
+const ROLES = [["warrior", "Guerrero", "Warrior"], ["mage", "Mago", "Mage"], ["summoner", "Summoner", "Summoner"], ["support", "Apoyo", "Support"], ["farmer", "Granjero", "Farmer"], ["fisher", "Pescador", "Fisher"]];
+const roleOf = b => b.job === "farmer" || b.job === "fisher" ? b.job : b.job === "support" ? "support" : ({ warrior: "warrior", mage: "mage", summoner: "summoner", support: "support" })[b.cls] || "warrior";
+let roleF = "";
+function charsInit() {
+  const c = $("chars"); c.innerHTML = `<h3><b>🧑‍🌾 ${L("Personajes", "Characters")}</b><span class="cnt"></span></h3><div class="chips"></div><div class="body" style="padding:0"></div>`;
+  c.onclick = e => { const f = e.target.closest("[data-f]"); if (f) { roleF = f.dataset.f === roleF ? "" : f.dataset.f; paintChars(); return; } const r = e.target.closest(".r"); if (r && +r.dataset.id !== sel) show(+r.dataset.id); };
+}
+function paintChars() {
+  const c = $("chars"), body = c.querySelector(".body"), top = body.scrollTop, cnt = {};
+  for (const b of roster) { const k = roleOf(b); cnt[k] = (cnt[k] || 0) + 1; }
+  c.querySelector(".chips").innerHTML = ROLES.map(([k, es, en]) => `<a data-f="${k}" class="${roleF === k ? "on" : ""}">${L(es, en)} ${cnt[k] || 0}</a>`).join("");
+  c.querySelector(".cnt").textContent = roster.length;
+  body.innerHTML = ROLES.filter(([k]) => !roleF || roleF === k).map(([k, es, en]) => { const l = roster.filter(b => roleOf(b) === k); return l.length ? `<div class="g"><span>${L(es, en)}</span><span>${l.length}</span></div>` + l.map(row).join("") : ""; }).join("") || `<span style="color:#998;padding:6px 8px;display:block">${L("Nadie con este oficio", "Nobody with this job")}</span>`;
+  body.scrollTop = top;
+}
+function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); paintChars(); }
 
 // ---- arranque ----
 async function poll() {
-  try { roster = (await (await fetch("/api/bots", { cache: "no-store" })).json()).list || []; sample(); paintRoster(); paintStats(); } catch { /* servidor un momento fuera: se reintenta */ }
+  try { roster = (await (await fetch("/api/bots", { cache: "no-store" })).json()).list || []; sample(); paintRoster(); paintStats(); paintChars(); } catch { /* servidor un momento fuera: se reintenta */ }
   try { st = await (await fetch("/api/stats", { cache: "no-store" })).json(); paintGlob(); paintSumm(); } catch { /* idem */ }
 }
 addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !("hbBrain" in e.data) || e.data.id !== sel) return;
   brain = e.data.hbBrain; if (brain) { paintInfo(); $("game").querySelector(".who").textContent = brain.name + " · " + (MODES[brain.mode]?.[getLang() === "en" ? 1 : 0] || brain.mode) + " · " + brain.map; }
 });
-splitters(); game(); rosterInit(); infoInit(); statsInit(); globInit(); summInit(); place();
+splitters(); game(); rosterInit(); infoInit(); statsInit(); globInit(); summInit(); charsInit(); place(); addEventListener("resize", layout); new ResizeObserver(layout).observe($("app"));
 poll().then(() => { if (sel) show(sel); else if (roster.length) show(order()[0].id); });
 setInterval(poll, POLL);

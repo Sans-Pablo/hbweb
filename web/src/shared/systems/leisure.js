@@ -65,6 +65,7 @@ function ensureRod(w, p) {
   return rod;
 }
 // Vende el pescado (se queda con uno si su summon carnívoro tiene hambre)
+const FISH_KEEP = 24, fishLeft = p => p.bag.reduce((n, i) => n + (Fishing.isFish(i.id) ? i.count || 1 : 0), 0);
 function cashIn(adv, w, p, r, H) {
   const ball = Comp.activeBall(p);
   let gold = 0, n = 0, fed = 0;
@@ -74,6 +75,7 @@ function cashIn(adv, w, p, r, H) {
       const before = Comp.hpOf(p, ball.comp);
       if (adv.command(p.id, { t: "use", uid: i.uid, dest: ball.uid }) !== false && Comp.hpOf(p, ball.comp) > before) { fed++; continue; }
     }
+    if (r.job === "fisher" && fishLeft(p) <= FISH_KEEP) continue;                       // 0.78.0: el pescador fijo guarda la pesca para su puesto (vende solo lo que pasa de FISH_KEEP piezas)
     const c = i.count || 1; gold += (Fishing.FISH_PRICE[i.id] ?? 1) * c; n += c; Inv.removeFromBag(p, i.uid);
   }
   p.gold += gold;
@@ -121,7 +123,7 @@ export function tick(adv, w, p, r, home, H) {
   const b = p.bot, now = w.time;
   const L = r._leis;
   if (L) {
-    if (p.dead || b.owner != null || r._pend || r._trip || r._delve || p.hp < p.maxHp * 0.6 || w.pvp || w !== home) return end(adv, w, p, r, p.dead ? "muerto" : "interrumpido", H);
+    if (p.dead || b.owner != null || r._pend || r._trip || r._delve || r._stall || p.hp < p.maxHp * 0.6 || w.pvp || w !== home) return end(adv, w, p, r, p.dead ? "muerto" : "interrumpido", H);
     if (now > L.until) return end(adv, w, p, r, "", H);
     if (L.kind === "fish") {
       if (!p.bag.some(i => i.id === Fishing.ROD)) return end(adv, w, p, r, "sin caña", H);

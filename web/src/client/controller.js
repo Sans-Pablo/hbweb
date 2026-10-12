@@ -31,8 +31,9 @@ export class Controller {
       if (e.button === 2 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { ui.closeMinimap(); return; }   // clic derecho cierra el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
-      if (e.altKey && e.button === 0) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Alt + clic: orden de ataque al compañero
-      if (e.altKey && e.button === 2) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Alt + clic derecho: el compañero va a esa casilla
+      if (e.shiftKey && e.button === 0) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Shift + clic: orden de ataque al compañero
+      if (e.altKey && e.button === 0) { const en = this.target().ent; if (en && (en.kind === "npc" || (en.kind === "player" && en.id !== this.me?.id))) { this.critNext = true; this.intent = { t: "attack", id: en.id }; this.path = []; return; } }   // Alt + clic: ataque crítico (el «super ataque» del original)
+      if (e.shiftKey && e.button === 2) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Shift + clic derecho: el compañero va a esa casilla
       this.ctrl = e.ctrlKey;
       this.btn = e.button === 2 ? 2 : 0;
       this.down = true; this.noHold = false;
@@ -144,10 +145,19 @@ export class Controller {
     return { ent, x: ent ? ent.x : Math.floor(wx / T), y: ent ? ent.y : Math.floor(wy / T) };
   }
 
+  // orden de ataque: Alt+clic marca un crítico (si queda carga) y correr hacia el objetivo marca el dash
+  atk(t, dash) {
+    const m = { t: "attack", target: t.id };
+    if (this.critNext && (this.me?.superAttack || 0) > 0) m.crit = true;
+    this.critNext = false;
+    if (dash) m.dash = true;
+    return m;
+  }
+
   // golpe o disparo si el objetivo está al alcance (cuerpo a cuerpo 1 casilla, arco a cualquier distancia)
   strike(me, t) {
     if (dist(me, t) > reachOf(this.world, me, t)) return false;
-    if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: t.id });
+    if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send(this.atk(t));
     return true;
   }
 
@@ -218,10 +228,14 @@ export class Controller {
     if (it.t === "attack") {
       const t = world.ents.get(it.id);
       if (!t || t.dead) { this.intent = null; this.path = []; return; }
-      if (dist(me, t) <= reachOf(world, me, t)) {
+      const reach = reachOf(world, me, t), gap = dist(me, t);
+      if (gap <= reach) {
         this.path = [];
-        if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send({ t: "attack", target: t.id });
+        if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send(this.atk(t));
         return;
+      }
+      if (run && gap === reach + 1 && reach < 4 && me.sp >= 2 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
+        this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);
       if (p.length < 2) { this.intent = null; this.path = []; return; }

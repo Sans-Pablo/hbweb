@@ -28,12 +28,13 @@ import { judge, stallable } from "./botitems.js";
 import * as Stall from "./stall.js";
 import * as Quests from "./quests.js";
 import * as Leisure from "./leisure.js";
+import * as SFood from "./summonfood.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
 export const RESIDENT_NAMES = NAMES;
-// OFICIOS FIJOS (0.76.0, INVENTO): entre los 40 habitantes, 2 granjeros, 2 pescadores y 4 de apoyo (2 por bando: 0-19 Aresden, 20-39 Elvine) que viven de su oficio
-export const JOBS = { Helga: "farmer", Nils: "farmer", Ivo: "fisher", Greta: "fisher", Petra: "support", Lyra: "support", Olga: "support", Yara: "support" };
+// OFICIOS FIJOS (0.76.0, INVENTO): entre los 40 habitantes, 4 granjeros, 4 pescadores y 4 de apoyo (2+2+2 por bando, 0.78.0: 0-19 Aresden, 20-39 Elvine) que viven de su oficio
+export const JOBS = { Helga: "farmer", Nessa: "farmer", Ivo: "fisher", Quill: "fisher", Nils: "farmer", Cora: "farmer", Greta: "fisher", Finn: "fisher", Petra: "support", Lyra: "support", Olga: "support", Yara: "support" };
 export const isCraft = r => r?.job === "farmer" || r?.job === "fisher";
 
 const ARCH = {
@@ -881,18 +882,21 @@ function pets(adv, w, p, r, home) {
   r._petThink = w.time + 2500;
   const b = p.bot, live = liveOf(w, p);
   const want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
-  const qb = qBall(p);
+  const qb = w.time < (r._supHold || 0) ? null : qBall(p);          // el mago de apoyo suelta un rato la bola de la misión para sacar a su summon de apoyo (0.78.0)
   if (!want && qb && !qb.comp.down && !qb.comp.on && Comp.activeBall(p) && !w.fightZone && w.time - p.lastCombat > 4000) { adv.command(p.id, { t: "use", uid: Comp.activeBall(p).uid }); r._wantBall = qb.uid; r._petUseAt = 0; }
   const ball = want || (qb && !qb.comp.down ? qb : null) || ballOf(p), c = ball?.comp;
   if (want && c.on) r._wantBall = 0;
   // VARIOS SUMMONS: el mago alterna de escuela (otros hechizos); los demás entrenan al de menor nivel para llevarlos todos al máximo (meta «summons distintos al nivel máximo»)
-  if (live && !qb && balls(p).length > 1 && w.time - (r._schoolAt ||= w.time + 120000) > 0 && w.time - p.lastCombat > 4000 && !w.fightZone) {
+  // el MAGO DE APOYO saca siempre un summon de apoyo (Healer/Buffer/Aura) en cuanto tiene uno: antes se quedaba con el de escuela y nunca se le veía invocar apoyo (0.78.0)
+  const supNow = supporter(p, r) && live && w.time >= (r._supAt || 0) && !!Comp.activeBall(p) && !Tal.CLS_OF[Comp.activeBall(p).comp.sp] && balls(p).some(i => Tal.CLS_OF[i.comp.sp] && !i.comp.down);
+  if (live && (supNow || !qb) && balls(p).length > 1 && (supNow || (!qb && w.time - (r._schoolAt ||= w.time + 120000) > 0)) && (supNow || w.time - p.lastCombat > 4000) && !w.fightZone) {
     const cur = Comp.activeBall(p), all = balls(p).filter(i => i !== cur && !i.comp.down);
     let nx = null;
-    if (r.arch === "scholar") { const o = all.filter(i => Sch.SCHOOL_OF[i.comp.sp] && Sch.SCHOOL_OF[i.comp.sp] !== Sch.SCHOOL_OF[cur?.comp.sp]); nx = o[Math.floor(w.rng() * o.length)]; }
+    if (supporter(p, r)) { const o = all.filter(i => Tal.CLS_OF[i.comp.sp] && Tal.CLS_OF[i.comp.sp] !== Tal.CLS_OF[cur?.comp.sp]); nx = o[Math.floor(w.rng() * o.length)]; }
+    else if (r.arch === "scholar") { const o = all.filter(i => Sch.SCHOOL_OF[i.comp.sp] && Sch.SCHOOL_OF[i.comp.sp] !== Sch.SCHOOL_OF[cur?.comp.sp]); nx = o[Math.floor(w.rng() * o.length)]; }
     else { const o = all.filter(i => i.comp.lvl < Sch.TRADE_LEVEL).sort((x, y) => x.comp.lvl - y.comp.lvl)[0]; if (o && cur && (cur.comp.lvl >= Sch.TRADE_LEVEL || cur.comp.lvl >= o.comp.lvl + 4)) nx = o; }
     r._schoolAt = w.time + 180000 + Math.floor(w.rng() * 180000);
-    if (cur && nx) { adv.command(p.id, { t: "use", uid: cur.uid }); r._wantBall = nx.uid; r._petUseAt = 0; blog(w, p, `Cambio de summon: guardo a ${cur.comp.nm} (nv ${cur.comp.lvl}) y saco a ${nx.comp.nm} (${nx.comp.sp} nv ${nx.comp.lvl}).`); return; }
+    if (cur && nx) { if (supNow) { r._supHold = w.time + 240000; r._supAt = w.time + 480000; } adv.command(p.id, { t: "use", uid: cur.uid }); r._wantBall = nx.uid; r._petUseAt = 0; blog(w, p, `Cambio de summon: guardo a ${cur.comp.nm} (nv ${cur.comp.lvl}) y saco a ${nx.comp.nm} (${nx.comp.sp} nv ${nx.comp.lvl}).`); return; }
   }
   // ---- mantenimiento (en cualquier mapa menos Promise Land y la cripta)
   if (ball) {
@@ -1267,6 +1271,17 @@ function gather(adv, w, p, r, home) {
 // Con la mochila llena de equipo que no le sirve, el habitante entra en la tienda, monta un puesto con precios razonables y vuelve a sus cosas;
 // más tarde regresa a recoger el oro (y cierra el puesto si ya no queda nada). Los jugadores le compran aunque él no esté.
 const stallOf = (adv, p) => (adv.stallDb || []).find(x => x.owner === p.name.toLowerCase());
+// 0.78.0 (INVENTO): los artesanos (granjero/pescador) venden en el puesto lo que cosechan o pescan, al precio de Item.cfg en valor absoluto (el original guarda con signo negativo lo que no vende la tienda; sin precio: SFood.FOOD_PRICE)
+export const produceStock = (w, p) => p.bag.filter(i => Comp.FEED[i.id] && !i.comp).map(i => ({ i, price: Math.max(1, Math.abs(w.data.item(i.id)?.price) || SFood.FOOD_PRICE) })).slice(0, Stall.MAX_ITEMS_STALL);
+// ¿le sirve esta fila de un puesto a un bot con summon? comida de estadística que su bola aún acepta (summonfood.wanted) o un caramelo; devuelve cuántas piezas comprar
+export function foodWanted(w, p, row) {
+  if (p.dead || p.res && isCraft(p.res)) return 0;
+  const d = w.data.item(row.inst.id); if (!d) return 0;
+  const balls = Comp.activeBalls(p); if (!balls.length) return 0;
+  const ok = Comp.isCandy(d) || balls.some(b => SFood.wanted(b)?.id === row.inst.id);
+  if (!ok || row.price > p.gold - SFood.RESERVE) return 0;
+  return Math.max(1, Math.min(row.inst.count || 1, SFood.PER_ERRAND, Math.floor((p.gold - SFood.RESERVE) / row.price)));
+}
 export function stallSurplus(w, p) {
   const worn = new Set(Object.values(p.equip)), out = [];
   for (const i of p.bag) { if (worn.has(i.uid) || i.comp) continue; const v = judge(w, p, i, []); if (stallable(v)) out.push({ i, v }); }          // lo que juzga «para comerciar»
@@ -1288,12 +1303,14 @@ function stallAI(adv, w, p, r, home) {
       const me = p.name.toLowerCase();
       for (const e of Stall.stallsOf(w)) {
         if (e.stall.owner === me) continue;
-        const row = e.stall.items.find(x => x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"); if (!row) continue;
+        const row = e.stall.items.find(x => foodWanted(w, p, x) || x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"); if (!row) continue;
+        const nFood = foodWanted(w, p, row);
         const sp = w.freeSpotNear(e.x + 1, e.y + 1); if (sp) adv.relocate(p, w, sp);
-        const __r = adv.command(p.id, { t: "stallbuy", sid: e.stall.sid, uid: row.inst.uid, count: row.inst.count || 1 })
+        const __r = adv.command(p.id, { t: "stallbuy", sid: e.stall.sid, uid: row.inst.uid, count: nFood || row.inst.count || 1 })
         if (__r) {
           remember(p, "Compré en el puesto de " + e.stall.name + ".", "I bought something at " + e.stall.name + "'s stall.");
-          blog(w, p, "Compro en el puesto de " + e.stall.name + " algo que me mejora el equipo."); break;
+          if (nFood) { SFood.feedSummons(w, p, t => blog(w, p, t)); blog(w, p, "Compro comida en el puesto de " + e.stall.name + " para mi summon."); }
+          else blog(w, p, "Compro en el puesto de " + e.stall.name + " algo que me mejora el equipo."); break;
         }
       }
     } else if (!st.done) {
@@ -1306,11 +1323,17 @@ function stallAI(adv, w, p, r, home) {
       const mine = stallOf(adv, p);
       if (mine) {
         const gold = mine.gold; adv.command(p.id, { t: "stalltake" });
-        if (!mine.items.length) { adv.command(p.id, { t: "stallclose" }); blog(w, p, "Cierro mi puesto: vendí todo" + (gold ? " (+" + gold + " de oro)." : ".")); }
+        const fresh = isCraft(r) ? produceStock(w, p) : [];
+        if (fresh.length && adv.command(p.id, { t: "stallclose" })) {                                   // artesano: recoge lo no vendido y repone el puesto con la cosecha nueva
+          const again = produceStock(w, p).map(({ i, price }) => ({ uid: i.uid, price, count: i.count || 1 }));
+          if (again.length) adv.command(p.id, { t: "stallopen", title: pickBy(["Cosecha fresca", "Del campo", "Pesca del día"], hash(p.name), 3), items: again });
+          blog(w, p, "Repongo mi puesto con " + again.length + " productos" + (gold ? " (+" + gold + " de oro)." : "."));
+        }
+        else if (!mine.items.length) { adv.command(p.id, { t: "stallclose" }); blog(w, p, "Cierro mi puesto: vendí todo" + (gold ? " (+" + gold + " de oro)." : ".")); }
         else if (gold) blog(w, p, "Recojo " + gold + " de oro de mi puesto.");
       } else {
-        const items = stallSurplus(w, p).map(({ i, v }) => ({ uid: i.uid, price: Math.max(1, Math.round(Math.max(v.value, Shop.sellPriceOf(w.data.item(i.id), i) * 2) * (0.9 + w.rng() * 0.4) / (i.count || 1))), count: i.count || 1 }));
-        if (items.length && adv.command(p.id, { t: "stallopen", title: pickBy(["Ocasión", "Rebajas", "Todo a buen precio", "Liquidación", "Cosas útiles"], hash(p.name), 7), items })) {
+        const items = isCraft(r) ? produceStock(w, p).map(({ i, price }) => ({ uid: i.uid, price, count: i.count || 1 })) : stallSurplus(w, p).map(({ i, v }) => ({ uid: i.uid, price: Math.max(1, Math.round(Math.max(v.value, Shop.sellPriceOf(w.data.item(i.id), i) * 2) * (0.9 + w.rng() * 0.4) / (i.count || 1))), count: i.count || 1 }));
+        if (items.length && adv.command(p.id, { t: "stallopen", title: isCraft(r) ? pickBy(["Cosecha fresca", "Del campo", "Pesca del día"], hash(p.name), 3) : pickBy(["Ocasión", "Rebajas", "Todo a buen precio", "Liquidación", "Cosas útiles"], hash(p.name), 7), items })) {
           remember(p, "Monté un puesto en la tienda con " + items.length + " objetos.", "I set up a stall in the shop with " + items.length + " items.");
         }
       }
@@ -1321,7 +1344,7 @@ function stallAI(adv, w, p, r, home) {
     r._buyAt = now + 120000;
     const me = p.name.toLowerCase(), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f");
     const want = tp && !(b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || b.travel || w.pvp || p.hp < p.maxHp * 0.7) &&
-      (adv.stallDb || []).some(sd => sd.owner !== me && sd.map === "gshop_1f" && sd.items.some(x => x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"));
+      (adv.stallDb || []).some(sd => sd.owner !== me && sd.map === "gshop_1f" && sd.items.some(x => foodWanted(w, p, x) || x.price <= p.gold * 0.7 && Inv.canCarry(p, w.data, w.data.item(x.inst.id), 1, x.inst) && judge(w, p, x.inst, []).act === "equip"));
     if (want) {
       r._buyAt = now + 600000;
       r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000, buy: true };
@@ -1333,6 +1356,7 @@ function stallAI(adv, w, p, r, home) {
   r._stallAt = now + 30000;                                                                   // ocupado: reintenta pronto
   if (b.owner != null || r._trip || r._delve || r._pet || r._gather || b.rest || p.hp < p.maxHp * 0.7 || b.travel || w.pvp) return;
   const mine = stallOf(adv, p), tp = (adv.maps[home.map.id]?.meta.teleports || []).find(t => t.map === "gshop_1f"); if (!tp) return;
+  if (isCraft(r)) { if (produceStock(w, p).length < (mine ? 1 : 2)) return; r._stallAt = now + 150000; r._stall = { tp: { x: tp.x, y: tp.y }, until: now + 120000 }; b.travel = { x: tp.x, y: tp.y, w, until: now + 60000 }; b.path = null; b.goal = null; b.fails = 0; blog(w, p, "Llevo mi cosecha al puesto de la tienda."); return; }
   if (!mine && stallSurplus(w, p).length < (p.bag.length >= 40 ? 1 : 3)) return;                // monta puesto con ≥3 objetos que le sobran (o 1 si la mochila casi está llena)
   if (mine && !mine.gold && mine.items.length && w.rng() < 0.7) return;                        // nada que cobrar: casi nunca vuelve
   r._stallAt = now + 600000 + Math.floor(w.rng() * 600000);
