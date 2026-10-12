@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bestiario · Helbreath Web</title>
+<title>Sprite Tool · Helbreath Web</title>
 <style>
   :root { --stone:#15171b; --slab:#23262d; --edge:#3a3e47; --parch:#ece2c6; --muted:#9a937f; --brass:#d4ab52; }
   * { box-sizing: border-box; }
@@ -16,30 +16,50 @@
   #snd { padding:4px 14px; font-size:12px; } #snd .sg { margin:4px 0; } #snd button { margin:1px; padding:2px 6px; font-size:11px; cursor:pointer; } #snd button.on { background:#7bd; color:#000; } #snd-now { color:var(--muted); margin-left:8px; }
   #info { padding:6px 14px; color:var(--muted); font-size:12px; }
   #wrap { overflow:auto; padding:8px 14px 30px; }
+  body[data-v=raw] .mo, body[data-v=raw] .nr, body[data-v=pc] .mo { display:none !important; }
+  body:not([data-v=pc]) .pcc, body:not([data-v=raw]) .rawc { display:none !important; }
+  #rawinfo { color:var(--muted); font-size:11px; }
   canvas { display:block; background:#2b2d33; border:1px solid var(--edge); }
 </style>
 </head>
 <body>
 <header>
-  <b>Bestiario</b>
+  <b>Sprite Tool</b>
   <a href="armeria.html">Armería →</a>
-  <label>Criatura <select id="sp"></select></label>
-  <label>Vista <select id="mode"><option value="evo">Evolución (etapas × direcciones)</option><option value="dirs">Un nivel, 8 direcciones</option></select></label>
-  <label>Modelo <select id="model"><option value="cmp">Comparar los 4 (filas)</option><option value="0">1 · Original</option><option value="1">2 · HD actual</option><option value="2">3 · IA (Real-ESRGAN)</option><option value="3">4 · IA + luz (simulada)</option></select></label>
-  <label>Nivel <select id="lvl"></select></label>
-  <label>Acción <select id="act"><option value="stop">Reposo</option><option value="move">Andar</option><option value="attack">Atacar</option><option value="damage">Daño</option><option value="dying">Morir</option></select></label>
-  <label>Dirección <select id="dir"><option value="0">Todas</option></select></label>
+  <label class="nr">Criatura / personaje <select id="sp"></select></label>
+  <label>Vista <select id="mode"><option value="evo">Evolución (etapas × direcciones)</option><option value="dirs">Un nivel, 8 direcciones</option><option value="raw">Hojas sueltas (todos los sprites)</option></select></label>
+  <label class="mo">Modelo <select id="model"><option value="cmp">Comparar los 4 (filas)</option><option value="0">1 · Original</option><option value="1">2 · HD actual</option><option value="2">3 · IA (Real-ESRGAN)</option><option value="3">4 · IA + luz (simulada)</option></select></label>
+  <span class="pcc" style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <label>Piel <select id="pc-skin"></select></label>
+    <label>Peinado <select id="pc-hair"></select></label>
+    <label>Color de pelo <select id="pc-hcol"></select></label>
+    <label>Ropa interior <select id="pc-under"></select></label>
+    <label><input type="checkbox" id="pc-cmb"> En combate (reposo/andar)</label>
+  </span>
+  <span class="rawc" style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <label>Fuente <select id="rw-src"><option value="sprites">Monstruos, mapa y objetos (sprites)</option><option value="players">Personajes (cuerpos, pelo, ropa interior)</option><option value="equip">Equipo (armas, ropa, escudos)</option><option value="mod">Redibujos (sprites_mod)</option><option value="fx">Efectos (fx)</option><option value="ui">Interfaz (ui)</option></select></label>
+    <label>Filtro <input id="rw-q" placeholder="ej. orge, pb1, a1" style="width:110px;background:#0d0f12;color:var(--parch);border:1px solid var(--edge);border-radius:4px;padding:4px 8px"></label>
+    <label>Hoja <select id="rw-key" style="max-width:220px"></select></label>
+    <button id="rw-prev">◀</button><button id="rw-next">▶</button>
+    <label><input type="checkbox" id="rw-piv" checked> Pivote</label>
+    <label><input type="checkbox" id="rw-sheet"> Hoja entera</label>
+    <span id="rawinfo"></span>
+  </span>
+  <label class="mo">Nivel <select id="lvl"></select></label>
+  <label class="nr">Acción <select id="act"></select></label>
+  <label class="nr">Dirección <select id="dir"><option value="0">Todas</option></select></label>
   <label>Zoom <select id="zoom"><option>1</option><option selected>1.5</option><option>2</option><option>3</option></select></label>
-  <label><input type="checkbox" id="comp" checked> Como summon</label>
-  <label><input type="checkbox" id="cast"> Círculo de casteo</label>
-  <span id="cc" style="display:none;gap:10px;align-items:center;flex-wrap:wrap">
+  <label class="mo"><input type="checkbox" id="side" checked> Original al lado</label>
+  <label class="mo"><input type="checkbox" id="comp" checked> Como summon</label>
+  <label class="mo"><input type="checkbox" id="cast"> Círculo de casteo</label>
+  <span id="cc" class="mo" style="display:none;gap:10px;align-items:center;flex-wrap:wrap">
     <label>Color <input type="color" id="cc-color"></label>
     <label>Núcleo <input type="color" id="cc-core"></label>
     <label>Brillo <input type="range" id="cc-bright" min="0.05" max="1.5" step="0.05"><output id="cc-bo"></output></label>
     <label>Radio <input type="range" id="cc-size" min="20" max="80" step="1"><output id="cc-so"></output></label>
     <button id="cc-save">Guardar círculo</button>
   </span>
-  <span id="rc" style="display:inline-flex;gap:6px;align-items:center">
+  <span id="rc" class="mo" style="display:inline-flex;gap:6px;align-items:center">
     <label>Matiz <input id="rc-h" type="range" min="0" max="360" value="0" style="width:90px"> <b id="rc-ho">0°</b></label>
     <label>Satur. <input id="rc-s" type="range" min="0" max="300" value="100" style="width:90px"> <b id="rc-so">100%</b></label>
     <label>Brillo <input id="rc-b" type="range" min="20" max="200" value="100" style="width:90px"> <b id="rc-bo">100%</b></label>
@@ -47,7 +67,7 @@
   </span>
   <label>Fondo <select id="bg"><option value="#2b2d33">Gris</option><option value="#0b0b10">Oscuro</option><option value="#6d8a4a">Hierba</option><option value="#b9a77a">Arena</option></select></label>
 </header>
-<details id="snd" open><summary>Sonidos de la Pixie (clic para oír) <span id="snd-now"></span></summary><div id="snd-body"></div></details>
+<details id="snd" class="nr mo" open><summary>Sonidos de la Pixie (clic para oír) <span id="snd-now"></span></summary><div id="snd-body"></div></details>
 <div id="info">Cargando…</div>
 <div id="wrap"><canvas id="cv"></canvas></div>
 <canvas id="game" style="display:none"></canvas>

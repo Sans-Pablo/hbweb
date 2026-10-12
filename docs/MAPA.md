@@ -78,14 +78,14 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `assets.js` · 279 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
 - `audio.js` · 223 · Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
 - `bestiary-sounds.js` · 37 · Bestiario: panel de sonidos candidatos para la Pixie. Cada botón reproduce un WAV original de data/sfx
-- `bestiary.js` · 125 · Bestiario: página de pruebas visuales (bestiario.html). Dibuja cualquier criatura con el mismo drawEntity del juego,
+- `bestiary.js` · 232 · Sprite Tool (antes Bestiario; bestiario.html): página de pruebas visuales. Dibuja cualquier criatura, los personajes M y W y cualquier hoja
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 103 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 313 · Conexión con el "servidor". Dos implementaciones con la misma forma:
 - `controller.js` · 261 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 129 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
-- `dashboard.js` · 243 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
+- `dashboard.js` · 253 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
 - `devtools.js` · 79 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
@@ -274,7 +274,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `mkvoice_companion.py` · 41 · 
 - `mkvoice_fear.py` · 83 · 
 - `mkvoice_phases.py` · 63 · evolve: línea al volver a invocar al compañero tras cambiar de tamaño (niveles 10, 25, 40, 50 = pasos 1..4)
-- `remaster_ia.py` · 93 · 
+- `remaster_ia.py` · 112 · 
 - `remaster_music.py` · 203 · 
 - `serve.py` · 75 · 
 - `tile_table.py` · 24 · (archivo .pak, índice inicial, cantidad)

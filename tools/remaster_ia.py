@@ -24,10 +24,11 @@ def prep(src, dst):
     Image.fromarray(a[..., :3][idx[0], idx[1], :]).save(dst)
     return al
 
-def smooth_alpha(a8, w, h, sig=3.0, minarea=60):
+def smooth_alpha(a8, w, h, sig=3.0, minarea=4):
     """Alfa original (baja res) -> alfa x4 de contorno suave: sin escalones, sin motas sueltas ni agujeros pequeños."""
     a = cv2.resize(a8.astype(np.float32) / 255, (w, h), interpolation=cv2.INTER_CUBIC)
-    m = (cv2.GaussianBlur(np.clip(a, 0, 1), (0, 0), sig) > .5).astype(np.uint8)
+    a = np.clip(a, 0, 1)
+    m = ((cv2.GaussianBlur(a, (0, 0), sig) > .5) | (cv2.GaussianBlur(a, (0, 0), sig / 2) > .5)).astype(np.uint8)   # el 2.º desenfoque conserva líneas de 1 px (patas finas), que con sig=3 desaparecen
     n, lab, st, _ = cv2.connectedComponentsWithStats(m, connectivity=8)
     keep = np.zeros(n, bool); keep[1:] = st[1:, cv2.CC_STAT_AREA] >= minarea * 16
     m = keep[lab]

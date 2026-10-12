@@ -20,7 +20,7 @@ function show(id) {
   sel = id; brain = null; history.replaceState(null, "", "#" + id);
   const g = $("game"); let f = g.querySelector("iframe");
   if (!f) { g.querySelector(".empty")?.remove(); f = document.createElement("iframe"); f.allow = "autoplay"; g.appendChild(f); }
-  f.src = "index.html?embed=1&o=" + id + "#observar=" + id;                         // la consulta distinta fuerza recargar solo el marco
+  f.src = "index.html?embed=1&o=" + id + (new URLSearchParams(location.search).get("server") ? "&server=" + encodeURIComponent(new URLSearchParams(location.search).get("server")) : "") + "#observar=" + id;                         // la consulta distinta fuerza recargar solo el marco
   paintRoster(true); paintInfo(true); paintStats();
 }
 const order = () => { const { out, solo } = groups(roster, ""); return [...out.flatMap(x => x.m), ...solo]; };
@@ -230,9 +230,19 @@ function paintChars() {
 function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); paintChars(); }
 
 // ---- arranque ----
+// Dirección del servidor como en main.js#findServer: ?server=URL > data/server.json (GitHub Pages -> PC que aloja) > mismo origen.
+let baseP;
+const apiBase = () => baseP ||= (async () => {
+  const q = new URLSearchParams(location.search).get("server");
+  if (q) return q.replace(//$/, "");
+  try { const j = await fetch("data/server.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null); const u = String(j?.url || "").replace(//$/, ""); if (u) { const ok = await fetch(u + "/api/info", { cache: "no-store" }).then(r => r.ok, () => false); if (ok) return u; } } catch { /* mismo origen */ }
+  return "";
+})();
+const api = async p => fetch((await apiBase()) + p, { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } });
+
 async function poll() {
-  try { roster = (await (await fetch("/api/bots", { cache: "no-store" })).json()).list || []; sample(); paintRoster(); paintStats(); paintChars(); } catch { /* servidor un momento fuera: se reintenta */ }
-  try { st = await (await fetch("/api/stats", { cache: "no-store" })).json(); paintGlob(); paintSumm(); } catch { /* idem */ }
+  try { roster = (await (await api("/api/bots")).json()).list || []; sample(); paintRoster(); paintStats(); paintChars(); } catch { /* servidor un momento fuera: se reintenta */ }
+  try { st = await (await api("/api/stats")).json(); paintGlob(); paintSumm(); } catch { /* idem */ }
 }
 addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !("hbBrain" in e.data) || e.data.id !== sel) return;

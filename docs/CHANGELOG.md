@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.79.8 · Sprite Tool (2026-10-12)
+- `bestiario.html` pasa a llamarse «Sprite Tool». Personajes M/W (`@M`, `@W`) con piel, peinado, color, ropa interior y acciones; vista «Hojas sueltas» con todas las fuentes (sprites, players, equip, sprites_mod, fx, ui), filtro, pivote y hoja entera.
+
+## 0.79.7 · Bestiario: original al lado (2026-10-12)
+- Casilla «Original al lado» (`bestiario.html`, `bestiary.js#frame`): cada fotograma lleva a su izquierda el original. Hojas IA de tigerworm, cat y scorpion; el suavizado del alfa conserva líneas de 1 px.
+
 ## 0.79.6 · Servidor más robusto (2026-10-12)
 - Copia diaria de `hb.sqlite` en `server/data/backups/` (7 días; al arrancar y cada 6 h). Si el puerto está ocupado al reiniciar, el servidor reintenta hasta 30 s en vez de caer en bucle. Test `store-backup`.
 

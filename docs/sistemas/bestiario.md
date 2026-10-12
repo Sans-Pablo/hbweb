@@ -37,3 +37,7 @@ Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de
 3. Mugre suelta: por fotograma, descartar trozos que no toquen el cuerpo (5 px) ni midan el 15 % del mayor.
 4. El alfa original es binario: se rehace aparte; el WebP lleva `exact=True` para poder rehacer solo el alfa con `--alpha`.
 5. Tras regenerar, comprobar que cada fotograma tenga un solo componente (o piezas grandes legítimas, como las puntas del garrote).
+6. **Líneas finas.** `smooth_alpha` une el desenfoque `sig` y `sig/2` para no perder patas/antenas de 1 px; `minarea` pequeño.
+
+## Sprite Tool (v0.79.8)
+La página (`bestiario.html`) tiene tres vistas: criaturas (modelos 0-3), personajes `@M`/`@W` (`pcFrame`, usa `drawEntity` con `kind:"player"`; el equipo se ve en «Hojas sueltas» → equip) y «Hojas sueltas» (`rawList`/`rawFrame`, manifiestos sprites/players/equip/sprites_mod/fx/ui; el equipo no pasa por `imgUrl`). `rawList` es asíncrona y `rawFrame` la llama cada fotograma: usa `rawBusy` para no colarse durante la carga.
