@@ -118,7 +118,7 @@ La tabla es el reparto de reserva; las magias que el diseño original ya enseña
 3. ¿Rezago del 10 % o sin penalización (propuesto: ninguna)?
 4. ¿Segunda bola activa en el Acto IV, o ya desde el II?
 5. Ampliar el tope de nivel del jugador sobre 180 ¿existe en el servidor original o hay que definirlo?
-6. Mapas y jefes de cada acto (relación con `DUNGEON_V1–V3.md`).
+6. Mapas y jefes de cada acto (relación con `DUNGEON_V3.md`).
 7. Qué mejoras de la sección 5 se implementan primero.
 
 ## 8. Cuando se implemente

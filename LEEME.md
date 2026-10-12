@@ -1,8 +1,6 @@
 # Helbreath Web (iteración 3)
 
-Primera entrega de la cripta procedural: instrucciones y alcance en [docs/DUNGEON_V1.md](docs/DUNGEON_V1.md).
-
-Prueba en línea (un jugador): ver `SUBIR A GITHUB.md`.
+Estado, sistemas y procesos: `docs/ESTADO.md`, `docs/sistemas/`. La cripta: `docs/DUNGEON_V3.md`. Versión en línea: `docs/ONLINE.md`.
 
 Doble clic en **`Abrir prueba web.bat`**. Arranca un servidor local y abre `http://localhost:8080`. La ventana muestra también la dirección para entrar desde el móvil en tu misma Wi-Fi. Al cerrarla se apaga el servidor.
 
