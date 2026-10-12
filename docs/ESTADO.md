@@ -20,8 +20,8 @@
 - Color del nombre de los objetos según rango (tiers, como en WoW).
 - Traducciones completas (es/en) de todo el juego.
 - Observador: ignorar las teclas F cuando se pulsan fuera de la pantalla del juego (F5 refresca la web sin querer).
-- Investigar por qué los personajes tienen más stats de los debidos: comparar con la fórmula del HB original y con la pérdida de nivel al morir (se mantiene la pérdida de nivel; si es por balance y está bien, se deja y se documenta).
-- Bots: ¿llevan demasiadas cosas en la bolsa, es preferencia suya y venden? Revisar `manage`/`stallSurplus` y documentar.
+- (hecho en v0.73.0) Stats de más: el original da 3 puntos por nivel (`bCheckLevelUp`, igual que aquí). La causa era la pérdida de nivel al morir: quitaba 3 puntos del fondo libre pero no de lo ya repartido, así que morir y volver a subir regalaba 3 puntos por nivel. Ahora el nivel perdido deja una *deuda* (`lvDebt`) que pagan los siguientes niveles (y el reinicio de stats); la pérdida de nivel se mantiene. Test `level-debt.test.mjs`. Los personajes ya inflados conservan lo que tienen.
+- (hecho en v0.73.0) Bots: sí vendían (`manage` en `botitems.js`), pero solo con carga ≥ 50 % o la mochila casi llena (38/50), así que llevaban 13-15 objetos de equipo sobrante. Ahora también ordenan al pasar de 14; los residentes se guardan hasta 8 para su puesto. Arreglado de paso: al vender se llevaban la caña de pescar de los residentes (`judge` la conserva).
 
 **Futuro (aplazado):** ver [FUTURO.md](FUTURO.md): combate (críticos, dash, Firebow…), tutorial, arena completa, rediseño del sonido. Los mapas se dejan como están.
 

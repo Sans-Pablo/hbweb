@@ -29,7 +29,8 @@ export function observerBar(conn) {
   for (const b of bar.querySelectorAll("button")) b.style.cssText = "background:#2c2417;color:#f0e2b8;border:1px solid #6b5a33;border-radius:6px;padding:2px 8px;cursor:pointer";
   const step = d => { const l = ordered(roster); if (l.length < 2) return; const i = l.findIndex(b => b.id === conn.pid); watchTo(l[(i + d + l.length) % l.length].id); };
   bar.onclick = e => { const a = e.target.dataset?.a; if (a === "split") location.href = "observador.html#" + conn.pid; else if (a === "list") { location.hash = "#observar"; location.reload(); } else if (a === "exit") { location.hash = ""; location.reload(); } else if (a === "prev") step(-1); else if (a === "next") step(1); };
-  addEventListener("keydown", e => { if (e.target.closest?.("input,textarea,select")) return; if (e.key === "[") step(-1); else if (e.key === "]") step(1); });
+  addEventListener("keydown", e => { if (/^F([2-9]|1[01])$/.test(e.key) && e.target.tagName !== "CANVAS") { e.preventDefault(); return; }      // observador: una F pulsada fuera de la pantalla del juego no hace nada (F5 refrescaba la web sin querer)
+    if (e.target.closest?.("input,textarea,select")) return; if (e.key === "[") step(-1); else if (e.key === "]") step(1); });
   document.body.appendChild(bar);
 }
 

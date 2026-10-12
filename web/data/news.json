@@ -11,6 +11,27 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Stats y bots (v0.73.0)",
+        "en": "Stats and bots (v0.73.0)"
+      },
+      "items": [
+        {
+          "es": "Perder nivel al morir descuenta los puntos de estadística ya gastados: ya no se ganan puntos de más al volver a subir.",
+          "en": "Losing a level on death now removes the stat points already spent: no more bonus points when levelling back up."
+        },
+        {
+          "es": "Los bots venden antes y no venden su caña de pescar.",
+          "en": "Bots sell earlier and no longer sell their fishing rod."
+        },
+        {
+          "es": "Observador: pulsar F5 u otra tecla F ya no refresca la página.",
+          "en": "Observer: pressing F5 or another F key no longer reloads the page."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Compañero en multijugador (v0.72.0)",
         "en": "Companion in multiplayer (v0.72.0)"
       },

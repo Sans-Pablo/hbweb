@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.73.0 · Stats y bots (2026-10-12)
+- Puntos de estadística: al perder nivel por morir se descuentan los puntos ya gastados (`lvDebt`, `combatsys.deathPenalty/giveExp`, `respec.js`); antes volver a subir regalaba puntos. Test `level-debt`.
+- Bots: venden antes (la bolsa se ordena con 36 huecos libres de margen) y conservan la caña de pescar (`botitems.js`).
+- Observador: las teclas F (F5 incluida) ya no refrescan la página (`dashboard.js`, `watchpanel.js`; faltaba una `\d` en el regex).
+
 ## 0.72.0 · Compañero en multijugador (2026-10-12)
 - Verificado con un test de red que los demás jugadores ven al compañero invocado (nombre, nivel, dueño, vida). Sin cambios de protocolo.
 - Ficha de compañeros actualizada; las habilidades por especie quedan como decisión de diseño pendiente.

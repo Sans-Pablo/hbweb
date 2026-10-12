@@ -146,7 +146,8 @@ export function giveExp(w, p, amount) {
   w.emit({ t: "exp", id: p.id, amount });
   while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
     p.level++;
-    p.pool += R.LEVELUP_POINTS;
+    const pay = Math.min(p.lvDebt | 0, R.LEVELUP_POINTS); p.lvDebt = (p.lvDebt | 0) - pay;
+    p.pool += R.LEVELUP_POINTS - pay;
     w.recalc(p);
     w.emit({ t: "levelup", id: p.id, level: p.level });
   }
@@ -260,7 +261,11 @@ export function deathPenalty(w, p) {
   const loss = Math.floor((R.expForLevel(p.level + 1) - R.expForLevel(p.level)) * 0.25);
   const before = p.level;
   p.exp = Math.max(R.expForLevel(1), p.exp - loss);
-  while (p.level > 1 && p.exp < R.expForLevel(p.level)) { p.level--; p.pool = Math.max(0, p.pool - R.LEVELUP_POINTS); }
+  while (p.level > 1 && p.exp < R.expForLevel(p.level)) {
+    p.level--;
+    const take = Math.min(p.pool, R.LEVELUP_POINTS); p.pool -= take;
+    p.lvDebt = (p.lvDebt | 0) + R.LEVELUP_POINTS - take;                 // puntos ya repartidos: no se quitan, pero los próximos niveles los pagan primero (si no, subir y bajar regalaba stats)
+  }
   w.recalc(p);
   w.emit({ t: "penalty", id: p.id, loss, level: p.level, lost: before - p.level });
 }

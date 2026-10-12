@@ -30,6 +30,7 @@ const frame = () => $("game").querySelector("iframe");
 for (const t of ["keydown", "keyup"]) addEventListener(t, e => {
   if (e.target.closest?.("input,textarea,select")) return;
   if (t === "keydown" && (e.key === "[" || e.key === "]")) { step(e.key === "[" ? -1 : 1); return; }
+  if (/^F([2-9]|1[01])$/.test(e.key)) e.preventDefault();      // F5 no refresca el observador por error, haya o no marco
   const f = frame(); if (!f?.contentWindow || e.ctrlKey && /^[rwtnl]$/i.test(e.key)) return;
   if (/^Fd+$/.test(e.key) || e.key === " " || e.key.startsWith("Arrow") || e.key === "Tab") e.preventDefault();      // el navegador no actúa sobre la página madre
   const { key, code, shiftKey, ctrlKey, altKey, repeat } = e;

@@ -13,6 +13,7 @@ export function respec(w, p, cmd) {
   for (const k of Object.keys(p.stats)) { const give = Math.max(0, p.stats[k] - RESPEC.base); back += give; p.stats[k] -= give; }
   if (back <= 0) return w.reject(p, cmd, "no hay puntos que recuperar");
   p.gold -= cost; p.pool += back;
+  const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed;       // los puntos de niveles perdidos al morir se saldan aquí
   p.respecs = (p.respecs | 0) + 1;
   w.recalc(p);
   w.emit({ t: "statreset", id: p.id, cost, points: back });

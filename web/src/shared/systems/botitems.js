@@ -6,6 +6,7 @@ import { EQUIP, ITYPE, MAX_ITEMS, GOLD } from "../items.js";
 import * as Inv from "../inventory.js";
 import * as Shop from "./shopsys.js";
 import { itemLevel } from "../itemlevel.js";
+import { ROD } from "./fishing.js";
 
 export const canWear = (q, d) => !!d && d.type === ITYPE.EQUIP && !(d.levelLimit > q.level) && !(d.gender === 1 && q.gender !== 1) && !(d.gender === 2 && q.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY;
 export const slotOf = d => (d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos);
@@ -27,6 +28,7 @@ export function judge(w, p, i, friends = []) {
   const sellPrice = Shop.sellPriceOf(d, i, count) || 0;
   if (p.res?.arch === "hunter" && (i.id === 77 || (/Bow/.test(d.name) && d.skill === 6 && !p.eff?.bow))) return { act: "keep", value: sellPrice, why: "el cazador dispara con arco" };       // flechas y arco de repuesto (bot.js isArcher)
   if (p.res?.arch === "scholar" && !p.eff?.wtype && d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND) return { act: "keep", value: sellPrice, why: "el invocador de apoyo necesita un báculo" };
+  if (i.id === ROD && p.res) return { act: "keep", value: sellPrice, why: "la caña para pescar en sus ratos libres" };
   if (isConsumable(d)) {
     const cap = /Potion/.test(d.name) ? (p.res ? 40 : CAP.potion) : d.type === ITYPE.EAT ? CAP.food : CAP.other;
     if (count <= cap) return { act: "keep", value: sellPrice, why: "consumible que uso" };
@@ -53,7 +55,7 @@ export const stallable = v => !v.for && (v.act === "store" || (v.act === "sell" 
 export function manage(w, p, { force = false, friends = [], log = () => {}, stallKeep = 0 } = {}) {
   const load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
   let moved = 0;
-  if (force || load >= 0.5 || p.bag.length >= MAX_ITEMS - 12) {
+  if (force || load >= 0.5 || p.bag.length >= MAX_ITEMS - 36) {
     const worn = new Set(Object.values(p.equip));
     let sold = 0, gold = 0, stored = 0, kept = 0;
     for (const i of [...p.bag]) {
