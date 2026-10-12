@@ -12,3 +12,6 @@ Código: `shared/systems/bot.js`, `Adventure.spawnBot/botOp` (`adventure.js`), `
 - `botitems.wish`: la ganancia se mide relativa a lo que ya lleva en el hueco (`gain/(have+6)`), así las armaduras compiten con las armas; `errands()` visita primero el hueco más flojo.
 - Hilos: `residents.noteThread`/`threadOf` recuerdan quién charla con quién; dentro del hilo la respuesta tiene enfriamiento 5 s, más alcance y prioridad.
 - `human.js`: `chatter` (chat ambiental enlatado) es falso por defecto; se activa con `/api/admin/human`.
+
+## v0.64.0
+Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (`dlv`) caducan a 20 min (`dlt`), `bossPreview` con la escala de `dungeon.js`.

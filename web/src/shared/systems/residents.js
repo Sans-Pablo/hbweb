@@ -72,7 +72,7 @@ function befriend(p, who, n = 1) {
 function newGoal(w, p) {
   // METAS DE VIDA (las mismas que perseguiría un jugador): muchas bajas enemigas (pvp), nivel máximo (level), terminar la cripta (crypt), muchos summons distintos
   // al nivel máximo (pet), los mejores objetos (gear) y socializar (friend); el oro (gold) y los monstruos (kills) son paradas intermedias.
-  if (p.quests && w.rng() < 0.8) { const g = questGoal(w, p); if (g) { p.res.goal = { ...g, q: p.quests.n }; return; } }
+  if (p.quests) { const g = questGoal(w, p); if (g) { p.res.goal = { ...g, q: p.quests.n }; return; } }
   const r = p.res, kind = ["level", "level", "gold", "kills", "friend", "friend", "pvp", "pvp", "pit", "crypt", "crypt", "pet", "pet", "gear", "gear"][Math.floor(w.rng() * 15)];
   if (kind === "level") r.goal = { k: "level", n: p.level + 2 };
   else if (kind === "gold") r.goal = { k: "gold", n: p.gold + 800 + p.level * 300 };
@@ -88,6 +88,13 @@ export const goalText = (g, lang) => !g ? "" : lang === "en"
   ? { level: `reach level ${g.n}`, gold: `save ${g.n} gold`, kills: `hunt ${g.n} monsters in total`, friend: "make new friends", pvp: `kill enemies until I have ${g.n} enemy kills`, pit: `dominate pit ${g.zone} in Promise Land`, pet: `have ${g.n} different summons at max level`, gear: `reach an average item level of ${g.n}`, crypt: g.king ? "kill the Golden Skeleton King and finish the crypts" : `reach crypt level ${g.n}` }[g.k]
   : { level: `llegar al nivel ${g.n}`, gold: `juntar ${g.n} de oro`, kills: `cazar ${g.n} monstruos en total`, friend: "hacer nuevos amigos", pvp: `abatir enemigos hasta las ${g.n} bajas`, pit: `dominar el foso ${g.zone} de Promise Land`, pet: `tener ${g.n} summons distintos al nivel máximo`, gear: `llegar a un nivel de objeto medio de ${g.n}`, crypt: g.king ? "matar al Rey esqueleto dorado y terminar las criptas" : `llegar al nivel ${g.n} de la cripta` }[g.k];
 // La misión activa convertida en una meta de las de siempre (nivel, caza, cripta, pvp, summons). `q` = nº de misión: la meta se da por buena al pasar a la siguiente.
+// ¿está en condiciones de pelear con el jefe que le pide la misión? Si no, mejor sube de nivel cazando (y gasta el oro en pociones) antes de bajar a morir
+function questReady(w, p) {
+  const q = p.quests, cur = q && Quests.lineOf(p)[q.n], g = cur?.goal; if (!g || p.level >= 50) return true;
+  const tier = g.k === "boss" ? g.tier : g.k === "staff" || g.k === "king" ? 4 : 0; if (!tier) return true;
+  const bp = bossPreview(w, Math.min(20, tier * 5)); if (!bp) return true;
+  const e = fightEstimate(w, p, bp, true); return e.ratio >= 1.3 || p.level >= 5 * tier * 2 + 20;
+}
 function questGoal(w, p) {
   const q = p.quests, cur = Quests.lineOf(p)[q.n]; if (!cur) return null;
   const g = cur.goal, pr = Quests.progress(p, g);
@@ -117,7 +124,7 @@ export function avgIlvl(w, p) {
 }
 function goalDone(p) {
   const g = p.res.goal;
-  return !g ? false : g.q !== undefined && p.quests && p.quests.n > g.q ? true : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
+  return !g ? false : g.q !== undefined && p.quests ? p.quests.n > g.q : g.k === "pet" ? maxedPets(p) >= g.n : g.k === "gear" ? p.res._w && avgIlvl(p.res._w, p) >= g.n : g.k === "level" ? p.level >= g.n : g.k === "gold" ? p.gold >= g.n : g.k === "kills" ? (p.kills || 0) >= g.n : g.k === "pvp" ? (p.ek || 0) >= g.n
     : g.k === "pit" ? (p.res.qa.pvp.held || 0) >= g.n : g.k === "crypt" ? (g.king ? (p.delve?.king | 0) > 0 : (p.delve?.deepest || 1) >= g.n) : Object.keys(p.res.rel).length >= g.n;
 }
 
@@ -474,7 +481,7 @@ function reflect(adv, w, p, r) {
 // exige entonces 5 niveles más por cada muerte allí). Se guarda en la ficha del habitante (`dlv`, `dd`).
 function learnFromDeath(w, p, r) {
   const k0 = r._killer || r._lastHit, k = k0 && r._killBoss ? k0 + "*" + r._killBoss : k0, ks = k && w.map.kind === "dungeon" ? k + "@" + w.map.level : k;          // los jefes de la cripta se aprenden aparte de su especie
-  if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[ks] = Math.max(r.dlv[ks] || 0, p.level); blog(w, p, `Aprendo: «${k}»${ks !== k ? " en el piso " + w.map.level : ""} me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
+  if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[ks] = Math.max(r.dlv[ks] || 0, p.level); (r.dlt ||= {})[ks] = w.time; blog(w, p, `Aprendo: «${k}»${ks !== k ? " en el piso " + w.map.level : ""} me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
   // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
   const lostGold = Math.floor(p.gold * 0.1); p.gold -= lostGold; r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
   if (r._pvpDeath) { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }          // rencor: el grupo tenderá a volver a Promise Land
@@ -621,7 +628,7 @@ function expedition(adv, w, p, r, home) {
     const ev = Council.evaluate(adv, p, CH, 1); kind = Council.bestOf(ev);
     if (w.time - (r._evalLog || 0) > 120000) { r._evalLog = w.time; blog(w, p, `Evalúo qué me conviene: ${Council.KINDS.map(k => k + " " + ev[k].s).join(", ")} → ${Council.labelOf(kind)} (${ev[kind].why}).`); }
   }
-  if (g === "crypt" && p.quests && !plan) kind = "crypt";                                           // misión de cripta: baja sí o sí (el consejo solo decide cuando no hay misión)
+  if (g === "crypt" && p.quests && !plan) kind = questReady(w, p) ? "crypt" : "hunt";                                           // misión de cripta: baja sí o sí (el consejo solo decide cuando no hay misión)
   if (kind === "hunt") { r._tripAt = plan ? plan.until : w.time + 90000; return; }                   // se queda cazando en la granja (la caza prefiere lo que más rinde)
   const pl = p.level >= 3 && kind === "pl";
   if (!pl) return startDelve(adv, w, p, r, home);

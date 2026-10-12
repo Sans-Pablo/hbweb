@@ -78,7 +78,7 @@ test("dificultad por nivel y jefes cada 5 niveles", () => {
   const e = level => generateLevel(levelSeed(1, level), level).spawns.find(s => !s.boss).scale;
   assert.ok(e(10).hp > e(1).hp * 2 && e(10).dmg > e(1).dmg && e(20).exp > e(10).exp);
   const b = generateLevel(levelSeed(1, 5), 5).spawns.find(s => s.boss);
-  assert.equal(b.boss, 1); assert.ok(b.scale.hp > 6 * e(5).hp);
+  assert.equal(b.boss, 1); assert.ok(b.scale.hp > 3.5 * e(5).hp);
   assert.deepEqual([5, 10, 15, 20].map(l => generateLevel(levelSeed(1, l), l).spawns.find(s => s.boss).boss), [1, 2, 3, 4]);
 });
 
@@ -121,7 +121,7 @@ test("enemigos escalados, jefe y victoria en el nivel 20", () => {
   take(a, id, "down"); take(a, id, "return");
   p.delve.deepest = 5; assert.ok(enter(a, id, false).ok);
   const w5 = a.worldFor(id), boss = [...w5.ents.values()].find(e => e.boss);
-  assert.ok(boss && boss.maxHp > 6 * base && boss.dmgMul > 1.5);
+  assert.ok(boss && boss.maxHp > 4 * base && boss.dmgMul > 1.3);
   assert.equal(w5.map.boss, 1); assert.equal(w5.grid.w, 36);
   assert.ok(hp(w5) === boss.maxHp);
   p.delve.deepest = 20; take(a, id, "return"); assert.ok(enter(a, id, false).ok);

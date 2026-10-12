@@ -225,7 +225,7 @@ export function generateLevel(seed, level) {
 
   // ---- enemigos
   const spawns = [];
-  const scale = { hp: 1 + .22 * (level - 1), dmg: 1 + .1 * (level - 1), exp: 1 + .15 * (level - 1) };
+  const scale = { hp: 1 + .18 * (level - 1), dmg: 1 + .06 * (level - 1), exp: 1 + .15 * (level - 1) };
   const minD = d => cells.filter(([x, y]) => dist[y * w + x] >= d && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3).length;
   const dmin = boss ? 8 : minD(14) >= 40 ? 14 : 6;
   const free = cells.filter(([x, y]) => dist[y * w + x] >= dmin && roomy(P, x, y, 1) && !decor.has(y * w + x) && Math.max(Math.abs(x - fin[0]), Math.abs(y - fin[1])) > 3);
@@ -243,7 +243,7 @@ export function generateLevel(seed, level) {
     bossTier = Math.min(4, level / BOSS_EVERY);
     let bc = fin, bdiff = 1e9;                                       // el jefe espera a tres cuartos del camino, antes de la salida
     for (const [x, y] of cells) { const d = Math.abs(dist[y * w + x] - far * .75); if (d < bdiff && roomy(P, x, y, 1)) { bdiff = d; bc = [x, y]; } }
-    spawns.push({ id: id++, name: "Skeleton", max: 1, rect: [bc[0], bc[1], bc[0], bc[1]], respawn: false, boss: bossTier, scale: { hp: scale.hp * (6 + 2 * bossTier), dmg: scale.dmg * (1.6 + .2 * bossTier), exp: scale.exp * (8 + 3 * bossTier) } });
+    spawns.push({ id: id++, name: "Skeleton", max: 1, rect: [bc[0], bc[1], bc[0], bc[1]], respawn: false, boss: bossTier, scale: { hp: scale.hp * (3 + bossTier), dmg: scale.dmg * (1 + .15 * bossTier), exp: scale.exp * (8 + 3 * bossTier) } });
   }
   return {
     grid, start: sp, portals, spawns, seed: seed >>> 0, level, theme, boss: bossTier, version: DUNGEON_VERSION,

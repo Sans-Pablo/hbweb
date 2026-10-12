@@ -14,3 +14,6 @@ Los habitantes (`residents.js`) persiguen la misión actual (`questGoal`); `node
 
 ## Pruebas
 `tests/quests.test.mjs`: recorre las 22 misiones de cada clase forzando cada objetivo y comprueba permisos finales.
+
+## Medición v0.64.0
+Semilla 2, 12 bots, 480 min: 5 de 12 superan el Rey carmesí (misión 6); el resto sigue en la misión 5. Nivel 36-40 a las 8 h. Los capítulos 3-5 siguen sin pisarse con tiempo de juego real.

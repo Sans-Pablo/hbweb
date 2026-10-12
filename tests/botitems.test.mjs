@@ -29,7 +29,7 @@ assert.ok(["equip", "store"].includes(v1.act), "una espada decente no se vende: 
 // 2. lo que no le sirve ni a él ni a nadie se vende
 const v2 = BI.judge(w, A, add(A, "Hoe"), []); assert.ok(v2.act !== "equip", "azada: " + v2.act);
 // 3. potiones de más se venden, hasta el límite se guardan
-const red = data.named("RedPotion"); const pots = { uid: w.nextItem++, id: red.id, count: 40 }; A.bag.push(pots);
+const red = data.named("RedPotion"); const pots = { uid: w.nextItem++, id: red.id, count: 60 }; A.bag.push(pots);
 assert.equal(BI.judge(w, A, pots, []).act, "sell", "sobran pociones");
 pots.count = 10; assert.equal(BI.judge(w, A, pots, []).act, "keep", "10 pociones se quedan");
 // 4. ordenar: pociones primero (fila de arriba), armas después

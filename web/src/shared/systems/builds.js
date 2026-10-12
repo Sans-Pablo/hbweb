@@ -9,9 +9,12 @@ export const BUILDS = {
   glass:    { es: "cañón de cristal", w: { str: 0.55, dex: 0.3, vit: 0.15 } },
   agile:    { es: "ágil", w: { dex: 0.5, str: 0.25, vit: 0.25 } },
   summoner: { es: "invocador", w: { int: 0.3, mag: 0.15, vit: 0.35, str: 0.2 } },
+  vanguard: { es: "vanguardia", w: { vit: 0.45, str: 0.4, dex: 0.15 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
+  arcane:   { es: "arcano", w: { vit: 0.4, int: 0.3, mag: 0.15, str: 0.15 } },                      // Mago e Invocador de misiones: vida y mente
 };
+const QUEST_BUILD = { warrior: "vanguard", mage: "arcane", summoner: "arcane" };
 export const DEFAULT_BUILD = { warrior: "glass", hunter: "agile", trader: "balanced", wanderer: "balanced", scholar: "summoner" };
-export const buildOf = p => (p.res && BUILDS[p.res.build]) ? p.res.build : DEFAULT_BUILD[p.res?.arch] || "balanced";
+export const buildOf = p => (p.res && BUILDS[p.res.build]) ? p.res.build : QUEST_BUILD[p.quests?.cls] || DEFAULT_BUILD[p.res?.arch] || "balanced";
 
 // Reparte `total` puntos según el build respetando el tope de cada estadística
 export function allocate(p, total) {
@@ -27,10 +30,11 @@ export function perf(p, w) { const b = p.res?.bperf; return b ? (p.exp - b.exp0)
 // Siguiente build a probar: primero los que no ha probado; luego el mejor conocido (con algo de exploración)
 export function nextBuild(p, w) {
   const hist = p.res.builds || [], tried = new Set(hist.map(h => h.name)), cur = buildOf(p);
-  const fresh = Object.keys(BUILDS).filter(k => !tried.has(k) && k !== cur);
+  const pool = Object.keys(BUILDS).filter(k => !p.quests || (k !== "glass" && k !== "agile"));          // con misiones no se prueba un build sin vida
+  const fresh = pool.filter(k => !tried.has(k) && k !== cur);
   if (fresh.length && (w.rng() < 0.75 || hist.length < 2)) return fresh[Math.floor(w.rng() * fresh.length)];
   const best = hist.filter(h => h.name !== cur).sort((a, b) => b.rate - a.rate)[0];
-  return best?.name || Object.keys(BUILDS).filter(k => k !== cur)[Math.floor(w.rng() * (Object.keys(BUILDS).length - 1))];
+  return best?.name || pool.filter(k => k !== cur)[Math.floor(w.rng() * (pool.length - 1))];
 }
 // Anota el rendimiento del build que deja
 export function closeBuild(p, w) { const cur = buildOf(p), rate = Math.round(perf(p, w)), h = (p.res.builds ||= []), e = h.find(x => x.name === cur); if (e) { e.rate = Math.round((e.rate + rate) / 2); e.n++; } else h.push({ name: cur, rate, n: 1 }); }

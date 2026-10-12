@@ -26,7 +26,7 @@ export function judge(w, p, i, friends = []) {
   if (!d || i.id === GOLD || i.comp) return { act: "keep", value: 0, why: "es mío" };
   const sellPrice = Shop.sellPriceOf(d, i, count) || 0;
   if (isConsumable(d)) {
-    const cap = /Potion/.test(d.name) ? CAP.potion : d.type === ITYPE.EAT ? CAP.food : CAP.other;
+    const cap = /Potion/.test(d.name) ? (p.res ? 40 : CAP.potion) : d.type === ITYPE.EAT ? CAP.food : CAP.other;
     if (count <= cap) return { act: "keep", value: sellPrice, why: "consumible que uso" };
     return { act: "sell", value: sellPrice, why: `sobran (llevo ${count}, me bastan ${cap})` };
   }
@@ -93,6 +93,7 @@ export function tidy(w, p) {
 export function wish(w, p, gear, bad = new Set(), usableFn = canWear) {
   let best = null;
   for (const [slot, list] of gear) {
+    if (slot === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;
     const have = (() => { const uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined); return uid !== undefined ? ilvOf(w, Inv.instOf(p, uid)) : 0; })();
     for (const d of list) {
       if (bad.has(d.id) || !usableFn(p, d)) continue;

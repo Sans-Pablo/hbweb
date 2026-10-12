@@ -110,7 +110,8 @@ export function errands(w, p, b, first = false) {
   spendPoints(w, p);
   const cat = catalog(w.data);
   // comida y pociones
-  if (cat.potion && countOf(p, cat.potion.id) < 6) buy(w, p, cat.potion, 6 - countOf(p, cat.potion.id));
+  const potCap = p.res && p.level >= 15 ? Math.max(6, Math.min(40, Math.floor(p.gold / 60))) : 6;               // con oro de sobra lleva más pociones (aguantan más los jefes)
+  if (cat.potion && countOf(p, cat.potion.id) < potCap) buy(w, p, cat.potion, potCap - countOf(p, cat.potion.id));
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
@@ -123,7 +124,8 @@ export function errands(w, p, b, first = false) {
   for (const i of p.bag) {
     const d = w.data.item(i.id);
     if (!usable(d) || (b.badUid ||= new Set()).has(i.uid) || i.life === 0 || Object.values(p.equip).includes(i.uid)) continue;
-    const slot = slotOf(d), mine = ilv(i), cur = d.equipPos === EQUIP.TWOHAND ? ilv(worn(EQUIP.RHAND)) + ilv(worn(EQUIP.LHAND)) : value(slot);
+    if (d.equipPos === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;                  // un escudo expulsaría el arma a dos manos (y la vendería para recomprarla: bucle)
+    const slot = slotOf(d), mine = ilv(i), cur = d.equipPos === EQUIP.TWOHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND)) + ilv(worn(EQUIP.LHAND))) : value(slot);
     if (mine > cur * 1.08 + 0.5 && (!best || mine - cur > best.gain)) best = { i, gain: mine - cur };
   }
   if (best) {
@@ -154,6 +156,7 @@ export function errands(w, p, b, first = false) {
   let bought = 0;
   const slots = [EQUIP.RHAND, EQUIP.BODY, EQUIP.LEGGINGS, EQUIP.LHAND, EQUIP.HEAD, EQUIP.ARMS, EQUIP.PANTS].sort((x, y) => value(x) - value(y));      // primero las casillas más flojas o vacías: las armaduras no quedan siempre detrás del arma
   for (const slot of slots) {
+    if (slot === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;
     const list = cat.gear.get(slot) || [], have = value(slot), budget = b.saving && want ? Math.min(p.gold * 0.6, p.gold - want.price - 60) : p.gold * (first ? 0.25 : 0.6);      // ahorrando: solo gasta lo que sobre del precio de la pieza deseada
     if (b.saving && budget <= 0) continue;
     let got = false;
@@ -176,9 +179,12 @@ export function errands(w, p, b, first = false) {
 // compañeros cercanos) y no con el nivel a secas: un nivel 50 sin arma no le hace cosquillas. Es el «cálculo» que haría un jugador mirando su equipo.
 const avgOf = r => (r[0] + r[1]) / 2;
 export const dpsOf = q => avgOf(damageRange(q)) * 0.6;
-export function fightEstimate(w, p, e) {
+export function fightEstimate(w, p, e, solo = false) {                       // solo: sin contar a los jugadores de al lado (antes de bajar a la cripta se va sin ellos)
   let ally = 0, n = 0;
-  for (const q of w.ents.values()) if (q !== p && q.kind === "player" && !q.dead && q.side === p.side && dist(p, q) <= 14) { ally += dpsOf(q); n++; }
+  for (const q of w.ents.values()) {
+    if (!solo && q !== p && q.kind === "player" && !q.dead && q.side === p.side && dist(p, q) <= 14) { ally += dpsOf(q); n++; }
+    else if (q.comp && q.master === p.id && !q.dead && q.cfg) ally += (q.cfg.attackDiceThrow || 1) * ((q.cfg.attackDiceRange || 1) + 1) / 2 * 0.5 / Math.max(0.9, (q.cfg.actionTime || 1500) / 1000);   // el compañero también pega
+  }
   const foeHit = (e.cfg.attackDiceThrow || 1) * ((e.cfg.attackDiceRange || 1) + 1) / 2 * (e.dmgMul || 1) * 0.65, foeDps = foeHit * 0.8 / Math.max(0.9, (e.cfg.actionTime || 1500) / 1000);
   const ttk = e.hp / Math.max(0.5, dpsOf(p) + ally), taken = foeDps * ttk / (1 + n * 0.7);
   const red = w.data.named("RedPotion"), pots = red ? p.bag.reduce((a, i) => a + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
@@ -188,15 +194,15 @@ export function fightEstimate(w, p, e) {
 // el jefe que habrá en el piso `level` de la cripta (misma escala que dungeon.js), para decidir ANTES de bajar
 export function bossPreview(w, level) {
   const cfg = w.npcDb.Skeleton; if (!cfg || level % 5) return null;
-  const tier = Math.min(4, level / 5), sc = { hp: 1 + .22 * (level - 1), dmg: 1 + .1 * (level - 1) };
-  return { cfg, hp: Math.round(cfg.hitDice * 5.75 * sc.hp * (6 + 2 * tier)), dmgMul: sc.dmg * (1.6 + .2 * tier) };
+  const tier = Math.min(4, level / 5), sc = { hp: 1 + .18 * (level - 1), dmg: 1 + .06 * (level - 1) };
+  return { cfg, hp: Math.round(cfg.hitDice * 5.75 * sc.hp * (3 + tier)), dmgMul: sc.dmg * (1 + .15 * tier) };
 }
 export const fightOk = (w, p, e) => fightEstimate(w, p, e).ratio >= 1.3;
 export const tooStrong = (w, p, e) => {
   if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
   if (e.boss && !e.aux) return !fightOk(w, p, e);                                                       // jefe de cripta: solo si el cálculo de la pelea sale a favor (con los compañeros que lo ayuden)
   const dl = p.res?.dlv?.[(e.boss ? e.name + "*" + e.boss : e.name) + (w.map.kind === "dungeon" ? "@" + w.map.level : "")];       // en la cripta la lección es por piso (los esqueletos escalan con el piso: un piso que lo mató no veta toda la especie)                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
-  if (dl !== undefined && p.level < dl + 3) return true;
+  if (dl !== undefined && p.level < dl + 3 && w.time - (p.res.dlt?.[(e.boss ? e.name + "*" + e.boss : e.name) + (w.map.kind === "dungeon" ? "@" + w.map.level : "")] || 0) < 20 * 60000) return true;       // la lección caduca a los 20 min: sin presa no hay experiencia y el bot quedaba atascado
   const hit = (e.cfg.attackDiceThrow || 1) * (e.cfg.attackDiceRange || 1);
   return hit * 4 > p.maxHp;
 };
@@ -339,7 +345,8 @@ function run(adv, w, p, b) {
     if (owner && !p.party && w.time > (b.partyAt || 0)) { b.partyAt = w.time + 5000; Party.request(w, p, owner.name, true); think_(w, p, b, "party", {}, 0); }
   }
   // recados
-  if (w.time >= b.errand && w.time - p.lastCombat > 3500) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
+  const unarmed = p.equip[EQUIP.RHAND] === undefined && p.equip[EQUIP.TWOHAND] === undefined;         // el arma se rompió: no espera a la calma, se rearma ya (sin ella pegaba con 0 de daño)
+  if (w.time >= b.errand && (unarmed || w.time - p.lastCombat > 3500)) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp, fear = Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
