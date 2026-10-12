@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.72.0 · Compañero en multijugador (2026-10-12)
+- Verificado con un test de red que los demás jugadores ven al compañero invocado (nombre, nivel, dueño, vida). Sin cambios de protocolo.
+- Ficha de compañeros actualizada; las habilidades por especie quedan como decisión de diseño pendiente.
+
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
 ## 0.71.0 · Bando y pelo (2026-10-12)

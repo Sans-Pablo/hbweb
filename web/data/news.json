@@ -11,6 +11,19 @@
     {
       "date": "2026-10-12",
       "title": {
+        "es": "Compañero en multijugador (v0.72.0)",
+        "en": "Companion in multiplayer (v0.72.0)"
+      },
+      "items": [
+        {
+          "es": "Los demás jugadores ven a tu compañero invocado, con nombre, nivel y vida.",
+          "en": "Other players see your summoned companion, with name, level and health."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "title": {
         "es": "Bando y pelo (v0.71.0)",
         "en": "Side and hair (v0.71.0)"
       },

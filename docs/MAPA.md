@@ -164,6 +164,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `maps.test.mjs` · 59 · Ciudad de Aresden: teletransportes entre mapas (teleport-loc del servidor original).
 - `mobile.test.mjs` · 35 · Modo móvil: funciones puras (detección, auto-ataque inicial, joystick, objetivos cercanos). node tests/mobile.test.mjs
 - `net-bot.test.mjs` · 30 · El admin invoca un bot en el servidor real: el bot aparece como jugador, entra en el grupo y se mueve con él.
+- `net-companion.test.mjs` · 36 · Compañero en multijugador: el que invoca un jugador lo ven los demás (nombre, nivel, dueño) y el cliente los registra en la entidad.
 - `net-dungeon.test.mjs` · 103 · Dos clientes reales: transición, aislamiento y reconexión, con 80 ms de latencia.
 - `net-observe.test.mjs` · 32 · Modo observar: sin cuenta, se pide la lista de habitantes, se elige uno y se recibe el mundo desde su posición; las órdenes se ignoran.
 - `net-persist.test.mjs` · 23 · Cuenta y personaje nuevos sobreviven a matar el servidor de golpe (SIGKILL) nada más entrar.
