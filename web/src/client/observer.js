@@ -68,3 +68,35 @@ export function observerBar(conn) {
   bar.onclick = e => { const a = e.target.dataset?.a; if (a === "list") { location.hash = "#observar"; location.reload(); } else if (a === "exit") { location.hash = ""; location.reload(); } };
   document.body.appendChild(bar);
 }
+
+// Ventana «Cerebro»: lo que hace, piensa y mira el habitante observado (llega del servidor cada segundo, mensaje "brain").
+const MODES = { idle: ["Vagando / cazando", "Roaming / hunting"], fight: ["Peleando", "Fighting"], rest: ["Descansando", "Resting"], follow: ["Siguiendo a su líder", "Following its leader"], "delve-go": ["Yendo a la cripta", "Heading to the crypt"], delve: ["En la cripta", "In the crypt"], trip: ["De expedición", "On an expedition"], pit: ["Disputando un foso", "Contesting a pit"], pet: ["Cuidando a su summon", "Tending its summon"], travel: ["De viaje", "Travelling"], flee: ["Huyendo", "Fleeing"], dead: ["Muerto", "Dead"] };
+const KIND = { ally: "🟢", enemy: "🔴", mob: "👹", pet: "🐾" };
+export function brainPanel(conn) {
+  let el = document.getElementById("brain");
+  if (!el) {
+    el = document.createElement("div"); el.id = "brain"; el.dataset.open = "1";
+    el.style.cssText = "position:fixed;top:34px;right:6px;z-index:54;width:300px;max-height:calc(100vh - 80px);overflow:auto;background:rgba(20,15,6,.92);color:#f0e2b8;border:1px solid #6b5a33;border-radius:8px;padding:6px 10px;font:12px/1.4 sans-serif";
+    el.onclick = e => { if (e.target.dataset?.a === "tog") { el.dataset.open = el.dataset.open === "1" ? "0" : "1"; el._k = ""; } };
+    document.body.appendChild(el);
+  }
+  const b = conn.brain; if (!b) return;
+  const key = JSON.stringify(b) + el.dataset.open + getLang(); if (el._k === key) return; el._k = key;
+  const lang = getLang() === "en" ? 1 : 0, bar = (v, m, c) => `<span style="display:inline-block;width:70px;height:7px;background:#3a2f1a;border-radius:3px;vertical-align:middle"><i style="display:block;height:100%;width:${Math.max(0, Math.min(100, 100 * v / Math.max(1, m)))}%;background:${c};border-radius:3px"></i></span>`;
+  const head = `<div style="display:flex;justify-content:space-between"><b style="color:#ffd76a">🧠 ${L("Cerebro", "Brain")}</b><a data-a="tog" style="cursor:pointer;color:#b9a572">${el.dataset.open === "1" ? "▾" : "▸"}</a></div>`;
+  if (el.dataset.open !== "1") { el.innerHTML = head; return; }
+  const sec = t => `<div style="margin-top:6px;color:#b9a572;font-size:11px;text-transform:uppercase">${t}</div>`;
+  const q = b.quest;
+  let h = head + `<div>${MODES[b.mode]?.[lang] || b.mode} · Nv ${b.lv} ${esc(b.cls)} · ${esc(b.map)}${b.floor ? " (" + L("piso", "floor") + " " + b.floor + ")" : ""}</div>`;
+  h += `<div>❤ ${bar(b.hp, b.mhp, "#c33")} ${b.hp}/${b.mhp} &nbsp;✦ ${bar(b.mp, b.mmp, "#38c")} ${b.mp}/${b.mmp}</div><div>💰 ${b.gold} · 🧪 ${b.pots}${b.skill != null ? " · " + L("skill arma", "weapon skill") + " " + b.skill + "%" : ""}</div>`;
+  h += sec(L("Objetivo", "Goal")) + `<div>${esc(b.goal[lang ? "en" : "es"]) || "—"}</div>`;
+  if (q) h += `<div>📜 ${esc(q[lang ? "en" : "es"])} <span style="color:#9c9">${q.pr.join("/")}</span></div>`;
+  if (b.delve) h += `<div>⛏ ${L("Expedición: quedan", "Expedition: left")} ${b.delve.until}s</div>`;
+  if (b.team) h += `<div>👥 ${L("Equipo de", "Team of")} ${b.team.n} · ${L("líder", "leader")} ${esc(b.team.lead)}</div>`;
+  if (b.wish) h += `<div>💭 ${esc(b.wish)}</div>`;
+  h += sec(L("Mira", "Looking at")) + (b.target ? `<div>🎯 ${esc(b.target.n)} · ${b.target.hp}% · ${b.target.d} ${L("casillas", "tiles")}</div>` : "") + (b.near.length ? b.near.map(n => `<div>${KIND[n.k] || ""} ${esc(n.n)} ${n.hp}% · ${n.d}</div>`).join("") : `<div>${L("nada cerca", "nothing near")}</div>`);
+  h += sec(L("Piensa (diario)", "Thinking (log)")) + b.log.slice().reverse().map(l => `<div style="opacity:.9">${esc(l)}</div>`).join("");
+  if (b.mem.length) h += sec(L("Recuerdos", "Memories")) + b.mem.slice().reverse().map(m => `<div>${esc(m[lang ? "en" : "es"])}</div>`).join("");
+  if (b.friends.length) h += sec(L("Amigos", "Friends")) + `<div>${b.friends.map(esc).join(", ")}</div>`;
+  el.innerHTML = h;
+}

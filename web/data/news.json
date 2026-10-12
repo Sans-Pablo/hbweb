@@ -10,6 +10,11 @@
   "news": [
     {
       "date": "2026-10-12",
+      "title": { "es": "Cerebro de bots (v0.65.0)", "en": "Bot brain (v0.65.0)" },
+      "items": [ { "es": "Al observar un bot hay una ventana Cerebro: qué hace, qué piensa y qué mira. Los bots compran el manual de su arma (menos fallos), bajan más en la cripta y la hacen en equipo.", "en": "Observing a bot now shows a Brain window: what it does, thinks and sees. Bots buy their weapon manual (fewer misses), go deeper in the crypt and delve as a team." } ]
+    },
+    {
+      "date": "2026-10-12",
       "title": { "es": "Summons que pelean (v0.64.4)", "en": "Summons that fight (v0.64.4)" },
       "items": [ { "es": "Los habitantes ahora van al hospital de compañeros sin que el grupo los desvíe, pelean con su summon y reservan oro para pociones.", "en": "Residents now reach the pet hospital without the group pulling them away, fight alongside their summon and keep gold for potions." } ]
     },

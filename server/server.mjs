@@ -645,9 +645,10 @@ const tickOnce = () => {
     if (ev.length) msg.ev = ev;
     if (c.itemsKey !== sh.itemsKey) { msg.it = sh.items; c.itemsKey = sh.itemsKey; }
     const quiet = !(msg.map || msg.sk || msg.fx || msg.e || msg.g || msg.ev || msg.it) && msg.ack === c.lastAck;
-    if (quiet && now - (c.lastSentAt || 0) < 400) { for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l); continue; }     // tick sin novedades: se manda el reloj solo cada 0,4 s (ahorra ancho de banda del túnel)
+    if (quiet && now - (c.lastSentAt || 0) < 400) { if (c.watch && now - (c.brainAt || 0) >= 1000) { c.brainAt = now; try { send(c, { t: "brain", b: Residents.brainOf(adventure, me) }); } catch (e) { /* informativo */ } } for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l); continue; }     // tick sin novedades: se manda el reloj solo cada 0,4 s (ahorra ancho de banda del túnel)
     c.lastAck = msg.ack; c.lastSentAt = now;
     send(c, msg);
+    if (c.watch && now - (c.brainAt || 0) >= 1000) { c.brainAt = now; try { send(c, { t: "brain", b: Residents.brainOf(adventure, me) }); } catch (e) { /* el cerebro es solo informativo */ } }
     for (const l of logs.slice(-8)) sysMsg(c, "[" + me.name + "] " + l);              // lo que piensa y hace el habitante observado, en el chat
   }
 };

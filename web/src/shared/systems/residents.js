@@ -218,6 +218,30 @@ export function speak(adv, p, text) {
   q.push({ p, pre: m[1], sit: m[2], at: w.time, lang: p.res.lang }); if (q.length > 14) q.shift();
   pumpSay(adv);
 }
+// «Cerebro» del habitante observado: qué hace, qué piensa, qué mira. Lo recibe el cliente en modo observar (≈1 vez por segundo).
+export function brainOf(adv, p) {
+  const w = adv.worldFor(p.id), b = p.bot, r = p.res || {}, tgt = b.target != null ? w.ents.get(b.target?.id ?? b.target) : null;
+  const d = r._delve, t = r._trip;
+  const mode = p.dead ? "dead" : b.rest ? "rest" : b.owner != null ? "follow" : d ? (d.go ? "delve-go" : "delve") : t ? (t.pit ? "pit" : "trip") : r._pet ? "pet" : b.travel ? "travel" : b.fleeAt && w.time - b.fleeAt < 3000 ? "flee" : tgt ? "fight" : "idle";
+  const cur = p.quests && Quests.lineOf(p)[p.quests.n | 0];
+  const lead = b.owner != null ? w.ents.get(b.owner) : null;
+  const near = [...w.ents.values()].filter(e => e !== p && !e.dead && dist(p, e) <= 12 && e.kind !== "citizen" && !e.aux).sort((x, y) => dist(p, x) - dist(p, y)).slice(0, 6).map(e => ({ n: e.name || e.type || "?", k: e.kind === "player" ? (e.side === p.side ? "ally" : "enemy") : e.comp ? "pet" : "mob", d: Math.round(dist(p, e)), hp: Math.round(100 * e.hp / Math.max(1, e.maxHp)) }));
+  const red = w.data.named?.("RedPotion"), pots = red ? p.bag.reduce((n, i) => n + (i.id === red.id ? i.count || 1 : 0), 0) : 0;
+  const sk = p.eff?.skill, skv = sk != null ? (p.skills?.[sk] | 0) : null;
+  return {
+    id: p.id, mode, lv: p.level, hp: p.hp, mhp: p.maxHp, mp: p.mp, mmp: p.maxMp, gold: p.gold, pots, map: w.map.id, floor: w.map.kind === "dungeon" ? w.map.level : 0, cls: p.quests?.cls || "",
+    goal: { es: goalText(r.goal, "es"), en: goalText(r.goal, "en") },
+    quest: cur ? { id: cur.id, es: cur.es || cur.name || cur.id, en: cur.en || cur.name || cur.id, pr: Quests.progress(p, cur.goal) } : null,
+    target: tgt ? { n: tgt.name || tgt.type || "?", hp: Math.round(100 * tgt.hp / Math.max(1, tgt.maxHp)), d: Math.round(dist(p, tgt)) } : null,
+    delve: d ? { until: Math.max(0, Math.round((d.until - w.time) / 1000)), floor: d.lv | 0 } : null,
+    team: lead ? { lead: lead.name, n: members(adv, lead) + 1 } : members(adv, p) > 0 ? { lead: p.name, n: members(adv, p) + 1 } : null,
+    skill: skv, near,
+    wish: b.wish || "",
+    log: (b.log || []).slice(-14),
+    mem: (r.mem || []).slice(-5).map(m => ({ es: m.es, en: m.en })),
+    friends: Object.entries(r.rel || {}).sort((x, y) => y[1] - x[1]).slice(0, 4).map(([n, v]) => n + " " + v),
+  };
+}
 export function thought(adv, p, sit) {                                                   // burbuja sobre la cabeza (evento botsay) con texto del modelo
   if (!p.res || typeof adv.llm !== "function" || adv.llm.ready === false) return;
   const q = (adv._sayQ ||= []), w = adv.worldFor(p.id);
@@ -653,6 +677,21 @@ function startDelve(adv, w, p, r, home) {
   blog(w, p, `Planeo bajar a la cripta de esqueletos${r.goal?.k === "crypt" ? " (mi meta: nivel " + r.goal.n + ")" : ""}: voy a la entrada (${spot[0]},${spot[1]}).`);
   remember(p, "Salí hacia la cripta de esqueletos.", "Set out for the skeleton crypt.");
   if (w.rng() < 0.6) speak(adv, p, "§you are going down to the skeleton crypt to clear skeletons");
+  recruitCrypt(adv, w, p, r);
+}
+// Equipo de cripta: el que sale a bajar invita a compañeros libres de su granja (mismo bando, nivel parecido; hasta 4 en total). Es voluntario (algunos rechazan): en grupo se reparte la experiencia,
+// la cuenta contra los jefes suma lo que pegan los aliados y los miembros siguen al líder por la cripta (bot.js).
+function recruitCrypt(adv, w, p, r) {
+  if (p.bot.owner != null || w.pvp) return;
+  const cand = [...adv.bots.values()].filter(q => q !== p && q.res && !q.dead && q.side === p.side && adv.worldFor(q.id) === w && q.bot.owner == null && !q.res.followUntil && !q.res._trip && !q.res._delve && !q.res._pet && !q.bot.rest && q.level >= 8 && Math.abs(q.level - p.level) <= 8 && q.hp > q.maxHp * 0.7 && dist(p, q) < 60).sort((x, y) => dist(p, x) - dist(p, y));
+  let n = members(adv, p);
+  for (const q of cand) {
+    if (n >= 3) break;
+    if (w.rng() < 0.25) { blog(w, q, `${p.name} me propone bajar juntos a la cripta, pero prefiero ir por mi cuenta.`); continue; }
+    q.bot.owner = p.id; q.res._leaveAt = w.time + 600000 + Math.floor(w.rng() * 300000); q.bot.partyAt = 0; n++;
+    blog(w, q, `Bajo a la cripta en equipo con ${p.name} (nv ${p.level}): juntos aguantamos más.`); blog(w, p, `${q.name} (nv ${q.level}) baja conmigo a la cripta.`);
+    befriend(p, q.name, 1); befriend(q, p.name, 1);
+  }
 }
 // Recall desde la cripta: el canal dura 3 s y quedarse quieto es obligatorio (moverse o un segundo comando lo cancelan)
 function cryptRecall(adv, w, p, r, es) {
@@ -690,10 +729,10 @@ function delve(adv, w, p, r, home) {
   r._delveAt = w.time + 1500;
   // nivel despejado: baja si puede (niveles superiores solo con suficiente nivel) o sale
   if (w.cleared) {
-    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && w.time < d.until - 60000 && (!nb || fightEstimate(w, p, nb, false, true).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
+    const gate = w.map.portals.find(g => g.target === "down"), nb = bossPreview(w, w.map.level + 1), deeper = !!gate && w.map.level + 1 <= Quests.cryptCap(p) && p.level >= cryptNeed(r, w.map.level + 1) && (!nb || fightEstimate(w, p, nb, false, true).ratio >= 1.3);       // no baja a un piso de jefe sin hacer la cuenta
     const exit = deeper ? gate : w.map.portals.find(g => g.target === "origin" && g.id !== "return") || w.map.portals.find(g => g.id === "return");
     if (!exit) return;
-    if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
+    if (dist(p, exit) <= 1) { if (w.time - (d.cmdAt || 0) > 2000) { d.cmdAt = w.time; if (!deeper) d.until = 0; else d.until = Math.max(d.until, w.time + 300000); blog(w, p, deeper ? `Nivel ${w.map.level} despejado: bajo.` : "Cripta despejada: salgo."); adv.command(p.id, { t: "portal", portal: exit.id }); } }
     else if (!b.travel || b.travel.x !== exit.x) { b.travel = { x: exit.x, y: exit.y, w, until: w.time + 60000 }; b.path = null; b.goal = null; }
     return;
   }

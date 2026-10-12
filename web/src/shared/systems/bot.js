@@ -15,10 +15,10 @@ import * as R from "../rules.js";
 import { reachOf, MAX_LEVEL } from "./combatsys.js";
 import { damageRange } from "../combat.js";
 import { groundTop } from "./ground.js";
-import { newInst } from "./itemsys.js";
+import { newInst, useItem } from "./itemsys.js";
 import * as Party from "./party.js";
 import * as Tut from "./tutorial.js";
-import { SKILL } from "../skills.js";
+import { SKILL, SKILL_NAMES } from "../skills.js";
 import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
@@ -107,6 +107,20 @@ function tryEquip(w, p, b, inst) {
 export const bagClass = (w, p, i) => { const v = judge(w, p, i, friendsOf(w, p)); return v.act === "equip" ? "keep" : v.act; };
 const friendsOf = (w, p) => w.hooks?.friends?.(p) || [];
 const sellExtra = (w, p, force = false) => manage(w, p, { force, friends: friendsOf(w, p), log: t => blog(w, p, t), stallKeep: p.res ? 8 : 0 });
+// Manuales de habilidad: sin maestría (0 %) el arma que lleva puesta nunca acierta y la habilidad no sube (gainSSN). Compra y estudia el de su arma y el de su escudo.
+export function studyManuals(w, p, b) {
+  const need = [];
+  if (p.eff?.wtype > 0 && !((p.skills[p.eff.skill] || 0) > 0)) need.push(p.eff.skill);
+  if (p.equip[EQUIP.LHAND] !== undefined && !((p.skills[SKILL.SHIELD] || 0) > 0)) need.push(SKILL.SHIELD);
+  for (const sk of need) {
+    const d = [...w.data.items.values()].find(x => x && x.effectType === EFFECT.STUDYSKILL && x.v1 === sk && x.price > 0);
+    if (!d) continue;
+    let inst = p.bag.find(i => i.id === d.id);
+    if (!inst) { if (p.gold < d.price + 40) continue; inst = buy(w, p, d); if (inst) blog(w, p, `Compro ${d.name} (${d.price} de oro): sin esa habilidad fallo todos los golpes.`); }
+    if (inst && useItem(w, p, inst.uid)) blog(w, p, `Estudio ${d.name}: ahora domino ${SKILL_NAMES[sk] || "la habilidad"}.`);
+  }
+}
+
 export function errands(w, p, b, first = false) {
   if (p.dead) return;
   spendPoints(w, p);
@@ -122,6 +136,7 @@ export function errands(w, p, b, first = false) {
   const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
   const usable = d => d && d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
     d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && SKIP_WEAPON.test(d.name));
+  studyManuals(w, p, b);
   let best = null;
   for (const i of p.bag) {
     const d = w.data.item(i.id);

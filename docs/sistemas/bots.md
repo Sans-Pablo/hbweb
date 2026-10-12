@@ -15,3 +15,9 @@ Código: `shared/systems/bot.js`, `Adventure.spawnBot/botOp` (`adventure.js`), `
 
 ## v0.64.0
 Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (`dlv`) caducan a 20 min (`dlt`), `bossPreview` con la escala de `dungeon.js`.
+
+## Cerebro, manuales, descenso y equipo (0.65.0)
+- **Cerebro**: en modo observar el servidor envía `{t:"brain", b}` cada segundo (`brainOf(adv,p)`, residents.js); el cliente lo pinta en `brainPanel` (observer.js). Test: `tests/bot-brain.test.mjs`.
+- **Manuales**: `studyManuals` (bot.js) compra y usa el manual de la skill del arma/escudo si está a 0. Test: `bot-manuals.test.mjs`.
+- **Descenso**: cada piso nuevo suma 5 min a `_delve.until`; el tope lo siguen marcando `cryptCap` y `cryptNeed`.
+- **Equipo de cripta**: `recruitCrypt` invita hasta 2 habitantes libres cercanos (nv ±8, vida >70 %); un 25 % rechaza. Los seguidores bajan por el portal tras el líder.

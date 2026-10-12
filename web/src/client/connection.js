@@ -169,6 +169,7 @@ export class NetConnection {
     } else if (m.t === "s") this.onState(m);
     else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
     else if (m.t === "msg") this.events.push({ t: "chat", system: true, text: m.text, id: this.pid });
+    else if (m.t === "brain") this.brain = m.b;
     else if (m.t === "kicked") this.kickMsg = m.msg;
     else if (m.t === "unwatched") { this.events.push({ t: "chat", system: true, text: m.why || "Fin de la observación.", id: this.pid }); setTimeout(() => { location.hash = "#observar"; location.reload(); }, 2500); }
   }

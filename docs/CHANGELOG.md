@@ -2,6 +2,13 @@
 
 Registro de cambios del port, del más reciente al más antiguo. Se actualiza en cada entrega junto con `web/data/news.json` (lo que ven los testers con F1) y `web/data/version.json`.
 
+## 0.65.0 · Cerebro de bots (2026-10-12)
+- Observar: ventana «Cerebro» (arriba a la derecha) con modo, objetivo, misión, expedición, equipo, a quién mira, diario de pensamientos, recuerdos y amigos. El servidor manda `brain` 1 vez por segundo solo a quien observa (`brainOf` en residents.js). Sin cambio de `NET_PROTO`: un cliente viejo ignora el mensaje.
+- Bots: compran y estudian el manual de la habilidad de su arma (y del escudo): con 0 % de skill fallaban casi todo (`studyManuals`).
+- Bots: en la cripta cada piso nuevo prorroga la expedición 5 min y ya no vuelven a casa al acabar el tiempo si pueden bajar más.
+- Bots: al bajar a una cripta invitan a 2 compañeros cercanos (nv ±8) y bajan en equipo (`recruitCrypt`).
+- Test: `bot-brain`, `bot-manuals`; `human.test` espera más a un bot en expedición.
+
 ## 0.64.4 · Summons que pelean (2026-10-12)
 - Bots: el cálculo de pelea (`fightEstimate`) cuenta el daño real del summon vivo (golpe de su nivel, +60 % si es de escuela) y que reparte los golpes. Antes usaba la ficha del monstruo.
 - Bots: el encargo del hospital de compañeros ya no lo interrumpe el grupo (arrastraba al bot lejos de Gail) y el simulador carga `gshop_1f`.
