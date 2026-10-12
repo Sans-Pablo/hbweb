@@ -12,7 +12,7 @@
 
 ### Opción B · Tailscale Funnel (gratis, dirección fija)
 1. Instala Tailscale (tailscale.com) y entra con tu cuenta. En el panel de administración activa **DNS → HTTPS Certificates**.
-2. Ejecuta `tailscale funnel 8088` una vez: si Funnel no está permitido te da un enlace para activarlo. Tu dirección es `https://NOMBRE-PC.TU-RED.ts.net`.
+2. Ejecuta `tailscale funnel 8088` una vez: si Funnel no está permitido te da un enlace para activarlo. Tu dirección es `https://NOMBRE-PC.TU-RED.ts.net` (fija: puesta una vez en `server.json` y `publicUrl`, no hace falta publicar nada más; `iniciar.ps1` relanza el funnel solo). Probado en Windows 11 (Tailscale 1.104, 2026-10-12).
 3. Doble clic en **`Servidor online.bat`**, elige `2` y pega esa dirección.
 
 ### Publicar la dirección (una sola vez)

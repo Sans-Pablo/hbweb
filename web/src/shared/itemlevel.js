@@ -21,13 +21,20 @@ function baseLevel(d) {
       return Math.max(1, Math.abs(d.price || 0) / 450);
   }
 }
+// Peso de cada atributo en item level (por punto de valor). INVENTO: antes todos valían igual (2.2·v1 + 1.4·v2) y un «Light» o «Agile» (sin efecto
+// real de combate) puntuaba como un «Critical»; ahora cuenta lo que hace cada uno (applyEquipAttr): daño añadido/crítico/veneno en armas,
+// absorción/defensa/resistencia mágica en armaduras, y los secundarios según su efecto (v2·7 %, o v2·3 % en absorciones).
+const W1 = { 1: 2.6, 2: 2, 3: 1, 5: 4, 6: 1.5, 7: 9, 8: 1, 9: 18, 10: 2 };      // armas: crítico, veneno, justo, ágil (fijo), ligero, afilado (fijo), fuerte, antiguo (fijo), especial
+const D1 = { 6: 1, 8: 1.4, 11: 1.5, 12: 2.2 };                                  // armaduras: ligero, fuerte, conversión de maná, crítico de carga
+const FLAT1 = new Set(["w5", "w7", "w9"]);                                       // su valor no depende de v1 (la tirada solo decide el color)
+const SUB = { 1: 0.8, 2: 1.4, 3: 2, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2.6, 9: 2.6, 10: 4, 11: 3, 12: 1.4 };
 // Item level de un objeto (d = definición, attr = atributos del objeto concreto, opcional)
 export function itemLevel(d, attr = 0, id = d?.id) {
   if (!d || d.type !== ITYPE.EQUIP) return 0;
   let v = baseLevel(d);
   if (attr) {
     const a = parseAttr(attr), weapon = d.effectType === EFFECT.ATTACK || d.effectType === EFFECT.ATTACK_MANASAVE;
-    v += (weapon ? 2.2 : 1.6) * a.v1 + 1.4 * a.v2;
+    v += ((weapon ? W1 : D1)[a.t1] || 0) * (FLAT1.has(weapon ? "w" + a.t1 : "") ? 1 : a.v1) + (SUB[a.t2] || 0) * a.v2;
   }
   if (UNIQUE.has(id)) v += 25;
   v += (d.levelLimit || 0) * 0.15;

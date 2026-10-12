@@ -130,6 +130,7 @@ function PublicarEnlace($url) {
     [IO.File]::WriteAllText($f, "{`"url`": `"$url`"}`n", (New-Object Text.UTF8Encoding $false))
     if (-not (Tiene "git") -or -not (Test-Path (Join-Path $root ".git"))) { Aviso "server.json actualizado, pero sin git no puedo publicarlo en GitHub."; return }
     $env:GIT_TERMINAL_PROMPT = "0"
+    $ErrorActionPreference = "Continue"                                      # los avisos de git (p. ej. LF/CRLF) por stderr no son errores: antes cortaban la publicacion del enlace
     Push-Location $root
     try {
       git add -- web/data/server.json 2>&1 | Out-Null

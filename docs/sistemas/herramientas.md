@@ -19,3 +19,9 @@ Botón de «Personaje»: `dbg resetall` → `Adventure.resetAll()` recorre todos
 
 ## Reiniciar bots desde 0
 Botón `botsnew` (con confirmación). `Adventure.restartBots()` quita todos los bots y habitantes, vacía `adv.offline`, borra sus puestos de `stallDb` y llama a `adventure.onBotsRestart(nombres)`; el servidor borra entonces `saves[bkey(n)]` de los 40 habitantes y guarda. Después recrea el mismo número de habitantes, nuevos (nivel 1-4, sin historia). No toca a los jugadores humanos (para eso, Reset all). Test: `tests/debug.test.mjs`.
+
+## Modo «0 restricciones» (`p.free`, v0.79.0)
+Sin báculo de familia (`staffOk`), sin tope de nivel de mascota y sin requisitos para evolucionar. Solo herramientas de prueba.
+
+## Barras de estado (v0.79.1)
+`renderer.stateBars` pinta sobre la cabeza una barra por estado (debuffs y berserk/protect/invis) con el tiempo restante (escala 10 s). El servidor publica `sx` en `pub()`.

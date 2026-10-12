@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.79.2 · Botín inteligente de los bots (2026-10-12)
+- Los bots juzgan el equipo del suelo con `judge` (`lootValue`): recogen lo que equipan o guardan, y solo venden lo que paga; elijen por valor/distancia. Item level pondera cada atributo por su efecto real. Dirección fija de Tailscale Funnel. Test `bot-loot`.
 
 ## 0.79.1 · Indicador de estados de los demás (2026-10-12)
 - Barras de tiempo restante sobre la cabeza de jugadores, monstruos y summons con Hold, Hielo, Confusión, Illusion, Armor Break, Inhibición o Veneno. El servidor publica `sx` en `pub()`. NET_PROTO 10.

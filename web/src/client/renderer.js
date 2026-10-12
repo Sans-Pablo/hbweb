@@ -34,7 +34,7 @@ export const CAST_CFG = { Liche: { color: "#be64ff", core: "#ebc8ff", bright: 0.
 fetch("data/cast_circle.json").then(r => r.ok ? r.json() : null).then(j => { if (j) for (const k in j) CAST_CFG[k] = { ...CAST_CFG[k], ...j[k] }; }).catch(() => {});
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(",");
 
-const STATE_COL = [["hold", "#ffd34d"], ["ice", "#6ac8ff"], ["confuse", "#c28aff"], ["illusion", "#ff8ad8"], ["armorbreak", "#ff6a6a"], ["inhibit", "#9aa0ff"], ["poison", "#7fe07f"]];
+const STATE_COL = [["hold", "#ffd34d"], ["ice", "#6ac8ff"], ["confuse", "#c28aff"], ["illusion", "#ff8ad8"], ["armorbreak", "#ff6a6a"], ["inhibit", "#9aa0ff"], ["poison", "#7fe07f"], ["berserk", "#ff9a3c"], ["protect", "#ffffff"], ["invis", "#b0b0b0"]];
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;

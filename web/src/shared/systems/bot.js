@@ -507,11 +507,11 @@ function run(adv, w, p, b) {
   if (!b.rest && !b.noLoot && !b.travel) {
     const here = groundTop(w, p.x, p.y);
     if (here && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
-    let best = null, bd = 1e9;
+    let best = null, bd = 0;
     const LR = (b.lootBoost || 0) > w.time ? 9 : 5;                                       // actividad de guild «loot»: rastrea más lejos
     for (let y = p.y - LR; y <= p.y + LR; y++) for (let x = p.x - LR; x <= p.x + LR; x++) {
       const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
-      if (it && wanted(w, p, it)) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)); if (d < bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = d; } }
+      const lv = it ? lootValue(w, p, it) : 0; if (lv > 0) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)), sc = lv / (d + 2); if (sc > bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = sc; } }
     }
     if (best) { think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
   }
@@ -591,11 +591,20 @@ function farm(adv, w, p, b) {
   }
   return false;
 }
-function wanted(w, p, it) {
+// Valor del objeto del suelo para el bot (0 = no lo recoge). INVENTO: antes recogía todo el equipo, el más cercano primero, y la basura le llenaba
+// la mochila y el peso: luego no podía cargar las piezas buenas. Ahora lo juzga como si ya lo llevara (botitems.js judge): equipar/guardar/comerciar o
+// vender por un precio que merezca el viaje; con la mochila cargada solo se lleva lo que de verdad le sirve.
+export function lootValue(w, p, it) {
   const d = w.data.item(it.id);
-  if (!d) return false;
-  if (it.id === GOLD) return true;
-  if (it.comp) return false;
-  if (d.type === ITYPE.EQUIP && d.price <= 0 && !it.attr && !(d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && !(d.levelLimit > p.level))) return false;
-  return (d.price > 0 || d.type === ITYPE.EAT || d.type === ITYPE.EQUIP) && p.bag.length < MAX_ITEMS - 3 && Inv.canCarry(p, w.data, d, it.count || 1, it);
+  if (!d) return 0;
+  if (it.id === GOLD) return 1e4;
+  if (it.comp) return 0;
+  if (d.type === ITYPE.EQUIP && d.price <= 0 && !it.attr && !(d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && !(d.levelLimit > p.level))) return 0;
+  if (!((d.price > 0 || d.type === ITYPE.EAT || d.type === ITYPE.EQUIP) && p.bag.length < MAX_ITEMS - 3 && Inv.canCarry(p, w.data, d, it.count || 1, it))) return 0;
+  if (d.type !== ITYPE.EQUIP) return 1 + (d.price || 0) * (it.count || 1) * 0.1;
+  const v = judge(w, p, { ...it, life: it.life ?? d.maxLife }, friendsOf(w, p)), load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
+  if (v.act === "equip") return 500 + v.value;
+  if (v.act === "keep" || v.act === "store") return 50 + v.value;
+  return v.value >= (load > 0.6 ? 400 : 120) ? v.value * 0.2 : 0;                  // basura: solo si se vende bien y hay sitio
 }
+const wanted = (w, p, it) => lootValue(w, p, it) > 0;
