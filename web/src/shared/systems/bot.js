@@ -497,9 +497,17 @@ function run(adv, w, p, b) {
         } else if (d <= MAGE_RANGE.max) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }       // a distancia: espera a que el summon lance
       } else if (p.res?.arch === "scholar" && !isSupport(p) && Comp.activeBall(p)) wieldStaff(adv, w, p, b);
     }
-    if (dist(p, t) <= reachOf(w, p, t)) {
+    // Crítico (Alt + clic) y dash, como un jugador con maestría 100 en el arma (Game.cpp, _iGetAttackType / OBJECTATTACKMOVE)
+    const master = ((p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= 100), crit = master && (p.superAttack | 0) > 0;
+    const gap = dist(p, t), reach = reachOf(w, p, t, crit);
+    const ddx = Math.abs(p.x - t.x), ddy = Math.abs(p.y - t.y);
+    const canDash = master && !p.eff.bow && gap === reachOf(w, p, t) + 1 && reachOf(w, p, t) < 4 && (ddx === 0 || ddy === 0 || ddx === ddy) && p.sp >= 2;
+    if (gap <= reach || canDash) {
       b.stuck = null;
-      if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: t.id }); }
+      if (w.time - p.lastAttack >= PLAYER.attackCooldownMs && !w.busy(p)) {
+        const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d;
+        adv.command(p.id, gap <= reachOf(w, p, t) ? { t: "attack", target: t.id, ...(crit ? { crit: true } : {}) } : gap <= reach ? { t: "attack", target: t.id, crit: true } : { t: "attack", target: t.id, dash: true });
+      }
     } else if (!step(adv, w, p, b, t.x, t.y, dist(p, t) > 5) && b.fails > 8) {          // no hay camino hasta él (vallado, otra zona): lo descarta un rato
       (b.ignore ||= new Map()).set(t.id, w.time + 20000); b.target = null; b.fails = 0; b.path = null;
     }

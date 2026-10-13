@@ -80,7 +80,7 @@ function newCharacter(w, p, create) {
 // Conserva nombre, clase, aspecto y bando. `stats` = atributos base de ese personaje al nacer (los de la clase, o los de los bots).
 export function resetCharacter(w, p, stats) {
   for (const b of p.bag) if (b.comp?.on) { b.comp.on = false; dismissCompanion(w, p, b.uid); }
-  Object.assign(p, { kills: 0, ek: 0, lvDebt: 0, respecs: 0, hunt: undefined, delve: undefined, kinds: undefined, god: false, deadAt: 0, dead: false });
+  Object.assign(p, { kills: 0, ek: 0, pkCount: 0, reputation: 0, enemyKillCount: 0, rewardGold: 0, elo: 1500, lvDebt: 0, respecs: 0, hunt: undefined, delve: undefined, kinds: undefined, god: false, deadAt: 0, dead: false });
   newCharacter(w, p, { gender: p.gender, look: p.look, persona: p.persona, cls: p.cls, side: p.side, stats: stats || PRESETS[p.cls] || PRESETS.warrior });
   Tut.init(p, !p.bot); Quests.init(p);
   recalc(w, p); p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100;
@@ -104,7 +104,7 @@ export function addPlayer(w, name, save = null, create = null) {
 }
 
 function loadSave(w, p, s) {
-  for (const k of ["level", "exp", "pool", "lvDebt", "gold", "kills", "ek", "respecs", "gender", "side"]) if (Number.isFinite(s[k])) p[k] = s[k];
+  for (const k of ["level", "exp", "pool", "lvDebt", "gold", "kills", "ek", "respecs", "gender", "side", "pkCount", "reputation", "enemyKillCount", "rewardGold", "elo"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
   if (s.look) p.look = { ...p.look, ...s.look };
   if (typeof s.persona === "string" && "wjd".includes(s.persona) && s.persona.length === 1) p.persona = s.persona;
@@ -142,7 +142,7 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
+    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.cleared ? { cleared: p.delve.cleared } : {}), ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p), quests: Quests.toSave(p),

@@ -69,13 +69,14 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
 // dash: a una casilla más allá del alcance, solo si se venía corriendo; avanza y golpea
 {
   const n = spawn(30, 30); put(p, 28, 30); p.sp = 50; p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] = 100; p.lastAttack = -1e9; p.busyUntil = 0; p.lastRun = -1e9;
-  assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "sin correr no hay dash");
-  p.lastRun = w.time; p.busyUntil = 0;
+  p.busyUntil = 0;                                   // el original no exige haber corrido antes
   const sp0 = p.sp, evs = w.events.length;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "corriendo sí");
   tick(1500);
   assert.equal(p.x, 29, "avanza una casilla"); assert.ok(p.sp < sp0, "cuesta aliento");
   assert.ok(w.events.slice(evs).some(e => e.t === "crit" && e.dash), "evento dash");
+  put(p, 28, 31); p.busyUntil = 0; p.lastAttack = -1e9; n.x = 30; n.y = 30; p.sp = 50;
+  assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "salto de caballo: sin dash");
   put(p, 20, 40); p.lastRun = w.time; p.busyUntil = 0; p.lastAttack = -1e9;
   assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "más lejos no hay dash");
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.81.0 · Crítico, dash y fuente de sprites (2026-10-13)
+- Crítico (Alt+clic) y dash de guerreros arreglados: el dash ya no exige haber corrido (el servidor lo rechazaba y el cliente reenviaba sin parar), exige línea recta/diagonal a 2 casillas, y el crítico tiene el alcance del original (espada larga 3, esgrima 4, StormBlade 5).
+- Los bots maestros usan crítico y dash (`tests/bot-crit.test.mjs`).
+- Daño, «Failed!» y nombre del conjuro se dibujan con la fuente de sprites del cliente original (`interface2_1`, `PutString_SprFont3`).
+
 ## 0.80.7 · Ventanas dentro del juego (2026-10-13)
 - Nuevo toolkit `client/window.js` (marco clásico, botones de piedra, texto, párrafos, casillas, deslizadores, campos, listas desplegables, zonas con scroll, `Flow`) y prompts `gui.ask`/`gui.confirm` en el lienzo. Ficha `docs/sistemas/ventanas.md`, test `tests/window.test.mjs`.
 - F1 (`client/newswin.js`) y Opciones (F12) ya no son HTML: se dibujan en el lienzo con el cursor del juego. Eliminados `client/news.js`, `client/devtools.js` y los paneles `#news`/`#options`; `gui.actions` conecta Opciones con guardar/exportar/importar/tutorial.

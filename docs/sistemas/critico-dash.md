@@ -9,15 +9,14 @@ Cifras **del original** (verificadas contra `HelbreathOriginal`): servidor `char
 - **Alt + clic** sobre un enemigo: el siguiente ataque va con `crit:true`. Exige carga y **maestría 100** en la habilidad del arma (mano = habilidad 5); gasta una carga.
 - **Efecto** (`critDashBonus`): daño += daño·nivel/100 (redondeado); luego por habilidad: espada corta ×2; arco y espada larga +10 % y +30 de puntería; hacha +20 %;
   martillo +20 % y +20 de puntería; báculo +20 % y +50 de puntería; mano/esgrima solo lo del nivel; siempre +100 de puntería. Ya no se ignora defensa.
-- No portado: ataques de tormenta (StormBlade, tipo 30) ni rangos de crítico a distancia (el cliente original permite críticos hasta 3–5 casillas según arma).
+- **Alcance del crítico** (`combatsys.reachOf(..., crit)`, cliente `_iGetAttackType`): espada larga 3, esgrima 4, StormBlade (845) 5, resto 4. Sin carga o sin maestría 100 el golpe es normal.
 
 ## Dash (`OBJECTATTACKMOVE`)
-- Corriendo (activo por defecto), objetivo a alcance + 1, maestría 100 en el arma y aliento: avanza un paso y golpea (`bIsDash`).
-- Bono: +20 de puntería; espada larga +10 % de daño, hacha y martillo +20 %. Servidor: `world.js` comando `attack` (`cmd.dash`, `p.lastRun`, `sp >= 2`).
-- Diferencia conocida: el original permite el dash a 2 casillas en diagonal/recta; aquí «alcance + 1».
+- Objetivo **exactamente a 2 casillas en línea recta o diagonal**, maestría 100 en el arma y aliento (`sp >= 2`): avanza un paso y golpea. **No exige haber corrido antes** (antes el servidor lo rechazaba de pie y el cliente reenviaba la orden sin parar). No vale con StormBlade (alcance ≥ 4).
+- Bono: +20 de puntería; espada larga +10 % de daño, hacha y martillo +20 %. Servidor: `world.js` comando `attack` (`cmd.dash`, `sp >= 2`).
 
 ## Controles
 Shift+clic izq. = el summon va a la casilla; Shift+clic der. = el summon ataca; Alt+clic = crítico (`controller.js`, `atk()`).
 
 ## Protocolo y pruebas
-`NET_PROTO` = 8 (el comando `attack` lleva `crit`/`dash`; no cambia). Test: `tests/crit-dash.test.mjs`.
+`NET_PROTO` = 8 (el comando `attack` lleva `crit`/`dash`; no cambia). Tests: `tests/crit-dash.test.mjs`, `tests/bot-crit.test.mjs` (los bots maestros usan crítico y dash: `systems/bot.js`, bloque melee).

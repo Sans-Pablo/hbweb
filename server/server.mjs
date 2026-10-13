@@ -23,6 +23,7 @@ import { setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { DEBUG } from "../web/src/shared/systems/debug.js";
 DEBUG.enabled = process.env.HB_DEBUG !== "0";            // las herramientas de prueba (F1) abiertas a todos; HB_DEBUG=0 las apaga
 import { GameData } from "../web/src/shared/data.js";
+import * as Bal from "../web/src/shared/balance.js";
 import { damageRange } from "../web/src/shared/combat.js";
 import { attackMs } from "../web/src/shared/world.js";
 import { LIMITS, PLAYER, NET_PROTO } from "../web/src/shared/const.js";
@@ -83,6 +84,8 @@ try {
 const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, maps, clock: () => new Date().getMinutes() });   // día y noche como el cliente local
 
 const clients = new Set();
+// Balance (shared/balance.js): web/data/balance.json es la base; lo que guarda el admin (saves["sys:balance"]) la sustituye
+{ let base = {}; try { base = JSON.parse(fs.readFileSync(path.join(DATA, "balance.json"), "utf8")); } catch {} Bal.setBalance(store.saves["sys:balance"] || base); }
 const saves = store.saves;
 // Habitantes: bots permanentes del servidor (systems/residents.js). Su partida vive en saves["bot:<nombre>"] y se guarda con la de los jugadores.
 const OBSERVE = env.HB_OBSERVE !== "0" && CFG.observe !== false;           // modo observar: ver jugar a un habitante en vivo desde la pantalla de entrada
@@ -186,6 +189,14 @@ const server = http.createServer((req, res) => {
       else if (url.pathname === "/api/admin/botparties") json(req, res, 200, { parties: botStats.parties() });
       else json(req, res, 200, botStats.detail(url.searchParams.get("name") || "") || { error: "no existe" });
     } catch (e) { json(req, res, 500, { error: e.message }); }
+    return;
+  }
+  if (url.pathname === "/api/admin/balance") {
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    if (req.method === "POST") {
+      let body = ""; req.on("data", d => { body += d; if (body.length > 200000) req.destroy(); });
+      req.on("end", () => { try { const b = Bal.setBalance(JSON.parse(body || "{}")); saves["sys:balance"] = b; json(req, res, 200, b); persist(true); } catch (e) { json(req, res, 400, { error: e.message }); } });
+    } else json(req, res, 200, Bal.BAL);
     return;
   }
   if (url.pathname === "/api/admin/human") {
@@ -551,6 +562,7 @@ function ownState(e) {
 function pub(e, own) {
   const o = { id: e.id, k: e.kind, name: e.name, x: e.x, y: e.y, fx: e.fx, fy: e.fy, dir: e.dir, act: e.act,
     s: r1(e.actStart), d: e.actDur, dead: e.dead ? 1 : 0, hp: e.hp, mh: e.maxHp };
+  if (e.pkCount > 0) o.pk = e.pkCount;
   if (e.role) o.rl = e.role;
   if (e.st) { for (const k in e.st) { const u = e.st[k].until; if (u === Infinity || u > adventure.time) (o.sx ||= {})[k] = [e.st[k].v, u === Infinity ? -1 : Math.round(u - adventure.time)]; } }          // estados con tiempo restante (indicador de buffs/debuffs de los demás)
   if (e.stall) o.stl = [e.stall.sid, e.stall.name, e.stall.title, e.stall.items.length];            // puesto de jugador: nombre del dueño y rótulo (los objetos solo se piden al abrirlo)

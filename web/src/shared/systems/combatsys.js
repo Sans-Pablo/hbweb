@@ -1,7 +1,9 @@
 // Golpes, daño, experiencia y muerte de jugadores y monstruos.
 import * as Boss from "./bosses.js";
+import * as Bal from "../balance.js";
 import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
+import * as PK from "./pk.js";
 import * as Inv from "../inventory.js";
 import { EQUIP, ITYPE } from "../items.js";
 import { strikeNpc, absorbOnHit, CRIT } from "../combat.js";
@@ -31,10 +33,12 @@ export function useArrow(w, p) {
 // Alcance de un golpe cuerpo a cuerpo: 1 casilla; 4 con el arma 845 (HGServer/Game.cpp, iClientMotion_Attack_Handler); el cliente
 // también permite golpear a monstruos grandes (tipos 66, 73, 81, 91) desde 2 casillas.
 export const BIG_MOBS = new Set([66, 73, 81, 91]);
-export function reachOf(w, p, t) {
+// `crit` (Alt + clic): el cliente original deja golpear de más lejos: espada larga 3, esgrima 4, StormBlade 5 (Game.cpp, _iGetAttackType / clic con Alt).
+export function reachOf(w, p, t, crit) {
   if (p.eff?.bow) return Infinity;                                  // arco: el cliente manda el disparo a la casilla elegida
   const two = p.equip[EQUIP.TWOHAND], inst = two !== undefined && Inv.instOf(p, two);
-  if (inst && inst.id === 845) return 4;
+  if (inst && inst.id === 845) return crit ? 5 : 4;
+  if (crit && p.eff?.wtype > 0) { if (p.eff.skill === 8) return 3; if (p.eff.skill === 9) return 4; }
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
 
@@ -59,7 +63,7 @@ export function playerHit(w, p, t, fx = {}) {
   const lethal = t.hp - r.damage <= 0;
   if (!lethal) gainSSN(p, skill, 1);
   wearWeapon(w, p);
-  damageNpc(w, t, r.damage, p, skill);
+  damageNpc(w, t, Math.max(1, Bal.scale(r.damage, Bal.meleeMul())), p, skill);
 }
 
 // ---- PvP (INVENTO del port: el original calcula el golpe contra jugadores en iCalculateAttackEffect con las mismas piezas que contra monstruos).
@@ -67,7 +71,7 @@ export function playerHit(w, p, t, fx = {}) {
 // distintos y también los viajeros (bando 0, sin bando) contra cualquiera; no se golpean entre sí los del mismo bando (1 o 2) ni los de la misma party.
 export function canFight(w, p, t) {
   if (!w.pvp || t === p || t.kind !== "player" || p.dead || t.dead || w.safeAt(p.x, p.y) || w.safeAt(t.x, t.y)) return false;
-  if (p.side > 0 && p.side === t.side) return false;
+  if (p.side > 0 && p.side === t.side && !(t.pkCount > 0)) return false;          // un criminal del propio bando sí es atacable (IsPlayerHostile)
   return !(p.party && t.party && p.party.id === t.party.id);
 }
 // Multiplicador del daño entre jugadores (invento del port): subido para que un duelo se decida en unos 15-25 golpes, no en minutos; las pets y las pociones deciden el resto.
@@ -84,7 +88,7 @@ export function hitPlayer(w, p, t, fx = {}) {
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap);
-  a.damage = Math.max(1, Math.round(a.damage * PVP_DMG));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
+  a.damage = Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul()));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
   if (!t.dead) knockback(w, p, t, a.damage);
@@ -100,7 +104,8 @@ function pvpCredit(w, v, from) {
   v.dead = false; const ok = canFight(w, k, v); v.dead = true;                                    // canFight rechaza a los muertos: se evalúa como si aún viviera
   if (!ok) return;
   k.ek = (k.ek || 0) + 1; k.kills = (k.kills || 0) + 1; k.streak = (k.streak || 0) + 1;
-  w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was); penaltyDrop(w, v, 1);
+  w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was);
+  const lost = PK.onPlayerKilled(w, k, v, giveExp); penaltyDrop(w, v, Math.max(1, lost));
 }
 // ApplyCombatKilledPenalty / PenaltyItemDrop (Client.cpp): el caído suelta al azar objetos de la mochila, puestos o no (DropItemHandler los desequipa).
 // El original suelta cPenaltyLevel objetos (2 al morir a manos del bando enemigo, -1 si es menor de nivel 80); aquí 1 como mínimo, sin oro ni bolas de compañero.
@@ -221,6 +226,7 @@ export function npcStrikes(w, n, t) {
   const defense = t.defense + (prot === 3 ? 40 : prot === 4 ? 100 : 0);
   if (R.dice(w.rng, 1, 100) > R.hitChance(hitRatio, defense, n.dir === t.dir)) return miss();
   if (sget(w, n, "berserk")) damage *= 2;                              // furia: el doble de daño
+  damage = Math.max(1, Bal.scale(damage, Bal.monsterDmgMul(n.name)));
   let ap = R.absorbOnPlayer(w.rng, damage, t.stats);
   if (ap <= 0) return miss();
   const a = absorbOnHit(w.rng, t, ap);

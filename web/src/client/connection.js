@@ -237,7 +237,7 @@ export class NetConnection {
       }
     }
     e.dead = !!o.dead; e.hp = o.hp; e.maxHp = o.mh; e.name = o.name;
-    e.role = o.rl; e.comp = !!o.cp; e.master = o.mt;
+    e.role = o.rl; e.pk = o.pk | 0; e.comp = !!o.cp; e.master = o.mt;
     e.stall = o.stl ? { sid: o.stl[0], owner: o.stl[1], title: o.stl[2], n: o.stl[3] } : null;
     if (o.mm !== undefined) { e.mp = o.mp; e.maxMp = o.mm; }
     if (!own) { if (o.sx) { e.st = {}; for (const k in o.sx) e.st[k] = { v: o.sx[k][0], until: o.sx[k][1] < 0 ? Infinity : w.time + o.sx[k][1] }; } else if (e.st) e.st = null; }          // estados de los demás con su tiempo restante (server pub: sx)

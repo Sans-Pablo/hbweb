@@ -15,7 +15,7 @@ Base: servidor `Helbreath.HGServerConsole` (HG.cpp 40.8k líneas, combat.cpp, Np
 | Mapas (`MAPDATA`/`GServer.cfg`) | 85 (84 en servidor) | 41 | ~48 %. Faltan Elvine, nieve, muchos mapas de bando y de dungeon |
 | Quests (`Quest.cfg`) | 151 | invención propia (22 por clase, acto 1) | ➕ otro sistema, no es el original |
 | Guerra (Crusade/Heldenian/Apocalypse) | ~640 líneas de referencias | 0 | ❌ ausente por completo |
-| Reputación/PK/criminal | sí | no | ❌ |
+| Reputación/PK/criminal | sí | no | 🟡 núcleo portado (systems/pk.js) |
 | Sistema de bandos (Aresden/Elvine/Istria/Neutral) | núcleo del juego | no hay elección de bando | ⏸ |
 | Cliente: ventanas (`DrawDialogBox_*`) | 46 | la mayoría de las comunes | 🟡 faltan las de guerra, slates, fishing, DK, majestic… |
 | Cliente: texto sobre cabezas | tipos 20/21-23/41-42 con fuente de sprites | daño/“fallo” en canvas | 🟡 ver §3 |
@@ -32,7 +32,7 @@ Resumen en una frase: **el combate, la magia, los ítems y la economía base est
 | Hambre (`m_iHungerStatus`) | sí | `hunger` presente | ✅ (a verificar fórmulas) |
 | Modo seguro de ataque (`m_bIsSafeAttackMode`) | sí | modo paz/ataque con Tab (0.80.2) | ✅ |
 | Penalización de muerte (`PenaltyItemDrop`) | sí | `combatsys.penaltyDrop` (0.80.2) | ✅ |
-| Contador PK (`m_iPKCount`), criminal, reputación | sí | no | ❌ |
+| Contador PK (`m_iPKCount`), criminal, reputación | sí | no | 🟡 portado, falta UI y cárcel real |
 | Contador de kills enemigos (`m_iEnemyKillCount`), contribución, `m_iWarContribution` | sí | no | ❌ |
 | Habilidad especial por arma / `m_iSpecialAbilityTime` | sí (18 refs) | `special` en 14 ficheros, de otro origen | 🟡 (a verificar si es la del original) |
 | Resistencias (`m_iAddResistMagic`…) | sí | `rules.js`/`combat.js` | ✅ |
@@ -58,10 +58,10 @@ Resumen en una frase: **el combate, la magia, los ítems y la economía base est
 
 | Elemento | Original | Port | Estado |
 |---|---|---|---|
-| Fuente de sprites (`SPRID_INTERFACE_SPRFONTS2`, `PutString_SprFont3`, 95 glifos × tipos) | usada para daño/conjuros/avisos | texto de canvas (Trebuchet/Tahoma) | ❌ fuente distinta |
+| Fuente de sprites (`SPRID_INTERFACE_SPRFONTS2`, `PutString_SprFont3`, 95 glifos × tipos) | usada para daño/conjuros/avisos | `fx.js` `sprFontDraw`: hoja `interface2_1`, 3 tipos, sombra (0,+1)/(+1,+1) y tinte | ✅ daño, fallo y nombre del conjuro (en el resto de avisos sigue canvas) |
 | Chat sobre la cabeza (tipo 20 amarillo, retardo 650 ms) | sí | chat propio | 🟡 |
 | Texto de conjuro sobre la cabeza (tipo 41/42, rojo, sube) | sí | no | ❌ |
-| Números de daño tipo 21-23 (3 tamaños de fuente de sprites, 1-3 líneas de 20 caracteres) | sí | `fx.js "damage"` con canvas | 🟡 (similar, no idéntico) |
+| Números de daño tipo 21-23 (3 tamaños de fuente de sprites, 1-3 líneas de 20 caracteres) | sí | `fx.js "damage"` con la fuente de sprites (tipo por daño <12/<40/más) | 🟡 (sin apilado de líneas) |
 | ~285 puntos de creación de efectos (`bAddNewEffect`) | sí | `fx.js` con efectos recreados | 🟡 (sin conteo de paridad) |
 | Detalle gráfico (`m_cDetailLevel`: transparencias) | sí | no | ❌ |
 | `DrawEffectLights`, `DrawTopMsg`, `DrawDialogBox_WarningMsg`/`15AgeMsg`/`ShutDownMsg` | sí | parcial | 🟡 |
@@ -86,7 +86,7 @@ Resumen en una frase: **el combate, la magia, los ítems y la economía base est
 | Granjas, criptas por jugador, jefes con fases | no existen | sí | ➕ |
 | Arena | no | sí | ➕ (con bandera aplazada) |
 | Sistema de quests | 151 `Quest.cfg` | 22/clase propia | ➕ |
-| Teleport.cfg, DupItemID.cfg | sí | `teleport` presente | ✅ (a verificar) |
+| Teleport.cfg, DupItemID.cfg | sí | `teleport` presente | 🟡 teleport.json + validador, sin diálogo |
 | Crusade, Heldenian, Apocalypse | sí | no | ❌ |
 | Eventos de mundo/DelayedEvents | sí | no | ❌ |
 | Hero items (`m_bIsHeroItem` no encontrado; héroe por bono de armadura) | sí | `drops.js` | 🟡 |

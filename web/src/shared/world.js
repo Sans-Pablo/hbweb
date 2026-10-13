@@ -204,9 +204,12 @@ const COMMANDS = {
     if (!t || t.dead || (t.kind !== "npc" ? !Combat.canFight(w, p, t) : t.master && !Npc.foeOf(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
-    const reach = Combat.reachOf(w, p, t), gap = dist(p, t);
+    const critOk = !!cmd.crit && (p.superAttack | 0) > 0 && mastered(p);       // CRÍTICO (Alt + clic): gasta una carga de super ataque
+    const reach = Combat.reachOf(w, p, t, critOk), gap = dist(p, t);
     // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
-    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && w.time - (p.lastRun || -1e9) < PLAYER.runMs * 3 && p.sp >= 2 && mastered(p);
+    // el original (OBJECTATTACKMOVE) exige SP, maestría 100 y el objetivo a 2 casillas EN LÍNEA (recta o diagonal); no hace falta haber corrido antes
+    const dx = Math.abs(p.x - t.x), dy = Math.abs(p.y - t.y);
+    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 2 && mastered(p);
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
@@ -215,11 +218,11 @@ const COMMANDS = {
       if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
       p.sp -= 1; p.lastMove = w.time; lead = PLAYER.runMs;
     }
-    const crit = !!cmd.crit && (p.superAttack | 0) > 0 && mastered(p);       // CRÍTICO (Alt + clic): gasta una carga de super ataque
+    const crit = critOk && !dash;
     if (crit) p.superAttack -= 1;
     const ms = attackMs(p);
     const go = () => {
-      if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t)) return;
+      if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t, crit)) return;
       p.dir = dirTo(p.x, p.y, t.x, t.y) || p.dir;
       w.setAct(p, ACT.ATTACK, ms);
       p.busyUntil = w.time + ms;

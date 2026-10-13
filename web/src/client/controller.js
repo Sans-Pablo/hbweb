@@ -158,7 +158,7 @@ export class Controller {
 
   // golpe o disparo si el objetivo está al alcance (cuerpo a cuerpo 1 casilla, arco a cualquier distancia)
   strike(me, t) {
-    if (dist(me, t) > reachOf(this.world, me, t)) return false;
+    if (dist(me, t) > reachOf(this.world, me, t, this.critNext && (me.superAttack || 0) > 0)) return false;
     if (!this.world.busy(me) && this.world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send(this.atk(t));
     return true;
   }
@@ -230,13 +230,14 @@ export class Controller {
     if (it.t === "attack") {
       const t = world.ents.get(it.id);
       if (!t || t.dead) { this.intent = null; this.path = []; return; }
-      const reach = reachOf(world, me, t), gap = dist(me, t);
+      const critOn = this.critNext && (me.superAttack || 0) > 0, reach = reachOf(world, me, t, critOn), gap = dist(me, t);
       if (gap <= reach) {
         this.path = [];
         if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) this.conn.send(this.atk(t));
         return;
       }
-      if (run && gap === reach + 1 && reach < 4 && me.sp >= 2 && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
+      const lineUp = (me.x === t.x || me.y === t.y || Math.abs(me.x - t.x) === Math.abs(me.y - t.y));      // dash: solo en línea recta o diagonal (OBJECTATTACKMOVE)
+      if (run && gap === reach + 1 && reach < 4 && lineUp && me.sp >= 2 && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
         this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);

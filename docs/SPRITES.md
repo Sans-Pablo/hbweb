@@ -36,3 +36,6 @@ La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~l
 | Suelo/paredes de la cripta | `t300-t309`, objeto `t211` | IA + `tools/fill_tile_holes.py` para las motas negras |
 | Costuras en suelo de cripta | `tools/fix_tile_seams.py` | la IA procesa cada casilla aislada y marca el borde; no usar tone/blur sobre terreno |
 | Cuadricula de terreno (hojas t* 300 casillas) | pendiente | `fix_tile_seams.py` aplicado a todo se REVIRTIO (aspecto de upscale viejo + negros en t406-409); solo se usa en t300-t309 (cripta). Probar IA con vecinos como contexto |
+
+## Fuente de sprites de texto (interface2_1)
+`interface2_1` (285 fotogramas = 3 tipos x 95 glifos): glifo = `código-32 + 95*tipo`, avance = ancho del fotograma. Usada en `fx.js` (`sprFontDraw`) para daño, fallo y conjuros; mensajes tipo 21/22/23 -> tipo 2/1/0. Las cifras (`interface2_0` 6-15) las dibuja `gui.num`.

@@ -35,7 +35,7 @@
 - [ ] Bucle de `learn` repetido de los bots.
 
 ### P2 · Balance
-- [x] (hecho en v0.80.6) **Balance de magias, pets, habilidades de pet y daños:** sistema editable por web (`/admin/balance.html`, ficha `docs/sistemas/balance.md`). Pendiente: cubrir hechizos de monstruos, jefes, arena y bots; coste de círculos 9-10; afinar con partidas reales.
+- [x] (hecho en v0.80.6) **Balance de magias, pets, habilidades de pet y daños:** sistema editable por web (`/admin/balance.html`, ficha `docs/sistemas/balance.md`). Hechizos de monstruos y jefes cubiertos; círculos 9-10 se dejan como el original (decidido). Pendiente: arena y bots; afinar con partidas reales.
 - [ ] Cyclops/Troll/Skeleton a nivel 32-50 contra `NPC.cfg` (¿equipo del bot o monstruo?).
 - [ ] Revivir al summon menos caro (escala con su nivel).
 - [ ] Sumideros de oro (reparar, teñir, apuestas, mejora de equipo).
@@ -287,3 +287,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - Petición «porta todo esto» (bandos/PK, polymorph/slates/upgrade/DK, pesca/minería/alquimia, Teleport.cfg, fuente de sprites, Item4): PARCIAL, sin versión ni commit (el otro agente tiene cambios sin subir). Hecho: PK/reputación/Elo (systems/pk.js, tests/pk.test.mjs), Teleport.cfg (tools/convert_teleport.mjs, systems/teleport.js, tests/teleport.test.mjs), Item4 en convert.py (solo sintaxis verificada). Pendiente: cárcel arejail/elvjail, DecPKCount, textos/UI de PK, diálogo William/Gail, Polymorph/Slates/ItemUpgrade/DK/ChangeStatsMajestic, pesca/minería/alquimia/manufactura por .cfg, fuente de sprites. Fallo previo ajeno: tests/support-summon.test.mjs (balance del otro agente).
 - Petición: escenarios de rendimiento con magias/bots/monstruos, medir y capturas. HECHO v0.80.5 → `tools/perf.py` (`HB_HEADED=1`), capturas en pruebas/rendimiento/. Pendiente: magia p95 de fotograma ~26-39 ms (picos de drawImage en hojas IA grandes; ImageBitmap probado y descartado: peor).
+
+- Petición «fuente de sprites para daño/casteo + revisar críticos y dash + bots»: HECHO v0.81.0 (local, sin commit ni push: hay trabajo del otro agente mezclado). Crit/dash en `critico-dash.md`, fuente en `fx.js` (`sprFontDraw`). Pendiente: apilado de líneas del daño y la fuente en el resto de avisos.

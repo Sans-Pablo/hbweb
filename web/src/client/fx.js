@@ -9,6 +9,40 @@ import { SpellFx } from "./spellfx.js";
 const SPELL_COLORS = { 0: "197,138,255", 1: "176,138,74", 2: "207,230,255", 3: "255,122,42", 4: "74,168,255" };
 
 const FX_EVO_MS = 3000;
+// Fuente de sprites del cliente original (Game.cpp PutString_SprFont3, hoja interface2 nº1): 3 tipos × 95 glifos, cada uno con su
+// ancho; sombra negra en (0,+1) y (+1,+1) y el glifo teñido encima. Tipo por mensaje: 21→2, 22→1, 23→0 (iFontSize = 23 - tipo).
+const SPRFONT = { man: null, img: null, tint: null };
+function loadSprFont() {
+  if (SPRFONT.img) return;
+  SPRFONT.img = new Image(); SPRFONT.tint = document.createElement("canvas");
+  fetch("data/ui.json").then(r => r.json()).then(m => { SPRFONT.man = m.interface2_1; SPRFONT.img.src = "data/ui/" + m.interface2_1.png; }).catch(() => {});
+}
+const sprFontReady = () => !!(SPRFONT.man && SPRFONT.img.complete && SPRFONT.img.naturalWidth);
+function sprFontWidth(text, type) {
+  let w = 0;
+  for (const ch of text) { const f = SPRFONT.man.frames[ch.charCodeAt(0) - 32 + 95 * type]; if (f) w += f[2]; }
+  return w;
+}
+function sprFontDraw(ctx, text, cx, y, type, rgb, alpha = 1) {
+  const fr = SPRFONT.man.frames, T = SPRFONT.tint, g = T.getContext("2d");
+  let x = Math.round(cx - sprFontWidth(text, type) / 2);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = false;
+  for (const ch of text) {
+    const f = fr[ch.charCodeAt(0) - 32 + 95 * type];
+    if (!f) continue;
+    const [sx, sy, sw, sh, px, py] = f;
+    T.width = sw; T.height = sh;
+    g.drawImage(SPRFONT.img, sx, sy, sw, sh, 0, 0, sw, sh);
+    g.globalCompositeOperation = "source-atop"; g.fillStyle = "rgb(" + rgb + ")"; g.fillRect(0, 0, sw, sh);
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px, y + py + 1, sw, sh);
+    ctx.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px + 1, y + py + 1, sw, sh);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(T, 0, 0, sw, sh, x + px, y + py, sw, sh);
+    x += sw;
+  }
+  ctx.restore();
+}
 export class Fx {
   constructor(world, me) {
     this.world = world;
@@ -25,16 +59,18 @@ export class Fx {
     this.sp = new SpellFx();         // efectos de hechizos del cliente original
     this.sp.hook = (n, x, y) => this.onSfx?.(n, x, y);
     this.sp.load();
+    loadSprFont();
   }
 
   at(id) {
     const e = this.world.ents.get(id);
     return e ? posOf(e, this.world.time) : null;
   }
-  text(id, text, color, big = false, dy = 0, size = 0) {
+  // spr = tipo de la fuente de sprites (21-23, como los mensajes de cabeza del original) y color "r,g,b"
+  text(id, text, color, big = false, dy = 0, size = 0, spr = 0) {
     const p = this.at(id);
     if (!p) return;
-    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, size, born: performance.now(), dx: (Math.random() - 0.5) * 14 });
+    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, size, spr, born: performance.now(), dx: (Math.random() - 0.5) * 14 });
   }
 
   onEvent(ev) {
@@ -43,12 +79,12 @@ export class Fx {
       case "damage":
         this.flash.set(ev.id, performance.now());
         // Game.cpp (OBJECTDAMAGE): "-N" en amarillo (m_wR[13]*2), tamaño por daño (<12 / <40 / más); crítico = «Critical» (MOTION_EVENT_HANDLER3)
-        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount, "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13);
+        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount, "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) || ev.amount >= 40 ? 23 : ev.amount >= 12 ? 22 : 21);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
-      case "miss": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16); break;   // Game.cpp OBJECTDAMAGE con daño 0
+      case "miss": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16, 22); break;   // Game.cpp OBJECTDAMAGE con daño 0
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;
         const c = this.world.ents.get(ev.id);
@@ -58,7 +94,7 @@ export class Fx {
         break;
       }
       // Game.cpp OBJECTMAGIC: sobre el lanzador aparece «<Nombre del hechizo>!» (CMsg tipo 41, rojo 255,80,80)
-      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#ff5050", false, 0, 14); break; }
+      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#d23c3c", false, 0, 14, 22); break; }
       case "spell": {
         const c = this.world.ents.get(ev.id);
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);
@@ -66,7 +102,7 @@ export class Fx {
       }
       case "dummy-crit": this.text(ev.nid, "CRITICAL!", ev.cls === "healer" ? "#7fff7f" : ev.cls === "buffer" ? "#ffe84a" : "#7fc4ff", true, -18); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
-      case "resist": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16); break;
+      case "resist": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16, 22); break;
       case "exp": if (mine) this.text(ev.id, "+" + ev.amount + " exp", "#e6c869", false, -16); break;
       case "levelup": {
         const p = this.at(ev.id);
@@ -162,6 +198,11 @@ export class Fx {
       const age = now - t.born, k = age / 1100;
       if (k >= 1) continue;
       let x = t.x - camX, y = t.y - camY - 26 * k, size = 12;
+      if (t.spr && sprFontReady()) {
+        const rgb = t.color.startsWith("#") ? [1, 3, 5].map(i => parseInt(t.color.slice(i, i + 2), 16)).join(",") : t.color;
+        sprFontDraw(ctx, t.text, Math.round(x), Math.round(y), 23 - t.spr, rgb, k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3);
+        continue;
+      }
       if (remaster) {
         const pop = age < 120 ? 1 + 0.6 * (1 - age / 120) : 1;
         size = (t.size || (t.big ? 18 : 14)) * pop;
