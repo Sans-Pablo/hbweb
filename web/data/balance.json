@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "global": {},
+  "spells": { "61": { "dmg": 0.85 }, "63": { "dmg": 1.3 } },
+  "npcs": {},
+  "pets": {},
+  "petSkills": {},
+  "schools": { "hp": 1.5, "mp": 1.3, "dmg": 1.25 }
+}

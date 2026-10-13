@@ -14,6 +14,7 @@ import { addField, DYN } from "./fields.js";
 import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import * as Tal from "./talents.js";
+import * as Bal from "../balance.js";
 
 export const SHIELD_STAGES = { 3: [0.8, 0.55, 0.3], 4: [0.2] };       // % de vida a los que se levanta el escudo de hielo
 export const CLONE_STAGES = { 2: [0.75, 0.4] };
@@ -191,7 +192,7 @@ export function bossTick(w, n) {
     if (z.kind === "ember" && z.owner === n.id && w.time >= z.next) {
       z.next += 1000;
       const oid = w.grid.occupant(z.x, z.y), e = oid === undefined ? null : w.ents.get(oid);
-      if (e && !e.dead && (e.kind === "player" || e.comp)) hurtFoe(w, n, e, z.dmg, "fire");
+      if (e && !e.dead && (e.kind === "player" || e.comp)) hurtFoe(w, n, e, Bal.scale(z.dmg, Bal.monsterDmgMul(n.name)), "fire");
     }
   }
   tickDrain(w, n, b); tickFrost(w, n); tickThaw(w, n);

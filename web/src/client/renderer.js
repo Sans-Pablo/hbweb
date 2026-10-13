@@ -361,6 +361,8 @@ export class Renderer {
     for (const f of fades.values()) bucket(f.e);
     const overlays = [];
     this.bq = [];
+    this.crowdNow = 0;                                   // LOD: con mucha gente en pantalla se omiten las sombras (el fotograma anterior decide)
+    this.crowd = this.crowdLast || 0;
     for (let j = -2; j <= rows + 8; j++) {
       const ty = ty0 + j;
       for (let i = -7; i <= cols + 7; i++) {
@@ -368,7 +370,7 @@ export class Renderer {
         const list = buckets.get(ty * 100000 + tx);
         if (list) {
           if (list.length > 1) list.sort((a, b) => (a[0].dead ? 0 : 1) - (b[0].dead ? 0 : 1));
-          for (const [e, x, y] of list) this.drawEntity(e, x, y, s, overlays);
+          for (const [e, x, y] of list) { this.crowdNow++; this.drawEntity(e, x, y, s, overlays); }
         }
         const t = this.grid.tile(tx, ty);
         if (!t || !t.obj) continue;
@@ -382,6 +384,7 @@ export class Renderer {
       }
     }
 
+    this.crowdLast = this.crowdNow;
     if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
     this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
@@ -642,7 +645,7 @@ export class Renderer {
       if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
-      spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
+      if (this.crowd < 70 || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
       drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap);
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
@@ -706,7 +709,7 @@ export class Renderer {
       else if (cc && (look(e.name) === "Liche" || look(e.name) === "Frost") && e.clvl < 30) { /* idem */ }
       else if (cc) { if (look(e.name) === "Demon") { const ag = performance.now() - cc.at; flare = Math.max(0, Math.min(1, ag / 200, (1700 - ag) / 600)); } this.castCircle(ctx, x, y, cc, e, s.fx || this.fx); } }          // círculo de casteo del summon en nivel máximo: bajo sus pies, antes de la sombra y el sprite
     ctx.globalAlpha = alpha;
-    if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75, ...this.shK);   // DrawObject_OnStop: sin sombra
+    if (!e.dead && !NO_SHADOW.has(e.type) && this.crowd < 70) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75, ...this.shK);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     const hover = e.comp && e.name === "Tutelary-Angel" ? 10 * (e.clvl >= 50 ? 1.2 : 1) + 1.5 * Math.sin(performance.now() / 450 + e.id) : 0;   // Pixie: flota sobre el suelo (la sombra queda abajo)

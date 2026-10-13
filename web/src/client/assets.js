@@ -1,6 +1,7 @@
 // Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
 // (CSprite::PutSpriteFast, PutShadowSprite, PutTransSprite del cliente original).
 
+import { setBalance } from "../shared/balance.js";
 import { GameData } from "../shared/data.js";
 import { PSYCHIC_ITEM } from "../shared/classgear.js";
 import { Grid } from "../shared/grid.js";
@@ -74,6 +75,7 @@ export async function loadAssets(onProgress) {
     if (id === "arefarm") return;
     m.ensure = () => m.loading || (m.loading = response("data/maps/" + id + ".bin").then(r => r.arrayBuffer()).then(bytes => { m.grid = new Grid(mapMeta.w, mapMeta.h, new Uint8Array(bytes)); return m; }).catch(err => { m.loading = null; throw err; }));
   }));
+  setBalance(await json("data/balance.json").catch(() => ({})));                  // multiplicadores de balance (balance.js); el servidor online manda los suyos
   const data = new GameData({ items, magic, npcs: npcDb });
   setData(data);
   const pcRow = data.items?.get?.(PSYCHIC_ITEM.id);                                                     // Psychic Controller en el herrero (classgear.js)
@@ -107,6 +109,8 @@ export async function loadAssets(onProgress) {
 
 // Desplazamientos de color de las armas (Client/Game.cpp: m_wWR/G/B[1..10] menos m_wR[0]=100): se suman a cada canal.
 export const WEAPON_RGB = [null, [-30, -30, -20], [-30, -30, -20], [-30, -30, -20], [-30, 0, -30], [30, -10, -90], [-58, -47, 11], [45, 45, 45], [20, 0, 20], [-25, -90, -90], [35, 4, -70]];
+// decodifica la hoja fuera del hilo principal: el primer drawImage de una hoja grande sin decodificar costaba 100-200 ms (tirón)
+const dec = i => { i._d = 0; try { i.decode().then(() => { i._d = 1; }, () => { i._d = 1; }); } catch { i._d = 1; } return i; };
 export class Sprites {
   constructor(manifest, images, hdManifest = {}) {
     this.m = manifest;
@@ -124,7 +128,7 @@ export class Sprites {
         if (!i || (broken && (tries[k]?.n || 0) < 4 && performance.now() - (tries[k]?.at || 0) > 1500)) {
           const n = (tries[k]?.n ?? -1) + 1;
           tries[k] = { n, at: performance.now() };
-          i = new Image(); i.src = spriteUrl(manifest[k].png) + (n ? "&retry=" + n : ""); t[k] = i;
+          i = new Image(); i.src = spriteUrl(manifest[k].png) + (n ? "&retry=" + n : ""); dec(i); t[k] = i;
         }
         return i;
       },
@@ -156,17 +160,17 @@ export class Sprites {
   hdImg(key) {
     const h = this.hd && this.hdm[key]; if (!h) return null;
     let n = this.hdi[key];
-    if (!n) { n = this.hdi[key] = new Image(); n.addEventListener("error", () => { n.failed = true; }, { once: true }); n.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + (h.dir === "sprites_ia" ? IA_VERSION : ASSET_VERSION); }
+    if (!n) { n = this.hdi[key] = new Image(); n.addEventListener("error", () => { n.failed = true; }, { once: true }); n.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + (h.dir === "sprites_ia" ? IA_VERSION : ASSET_VERSION); dec(n); }
     return n;
   }
   has(key) { return !!this.m[key]; }
   // En modo remastered un sprite con hoja HD/IA no se da por listo hasta que llega esa hoja: asi nunca se dibuja la original y luego se sustituye (parpadeo).
   // Si la hoja nueva falla al descargar, se cae a la original.
   ready(key) {
-    const i = this.img[key]; if (!(i && i.complete && i.naturalWidth > 0)) return false;
+    const i = this.img[key]; if (!(i && i.complete && i.naturalWidth > 0 && i._d !== 0)) return false;
     const h = this.hd && this.hdm[key]; if (!h) return true;
     const n = this.hdImg(key);
-    return (n.complete && n.naturalWidth > 0) || !!n.failed || (n.complete && !n.naturalWidth);
+    return (n.complete && n.naturalWidth > 0 && n._d !== 0) || !!n.failed || (n.complete && !n.naturalWidth);
   }
   // espera a que estén descargados estos sprites (para no dibujar al personaje a medias)
   preload(keys) {

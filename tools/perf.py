@@ -60,8 +60,10 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True); res = {}
     for n in names:
         with game(query="offline=1") as pg:
+            import os
+            if os.environ.get("RSET"): pg.evaluate("o=>{const r=hb.renderer;for(const k in o){if(k==='hd'){r.hdOpt=o[k];r.spr.hd=o[k]}else r[k]=o[k]}}", json.loads(os.environ["RSET"]))   # variantes: {"hd":false,"lightFx":false,"lighting":false}
             for c in SCEN[n]: pg.evaluate("c=>hbDev.send(c)", c); pg.wait_for_timeout(300)
-            pg.wait_for_timeout(4000)
+            pg.wait_for_timeout(14000)
             if n in ("magia", "extremo"):   # el jugador también lanza: círculo de ataque continuo con rayos
                 pg.evaluate("()=>{ const w=hb.world; }")
             import os

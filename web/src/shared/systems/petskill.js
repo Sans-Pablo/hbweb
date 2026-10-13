@@ -4,6 +4,7 @@
 //   dot: veneno (3 golpes seguidos)       guard: escudo propio (cprot)   rage: furia propia (berserk, el golpe vale el doble)
 //   mend: cura al propio compañero        leech: golpe + cura al dueño
 import { dist } from "../const.js";
+import * as Bal from "../balance.js";
 import { sset } from "./status.js";
 import { saved } from "./talents.js";
 
@@ -34,7 +35,7 @@ export function tryUse(w, n, owner, t, c, hurt) {
   const s = skillOf(c);
   if (!s || t.kind !== "npc" || !ready(w, n, s) || dist(n, t) > Math.max(2, n.cfg.attackRange)) return false;
   n.mp -= saved(w, n, s.mp); n.skillAt = w.time + s.cd; n.castAt = w.time;
-  const base = Math.max(1, Math.round(n.dmgNow || 1)), dmg = Math.max(1, Math.round(base * (s.mult || 1)));
+  const base = Math.max(1, Math.round(n.dmgNow || 1)), dmg = Math.max(1, Bal.scale(Math.round(base * (s.mult || 1)), Bal.petSkillMul(c.sp)));
   w.emit({ t: "petskill", id: owner ? owner.id : n.id, nid: n.id, nm: c.nm || c.sp, skill: s.name, kind: s.kind, x: t.x, y: t.y });
   if (s.kind === "hit" || s.kind === "drain" || s.kind === "leech") {
     hurt(w, n, t, dmg, "skill");

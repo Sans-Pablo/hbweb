@@ -6,6 +6,7 @@
 //    cuota que crece con el nivel del compañero; así sumar su daño al del jugador nunca desequilibra (cuota máxima 0,5).
 //  - Experiencia: el compañero recibe el 40 % de lo que gana el dueño y el 50 % de la de sus propias muertes (el dueño no gana por ellas).
 import { newInst } from "./itemsys.js";
+import * as Bal from "../balance.js";
 import { groundPush } from "./ground.js";
 import * as Inv from "../inventory.js";
 import { MAX_ITEMS } from "../items.js";
@@ -56,7 +57,7 @@ export function statsOf(p, c) {
   if (Tal.isDummy(c)) return { share: 0, dmg: 0, hp: Math.round(6 + 1.2 * c.lvl) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };      // frágil: unos pocos golpes lo matan; sube poco con el nivel
   const share = shareOf(c.lvl, c.sp), f = Tal.factors(c);
   const t2 = Sch.isTier2(c.sp);                                              // especie superior de escuela: más vida y daño
-  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1))) + (c.fb?.atk || 0), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1))) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };
+  return { share, dmg: Math.max(1, Math.round(avgHit(p) * share * f.dmg * (t2 ? Sch.TIER_MULT.dmg : 1) * Bal.petDmgMul(c.sp))) + (c.fb?.atk || 0), hp: Math.max(5, Math.round(p.maxHp * Math.min(1.5, 0.5 + 0.02 * c.lvl) * f.hp * (t2 ? Sch.TIER_MULT.hp : 1) * Bal.petHpMul(c.sp))) + (c.fb?.hp || 0), mp: Tal.maxMp(c) };
 }
 
 export const OWNER_SHARE = 0.4;                                              // parte de la experiencia del dueño que recibe su compañero (0.25 hasta v0.44: los habitantes lo veían subir demasiado despacio)

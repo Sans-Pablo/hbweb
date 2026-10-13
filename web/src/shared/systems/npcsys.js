@@ -1,5 +1,6 @@
 // Monstruos: aparición en sus generadores, IA, ataque, muerte y botín.
 import { ACT, DX, DY, CORPSE_MS, CHASE_LIMIT, dirTo, dist, mobDurations } from "../const.js";
+import * as Bal from "../balance.js";
 import { STAFF_FOR, STAFF_MSG, staffOk } from "../classgear.js";
 import * as R from "../rules.js";
 import { greedyStep } from "../path.js";
@@ -41,6 +42,7 @@ export function spawnFrom(w, g) {
     // Cripta de esqueletos: cada nivel multiplica vida, daño y experiencia (g.scale); los jefes llevan además g.boss (1..4).
     if (g.scale) { n.hp = Math.ceil(n.hp * g.scale.hp); n.exp = Math.ceil(n.exp * g.scale.exp); n.dmgMul = g.scale.dmg; }
     if (g.boss) { n.boss = g.boss; n.cfg = { ...cfg, searchRange: Math.max(cfg.searchRange, 12), attackRange: Math.max(cfg.attackRange, 1) }; }   // los jefes ven de lejos y no se quedan quietos
+    n.hp = Math.max(1, Bal.scale(n.hp, Bal.monsterHpMul(g.name), Math.ceil));
     n.maxHp = n.hp;
     n.noDieRemainExp = n.exp - Math.floor(n.exp / 3);
     g.alive++;
@@ -61,7 +63,7 @@ function explode(w, n, spell, cx = n.x, cy = n.y) {
     const centre = e.x === cx && e.y === cy;
     let dmg = centre ? R.dice(w.rng, sp.v4, sp.v5) + sp.v6 : R.dice(w.rng, sp.v7, sp.v8) + sp.v9;
     if (pr === 2) dmg = Math.floor(dmg / 2);
-    damagePlayer(w, e, Math.max(0, dmg), n, "fire");
+    damagePlayer(w, e, Math.max(0, Bal.scale(dmg, Bal.monsterDmgMul(n.name))), n, "fire");     // balance: la magia del monstruo escala como su golpe
   }
 }
 

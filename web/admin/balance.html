@@ -1,0 +1,81 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Balance · Helbreath Web</title>
+<style>
+:root{color-scheme:dark;--bg:#14110d;--card:#211b14;--line:#4a3d2a;--gold:#f0d27a;--txt:#e8dcc3;--ok:#9fd48a;--bad:#e08a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,sans-serif;padding:16px}
+h1{color:var(--gold);font:600 22px Georgia,serif;margin:0 0 4px}.sub{opacity:.7;margin-bottom:12px}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:2}
+button,input{font:inherit;color:var(--txt);background:#2c2418;border:1px solid var(--line);border-radius:6px;padding:4px 9px}
+button{cursor:pointer}button:hover,button.on{border-color:var(--gold)}button.save{border-color:#4f8a3b;color:var(--ok)}
+input.m{width:68px;text-align:right}input.ch{border-color:var(--gold);background:#3a2f1a}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;overflow:auto;max-height:70vh}
+table{border-collapse:collapse;width:100%}th,td{padding:4px 8px;text-align:right;border-bottom:1px solid #3a3022;white-space:nowrap}
+th{color:var(--gold);position:sticky;top:-12px;background:var(--card);cursor:pointer}th:first-child,td:first-child{text-align:left}
+.hi{color:var(--bad)}.lo{color:#8ab4e0}.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+#msg{margin-left:8px}.hint{opacity:.65;font-size:12px;margin:6px 0}
+</style></head><body>
+<h1>Balance del juego</h1><div class="sub" id="sub">Cargando…</div>
+<div class="tools"><button class="save" id="save">Guardar y aplicar</button><button id="reset">Restablecer todo a 1</button><button id="exp">Exportar JSON</button><button id="imp">Importar JSON</button><span id="msg"></span></div>
+<div class="tools">Mag del lanzador <input id="mag" class="m" type="number" value="100"> Nivel de pet <input id="plv" class="m" type="number" value="30"> Daño medio del jugador <input id="avg" class="m" type="number" value="25"></div>
+<nav id="tabs"></nav><div class="card" id="body"></div>
+<script type="module">
+import { SPECIES } from "/src/shared/systems/companion.js";
+import { SKILLS } from "/src/shared/systems/petskill.js";
+const tok = new URLSearchParams(location.search).get("token"), $ = s => document.querySelector(s);
+const j = u => fetch(u).then(r => r.json());
+const [magic, npcs, saved] = await Promise.all([j("/data/magic.json"), j("/data/npc.json"), fetch("/api/admin/balance?token=" + tok).then(r => r.ok ? r.json() : null)]);
+if (!saved) { $("#sub").textContent = "Sin acceso: abre esta página desde el PC del servidor con ?token=…"; throw 0; }
+let cfg = structuredClone(saved), orig = JSON.stringify(saved), tab = "global", sortKey = null, sortDir = -1;
+const MULT = { global: "Globales", spells: "Hechizos", npcs: "Monstruos", pets: "Pets", petSkills: "Habilidades de pet", schools: "Escuelas" };
+const GLABEL = { playerMelee: "Daño cuerpo a cuerpo del jugador a monstruos", playerSpell: "Daño de hechizos del jugador a monstruos", monsterDmg: "Daño de monstruos a jugadores", monsterHp: "Vida de monstruos", petDmg: "Daño de las pets", petHp: "Vida de las pets", petSkill: "Daño de habilidades de pet", field: "Daño de campos (Fire Field, etc.)", heal: "Curación", pvp: "Daño jugador contra jugador", spellMana: "Coste de maná de los hechizos" };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mval = (sec, id, f) => sec === "global" ? cfg.global[id] ?? 1 : sec === "schools" ? cfg.schools[id] ?? 1 : sec === "petSkills" ? cfg.petSkills[id] ?? 1 : cfg[sec][id]?.[f] ?? 1;
+function inp(sec, id, f) { const v = mval(sec, id, f); return `<input class="m ${v !== 1 ? "ch" : ""}" type="number" step="0.05" min="0" max="20" value="${v}" data-s="${sec}" data-i="${esc(id)}" data-f="${f || ""}">`; }
+const fmt = (n, d = 1) => Number.isFinite(n) ? n.toFixed(d) : "–";
+const G = k => cfg.global[k] ?? 1;
+function spellRows() {
+  const mag = +$("#mag").value || 1, ids = Object.keys(magic).filter(i => magic[i].type === 3 && magic[i].v4 > 0);
+  const rows = ids.map(id => { const s = magic[id], b = s.v4 * (s.v5 + 1) / 2 + s.v6, base = b * (1 + mag / 3.3 / 100);
+    const dmg = base * G("playerSpell") * (cfg.spells[id]?.dmg ?? 1), mana = Math.max(1, s.mana * G("spellMana") * (cfg.spells[id]?.mana ?? 1));
+    return { id, name: s.name, circ: s.category ?? "", int: s.reqInt, mana0: s.mana, dmg0: base, dmg, mana, eff: dmg / mana }; });
+  const med = rows.map(r => r.eff).sort((a, b) => a - b)[rows.length >> 1] || 1;
+  return rows.map(r => ({ ...r, rel: r.eff / med }));
+}
+function monsterRows() { const avg = +$("#avg").value || 1;
+  return Object.entries(npcs).map(([name, n]) => { const dice = (n.attackDiceThrow || 1) * ((n.attackDiceRange || 1) + 1) / 2, hp = (n.hitDice || 1) * 4.5 + 10;
+    const hm = cfg.npcs[name]?.hp ?? 1, dm = cfg.npcs[name]?.dmg ?? 1;
+    return { id: name, name, hitDice: n.hitDice, dice0: dice, hp: hp * hm * G("monsterHp"), dmg: dice * dm * G("monsterDmg"), ttk: hp * hm * G("monsterHp") / (avg * G("playerMelee")) }; }); }
+function petRows() { const lvl = +$("#plv").value || 1, avg = +$("#avg").value || 1;
+  return Object.keys(SPECIES).map(sp => { const dm = (cfg.pets[sp]?.dmg ?? 1) * G("petDmg"), hm = (cfg.pets[sp]?.hp ?? 1) * G("petHp");
+    const sk = SKILLS[sp], skm = (cfg.petSkills[sp] ?? 1) * G("petSkill");
+    return { id: sp, name: sp, dmg: avg * 0.5 * dm, hp: 100 * Math.min(1.5, 0.5 + 0.02 * lvl) * hm, skill: sk ? sk.name + " ×" + fmt((sk.mult || 0) * skm, 2) : "–" }; }); }
+const tables = {
+  spells: () => ({ cols: [["name", "Hechizo"], ["circ", "Cat"], ["int", "Int"], ["mana0", "Maná base"], ["mana", "Maná"], ["dmg0", "Daño base"], ["dmg", "Daño"], ["eff", "Daño/maná"], ["rel", "Vs mediana"], ["_d", "× daño"], ["_m", "× maná"]], rows: spellRows(), inputs: { _d: ["spells", "dmg"], _m: ["spells", "mana"] } }),
+  npcs: () => ({ cols: [["name", "Monstruo"], ["hitDice", "Dados vida"], ["hp", "Vida aprox."], ["dice0", "Daño base"], ["dmg", "Daño"], ["ttk", "Golpes para matar"], ["_h", "× vida"], ["_d", "× daño"]], rows: monsterRows(), inputs: { _h: ["npcs", "hp"], _d: ["npcs", "dmg"] } }),
+  pets: () => ({ cols: [["name", "Especie"], ["hp", "Vida (100 base)"], ["dmg", "Daño/golpe"], ["skill", "Habilidad"], ["_d", "× daño"], ["_h", "× vida"]], rows: petRows(), inputs: { _d: ["pets", "dmg"], _h: ["pets", "hp"] } }),
+  petSkills: () => ({ cols: [["name", "Especie"], ["skill", "Habilidad"], ["_s", "× habilidad"]], rows: petRows(), inputs: { _s: ["petSkills", ""] } }),
+};
+function render() {
+  $("#tabs").innerHTML = Object.entries(MULT).map(([k, v]) => `<button class="${k === tab ? "on" : ""}" data-t="${k}">${v}</button>`).join("");
+  const b = $("#body");
+  if (tab === "global") b.innerHTML = `<div class="hint">1 = comportamiento del original. 2 = el doble. Los cambios se aplican en caliente a todo el servidor al guardar.</div><table>` + Object.keys(GLABEL).map(k => `<tr><td>${GLABEL[k]}</td><td>${inp("global", k)}</td></tr>`).join("") + "</table>";
+  else if (tab === "schools") b.innerHTML = `<div class="hint">Multiplicadores de los summons de segundo nivel (evoluciones) sobre el base: vida, maná y daño.</div><table>` + [["hp", "Vida"], ["mp", "Maná"], ["dmg", "Daño"]].map(([k, n]) => `<tr><td>${n}</td><td>${inp("schools", k)}</td></tr>`).join("") + "</table>";
+  else { const t = tables[tab](); if (sortKey) t.rows.sort((a, c) => (typeof a[sortKey] === "string" ? a[sortKey].localeCompare(c[sortKey]) : a[sortKey] - c[sortKey]) * sortDir);
+    b.innerHTML = `<table><tr>` + t.cols.map(([k, n]) => `<th data-k="${k}">${n}</th>`).join("") + "</tr>" + t.rows.map(r => "<tr>" + t.cols.map(([k]) => {
+      if (t.inputs[k]) return `<td>${inp(t.inputs[k][0], r.id, t.inputs[k][1])}</td>`;
+      const v = r[k]; return `<td class="${k === "rel" ? (v > 1.5 ? "hi" : v < 0.67 ? "lo" : "") : ""}">${typeof v === "number" ? fmt(v, k === "rel" || k === "eff" ? 2 : 1) : esc(v ?? "")}</td>`; }).join("") + "</tr>").join("") + "</table>"; }
+  $("#sub").textContent = "v" + (cfg.version || 1) + " · " + (JSON.stringify(cfg) === orig ? "sin cambios" : "cambios sin guardar");
+}
+function set(sec, id, f, v) { v = Math.max(0, Math.min(20, +v)); if (!Number.isFinite(v)) return;
+  if (sec === "global" || sec === "schools") cfg[sec][id] = v; else if (sec === "petSkills") cfg.petSkills[id] = v;
+  else { (cfg[sec][id] ||= {})[f] = v; if (v === 1) { delete cfg[sec][id][f]; if (!Object.keys(cfg[sec][id]).length) delete cfg[sec][id]; } } }
+document.addEventListener("change", e => { const t = e.target; if (t.dataset?.s) { set(t.dataset.s, t.dataset.i, t.dataset.f, t.value); render(); } else if (t.id) render(); });
+document.addEventListener("click", async e => { const t = e.target;
+  if (t.dataset.t) { tab = t.dataset.t; sortKey = null; render(); }
+  else if (t.dataset.k) { sortDir = sortKey === t.dataset.k ? -sortDir : -1; sortKey = t.dataset.k; render(); }
+  else if (t.id === "reset" && confirm("¿Poner todos los multiplicadores a 1?")) { cfg = { version: 1, global: {}, spells: {}, npcs: {}, pets: {}, petSkills: {}, schools: { hp: 1, mp: 1, dmg: 1 } }; render(); }
+  else if (t.id === "save") { const r = await fetch("/api/admin/balance?token=" + tok, { method: "POST", body: JSON.stringify(cfg) }); if (r.ok) { cfg = await r.json(); orig = JSON.stringify(cfg); $("#msg").textContent = "Guardado y aplicado ✓"; } else $("#msg").textContent = "Error al guardar"; render(); }
+  else if (t.id === "exp") { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(cfg, null, 2)], { type: "application/json" })); a.download = "balance.json"; a.click(); }
+  else if (t.id === "imp") { const i = document.createElement("input"); i.type = "file"; i.accept = ".json"; i.onchange = async () => { try { cfg = JSON.parse(await i.files[0].text()); render(); $("#msg").textContent = "Importado: falta guardar"; } catch { $("#msg").textContent = "JSON no válido"; } }; i.click(); } });
+render();
+</script></body></html>

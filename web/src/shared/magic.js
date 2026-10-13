@@ -1,5 +1,6 @@
 // Magia: fórmulas del servidor original (PlayerMagicHandler, Effect_Damage_Spot, bCheckResistingMagicSuccess).
 import { dice, MIN_HIT, MAX_HIT } from "./rules.js";
+import * as Bal from "./balance.js";
 
 const MC_PROB = [0, 300, 250, 200, 150, 100, 80, 70, 60, 50, 40];       // _tmp_iMCProb
 const MC_PENALTY = [0, 5, 5, 8, 8, 10, 14, 28, 32, 36, 40];             // _tmp_iMLevelPenalty
@@ -63,9 +64,9 @@ export const MAGIC_MODE = { free: false, player: true, schools: true };   // sch
 // modo «Full mage» (F1 → Herramientas): por jugador, equivale a MAGIC_MODE.free solo para él (todo aprendido, sin maná)
 export const freeFor = p => MAGIC_MODE.free || !!(p && p.fullMage);
 export const NO_PLAYER_MAGIC = "los hechizos están cerrados";
-export function manaCost(p, spell) {
+export function manaCost(p, spell, id) {
   if (freeFor(p)) return 0;
-  let c = spell.mana;
+  let c = Bal.scale(spell.mana, Bal.spellManaMul(id));
   if (p.eff.manaSave > 0) { c = Math.floor(c - (p.eff.manaSave / 100) * c); if (c <= 0) c = 1; }
   if (p.eff.wtype === 34) c += 20;
   return c;

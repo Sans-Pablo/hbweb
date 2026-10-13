@@ -1,6 +1,7 @@
 // Objetos dinámicos de los hechizos de campo (CheckDynamicObjectList / DynamicObjectEffectProcessor):
 // muro y campo de fuego, nube venenosa, tormenta de hielo y campo de pinchos. Se procesan una vez por segundo.
 import * as Boss from "./bosses.js";
+import * as Bal from "../balance.js";
 import { dice } from "../rules.js";
 import { sget, sset, sclear } from "./status.js";
 import { damagePlayer } from "./combatsys.js";
@@ -33,6 +34,7 @@ export { iceResisted };
 // daño directo de un campo (sin atacante): al morir un monstruo no da experiencia a nadie
 function hit(w, e, dmg, f) {
   if (e.dead) return;
+  dmg = Bal.scale(dmg, Bal.fieldMul());
   if (e.kind === "player") {
     if (e.st && sget(w, e, "hold")) sclear(w, e, "hold");
     damagePlayer(w, e, dmg, { id: f.owner || 0 }, f.type === DYN.FIRE || f.type === DYN.FIRE3 ? "fire" : f.type === DYN.ICESTORM ? "ice" : f.type === DYN.PCLOUD ? "poison" : undefined);
