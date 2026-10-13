@@ -45,7 +45,7 @@ Otro agente también empuja a `main`. Proceso completo y ahorro de tokens: `docs
 F1 muestra `web/data/news.json` (novedades, lista de pruebas, notas). Cada cambio visible se anota ahí en el mismo commit (`docs/sistemas/novedades.md`).
 
 ## Documentación
-`docs/ORIGINAL.md` dónde está el código original en este PC · `docs/ESTADO.md` estado y pendientes · `docs/FINDINGS.md` trampas · `docs/SPRITES.md` sprites clave (claves, prefijos, trampas) · `docs/sistemas/*.md` una ficha por sistema.
+`docs/ORIGINAL.md` dónde está el código original en este PC · `docs/BACKLOG.md` tickets vigentes y orden · `docs/ESTADO.md` estado · `docs/FINDINGS.md` trampas · `docs/SPRITES.md` sprites clave (claves, prefijos, trampas) · `docs/sistemas/*.md` una ficha por sistema.
 
 ## Versión visible
 `web/data/version.json` ({version, name}) se muestra junto a los fps (arriba a la izquierda). Súbela en cada entrega para que los testers sepan qué build prueban.

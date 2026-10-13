@@ -1,5 +1,7 @@
 # Estado del proyecto
 
+> **Backlog vigente: `docs/BACKLOG.md` (2026-10-13).** El TO-DO de abajo es histórico.
+
 **Hecho:** granja de Aresden jugable; combate con fórmulas del servidor original; ítems originales (568 de Item.cfg), mochila de 50 casillas, peso, equipar con requisitos, absorción por parte del cuerpo, durabilidad (solo con bando), botín con las tasas originales (1/1), habilidades con maestría, resistencia, hambre; opciones (Esc), mapa tipo Diablo II, correr con R, guardado en el navegador.
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
