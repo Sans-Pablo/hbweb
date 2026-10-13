@@ -140,11 +140,12 @@ ITEM_FIELDS = ["type", "equipPos", "effectType", "v1", "v2", "v3", "v4", "v5", "
                "seV1", "seV2", "skill", "category", "color"]
 
 def read_items(server, hb):
-    """Item.cfg + Item2.cfg + Item3.cfg del servidor -> {id: {name, display, ...}} (ids únicos entre los tres)."""
+    """Item.cfg + Item2.cfg + Item3.cfg + Item4.cfg del servidor -> {id: {name, display, ...}} (ids únicos entre los tres)."""
     import re
     items = {}
-    for fn in ("Item.cfg", "Item2.cfg", "Item3.cfg"):
+    for fn in ("Item.cfg", "Item2.cfg", "Item3.cfg", "Item4.cfg"):
         path = os.path.join(server, "Files", fn)
+        if not os.path.exists(path): continue            # Item4.cfg: ítems de la versión 3.x del original (tools/add_missing_items.mjs los importa ya)
         for line in open(path, encoding="latin-1"):
             if line.strip().startswith("[ENDITEMLIST]"): break
             m = re.match(r"\s*Item\s*=\s*(\d+)\s+(\S+)\s+(.*)", line)

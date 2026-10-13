@@ -1,5 +1,6 @@
 // Lanzar y aprender hechizos.
 import { ACT, PLAYER, dist, dirTo } from "../const.js";
+import * as Bal from "../balance.js";
 import { dice } from "../rules.js";
 import { gainSSN } from "../skills.js";
 import { EQUIP } from "../items.js";
@@ -73,7 +74,7 @@ function usable(w, p, cmd) {
   }
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
-  if (p.mp < M.manaCost(p, sp)) return w.reject(p, cmd, "maná insuficiente");
+  if (p.mp < M.manaCost(p, sp, cmd.spell)) return w.reject(p, cmd, "maná insuficiente");
   return sp;
 }
 
@@ -97,7 +98,7 @@ export function cast(w, p, cmd) {
   if (sget(w, p, "inhibit")) return w.reject(p, cmd, "inhibido");
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
-  const cost = M.manaCost(p, sp);
+  const cost = M.manaCost(p, sp, cmd.spell);
   if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
 
   p.lastCast = w.time;
@@ -175,7 +176,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
-    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * schoolMult);
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * schoolMult * Bal.spellDmgMul(id));
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damageNpc(w, tgt, dmg, p, null, half);
@@ -203,7 +204,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     case 2: {                                                          // curación
       const t = target;
       if (t && t.kind === "player" && !t.dead && t.hp < t.maxHp) {
-        const heal = dice(w.rng, sp.v4, sp.v5) + sp.v6;
+        const heal = Bal.scale(dice(w.rng, sp.v4, sp.v5) + sp.v6, Bal.healMul());
         t.hp = Math.min(t.maxHp, t.hp + heal);
         w.emit({ t: "heal", id: t.id, amount: heal, by: p.id });
       }
