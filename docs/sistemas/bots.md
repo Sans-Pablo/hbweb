@@ -1,6 +1,6 @@
 # Bots (jugadores simulados) — INVENTO del port
 
-Código: `shared/systems/bot.js`, `Adventure.spawnBot/botOp` (`adventure.js`), `debug.js` (ops `bot`, `botclear`), `client/devtools.js` (F1 → Bots). Tests: `tests/bot.test.mjs`, `tests/net-bot.test.mjs`.
+Código: `shared/systems/bot.js`, `Adventure.spawnBot/botOp` (`adventure.js`), `debug.js` (ops `bot`, `botclear`), `client/newswin.js` (F1 → Herramientas → Bots). Tests: `tests/bot.test.mjs`, `tests/net-bot.test.mjs`.
 
 - **Qué son**: entidades `kind: "player"` sin conexión. Se ven y cuentan como jugadores (grupo, HP en el marco de grupo, equipo visible `ap`) y deciden con las MISMAS órdenes que un cliente (`adv.command`: move, attack, pickup, equip, use, stat, say, respawn): no tienen atajos de reglas.
 - **Invocar**: F1 → Bots (cuenta con herramientas de admin, `HB_DEBUG`): *Invocar bot* (entra en tu grupo y te sigue), *Bot suelto* (caza por su cuenta alrededor de su punto de nacimiento), *Quitar bots*. Hasta 10 por orden y 40 en total; nivel inicial 1–50. Los bots de un jugador se van cuando éste sale.

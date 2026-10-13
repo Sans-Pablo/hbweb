@@ -4,6 +4,8 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
+- [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
+
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
 
 ### P0 · Servidor oficial siempre online y de mínima latencia (pedido 2026-10-13)
@@ -33,6 +35,7 @@
 - [ ] Bucle de `learn` repetido de los bots.
 
 ### P2 · Balance
+- [x] (hecho en v0.80.6) **Balance de magias, pets, habilidades de pet y daños:** sistema editable por web (`/admin/balance.html`, ficha `docs/sistemas/balance.md`). Pendiente: cubrir hechizos de monstruos, jefes, arena y bots; coste de círculos 9-10; afinar con partidas reales.
 - [ ] Cyclops/Troll/Skeleton a nivel 32-50 contra `NPC.cfg` (¿equipo del bot o monstruo?).
 - [ ] Revivir al summon menos caro (escala con su nivel).
 - [ ] Sumideros de oro (reparar, teñir, apuestas, mejora de equipo).
@@ -281,3 +284,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - ia-0.80.34: equalize_detail también en terreno de granja (t0,t3,t4,t5,t19,t337,t339–343) e interiores (t406–413, t418–421). Backups pre-ecualización: `$TEMP/eq_bak`.
 
 - Petición: documento md de magias (lore, fórmulas, balance, simulaciones). HECHO v0.80.4 → docs/sistemas/magias-diseno.md.
+
+- Petición «porta todo esto» (bandos/PK, polymorph/slates/upgrade/DK, pesca/minería/alquimia, Teleport.cfg, fuente de sprites, Item4): PARCIAL, sin versión ni commit (el otro agente tiene cambios sin subir). Hecho: PK/reputación/Elo (systems/pk.js, tests/pk.test.mjs), Teleport.cfg (tools/convert_teleport.mjs, systems/teleport.js, tests/teleport.test.mjs), Item4 en convert.py (solo sintaxis verificada). Pendiente: cárcel arejail/elvjail, DecPKCount, textos/UI de PK, diálogo William/Gail, Polymorph/Slates/ItemUpgrade/DK/ChangeStatsMajestic, pesca/minería/alquimia/manufactura por .cfg, fuente de sprites. Fallo previo ajeno: tests/support-summon.test.mjs (balance del otro agente).
+- Petición: escenarios de rendimiento con magias/bots/monstruos, medir y capturas. HECHO v0.80.5 → `tools/perf.py` (`HB_HEADED=1`), capturas en pruebas/rendimiento/. Pendiente: magia p95 de fotograma ~26-39 ms (picos de drawImage en hojas IA grandes; ImageBitmap probado y descartado: peor).

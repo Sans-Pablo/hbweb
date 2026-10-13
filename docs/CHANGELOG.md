@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.80.7 · Ventanas dentro del juego (2026-10-13)
+- Nuevo toolkit `client/window.js` (marco clásico, botones de piedra, texto, párrafos, casillas, deslizadores, campos, listas desplegables, zonas con scroll, `Flow`) y prompts `gui.ask`/`gui.confirm` en el lienzo. Ficha `docs/sistemas/ventanas.md`, test `tests/window.test.mjs`.
+- F1 (`client/newswin.js`) y Opciones (F12) ya no son HTML: se dibujan en el lienzo con el cursor del juego. Eliminados `client/news.js`, `client/devtools.js` y los paneles `#news`/`#options`; `gui.actions` conecta Opciones con guardar/exportar/importar/tutorial.
+- `gui` admite diálogos modales (`modal`), teclado propio (`key`) y captura de ratón (`cap`); el puesto de venta usa `gui.ask`.
+- Opciones: ventana algo más alta (el botón de cerrar sesión quedaba cortado).
+- Esta entrega incluye también el trabajo sin publicar de 0.80.5 (rendimiento) y 0.80.6 (balance).
+
+## 0.80.6 · Balance (2026-10-13)
+- Nuevo sistema de balance: `shared/balance.js` + `web/data/balance.json` + `/api/admin/balance` + página `web/admin/balance.html` (enlace desde `/admin`). Multiplicadores por hechizo (daño/maná), monstruo, pet, habilidad de pet, escuela y globales (melee, PvP, campos, curas). Todo ×1 = original.
+- Ajuste inicial: Mass Fire Strike ×0.85, Mass Chill Wind ×1.3, escuelas `mp` 1.6 → 1.3.
+- `tests/balance.test.mjs`, ficha `docs/sistemas/balance.md`.
+
+## 0.80.5 · Pruebas de rendimiento (2026-10-13)
+- `tools/perf.py`: escenarios autónomos (base, bots20, monstruos, magia, extremo) con GPU real (`HB_HEADED=1`), medición de dibujo/fotograma, capturas en `pruebas/rendimiento/` y `resultados.json`; `PROF=1` imprime el perfil.
+- `renderer.js`: los bloques de suelo con hojas aún sin cargar ya no se regeneran en cada fotograma (reintento cada 3 s); LOD: con ≥70 entidades en pantalla se omiten las sombras (salvo la propia).
+- Medido (RTX 4060): magia 50-54 fps, extremo (40 bots + 30 monstruos + Full mage) 19 → 45 fps.
+- `tools/e2e.py` funciona también en Windows (Chromium de Playwright).
+
 ## 0.80.4 · Documento de magias (2026-10-13)
 - `tools/sim_magia.mjs` + `tools/magia_lore.mjs` generan `docs/sistemas/magias-diseno.md`: 65 magias con lore, fórmulas, simulaciones de daño/maná, escuelas y hallazgos de balance.
 

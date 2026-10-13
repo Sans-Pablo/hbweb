@@ -32,7 +32,7 @@ export function registerDialogs(gui, api) {
     id: 1, x: 110, y: 90, w: 270, h: 376,
     draw(g, me) {
       g.put("dialogtext_0", 0, 0, 0);
-      const side = me.side, name = me.name + " : Contribution (0)";
+      const side = me.side, name = me.name + " : Contribution (" + (me.warContribution | 0) + ")";
       g.aligned(24, 252, 52, name, INK);
       g.aligned(0, 275, 69, side === 1 ? "Aresden Combatant" : side === 2 ? "Elvine Combatant" : "Traveller", INK);
       const L = (v, y, x1 = 180, x2 = 250) => g.aligned(x1, x2, y, String(v), INK);
@@ -413,7 +413,7 @@ export function registerDialogs(gui, api) {
   ];
   const optRows = [];                                   // [x, y, fila] de cada interruptor, calculado al dibujar
   const mods = {
-    id: 60, x: 210, y: 70, w: 380, h: 440,
+    id: 60, x: 210, y: 62, w: 380, h: 472,
     draw(g, me) {
       const c = g.ctx, S = api.sys(), m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
       c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);
@@ -444,9 +444,9 @@ export function registerDialogs(gui, api) {
       for (const [x, y, r] of optRows) if (lx >= x && lx < x + 170 && ly >= y - 2 && ly < y + 16) { r.set(!r.get()); return true; }
       const i = Math.floor((ly - this._y) / 26), col = Math.floor((lx - 16) / 116);
       if (ly >= this._y && ly < this._y + 22 + 26 && i >= 0 && i <= 1 && col >= 0 && col <= 2 && (lx - 16) % 116 < 108 && (ly - this._y) % 26 < 22) {
-        const n = i * 3 + col, $ = id => document.getElementById(id);
-        if (n === 0) setLang(getLang() === "es" ? "en" : "es"); else if (n === 1) $("btn-save")?.click(); else if (n === 2) $("btn-tutorial")?.click();
-        else if (n === 3) $("btn-export")?.click(); else if (n === 4) $("btn-import")?.click(); else g.toggle(19);
+        const n = i * 3 + col, A = g.actions || {};
+        if (n === 0) setLang(getLang() === "es" ? "en" : "es"); else if (n === 1) A.save?.(); else if (n === 2) A.tutorial?.();
+        else if (n === 3) { if (A.canExport) A.exportSave?.(); } else if (n === 4) A.importSave?.(); else g.toggle(19);
         return true;
       }
       const yb = this._y + 58;

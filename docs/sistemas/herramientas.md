@@ -1,6 +1,6 @@
 # Herramientas de prueba (F1 → Herramientas)
 
-INVENTO del port, solo para testers. Código: `client/devtools.js` (panel), `shared/systems/debug.js` (órdenes `{t:"dbg", op}`), viaje en `Adventure.debugTravel`. `DEBUG.enabled` es `true` en la build local; el servidor (`server/server.mjs`) las apaga salvo con `HB_DEBUG=1`.
+INVENTO del port, solo para testers. Código: `client/newswin.js` (pestaña Herramientas de F1), `shared/systems/debug.js` (órdenes `{t:"dbg", op}`), viaje en `Adventure.debugTravel`. `DEBUG.enabled` es `true` en la build local; el servidor (`server/server.mjs`) las apaga salvo con `HB_DEBUG=1`.
 
 | Sección | Operaciones |
 |---|---|

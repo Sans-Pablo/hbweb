@@ -268,11 +268,11 @@ export class Win {
     const c = g.ctx, ui = this.ui = new Ui(this, g); this.g = g;
     const fr = frameCanvas(g, this.w, this.h);
     if (fr) c.drawImage(fr, 0, 0, fr.width, fr.height, 0, 0, this.w, this.h); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); c.fillStyle = "#2a2014"; c.fillRect(17, 31, this.w - 34, this.h - 53); }
-    if (this.title) g.text(this.w / 2, 9, this.title, THEME.title, { align: "center", bold: true });
+    if (this.title) g.text(this.w / 2, 15, this.title, THEME.title, { align: "center", bold: true });
     this.body(ui, me, world);
     ui.finish();
     if (!this.nox) {                                                   // aspa de cierre
-      const x = this.w - 42, y = 7, over = ui.hov(x, y, 16, 16);
+      const x = this.w - 44, y = 12, over = ui.hov(x, y, 16, 16);
       c.fillStyle = over ? "#8a1c14" : "#3a2a1a"; c.fillRect(x, y, 16, 16); c.strokeStyle = over ? "#ffb08a" : "#a88a48"; c.strokeRect(x + .5, y + .5, 15, 15);
       c.strokeStyle = over ? "#fff" : "#e8d9b0"; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 4, y + 4); c.lineTo(x + 12, y + 12); c.moveTo(x + 12, y + 4); c.lineTo(x + 4, y + 12); c.stroke(); c.lineWidth = 1;
       ui.hit(x, y, 16, 16, { fn: () => { g.close(this.id); return true; } });

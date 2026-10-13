@@ -101,10 +101,7 @@ body.mobile.m-focus #m-joy, body.mobile.m-focus #m-actions, body.mobile.m-focus 
 body.mobile.m-focus #m-close { display: block; }
 /* paneles DOM (opciones, novedades...) a pantalla casi completa */
 body.mobile .panel.open { position: fixed !important; left: 6px !important; right: 6px !important; top: 6px !important; bottom: 6px !important; width: auto !important; transform: none !important; overflow: auto; z-index: 9; }
-body.mobile #news .scroll { max-height: none; }
-body.mobile #options label { margin: 12px 0; font-size: 15px; } body.mobile #options input[type=checkbox] { width: 24px; height: 24px; }
-body.mobile #options button, body.mobile #news button { min-height: 40px; } body.mobile .panel .close { width: 44px; height: 44px; font-size: 26px; z-index: 3; }
-body.mobile #options kbd, body.mobile #news kbd { display: none; }
+body.mobile .panel .close { width: 44px; height: 44px; font-size: 26px; z-index: 3; }
 body.mobile #log { left: max(8px, env(safe-area-inset-left)); bottom: 150px; width: min(46vw, 360px); font-size: 12px; }
 body.mobile #chat { left: 8px; right: 8px; width: auto; bottom: 8px; z-index: 12; } body.mobile #chat input { font-size: 16px; }
 body.mobile #toast { font-size: 18px; }

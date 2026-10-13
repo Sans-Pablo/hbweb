@@ -294,7 +294,6 @@ async function main() {
   opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)
   opts.autoAttack = true;                            // al entrar siempre con el ataque automático activado
   if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
-  const optionsEl = document.getElementById("options");
   function applyOpts() {
     view.showMinimap = opts.map; view.mapStyle = "corner"; view.showGrid = opts.grid;
     if (sound.on !== opts.sound) sound.toggle();
@@ -306,23 +305,13 @@ async function main() {
     if (fx.sp) fx.sp.off = !opts.spellFx;
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
-    for (const el of optionsEl.querySelectorAll("[data-opt]")) {
-      const v = opts[el.dataset.opt];
-      if (el.type === "checkbox") el.checked = !!v; else el.value = v;
-    }
     store.set("opts", JSON.stringify(opts));
   }
   function setOpt(k, v) { opts[k] = v; applyOpts(); }
-  optionsEl.addEventListener("change", e => {
-    const el = e.target.closest("[data-opt]"); if (!el) return;
-    setOpt(el.dataset.opt, el.type === "checkbox" ? el.checked : el.value);
-  });
   // Teclas del cliente original (Game.cpp, OnKeyUp/OnKeyDown). Las acciones tienen nombre propio;
   // los botones de la interfaz usan los mismos nombres.
   // BUG-018: el clic derecho nunca abre el menú de Windows (ni en los paneles DOM como F1); solo se respeta en campos de texto
   document.addEventListener("contextmenu", e => { if (!e.target.closest?.("input[type=text],input:not([type]),textarea")) e.preventDefault(); });
-  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options" };
-  const togglePanel = id => document.getElementById(id).classList.toggle("open");
   const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "", whisper: true, shout: true };
   const shortcuts = [null, null];                        // F2 / F3: { item: id } | { spell: id }
   try { Object.assign(shortcuts, JSON.parse(store.get("shortcuts", "[]"))); } catch {}
@@ -492,7 +481,7 @@ async function main() {
         case "escape": {
           const open = document.querySelectorAll(".panel.open");
           for (const p of open) p.classList.remove("open");
-          for (const id of [91, 90, NEWS_ID, 17, 23, 20, 31, 11, 14, 16]) if (gui.isOpen(id)) { gui.close(id); break; }   // Esc cierra el cuadro de NPC de más arriba
+          for (const id of [91, 90, NEWS_ID, 60, 17, 23, 20, 31, 11, 14, 16]) if (gui.isOpen(id)) { gui.close(id); break; }   // Esc cierra el cuadro de NPC de más arriba
           break;
         }
         case "char": gui.toggle(1); break;
@@ -501,15 +490,15 @@ async function main() {
         case "news": gui.toggle(NEWS_ID); break;
         case "skill": gui.toggle(15); break;
         case "book": gui.toggle(3); break;
-        default: if (PANELS[a]) togglePanel(PANELS[a]);
       }
     },
   };
   // cuenta: guardar, copia de seguridad, cerrar sesión
   const $id = i => document.getElementById(i);
-  if (online) $id("btn-export").parentElement.style.display = "none";
-  $id("btn-save").onclick = () => { conn.save?.(); hud.toast("Partida guardada"); };
-  $id("btn-export").onclick = () => {
+  gui.actions = {};
+  gui.actions.canExport = !online;
+  gui.actions.save = () => { conn.save?.(); hud.toast("Partida guardada"); };
+  gui.actions.exportSave = () => {
     conn.save?.();
     const txt = Accounts.exportSave(store.get("name", ""));
     if (!txt) return hud.toast("Aún no hay nada guardado");
@@ -519,7 +508,7 @@ async function main() {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
-  $id("btn-import").onclick = () => $id("file-import").click();
+  gui.actions.importSave = () => $id("file-import").click();
   $id("file-import").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
     try {
@@ -529,8 +518,7 @@ async function main() {
       location.reload();
     } catch (err) { hud.toast(err.message); }
   };
-  $id("btn-tutorial").onclick = () => { optionsEl.classList.remove("open"); tutorial.restart(); };
-  $id("btn-logout").onclick = () => { conn.save?.(); location.reload(); };
+  gui.actions.tutorial = () => { gui.close(60); tutorial.restart(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.canWhisper = () => flags.whisper;
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };

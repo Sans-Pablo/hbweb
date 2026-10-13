@@ -108,9 +108,6 @@
   .panel h3 { margin: 0 0 4px; color: var(--brass); font: 600 18px Georgia, serif; }
   .panel h3 small { color: var(--muted); font: 13px "Segoe UI", sans-serif; margin-left: 6px; }
   .panel .close { position: absolute; right: 8px; top: 6px; background: none; border: 0; font-size: 20px; color: var(--muted); }
-  #options { left: 50%; top: 50%; transform: translate(-50%,-50%); width: 320px; }
-  #options label { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 9px 0; color: var(--text, #e8dcc0); }
-  #options select { background: #1a1815; color: inherit; border: 1px solid #5a4a2c; padding: 3px 6px; }
   #charpanel { left: 14px; top: 50px; width: 290px; }
   #charpanel .pool { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
   #charpanel .pool b { color: #ffd76a; }
@@ -146,26 +143,6 @@
   #inv .detail .acts button { background: #2c2414; border: 1px solid var(--brass); border-radius: 6px; color: #ffd76a; padding: 3px 10px; font-size: 12px; }
   #charpanel .sk { display: grid; grid-template-columns: 1fr auto; font-size: 12px; padding: 1px 0; color: var(--muted); }
   #charpanel .sk b { color: var(--parch); }
-  #news { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, 94%); font-size: 13px; }
-  #news p { color: var(--muted); font-size: 12px; margin: 4px 0; }
-  #news .build { color: var(--brass); }
-  #news nav { display: flex; gap: 6px; margin: 8px 0; }
-  #news nav button { padding: 4px 12px; background: #1b1814; border: 1px solid #5a4a2c; color: var(--muted); border-radius: 6px; cursor: pointer; }
-  #news nav button.on { color: #f0d080; border-color: #b8943f; }
-  #news .scroll { max-height: min(60vh, 460px); overflow: auto; padding-right: 6px; }
-  #news h4 { margin: 10px 0 4px; color: #e6c869; font-size: 14px; }
-  #news h4 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
-  #news ul { margin: 0; padding-left: 18px; }
-  #news ul.checks { list-style: none; padding-left: 0; }
-  #news li { padding: 3px 0; line-height: 1.4; }
-  #news label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
-  #news .dev { margin: 6px 0; padding: 6px 8px; border: 1px solid #3a3020; border-radius: 6px; }
-  #news .dev h4 { margin: 0 0 4px; }
-  #news .devrow { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-  #news .devrow button, #news .devrow select, #news .devrow input { background: #1b1814; border: 1px solid #5a4a2c; color: #e8dcc0; border-radius: 5px; padding: 2px 7px; font-size: 12px; }
-  #news .devrow button { cursor: pointer; }
-  #news .devrow button:hover { border-color: #e6c869; }
-  #news .reset { margin-top: 10px; background: none; border: 1px solid #5a4a2c; color: var(--muted); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
 
   #death { position: absolute; inset: 0; display: none; place-items: center; background: radial-gradient(rgba(60,0,0,.35), rgba(0,0,0,.75)); pointer-events: auto; }
   #death h2 { font: 700 40px Georgia, serif; color: #e04a3a; margin: 0 0 14px; text-shadow: 0 2px 0 #000; text-align: center; }
@@ -255,9 +232,6 @@ body.dialogtrans .panel { opacity: .55; }
   #join .tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
   #join .tabs button { flex: 1; padding: 6px; background: #1b1810; color: #bba; border: 1px solid #4a3f28; border-radius: 6px; cursor: pointer; }
   #join .tabs button.on { background: #3a2f18; color: #ffd76a; border-color: #ffd76a; }
-  #options .acct { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
-  #options .acct b { width: 100%; }
-  #options .acct button { padding: 4px 8px; font-size: 12px; background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; cursor: pointer; }
   #join .langsw, #options .langsw { display: flex; gap: 6px; margin: 4px 0 8px; justify-content: center; }
   #join .langsw button, #options .langsw button { padding: 3px 10px; background: #1b1810; color: #bba; border: 1px solid #4a3f28; border-radius: 6px; cursor: pointer; font-size: 12px; }
   #join .langsw button.on, #options .langsw button.on { background: #3a2f18; color: #ffd76a; border-color: #ffd76a; }
@@ -292,8 +266,7 @@ body.dialogtrans .panel { opacity: .55; }
     #create .cols { gap: 10px; } #create h2 { margin: 0 0 6px; font-size: 18px; }
     #join form { padding: 12px 16px; } #join .where, #join .hint, #joininfo { display: none; } #join .tabs, #join .langsw { margin: 2px 0 6px; }
     #join input { padding: 7px 9px; margin-top: 2px; } #join button { margin-top: 8px; }
-    #news { width: 96%; } #news .scroll { max-height: 62vh; }
-  }
+    }
   @media (max-width: 700px) { .panel { max-width: 96vw; } #options { width: 94vw; } #inv, #book, #charpanel { width: 94vw; } #inv .grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); } }
 </style>
 <div id="create"></div>
@@ -335,39 +308,7 @@ body.dialogtrans .panel { opacity: .55; }
   <div id="book" class="panel"><button class="close" data-key="book">×</button><h3>Libro de magia</h3>
     <p class="hint">Aprende con oro y elige uno. Elige un hechizo: el siguiente clic izquierdo lo lanza, el derecho cancela.</p><div class="list"></div></div>
 
-  <div id="options" class="panel">
-    <button class="close" data-key="escape">×</button>
-    <h3>Opciones</h3>
-    <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
-    <label><input type="checkbox" data-opt="run"> Correr (<kbd>Ctrl</kbd>+<kbd>R</kbd>)</label>
-    <label><input type="checkbox" data-opt="map"> Mostrar mapa (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</label>
-    <label>Estilo del mapa
-      <select data-opt="mapStyle"><option value="corner">Esquina</option><option value="overlay">Superpuesto (estilo Diablo II)</option></select></label>
-    <label><input type="checkbox" data-opt="autoAttack"> Ataque automático (clic izquierdo sobre un monstruo)</label>
-    <label><input type="checkbox" data-opt="grid"> Mostrar casillas bloqueadas</label>
-    <b>Mejoras</b>
-    <label><input type="checkbox" data-opt="classicCursor"> Cursor clásico del juego</label>
-    <label><input type="checkbox" data-opt="hdSprites"> Sprites y terreno en HD (solo Remastered)</label>
-    <label><input type="checkbox" data-opt="lighting"> Luz y viñeta (solo Remastered)</label>
-    <label><input type="checkbox" data-opt="spellFx"> Animaciones de hechizos</label>
-    <label><input type="checkbox" data-opt="groundInfo"> Info de objetos del suelo (atributos y precio)</label>
-    <div class="acct"><b>Cuenta</b>
-      <button type="button" id="btn-tutorial">Repetir tutorial</button>
-      <button type="button" id="btn-save">Guardar ahora</button>
-      <button type="button" id="btn-export">Exportar copia</button>
-      <button type="button" id="btn-import">Importar copia</button>
-      <button type="button" id="btn-logout">Cerrar sesión</button>
-      <input type="file" id="file-import" accept=".json,application/json" hidden></div>
-    <label><input type="checkbox" data-opt="sound"> Sonido (<kbd>Ctrl</kbd>+<kbd>S</kbd>)</label>
-    <label>Gráficos
-      <select data-opt="mode"><option value="classic">Clásico</option><option value="remastered">Remastered</option></select></label>
-  </div>
-
-  <div id="news" class="panel">
-    <button class="close" data-key="news">×</button>
-    <h3>F1</h3>
-    <div class="body"></div>
-  </div>
+  <input type="file" id="file-import" accept=".json,application/json" hidden>
 
   <div id="chat"><input maxlength="120" placeholder="Escribe y pulsa Intro (Esc para cancelar)"></div>
   <div id="death"><div><h2>Has muerto</h2><button>Reaparecer <kbd>Intro</kbd></button></div></div>

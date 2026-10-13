@@ -1,4 +1,4 @@
-// F1 dentro del juego: novedades, lista de pruebas, notas y herramientas de prueba (data/news.json + devtools). Ventana del lienzo (window.js).
+// F1 dentro del juego: novedades, lista de pruebas, notas y herramientas de prueba (data/news.json + herramientas de prueba). Ventana del lienzo (window.js).
 import { Win, Flow, THEME } from "./window.js";
 import { getLang } from "./i18n.js";
 import { SPECIES as ALL_SPECIES } from "../shared/systems/companion.js";
@@ -29,7 +29,7 @@ export class NewsWin extends Win {
     const d = this.data, lang = getLang(), I = this.inner, w = I.w;
     if (!d) { ui.text(I.x, I.y, "Cargando…", THEME.dim); return; }
     ui.text(I.x, I.y, L(d.build), THEME.head, { bold: true, shadow: true });
-    const ih = ui.para(I.x, I.y + 16, w, L(d.intro), THEME.dim);
+    const ih = ui.para(I.x, I.y + 16, w, L(d.intro), THEME.txt);
     const ty = I.y + 20 + ih; let tx = I.x;
     for (const [k, es, en] of TABS) {
       const label = lang === "en" ? en : es, bw = Math.max(90, Math.ceil(ui.tw(label)) + 24);
