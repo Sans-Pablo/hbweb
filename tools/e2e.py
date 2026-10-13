@@ -37,7 +37,7 @@ def _player(b, mobile, skip_tutorial, query, size, user=None):
     pg.user = user or "e2e" + str(random.randint(1000, 9999))
     click('#join [data-tab=new]'); pg.fill('#join .user', pg.user); pg.fill('#join .pass', 'abcdef'); pg.fill('#join .pass2', 'abcdef')
     click('#join .go'); pg.wait_for_timeout(2500)
-    click("text=Crear personaje >> nth=-1"); pg.wait_for_function("window.hb && hb.world", timeout=30000); pg.wait_for_timeout(2500)
+    click("button:has-text(\"Crear personaje\") >> nth=-1"); pg.wait_for_function("window.hb && hb.world", timeout=30000); pg.wait_for_timeout(2500)
     if skip_tutorial: pg.evaluate("()=>hb.tutorial&&hb.tutorial.skipAll&&hb.tutorial.skipAll()"); pg.wait_for_timeout(400)
     return pg
 
@@ -46,7 +46,7 @@ def players(n=1, mobile=False, skip_tutorial=True, query="", size=None):
     """n jugadores (cada uno en su contexto de navegador) sobre el mismo servidor/URL; úsalo con query="server=http://localhost:8088" para el modo online."""
     srv = _serve()
     with sync_playwright() as p:
-        b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium", args=["--no-sandbox"])
+        b = p.chromium.launch(channel=os.environ["HB_CHANNEL"], args=["--no-sandbox"]) if os.environ.get("HB_CHANNEL") else p.chromium.launch(executable_path="/opt/pw-browsers/chromium", args=["--no-sandbox"]) if os.path.exists("/opt/pw-browsers/chromium") else p.chromium.launch(headless=not os.environ.get("HB_HEADED"), args=["--no-sandbox", "--ignore-gpu-blocklist"])
         try: yield [_player(b, mobile, skip_tutorial, query, size) for _ in range(n)]
         finally:
             b.close()

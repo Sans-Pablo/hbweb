@@ -56,6 +56,43 @@ export class Renderer {
     this.cam = null; this.chunks.clear(); this.buildMinimap();
   }
 
+  // Luz dinámica (remastered): una capa de ambiente oscuro a la que cada personaje le abre un foco cálido, más un brillo aditivo encima.
+  // Sombras largas: se alargan e inclinan hacia el lado contrario de la luz principal (arriba a la derecha).
+  drawLights(s, ctx, VW, VH, camX, camY, time) {
+    const L = this.lc || (this.lc = document.createElement("canvas")), g = L.getContext("2d");
+    if (L.width !== VW || L.height !== VH) { L.width = VW; L.height = VH; }
+    const night = s.sky?.night || 0, dark = 0.34 + 0.4 * night;
+    g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, VW, VH);
+    g.fillStyle = night > 0.05 ? "rgba(6,8,28," + dark + ")" : "rgba(14,12,30," + dark + ")";
+    g.fillRect(0, 0, VW, VH);
+    g.globalCompositeOperation = "destination-out";
+    const spots = [];
+    for (const e of s.world.ents.values()) {
+      if (e.kind !== "player" || e.dead) continue;
+      const [px, py] = posOf(e, time), x = px - camX, y = py - camY - 18;
+      if (x < -300 || y < -300 || x > VW + 300 || y > VH + 300) continue;
+      spots.push([x, y, e === s.me ? 230 + 60 * night : 130]);
+    }
+    for (const [x, y, R] of spots) {
+      const f = 1 + 0.03 * Math.sin(time / 260 + x), r = R * f, h = g.createRadialGradient(x, y, 8, x, y, r);
+      h.addColorStop(0, "rgba(0,0,0,1)"); h.addColorStop(0.55, "rgba(0,0,0,0.7)"); h.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = h; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    ctx.drawImage(L, 0, 0);
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    for (const [x, y, R] of spots) {
+      const r = R * 0.9, h = ctx.createRadialGradient(x, y, 4, x, y, r);
+      h.addColorStop(0, "rgba(255,190,110,0.20)"); h.addColorStop(0.5, "rgba(255,150,70,0.07)"); h.addColorStop(1, "rgba(255,140,60,0)");
+      ctx.fillStyle = h; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    ctx.restore();
+    const v = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.35, VW / 2, VH / 2, Math.max(VW, VH) * 0.75);
+    v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(4,4,12,0.45)");
+    ctx.fillStyle = v; ctx.fillRect(0, 0, VW, VH);
+  }
+  get shK() { return this.mode === "remastered" && this.lightFx ? [0.42, 0.6] : [1 / 3, 1 / 3]; }
+
   setMode(m) { this.mode = m; this.spr.hd = m === "remastered" && this.hdOpt !== false; this.cam = null; this.layout(); }
 
   resize() {
@@ -96,29 +133,88 @@ export class Renderer {
     return [(px - this.ox) / this.scale + this.camX, (py - this.oy) / this.scale + this.camY];
   }
 
-  groundChunk(cx, cy) {
+  // rows: filas de casillas que se dibujan en esta llamada (el precalentado reparte un bloque entre varios fotogramas)
+  groundChunk(cx, cy, rows = CHUNK) {
     const hd = !!this.spr.hd, k = cx + "," + cy + (hd ? "h" : "");
     let c = this.chunks.get(k);
     if (c) return c;
+    const late = this.late || (this.late = new Map()), lt = late.get(k), now = performance.now();
+    // bloque con hojas aún sin cargar: solo se rehace cuando llega alguna de las que faltaban (o cada 3 s por si una no llega nunca); antes, cada fotograma (40-200 ms c/u)
+    if (lt && now - lt.t < 3000 && !lt.miss.some(m => this.spr.ready(m) && !(hd && this.spr.hdm[m] && this.spr.src(m)[1] === 1))) return lt.c;
     const Q = hd ? 2 : 1;                                   // remastered: el suelo se pregenera al doble de resolución
-    c = document.createElement("canvas");
-    c.width = c.height = CHUNK * T * Q;
-    const g = c.getContext("2d");
-    g.scale(Q, Q);
-    g.imageSmoothingEnabled = hd; g.imageSmoothingQuality = "high";
-    let ready = true;
-    for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) {
-      const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + j);
+    const wip = this.wip || (this.wip = new Map());
+    let st = wip.get(k);
+    if (!st) {
+      c = document.createElement("canvas"); c.width = c.height = CHUNK * T * Q;
+      const g = c.getContext("2d"); g.scale(Q, Q);
+      g.imageSmoothingEnabled = hd; g.imageSmoothingQuality = "high";
+      st = { c, g, j: 0, ready: true, miss: new Set() }; wip.set(k, st);
+    }
+    const { g } = st;
+    for (const end = Math.min(CHUNK, st.j + rows); st.j < end; st.j++) for (let i = 0; i < CHUNK; i++) {
+      const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + st.j);
       if (t) {
-        if (!this.spr.ready("t" + t.spr)) ready = false;
-        else if (hd && this.spr.hdm["t" + t.spr] && this.spr.src("t" + t.spr)[1] === 1) ready = false;   // espera a la hoja HD
-        this.spr.put(g, "t" + t.spr, t.frame, i * T, j * T);
+        if (!this.spr.ready("t" + t.spr)) { st.ready = false; st.miss.add("t" + t.spr); }
+        else if (hd && this.spr.hdm["t" + t.spr] && this.spr.src("t" + t.spr)[1] === 1) { st.ready = false; st.miss.add("t" + t.spr); }   // espera a la hoja HD
+        this.spr.put(g, "t" + t.spr, t.frame, i * T, st.j * T);
       }
     }
+    if (st.j < CHUNK) return null;                          // a medias: quien lo pide por precalentado lo ignora
+    wip.delete(k);
+    if (st.ready && hd) this.blendTone(st.c, g, cx, cy, Q);
     // Una hoja pendiente no debe dejar un bloque vacío guardado para toda la partida.
-    if (ready) this.chunks.set(k, c);
-    if (this.chunks.size > 96) this.chunks.delete(this.chunks.keys().next().value);
-    return c;
+    if (st.ready) { this.chunks.set(k, st.c); late.delete(k); } else late.set(k, { c: st.c, t: now, miss: [...st.miss] });
+    if (this.chunks.size > 160) this.chunks.delete(this.chunks.keys().next().value);
+    return st.c;
+  }
+
+  // color medio de una casilla (null si tiene transparencia: bordes y mezclas no se tocan)
+  tileMean(t) {
+    const key = "t" + t.spr, m = this.tmCache || (this.tmCache = new Map());
+    let sheet = m.get(key);
+    if (!sheet) {                                                  // una sola lectura por hoja: se reduce entera y se promedia en la CPU
+      sheet = new Map(); m.set(key, sheet);
+      const [img, k] = this.spr.src(key), S = 8, fs = T * k;       // 8x8 píxeles por casilla
+      const w = Math.ceil(img.naturalWidth / fs) * S, h = Math.ceil(img.naturalHeight / fs) * S;
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      const x = cv.getContext("2d", { willReadFrequently: true }); x.imageSmoothingQuality = "high"; x.drawImage(img, 0, 0, w, h);
+      const d = x.getImageData(0, 0, w, h).data;
+      for (let f = 0, fr; (fr = this.spr.frame(key, f)); f++) {
+        const gx = Math.round(fr[0] * k / fs) * S, gy = Math.round(fr[1] * k / fs) * S;
+        let r = 0, g = 0, b = 0, a = 0;
+        for (let yy = 0; yy < S; yy++) for (let xx = 0; xx < S; xx++) { const o = ((gy + yy) * w + gx + xx) * 4; r += d[o]; g += d[o + 1]; b += d[o + 2]; a += d[o + 3]; }
+        sheet.set(f, a < S * S * 250 ? null : [r / (S * S), g / (S * S), b / (S * S)]);
+      }
+    }
+    return sheet.get(t.frame) ?? null;
+  }
+  // Las casillas del original tienen cada una su tono: se acerca el de cada casilla al de su vecindario (factor interpolado entre centros, sin saltos en los bordes)
+  blendTone(c, g, cx, cy, Q) {
+    const N = CHUNK, M = N + 2, mean = [];                       // medias de la rejilla con 1 casilla de margen
+    for (let j = -1; j <= N; j++) for (let i = -1; i <= N; i++) { const t = this.grid.tile(cx * N + i, cy * N + j); mean.push(t && this.spr.ready("t" + t.spr) ? this.tileMean(t) : null); }
+    const at = (i, j) => mean[(j + 1) * (N + 2) + (i + 1)];
+    const fac = new Float32Array((N + 2) * (N + 2) * 3).fill(1);
+    for (let j = -1; j <= N; j++) for (let i = -1; i <= N; i++) {
+      const m0 = at(i, j); if (!m0) continue;
+      const s = [0, 0, 0]; let n = 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const o = (i + di >= -1 && i + di <= N && j + dj >= -1 && j + dj <= N) ? at(i + di, j + dj) : null; if (o) { s[0] += o[0]; s[1] += o[1]; s[2] += o[2]; n++; } }
+      for (let k = 0; k < 3; k++) fac[((j + 1) * M + i + 1) * 3 + k] = Math.min(1.15, Math.max(0.87, 1 + 0.85 * (s[k] / n / Math.max(m0[k], 8) - 1)));
+    }
+    // En la GPU: mapa de factores (1 px por casilla) ampliado con suavizado = interpolación bilineal entre centros.
+    // Oscurecer = multiply; aclarar = suma (aprox.), sin recorrer píxeles en la CPU.
+    const mk = (f) => { const cv = this.tnCv || (this.tnCv = [document.createElement("canvas"), document.createElement("canvas")]); return cv; };
+    const [dk, br] = mk(); dk.width = dk.height = br.width = br.height = M;
+    const dx = dk.getContext("2d"), bx = br.getContext("2d"), di = dx.createImageData(M, M), bi = bx.createImageData(M, M);
+    for (let n = 0; n < M * M; n++) for (let k = 0; k < 3; k++) {
+      const f = fac[n * 3 + k]; di.data[n * 4 + k] = Math.min(f, 1) * 255; bi.data[n * 4 + k] = Math.max(f - 1, 0) * 700;
+      if (k === 0) { di.data[n * 4 + 3] = 255; bi.data[n * 4 + 3] = 255; }
+    }
+    dx.putImageData(di, 0, 0); bx.putImageData(bi, 0, 0);
+    const P = T * Q;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.globalCompositeOperation = "multiply"; g.drawImage(dk, -P, -P, M * P, M * P);
+    g.globalCompositeOperation = "lighter"; g.globalAlpha = 0.14; g.drawImage(br, -P, -P, M * P, M * P);
+    g.restore();
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -159,7 +255,22 @@ export class Renderer {
     const span = CHUNK * T;
     for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
       for (let cx = Math.floor(camX / span); cx * span < camX + VW; cx++)
-        if (cx >= 0 && cy >= 0) ctx.drawImage(this.groundChunk(cx, cy), cx * span - camX, cy * span - camY, span, span);
+        if (cx >= 0 && cy >= 0) {
+          // bordes del bloque alineados a píxel físico: con zoom fraccionario quedaba una línea oscura entre bloques
+          const sc = this.scale, x0 = Math.floor((cx * span - camX) * sc), y0 = Math.floor((cy * span - camY) * sc);
+          const x1 = Math.ceil(((cx + 1) * span - camX) * sc), y1 = Math.ceil(((cy + 1) * span - camY) * sc);
+          ctx.drawImage(this.groundChunk(cx, cy), x0 / sc, y0 / sc, (x1 - x0) / sc, (y1 - y0) / sc);
+        }
+
+    // precalienta (1 por fotograma) los bloques de alrededor para que al llegar a ellos ya estén hechos: sin tirón al andar
+    {
+      const hdk = this.spr.hd ? "h" : "", c0x = Math.floor(camX / span), c0y = Math.floor(camY / span), c1x = Math.floor((camX + VW) / span), c1y = Math.floor((camY + VH) / span);
+      let built = false;
+      for (let r = 1; r <= 2 && !built; r++)
+        for (let cy = c0y - r; cy <= c1y + r && !built; cy++)
+          for (let cx = c0x - r; cx <= c1x + r && !built; cx++)
+            if (cx >= 0 && cy >= 0 && !this.chunks.has(cx + "," + cy + hdk)) { this.groundChunk(cx, cy, 3); built = true; }
+    }
 
     this.drawPortals(s, camX, camY);
     this.drawFields(s, camX, camY);
@@ -275,7 +386,8 @@ export class Renderer {
     this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
     // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
-    if (remaster && this.lighting !== false) {
+    if (remaster && this.lighting !== false && this.lightFx) this.drawLights(s, ctx, VW, VH, camX, camY, time);   // luz dinámica: ambiente oscuro con focos
+    else if (remaster && this.lighting !== false) {
       const cx = ppx - camX, cy = ppy - camY - 20, R = Math.max(VW, VH) * 0.75;
       const g = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
       g.addColorStop(0, "rgba(255,200,120,0.06)");
@@ -530,7 +642,7 @@ export class Renderer {
       if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
-      spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75);
+      spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
       drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap);
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
@@ -594,7 +706,7 @@ export class Renderer {
       else if (cc && (look(e.name) === "Liche" || look(e.name) === "Frost") && e.clvl < 30) { /* idem */ }
       else if (cc) { if (look(e.name) === "Demon") { const ag = performance.now() - cc.at; flare = Math.max(0, Math.min(1, ag / 200, (1700 - ag) / 600)); } this.castCircle(ctx, x, y, cc, e, s.fx || this.fx); } }          // círculo de casteo del summon en nivel máximo: bajo sus pies, antes de la sombra y el sprite
     ctx.globalAlpha = alpha;
-    if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75);   // DrawObject_OnStop: sin sombra
+    if (!e.dead && !NO_SHADOW.has(e.type)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75, ...this.shK);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     const hover = e.comp && e.name === "Tutelary-Angel" ? 10 * (e.clvl >= 50 ? 1.2 : 1) + 1.5 * Math.sin(performance.now() / 450 + e.id) : 0;   // Pixie: flota sobre el suelo (la sombra queda abajo)

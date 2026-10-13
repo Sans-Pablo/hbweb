@@ -33,6 +33,16 @@ const OPS = {
   heal(w, p) { p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100; say(w, p, "HP, MP, SP and hunger full"); },
   // Modo «0 restricciones»: sin báculo/Psychic Controller, sin tope de nivel del dueño al subir al summon (classgear.staffOk, dummy.hasStaff, companion.addExp)
   free(w, p) { p.free = !p.free; say(w, p, p.free ? "0 restrictions: on (no staff, no level cap for pets)" : "0 restrictions: off"); },
+  // «Full mage»: stats a 200, todos los hechizos aprendidos y sin gasto de maná (magic.js freeFor); los lanza el jugador a mano
+  fullmage(w, p) {
+    p.fullMage = !p.fullMage;
+    if (p.fullMage) {
+      for (const k of Object.keys(p.stats)) p.stats[k] = 200;
+      for (const id in w.magic) if (w.magic[id]) p.magic[id] = 1;
+      w.recalc(p); p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp;
+    }
+    say(w, p, p.fullMage ? "Full mage: on (stats 200, all spells, no mana cost)" : "Full mage: off (spells stay learned)");
+  },
   god(w, p) { p.god = !p.god; say(w, p, p.god ? "Invulnerable: on" : "Invulnerable: off"); },
   skills(w, p, c) { const n = num(c.n, 0, 100, 50); for (const k of Object.keys(SKILL_NAMES)) p.skills[k] = n; w.recalc(p); say(w, p, "All skills set to " + n); },
   // todos (jugadores y habitantes, en todos los mapas) vuelven al nivel 1 con sus atributos de partida, como al arrancar el servidor

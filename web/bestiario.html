@@ -25,10 +25,10 @@
 <body>
 <header>
   <b>Sprite Tool</b>
-  <a href="armeria.html">Armería →</a>
+  <a href="armeria.html">Armería →</a> <a href="terreno.html">Terreno →</a>
   <label class="nr">Criatura / personaje <select id="sp"></select></label>
   <label>Vista <select id="mode"><option value="evo">Evolución (etapas × direcciones)</option><option value="dirs">Un nivel, 8 direcciones</option><option value="raw">Hojas sueltas (todos los sprites)</option></select></label>
-  <label class="mo">Modelo <select id="model"><option value="cmp">Comparar los 4 (filas)</option><option value="0">1 · Original</option><option value="1">2 · HD actual</option><option value="2">3 · IA (Real-ESRGAN)</option><option value="3">4 · IA + luz (simulada)</option></select></label>
+  <label class="nr">Modelo <select id="model"><option value="cmp">Comparar los 4 (filas)</option><option value="0">1 · Original</option><option value="1">2 · HD actual</option><option value="2">3 · IA (Real-ESRGAN)</option><option value="3">4 · IA + luz (simulada)</option></select></label>
   <span class="pcc" style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap">
     <label>Piel <select id="pc-skin"></select></label>
     <label>Peinado <select id="pc-hair"></select></label>
@@ -49,7 +49,7 @@
   <label class="nr">Acción <select id="act"></select></label>
   <label class="nr">Dirección <select id="dir"><option value="0">Todas</option></select></label>
   <label>Zoom <select id="zoom"><option>1</option><option selected>1.5</option><option>2</option><option>3</option></select></label>
-  <label class="mo"><input type="checkbox" id="side" checked> Original al lado</label>
+  <label class="nr"><input type="checkbox" id="side" checked> Original al lado</label>
   <label class="mo"><input type="checkbox" id="comp" checked> Como summon</label>
   <label class="mo"><input type="checkbox" id="cast"> Círculo de casteo</label>
   <span id="cc" class="mo" style="display:none;gap:10px;align-items:center;flex-wrap:wrap">

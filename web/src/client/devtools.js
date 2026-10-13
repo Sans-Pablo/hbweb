@@ -25,7 +25,7 @@ export function devHtml(lang) {
   return `<p>${L(lang, "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.", "Testing only: what you do here is saved with the game. Results show in the chat log.")}</p>` +
     row(L(lang, "Personaje", "Character"),
       `Lv ${num("lvl", 30, 1, 50)} ${b("level", "Set level")} ${b("exp", "+1000 exp", 'data-n="1000"')} ${b("gold", "+100k gold", 'data-n="100000"')} ${b("points", "+5 points", 'data-n="5"')}` +
-      ` ${b("heal", "Heal all")} ${b("resetall", L(lang, "Reset all (todos a nivel 1)", "Reset all (everyone to level 1)"))} ${b("god", "Invulnerable on/off")} ${b("free", L(lang, "0 restricciones on/off", "0 restrictions on/off"))} ${b("skills", "Skills 50", 'data-n="50"')}` +
+      ` ${b("heal", "Heal all")} ${b("resetall", L(lang, "Reset all (todos a nivel 1)", "Reset all (everyone to level 1)"))} ${b("fullmage", "Full mage on/off")} ${b("god", "Invulnerable on/off")} ${b("free", L(lang, "0 restricciones on/off", "0 restrictions on/off"))} ${b("skills", "Skills 50", 'data-n="50"')}` +
       ` <select id="dv-stat">${opt(["str", "vit", "dex", "int", "mag", "chr"])}</select> ${num("statv", 50, 1, 500)} ${b("stat", "Set stat")}`) +
     row(L(lang, "Ir a", "Go to"),
       `<select id="dv-map">${opt(maps)}</select> ${b("goto", "Go")} ` +
@@ -62,7 +62,7 @@ export function devClick(e) {
     case "botclear": send({ op }); break;
     case "botsnew": if (!confirm("Restart all bots from scratch?")) break; send({ op }); break;
     case "resetall": if (!confirm("Reset all?")) break; send({ op }); break;
-    case "heal": case "god": case "free": case "clear": case "killall": case "freeze": case "petheal": case "petreset": send({ op }); break;
+    case "heal": case "fullmage": case "god": case "free": case "clear": case "killall": case "freeze": case "petheal": case "petreset": send({ op }); break;
     case "goto": send({ op, map: val("map") }); break;
     case "bosshp": send({ op, n: val("bhp") }); break;
     case "crypt": send({ op, level: val("clv") }); break;

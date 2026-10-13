@@ -290,22 +290,25 @@ export class SpellFx {
     const fr = m.frames[f];
     if (!fr) return;
     const [sx, sy, sw, sh, px, py] = fr;
-    ctx.save();
-    ctx.globalCompositeOperation = mode === "add" ? "lighter" : mode === "rev" ? "multiply" : "source-over";
+    const pa = ctx.globalAlpha, po = ctx.globalCompositeOperation;      // sin save/restore: es más barato con cientos de sprites
+    ctx.globalCompositeOperation = mode === "add" ? "lighter" : "source-over";
     ctx.globalAlpha = Math.min(1, a);
     ctx.drawImage(img, sx, sy, sw, sh, Math.round(x + px), Math.round(y + py), sw, sh);
-    ctx.restore();
+    ctx.globalAlpha = pa; ctx.globalCompositeOperation = po;
   }
 
   update() {
     if (this.off) { this.list.length = 0; return; }
-    const now = performance.now();
-    for (const e of [...this.list]) {
+    const now = performance.now(), L = this.list;
+    for (let i = 0, n = L.length; i < n; i++) {                      // los efectos nuevos (add durante step) se añaden al final y se procesan el próximo fotograma
+      const e = L[i];
       if (e.dead || now - e.t <= e.ft) continue;
       e.t = now; this.step(e);
     }
-    this.list = this.list.filter(e => !e.dead);
-    if (this.list.length > 600) this.list.splice(0, this.list.length - 600);
+    let w = 0;
+    for (let i = 0; i < L.length; i++) if (!L[i].dead) L[w++] = L[i];
+    L.length = w;
+    if (L.length > 400) L.splice(0, L.length - 400);
   }
 
   draw(ctx, camX, camY) {
@@ -416,9 +419,16 @@ export class SpellFx {
   // _DrawThunderEffect: rayo irregular que avanza a trompicones de (sx,sy) hacia (dx,dy)
   thunder(ctx, sX, sY, dX, dY, rX, rY, kind) {
     const pts = [[sX, sY]];
-    let ix = sX, iy = sY, err = 0, tx = sX, ty = sY;
+    let ix = sX, iy = sY, tx = sX, ty = sY;
+    // misma recta que getPoint(sX,sY,dX,dY,0,j*10) pero avanzando en incremental con dx/dy fijos (antes se recalculaba desde cero: coste cuadrático)
+    let ldx = dX - sX, ldy = dY - sY, xi = 1, yi = 1, err = 0, left = (sX === dX && sY === dY) ? 0 : Math.max(Math.abs(ldx), Math.abs(ldy)) + 1;
+    if (ldx < 0) { xi = -1; ldx = -ldx; } if (ldy < 0) { yi = -1; ldy = -ldy; }
+    const major = ldx > ldy;
     for (let j = 0; j < 100; j++) {
-      [tx, ty, err] = getPoint(sX, sY, dX, dY, 0, j * 10);
+      for (let k = j === 0 ? 1 : j === 1 ? 9 : 10; k > 0 && left > 0; k--, left--) {
+        if (major) { err += ldy; if (err > ldx) { err -= ldx; ty += yi; } tx += xi; }
+        else { err += ldx; if (err > ldy) { err -= ldy; tx += xi; } ty += yi; }
+      }
       switch (nextDir(ix, iy, tx, ty)) {
         case 1: rY -= 5; break; case 2: rY -= 5; rX += 5; break; case 3: rX += 5; break; case 4: rX += 5; rY += 5; break;
         case 5: rY += 5; break; case 6: rX -= 5; rY += 5; break; case 7: rX -= 5; break; case 8: rX -= 5; rY -= 5; break;

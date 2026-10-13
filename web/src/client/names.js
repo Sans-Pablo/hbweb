@@ -11,4 +11,5 @@ export const itemSet = s => (s <= 19 ? s - 1 : s - 3);
 export const groundKey = d => "ig" + itemSet(d.sprite);
 export const packKey = d => "ip" + itemSet(d.sprite);
 // clave de icono: los báculos de escuela llevan su tinte fijo detrás de «#» (gui.putGame lo separa y tiñe)
-export const iconKey = d => packKey(d) + (d.tint ? "#" + d.tint : "");
+// it: la instancia; su color en un arma usa la paleta aditiva del original (WEAPON_RGB), con prefijo «w»
+export const iconKey = (d, it) => packKey(d) + (it && it.color > 0 && it.color <= 10 && (d.equipPos === 8 || d.equipPos === 9) ? "#w" + it.color : d.tint ? "#" + d.tint : "");

@@ -95,6 +95,20 @@ export function unequip(p, data, uid) {
   return false;
 }
 
+// CheckHeroItemEquipped (HG.cpp): el conjunto completo de héroe (casco, armadura, brazales y pantalón del mismo bando y sexo; ids de items.h 403-426)
+// da 1 (guerrero: +100 acierto, +5 daño) o 2 (mago: +4 daño de hechizo). Ids: casco 403+2s+g, gorro 407+2s+g, coraza 411+2s+g, túnica 415+2s+g, brazales 419+2s+g, pantalón 423+2s+g (s: 0 Aresden/1 Elvine, g: 0 macho/1 hembra).
+function heroBonus(p, data) {
+  const id = pos => { const u = p.equip[pos]; return u === undefined ? -1 : (instOf(p, u)?.id ?? -1); };
+  const h = id(EQUIP.HEAD), b = id(EQUIP.BODY), a = id(EQUIP.ARMS), l = id(EQUIP.LEGGINGS);
+  if (h < 0 || b < 0 || a < 0 || l < 0) return 0;
+  for (let k = 0; k < 4; k++) {                                       // k = 2*lado + sexo
+    if (a !== 419 + k || l !== 423 + k) continue;
+    if (h === 403 + k && b === 411 + k) return 1;
+    if (h === 407 + k && b === 415 + k) return 2;
+  }
+  return 0;
+}
+
 // CalcTotalItemEffect: todo lo que el equipo cambia en el combate
 export function recalc(p, data) {
   const s = p.stats;
@@ -102,7 +116,7 @@ export function recalc(p, data) {
     sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
     defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, summonSave: 0, resistMagic: 0,
     addDR: 0, addHP: 0, addSP: 0, addMP: 0, addMR: 0, addPR: 0, addAbsMD: 0, addCD: 0, addExp: 0, addGold: 0,
-    castBonus: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0, prot: { light: 0, fire: 0, ice: 0, poison: 0 },
+    castBonus: 0, addMagicPct: 0, hero: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0, prot: { light: 0, fire: 0, ice: 0, poison: 0 },
   };
   if (p.equip[EQUIP.TWOHAND] !== undefined) delete p.equip[EQUIP.RHAND];        // el arma a dos manos manda
   for (const [ps, uid] of Object.entries(p.equip)) {
@@ -112,7 +126,7 @@ export function recalc(p, data) {
       case EFFECT.ATTACK: case EFFECT.ATTACK_MANASAVE: case EFFECT.ATTACK_MAXHPDOWN: case EFFECT.ATTACK_DEFENSE: case EFFECT.ATTACK_SPECABLTY:
         fx.sm = [d.v1, d.v2, d.v3]; fx.l = [d.v4, d.v5, d.v6];
         fx.skill = d.skill; fx.hit = p.skills[d.skill] || 0; fx.wtype = d.appr;
-        if (d.effectType === EFFECT.ATTACK_MANASAVE) fx.manaSave = Math.min(80, fx.manaSave + d.v4);
+        if (d.effectType === EFFECT.ATTACK_MANASAVE) { fx.manaSave = Math.min(80, fx.manaSave + d.v4); if (d.v5 === 1) fx.addMagicPct += d.v6; }          // v5 = WET_ADDMAGICDMGPCT (HG.cpp CalcTotalItemEffect)
         if (d.effectType === EFFECT.ATTACK_DEFENSE) fx.armor[EQUIP.BODY] = (fx.armor[EQUIP.BODY] || 0) + d.specialEffect;
         break;
       case EFFECT.ATTACK_ARROW: {
@@ -140,6 +154,7 @@ export function recalc(p, data) {
     if (pos === EQUIP.RHAND || pos === EQUIP.TWOHAND) fx.speedNib = Math.max(0, realStats(d, inst).speed - Math.floor(s.str / 13));
   }
   fx.defense += fx.addDR;
+  fx.hero = heroBonus(p, data);
   p.eff = fx;
   p.defense = fx.defense;
   return fx;

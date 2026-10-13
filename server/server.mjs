@@ -560,6 +560,7 @@ function pub(e, own) {
   else {
     if (e.side) o.sd = e.side;                                                   // bando (1 Aresden, 2 Elvine): el cartel de nombre lo muestra y marca enemigos
     o.mp = e.mp; o.mm = e.maxMp;                                                // maná visible para el grupo (marcos de grupo)
+    if (e.combatMode) o.cm = 1;
     o.lc = r1(e.lastCombat); o.lk = [e.gender, e.look.skin, e.look.hair, e.look.hairCol, e.look.under];
     if (e.guild) o.gd = [e.guild.name, e.guild.rank, e.guild.cape, e.guild.boots];                 // guild visible: nombre bajo el personaje y colores
     o.ap = apparelOf(e, id => data.item(id));                                  // equipo visible para los demás jugadores

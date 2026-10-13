@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terreno · Helbreath Web</title>
+<style>
+  :root { --stone:#15171b; --slab:#23262d; --edge:#3a3e47; --parch:#ece2c6; --muted:#9a937f; --brass:#d4ab52; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--stone); color:var(--parch); font:14px/1.4 "Segoe UI", system-ui, sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:10px 14px; background:var(--slab); border-bottom:1px solid var(--edge); position:sticky; top:0; z-index:2; }
+  header b { color:var(--brass); font:600 18px Georgia, serif; letter-spacing:.06em; }
+  a { color:var(--brass); }
+  label { display:flex; gap:6px; align-items:center; color:var(--muted); font-size:12px; }
+  select, input, button { background:#0d0f12; color:var(--parch); border:1px solid var(--edge); border-radius:4px; padding:4px 8px; font:inherit; }
+  button:hover { border-color:var(--brass); }
+  #info { padding:6px 14px; color:var(--muted); font-size:12px; }
+  #wrap { overflow:auto; padding:8px 14px 30px; display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; }
+  canvas { display:block; border:1px solid var(--edge); max-width:100%; touch-action:none; }
+  #side canvas { margin-top:4px; }
+  body[data-v=sheet] .mp, body[data-v=map] .sh { display:none !important; }
+</style>
+</head>
+<body data-v="sheet">
+<header>
+  <b>Terreno</b>
+  <a href="bestiario.html">← Sprite Tool</a><a href="armeria.html">Armería</a>
+  <label>Vista <select id="view"><option value="sheet">Hojas de losetas</option><option value="map">Mapa</option></select></label>
+  <label>Modelo <select id="model"><option value="0">Original</option><option value="1">HD actual</option><option value="2">IA (Real-ESRGAN)</option></select></label>
+  <label class="sh">Filtro <select id="flt"><option value="">Todas</option><option value="ia">Con IA</option><option value="noia">Sin IA</option><option value="pend">IA sin revisar</option><option value="ok">Aprobadas</option><option value="mal">Rechazadas</option></select></label>
+  <label class="sh">Hoja <select id="key" style="max-width:220px"></select></label>
+  <button class="sh" id="prev">◀</button><button class="sh" id="next">▶</button>
+  <button class="sh" id="okb" title="Marcar esta hoja como aprobada">✔ Aprobar</button><button class="sh" id="malb" title="Marcar esta hoja como rechazada">✘ Rechazar</button><button class="sh" id="where" title="Abrir un mapa donde se usa esta hoja">Ver en mapa</button><button id="exp" title="Copiar el estado de revisión">Copiar revisión</button>
+  <label class="mp">Mapa <select id="map"></select></label>
+  <label class="mp">X <input id="mx" type="number" value="0" style="width:62px"></label>
+  <label class="mp">Y <input id="my" type="number" value="0" style="width:62px"></label>
+  <label class="mp"><input type="checkbox" id="obj" checked> Objetos</label>
+  <label>Zoom <select id="zoom"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+  <label>Fondo <select id="bg"><option value="#2b2d33">Gris</option><option value="#0b0b10">Oscuro</option><option value="#6d8a4a">Hierba</option></select></label>
+</header>
+<div id="info">Cargando…</div>
+<div id="wrap"><canvas id="cv"></canvas><div id="side" class="sh"></div></div>
+<script type="module" src="src/client/terrain.js"></script>
+</body>
+</html>

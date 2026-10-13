@@ -247,7 +247,7 @@ export class NetConnection {
       e.type = o.type; e.special = o.sp; e.phase = o.ph; e.boss = o.bs || 0; { const bx = o.bx || 0; e.clone = !!(bx & 1); e.crystal = !!(bx & 2); e.shield = !!(bx & 4); e.hasClones = !!(bx & 8); e.ghost = !!(bx & 16); e.wrath = o.wr || 0; e.owner = o.ow || 0; e.a2 = o.a2 || 0; e.crop = o.a2 ? o.a2 >> 8 : 0; }
       if (isNew || !e.cfg || e.kind !== o.k) { e.kind = o.k; e.cfg = w.npcDb[o.name] || {}; e.dur = mobDurations(o.type); }       // también si la id cambió de jugador a monstruo (invocaciones en Promise Land): sin cfg el render lanzaba una excepción
     } else {
-      e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc);
+      e.lastCombat = Math.max(e.lastCombat || -1e9, o.lc); e.combatMode = !!o.cm;
       if (o.lk) { e.gender = o.lk[0]; e.look = { skin: o.lk[1], hair: o.lk[2], hairCol: o.lk[3], under: o.lk[4] }; }
       if (own) Object.assign(e, o.o);                    // estado completo del propio jugador (server/server.mjs: ownState)
       else { e.ap = o.ap; e.side = o.sd || 0; e.gd = o.gd || null; }          // equipo visible de los demás y su bando

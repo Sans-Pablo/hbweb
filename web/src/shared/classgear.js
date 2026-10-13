@@ -9,10 +9,10 @@ const W = "warrior", M = "mage", S = "summoner";
 
 // [patrón sobre el nombre, clases] por casilla de equipo; gana la primera que encaja. Sin coincidencia: libre.
 const RULES = {
-  1: [[/^[ae]HeroCap/, [W]], [/^Wizard-Hat/, [W, M]], [/^Wizard-Cap/, [W, S]], [/./, [W]]],
+  1: [[/^[ae]HeroCap/, [W]], [/^Master-Cap/, [W, S]], [/^Wizard-Hat/, [W, M]], [/^Wizard-Cap/, [W, S]], [/./, [W]]],
   2: [[/Robe/, [M]], [/Leather|Ledder/, [S]], [/Plate|Chain|Scale|HeroArmor/, [W]], [/Bodice|Tunic/, [W, M, S]]],
-  3: [[/^(Wizard|DarkMage)Hauberk/, [M]], [/^Hauberk/, [W, S]], [/^(Knight|DarkKnight|SangAh|[ae]Hero)/, [W]], [/Shirt|Chemise/, [W, M, S]]],
-  4: [[/^ChainHose/, [W, M, S]], [/^DarkMageLeggings/, [M]], [/^(PlateLeggings|KnightPlateLeg|DarkKnightLeggings|SangAhLeggings|[ae]HeroLeggings)/, [W]], [/Trousers|Skirt/, [W, M, S]]],
+  3: [[/^(Wizard|DarkMage)Hauberk/, [M]], [/^(Master)?Hauberk/, [W, S]], [/^(Knight|DarkKnight|SangAh|[ae]Hero)/, [W]], [/Shirt|Chemise/, [W, M, S]]],
+  4: [[/^ChainHose/, [W, M, S]], [/^MasterLeggings/, [W]], [/^DarkMageLeggings/, [M]], [/^(PlateLeggings|KnightPlateLeg|DarkKnightLeggings|SangAhLeggings|[ae]HeroLeggings)/, [W]], [/Trousers|Skirt/, [W, M, S]]],
 };
 export function classesOf(d) {
   if (!d || d.type !== 1) return null;

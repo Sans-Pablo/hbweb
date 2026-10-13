@@ -193,6 +193,7 @@ const COMMANDS = {
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
+  combatmode(w, p, cmd) { p.combatMode = !!cmd.on; return true; },      // Tab: postura de combate (Game.cpp: appr2 & 0xF000); la ven los demás
   lang(w, p, cmd) { if (cmd.lang === "en" || cmd.lang === "es") p.uiLang = cmd.lang; return true; },      // idioma del cliente: los habitantes le hablan en él
   turn(w, p, cmd) {
     if (!w.busy(p) && cmd.dir >= 1 && cmd.dir <= 8) p.dir = cmd.dir;
@@ -200,7 +201,7 @@ const COMMANDS = {
   },
   attack(w, p, cmd) {
     const t = w.ents.get(cmd.target);
-    if (!t || t.dead || (t.kind !== "npc" && !Combat.canFight(w, p, t))) return w.reject(p, cmd, "sin objetivo");
+    if (!t || t.dead || (t.kind !== "npc" ? !Combat.canFight(w, p, t) : t.master && !Npc.foeOf(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
     const reach = Combat.reachOf(w, p, t), gap = dist(p, t);

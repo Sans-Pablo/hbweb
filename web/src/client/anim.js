@@ -24,7 +24,7 @@ export function posOf(e, time) {
 //   9 recoger, 10 daño, 11 morir
 export function playerSprite(e, time, bow = false) {
   const act = actionAt(e, time), p = progress(e, time);
-  const combat = time - e.lastCombat < PLAYER.combatStanceMs;
+  const combat = !!e.combatMode || time - e.lastCombat < PLAYER.combatStanceMs;
   let group, f;
   switch (act) {
     case ACT.MOVE: group = combat ? 3 : 2; f = Math.min(7, Math.floor(p * 8)); break;

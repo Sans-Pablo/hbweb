@@ -1,6 +1,6 @@
 // Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 // el jugador y mueve el bucle de juego.
-import { MAGIC_MODE } from "../shared/magic.js";
+import { MAGIC_MODE, freeFor } from "../shared/magic.js";
 import { rarityOf, RARITY_COLOR } from "../shared/rarity.js";
 import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
@@ -30,7 +30,8 @@ import { registerGuild } from "./guild.js";
 import { registerPetDialog } from "./petdialog.js";
 import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
-import { setupNews } from "./news.js";
+import { registerNews, NEWS_ID } from "./newswin.js";
+import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
 import { setNpcDb } from "./compicon.js";
@@ -59,7 +60,6 @@ async function main() {
   const mobile = isMobile();                         // pantalla táctil: controles y menús para móvil (mobile.js)
   if (mobile) document.body.classList.add("mobile");
   startDomTranslation(); bindLanguage();
-  setupNews(document.getElementById("news"));
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});   // caché persistente: la segunda visita no vuelve a bajar nada
   const status = document.getElementById("loading");
   const assets = await loadAssets(k => { status.querySelector("span").textContent = "Cargando gráficos… " + Math.round(100 * k) + "%"; });
@@ -95,6 +95,7 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
+  registerNews(gui); registerPrompts(gui);
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
@@ -178,6 +179,8 @@ async function main() {
     assets.sprites.preload(ks); assets.sprites.preloadHd(ks);
   };
   setTimeout(warmEquip, 0);
+  // iconos de la mochila y objetos del suelo: se bajan al empezar (antes aparecian a trozos al abrir la bolsa)
+  setTimeout(() => { for (let i = 0; i < 20; i++) { assets.sprites.preload(["ip" + i, "ig" + i]); assets.sprites.preloadHd(["ip" + i, "ig" + i]); } }, 50);
   gui.describe = uid => {
     const me = world.ents.get(pid), it = me && me.bag.find(i => i.uid === uid); if (!it) return null;
     const lines = hud.describe(it, me).map(l => /color:#9fe39a/.test(l) ? { t: l.replace(/<[^>]+>/g, ""), c: "#9fe39a" } : { t: l.replace(/<[^>]+>/g, "") });
@@ -285,7 +288,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
+  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)
@@ -298,7 +301,7 @@ async function main() {
     sound.setVolume?.(opts.soundVol);
     sound.setMusic?.(opts.music); sound.setMusicVolume?.(opts.musicVol);
     MAGIC_MODE.free = false;                                   // magia con las reglas del servidor (la opción «magia libre» ya no existe)
-    renderer.lighting = !!opts.lighting;
+    renderer.lighting = !!opts.lighting; renderer.lightFx = !!opts.lightFx;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
@@ -318,7 +321,7 @@ async function main() {
   // los botones de la interfaz usan los mismos nombres.
   // BUG-018: el clic derecho nunca abre el menú de Windows (ni en los paneles DOM como F1); solo se respeta en campos de texto
   document.addEventListener("contextmenu", e => { if (!e.target.closest?.("input[type=text],input:not([type]),textarea")) e.preventDefault(); });
-  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options", news: "news" };
+  const PANELS = { char: "charpanel", inv: "inv", book: "book", options: "options" };
   const togglePanel = id => document.getElementById(id).classList.toggle("open");
   const flags = { safe: false, combat: false, force: false, detail: 2, lastChat: "", whisper: true, shout: true };
   const shortcuts = [null, null];                        // F2 / F3: { item: id } | { spell: id }
@@ -367,10 +370,10 @@ async function main() {
       if (!MAGIC_MODE.player) { hud.log("Los hechizos están cerrados.", "bad"); return; }
       if (!me || me.dead || !m) return;
       // magia de escuela: la lanza el summon que la conoce (su maná, no el del jugador); el servidor comprueba nivel y maná del summon
-      const ball = me.bag?.find(i => i.comp?.on), school = ball && SCHOOL_OF[ball.comp.sp], bySummon = !!school && !MAGIC_MODE.free && spellSchool(m) === school && taught(ball.comp, id);
+      const ball = me.bag?.find(i => i.comp?.on), school = ball && SCHOOL_OF[ball.comp.sp], bySummon = !!school && !freeFor(me) && spellSchool(m) === school && taught(ball.comp, id);
       if (!bySummon && (!me.magic || !me.magic[id])) return;
       if (ui.pointing != null) return;
-      if (!bySummon && !MAGIC_MODE.free && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
+      if (!bySummon && !freeFor(me) && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
@@ -448,7 +451,7 @@ async function main() {
         }
         switch (K) {
           case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
-          case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Nivel de detalle: bajo", "Nivel de detalle: medio", "Nivel de detalle: alto"][flags.detail]); return;
+          case "d": e.preventDefault(); setOpt("hdSprites", !opts.hdSprites); hud.log(opts.hdSprites ? "Sprites HD activados." : "Sprites originales (sin HD)."); return;   // revisar HD contra original; el nivel de detalle sigue en Opciones
           case "h": e.preventDefault(); ui.key("news"); return;
           case "p": e.preventDefault(); ui.autoParty(); return;
           case "e": e.preventDefault(); ui.autoTrade(); return;
@@ -466,7 +469,7 @@ async function main() {
         case "Insert": e.preventDefault(); hud.quickUse("hp"); return;
         case "Delete": e.preventDefault(); hud.quickUse("mp"); return;
         case "Home": e.preventDefault(); flag("safe", "Modo de ataque seguro activado.", "Modo de ataque seguro desactivado."); return;
-        case "Tab": e.preventDefault(); flag("combat", "Modo de combate.", "Modo de paz."); return;
+        case "Tab": e.preventDefault(); flag("combat", "Modo de combate.", "Modo de paz."); conn.send({ t: "combatmode", on: flags.combat }); return;
         case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
         case "PageUp": e.preventDefault(); hud.log("No tienes ninguna habilidad especial lista."); return;
         case "+": hud.toast("Mapa ampliado"); return;
@@ -489,12 +492,13 @@ async function main() {
         case "escape": {
           const open = document.querySelectorAll(".panel.open");
           for (const p of open) p.classList.remove("open");
-          for (const id of [17, 23, 20, 31, 11, 14, 16]) if (gui.isOpen(id)) { gui.close(id); break; }   // Esc cierra el cuadro de NPC de más arriba
+          for (const id of [91, 90, NEWS_ID, 17, 23, 20, 31, 11, 14, 16]) if (gui.isOpen(id)) { gui.close(id); break; }   // Esc cierra el cuadro de NPC de más arriba
           break;
         }
         case "char": gui.toggle(1); break;
         case "inv": gui.toggle(2); break;
         case "options": gui.toggle(60); break;
+        case "news": gui.toggle(NEWS_ID); break;
         case "skill": gui.toggle(15); break;
         case "book": gui.toggle(3); break;
         default: if (PANELS[a]) togglePanel(PANELS[a]);
@@ -519,7 +523,7 @@ async function main() {
   $id("file-import").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
     try {
-      if (!confirm("Esto reemplaza el progreso de " + store.get("name", "") + " con el del archivo. ¿Seguir?")) return;
+      if (!await gui.confirm("Esto reemplaza el progreso de " + store.get("name", "") + " con el del archivo. ¿Seguir?")) return;
       Accounts.importSave(store.get("name", ""), await f.text());
       conn.save = () => {};                                  // que no pise la copia importada al recargar
       location.reload();
@@ -595,7 +599,7 @@ async function main() {
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
   });
 
-  let last = performance.now(), fps = 0, frames = 0, fpsT = 0;
+  let last = performance.now(), fps = 0, frames = 0, fpsT = 0, drawSum = 0, drawMax = 0;
   const fpsEl = document.getElementById("fps");
   let buildTag = "";                                // versión y nombre de la compilación (data/version.json), junto a los fps
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { buildTag = " · v" + v.version + " " + v.name; }).catch(() => {});
@@ -612,8 +616,8 @@ async function main() {
     last = t;
     frames++; fpsT += dt;
     if (fpsT > 500) {
-      fps = Math.round(frames * 1000 / fpsT); frames = 0; fpsT = 0;
-      let txt = fps + " fps" + buildTag;
+      const frames0 = frames; fps = Math.round(frames * 1000 / fpsT); frames = 0; fpsT = 0;
+      let txt = fps + " fps · dibujo " + (drawSum / Math.max(1, frames0)).toFixed(1) + "/" + drawMax.toFixed(0) + " ms" + buildTag; drawSum = 0; drawMax = 0;
       if (online) {
         const n = [...world.ents.values()].filter(e => e.kind === "player").length;
         txt += " · " + n + (n === 1 ? " jugador" : " jugadores") + " · " + conn.ping + " ms";
@@ -658,11 +662,13 @@ async function main() {
     voice?.update(world, me, assets.npcDb);
     tutorial.update(me, world);
     mob?.update(me, world);
+    const d0 = performance.now();
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
+    { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
     hud.update(world, ctl.hoverEnt); questUi.render();
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();

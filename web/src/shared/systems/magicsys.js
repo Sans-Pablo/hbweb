@@ -22,7 +22,7 @@ import { look } from "./evolutions.js";
 export function learn(w, p, id) {
   const sp = w.magic[id];
   if (!sp) return w.reject(p, { t: "learn" }, "no existe");
-  if (M.MAGIC_MODE.schools && !M.MAGIC_MODE.free) {
+  if (M.MAGIC_MODE.schools && !M.freeFor(p)) {
     const ball = activeBall(p), c = ball?.comp, school = c && Sch.SCHOOL_OF[c.sp];
     if (!school) return w.reject(p, { t: "learn" }, "elige primero un summon de escuela (fuego, hielo o rayo)");
     if (Sch.spellSchool(sp) !== school) return w.reject(p, { t: "learn" }, "esa magia no es de la escuela de tu summon");
@@ -40,7 +40,7 @@ export function learn(w, p, id) {
   }
   if (p.magic[id]) return w.reject(p, { t: "learn" }, "ya la conoces");
   if (sp.cost < 0) return w.reject(p, { t: "learn" }, "no se vende");
-  if (!M.MAGIC_MODE.free && p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
+  if (!M.freeFor(p) && p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
   if (p.gold < sp.cost) return w.reject(p, { t: "learn" }, "oro insuficiente");
   p.gold -= sp.cost;
   p.magic[id] = 1;
@@ -52,12 +52,12 @@ export function learn(w, p, id) {
 // Comprobaciones comunes de lanzar/preparar (UseMagic del cliente original)
 function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
-  if (sp && M.MAGIC_MODE.free) p.magic[cmd.spell] = 1;
+  if (sp && M.freeFor(p)) p.magic[cmd.spell] = 1;
   const granted = !!sp && M.MAGIC_MODE.schools && !!Sch.spellSchool(sp);        // las magias de escuela las lanza el summon que las conoce (se comprueba abajo)
   if (!sp || (!p.magic[cmd.spell] && !granted)) return w.reject(p, cmd, "no conoces ese hechizo");
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
-  if (M.MAGIC_MODE.free) return sp;
+  if (M.freeFor(p)) return sp;
   if (M.MAGIC_MODE.schools && Sch.isSupportSpell(sp)) return w.reject(p, cmd, "esa magia es de los summons de apoyo");
   const school = M.MAGIC_MODE.schools ? Sch.spellSchool(sp) : null;
   if (M.MAGIC_MODE.schools && !school) return w.reject(p, cmd, "solo se lanza la magia de la escuela de tu summon");
@@ -150,10 +150,10 @@ function resist(w, tgt, power) {
 function resolve(w, p, id, sp, x, y, cost) {
   if (p.dead) return;
   // ¿sale el hechizo?
-  const sch = M.MAGIC_MODE.free || !M.MAGIC_MODE.schools ? null : Sch.spellSchool(sp), sm = sch && Sch.activeSchoolSummon(w, p, sch);
+  const sch = M.freeFor(p) || !M.MAGIC_MODE.schools ? null : Sch.spellSchool(sp), sm = sch && Sch.activeSchoolSummon(w, p, sch);
   const chance = M.castChance(p, id);                                  // las magias de escuela las lanza el summon: no fallan por la habilidad del jugador
-  if (!sch && !M.MAGIC_MODE.free && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
-  if (!sch && !M.MAGIC_MODE.free && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!sch && !M.freeFor(p) && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!sch && !M.freeFor(p) && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   let schoolMult = 1, schoolPower = 0;
   if (sch) {                                                          // paga y lanza el summon de la escuela
     const mana = Sch.spellMana(w.magic, sch, id) ?? Tal.manaOf(w, id);
@@ -175,7 +175,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
-    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k) * schoolMult);
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * schoolMult);
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damageNpc(w, tgt, dmg, p, null, half);
@@ -305,7 +305,7 @@ function resolve(w, p, id, sp, x, y, cost) {
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && !w.fightZone) {
-        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.MAGIC_MODE.free);   // con bola elegida: siempre esa especie
+        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.freeFor(p));   // con bola elegida: siempre esa especie
         if (!n) w.emit({ t: "nomagic", id: p.id });
       }
       break;

@@ -6,6 +6,15 @@
 
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
 
+### P0 · Servidor oficial siempre online y de mínima latencia (pedido 2026-10-13)
+- [ ] Plan completo en `docs/HOSTING.md` (fases A–H: medir, VPS 24/7 + TLS directo, latencia de aplicación, rendimiento, operación, web/registro con correo, seguridad, carga y beta). **Plan escrito (v0.80.1, sin código aún).** Pendiente decidir: región de los jugadores, proveedor/dominio, correo obligatorio.
+- [ ] (pedido 2026-10-13) Escenarios de escala y coste en `docs/HOSTING_ESCALA.md`: **global 100 CCU** (reinos regionales, ≈ 10 semanas, ≈ 100–320 €/mes; con un solo reino ≈ 6–7 semanas y 30–100 €/mes) y **low cost para amigos/pruebas** (VPS ≈ 5–8 €/mes, ≈ 4 días). Medido: tick 0,36 ms medio / 1,4 ms p95 con 40 bots. **Plan escrito (v0.80.1, sin código aún).** Siguiente paso sugerido: montar el low cost y medir red/memoria (Fase A).
+- [ ] (pedido 2026-10-13) Alojar en el **PC local** con versiones estables y testeables: `docs/HOSTING_LOCAL.md` (comparativa Cloudflare Tunnel / port-forward / VPS relay / Funnel / ngrok; canales stable·beta·dev en puertos y `HB_DATA` distintos, releases inmutables con rollback, servicio NSSM, backups, `/health`). Recomendado: Cloudflare Tunnel + dominio (~1 €/mes), VPS relay (~5 €) como plan B. **Plan escrito (v0.80.1, sin código aún).**
+
+### P0 · Fluidez con muchos lanzadores en pantalla (pedido 2026-10-13, v0.80.3)
+- [x] (0.80.3) `spellfx.js`: el rayo (`thunder`) recalculaba la recta desde cero (coste cuadrático, ×3 por efecto y fotograma) → incremental, mismos puntos (verificado 300 000 muestras); `put()` sin save/restore; `update()` sin copias; tope de efectos 600→400. HUD: «dibujo media/pico ms» junto a los fps.
+- [ ] Verificar con 5 Cyclops + Trolls + bots lanzando: leer «dibujo» y ping. Si sigue alto, siguiente sospechoso: gradientes radiales por entidad en `renderer.js` (auras Liche/Cyclops/Demon, líneas 750–990) → cachearlos en sprites.
+
 ### P0 · Bloqueantes antes de invitar a nadie
 - [x] (0.79.6) Servidor: bucle EADDRINUSE al reiniciar (esperar al puerto o salir limpio) y reinicio para cargar `shared/*`.
 - [ ] Protocolo/versión: comprobar que clientes viejos reciben el aviso de recargar.
@@ -46,6 +55,9 @@
 - [ ] Fuera del primer release: arena, mapas de Elvine/nieve, rediseño de sonido, LFS, actos 2+ y final.
 
 ## Backlog (actualizado en v0.70.0)
+- [ ] (pedido 2026-10-13) portar TODO lo faltante de docs/DESVIOS.md con la lógica original como regla (autónomo). Hecho: 80 ítems (tools/add_missing_items.mjs), magia 75 Ice Whirlwind, texto de lanzamiento, 49 mapas, 59 NPC (tools/add_missing_npcs.mjs), bonos de conjunto de héroe y zona de lucha. En curso: facciones, PK, cruzada, etc.
+- [x] (pedido 2026-10-13, v0.80.2) pets inmunes en Promise Land · color de armas del servidor original · drop al morir (PvP) · sprite TAB paz/ataque · textos de combate del original · F1 «Full mage». Falta verificación visual por el usuario.
+- [x] (pedido 2026-10-13) documento de desvíos original vs port: `docs/DESVIOS.md` (primera pasada; falta la verificación de las filas «a verificar»). Siguiente derivado: texto de conjuro sobre la cabeza («Nombre!», tipo 41 del cliente original).
 - [ ] (análisis, 2026-10-12) **Remaster tipo Diablo 2 Resurrected con los sprites de Helbreath:** hoy el HD es Scale2x×4 + suavizado (`tools/hdup.py`), sin detalle nuevo. Pendiente decidir: piloto con upscaler IA (Real-ESRGAN ncnn-vulkan, RTX 4060) en 3 muestras (cuerpo, monstruo, tile) y comparar en el Bestiario; luz/sombras dinámicas; HD manual solo para jefes/héroes. **Piloto hecho 2026-10-12 con el werewolf** (walk, 8 dir): `pruebas/werewolf-remaster/` (vídeos 4 niveles y original vs nuevo). Pendiente decidir si se sigue. **Lote enemigos 2026-10-12:** `tools/remaster_ia.py` genera `web/data/sprites_ia/` (+`sprites_ia.json`, derivados no versionados) para todos los enemigos de `npc.json` (Real-ESRGAN x4plus); el Bestiario tiene selector «Modelo» (Original / HD actual / IA / IA + luz simulada) y «Comparar los 4» en filas. Sin publicar.
 - Hecho 0.79.x: summons psíquicos, modo 0 restricciones, pets más rápidas, indicador de estados de los demás. Pendiente: contramagias psíquicas, HD de Beholder/Centaurus/Stalker.
 **Hecho recientemente:** magia 102–172 y teleport (por diseño/Recall), Inhibición/Confusión, PvP, chat de gremio/grupo, susurros `/to`, bots que abren y compran en puestos, Python ya no es necesario.
@@ -208,5 +220,64 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [ ] **Bots pulidos del todo** (0.79.3: Recall, cripta, flechas hechos; quedan summons lejos/ausentes, peso, `attack` sin objetivo, `learn`, balance): arreglar lo que sale en `Informe de bots.md`: atascos en granjas (Aresfarm/Elvine), Recall interrumpido, sin flechas, summons lejos/sin volver, peso/mochila, `attack` sin objetivo, `learn` repetido, balance (muertes por Cyclops/Troll/Skeleton, revivir summon caro, oro sin sumideros, exp/min negativa con Slimes).
 - [x] (2026-10-12, sin publicar) **Orge IA afinado (piloto de aprendizaje):** las 40 hojas del orge rehechas con la canalización nueva de `tools/remaster_ia.py` (conserva pelo y sombras, quita sombra negra del suelo y mugre suelta, alfa por fotograma; ~37 s con IA, ~12 s solo alfa con `--alpha`). Lecciones en `docs/FINDINGS.md`. Pendiente: Pablo revisa el orge en el Bestiario; después lote completo (`python tools/remaster_ia.py ESRGAN_DIR --force`), wyvern/troll/sprites diminutos; las líneas rectas finas bajo los pies: causa probable corregida (el suavizado leía píxeles del fotograma vecino; regla en `docs/sistemas/bestiario.md`), pendiente de confirmar por Pablo.
 - [x] (2026-10-12, sin publicar) **Troll IA con las lecciones del orge:** 40 hojas rehechas (22 s) con la canalización nueva (sin borrar negro, alfa por fotograma aislado, mugre suelta). La limpieza no quitó ningún píxel del troll en las muestras. Pendiente: correcciones de Pablo en el Bestiario (Modelo → 3).
-- [x] (2026-10-12, sin publicar, v0.79.8) **Sprite Tool** (petición de Pablo): el Bestiario incluye los personajes M y W y todos los sprites del juego (vista «Hojas sueltas»); renombrado. Pendiente: remaster IA de personajes (sin confirmar), revisión de tigerworm/cat, wyvern, bunny, ant y lote completo.
+- [x] (2026-10-12, sin publicar, v0.79.8) **Sprite Tool** (petición de Pablo): el Bestiario incluye los personajes M y W y todos los sprites del juego (vista «Hojas sueltas»); renombrado. Pendiente: revisión de tigerworm/cat, wyvern, bunny, ant y lote completo.
 - [x] (2026-10-12, sin publicar, v0.79.7) **Bestiario: «Original al lado»** (petición de Pablo): casilla que dibuja el original junto a cada fotograma del modelo elegido. Además hojas IA de tigerworm, cat y scorpion (patas finas arregladas: `smooth_alpha` une dos desenfoques; alfa rehecho en orge/troll/tigerworm/cat/scp). Pendiente: Pablo revisa tigerworm, cat y scorpion; luego wyvern, bunny, ant y el lote completo.
+- [ ] (2026-10-13, sin publicar, v0.79.11) **Armería con ESRGAN** (petición de Pablo): selector de modelo y Battle Hammer (`ip14`) con IA, pendiente de su revisión. Siguiente: más armas y el arma equipada (`equip.json`, aún no soportado por `remaster_ia.py`).
+- [ ] (2026-10-13, sin publicar, v0.79.12) **Herramienta de terreno** (petición de Pablo: «otra herramienta para mejorar terreno, ver los sprites de los maps»): `terreno.html` hecha (ver hojas y mapas por modelo). Siguiente: remasterizar hojas `t` con IA (`remaster_ia.py`, cuidando las costuras) y enlazarla desde la Sprite Tool.
+- [ ] (2026-10-13, sin publicar, v0.79.13) **IA en t301** (petición de Pablo): generada; pendiente su revisión (marcas en bordes de loseta).
+- [ ] (2026-10-13, sin publicar, v0.79.14) **IA en t214** (petición de Pablo): generada y revisada, pendiente de su visto bueno.
+- [ ] (2026-10-13, sin publicar, v0.79.15) **Arefarm completo con IA** + mejoras del proceso (relleno cíclico de losetas, imágenes de revisión, `--map`/`--status`, revisión en terreno.html): hecho, pendiente de su visto bueno.
+- [ ] (2026-10-13, sin publicar, v0.79.16) **Aresfarm con IA en el juego** (petición de Pablo): `assets.js` fusiona las hojas `t` IA; pendiente de su prueba.
+- [x] (2026-10-13, sin publicar, v0.79.10) **Remaster IA del personaje W** (petición de Pablo): 440 hojas IA con color corregido, botones de modelo y original al lado en la vista de personajes. Pendiente: M (sin pedir), revisar acciones/pelo con Pablo.
+- [x] (2026-10-13, sin publicar, v0.79.17) **Losetas IA con bordes/cuadrícula** (petición de Pablo): corregido con relleno envolvente + ajuste de tono. Pendiente: velocidad al hacer todo el juego (ver tiempos: suelos ~7 min en total, objetos de un mapa ~10 min); priorizar por mapa con `--map`.
+- [x] (2026-10-13, sin publicar, v0.79.18) **Escorpión IA en el juego** (petición de Pablo) y líneas negras entre losetas (alfa de borde).
+- [x] (2026-10-13, sin publicar, v0.79.19) **Líneas oscuras finas entre bloques de suelo** (captura de Pablo): bloques alineados a píxel.
+- [ ] (2026-10-13, sin publicar, v0.79.20) **Líneas persistentes y zona difusa en arefarm** (capturas de Pablo): sospecha de caché del navegador con hojas IA viejas; `IA_VERSION`. Pendiente: confirmar con nueva captura; si persiste, identificar la hoja difusa.
+- [x] (2026-10-13, v0.79.21) **Luz dinámica y sombras largas** (petición de Pablo, hacia la calidad de Diablo II Resurrected): `renderer.drawLights` + `shK`, opción `lightFx` (Opciones → Gráficos). Ficha `docs/sistemas/luz.md`.
+- [x] (2026-10-13, v0.79.22) **Líneas oscuras en el suelo** (capturas de Pablo): reproducido en el juego con Edge; causa = alfa de borde por hoja entera; corregido con `tools/fix_tile_alpha.py` (verificado: sin caídas de luminancia en la captura). Pendiente: zona difusa de hierba (t7/t6/t9/t352).
+- [x] (2026-10-13, v0.79.23) **Monstruos de la granja en IA** (petición de Pablo): slm, scp, amp, ant, gol integrados; pendiente revisión visual de Pablo y seguir con el resto de mapas.
+- [x] (2026-10-13, v0.79.24) **Monstruos granja: partes negras/perdidas** (Pablo): amp/gol arreglados (keep=0); ant IA oscura → HD, pendiente rehacerla.
+- [x] (2026-10-13) **Battle hammer + animaciones en personaje W por IA** (petición de Pablo).
+- [ ] (2026-10-13) **IA de los enemigos disponibles (skeleton, Promise Land: cla, cyc, orc, troll, zom, scp, gol) y de los objetos: sprite de suelo/bolsa (`ig*`), icono de inventario (`ip*`) y objeto equipado en el personaje (`equip.json`: armas `w*`, armadura/casco/etc.)** (petición de Pablo). Monstruos fusionados y objetos `ig/ip` listos; equipo (≈5900 hojas, ~2 h) generándose con `remaster_ia.py` (grupos `EA*`/`EW*`). Falta: revisar en el juego y los personajes (W/M, ya hechos).
+
+- [ ] (2026-10-13) Revisión de monstruos IA: zombi/orco oscuros (ahora `tone`: color y brillo base del original), esqueleto con piernas rotas (alfa fino + mezcla con original), clay golem con borde oscuro (`erode`), cíclope sin partes. Pendiente: confirmar en juego antes de 0.80.0.
+
+## Auditoría IA (2026-10-13, v0.79.25)
+- [ ] Petición: "qué sprites faltan en pasar con IA". Resultado: 8192/10553 hojas con IA. Sin IA: terreno `t` 223/309 (t12–t530), pb 264, pu 88, ph 88, ututelarangel 192, unidades `u*`/`lgol*`/`znz*`/`eid*` (~2.700 px·M), dummy, crop, civiles (shk, gnd, how, tom, william, kennedy, mcgaffin, perry, devlin, gail), ugate, id, cryptpit.
+- Con IA pero NO servidos en juego (fuera del regex de assets.js): 33 monstruos (demon, liche, ettin, wyvern… ant a propósito), y pb/pu/ph (solo mitad generada).
+
+- [x] (2026-10-13, v0.80.0, sin publicar) **33 monstruos + ant + cuerpos de personaje con IA** (petición de Pablo: "finaliza y controla esos 33 monstruos, ant y cuerpos de personajes"): regenerados, QA hecha, servidos en el juego. Pendiente: visto bueno de Pablo; fotogramas diminutos de pu1 sin IA (<3 px, usan original).
+- [ ] (2026-10-13) **"No veo los sprites de los items en la bag"** (Pablo): en prueba con Edge los iconos se ven (original, `putGame` no usa IA); esperando captura de Pablo.
+- [x] (v0.80.1, sin publicar, verificado en Edge: interior de tienda, ventana de personaje y bolsa) IA: interior de tienda/almacén/herrería (gshop_1, wrhus_1, bsmith_1 y sus «f»: teselas t406-421), ventanas de diálogo (personaje, bolsa, etc.: `tools/remaster_ui.py` → `web/data/ui_ia`, gui.js `uiSrc`) e iconos de la bolsa con las hojas `ip*` IA (gui.putGame usa `spr.src`). Pendiente de verificar en el navegador.
+- [x] (v0.80.1, sin publicar) IA: habitantes de la ciudad (shk, gnd, how, tom, william, kennedy, mcgaffin, perry, devlin, gail; 80 hojas) y suelo de la farm borroso: `remaster_ia.py --detail 0.9` (transfiere el detalle de alta frecuencia del original) aplicado a t0, t3, t4, t5, t19, t337, t339-343; IA_VERSION ia-0.80.8. Quedan por revisar otras teselas de suelo.
+- Interiores: puntos negros del suelo (t406-413, t418-421) corregidos rellenando alfa; NPC citizens (how, tom, shk, gail, gnd...) añadidos a la whitelist IA de assets.js. v0.80.1 local, IA_VERSION ia-0.80.10.
+- Gandlf (gnd0-7): píxeles verdes del original eliminados (alfa), despill + transferencia de detalle + nitidez; IA_VERSION ia-0.80.11.
+- Portal/plataforma de la farm (t301): motas negras por huecos de alfa rellenadas; IA_VERSION ia-0.80.12. Nuevo docs/SPRITES.md con sprites clave.
+- Armas IA (ia-0.80.13): Battle Axe hombre (`w0_26_*`, 56 hojas) nitidez: detalle del original + unsharp + alfa más seco. Pendiente de probar por el usuario; si gusta, extender a otras armas (`EW`).
+- Armas IA (ia-0.80.15): Barbarian Hammer hombre (`w0_32_*`, appr 32, 56 hojas): mismo tratamiento que Battle Axe + quitadas motas sueltas. Pendiente de probar.
+- Armas IA (ia-0.80.16): Barbarian Hammer H más nítido/realista (CLAHE, saturación, nitidez 2 escalas, contorno oscuro). Script en scratchpad fixham2.py.
+- Armaduras IA H (ia-0.80.17): KnightPlateMail `a0_4_*`, Hauberk `b0_2_*`, Leggings `l0_4_*` con acabado metálico (CLAHE, curva S, brillo especular, croma de acero, contorno); cascos Horned `h0_5_*` y Winged `h0_6_*` con tratamiento suave. Script scratchpad fixarm.py.
+
+- ia-0.80.18 (armaduras M v2, local): a0_4/b0_2/l0_4 con luminancia que conserva la media (base 0.88L+4, detalle local x1.5, brillos puntuales), croma de acero reducido, borde oscuro. Verificado en juego con s19.py (DSF 3). Cascos h0_5/h0_6 con parametros suaves.
+
+- ia-0.80.19 (equipo completo, local): tools/remaster_equip.py aplica el pulido a todas las hojas IA de equipo [ablohsmw][01]_* (5.938, salvo las 7 ya hechas a mano). Copia de seguridad previa en %TEMP%/equip_bak. Armas = receta martillo; armaduras/escudos/capas/botas = receta acero con croma adaptativo (lo coloreado se conserva); cascos = suave.
+
+- ia-0.80.22 (zombie, `tools/remaster_equip.py --type n`): receta de criaturas suavizada (mediana 5, bilateral 9/55, detalle x0.9 sobre luminancia suavizada, sin destellos, unsharp 1.5/3.5). Pendiente: aprobacion del usuario antes de extender a todas las criaturas ("mismo concepto de upscale en todo el juego"). Copia: %TEMP%/npc_bak.
+- ia-0.80.25 (cripta, peticion de Pablo): IA para las hojas de terreno que usa la cripta (t300, t302-t309, t211; t301 ya la tenia) con `tools/remaster_ia.py`; las motas negras (huecos de alfa de 1.8% en el original, 6% tras reescalar) se rellenan con `tools/fill_tile_holes.py`. Pendiente: costuras de brillo entre casillas y nuevo diseno del mapa si Pablo lo pide. Sin publicar.
+- ia-0.80.26 (cripta): Pablo vio cuadricula de casillas y exceso de blur. `tools/fix_tile_seams.py` rehace t300-t309: base = original x4 por casilla (continuo con la vecina) + alta frecuencia de la IA atenuada en el borde. Sin publicar.
+- ia-0.80.28: fix_tile_seams reajustado (base original afilada + detalle IA x1.5, borde 8px) tras quejas de "parece upscale del original". Sin publicar.
+- ia-0.80.29: Pablo vio parpadeo (se dibujaba la hoja original y luego la IA). `Sprites.ready()` (assets.js) no da por listo un sprite con hoja HD/IA hasta que esa hoja carga (cae a la original si falla). Sin publicar.
+- ia-0.80.30: Ctrl+D alterna sprites HD / originales (opts.hdSprites) para revisar; sustituye al ciclo de nivel de detalle (que sigue en Opciones).
+- ia-0.80.31 REVERTIDO (ia-0.80.32): el pase de costuras en todo el terreno (tools/fix_tile_seams.py) quito la cuadricula pero dejo aspecto de 'upscale viejo' y devolvio pixeles negros en el warehouse t406-409; se restauraron las hojas desde %TEMP%/seam_bak. Pendiente: otro metodo (IA con contexto de vecinos).
+- Carga de sprites lenta (peticion v0.80.1): el Streamer ahora baja a la vez la hoja original y la HD/IA (antes la HD se pedia al dibujar, sin cola ni prioridad); max simultaneas 6->10.
+
+## 0.80.1 (local) · terreno continuo y bolsa
+- Pedido: aplicar a todo el terreno el estilo de los edificios, sin parches de tono ni rejilla; iconos de la bolsa llegaban tarde.
+- `tools/equalize_detail.py` (nitidez por casilla) aplicado a t300–t309 (IA_VERSION ia-0.80.33).
+- `renderer.js blendTone`: en HD, el tono de cada casilla se acerca al de su vecindario (interpolado, sin saltos en bordes de bloque).
+- `main.js`: precarga de ip0–19 / ig0–19 (original+HD) al arrancar para que la bolsa salga completa. PENDIENTE verificar en navegador.
+- Pendiente: equalize_detail en otras hojas de terreno (granja, interiores) vigilando píxeles negros en t406–409.
+- Rendimiento (spikes de ms): `renderer.js` — los bloques de suelo (CHUNK 16x16, ~100 ms cada uno) se generan por filas (3/fotograma) en un anillo alrededor de la cámara; el suavizado de tono pasó a composición GPU (multiply + lighter) y la media por casilla se calcula 1 vez por hoja. Medido caminando (Playwright, 8 s): p99 17 ms (antes 233 ms), solo queda el pico de la primera carga (~150 ms).
+- ia-0.80.34: equalize_detail también en terreno de granja (t0,t3,t4,t5,t19,t337,t339–343) e interiores (t406–413, t418–421). Backups pre-ecualización: `$TEMP/eq_bak`.
+
+- Petición: documento md de magias (lore, fórmulas, balance, simulaciones). HECHO v0.80.4 → docs/sistemas/magias-diseno.md.

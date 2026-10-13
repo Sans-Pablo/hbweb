@@ -12,12 +12,21 @@ const CATS = { 1: "Armas", 3: "Báculos/varios", 5: "Arcos", 6: "Armaduras", 8: 
 const cats = [...new Set(ITEMS.map(o => o.d.category))].sort((a, b) => a - b);
 $("cat").innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${CATS[c] || "Categoría " + c} (${ITEMS.filter(o => o.d.category === c).length})</option>`).join("");
 
-// recorte del fotograma de un objeto a un canvas propio (nulo mientras la hoja no esté descargada)
+// Modelo gráfico: 0 original, 1 HD actual (sprites_hd), 2 IA (sprites_ia, tools/remaster_ia.py; solo las hojas ya remasterizadas)
+const hdIa = await fetch("data/sprites_ia.json").then(r => r.json()).catch(() => ({}));
+const sheets = new Map();   // "ruta" -> Image
+const sheet = h => { const u = "data/" + (h.dir || "sprites_hd") + "/" + h.png; let i = sheets.get(u); if (!i) { i = new Image(); i.src = u + "?v=" + Date.now(); sheets.set(u, i); } return i; };
+const model = () => +$("model").value;
+const hdOf = key => { const m = model(); return m === 2 ? hdIa[key] : m === 1 ? spr.hdm[key] : null; };
+// recorte del fotograma de un objeto a un canvas propio (nulo mientras la hoja no esté descargada). Con HD/IA el canvas es k veces mayor (c.k).
 function cut(d) {
-  const key = packKey(d), fr = spr.frame(key, d.spriteFrame);
-  if (!fr || !spr.ready(key)) return null;
-  const [sx, sy, w, h] = fr, c = document.createElement("canvas"); c.width = w; c.height = h;
-  c.getContext("2d").drawImage(spr.img[key], sx, sy, w, h, 0, 0, w, h); return c;
+  const key = packKey(d), h = hdOf(key);
+  if (model() && !h) return null;
+  const o = !h && spr.frame(key, d.spriteFrame), fr = h ? (h.frames ? h.frames[d.spriteFrame] : (spr.frame(key, d.spriteFrame) || []).map(v => v * h.k)) : o;
+  const img = h ? sheet(h) : spr.img[key];
+  if (!fr || !fr.length || (h ? !(img.complete && img.naturalWidth) : !spr.ready(key))) return null;
+  const [sx, sy, w, hh] = fr, c = document.createElement("canvas"); c.width = w; c.height = hh; c.k = h ? h.k : 1;
+  c.getContext("2d").drawImage(img, sx, sy, w, hh, 0, 0, w, hh); return c;
 }
 let cur = null, base = null;
 const R = { h: 0, s: 100, b: 100, k: 100, on: false, src: "#808080", dst: "#c03030", tol: 60 };
@@ -62,16 +71,16 @@ function paint() {
   if (!base) return;
   const z = +$("zoom").value, bg = $("bg").value, ed = render(base);
   for (const [id, img, s] of [["c0", base, z], ["c1", ed, z], ["c2", ed, 1]]) {
-    const cv = $(id); cv.width = base.width * s; cv.height = base.height * s;
-    const x = cv.getContext("2d"); x.imageSmoothingEnabled = false; x.fillStyle = bg; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
+    const cv = $(id), k = base.k || 1; cv.width = Math.round(base.width / k * s); cv.height = Math.round(base.height / k * s);
+    const x = cv.getContext("2d"); x.imageSmoothingEnabled = k > 1; x.imageSmoothingQuality = "high"; x.fillStyle = bg; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
   }
 }
 const label = o => o.d.display || o.d.name;
 function select(o, rename = true) {
-  const c = cut(o.d); if (!c) { $("info").textContent = "Cargando la hoja de " + label(o) + "…"; setTimeout(() => select(o, rename), 300); return; }
+  const c = cut(o.d); if (!c) { $("info").textContent = model() && !hdOf(packKey(o.d)) ? `${label(o)} no tiene hoja ${model() === 2 ? "IA" : "HD"} todavía (hoja ${packKey(o.d)}).` : "Cargando la hoja de " + label(o) + "…"; if (model() && !hdOf(packKey(o.d))) return; setTimeout(() => select(o, rename), 300); return; }
   cur = o; base = c;
   for (const e of document.querySelectorAll("#list canvas")) e.classList.toggle("sel", +e.dataset.id === o.id);
-  $("info").textContent = `#${o.id} ${label(o)} · hoja ${packKey(o.d)} fotograma ${o.d.spriteFrame} · ${c.width}×${c.height}px`;
+  $("info").textContent = `#${o.id} ${label(o)} · hoja ${packKey(o.d)} fotograma ${o.d.spriteFrame} · ${c.width / (c.k || 1)}×${c.height / (c.k || 1)}px${c.k > 1 ? " (modelo ×" + c.k + ")" : ""}`;
   if (rename) $("nm").value = label(o).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-2";
   paint();
 }
@@ -86,7 +95,7 @@ function buildList() {
   }
 }
 function draw(o) {   // miniatura; si la hoja aún no está lista, reintenta
-  const c = cut(o.d); if (!c) { setTimeout(() => o.cv.isConnected && draw(o), 400); return; }
+  const c = cut(o.d); if (!c) { if (!model() || hdOf(packKey(o.d))) setTimeout(() => o.cv.isConnected && draw(o), 400); else o.cv.getContext("2d").clearRect(0, 0, 48, 48); return; }
   const x = o.cv.getContext("2d"), k = Math.min(1, 44 / Math.max(c.width, c.height)); x.clearRect(0, 0, 48, 48);
   x.drawImage(c, 24 - c.width * k / 2, 24 - c.height * k / 2, c.width * k, c.height * k);
 }
@@ -104,6 +113,7 @@ $("c0").onclick = e => {          // cuentagotas: toma el color del píxel pulsa
 $("reset").onclick = () => { for (const [id, v] of [["h", 0], ["s", 100], ["b", 100], ["k", 100]]) { $(id).value = v; $(id).dispatchEvent(new Event("input")); } $("on").checked = R.on = false; paint(); };
 for (const id of ["q", "cat"]) $(id).addEventListener("input", buildList);
 for (const id of ["bg", "zoom"]) $(id).addEventListener("change", paint);
+$("model").addEventListener("change", () => { buildList(); if (cur) select(cur, false); });
 const flat = () => render(base).toDataURL("image/png");
 const slug = () => $("nm").value.replace(/[^A-Za-z0-9_-]/g, "");
 $("dl").onclick = () => { if (!base || !slug()) return; const a = document.createElement("a"); a.href = flat(); a.download = slug() + ".png"; a.click(); };

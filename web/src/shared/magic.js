@@ -60,9 +60,11 @@ export function castChance(p, id) {
 // Reglas del servidor original: hay que aprender cada hechizo (Int y oro), cuesta maná, se lanza con manos libres o varita y puede fallar.
 // free = modo de pruebas (todo aprendido, sin maná) y player = false lo cierra: solo para tests y depuración.
 export const MAGIC_MODE = { free: false, player: true, schools: true };   // schools: los hechizos de ataque de escuela los lanza el summon (systems/schools.js); las pruebas del sistema base lo apagan
+// modo «Full mage» (F1 → Herramientas): por jugador, equivale a MAGIC_MODE.free solo para él (todo aprendido, sin maná)
+export const freeFor = p => MAGIC_MODE.free || !!(p && p.fullMage);
 export const NO_PLAYER_MAGIC = "los hechizos están cerrados";
 export function manaCost(p, spell) {
-  if (MAGIC_MODE.free) return 0;
+  if (freeFor(p)) return 0;
   let c = spell.mana;
   if (p.eff.manaSave > 0) { c = Math.floor(c - (p.eff.manaSave / 100) * c); if (c <= 0) c = 1; }
   if (p.eff.wtype === 34) c += 20;
@@ -87,10 +89,14 @@ export function resists(rng, power, resistRatio) {
 }
 
 // Daño de un hechizo: dados + bonificación de Magia (mag/3.3 %) + daño mágico añadido.
-export function spellDamage(rng, p, n, d, k) {
+export function spellDamage(rng, p, n, d, k, fightZone = false) {
   let dmg = dice(rng, n, d) + k;
   if (dmg <= 0) dmg = 0;
-  dmg = Math.floor(dmg + dmg * ((p.stats.mag / 3.3) / 100) + 0.5);
+  dmg = Math.floor(dmg + dmg * (((p.stats.mag <= 0 ? 1 : p.stats.mag) / 3.3) / 100) + 0.5);   // HG.cpp Effect_Damage_Spot: Mag<=0 cuenta como 1
+  if (p.eff.hero === 2) dmg += 4;                                    // m_heroArmourBonus == 2 (conjunto de héroe de mago)
   dmg += p.eff.addMagic || 0;
-  return Math.max(0, dmg);
+  dmg += Math.trunc(dmg * (p.eff.addMagicPct || 0) / 100);           // m_addMagicDmgPct
+  dmg = Math.max(0, dmg);
+  if (fightZone) dmg += Math.trunc(dmg / 3);                        // mapa de zona de lucha: +1/3
+  return dmg;
 }

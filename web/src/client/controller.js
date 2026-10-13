@@ -59,6 +59,7 @@ export class Controller {
       if (e.target instanceof HTMLInputElement) return;
       if (e.target instanceof HTMLElement && e.target !== document.body && /^(BUTTON|A|SELECT|SUMMARY)$/.test(e.target.tagName)) e.target.blur();      // un botón con el foco se «pulsaría» con la barra espaciadora o Intro
       if ((e.key === " " || e.key === "Backspace" || e.key.startsWith("Arrow") || e.key === "PageDown") && !e.ctrlKey && !e.altKey) e.preventDefault();      // el navegador no desplaza ni retrocede la página
+      if (ui.gui.key(e)) { e.preventDefault(); return; }       // ventanas del lienzo con campos de texto o modales
       if (ui.npcKey(e)) { e.preventDefault(); return; }       // el cuadro de cantidad se queda con el teclado
       if (!e.repeat) ui.unlockAudio();
       this.keys.add(e.key.toLowerCase());
@@ -85,8 +86,9 @@ export class Controller {
     let best = null, bestD = 1e9;
     const time = this.world.time;
     for (const e of this.world.ents.values()) {
-      if (e.dead || e.master) continue;                                     // un seguidor (compañero) no se ataca
-      if (e.kind !== kind && !(kind === "npc" && this.enemyPlayer(e))) continue;   // en Promise Land también se pueden atacar los jugadores enemigos
+      if (e.dead) continue;
+      if (e.master) { const o = this.world.ents.get(e.master); if (!(kind === "npc" && e.comp && o && this.enemyPlayer(o))) continue; }   // un seguidor propio no se ataca; el del jugador enemigo (Promise Land) sí
+      else if (e.kind !== kind && !(kind === "npc" && this.enemyPlayer(e))) continue;   // en Promise Land también se pueden atacar los jugadores enemigos
       const [px, py] = posOf(e, time);
       let h = 64;                                                          // jugador enemigo (Promise Land): no tiene ficha de monstruo, mide como en pickPlayer
       if (e.cfg) { const { key, f } = mobSprite(e, time, k => this.r.spr.frames(k)); h = Math.max(30, this.r.mobHeight(key, f)); }

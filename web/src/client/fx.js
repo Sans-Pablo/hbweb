@@ -14,6 +14,7 @@ export class Fx {
     this.world = world;
     this.me = me;
     this.texts = [];
+    this.critT = new Map();
     this.parts = [];
     this.flash = new Map();          // id -> hora del último golpe (destello)
     this.rings = [];
@@ -30,10 +31,10 @@ export class Fx {
     const e = this.world.ents.get(id);
     return e ? posOf(e, this.world.time) : null;
   }
-  text(id, text, color, big = false, dy = 0) {
+  text(id, text, color, big = false, dy = 0, size = 0) {
     const p = this.at(id);
     if (!p) return;
-    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, born: performance.now(), dx: (Math.random() - 0.5) * 14 });
+    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, size, born: performance.now(), dx: (Math.random() - 0.5) * 14 });
   }
 
   onEvent(ev) {
@@ -41,11 +42,13 @@ export class Fx {
     switch (ev.t) {
       case "damage":
         this.flash.set(ev.id, performance.now());
-        this.text(ev.id, String(ev.amount), mine ? "#ff5a4a" : "#fff3d6", ev.amount >= 8);
+        // Game.cpp (OBJECTDAMAGE): "-N" en amarillo (m_wR[13]*2), tamaño por daño (<12 / <40 / más); crítico = «Critical» (MOTION_EVENT_HANDLER3)
+        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount, "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
-      case "miss": this.text(ev.id, "fallo", "#a9b4c2"); break;
+      case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
+      case "miss": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16); break;   // Game.cpp OBJECTDAMAGE con daño 0
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;
         const c = this.world.ents.get(ev.id);
@@ -54,16 +57,16 @@ export class Fx {
         setTimeout(() => this.sp.add(2, sx, sy, tx, ty), dur * 5 / 8);
         break;
       }
+      // Game.cpp OBJECTMAGIC: sobre el lanzador aparece «<Nombre del hechizo>!» (CMsg tipo 41, rojo 255,80,80)
+      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#ff5050", false, 0, 14); break; }
       case "spell": {
         const c = this.world.ents.get(ev.id);
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);
         break;
       }
-      case "heal": this.text(ev.id, "+" + ev.amount, ev.crit ? "#c8ffc8" : "#7fe07f", !!ev.crit); break;
       case "dummy-crit": this.text(ev.nid, "CRITICAL!", ev.cls === "healer" ? "#7fff7f" : ev.cls === "buffer" ? "#ffe84a" : "#7fc4ff", true, -18); break;
-      case "auramp": this.text(ev.id, "+" + ev.amount, "#7fa6ff", false, -10); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
-      case "resist": this.text(ev.id, "resiste", "#a9b4c2"); break;
+      case "resist": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16); break;
       case "exp": if (mine) this.text(ev.id, "+" + ev.amount + " exp", "#e6c869", false, -16); break;
       case "levelup": {
         const p = this.at(ev.id);
@@ -161,7 +164,7 @@ export class Fx {
       let x = t.x - camX, y = t.y - camY - 26 * k, size = 12;
       if (remaster) {
         const pop = age < 120 ? 1 + 0.6 * (1 - age / 120) : 1;
-        size = (t.big ? 18 : 14) * pop;
+        size = (t.size || (t.big ? 18 : 14)) * pop;
         x += t.dx * k;
         ctx.font = "700 " + size.toFixed(1) + "px 'Trebuchet MS', 'Segoe UI', sans-serif";
         ctx.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;

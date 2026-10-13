@@ -41,3 +41,12 @@ Editor de sprites de objetos, enlazado con el Bestiario. Recorta el fotograma de
 
 ## Sprite Tool (v0.79.8)
 La página (`bestiario.html`) tiene tres vistas: criaturas (modelos 0-3), personajes `@M`/`@W` (`pcFrame`, usa `drawEntity` con `kind:"player"`; el equipo se ve en «Hojas sueltas» → equip) y «Hojas sueltas» (`rawList`/`rawFrame`, manifiestos sprites/players/equip/sprites_mod/fx/ui; el equipo no pasa por `imgUrl`). `rawList` es asíncrona y `rawFrame` la llama cada fotograma: usa `rawBusy` para no colarse durante la carga.
+
+### Personaje con IA (v0.79.10)
+`python tools/remaster_ia.py ESRGAN_DIR W` (o `M`) genera pb/pu/ph del género. Real-ESRGAN cambia el matiz de tonos oscuros muy saturados (ropa interior morada → verde): `keep_chroma` conserva el Cr/Cb del original; `--chroma W` rehace solo el color.
+
+### Armería con IA (v0.79.11)
+`armeria.html` tiene «Modelo» (Original/HD/IA). Icono de mochila = hoja `ip`+`itemSet(sprite)` (Battle Hammer: sprite 15 → `ip14`). Para remasterizar un arma: `python tools/remaster_ia.py ESRGAN_DIR ip14`. Equipado (`equip.json`) pendiente.
+
+## Terreno (v0.79.12)
+`terreno.html` (`terrain.js`): hojas `t0..t308` de `sprites.json` con modelo Original/HD/IA y caída IA→HD→original. Vista Hojas: rejilla + prueba de costuras 4×4. Vista Mapa: lee `maps/<id>.bin` (10 bytes/casilla: suelo int16 +0, fotograma +2, objeto +4, fotograma objeto +6) y dibuja suelo, objetos y sombra de árboles (obj 100..149 → hoja obj+50, alfa .45). IA de hojas `t` con `remaster_ia.py` (`--map ID` genera las de un mapa, `--status` cuenta; losetas opacas con relleno cíclico; revisión en `sprites_ia/_review/`). Hecho: arefarm (85 hojas), t301, t214. Revisión en la página: filtro, ✔/✘ (localStorage), «Ver en mapa».

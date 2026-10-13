@@ -73,7 +73,7 @@ export function registerDialogs(gui, api) {
         const key = eqKey(female, d.sprite); if (!key) continue;
         const [x, y] = SLOT_POS[pos][female ? 1 : 0];
         if (g.hitUi(key, d.spriteFrame, x, y, lx, ly)) {
-          g.item = { uid, from: 1, dx: 0, dy: 0, draw: (gg, mx, my) => gg.putGame(iconKey(d), d.spriteFrame, mx, my, 0.9) };
+          g.item = { uid, from: 1, dx: 0, dy: 0, draw: (gg, mx, my) => gg.putGame(iconKey(d, it), d.spriteFrame, mx, my, 0.9) };
           return true;
         }
       }
@@ -152,7 +152,7 @@ export function registerDialogs(gui, api) {
         if (!d || this.equipped(me, uid) || (g.item && g.item.uid === uid)) continue;
         const [x, y] = this.pos(it);
         if (it.comp) drawBall(g, it, d, packKey(d), x, y, api.disabled?.(uid) ? 0.5 : 1);
-        else g.putGame(iconKey(d), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
+        else g.putGame(iconKey(d, it), d.spriteFrame, x, y, api.disabled?.(uid) ? 0.5 : 1);
         if (isStack(d)) g.text(x + 10, y + 10, comma(it.count), "#c8c8c8", { shadow: true, size: 11 });
       }
       const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
@@ -178,7 +178,7 @@ export function registerDialogs(gui, api) {
       if (api.disabled?.(h.it.uid)) return true;                     // esperando una operación de tienda (m_bIsItemDisabled)
       this.order = this.order.filter(u => u !== h.it.uid); this.order.push(h.it.uid);
       const fr = g.spr.frame(packKey(h.d), h.d.spriteFrame);
-      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => h.it.comp ? drawBall(gg, h.it, h.d, packKey(h.d), mx - (lx - h.x), my - (ly - h.y), 0.9) : gg.putGame(iconKey(h.d), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
+      g.item = { uid: h.it.uid, from: 2, dx: lx - h.x, dy: ly - h.y, draw: (gg, mx, my) => h.it.comp ? drawBall(gg, h.it, h.d, packKey(h.d), mx - (lx - h.x), my - (ly - h.y), 0.9) : gg.putGame(iconKey(h.d, h.it), h.d.spriteFrame, mx - (lx - h.x) + 0, my - (ly - h.y) + 0, 0.9), fr };
       return true;
     },
     dbl(g, lx, ly, me) {
@@ -408,7 +408,7 @@ export function registerDialogs(gui, api) {
   const optTog = (k, n) => ({ n, get: () => !!api.mods()[k], set: v => api.setOpt(k, v) });
   const SECTIONS = [
     ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas")]],
-    ["Gráficos", [{ n: "Modo Remastered", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD"), optTog("lighting", "Luz y viñeta"), optTog("spellFx", "Animaciones de hechizos"), optTog("classicCursor", "Cursor clásico"), { n: "Transparencia de cuadros", get: () => api.sys().trans, set: v => api.setSys({ trans: v }) }]],
+    ["Gráficos", [{ n: "Modo Remastered", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD"), optTog("lighting", "Luz y viñeta"), optTog("lightFx", "Luz dinámica y sombras largas"), optTog("spellFx", "Animaciones de hechizos"), optTog("classicCursor", "Cursor clásico"), { n: "Transparencia de cuadros", get: () => api.sys().trans, set: v => api.setSys({ trans: v }) }]],
     ["Sonido y chat", [{ n: "Sonido", get: () => api.sys().sound, set: v => api.setSys({ sound: v }) }, { n: "Música", get: () => api.sys().music, set: v => api.setSys({ music: v }) }, { n: "Susurros", get: () => api.sys().whisper, set: v => api.setSys({ whisper: v }) }, { n: "Gritos", get: () => api.sys().shout, set: v => api.setSys({ shout: v }) }]],
   ];
   const optRows = [];                                   // [x, y, fila] de cada interruptor, calculado al dibujar

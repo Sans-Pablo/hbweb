@@ -93,7 +93,7 @@ test("un bloque dibujado antes de que llegue su textura se vuelve a dibujar", ()
   renderer.spr = { ready: () => ready, put: () => { if (ready) draws++; } };
   try {
     renderer.groundChunk(0, 0); assert.equal(renderer.chunks.size, 0);
-    ready = true; renderer.groundChunk(0, 0);
+    ready = true; renderer.late.clear(); renderer.groundChunk(0, 0);
     assert.equal(renderer.chunks.size, 1); assert.equal(draws, 256);
     renderer.groundChunk(0, 0); assert.equal(draws, 256);
   } finally { globalThis.document = original; }

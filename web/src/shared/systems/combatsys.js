@@ -100,7 +100,20 @@ function pvpCredit(w, v, from) {
   v.dead = false; const ok = canFight(w, k, v); v.dead = true;                                    // canFight rechaza a los muertos: se evalúa como si aún viviera
   if (!ok) return;
   k.ek = (k.ek || 0) + 1; k.kills = (k.kills || 0) + 1; k.streak = (k.streak || 0) + 1;
-  w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was);
+  w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was); penaltyDrop(w, v, 1);
+}
+// ApplyCombatKilledPenalty / PenaltyItemDrop (Client.cpp): el caído suelta al azar objetos de la mochila, puestos o no (DropItemHandler los desequipa).
+// El original suelta cPenaltyLevel objetos (2 al morir a manos del bando enemigo, -1 si es menor de nivel 80); aquí 1 como mínimo, sin oro ni bolas de compañero.
+export function penaltyDrop(w, v, n = 1) {
+  for (let i = 0; i < n; i++) {
+    const list = v.bag.filter(it => !it.comp && it.id !== 90);
+    if (!list.length) return;
+    const it = list[Math.floor(w.rng() * list.length)], worn = Object.values(v.equip).includes(it.uid);
+    const out = Inv.removeFromBag(v, it.uid);
+    groundPush(w, v.x, v.y, out, true);
+    w.emit({ t: "penaltydrop", id: v.id, item: out.id, worn });
+  }
+  w.recalc(v);
 }
 export function pvpBounty(w, k, v, streak = 0) {
   const gold = Math.min(6000, Math.floor((150 + v.level * 45) * (1 + Math.min(5, streak) * 0.25)));

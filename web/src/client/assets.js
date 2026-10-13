@@ -9,7 +9,8 @@ import { imgUrl, detectWebp } from "./imgurl.js";
 import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, setDungeonPalette } from "../shared/dungeon.js";
 
-const ASSET_VERSION = "crypt-v2";
+const ASSET_VERSION = "crypt-v3";
+const IA_VERSION = "ia-0.80.34";                // subir al regenerar hojas de sprites_ia (la caché del navegador las conservaba)
 const spriteUrl = png => imgUrl("data/sprites/" + png) + "?v=" + ASSET_VERSION;
 
 // Reintenta una descarga fallida; nunca da por cargada una imagen rota.
@@ -96,12 +97,16 @@ export async function loadAssets(onProgress) {
   Object.assign(manifest, equip);
     setDungeonPalette(await json("data/dungeon_palette.json"));          // teselas de middled1n/middled1x para la cripta
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
+  const iaT = await json("data/sprites_ia.json").catch(() => ({}));          // terreno con IA (tools/remaster_ia.py --map); sustituye a la HD
+  for (const k of Object.keys(iaT)) if (/^((t|scp|slm|amp|gol|ske|cla|cyc|orc|troll|zom|ig|ip|ant|beholder|bunny|cat|centaurus|clawturtle|darkelf|demon|direboar|ettin|firewyvern|frost|gagoyle|giantcrayfish|giantfrog|giantlizard|giantplant|helb|hellclaw|icegolem|liche|mastermageorc|minotaurs|mtgiant|nizie|orge|rudolph|stalker|tentocle|tigerworm|unicorn|werewolf|wyvern|shk|gnd|how|tom|william|kennedy|mcgaffin|perry|devlin|gail)\d+|pb\d+_\d+|(pu|ph)\d+_\d+_\d+|[ahlmsbow][01]_\d+_\d+)$/.test(k)) hd[k] = iaT[k];
   const sprites = new Sprites(manifest, images, hd);
   sprites.anchors = await json("data/anchors.json").catch(() => ({}));          // anclajes por fotograma (ojos, orbe…) generados por tools/spritelab/anchors.py
   if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) devReload();
     return { meta, mapBytes: new Uint8Array(buf), sprites, npcDb, spawns, data, maps, shops, talk };
 }
 
+// Desplazamientos de color de las armas (Client/Game.cpp: m_wWR/G/B[1..10] menos m_wR[0]=100): se suman a cada canal.
+export const WEAPON_RGB = [null, [-30, -30, -20], [-30, -30, -20], [-30, -30, -20], [-30, 0, -30], [30, -10, -90], [-58, -47, 11], [45, 45, 45], [20, 0, 20], [-25, -90, -90], [35, 4, -70]];
 export class Sprites {
   constructor(manifest, images, hdManifest = {}) {
     this.m = manifest;
@@ -133,7 +138,7 @@ export class Sprites {
     const h = this.hd && this.hdm[key];
     if (h) {
       let i = this.hdi[key];
-      if (!i) { i = this.hdi[key] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[key] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + (h.dir === "sprites_ia" ? IA_VERSION : ASSET_VERSION); }
       if (i.complete && i.naturalWidth > 0) return [i, h.k];
     }
     return [this.img[key], 1];
@@ -142,13 +147,27 @@ export class Sprites {
   preloadHd(keys) {
     return Promise.all(keys.filter(k => this.hdm[k]).map(k => new Promise(res => {
       const h = this.hdm[k]; let i = this.hdi[k];
-      if (!i) { i = this.hdi[k] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + ASSET_VERSION; }
+      if (!i) { i = this.hdi[k] = new Image(); i.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + (h.dir === "sprites_ia" ? IA_VERSION : ASSET_VERSION); }
       if (i.complete) return res();
       i.addEventListener("load", res, { once: true }); i.addEventListener("error", res, { once: true });
     })));
   }
+  // imagen HD/IA de este sprite (la crea y empieza a descargar si hace falta); null si no tiene o no está en modo remastered
+  hdImg(key) {
+    const h = this.hd && this.hdm[key]; if (!h) return null;
+    let n = this.hdi[key];
+    if (!n) { n = this.hdi[key] = new Image(); n.addEventListener("error", () => { n.failed = true; }, { once: true }); n.src = imgUrl("data/" + (h.dir || "sprites_hd") + "/" + h.png) + "?v=" + (h.dir === "sprites_ia" ? IA_VERSION : ASSET_VERSION); }
+    return n;
+  }
   has(key) { return !!this.m[key]; }
-  ready(key) { const i = this.img[key]; return !!i && i.complete && i.naturalWidth > 0; }
+  // En modo remastered un sprite con hoja HD/IA no se da por listo hasta que llega esa hoja: asi nunca se dibuja la original y luego se sustituye (parpadeo).
+  // Si la hoja nueva falla al descargar, se cae a la original.
+  ready(key) {
+    const i = this.img[key]; if (!(i && i.complete && i.naturalWidth > 0)) return false;
+    const h = this.hd && this.hdm[key]; if (!h) return true;
+    const n = this.hdImg(key);
+    return (n.complete && n.naturalWidth > 0) || !!n.failed || (n.complete && !n.naturalWidth);
+  }
   // espera a que estén descargados estos sprites (para no dibujar al personaje a medias)
   preload(keys) {
     return Promise.all(keys.filter(k => this.m[k]).map(k => new Promise(res => {
@@ -207,6 +226,32 @@ export class Sprites {
     ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
   }
 
+  // Arma teñida como el original (PutSpriteRGB con m_wWR[c]-m_wR[0]): se SUMA el desplazamiento por canal a cada píxel opaco. Un lienzo por fotograma y color.
+  weaponTinted(key, f, col) {
+    const off = WEAPON_RGB[col], fr = this.frame(key, f);
+    if (!off || !fr || !this.ready(key)) return null;
+    const ck = key + ":" + f + ":" + col, c = this.wtCache || (this.wtCache = new Map());
+    let cv = c.get(ck);
+    if (!cv) {
+      const [sx, sy, w, h] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
+      cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      const g = cv.getContext("2d"); g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+      try {
+        const id = g.getImageData(0, 0, W, H), d = id.data;
+        for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { d[i] = Math.max(0, Math.min(255, d[i] + off[0])); d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + off[1])); d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + off[2])); }
+        g.putImageData(id, 0, 0);
+      } catch { /* lienzo contaminado: se queda sin teñir */ }
+      c.set(ck, cv);
+    }
+    return cv;
+  }
+  putWeapon(ctx, key, f, x, y, col) {
+    const cv = this.weaponTinted(key, f, col);
+    if (!cv) return this.put(ctx, key, f, x, y);
+    const [, , w, h, pvx, pvy] = this.frame(key, f);
+    ctx.drawImage(cv, 0, 0, cv.width, cv.height, x + pvx, y + pvy, w, h);
+  }
+
   silhouette(key) {
     const [img, k] = this.src(key), cacheKey = key + "@" + k;
     let c = this.sil[cacheKey];
@@ -224,14 +269,14 @@ export class Sprites {
 
   // Sombra como el original: se aplasta a 1/3 de alto y se inclina hacia la izquierda,
   // con los pies como punto fijo (PutShadowSprite oscurece el fondo al 25 %).
-  shadow(ctx, key, f, x, y, alpha) {
+  shadow(ctx, key, f, x, y, alpha, sq = 1 / 3, sk = 1 / 3) {          // sq: aplastado vertical, sk: inclinación (la luz dinámica usa una sombra más larga)
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [, k] = this.src(key);
     const X0 = x + pvx, Y0 = y + pvy;
     ctx.save();
     ctx.globalAlpha *= alpha;
-    ctx.transform(1, 0, 1 / 3, 1 / 3, X0 - h / 3, Y0 + (2 * h) / 3);
+    ctx.transform(1, 0, sk, sq, X0 - h * sk, Y0 + h * (1 - sq));
     ctx.drawImage(this.silhouette(key), sx * k, sy * k, w * k, h * k, 0, 0, w, h);
     ctx.restore();
   }

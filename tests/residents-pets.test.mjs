@@ -17,13 +17,13 @@ const reports = []; a.report = r => reports.push(r);
 const tick = ms => { for (let i = 0; i < ms / 50; i++) a.tick(50); };
 assert.ok(a.staticWorld("elvfarm") && [...a.staticWorld("elvfarm").ents.values()].some(e => e.role === "pethospital"), "Gail atiende en Elvine Farm");
 
-// el hospital no vende bolas de especies que no existen en NPC.cfg (Orc-Mage)
+// el hospital solo vende bolas de especies que existen en NPC.cfg (una inexistente se rechaza; Orc-Mage ya existe desde que se importó Npc.cfg)
 {
   const id = a.addPlayer("Comprador", null, { gender: 1, stats: { str: 20, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }), p = a.farm.ents.get(id);
   const sh = a.staticWorld("gshop_1f"), gail = [...sh.ents.values()].find(e => e.role === "pethospital");
   a.transfer(p, a.farm, sh, [gail.x, gail.y + 1]); p.gold = 50; sh.drainEvents();
-  a.command(id, { t: "petbuy", npc: gail.id, sp: "Orc-Mage" });
-  assert.ok(sh.drainEvents().some(e => e.t === "reject" && e.id === id), "Orc-Mage no se vende");
+  a.command(id, { t: "petbuy", npc: gail.id, sp: "Nope-Species" });
+  assert.ok(sh.drainEvents().some(e => e.t === "reject" && e.id === id), "especie inexistente no se vende");
   a.command(id, { t: "petbuy", npc: gail.id, sp: "Troll" });
   assert.ok(p.bag.some(i => i.comp?.sp === "Troll"), "Troll sí");
 }

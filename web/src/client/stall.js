@@ -8,23 +8,12 @@ import { t as tr } from "./i18n.js";
 import { MAPS } from "../shared/systems/stall.js";
 
 const GOLD = 90;
-// Mini-cuadro propio (window.prompt está bloqueado en muchos navegadores/webviews y es feo): devuelve Promise<string|null>.
-function ask(label, def, numeric) {
-  return new Promise(res => {
-    const bg = document.createElement("div"); bg.style.cssText = "position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#0008";
-    const box = document.createElement("div"); box.style.cssText = "background:#3a2a1a;border:2px solid #c8a96a;border-radius:4px;padding:12px 14px;color:#f0e0b8;font:13px sans-serif;display:grid;gap:8px;min-width:240px";
-    const t = document.createElement("div"); t.textContent = tr(label);
-    const inp = document.createElement("input"); inp.value = def; inp.style.cssText = "font:14px sans-serif;padding:4px;background:#f0e0b8;color:#2d1919;border:1px solid #2d1919"; if (numeric) { inp.inputMode = "numeric"; inp.maxLength = 9; }
-    const row = document.createElement("div"); row.style.cssText = "display:flex;gap:8px;justify-content:flex-end";
-    const done = v => { bg.remove(); res(v); };
-    const mk = (txt, ok) => { const b = document.createElement("button"); b.textContent = tr(txt); b.style.cssText = "padding:3px 12px;cursor:pointer"; b.onclick = () => done(ok ? inp.value : null); return b; };
-    row.append(mk("Cancelar", false), mk("Ok", true)); box.append(t, inp, row); bg.append(box); document.body.append(bg);
-    inp.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") done(inp.value); else if (e.key === "Escape") done(null); };
-    inp.focus(); inp.select();
-  });
-}
+// Entrada de texto dentro del juego (window.js: gui.ask) → Promise<string|null>.
+let askGui = null;
+const ask = (label, def, numeric) => askGui.ask(label, def, { numeric, maxLen: numeric ? 9 : 24 });
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 export function registerStall(gui, api) {
+  askGui = gui;
   const dlg = new class extends ClassicDialog {
     constructor() { super({ id: 48, title: "Puesto", w: 520, x: 140, top: 84, rowH: 16, footer: "Clic en una fila para comprar (Ctrl = toda la pila). Comisión 0." }); this.mode = "off"; this.hov = null; this.st = null; this.set = []; this.ctrl = false; }
     bagItems(me) {

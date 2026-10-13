@@ -54,7 +54,7 @@ export function drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap) {
     if (c) spr.tintedHair(ctx, key, d * fpd + f, x, y, DYE_RGB[c]); else spr.put(ctx, key, d * fpd + f, x, y);
   };
   const wg = WGROUP[group];
-  const weapon = () => { if (ap && ap.weapon && wg !== undefined) { const k = "w" + g + "_" + ap.weapon + "_" + (wg * 8 + d), c = ap.col && ap.col.weapon; if (c) spr.tintedHair(ctx, k, f, x, y, DYE_RGB[c]); else spr.put(ctx, k, f, x, y); } };
+  const weapon = () => { if (ap && ap.weapon && wg !== undefined) { const k = "w" + g + "_" + ap.weapon + "_" + (wg * 8 + d), c = ap.col && ap.col.weapon; if (c && c <= 10) spr.putWeapon(ctx, k, f, x, y, c); else if (c) spr.tintedHair(ctx, k, f, x, y, DYE_RGB[c]); else spr.put(ctx, k, f, x, y); } };
   const shield = () => {
     if (!ap || !ap.shield || wg === undefined) return;
     const key = "s" + g + "_" + ap.shield + "_" + wg;

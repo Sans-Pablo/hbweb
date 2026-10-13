@@ -118,23 +118,26 @@ function pcFrame(t) {
   const key = gender + JSON.stringify(look);
   if (key !== pcLoaded) { pcLoaded = key; stream.wantAll(spr.lookKeys(gender, look), 3); }
   const cw = Math.round(150 * zoom), ch = Math.round(210 * zoom), dirs = one ? [one] : [1, 2, 3, 4, 5, 6, 7, 8];
-  const W = cw * dirs.length, H = ch;
+  const cmp = $("model").value === "cmp", rows = cmp ? [0, 1, 2, 3] : [+$("model").value];
+  const side = $("side").checked && !cmp && rows[0] !== 0, cols = side ? dirs.length * 2 : dirs.length;   // «Original al lado», igual que con los monstruos
+  const W = cw * cols, H = ch * rows.length;
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   ctx.fillStyle = $("bg").value; ctx.fillRect(0, 0, W, H);
-  world.time = t; r.ctx = ctx; useModel(0);
+  world.time = t; r.ctx = ctx;
   const [a, d] = PACT[act] || PACT.stop, period = d + (act === "dying" ? 700 : 300), combat = $("pc-cmb").checked;
-  dirs.forEach((dir, di) => {
+  rows.forEach((mi, ri) => dirs.forEach((dir, di) => (side ? [0, mi] : [mi]).forEach((m, k) => {
+    const ci = side ? di * 2 + k : di; useModel(m);
     const e = { id: 200 + dir, name: "", kind: "player", gender, look, ap: null, dir, dead: false, hp: 100, maxHp: 100, x: 0, y: 0, fx: 0, fy: 0,
       act: a, actStart: d ? t - (t % period) : 0, actDur: d, lastCombat: combat ? t : -1e9 };
-    ctx.strokeStyle = "#ffffff12"; ctx.strokeRect(di * cw + .5, .5, cw - 1, ch - 1);
-    ctx.save(); ctx.beginPath(); ctx.rect(di * cw, 0, cw, ch); ctx.clip();
-    ctx.translate(di * cw + cw / 2, ch * 0.8); ctx.scale(zoom, zoom);
+    ctx.strokeStyle = "#ffffff12"; ctx.strokeRect(ci * cw + .5, ri * ch + .5, cw - 1, ch - 1);
+    ctx.save(); ctx.beginPath(); ctx.rect(ci * cw, ri * ch, cw, ch); ctx.clip();
+    ctx.translate(ci * cw + cw / 2, ri * ch + ch * 0.8); ctx.scale(zoom, zoom);
     try { r.drawEntity(e, 0, 0, { world, fx, hoverEnt: null, bubbles: null, pid: -1 }, []); } catch (er) { $("info").textContent = "Error: " + er.message; }
     ctx.restore();
-    ctx.fillStyle = "#ffffffaa"; ctx.font = "11px sans-serif"; ctx.fillText("dir " + dir, di * cw + 4, 12);
-  });
+    ctx.fillStyle = "#ffffffaa"; ctx.font = "11px sans-serif"; ctx.fillText((cmp || side ? MODELS[m].name + " · " : "") + "dir " + dir, ci * cw + 4, ri * ch + 12);
+  })));
   r.ctx = r.canvas.getContext("2d");
-  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `Personaje ${gender === 2 ? "W (mujer)" : "M (hombre)"} · sin equipo · hojas ${stream.done}/${stream.total} cargadas. El equipo se ve en «Hojas sueltas» → Equipo.`;
+  if (!$("info").textContent.startsWith("Error")) $("info").textContent = `Personaje ${gender === 2 ? "W (mujer)" : "M (hombre)"} · sin equipo · hojas ${stream.done}/${stream.total} cargadas · el modelo IA existe solo para W. El equipo se ve en «Hojas sueltas» → Equipo.`;
 }
 
 // ---- Hojas sueltas: cualquier hoja de cualquier manifiesto, fotograma a fotograma (tamaño real × zoom) con su pivote ----

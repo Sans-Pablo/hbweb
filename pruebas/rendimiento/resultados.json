@@ -1,0 +1,22 @@
+{
+ "magia": {
+  "fps": 51.1,
+  "drawAvg": 7.32,
+  "drawP95": 18.6,
+  "drawMax": 291.3,
+  "frameP95": 31.9,
+  "frameMax": 298,
+  "ents": 187,
+  "ping": null
+ },
+ "extremo": {
+  "fps": 15.1,
+  "drawAvg": 48.18,
+  "drawP95": 188.8,
+  "drawMax": 379,
+  "frameP95": 223.1,
+  "frameMax": 384,
+  "ents": 222,
+  "ping": null
+ }
+}

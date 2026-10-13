@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.80.4 · Documento de magias (2026-10-13)
+- `tools/sim_magia.mjs` + `tools/magia_lore.mjs` generan `docs/sistemas/magias-diseno.md`: 65 magias con lore, fórmulas, simulaciones de daño/maná, escuelas y hallazgos de balance.
+
+## 0.80.2 · Combate: pets, colores, modo Tab, Full mage (2026-10-13)
+- Pets enemigas atacables en mapas PvP (`controller.js pick`, `world.js attack` con `Npc.foeOf`).
+- Color de armas como el original: tabla aditiva `m_wWR` (`assets.js WEAPON_RGB/putWeapon`, iconos `#wN` en bolsa, arrastre y comercio).
+- PvP: el caído suelta un objeto al azar, puesto o de la mochila (`combatsys.penaltyDrop`, PenaltyItemDrop del original); evento `penaltydrop`.
+- TAB paz/ataque cambia el sprite: comando `combatmode`, `cm` en `pub()`, `anim.playerSprite`.
+- Textos de combate sobre las cabezas como el original (`fx.js`).
+- F1 → Herramientas «Full mage»: stats 200, todas las magias, sin maná por jugador (`magic.freeFor`, `p.fullMage`). Daño de hechizos revisado contra HG.cpp (Mag<=0 cuenta como 1).
+
+## 0.80.1 · IA: ventanas, bolsa e interiores (2026-10-13)
+- `tools/remaster_ui.py` (nuevo): hojas IA de la interfaz en `web/data/ui_ia` (todas menos fuentes). `gui.js`: `uiSrc` elige IA/original; `put/tint/mul/putGame/tintedIcon` dibujan a factor k con suavizado. Iconos de la bolsa usan `ip*` IA. Teselas t406-413, t418-421 (interiores). `IA_VERSION` ia-0.80.7.
+
+## 0.80.0 · IA: monstruos y personajes (2026-10-13)
+- `assets.js`: el regex de fusión IA incluye 33 familias de monstruos (+ant) y `pb|pu|ph`; `IA_VERSION` ia-0.80.5. Monstruos regenerados con el alfa actual (`--force`), hormiga con `darken`. QA (`qa.py`): pérdida de silueta media <0,2 salvo helb/liche (punteado del original), sin desbordes.
+- Cuerpos de personaje IA: mujer (pb4-6, pu1, ph1) y hombre (pb1-3, pu0, ph0).
+
+## 0.79.25 · Battle Hammer IA en W (2026-10-13)
+- Hojas IA del Battle Hammer (apariencia 31) en personaje mujer: `w1_31_0..55` (56 hojas, desde `equip.json`). `remaster_ia.py`: grupo `BH` con alfa fino (`sig=2`, `sg=1`, `keep=0`) para no cortar el mango; `assets.js` añade `w1_31_*` a la fusión IA; `IA_VERSION` ia-0.79.25.
+
+## 0.79.24 · Monstruos granja: sin partes perdidas (2026-10-13)
+- `remaster_ia.py`: Amphis, hormiga y golem conservan las piezas separadas del cuerpo (`keep=0` en `alpha_args`; antes `clean_mask` las borraba como «trozos sueltos»). La hormiga IA salía casi negra (brillo 0,36 del original): vuelve a HD hasta rehacerla. `IA_VERSION` ia-0.79.24.
+
+## 0.79.23 · Monstruos de la granja en IA (2026-10-13)
+- Hojas IA (Real-ESRGAN) de los monstruos de arefarm: Slime (slm), Escorpión (scp), Amphis (amp), Hormiga gigante (ant) y Golem de piedra (gol). `assets.js` las fusiona en modo remasterizado con HD; `IA_VERSION` ia-0.79.23.
+
+## 0.79.22 · Suelo sin líneas (alfa por casilla) (2026-10-13)
+- Causa real de las líneas oscuras: al reescalar la hoja entera, la fila de borde de cada casilla de suelo (HD e IA) se mezclaba con la casilla transparente vecina (alfa 159 en vez de 255), dejando una línea cada 4 casillas. `tools/fix_tile_alpha.py` rehace el alfa casilla a casilla en las hojas existentes; `remaster_ia.py` lo hace al generar.
+- `assets.js`: `ASSET_VERSION` crypt-v3 e `IA_VERSION` ia-0.79.22 (caché).
+- `tools/e2e.py`: variable `HB_CHANNEL` (p. ej. msedge) para usar un navegador del sistema.
+
+## 0.79.20 · Caché de hojas IA (2026-10-13)
+- `assets.js`: las hojas de `sprites_ia` se piden con `IA_VERSION` (subirla al regenerar); con `ASSET_VERSION` fijo el navegador servía las hojas IA anteriores a la corrección de alfa.
+
+## 0.79.19 · Suelo sin líneas entre bloques (2026-10-13)
+- `renderer.js`: los bloques de suelo (`groundChunk`) se dibujan con bordes alineados a píxel físico (floor/ceil); con zoom fraccionario el antialiasing dejaba ver el fondo oscuro entre bloques.
+
+## 0.79.18 · Escorpión IA en el juego (2026-10-13)
+- `assets.js` fusiona también las hojas `scp*` de `sprites_ia.json` en el manifiesto HD. `remaster_ia.py`: en hojas de losetas el alfa es siempre el del original ampliado (`build_alpha` erosionaba los bordes y dejaba líneas negras entre losetas); hojas de suelo regeneradas.
+
+## 0.79.17 · Terreno IA sin cuadrícula (2026-10-13)
+- `remaster_ia.py`: toda hoja de losetas 32×32 (≥100 fotogramas), opaca o no, se procesa con relleno envolvente (`TP=12`) y ajuste de tono de baja frecuencia (`TS=10`: color del original, detalle de la IA); antes cada loseta se reescalaba aislada y se veían bordes. Las no opacas usan `build_alpha`. Regeneradas las 37 hojas de suelo.
+
+## 0.79.11 · Armería con IA (BattleHammer) (2026-10-13)
+- `armeria.html`/`armory.js`: selector «Modelo» (Original / HD / IA). `cut()` recorta de `sprites_hd` o `sprites_ia` (fotograma × `k`) y el lienzo se muestra al mismo tamaño; los objetos sin hoja IA avisan en vez de fallar.
+- `remaster_ia.py`: acepta una clave de hoja exacta (`ip14`) además de prefijos. Generada `ip14` (Battle Hammer, objeto 761: `itemSet(15)=14`). Aún no cubre `equip.json` (arma equipada).
+
+## 0.79.10 · Sprite Tool: personaje W con IA (2026-10-13)
+- `remaster_ia.py W|M` (grupos `GROUPS`: pb/pu/ph de cada género) y `--chroma W`. `keep_chroma`: luminancia de la IA, color (Cr/Cb) del original; sin ello la ropa interior morada salía verde. 440 hojas de W en `sprites_ia/`.
+- Personajes: `soften` mezcla 40 % del original ampliado y suavizado con la IA (sola salía «cuadrada»); contorno más suave (`SIG`/`SG`). Probé el modelo `x4plus-anime`: peor (sombreado de dibujo).
+- `build_alpha(hole=)`: en personajes (`HOLE=3`) no se rellenan los huecos entre brazo y torso (salía una «capa» triangular en W); `--alpha W` rehecho.
+- `bestiario.html`: «Modelo» y «Original al lado» visibles en la vista de personajes; `bestiary.js#pcFrame` dibuja filas por modelo y original al lado.
+
 ## 0.79.9 · Observador sin caída silenciosa (2026-10-12)
 - `dashboard.js#apiBase`: si la sonda al servidor configurado falla y la página no es del propio servidor (GitHub Pages), usa igualmente la dirección de `server.json` en vez de pedir `/api` a github.io (404 mudo).
 

@@ -7,7 +7,7 @@ const NEAR = 40;
 import { bundleOfWorld, destinations, coreKeys } from "./bundles.js";
 
 export class Streamer {
-  constructor(sprites, { audio = null, max = 6 } = {}) {
+  constructor(sprites, { audio = null, max = 10 } = {}) {
     this.spr = sprites; this.audio = audio; this.max = max;
     this.queue = [];                    // { key, prio, res }
     this.pending = new Map();           // key -> promesa
@@ -40,8 +40,13 @@ export class Streamer {
       this.active++;
       const fin = () => { this.active--; this.done++; this.pending.delete(job.key); job.res(); this.onChange?.(this); this.pump(); };
       const img = this.spr.img[job.key];                       // el Proxy crea la imagen y empieza a descargar
-      if (img.complete) fin();
-      else { img.addEventListener("load", fin, { once: true }); img.addEventListener("error", fin, { once: true }); }
+      const hd = this.spr.hdImg?.(job.key);                    // la hoja HD/IA se baja a la vez (antes esperaba a que el dibujo la pidiera)
+      let left = 0; const one = () => { if (--left === 0) fin(); };
+      for (const i of [img, hd]) {
+        if (!i || i.complete) continue;
+        left++; i.addEventListener("load", one, { once: true }); i.addEventListener("error", one, { once: true });
+      }
+      if (!left) fin();
     }
   }
 

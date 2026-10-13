@@ -34,6 +34,7 @@ export function playerStrike(rng, p) {
   hit += 50;
   if (dex > 50) hit += dex - 50;
   hit += fx.addAR;
+  if (fx.hero === 1) { hit += 100; sm += 5; l += 5; }                  // m_heroArmourBonus == 1 (combat.cpp ~211): conjunto de héroe de guerrero
   return { sm: Math.max(1, sm), l: Math.max(1, l), hit };
 }
 

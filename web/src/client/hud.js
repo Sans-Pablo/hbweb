@@ -84,6 +84,7 @@ export class Hud {
     switch (ev.t) {
       case "companion": if (ev.id === me) this.log(ev.on ? (ev.nm || shown(ev.sp)) + " te acompaña." : (ev.nm || shown(ev.sp)) + " vuelve a la bola."); break;
       case "penalty": if (ev.id === me) this.log("Mueres: pierdes " + ev.loss + " de experiencia" + (ev.lost ? " y bajas al nivel " + ev.level : "") + ".", "bad"); break;
+      case "penaltydrop": if (ev.id === me) this.log(ev.worn ? "Al caer, sueltas un objeto que llevabas puesto." : "Al caer, sueltas un objeto de la mochila.", "bad"); break;
       case "dbg": if (ev.id === me) this.log("[test] " + ev.msg, "gold"); break;
       case "talent": if (ev.id === me) this.log(ev.nm + " aprende " + (talentName(ev.talent)) + " (" + ev.rank + ").", "gold"); break;
       case "talentreset": if (ev.id === me) this.log("Has reiniciado los talentos de " + ev.nm + " por " + ev.cost + " de oro.", "gold"); break;

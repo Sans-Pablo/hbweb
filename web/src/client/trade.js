@@ -28,7 +28,7 @@ export function registerTrade(gui, api) {
     }
     icon(g, it, x, y, alpha = 1) {
       const d = itemDef(it.id); if (!d) return;
-      g.putGame(iconKey(d), d.spriteFrame, x, y, alpha);
+      g.putGame(iconKey(d, it), d.spriteFrame, x, y, alpha);
       if (it.count > 1) g.text(x + 8, y + 10, it.count > 999 ? Math.floor(it.count / 1000) + "k" : String(it.count), "#c8c8c8", { shadow: true, size: 10 });
     }
     draw(g, me) {

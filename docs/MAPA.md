@@ -8,22 +8,22 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `appearance.js` · 18 · Equipo visible de un personaje (Client/Game.cpp, DrawObject_On*; Server: bEquipItemHandler -> m_sAppr2..4).
 - `attributes.js` · 140 · Atributos de los objetos que caen (NpcDeadItemGenerator, _AdjustRareItemValue, bEquipItemHandler).
 - `classgear.js` · 70 · Equipo por clase y báculos de escuela (v0.62.0). INVENTO del port: el original no restringe equipo por clase.
-- `combat.js` · 125 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
+- `combat.js` · 126 · Combate (iCalculateAttackEffect y compañía, HGServer/Game.cpp:52318+).
 - `const.js` · 67 · Constantes del juego compartidas por la simulación (el futuro servidor) y el cliente.
 - `data.js` · 19 · Datos del juego (generados por tools/convert.py a partir de los .cfg del servidor).
 - `drops.js` · 116 · Botín al morir un monstruo: NpcDeadItemGenerator (HGServer/Game.cpp:47297).
 - `dungeon.js` · 252 · Cripta de esqueletos: niveles que bajan de uno en uno (1..DUNGEON_LEVELS).
 - `grid.js` · 37 · Rejilla del mapa: casillas bloqueadas (del .amd) y ocupación por personajes.
-- `inventory.js` · 146 · Mochila, equipo y efectos del equipo (CalcTotalItemEffect, bEquipItemHandler...).
+- `inventory.js` · 161 · Mochila, equipo y efectos del equipo (CalcTotalItemEffect, bEquipItemHandler...).
 - `itemlevel.js` · 43 · ITEM LEVEL (INVENTO del port): una sola cifra para comparar objetos de la MISMA casilla de equipo (la usan los bots para decidir qué
 - `items.js` · 27 · Constantes y reglas puras de los objetos (HGServer/Item.h, Game.cpp).
-- `magic.js` · 96 · Magia: fórmulas del servidor original (PlayerMagicHandler, Effect_Damage_Spot, bCheckResistingMagicSuccess).
+- `magic.js` · 102 · Magia: fórmulas del servidor original (PlayerMagicHandler, Effect_Damage_Spot, bCheckResistingMagicSuccess).
 - `mobtiming.gen.js` · 3 · Generado por tools/convert_frames.py desde Client/MapData.cpp: no editar a mano.
 - `path.js` · 77 · A* en 8 direcciones con montículo binario.
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
-- `world.js` · 335 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
+- `world.js` · 336 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
 
 ## web/src/shared/systems
 
@@ -33,10 +33,10 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botitems.js` · 128 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
 - `builds.js` · 64 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 285 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 298 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 327 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `council.js` · 102 · CONSEJO DE GRUPO (INVENTO del port). Cuando varios habitantes van juntos, qué hacen lo decide una discusión, como entre jugadores de verda
-- `debug.js` · 131 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
+- `debug.js` · 141 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
 - `dummy.js` · 236 · Dummy: summon de apoyo ÚNICO del port (INVENTO: no existe en el original; usa el NPC "Dummy" de NPC.cfg y los hechizos de Magic.cfg).
 - `evolutions.js` · 52 · Tabla única de EVOLUCIONES de los compañeros (INVENTO del port, petición del diseñador). Para cambiar una cadena se edita SOLO esta tabl
 - `farming.js` · 84 · Agricultura, tal cual el servidor original (HGServer): sembrar con una bolsa de semillas, cuidar con la azada y cosechar.
@@ -74,48 +74,50 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 - `accounts.js` · 49 · Cuentas locales (la prueba es de un jugador y sin servidor): nombre + contraseña.
 - `anim.js` · 75 · Qué sprite y qué fotograma toca dibujar para cada entidad en cada momento.
-- `armory.js` · 117 · Armería: editor de sprites de objetos (armeria.html). Recolorea el sprite de mochila de cualquier objeto de Item.cfg
-- `assets.js` · 279 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
+- `armory.js` · 127 · Armería: editor de sprites de objetos (armeria.html). Recolorea el sprite de mochila de cualquier objeto de Item.cfg
+- `assets.js` · 324 · Carga de datos y gráficos, y funciones para dibujar sprites con su pivote
 - `audio.js` · 223 · Sonido: efectos originales (SOUNDS/*.wav) con volumen y panorámica según la distancia,
 - `bestiary-sounds.js` · 37 · Bestiario: panel de sonidos candidatos para la Pixie. Cada botón reproduce un WAV original de data/sfx
-- `bestiary.js` · 232 · Sprite Tool (antes Bestiario; bestiario.html): página de pruebas visuales. Dibuja cualquier criatura, los personajes M y W y cualquier hoja
+- `bestiary.js` · 235 · Sprite Tool (antes Bestiario; bestiario.html): página de pruebas visuales. Dibuja cualquier criatura, los personajes M y W y cualquier hoja
 - `bundles.js` · 92 · Qué recursos hacen falta en cada mapa (carga bajo demanda). Sin DOM: se prueba desde Node.
 - `classicdialog.js` · 103 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 313 · Conexión con el "servidor". Dos implementaciones con la misma forma:
-- `controller.js` · 261 · Entrada del jugador -> intenciones -> órdenes al servidor.
+- `controller.js` · 263 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 129 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `dashboard.js` · 253 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
 - `devtools.js` · 79 · F1 → «Herramientas»: panel de pruebas (crear objetos y enemigos, subir niveles, saltar de mapa...). Manda órdenes `dbg` a la simulació
 - `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
-- `fx.js` · 185 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
-- `gui.js` · 564 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
+- `fx.js` · 188 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
+- `gui.js` · 611 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `guild.js` · 98 · Cuadro «Guild» (id 34, Ctrl+G): el guild del original (Guildmaster / Guildsman) con lo que añade el port. La lógica vive en shared/syste
-- `hud.js` · 355 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
-- `i18n.js` · 391 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
+- `hud.js` · 356 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
+- `i18n.js` · 392 · Idiomas: español (el texto del código) e inglés. `t(texto)` traduce el texto en español a inglés cuando el idioma es "en";
 - `imgurl.js` · 8 · WebP opcional: tools/to_webp.py genera data/**/*.webp (sin pérdida) y data/webp.json; esos binarios NO se versionan.
 - `loadinfo.js` · 13 · Pantalla de carga: versión de la compilación (data/version.json) y últimas novedades (data/news.json), para saber qué se está probando.
 - `look.js` · 89 · Aspecto del personaje: piel y género (cuerpo), ropa interior y peinado con su color.
-- `main.js` · 795 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
+- `main.js` · 799 · Arranque del cliente web: carga datos, crea el mundo (el "servidor" local), conecta
 - `mobile.js` · 231 · Modo móvil (invento del port): controles táctiles y menús para pantallas pequeñas.
-- `names.js` · 14 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
+- `names.js` · 15 · Nombres y sprites de los objetos (los datos vienen de Item.cfg / ItemName.cfg).
 - `news.js` · 59 · F1: novedades, lista de pruebas y notas para los testers (data/news.json). Sustituye a la ayuda original.
 - `npcdialogs.js` · 625 · Cuadros de diálogo de los NPC de ciudad, como en el cliente original (Game.cpp):
 - `observer.js` · 63 · MODO OBSERVAR (INVENTO del port): desde la pantalla de entrada se ve la lista de habitantes del servidor (bando, nivel, mapa, atributos...) 
 - `party.js` · 107 · Cuadro de grupo (Party), id 32: DrawDialogBox_Party / DlgBoxClick_Party del cliente original (Client/Game.cpp) con sus textos (LAN_ENG.H).
 - `petdialog.js` · 106 · Cuadro «Summons» (F10 y botón de la barra, entre Personaje y Mochila): todo lo de la bola/compañero en un sitio.
 - `questui.js` · 67 · Diario de misiones y rastreador del HUD (v0.63.0). Todo sale del estado propio (me.quests) con las funciones compartidas de systems/quests.j
-- `renderer.js` · 1355 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
+- `renderer.js` · 1466 · Dibujo del mundo. Dos modos sobre la misma simulación, como Diablo II Resurrected:
 - `sky.js` · 86 · Cielo del cliente: noche (G_cSpriteAlphaDegree), lluvia (DrawWhetherEffects / WhetherObjectFrameCounter de Game.cpp)
-- `spellfx.js` · 440 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
+- `spellfx.js` · 450 · Efectos de hechizos del cliente original (Game.cpp: bAddNewEffect, bEffectFrameCounter, DrawEffects).
 - `stall.js` · 126 · Cuadro «Puesto» (id 48): tiendas de jugador (INVENTO del port; lógica en shared/systems/stall.js). Tres vistas:
-- `streaming.js` · 96 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
+- `streaming.js` · 101 · Descarga bajo demanda con cola de prioridad (como hacen los juegos actuales con sus "bundles"):
 - `summonpreview.js` · 73 · Vista previa de un summon antes de comprar su bola en el hospital de compañeros (INVENTO del port): estadísticas, hechizos,
+- `terrain.js` · 129 · Terreno: visor de las losetas y objetos de mapa (hojas tN de sprites.json) con el modelo Original / HD / IA, por hoja y sobre mapas reales.
 - `trade.js` · 127 · Cuadro «Trade» (id 33): comercio con otros jugadores y habitantes. INVENTO del port, a partir del intercambio del original
 - `tutorial.js` · 289 · Tutorial para jugadores nuevos (cliente). Guion y estado en shared/systems/tutorial.js; aquí se detectan los objetivos y se dibuja:
 - `voice.js` · 270 · "Personalidad" del jugador y de los habitantes: frases ocasionales en burbujas de chat.
 - `watchpanel.js` · 141 · CENTRO DE OBSERVACIÓN (INVENTO del port): paneles que acompañan al modo observar. A la izquierda el plantel (todos los habitantes agrupado
+- `window.js` · 373 · Sistema de ventanas del juego: todo dibujado en el lienzo 800x600 con el marco clásico de Helbreath (gamedialog_1, fotograma 2) y
 
 ## server
 
@@ -124,7 +126,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `botstats.mjs` · 131 · Estadísticas y análisis de comportamiento de los habitantes (bots) para el panel de administración.
 - `llm.mjs` · 71 · Voz opcional de los habitantes: genera texto en personaje (charla) y opiniones de probador (informe) con un modelo de lenguaje.
 - `report.mjs` · 50 · Informe de los habitantes-probadores. Recibe cada aviso (residents.report), lo guarda en informe-bots.jsonl y mantiene un resumen legible
-- `server.mjs` · 704 · Servidor online de Helbreath Web (Node.js, sin dependencias).
+- `server.mjs` · 705 · Servidor online de Helbreath Web (Node.js, sin dependencias).
 - `store.mjs` · 80 · Almacén persistente del servidor: SQLite (node:sqlite, Node >= 22.5) en vez de reescribir un JSON entero cada 30 s.
 
 ## tests
@@ -168,8 +170,10 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `farmer.test.mjs` · 17 · BUG-013: granjero de Aresfarm en (77,106) con rol "farmer" y aspecto de tendero (tipo 15).
 - `farming.test.mjs` · 97 · Agricultura (systems/farming.js): siembra, azada, cosecha, reglas del servidor original.
 - `fishing.test.mjs` · 41 · Pesca (fishing.js): lanzar la caña al agua, tabla por maestría, venta de pescado y pescado como comida de compañeros carnívoros.
+- `fullmage.test.mjs` · 23 · Modo «Full mage» (F1): stats 200, todos los hechizos, sin maná, solo para quien lo activa.
 - `ghost.test.mjs` · 56 · Esqueleto fantasma: un esqueleto común puede levantarse al desaparecer su cadáver. node tests/ghost.test.mjs
 - `guild.test.mjs` · 45 · Guilds (systems/guild.js): fundar con requisitos, invitar/aceptar, chat «@», colores, expulsar, ceder el mando, disolver y persistencia de
+- `hero.test.mjs` · 28 · Bonos del conjunto de héroe (HG.cpp CheckHeroItemEquipped) y del daño mágico en zona de lucha / m_addMagicDmgPct.
 - `human.test.mjs` · 45 · Humanización: horarios de conexión (admin: pins y mínimo), AFK, erratas, charla y llegadas con experiencia
 - `i18n.test.mjs` · 20 · Idiomas: el texto en español se traduce al inglés cuando se elige "en" y vuelve a español al cambiar.
 - `leisure.test.mjs` · 30 · Descansos de los habitantes (leisure.js): pescan en la orilla o hacen otra actividad, y lo anotan en r.lz.
@@ -193,6 +197,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `online.test.mjs` · 147 · Servidor online real (server/server.mjs): cuentas, sesiones, mundo compartido, privacidad, chat, administración y persistencia. node tests/
 - `party.test.mjs` · 94 · Grupos: invitar/aceptar/rechazar/cancelar, límite de 8, reparto de experiencia, retirarse y disolución, chat de grupo.
 - `path.test.mjs` · 41 · A* con arrays tipados: caminos válidos, de coste óptimo (frente a Dijkstra), reutilizables entre búsquedas y rodeando ocupados. node test
+- `penalty.test.mjs` · 14 · PenaltyItemDrop (Client.cpp): el caído en PvP suelta un objeto al azar (puesto o de la mochila) al suelo.
 - `pets.test.mjs` · 81 · Hospital de compañeros, modo paz/ataque, Ctrl+Q (objetivo), compañero caído y manuales de habilidad.
 - `petskill.test.mjs` · 44 · Habilidad activa de cada especie de compañero (petskill.js): maná, enfriamiento y efecto en combate.
 - `psychic.test.mjs` · 77 · Summons psíquicos (psychic.js): Beholder / Centaurus / Stalker lanzan solos, sin daño directo, con estados limitados y sin apilar.
@@ -242,10 +247,15 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 
 ## tools
 
+- `add_missing_items.mjs` · 20 · Añade a web/data/items.json los objetos de Item*.cfg (incl. Item4.cfg) que el conversor antiguo no leyó.
+- `add_missing_npcs.mjs` · 22 · Añade a web/data/npc.json los NPC de Npc.cfg (original) que faltan. Aditivo: no toca los existentes.
 - `bench.mjs` · 23 · Banco de pruebas de la simulación: N jugadores + N bots cazando en la granja con los generadores reales. node tools/bench.mjs [jugadores=20
 - `i18n_audit.mjs` · 28 · Auditoría de traducciones: busca cadenas en español (client/ y shared/) que t() no traduce al inglés.
+- `magia_lore.mjs` · 69 · Lore INVENTADO por el port (el original no tiene historia de los hechizos) y descripción de efecto, por id de Magic.cfg.
 - `questsim.mjs` · 57 · Simulación acelerada de las misiones del Acto I con habitantes. node tools/questsim.mjs [bots=9] [minutos=240] [semilla=1] [salida.json]
+- `sim_magia.mjs` · 500 · Genera docs/sistemas/magias-diseno.md: catálogo, fórmulas, lore (INVENTADO), simulaciones y guía de equilibrio de los hechizos.
 - `version_web.mjs` · 31 · Añade la revisión del despliegue a módulos ESM y entradas HTML para evitar mezclar entregas.
+- `add_missing_maps.py` · 50 · info() busca MAPDATA en repo/Files/GameServers/<srv>/MAPDATA: aquí es HGServer/MAPDATA
 - `build_dungeon_palette.py` · 122 · (mapa, tema): las cámaras de cada rey usan el escenario de otro dungeon del original (ver convert_theme_maps.py)
 - `convert.py` · 291 · número de monstruo de "spot-mob-generator" -> nombre en NPC.cfg (HGServer/Game.cpp)
 - `convert_all.py` · 43 · 
@@ -261,7 +271,11 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `convert_ui.py` · 27 · paperdoll del diálogo de personaje: item-equipM / item-equipW (15 hojas cada una) y colgantes de item-pack
 - `convert_units.py` · 43 · nombre, pak, tipo de NPC.cfg (0 = sin tipo), hojas
 - `e2e.py` · 75 · 
+- `equalize_detail.py` · 26 · 
 - `export_skeleton.py` · 31 · 
+- `fill_tile_holes.py` · 23 · 
+- `fix_tile_alpha.py` · 32 · 
+- `fix_tile_seams.py` · 27 · 
 - `hdup.py` · 38 · 
 - `lint_dialogs.py` · 18 · 
 - `make_crypt_assets.py` · 147 · ---------------------------------------------------------------- puerta
@@ -274,8 +288,11 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `mkvoice_companion.py` · 41 · 
 - `mkvoice_fear.py` · 83 · 
 - `mkvoice_phases.py` · 63 · evolve: línea al volver a invocar al compañero tras cambiar de tamaño (niveles 10, 25, 40, 50 = pasos 1..4)
-- `remaster_ia.py` · 112 · 
+- `perf.py` · 76 · 
+- `remaster_equip.py` · 58 · 
+- `remaster_ia.py` · 299 · Grupos de hojas de personaje (players.json): «W» = mujer (pieles 4-6, ropa interior pu1, pelo ph1); «M» = hombre (pieles 1-3, pu0, ph0)
 - `remaster_music.py` · 203 · 
+- `remaster_ui.py` · 46 · 
 - `serve.py` · 75 · 
 - `tile_table.py` · 24 · (archivo .pak, índice inicial, cantidad)
 - `to_webp.py` · 25 · 

@@ -5,6 +5,7 @@ Cada ficha: qué hace, de dónde se porta (función del original), reglas, prueb
 - [tiendas.md](tiendas.md) — tienda, herrero, almacén, mago.
 - [combate.md](combate.md) — fórmulas de ataque, defensa y daño (auditoría contra `Game.cpp`).
 - [magia.md](magia.md) — hechizos, efectos y estados.
+- [magias-diseno.md](magias-diseno.md) — diseño y balance de las 65 magias (generado: `node tools/sim_magia.mjs`).
 - [mundo.md](mundo.md) — mapas, NPC de ciudad, teleports, criptas.
 - [cripta.md](cripta.md) — cripta de esqueletos de 20 niveles.
 - [tutorial.md](tutorial.md) — tutorial para jugadores nuevos (diálogos con cara, objetivos, saltar).

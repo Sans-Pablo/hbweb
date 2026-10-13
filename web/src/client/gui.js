@@ -9,6 +9,9 @@ import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
 import { DYE_RGB } from "./look.js";
+import { WEAPON_RGB } from "./assets.js";
+import { imgUrl } from "./imgurl.js";
+const UI_IA_VERSION = "ui-0.80.1";          // subir al regenerar web/data/ui_ia
 
 export const W = 800, H = 600;
 const RESX = 80, RESY = 120, ADDX = 10;            // desplazamientos del cliente modificado a 800x600
@@ -36,6 +39,8 @@ export class Gui {
 
   async load() {
     this.manifest = await (await fetch("data/ui.json")).json();
+    this.iaMan = await fetch("data/ui_ia.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));          // cuadros con IA (tools/remaster_ui.py); solo en modo remastered
+    this.iaImg = {};
     await Promise.all(Object.keys(this.manifest).map(k => new Promise(res => {
       const i = new Image();
       i.onload = i.onerror = res;
@@ -44,6 +49,16 @@ export class Gui {
     })));
   }
   get ready() { return !!this.manifest; }
+  // hoja de la interfaz a usar: [imagen, factor]. La IA se pide la primera vez y, hasta que llega, se dibuja la original.
+  uiSrc(key) {
+    const h = this.spr && this.spr.hd && this.iaMan && this.iaMan[key];
+    if (h) {
+      let i = this.iaImg[key];
+      if (!i) { i = this.iaImg[key] = new Image(); i.src = imgUrl("data/ui_ia/" + h.png) + "?v=" + UI_IA_VERSION; }
+      if (i.complete && i.naturalWidth > 0) return [i, h.k];
+    }
+    return [this.img[key], 1];
+  }
 
   // coloca el lienzo sobre el área visible del juego (rect en píxeles CSS) y fija la escala 800x600
   place(rect, dpr) {
@@ -75,22 +90,39 @@ export class Gui {
   // ---------------------------------------------------------------- sprites del juego (item-pack...)
   setGameSprites(spr) { this.spr = spr; this._px = {}; }
   putGame(key, f, x, y, alpha = 1) {
-    const hash = key.indexOf("#"), tint = hash < 0 ? 0 : +key.slice(hash + 1); if (hash >= 0) key = key.slice(0, hash);
+    const hash = key.indexOf("#"), ts = hash < 0 ? "" : key.slice(hash + 1), wt = ts[0] === "w" ? +ts.slice(1) : 0, tint = ts[0] === "w" ? 0 : +ts; if (hash >= 0) key = key.slice(0, hash);
     const fr = this.spr && this.spr.frame(key, f); if (!fr || !this.spr.ready(key)) return;
     const [sx, sy, w, h, px, py] = fr;
     if (alpha !== 1) this.ctx.globalAlpha = alpha;
-    this.ctx.drawImage(tint ? this.tintedIcon(key, f, tint, fr) : this.spr.img[key], tint ? 0 : sx, tint ? 0 : sy, w, h, x + px, y + py, w, h);
+    const [img, k] = this.spr.src(key);          // hoja con IA (ip*) cuando está cargada; si no, la original
+    const sm = k > 1; if (sm) { this.ctx.imageSmoothingEnabled = true; this.ctx.imageSmoothingQuality = "high"; }
+    if (wt) this.ctx.drawImage(this.weaponIcon(key, f, wt, fr, img, k), 0, 0, w * k, h * k, x + px, y + py, w, h);
+    else if (tint) this.ctx.drawImage(this.tintedIcon(key, f, tint, fr, img, k), 0, 0, w * k, h * k, x + px, y + py, w, h);
+    else this.ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + px, y + py, w, h);
+    if (sm) this.ctx.imageSmoothingEnabled = false;
     if (alpha !== 1) this.ctx.globalAlpha = 1;
   }
   // icono con el tinte fijo de un báculo (multiplicado y recortado a la forma, como el pelo); se guarda un lienzo por fotograma
-  tintedIcon(key, f, tint, fr) {
-    const k = key + ":" + f + ":" + tint, c = this.tintCache || (this.tintCache = new Map());
+  tintedIcon(key, f, tint, fr, img = this.spr.img[key], z = 1) {
+    const k = key + ":" + f + ":" + tint + ":" + z, c = this.tintCache || (this.tintCache = new Map());
     let cv = c.get(k);
     if (!cv) {
-      const [sx, sy, w, h] = fr; cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-      const g = cv.getContext("2d"); g.drawImage(this.spr.img[key], sx, sy, w, h, 0, 0, w, h);
-      g.globalCompositeOperation = "multiply"; g.fillStyle = DYE_RGB[tint]; g.fillRect(0, 0, w, h);
-      g.globalCompositeOperation = "destination-in"; g.drawImage(this.spr.img[key], sx, sy, w, h, 0, 0, w, h);
+      const [sx, sy, w, h] = fr; cv = document.createElement("canvas"); cv.width = w * z; cv.height = h * z;
+      const g = cv.getContext("2d"); g.drawImage(img, sx * z, sy * z, w * z, h * z, 0, 0, w * z, h * z);
+      g.globalCompositeOperation = "multiply"; g.fillStyle = DYE_RGB[tint]; g.fillRect(0, 0, w * z, h * z);
+      g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx * z, sy * z, w * z, h * z, 0, 0, w * z, h * z);
+      c.set(k, cv);
+    }
+    return cv;
+  }
+  // icono de arma con la paleta aditiva del original (WEAPON_RGB)
+  weaponIcon(key, f, col, fr, img, z = 1) {
+    const k = "w:" + key + ":" + f + ":" + col + ":" + z, c = this.tintCache || (this.tintCache = new Map());
+    let cv = c.get(k);
+    if (!cv) {
+      const [sx, sy, w, h] = fr, off = WEAPON_RGB[col]; cv = document.createElement("canvas"); cv.width = w * z; cv.height = h * z;
+      const g = cv.getContext("2d"); g.drawImage(img, sx * z, sy * z, w * z, h * z, 0, 0, w * z, h * z);
+      try { const id = g.getImageData(0, 0, cv.width, cv.height), d = id.data; if (off) for (let i = 0; i < d.length; i += 4) if (d[i + 3]) for (let j = 0; j < 3; j++) d[i + j] = Math.max(0, Math.min(255, d[i + j] + off[j])); g.putImageData(id, 0, 0); } catch {}
       c.set(k, cv);
     }
     return cv;
@@ -124,13 +156,15 @@ export class Gui {
   put(key, f, x, y, w = null, vertical = false, alpha = 1) {
     const m = this.manifest && this.manifest[key]; if (!m) return;
     const fr = m.frames[f]; if (!fr) return;
-    const img = this.img[key]; if (!img || !img.naturalWidth) return;
+    const o = this.img[key]; if (!o || !o.naturalWidth) return;
     let [sx, sy, sw, sh, px, py] = fr;
     if (w !== null) { if (vertical) sh = Math.min(sh, w); else sw = Math.min(sw, w); }
     if (sw <= 0 || sh <= 0) return;
-    const c = this.ctx;
+    const c = this.ctx, [img, k] = this.uiSrc(key);
     if (alpha !== 1) c.globalAlpha = alpha;
-    c.drawImage(img, sx, sy, sw, sh, x + px, y + py, sw, sh);
+    if (k > 1) { c.imageSmoothingEnabled = true; c.imageSmoothingQuality = "high"; }
+    c.drawImage(img, sx * k, sy * k, sw * k, sh * k, x + px, y + py, sw, sh);
+    if (k > 1) c.imageSmoothingEnabled = false;
     if (alpha !== 1) c.globalAlpha = 1;
   }
 
@@ -151,31 +185,31 @@ export class Gui {
   }
   // dibuja un fotograma multiplicado por un color (PutTransSpriteRGB aproximado)
   tint(key, f, x, y, rgb) {
-    const m = this.manifest[key], fr = m.frames[f], img = this.img[key];
-    if (!fr || !img || !img.naturalWidth) return;
-    const [sx, sy, sw, sh, px, py] = fr;
+    const m = this.manifest[key], fr = m.frames[f], o = this.img[key];
+    if (!fr || !o || !o.naturalWidth) return;
+    const [sx, sy, sw, sh, px, py] = fr, [img, k] = this.uiSrc(key);
     const t = this._t || (this._t = document.createElement("canvas")), g = t.getContext("2d");
-    t.width = sw; t.height = sh;
-    g.clearRect(0, 0, sw, sh);
-    g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    t.width = sw * k; t.height = sh * k;
+    g.clearRect(0, 0, sw * k, sh * k);
+    g.drawImage(img, sx * k, sy * k, sw * k, sh * k, 0, 0, sw * k, sh * k);
     g.globalCompositeOperation = "source-atop";
     g.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-    g.fillRect(0, 0, sw, sh);
-    this.ctx.drawImage(t, x + px, y + py);
+    g.fillRect(0, 0, sw * k, sh * k);
+    this.ctx.drawImage(t, 0, 0, sw * k, sh * k, x + px, y + py, sw, sh);
   }
 
   // fotograma teñido multiplicando por un color CSS (aproxima PutSpriteRGB; p. ej. el pelo)
   mul(key, f, x, y, color) {
-    const m = this.manifest[key], fr = m && m.frames[f], img = this.img[key];
-    if (!fr || !img || !img.naturalWidth) return;
-    const [sx, sy, sw, sh, px, py] = fr;
+    const m = this.manifest[key], fr = m && m.frames[f], o = this.img[key];
+    if (!fr || !o || !o.naturalWidth) return;
+    const [sx, sy, sw, sh, px, py] = fr, [img, k] = this.uiSrc(key), W = sw * k, H = sh * k;
     const t = this._m || (this._m = document.createElement("canvas")), g = t.getContext("2d");
-    t.width = sw; t.height = sh;
-    g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, sw, sh);
-    g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    g.globalCompositeOperation = "multiply"; g.fillStyle = color; g.fillRect(0, 0, sw, sh);
-    g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    this.ctx.drawImage(t, x + px, y + py);
+    t.width = W; t.height = H;
+    g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, W, H);
+    g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+    g.globalCompositeOperation = "multiply"; g.fillStyle = color; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+    this.ctx.drawImage(t, 0, 0, W, H, x + px, y + py, sw, sh);
   }
 
   // texto con la letra del cliente (GDI): sombra de 1 píxel opcional
@@ -227,7 +261,16 @@ export class Gui {
   toggle(id) { if (this.isOpen(id)) this.close(id); else this.open(id); }
   closeAll() { for (const id of [...this.order]) this.close(id); }
   front(id) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); this.order.push(id); } }
+  // cuadro modal (ventanas de `window.js` con `modal`): mientras esté abierto recibe todo el ratón y el teclado
+  modal() { for (let i = this.order.length - 1; i >= 0; i--) { const d = this.dialogs.get(this.order[i]); if (d.modal && !d.hidden) return d; } return null; }
+  // teclado para los cuadros con campos de texto (Win.key); true = consumida (el controlador no la usa para moverse)
+  key(e) {
+    for (let i = this.order.length - 1; i >= 0; i--) { const d = this.dialogs.get(this.order[i]); if (d.key && !d.hidden && d.key(e, this)) return true; if (d.modal) return true; }
+    return false;
+  }
   dialogAt(x, y) {
+    const m = this.modal();
+    if (m) return x >= m.x && x < m.x + m.w && y >= m.y && y < m.y + m.h ? m : null;
     for (let i = this.order.length - 1; i >= 0; i--) {
       const d = this.dialogs.get(this.order[i]);
       if (d.hidden) continue;
@@ -238,13 +281,14 @@ export class Gui {
   // ¿está el puntero sobre la interfaz (y no sobre el mundo)?
   over(cx, cy) {
     const [x, y] = this.toGui(cx, cy);
-    return this.dialogAt(x, y) !== null || !this.mobile && y >= 548 - 0 && y < H && x >= 0 && x < W;
+    return this.modal() !== null || this.dialogAt(x, y) !== null || !this.mobile && y >= 548 - 0 && y < H && x >= 0 && x < W;
   }
 
   // ---------------------------------------------------------------- ratón
   move(cx, cy) {
     const [x, y] = this.toGui(cx, cy);
     this.mouse.x = x; this.mouse.y = y;
+    if (this.cap) this.cap.fn(x, y);
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
       d.x = Math.max(0, Math.min(this.W - d.w, x - this.drag.dx));
@@ -257,7 +301,9 @@ export class Gui {
     this.mouse.x = x; this.mouse.y = y; this.mouse.down = true;
     if (this.item) this.item = null;                                // por si quedó uno pegado
     const d = this.dialogAt(x, y);
+    if (!d && this.modal()) return true;
     if (d) {
+      if (button === 2 && d.modal) return true;
       if (button === 2) { if (!d.fixed) this.close(d.id); return true; }      // clic derecho: cierra el cuadro
       this.front(d.id);
       const now = performance.now(), dbl = button === 0 && this.lastClick && this.lastClick.id === d.id && now - this.lastClick.t < 400 && Math.hypot(x - this.lastClick.x, y - this.lastClick.y) < 6;
@@ -281,11 +327,11 @@ export class Gui {
   wheel(cx, cy, dy) {
     const [x, y] = this.toGui(cx, cy), d = this.dialogAt(x, y);
     if (d && d.wheel) { d.wheel(this, dy < 0 ? 1 : -1); return true; }
-    return !!d;
+    return !!d || !!this.modal();
   }
-  cancelDrag() { this.mouse.down = false; this.drag = null; this.item = null; }
+  cancelDrag() { this.mouse.down = false; this.drag = null; this.cap = null; this.item = null; }
   up(cx, cy) {
-    this.mouse.down = false; this.drag = null;
+    this.mouse.down = false; this.drag = null; this.cap = null;
     if (this.item) {
       const it = this.item; this.item = null;
       if (cx !== undefined) { const [x, y] = this.toGui(cx, cy); this.mouse.x = x; this.mouse.y = y; }
@@ -323,6 +369,7 @@ export class Gui {
     for (const id of this.order) {
       const d = this.dialogs.get(id);
       if (d.hidden) continue;
+      if (d.modal) { c.fillStyle = "rgba(0,0,0,.45)"; c.fillRect(0, 0, this.W, this.H); }
       c.save(); c.translate(d.x, d.y);
       c.beginPath(); c.rect(0, 0, d.w, d.h); c.clip();
       d.draw(this, me, world);
