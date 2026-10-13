@@ -1,0 +1,47 @@
+{
+ "env": {
+  "platform": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "hd_arg": "auto",
+  "mobile": false,
+  "seconds": 15,
+  "ts": 1791928506,
+  "hd_effective": true
+ },
+ "scenarios": {
+  "boot": {
+   "ready_ms": 325,
+   "transfer_bytes": 71041283,
+   "decoded_bytes": 1519463960,
+   "decoded_sheets": 1442,
+   "sheets_requested": 1441,
+   "long_tasks_over_50ms": 50,
+   "heap_bytes": 33908466
+  },
+  "walk": {
+   "frames": 186,
+   "frame_p50_ms": 66.7,
+   "frame_p95_ms": 166.7,
+   "frame_p99_ms": 216.7,
+   "frame_max_ms": 233.4,
+   "frames_over_50ms": 129,
+   "long_tasks_over_50ms": 238,
+   "transfer_bytes": 5834223,
+   "decoded_bytes_delta": 43383584
+  },
+  "teleport": {
+   "frames": 63,
+   "frame_p50_ms": 50.1,
+   "frame_p95_ms": 116.7,
+   "frame_p99_ms": 1050.0,
+   "frame_max_ms": 1050.0,
+   "frames_over_50ms": 35,
+   "long_tasks_over_50ms": 302,
+   "ready_ms": 5000,
+   "transfer_bytes": 0,
+   "decoded_bytes_delta": 0
+  }
+ },
+ "errors": [
+  "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+ ]
+}

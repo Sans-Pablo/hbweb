@@ -1,0 +1,35 @@
+{
+  "_doc": "Presupuestos. «scenarios»: métricas que no dependen de la máquina (bytes, hojas); se exigen siempre con --check. «gpu_scenarios»: tiempos de fotograma; solo se exigen con --gpu en una máquina con GPU real (en headless por software son siempre malos). «sheets»: tools/sprite_audit.py. Se endurecen, nunca se relajan sin anotarlo en docs/sistemas/rendimiento-sprites.md.",
+  "sheets": {
+    "max_decoded_bytes": 33554432,
+    "max_disk_bytes": 4194304,
+    "max_side": 4096
+  },
+  "scenarios": {
+    "boot": {
+      "transfer_bytes_max": 30000000,
+      "decoded_bytes_max": 300000000,
+      "sheets_requested_max": 600
+    },
+    "walk": {
+      "transfer_bytes_max": 40000000
+    },
+    "teleport": {
+      "transfer_bytes_max": 40000000,
+      "decoded_bytes_delta_max": 200000000
+    }
+  },
+  "regression_tolerance": 0.1,
+  "gpu_scenarios": {
+    "walk": {
+      "frame_p95_ms_max": 22,
+      "frame_p99_ms_max": 40,
+      "frames_over_50ms_max": 3,
+      "long_tasks_over_50ms_max": 4
+    },
+    "teleport": {
+      "frame_p99_ms_max": 60,
+      "frames_over_50ms_max": 6
+    }
+  }
+}

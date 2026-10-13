@@ -19,3 +19,6 @@ web/data/sprites_ia/
 web/data/sprites_ia.json
 web/data/ui_ia/
 web/data/ui_ia.json
+
+# resultados de medición y capturas (tools/perf, no se versionan; tools/perf/baseline.json sí)
+tools/perf/results/

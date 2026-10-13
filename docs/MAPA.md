@@ -24,17 +24,17 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `rarity.js` · 30 · Rareza del botín (propia del port; los atributos y los objetos salen del original).
 - `rules.js` · 82 · Fórmulas del servidor original (HGServer/Game.cpp). Funciones puras: reciben el
 - `skills.js` · 43 · Habilidades (Skill.cfg, CalculateSSN_*): maestría 0..100 que sube con el uso.
-- `world.js` · 336 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
+- `world.js` · 339 · Simulación del juego: el papel del servidor (HGServer). No sabe nada de dibujo ni del
 
 ## web/src/shared/systems
 
 - `arena.js` · 380 · Arena de apuestas. INVENTO del port (sin equivalente en el original); usa lo que sí existe: el NPC de ciudad "Kennedy"
-- `bosses.js` · 272 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
-- `bot.js` · 612 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
+- `bosses.js` · 273 · Mecánicas únicas de los jefes de la cripta. INVENTO del port (el original no tiene jefes de mazmorra); los números van aquí.
+- `bot.js` · 620 · BOT: jugador simulado (INVENTO del port, herramienta de admin). Vive en el mundo como un jugador más (kind "player", mochila, equipo,
 - `botitems.js` · 128 · GESTIÓN DE OBJETOS DE LOS BOTS (INVENTO del port, versión 2). Un bot trata sus objetos como un jugador con cabeza: cada uno tiene un VALOR
 - `builds.js` · 64 · BUILDS (reparto de puntos) de los habitantes (INVENTO del port). Cada habitante empieza con el de su arquetipo y, con el tiempo, prueba otro
 - `citizens.js` · 30 · Habitantes de las ciudades (tendero, herrero, almacenero, mago...): NPC pacíficos que no se mueven ni se pueden atacar.
-- `combatsys.js` · 302 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
+- `combatsys.js` · 304 · Golpes, daño, experiencia y muerte de jugadores y monstruos.
 - `companion.js` · 328 · Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
 - `council.js` · 102 · CONSEJO DE GRUPO (INVENTO del port). Cuando varios habitantes van juntos, qué hacen lo decide una discusión, como entre jugadores de verda
 - `debug.js` · 141 · Herramientas de prueba (F1 → «Herramientas»). INVENTO del port: no existen en el original. Solo funcionan con DEBUG.enabled
@@ -86,12 +86,12 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `classicdialog.js` · 103 · Cuadro de diálogo con el formato clásico de Helbreath (marco de madera "gamedialog_1" fotograma 2, texto en tinta oscura,
 - `compicon.js` · 71 · Icono de las bolas de compañero: un sprite pequeño de la especie (reposo, de frente) sobre la bola de Item.cfg.
 - `connection.js` · 313 · Conexión con el "servidor". Dos implementaciones con la misma forma:
-- `controller.js` · 263 · Entrada del jugador -> intenciones -> órdenes al servidor.
+- `controller.js` · 264 · Entrada del jugador -> intenciones -> órdenes al servidor.
 - `create.js` · 129 · Pantalla de creación de personaje (UpdateScreen_OnCreateNewCharacter del cliente original):
 - `dashboard.js` · 253 · OBSERVADOR DIVIDIDO (INVENTO del port): pantalla de cuatro cuadrantes para controlar y analizar a los habitantes, no solo mirar.
 - `dialogs.js` · 560 · Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 - `dungeon-choice.js` · 24 · Decisión de juego al volver a la cripta con progreso guardado: continuar donde se quedó o reiniciar desde el nivel 1.
-- `fx.js` · 188 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
+- `fx.js` · 229 · Efectos visuales del cliente: números de daño, avisos flotantes, chispas.
 - `gui.js` · 611 · Interfaz del cliente original dibujada sobre un lienzo de 800x600 (los sprites salen de
 - `guild.js` · 98 · Cuadro «Guild» (id 34, Ctrl+G): el guild del original (Guildmaster / Guildsman) con lo que añade el port. La lógica vive en shared/syste
 - `hud.js` · 356 · Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
@@ -145,6 +145,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `bot-arrows-allies.test.mjs` · 10 · v0.77.0: defender aliados (allyBonus) y sin flechas
 - `bot-brain.test.mjs` · 28 · El «cerebro» del habitante observado + descenso de cripta con reloj prorrogado + equipo de cripta.
 - `bot-chat.test.mjs` · 17 · Charla de los habitantes: mensajes largos partidos sin perder el final y memoria de lo hablado.
+- `bot-crit.test.mjs` · 35 · Los bots usan crítico (Alt+clic) y dash con maestría 100
 - `bot-fixes.test.mjs` · 26 · Arreglos de pulido de bots 0.79.3
 - `bot-forced-respec.test.mjs` · 13 · v0.77.0: la clase por ítems y el tope diario de reinicios (builds.js)
 - `bot-jobs.test.mjs` · 40 · Oficios fijos de los habitantes (0.76.0): 4 granjeros, 4 pescadores (2+2 por bando) y 4 de apoyo (2 por bando) que buscan grupo.
@@ -162,7 +163,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `companion.test.mjs` · 85 · Compañeros: obtención en la tienda, selección, estadísticas compartidas, experiencia, guardado.
 - `craft-stall.test.mjs` · 40 · Artesanos (0.78.0): los granjeros y pescadores venden en un puesto lo que cosechan/pescan al precio de Item.cfg; otros bots con summon les c
 - `create-side.test.mjs` · 22 · Creación de personaje: el bando elegido (Aresden/Elvine) se aplica y el nuevo de Elvine empieza en su granja.
-- `crit-dash.test.mjs` · 82 · Crítico (Alt + clic) y dash (atacar corriendo). Cifras del original (combat.cpp, HG.cpp, Game.cpp): ver docs/sistemas/critico-dash.md.
+- `crit-dash.test.mjs` · 83 · Crítico (Alt + clic) y dash (atacar corriendo). Cifras del original (combat.cpp, HG.cpp, Game.cpp): ver docs/sistemas/critico-dash.md.
 - `crypt-start.test.mjs` · 44 · Cripta: piso de inicio elegible entre los despejados; tras despejar el 10 y salir se entra en el 11 (sin repetir el jefe)
 - `data.test.mjs` · 50 · Coherencia de los datos generados (web/data): lo que un conversor deja a medias suele romper el juego mucho después.
 - `debug.test.mjs` · 49 · Herramientas de prueba (F1 → Herramientas): órdenes dbg.
@@ -250,6 +251,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `voice.test.mjs` · 74 · determinista por nombre
 - `whisper.test.mjs` · 21 · Susurros «/to nombre texto»: llegan a otro jugador aunque esté en otro mapa; el emisor recibe el eco; sin destinatario se rechaza.
 - `window.test.mjs` · 43 · Sistema de ventanas del lienzo (window.js + gui.js): avisos modales (gui.ask / gui.confirm), teclado y bloqueo del ratón por modal.
+- `perf_tools_test.py` · 26 · 
 
 ## tools
 
@@ -277,7 +279,7 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `convert_theme_maps.py` · 42 · 
 - `convert_ui.py` · 27 · paperdoll del diálogo de personaje: item-equipM / item-equipW (15 hojas cada una) y colgantes de item-pack
 - `convert_units.py` · 43 · nombre, pak, tipo de NPC.cfg (0 = sin tipo), hojas
-- `e2e.py` · 75 · 
+- `e2e.py` · 76 · 
 - `equalize_detail.py` · 26 · 
 - `export_skeleton.py` · 31 · 
 - `fill_tile_holes.py` · 23 · 
@@ -295,12 +297,13 @@ Generado por `tools/mapa.sh` (no editar a mano). Cada línea: fichero · líneas
 - `mkvoice_companion.py` · 41 · 
 - `mkvoice_fear.py` · 83 · 
 - `mkvoice_phases.py` · 63 · evolve: línea al volver a invocar al compañero tras cambiar de tamaño (niveles 10, 25, 40, 50 = pasos 1..4)
-- `perf.py` · 76 · 
+- `perf.py` · 78 · 
 - `remaster_equip.py` · 58 · 
 - `remaster_ia.py` · 299 · Grupos de hojas de personaje (players.json): «W» = mujer (pieles 4-6, ropa interior pu1, pelo ph1); «M» = hombre (pieles 1-3, pu0, ph0)
 - `remaster_music.py` · 203 · 
 - `remaster_ui.py` · 46 · 
 - `serve.py` · 75 · 
+- `sprite_audit.py` · 76 · 
 - `tile_table.py` · 24 · (archivo .pak, índice inicial, cantidad)
 - `to_webp.py` · 25 · 
 - `upscale_equip.py` · 18 · 
