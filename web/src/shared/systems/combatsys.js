@@ -38,7 +38,7 @@ export function reachOf(w, p, t, crit) {
   if (p.eff?.bow) return Infinity;                                  // arco: el cliente manda el disparo a la casilla elegida
   const two = p.equip[EQUIP.TWOHAND], inst = two !== undefined && Inv.instOf(p, two);
   if (inst && inst.id === 845) return crit ? 5 : 4;
-  if (crit && p.eff?.wtype > 0) { if (p.eff.skill === 8) return 3; if (p.eff.skill === 9) return 4; }
+  if (crit && p.eff?.wtype > 0) { if (p.eff.skill === 8) return 3; if (p.eff.skill === 9) return 4; if (p.eff.skill === 10 || p.eff.skill === 14 || p.eff.skill === 21) return 2; }   // hacha, martillo, vara: absX<=2 (Game.cpp ~31018, 31052, 31090)
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
 
