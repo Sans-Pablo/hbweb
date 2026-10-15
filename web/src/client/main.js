@@ -845,7 +845,7 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
     for (const t of box.querySelectorAll(".tabs button")) t.classList.toggle("on", (t.dataset.tab === "new") === c);
     go.textContent = c ? "Crear cuenta y entrar" : "Entrar";
     msg.textContent = "";
-    pass.autocomplete = c ? "new-password" : "current-password";
+    pass.autocomplete = "off";   // campo de texto enmascarado: Chrome no lo trata como login (sin avisos del gestor de contraseñas)
   };
   if (online) fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => {
     if (v.version === info.version) return;

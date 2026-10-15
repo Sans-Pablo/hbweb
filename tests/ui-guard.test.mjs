@@ -16,4 +16,5 @@ for (const f of [path.join(root, "index.html"), ...walk(path.join(root, "src")).
 const gui = fs.readFileSync(path.join(root, "src/client/gui.js"), "utf8");
 if (!/this\.full = rect/.test(gui)) fail("el lienzo de la GUI debe cubrir toda el área (this.full = rect)");
 if (!/const vl = /.test(gui) && !/vl = \(f\.x/.test(gui)) fail("el arrastre debe medirse contra los bordes del navegador");
+{ const i = html.indexOf('id="join"'); if (/type=["']?password/i.test(html.slice(i, i + 1500))) fail("el login no debe usar input type=password (aviso de filtración de Chrome)"); }
 console.log("OK ui-guard");

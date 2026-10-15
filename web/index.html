@@ -232,8 +232,8 @@ body.dialogtrans .panel { opacity: .55; }
   <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
   <div class="tabs"><button type="button" data-tab="login" class="on">Entrar</button><button type="button" data-tab="new">Crear cuenta</button></div>
   <label>Nombre<input class="user" maxlength="16" autocomplete="off" data-lpignore="true" spellcheck="false"></label>
-  <label class="pw">Contraseña<input class="pass" type="password" autocomplete="current-password"></label>
-  <label class="pw2">Repite la contraseña<input class="pass2" type="password" autocomplete="new-password"></label>
+  <label class="pw">Contraseña<input class="pass" type="text" name="hb-k1" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore></label>
+  <label class="pw2">Repite la contraseña<input class="pass2" type="text" name="hb-k2" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore></label>
   <button type="submit" class="go">Entrar</button><p class="msg"></p>
   <p class="hint">Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.</p></form></div>
 <style>
@@ -246,7 +246,8 @@ body.dialogtrans .panel { opacity: .55; }
   #join .pw2 { display: none; }
   #join.creating .pw2 { display: block; }
   #join .hint { font-size: 11px; color: var(--muted); margin: 10px 0 0; text-align: center; }
-  #join input[type=password] { width: 100%; box-sizing: border-box; }
+  #join input.pass, #join input.pass2 { -webkit-text-security: disc; text-security: disc; }
+  #join input.pass, #join input.pass2 { width: 100%; box-sizing: border-box; }
   #create { position: fixed; inset: 0; display: none; place-items: center; background: rgba(5,5,8,.92); z-index: 60; }
   #create .box { background: linear-gradient(#1f1b13, #14110b); border: 1px solid #6b5a33; border-radius: 12px; padding: 18px 22px; width: min(620px, 94vw); color: #e8e2d0; font-size: 14px; }
   #create h2 { margin: 0 0 12px; color: #d9a940; font-family: Tahoma, Verdana, sans-serif; text-align: center; letter-spacing: .08em; }

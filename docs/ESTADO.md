@@ -387,3 +387,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.5 (hb-ui): flechas de entrada únicas por destino y ninguna en cerrados; quitado «+N exp» flotante; F11 ya usaba `Win` común (verificado en ambos modos, sin diferencia reproducible).
 
 - 0.85.7 (hb-ui): ventanas hasta el borde exacto (gui.full), guardia CSS + tests/ui-guard.test.mjs, login sin autocompletado, minimapa de cripta proporcional (106 px), quitado pitMob. No se halló ningún beforeunload ni overlay celeste concreto en el código; el cartel de Chrome se asume el de guardar contraseña.
+
+- 0.85.7 (hb-ui): el cartel era el aviso de filtración de Google Password Manager; el login ya no usa input type=password (texto con -webkit-text-security, name no estandar, autocomplete off). Login offline verificado.
