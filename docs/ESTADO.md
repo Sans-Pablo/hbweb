@@ -369,3 +369,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Ticket 11 completo: barra inferior hasta los bordes (`Gui.edgeFill`, verificado a 1280x720) + arrastre a bordes; el área de juego ya era de pantalla completa.
 - Ticket 10 parcial (v0.84.3): solo el indicador Remastered/Legacy. Faltan limpieza de opciones y valores por defecto de F1.
 - Pendientes: 5 (migrar diálogos + constructor con opciones + retratos), 10 (resto), 12 (interfaz original total, minimapa móvil/reescalado en cripta), 14 (stats Olympia, mini mob en el foso). Requieren decisiones de diseño (formato Olympia no documentado, GUI de ancho variable).
+
+- 0.85.1 (hilo UI): cerrado lo sin verificar de 0.85.0 (arrastre al borde, chat/log arrastrables en Legacy, buscador de compañeros, Opciones en vivo). Hospital sigue siendo ClassicDialog, no Win.

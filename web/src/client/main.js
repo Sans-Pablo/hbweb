@@ -6,6 +6,7 @@ import { Grid } from "../shared/grid.js";
 import { Adventure } from "../shared/adventure.js";
 import { chooseDungeon } from "./dungeon-choice.js";
 import { createQuestUi } from "./questui.js";
+import { initDomDrag } from "./domdrag.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
 import { NET_PROTO, dirTo } from "../shared/const.js";
@@ -144,6 +145,7 @@ async function main() {
   status.remove();
   const logout = { n: null, t: 0 };
   const chatLog = [];
+  initDomDrag();                                                                       // chat y registro arrastrables
   const questUi = createQuestUi(() => world.ents.get(pid), () => gui.toggle(QUEST_ID));
   const guiApi = {
     quests: () => gui.toggle(QUEST_ID),

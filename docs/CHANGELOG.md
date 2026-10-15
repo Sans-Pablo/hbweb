@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.1 · Ventanas hasta el borde (2026-10-15)
+- Cierre de lo sin verificar de 0.85.0: el arrastre de ventanas del lienzo llega al borde de pantalla (por abajo se detiene sobre la barra inferior, 52 px, para no perder el asa); chat y registro (DOM, también en Legacy) son arrastrables con asa propia (domdrag.js), posición guardada y doble clic para restaurar; buscador de compañeros probado con bola; interruptores de Opciones (mini quest, indicadores de dirección) probados en vivo.
+
 ## 0.85.0 · Ventanas y buscadores (2026-10-15)
 - Hilo UI, backlog nuevo: ventana de elegir personaje eliminada; chat en ventana de formato nuevo (chatwin.js); rastreador de misiones con el formato nuevo y opción en Opciones; ventanas movibles hasta el borde de pantalla (lienzo y rastreador); buscador de objetos (dlgsearch.js) en tienda, herrería, almacén, hospital y compañeros; barras inferiores con bordes estirados; indicadores de dirección como opción (apagados por defecto); mensaje de lanzar hechizo con la fuente original (sin toast).
 - Hospital: se mantiene el ClassicDialog con pestañas (mismo marco de madera que los demás cuadros) + buscador; no se reconstruyó como Win.

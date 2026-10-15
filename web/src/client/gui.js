@@ -293,7 +293,7 @@ export class Gui {
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
       d.x = Math.max(60 - d.w, Math.min(this.W - 60, x - this.drag.dx));   // se puede arrastrar hasta el borde (queda a la vista un asa de 60 px)
-      d.y = Math.max(0, Math.min(this.H - 20, y - this.drag.dy));    // hasta los bordes de la pantalla (barra incluida)
+      d.y = Math.max(0, Math.min(this.H - 52 - 20, y - this.drag.dy));   // hasta el borde de la pantalla; por abajo la barra inferior (52 px) tapa la ventana, así que el asa se detiene justo encima
     }
   }
   // devuelve true si la interfaz se queda con el clic
