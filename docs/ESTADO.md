@@ -326,3 +326,7 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] (0.82.0) Compendio del juego en un artifact (testers, desvíos, dev): https://claude.ai/artifact/H9RKBrnNGb8RaPYgmaNTay
 
 - Petición (9 puntos): HD ya no vuelve a original solo; minimapa con «Cargando mapa…»; nombre propio solo en hover; F1 Skills 100; ataque a jugadores según `_iGetFOE` (aliados del mismo bando no se atacan (viajeros sí: desvío del port) ni se pisan al clicar; criminales sí): HECHO v0.82.1 (local). Pendiente: fuente de daño más nítida (sin IA disponible), alternar Force Attack con Ctrl+A. El FAIL de magia a summons es la tirada de resistencia original (poca skill), no un fallo de daño.
+
+## Hilo UI (rama Pablo-Claude/hb-ui-46a637) — v0.83.10
+- Hechos: 1 hover turquesa, 2 tutorial (cuadro con retrato, saltar con doble clic), 3 buscador/Ok destacado/márgenes comunes, 8 botón de mascota, 9 rótulo de la cripta, 11 arrastrar ventanas al borde, 13 pelo F5.
+- Pendientes: 4 cuadros neutros al hover, 5 migrar diálogos al sistema de ventanas + constructor, 6 misiones como Win propia, 7 hospital de mascotas, 10 modos Remastered/Legacy, 11 barra y área máxima (requiere GUI de ancho variable), 12 interfaz original total y minimapa móvil, 14 estadísticas estilo Olympia y mini sprite en pozos.
