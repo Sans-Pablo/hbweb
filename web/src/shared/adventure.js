@@ -23,6 +23,10 @@ export const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "
 export const FARM_HOME = [65, 75];
 export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
 
+// HG.cpp iGetMapLocationSide: arefarm/elvfarm (y sus almacenes) pertenecen a un bando; el teletransporte (HG.cpp ~11714) se deniega a quien no es de ese bando salvo GM o neutral
+export const FARM_SIDE = { arefarm: 1, elvfarm: 2 };
+export const enemyMap = (p, id) => { const s = FARM_SIDE[id]; return !!(s && p.side && p.side !== s && !p.gm); };
+
 export const SHARED_FROM = 15;   // desde este piso la cripta es una sola para los dos bandos (PvP): las parties se disputan el territorio
 const gkey = p => p.party ? "g" + p.party.id : p.id;   // clave de la cripta: la party comparte una
 export class Adventure {
@@ -120,6 +124,7 @@ export class Adventure {
       if (w === home) return false;
       return this.transfer(p, w, home, home.home);
     }
+    if (enemyMap(p, id)) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "no puedes entrar en la granja del bando enemigo" }); return false; }
     const to = id === w.map.id ? w : this.staticWorld(id);
     if (!to) { w.emit({ t: "reject", id: p.id, cmd: "teleport", why: this.maps[id] && !this.maps[id].grid ? "cargando el mapa, vuelve a intentarlo" : "mapa no disponible" }); return false; }
     const init = this.maps[id]?.meta.initial;
@@ -311,6 +316,7 @@ export class Adventure {
       else this.runs.get(gkey(p)).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
       return this.descend(p, w, level, true);
     }
+    if (enemyMap(p, String(cmd.map || "").toLowerCase())) return w.reject(p, cmd, "no puedes entrar en la granja del bando enemigo");
     const to = cmd.map === "arefarm" ? this.farm : this.staticWorld(String(cmd.map || "").toLowerCase());
     if (!to) return w.reject(p, cmd, "mapa no disponible (puede estar cargándose)");
     if (to === w) return true;

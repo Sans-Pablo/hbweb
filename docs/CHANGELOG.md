@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.15 · Motor: granjas por bando (2026-10-15)
+- No se puede entrar en la granja del bando enemigo (HG.cpp iGetMapLocationSide / teletransporte)
+
 ## 0.84.14 · Motor: magia a objetivos en movimiento (2026-10-15)
 
 - Los hechizos ofensivos siguen al ocupante de la casilla hasta que sale el hechizo (HG.cpp PlayerMagicHandler resuelve al instante; aquí la animación lo retrasa y los monstruos en movimiento esquivaban). `tests/magic-moving.test.mjs`.

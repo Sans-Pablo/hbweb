@@ -103,6 +103,7 @@ const EN = {
   "Partida en línea: se ha cargado tu progreso. Intro para hablar.": "Online game: your progress was loaded. Enter to chat.", "Partida en línea. Pulsa Intro para hablar con los demás.": "Online game. Press Enter to talk to the others.",
   "Faltan los datos de Skeleton. Recarga la página.": "Skeleton data is missing. Reload the page.", "Cripta de esqueletos": "Skeleton crypt",
   "Summons": "Summons", "Rename": "Rename", "Mode": "Mode", "Reset talents": "Reset talents", "Peace": "Peace", "Attack": "Attack", "You have no companion ball.": "You have no companion ball.",
+  "no puedes entrar en la granja del bando enemigo": "you cannot enter the enemy side's farm",
   "solo existen Aresfarm, sus tiendas y la cripta": "only Aresfarm, its shops and the crypt exist",
   "Cristal de hielo": "Ice Crystal",
   "Fantasma skeleton": "Ghost skeleton", "Recall: vuelves a la granja.": "Recall: you return to the farm.", "Recall cancelado.": "Recall cancelled.", "Recall interrumpido: te moviste o entraste en combate.": "Recall interrupted: you moved or entered combat.",
