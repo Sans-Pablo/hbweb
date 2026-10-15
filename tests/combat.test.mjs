@@ -95,12 +95,12 @@ assert.equal(comboBonus(9, 4), 8);
 assert.equal(absorbOnPlayer(seq(0.999), 10, { vit: 100 }), 1);   // 10 - (1d10 - 1) = 1
 
 
-// retroceso: golpes de 40 o más empujan una casilla en dirección contraria al atacante, sin cambiar hacia dónde mira
+// sin retroceso: el original (NOTIFY_DAMAGEMOVE) no desplaza al objetivo
 {
   const ev = [], w = { emit: e => ev.push(e), tryStep: (e, d) => { e.x += 1; e.actStart = 5; return true; } };
   const n = { x: 3, y: 3 }, t = { x: 4, y: 3, dir: 7, busyUntil: 0, dead: false };
   knockback(w, n, t, 39); assert.equal(ev.length, 0);
-  knockback(w, n, t, 40); assert.equal(t.x, 5); assert.equal(t.dir, 7); assert.equal(ev[0].dir, 3);
+  knockback(w, n, t, 400); assert.equal(ev.length, 0, "el original no mueve al objetivo"); assert.equal(t.x, 4);
 }
 
 // habilidades especiales de monstruo (bCreateNewNpc): bonus de experiencia y absorciones

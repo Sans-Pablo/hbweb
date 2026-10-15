@@ -10,7 +10,7 @@ import * as R from "./rules.js";
 import * as Player from "./systems/player.js";
 import * as Respec from "./systems/respec.js";
 import * as Combat from "./systems/combatsys.js";
-import { CRIT } from "./combat.js";
+import { CRIT, attackType } from "./combat.js";
 import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals, runStepsPerSp } from "./systems/vitals.js";
@@ -215,6 +215,7 @@ const COMMANDS = {
     const dx = Math.abs(p.x - t.x), dy = Math.abs(p.y - t.y);
     const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 1 && mastered(p);
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
+    if (dash && sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");   // un paralizado no se mueve NUNCA (tampoco con el dash)
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
     Feign.stand(w, p);
@@ -232,7 +233,7 @@ const COMMANDS = {
       w.setAct(p, ACT.ATTACK, ms);
       p.busyUntil = w.time + ms;
       p.lastAttack = p.lastCombat = w.time;
-      w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, tx: t.x, ty: t.y });
+      w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, at: attackType(p.eff.wtype, crit), tx: t.x, ty: t.y });
       w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
     };
     if (lead) { p.busyUntil = w.time + lead + ms; p.lastCombat = w.time; w.after(lead, go); return true; }
@@ -240,7 +241,7 @@ const COMMANDS = {
     p.busyUntil = w.time + ms;
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
-    w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, tx: t.x, ty: t.y });
+    w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, at: attackType(p.eff.wtype, crit), tx: t.x, ty: t.y });
     w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
     return true;
   },

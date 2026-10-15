@@ -1,39 +1,43 @@
-// Hechizos solo contra jugadores: Confusion (16), Inhibition Casting (31) y Resurrection (32).
-// node tests/magic-pvp.test.mjs
+// Magia contra jugadores (HG.cpp Effect_Damage_Spot): daña en PvP, no a uno mismo, ni en zona segura/sin PvP, ni a la party. node tests/magic-pvp.test.mjs
 import { readFileSync } from "node:fs";
 import { Grid } from "../web/src/shared/grid.js";
 import { World } from "../web/src/shared/world.js";
 import { GameData } from "../web/src/shared/data.js";
-import { sget } from "../web/src/shared/systems/status.js";
+import { sset, sget } from "../web/src/shared/systems/status.js";
+import { damagePlayer, canFight } from "../web/src/shared/systems/combatsys.js";
 import { MAGIC_MODE } from "../web/src/shared/magic.js";
-MAGIC_MODE.schools = false; MAGIC_MODE.player = true;
-
+MAGIC_MODE.player = true;
 const D = new URL("../web/data/", import.meta.url);
 const meta = JSON.parse(readFileSync(new URL("map.json", D)));
 const bytes = new Uint8Array(readFileSync(new URL(meta.map + ".bin", D)));
 const npcDb = JSON.parse(readFileSync(new URL("npc.json", D)));
-const magic = JSON.parse(readFileSync(new URL("magic.json", D)));
-const data = new GameData({ items: JSON.parse(readFileSync(new URL("items.json", D))), magic, npcs: npcDb });
+const data = new GameData({ items: JSON.parse(readFileSync(new URL("items.json", D))), magic: JSON.parse(readFileSync(new URL("magic.json", D))), npcs: npcDb });
 const assert = (c, m) => { if (!c) { console.error("FALLO:", m); process.exit(1); } };
-const id = nm => Object.keys(magic).find(k => magic[k].name === nm);
-
 const w = new World({ grid: new Grid(meta.w, meta.h, bytes), npcDb, data, spawns: [], rng: Math.random, start: meta.start });
 const aid = w.addPlayer("mago"), a = w.ents.get(aid), bid = w.addPlayer("victima"), b = w.ents.get(bid);
-for (const u of Object.values(a.equip)) w.command(aid, { t: "unequip", uid: u });
+for (const e of [a, b]) for (const u of Object.values(e.equip)) w.command(e.id, { t: "unequip", uid: u });
 w.tick(1000);
-a.magic = {}; for (const k of Object.keys(w.magic)) a.magic[k] = 1;
-a.skills[4] = 100; a.stats.int = a.stats.mag = 200; a.level = 100; a.mp = a.maxMp = 9999;
-const [bx, by] = w.freeSpotNear(a.x + 4, a.y); w.grid.release?.(b.x, b.y, b.id); b.x = b.fx = bx; b.y = b.fy = by; w.grid.occupy(bx, by, bid);
-const cast = (spell, x, y) => { w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; a.mp = a.maxMp; return w.command(aid, { t: "cast", spell, x, y }) && (w.tick(1500), true); };
-
-for (let i = 0; i < 20 && !sget(w, b, "confuse"); i++) cast(id("Confusion"), b.x, b.y);
-assert(sget(w, b, "confuse"), "Confusion confunde al jugador");
-for (let i = 0; i < 20 && !sget(w, b, "inhibit"); i++) cast(id("Inhibition Casting"), b.x, b.y);
-assert(sget(w, b, "inhibit"), "Inhibition Casting inhibe al jugador");
-b.magic = { [id("Heal")]: 1 }; b.mp = b.maxMp = 100; b.hp = 1; w.tick(1200); b.lastCast = -1e9; b.busyUntil = 0;
-assert(!w.command(bid, { t: "cast", spell: id("Heal"), x: b.x, y: b.y }), "el inhibido no puede lanzar");
-
-b.hp = 0; b.dead = true; w.grid.release?.(b.x, b.y, b.id);
-cast(id("Resurrection"), b.x, b.y);
-assert(!b.dead && b.hp > 0, "Resurrection levanta al jugador caído");
+a.magic = { 0: 1 }; a.skills[4] = 100; a.stats.int = a.stats.mag = 200; a.level = 100; w.recalc(a); a.mp = a.maxMp = 9999;
+b.stats.mag = 1; b.skills[3] = 0; w.recalc(b); b.hp = b.maxHp = 5000;
+const [x, y] = w.freeSpotNear(a.x + 3, a.y);
+w.grid.release(b.x, b.y, b.id); b.x = b.fx = x; b.y = b.fy = y; w.grid.occupy(x, y, b.id);
+const shoot = () => { a.lastCast = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: 0, x: b.x, y: b.y }); w.tick(1500); };
+w.pvp = false; b.hp = 5000; shoot();
+assert(b.hp === 5000, "sin PvP la magia no daña a un jugador");
+a.side = 1; b.side = 2; w.pvp = true; w.safeAt = () => false; b.hp = 5000;
+for (let i = 0; i < 6 && b.hp === 5000; i++) shoot();
+assert(b.hp < 5000, "con PvP la magia daña a un jugador");
+b.hp = 5000; const ahp = a.hp; w.command(aid, { t: "cast", spell: 0, x: a.x, y: a.y }); w.tick(1500);
+assert(a.hp === ahp, "no se daña a sí mismo");
+const hp1 = b.hp = 5000; w.safeAt = () => true; shoot();
+assert(b.hp === hp1, "en zona segura no hay daño");
+w.safeAt = () => false; a.side = b.side = 1; a.party = b.party = { id: 7 }; shoot();
+assert(b.hp === hp1, "la party no se daña");
+// Paralyze/Hold: el paralizado no se mueve nunca y un golpe fuerte no lo desplaza ni lo libera (combat.cpp: NOTIFY_DAMAGEMOVE solo avisa)
+w.safeAt = () => false; b.hp = b.maxHp = 5000; b.busyUntil = 0; sset(w, b, "hold", 2, 60000);
+const bx = b.x, by = b.y;
+assert(!w.command(bid, { t: "move", x: bx + 1, y: by }), "el paralizado no se mueve");
+damagePlayer(w, b, 200, a); w.tick(1500);
+assert(b.x === bx && b.y === by, "sin retroceso al recibir mas de 40");
+assert(sget(w, b, "hold"), "un golpe fisico no libera Paralyze");
 console.log("OK magic-pvp");

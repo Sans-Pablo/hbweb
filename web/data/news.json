@@ -1,5 +1,5 @@
 {
- "build": "0.85.7",
+ "build": "0.85.8",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -12,10 +12,22 @@
     "en": "Edges, minimap and UI cleanup (v0.85.7)"
    },
    "items": [
-    {"es": "Las ventanas se pueden arrastrar hasta el borde exacto del navegador (Character Info ya no queda cortada).", "en": "Windows can be dragged to the exact browser edge (Character Info is no longer clipped)."},
-    {"es": "Minimapa de la cripta más pequeño (proporcional al mapa).", "en": "Crypt minimap is smaller (proportional to the map)."},
-    {"es": "Quitado el mini esqueleto de la entrada de la cripta.", "en": "Removed the mini skeleton at the crypt entrance."},
-    {"es": "Sin sombras celestes en la interfaz ni cartel de Chrome al entrar (formulario sin autocompletado).", "en": "No light-blue UI shadows and no Chrome banner on login (autofill disabled)."}
+    {
+     "es": "Las ventanas se pueden arrastrar hasta el borde exacto del navegador (Character Info ya no queda cortada).",
+     "en": "Windows can be dragged to the exact browser edge (Character Info is no longer clipped)."
+    },
+    {
+     "es": "Minimapa de la cripta más pequeño (proporcional al mapa).",
+     "en": "Crypt minimap is smaller (proportional to the map)."
+    },
+    {
+     "es": "Quitado el mini esqueleto de la entrada de la cripta.",
+     "en": "Removed the mini skeleton at the crypt entrance."
+    },
+    {
+     "es": "Sin sombras celestes en la interfaz ni cartel de Chrome al entrar (formulario sin autocompletado).",
+     "en": "No light-blue UI shadows and no Chrome banner on login (autofill disabled)."
+    }
    ]
   },
   {
@@ -4089,6 +4101,31 @@
     {
      "es": "Conexión: si la pestaña queda en segundo plano y el socket se cae, el juego reconecta solo y resincroniza en vez de mostrar «Connection lost».",
      "en": "Connection: if the tab sleeps in the background and the socket drops, the game reconnects and resyncs instead of showing Connection lost."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Motor: combate y magia PvP (v0.85.7)",
+    "en": "Engine: combat and PvP magic (v0.85.7)"
+   },
+   "items": [
+    {
+     "es": "Los críticos hacen daño (alcance corregido), con el sonido y las chispas del original; absorción de armadura/escudo por golpe como el servidor original; sin retroceso al recibir mucho daño.",
+     "en": "Crits now deal damage (reach fixed), with the original sound and sparks; per-hit armour/shield absorption as in the original server; no knockback on heavy hits."
+    },
+    {
+     "es": "Berserk con el efecto original (PutTransSpriteRGB 0,-5,-5).",
+     "en": "Berserk uses the original effect (PutTransSpriteRGB 0,-5,-5)."
+    },
+    {
+     "es": "Correr y lanzar un hechizo frena al personaje; un paralizado no se mueve nunca ni sale volando.",
+     "en": "Running then casting stops the character; a paralyzed player never moves nor gets knocked back."
+    },
+    {
+     "es": "Las magias de daño funcionan en PvP (Effect_Damage_Spot): resistencia, vitalidad, suerte y Protect From Magic. Probar en 2ndmiddle.",
+     "en": "Damage spells work in PvP (Effect_Damage_Spot): resistance, vitality, luck and Protect From Magic. Test in 2ndmiddle."
     }
    ]
   }

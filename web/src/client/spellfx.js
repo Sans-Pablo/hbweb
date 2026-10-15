@@ -90,6 +90,8 @@ export class SpellFx {
         e.mx = sx * T; e.my = sy * T - 35; e.err = 0; e.dir = calcDir(sx, sy, dx, dy);
         this.hook?.("C4", sx, sy);
         break;
+      case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 250: e.mx = sx * T; e.my = sy * T - 40; break;   // destello de crítico (bAddNewEffect: mX=sX*32, mY=sY*32-40)
+      case 81: e.mx = sx * T; e.my = sy * T; break;                // StormBlade (tipo 15)
       case 16: case 34: case 71: case 196: e.mx = sx * T; e.my = sy * T - (type === 71 || type === 196 ? 0 : 40); e.err = 0; break;
       case 100: case 110: case 120: case 130: case 137: case 161: case 182: case 251:
         e.mx = px(sx); e.my = px(sy) - 40; e.dir = dirTo(sx, sy, dx, dy) || 1; break;
@@ -149,6 +151,7 @@ export class SpellFx {
         if (f === 1) for (let i = 0; i < 5; i++) at(12, e.mx + 5 - rnd(10), e.my + 5 - rnd(10), -rnd(2));
         if (f === 7) for (let i = 0; i < 3; i++) at(15, e.mx + 5 - rnd(10), e.my + 5 - rnd(10));
         done(); break;
+      case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 250: case 81: done(); break;
       case 6: case 10: if (f === 1) burst9(e.type === 10 ? 11 : 5, e.type === 10 ? 40 : 10); if (f >= e.max) end(); break;
       case 7: if (f === 1) burst9(3, 10); if (f >= e.max) end(); break;
       case 9: case 11: e.mx += e.rx; e.my += e.ry; e.ry++; done(); break;
@@ -336,6 +339,9 @@ export class SpellFx {
         case 16: P(0, 0, x, y); break;
         case 18: P(18, f, x, y, "add", .7); break;
         case 30: P(14, f, x, y); break;
+        case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: P(8, 1, x, y); break;   // chispas del crítico: fx8 fotograma 1 (EffectSpr[8], 1)
+        case 81: P(100, f, x + 70, y + 70); break;               // StormBlade: fx100 (+70,+70)
+        case 250: break;                                         // sprite 103 del original no está en los recursos convertidos
         case 31: case 252: P(15, f, x, y); break;
         case 33: P(19, f, x, y); break;
         case 35: P(6, f, x - 30, y - 18); break;

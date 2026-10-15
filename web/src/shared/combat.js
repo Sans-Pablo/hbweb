@@ -64,6 +64,21 @@ export function critDashBonus(a, level, skill, crit, dash) {
   }
   return a;
 }
+// Tipo de ataque que el cliente manda en OBJECTATTACK (V3) y que los demás usan para dibujar: Game.cpp _iGetAttackType (~20846).
+// Sin crítico: 1 (cuerpo a cuerpo), 2 (arco ≥41), 5 (StormBlade, tipo 15); con crítico: 20 puños, 21 daga/espada corta, 22 Esterk (7, 18),
+// 23 espada larga (y 29, 33), 24 hacha, 25 arco, 26 martillo, 27 vara, 30 StormBlade.
+export function attackType(wt, crit) {
+  const w = wt | 0;
+  if (w === 0) return crit ? 20 : 1;
+  if (w <= 2) return crit ? 21 : 1;
+  if (w < 20) return w === 7 || w === 18 ? (crit ? 22 : 1) : w === 15 ? (crit ? 30 : 5) : (crit ? 23 : 1);
+  if (w < 29) return crit ? 24 : 1;
+  if (w === 29 || w === 33) return crit ? 23 : 1;
+  if (w >= 30 && w < 33) return crit ? 26 : 1;
+  if (w >= 34 && w < 41) return crit ? 27 : 1;
+  if (w >= 41) return crit ? 25 : 2;
+  return 0;
+}
 // Golpe de un jugador a un monstruo. Devuelve {hit, damage}.
 // ctx (opcional): { berserk, protect (estado del objetivo, 1..5), bonus (armas especiales) } — ver iCalculateAttackEffect.
 export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
@@ -97,7 +112,8 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
 
 // Parte del cuerpo alcanzada y absorción de armadura y escudo cuando un monstruo golpea a un jugador.
 // Devuelve { damage, part, shielded } (part = posiciones de equipo que se desgastan).
-export function absorbOnHit(rng, p, ap) {
+// sameDir: atacante y objetivo miran igual (cAttackerDir == cTargetDir): entonces el escudo no cuenta (combat.cpp ~907).
+export function absorbOnHit(rng, p, ap, sameDir = false) {
   const fx = p.eff, A = fx.armor;
   const r = dice(rng, 1, 10000);
   let abs, parts;
@@ -107,8 +123,8 @@ export function absorbOnHit(rng, p, ap) {
   else { abs = A[EQUIP.HEAD] || 0; parts = [EQUIP.HEAD]; }
   const absArmor = Math.floor((Math.min(abs, 80) / 100) * ap);
   let absShield = 0, shielded = false;
-  if (fx.shield > 0 && dice(rng, 1, 100) <= (p.skills[11] || 0)) {
-    absShield = Math.floor((Math.min(fx.shield, 80) / 100) * ap);
+  if (!sameDir && fx.shield > 0 && dice(rng, 1, 100) <= (p.skills[11] || 0)) {
+    absShield = Math.floor((Math.min(fx.shield, 80) / 100) * (ap - absArmor));   // el escudo se calcula sobre lo que deja la armadura
     shielded = true;
   }
   let damage = ap - (absArmor + absShield);

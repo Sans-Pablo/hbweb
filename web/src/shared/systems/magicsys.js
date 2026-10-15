@@ -6,7 +6,7 @@ import { gainSSN } from "../skills.js";
 import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
-import { damageNpc } from "./combatsys.js";
+import { damageNpc, damagePlayer, canFight } from "./combatsys.js";
 import { summonFor, spawnCompanion } from "./npcsys.js";
 import { activeBall } from "./companion.js";
 import { sget, sset, sclear } from "./status.js";
@@ -47,7 +47,15 @@ function usable(w, p, cmd) {
 }
 
 // Elegir el hechizo en el libro: el personaje empieza a lanzarlo (animación) y espera el objetivo.
+// Correr/andar y lanzar: el original frena al personaje (cada paso termina antes de empezar el gesto de lanzar, Game.cpp _bCheckMagicCast / m_cCommand=OBJECTSTOP).
+// Si lo único que ocupa al jugador es el paso en curso, la orden espera a que acabe y se ejecuta entonces.
+function afterStep(w, p, cmd, fn) {
+  if (!w.busy(p) || (p.act !== ACT.MOVE && p.act !== ACT.RUN)) return false;
+  w.after(Math.max(1, p.busyUntil - w.time), () => { if (!p.dead) fn(w, p, cmd); });
+  return true;
+}
 export function prepare(w, p, cmd) {
+  if (!p.dead && afterStep(w, p, cmd, prepare)) return true;
   if (p.dead || w.busy(p)) return w.reject(p, cmd, "ocupado");
   const sp = usable(w, p, cmd); if (!sp) return false;
   p.prep = { spell: cmd.spell, at: w.time };
@@ -60,6 +68,7 @@ export function prepare(w, p, cmd) {
 
 export function cast(w, p, cmd) {
   const pre = !!(cmd.pre && p.prep && p.prep.spell === cmd.spell && w.time - p.prep.at < 120000);
+  if (!pre && !p.dead && afterStep(w, p, cmd, cast)) return true;
   if (!pre && w.busy(p)) return w.reject(p, cmd, "ocupado");
   if (w.time - (p.lastCast ?? -1e9) < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido");
   const sp = usable(w, p, cmd); if (!sp) return false;
@@ -120,6 +129,7 @@ function resolve(w, p, id, sp, x, y, cost) {
 
   // daño mágico a un monstruo: resistencia, absorción, protección, y la mitad de experiencia en golpes de zona
   const hurt = (tgt, n, d, k, half = false) => {
+    if (tgt && tgt.kind === "player") return hurtPlayer(tgt, n, d, k);
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
@@ -128,6 +138,20 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damageNpc(w, tgt, dmg, p, null, half);
+    return tgt;
+  };
+  // Effect_Damage_Spot (HG.cpp ~18047) contra un jugador: mismo daño base y bonos del lanzador; el objetivo resiste (bCheckResistingMagicSuccess),
+  // reduce por dice(1, vit/10)-1, suerte (dice(1,10)<5 y hp<=daño -> 1) y Protect From Magic a la mitad; absorción elemental y PFM dentro de damagePlayer.
+  // Solo con canFight (PvP del mapa, fuera de zonas seguras, no party/mismo bando); nunca a uno mismo.
+  const hurtPlayer = (tgt, n, d, k) => {
+    if (!canFight(w, p, tgt)) return null;
+    if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * Bal.spellDmgMul(id));
+    if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
+    if (dmg < 0) dmg = 0;
+    if (dice(w.rng, 1, 10) < 5 && tgt.hp <= dmg) dmg = 1;
+    if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
+    damagePlayer(w, tgt, dmg, p, sp.attr === 3 ? "fire" : sp.attr === 4 ? "ice" : "mag");
     return tgt;
   };
   const freeze = (tgt, s) => {

@@ -648,7 +648,7 @@ export class Renderer {
       if (!this.pcache.draw(ctx, gender, look, group, d, f, x, y, ap, Math.min(2, Math.ceil(this.scale * 2) / 2))) { const T = performance.now(); drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap); this.pcache.st.msDirect += performance.now() - T; this.pcache.st.nDirect = (this.pcache.st.nDirect || 0) + 1; }
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
-      if (zerk) spr.tinted(ctx, body, f, x, y, "#ff2a1a", 0.35);
+      if (zerk) spr.transRGB(ctx, body, f, x, y, 0, -5, -5);     // Game.cpp: PutTransSpriteRGB(…, 0, -5, -5)
       this.auras(e, x, y, w, false);
       if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
       // nombre de los demás jugadores y bocadillo de chat
@@ -743,7 +743,7 @@ export class Renderer {
     if (e.shield && alive) { ctx.strokeStyle = "rgba(170,230,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - 20, 30, 40, 0, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
     if (alive && (sget(s.world, e, "ice") || (e.chillUntil || 0) > s.world.time)) spr.tinted(ctx, key, f, x, y, "#4a8cff", 0.5);
-    if (alive && sget(s.world, e, "berserk")) spr.tinted(ctx, key, f, x, y, "#ff2a1a", 0.35);
+    if (alive && sget(s.world, e, "berserk")) spr.transRGB(ctx, key, f, x, y, 0, -5, -5);
     if (alive) this.auras(e, x, y, s.world, true);
     if (remaster) {
       if (flashAge < 150) spr.tinted(ctx, key, f, x, y, "#ffffff", 0.75 * (1 - flashAge / 150));

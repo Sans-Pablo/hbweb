@@ -218,7 +218,14 @@ export class Sound {
       case "companion-lost": if (ev.id === this.me && ev.sp === "Tutelary-Angel") this.playRaw("M62", 0.7, 0); break;
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
-        else this.play(ev.bow || ev.wt >= 40 ? "C3" : ev.wt > 0 ? "C2" : "C1", ev.id, 0.8);   // por arma (MapData.cpp): manos C1, armas cuerpo a cuerpo C2, arco C3 (40..59)
+        else {
+          this.play(ev.bow || ev.wt >= 40 ? "C3" : ev.wt > 0 ? "C2" : "C1", ev.id, 0.8);   // por arma (MapData.cpp): manos C1, armas cuerpo a cuerpo C2, arco C3 (40..59)
+          if (ev.at >= 20) {                                                                // crítico (MapData.cpp OBJECTATTACK): grito en el fotograma 2 (C23 hombre, C24 mujer) y «loup» E43 en el 5
+            const dur = e?.actDur || 296, id = ev.id;
+            setTimeout(() => this.play(e?.gender === 2 ? "C24" : "C23", id), dur * 2 / 8);
+            setTimeout(() => this.play("E43", id), dur * 5 / 8);
+          }
+        }
         break;
       case "damage":
         if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }

@@ -288,6 +288,28 @@ export class Sprites {
     ctx.restore();
   }
 
+  // PutTransSpriteRGB(x, y, frame, r, g, b): el mismo fotograma a media transparencia con cada canal desplazado r/g/b (unidades de 1/31).
+  // Berserk: (0, -5, -5) sobre el cuerpo (Game.cpp DrawObject, "if ((_tmp_iStatus & 0x20) != 0) // Berserk").
+  transRGB(ctx, key, f, x, y, r, g, b) {
+    const fr = this.frame(key, f);
+    if (!fr || !this.ready(key)) return;
+    const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
+    const t = this.tmp, q = this.tctx, c = v => Math.max(0, Math.min(255, Math.round(255 + v * 255 / 31)));
+    if (t.width < W || t.height < H) { t.width = Math.max(t.width, W); t.height = Math.max(t.height, H); }
+    q.globalCompositeOperation = "source-over";
+    q.clearRect(0, 0, W, H);
+    q.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+    q.globalCompositeOperation = "multiply";
+    q.fillStyle = `rgb(${c(r)},${c(g)},${c(b)})`;
+    q.fillRect(0, 0, W, H);
+    q.globalCompositeOperation = "destination-in";
+    q.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+    ctx.save();
+    ctx.globalAlpha *= 0.5;
+    ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
+    ctx.restore();
+  }
+
   // Fotograma teñido de un color (destello al recibir un golpe, resaltado al pasar el ratón)
   tinted(ctx, key, f, x, y, color, alpha, op = "source-over") {
     const fr = this.frame(key, f);
