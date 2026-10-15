@@ -27,7 +27,7 @@ export function tickVitals(w, p) {
   if (now - p.tSp >= SP_MS + plus) {
     p.tSp = now;
     if (p.sp < p.maxSp) {
-      let t = dice(rng, 1, Math.floor(s.vit / 3));
+      let t = 10 + dice(rng, 4, Math.floor(s.vit / 17));            // TimeStaminarPointsUp (HG.cpp:10010)
       if (p.eff.addSP) t += Math.floor((p.eff.addSP / 100) * t);
       t += p.level <= 20 ? 15 : p.level <= 40 ? 10 : p.level <= 60 ? 5 : 0;
       p.sp = Math.min(p.maxSp, p.sp + t);
@@ -36,7 +36,8 @@ export function tickVitals(w, p) {
   if (now - p.tHp >= HP_MS + plus) {
     p.tHp = now;
     if (p.hp < p.maxHp) {
-      let t = Math.max(dice(rng, 1, s.vit), Math.floor(s.vit / 2)) + p.hpStock;
+      // TimeHitPointsUp (HG.cpp:9938-9955): dice(3, vit/3) con mínimo vit/2, más reserva; el % de AddHP va sobre el total
+      let t = Math.max(dice(rng, 3, Math.floor(s.vit / 3)), Math.floor(s.vit / 2)) + p.hpStock + (p.hpStatic || 0);
       if (p.eff.addHP) t += Math.floor((p.eff.addHP / 100) * t);
       p.hp = Math.min(p.maxHp, p.hp + t);
     }
@@ -44,6 +45,7 @@ export function tickVitals(w, p) {
   }
   if (now - p.tMp >= MP_MS + plus) {
     p.tMp = now;
-    if (p.mp < p.maxMp) { let t = dice(rng, 1, s.mag); if (p.eff.addMP) t += Math.floor((p.eff.addMP / 100) * t); p.mp = Math.min(p.maxMp, p.mp + t); }
+    if (p.mp < p.maxMp) { let t = dice(rng, 3, Math.floor(s.mag / 3));   // TimeManaPointsUp (HG.cpp:9978)
+      if (p.eff.addMP) t += Math.floor((p.eff.addMP / 100) * t); p.mp = Math.min(p.maxMp, p.mp + t); }
   }
 }

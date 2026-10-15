@@ -8,9 +8,15 @@ export const SKILL_NAMES = {
   7: "Espada corta", 8: "Espada larga", 9: "Esgrima", 10: "Hacha", 11: "Escudo", 12: "Alquimia", 13: "Fabricación",
   14: "Martillo", 19: "Fingir muerte", 21: "Bastón", 23: "Resistencia al veneno",
 };
-export const MAX_TOTAL_MASTERY = 700;           // DEF_MAXSKILLPOINTS
+export const MAX_TOTAL_MASTERY = 900;           // combat.h MAXSKILLPOINTS (CheckTotalSkillMasteryPoints, Client.cpp:460)
 
-const ssnTable = L => (L <= 50 ? L : 2 * L);
+// _iCalcSkillSSNpoint (HG.cpp:15004): hasta 50 vale el nivel; por encima, nivel*nivel/10.
+export const ssnTable = L => (L < 1 ? 1 : L <= 50 ? L : Math.floor((L * L) / 10));
+// GetSkillMultiplier (Shared/Skilltypes.h:30): cada punto de uso cuenta x8 (combate, magia, resistencias, fingir muerte), x2 (minería, pesca,
+// agricultura, alquimia, fabricación) o x1 (el resto) — Client.cpp:806 SkillUp.
+const MULT8 = [4, 5, 6, 7, 8, 9, 10, 14, 21, 19, 3, 11, 23];
+const MULT2 = [2, 13, 12, 0, 1];
+export const skillMultiplier = skill => (MULT8.includes(skill) ? 8 : MULT2.includes(skill) ? 2 : 1);
 
 // tope de maestría según el atributo que la limita
 function cap(p, skill) {
@@ -31,6 +37,7 @@ export function gainSSN(p, skill, v) {
   const m = p.skills[skill] || 0;
   if (m <= 0 || v <= 0) return false;                       // sin maestría inicial no hay progreso
   const before = p.ssn[skill] || 0;
+  v *= skillMultiplier(skill);
   let ssn = before + v;
   if (m < 100 && ssn > ssnTable(m + 1)) {
     if (m + 1 > cap(p, skill)) { p.ssn[skill] = before; return false; }
