@@ -1,5 +1,5 @@
 {
- "build": "0.85.5",
+ "build": "0.85.6",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -4042,6 +4042,19 @@
     {
      "es": "El chat y el rastreador de misiones tienen formato nuevo; Opciones permite ocultar el rastreador y activar los indicadores de dirección (apagados por defecto). Las ventanas se pueden arrastrar hasta el borde.",
      "en": "Chat and quest tracker use the new format; Options can hide the tracker and enable direction indicators (off by default). Windows can be dragged to the screen edge."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Flechas de entrada y experiencia (v0.85.5)",
+    "en": "Entrance arrows and experience (v0.85.5)"
+   },
+   "items": [
+    {
+     "es": "Una sola flecha por entrada a cada lugar y ninguna en mapas cerrados. Quitado el mensaje flotante de experiencia, que no existe en el original.",
+     "en": "One arrow per entrance to each place and none for closed maps. Removed the floating experience message, which is not in the original."
     }
    ]
   }
