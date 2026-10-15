@@ -12,11 +12,11 @@ Cifras **del original** (verificadas contra `HelbreathOriginal`): servidor `char
 - **Alcance del crítico** (`combatsys.reachOf(..., crit)`, cliente `_iGetAttackType`): espada larga 3, esgrima 4, StormBlade (845) 5, resto 4. Sin carga o sin maestría 100 el golpe es normal.
 
 ## Dash (`OBJECTATTACKMOVE`)
-- Objetivo **exactamente a 2 casillas en línea recta o diagonal**, maestría 100 en el arma y aliento (`sp >= 2`): avanza un paso y golpea. **No exige haber corrido antes** (antes el servidor lo rechazaba de pie y el cliente reenviaba la orden sin parar). No vale con StormBlade (alcance ≥ 4).
-- Bono: +20 de puntería; espada larga +10 % de daño, hacha y martillo +20 %. Servidor: `world.js` comando `attack` (`cmd.dash`, `sp >= 2`).
+- Objetivo **exactamente a 2 casillas en línea recta o diagonal**, maestría 100 en el arma y aliento (`sp >= 1`, original `m_iSP > 0`): avanza un paso y golpea. **No exige haber corrido antes** (antes el servidor lo rechazaba de pie y el cliente reenviaba la orden sin parar). No vale con StormBlade (alcance ≥ 4).
+- Bono: +20 de puntería; espada larga +10 % de daño, hacha y martillo +20 %. Servidor: `world.js` comando `attack` (`cmd.dash`, `sp >= 1`).
 
 ## Controles
-Shift+clic izq. = el summon va a la casilla; Shift+clic der. = el summon ataca; Alt+clic = crítico (`controller.js`, `atk()`).
+Ctrl+clic = atacar; con el objetivo a 2 casillas en línea y corriendo (modo correr o Shift) = dash; Alt+clic = crítico (`controller.js`, `atk()`). Los controles Shift del summon se quitaron (v0.84.18): Shift es la tecla de correr del original.
 
 ## Protocolo y pruebas
 `NET_PROTO` = 8 (el comando `attack` lleva `crit`/`dash`; no cambia). Tests: `tests/crit-dash.test.mjs`, `tests/bot-crit.test.mjs` (los bots maestros usan crítico y dash: `systems/bot.js`, bloque melee).

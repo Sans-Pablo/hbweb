@@ -34,16 +34,17 @@ export class Controller {
       if (e.button === 0 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { renderer.miniDragStart(e.clientX, e.clientY); canvas.setPointerCapture?.(e.pointerId); return; }   // arrastrar el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
-      if (e.shiftKey && e.button === 2) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Shift + clic derecho: orden de ataque al compañero
       if (e.altKey && e.button === 0) { const en = this.target().ent; if (en && (en.kind === "npc" || (en.kind === "player" && en.id !== this.me?.id))) { this.critNext = true; this.intent = { t: "attack", id: en.id }; this.path = []; return; } }   // Alt + clic: ataque crítico (el «super ataque» del original)
-      if (e.shiftKey && e.button === 0) { this.intent = null; this.path = []; const t = this.target(); this.ui.petGo(t.x, t.y); return; }      // Shift + clic izquierdo: el compañero va a esa casilla
-      this.ctrl = e.ctrlKey;
+      this.ctrl = e.ctrlKey; this.shift = e.shiftKey;
       this.btn = e.button === 2 ? 2 : 0;
       this.down = true; this.noHold = false;
       canvas.setPointerCapture?.(e.pointerId);
       if (this.btn === 2) this.rightClick(); else this.click(true);
     });
-    canvas.addEventListener("pointermove", e => { renderer.miniDragMove(e.clientX, e.clientY); ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
+    canvas.addEventListener("pointermove", e => { renderer.miniDragMove(e.clientX, e.clientY); ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; this.shift = e.shiftKey; });
+    addEventListener("keydown", e => { if (e.key === "Shift") this.shift = true; });                       // Game.cpp: m_bShiftPressed cuenta como correr para el dash (OBJECTATTACKMOVE)
+    addEventListener("keyup", e => { if (e.key === "Shift") this.shift = false; });
+    addEventListener("blur", () => { this.shift = false; });
     canvas.addEventListener("pointerup", e => { renderer.miniDragEnd(); this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
     canvas.addEventListener("pointercancel", () => { this.down = false; ui.gui.up(); });
     // un objeto arrastrado nunca se queda pegado al cursor: si se suelta fuera del lienzo o se pierde el foco, se suelta igual
@@ -255,7 +256,7 @@ export class Controller {
         return;
       }
       const lineUp = (me.x === t.x || me.y === t.y || Math.abs(me.x - t.x) === Math.abs(me.y - t.y));      // dash: solo en línea recta o diagonal (OBJECTATTACKMOVE)
-      if (run && gap === reach + 1 && reach < 4 && lineUp && me.sp >= 2 && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
+      if ((run || (this.shift && me.sp >= 1)) && gap === reach + 1 && reach < 4 && lineUp && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
         this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);

@@ -191,7 +191,7 @@ const COMMANDS = {
     if (!w.tryStep(p, cmd.dir, (run ? PLAYER.runMs : PLAYER.walkMs) * slow, run ? ACT.RUN : ACT.MOVE)) return w.reject(p, cmd, "bloqueado");
     if (run && (p.runSteps = (p.runSteps || 0) + 1) >= runStepsPerSp(p.level)) { p.runSteps = 0; p.sp -= 1; }
     p.lastMove = w.time;
-    if (run) p.lastRun = w.time;                              // el dash exige haber corrido hace un instante
+    if (run) p.lastRun = w.time;                              // (el dash ya no lo exige: el original solo mira SP > 0)
     // al llegar a una casilla de teletransporte, el servidor original (RequestTeleportHandler) te manda al destino
     const tp = w.teleports.get(w.grid.idx(p.x, p.y));
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
@@ -213,7 +213,7 @@ const COMMANDS = {
     // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
     // el original (OBJECTATTACKMOVE) exige SP, maestría 100 y el objetivo a 2 casillas EN LÍNEA (recta o diagonal); no hace falta haber corrido antes
     const dx = Math.abs(p.x - t.x), dy = Math.abs(p.y - t.y);
-    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 2 && mastered(p);
+    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 1 && mastered(p);
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad

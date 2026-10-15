@@ -79,5 +79,9 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "salto de caballo: sin dash");
   put(p, 20, 40); p.lastRun = w.time; p.busyUntil = 0; p.lastAttack = -1e9;
   assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "más lejos no hay dash");
+  put(p, 28, 30); p.busyUntil = 0; p.lastAttack = -1e9; p.sp = 0;
+  assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "sin aliento no hay dash");
+  p.sp = 1; p.busyUntil = 0;
+  assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "con SP > 0 basta (Game.cpp: m_iSP > 0)");
 }
 console.log("OK crit-dash");

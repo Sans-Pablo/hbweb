@@ -1,10 +1,23 @@
 {
-  "build": "0.84.17",
+  "build": "0.84.18",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Dash y sin controles Shift del summon (v0.84.18)",
+        "en": "Dash and no Shift pet controls (v0.84.18)"
+      },
+      "items": [
+        {
+          "es": "El dash (Ctrl+clic con el objetivo a 2 casillas en línea) ya no exige 2 de aliento (basta SP > 0, Game.cpp) y Shift cuenta como correr. Se quitan los controles Shift del summon (Shift+clic ir/atacar).",
+          "en": "Dash (Ctrl+click on a target 2 tiles away in line) now only needs SP > 0 (Game.cpp) and Shift counts as running. Shift pet controls removed (Shift+click go/attack)."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {

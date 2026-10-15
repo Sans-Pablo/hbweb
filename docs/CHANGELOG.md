@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.84.18 · Dash y sin controles Shift del summon (2026-10-15)
+- Dash: el original solo exige SP > 0 (Game.cpp OBJECTATTACKMOVE: `(m_bShiftPressed || m_bRunningMode) && m_iSP > 0`, maestría 100, Ctrl+clic a (2,2)/(0,2)/(2,0)); antes pedía SP >= 2 y Shift no contaba como correr.
+- Se quitan todos los controles Shift del summon (Shift+clic izq. ir a casilla, der. atacar), también el Alt+clic de orden de ataque del summon; Shift queda libre para la mecánica original. Pendiente: reimplementar el control del pet con otra tecla.
+
 ## 0.84.17 — Sin indicador de tiempo sobre la cabeza
 - Se quitan las barras de tiempo de debuffs sobre la cabeza del personaje (`renderer.stateBars`); el original no las dibuja (Game.cpp DrawObject_*: solo auras y efectos).
 

@@ -332,8 +332,6 @@ export class Renderer {
     }
 
 
-    this.drawPetOrder(s, camX, camY);
-
     // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
     ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = (this.q || 0) >= 1 ? "low" : "medium";     // "high" re-muestrea cada sprite con un filtro caro: con 30 personajes en pantalla eran 20 fps
     const P1 = performance.now();
@@ -566,25 +564,6 @@ export class Renderer {
   }
 
   // arena de apuestas (systems/arena.js): arena de arena con borde discontinuo dorado sobre el suelo de Aresfarm
-
-  // Orden al summon: pelotitas (como el camino del personaje) desde él hasta la casilla (celestes, "ve allí") o hasta el objetivo (rojas, "ataca"). Desaparece al cumplirse o a los 15 s; el summon que anda solo no dibuja nada.
-  drawPetOrder(s, camX, camY) {
-    const o = s.petOrder; if (!o) return;
-    const w = s.world, { ctx } = this, perf = performance.now();
-    const pet = [...w.ents.values()].find(e => e.comp && e.master === s.me?.id && !e.dead);
-    let tx, ty;
-    if (o.kind === "go") { tx = o.x; ty = o.y; if (pet && pet.x === tx && pet.y === ty) o.done = true; }
-    else { const t = w.ents.get(o.target); if (!t || t.dead) o.done = true; else { tx = t.x; ty = t.y; } }
-    if (!pet || o.done || perf - o.at > 15000) { s.petOrder = null; if (o.done || !pet) o.at = -1e9; return; }
-    const atk = o.kind === "atk", fade = Math.min(1, (15000 - (perf - o.at)) / 1500);
-    const col = atk ? "255,70,60" : "150,225,255", n = Math.max(Math.abs(tx - pet.x), Math.abs(ty - pet.y));      // mismas pelotitas que el camino del personaje: rojo = ataque, celeste claro = ir allí
-    ctx.save(); ctx.fillStyle = "rgba(" + col + "," + 0.75 * fade + ")";
-    for (let i = 1; i <= n; i++) {
-      const x = Math.round(pet.x + (tx - pet.x) * i / n), y = Math.round(pet.y + (ty - pet.y) * i / n);
-      ctx.beginPath(); ctx.arc(x * T + 16 - camX, y * T + 18 - camY, i === n ? 3.6 : 1.8, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.restore();
-  }
 
   drawPortals(s, camX, camY) {
     const { ctx } = this;
