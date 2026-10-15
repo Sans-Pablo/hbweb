@@ -1,5 +1,5 @@
 {
- "build": "0.83.7",
+ "build": "0.83.8",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -7,8 +7,9 @@
  "news": [
   {
    "date": "2026-10-15",
-   "title": {"es": "Interfaz más limpia y tutorial arreglado (v0.83.7)", "en": "Cleaner interface and tutorial fix (v0.83.7)"},
+   "title": {"es": "Interfaz más limpia y tutorial arreglado (v0.83.8)", "en": "Cleaner interface and tutorial fix (v0.83.8)"},
    "items": [
+    {"es": "El rótulo de salida/bajada de la cripta solo sale al pasar el ratón o al estar junto. El botón de modo del compañero se movió junto al de combate para no pisar la barra.", "en": "The crypt exit/descent label only shows on hover or when next to it. The companion mode button moved next to the combat button so it no longer overlaps the bar."},
     {"es": "El tutorial ya no reaparece tras saltarlo ni se bloquea al abrir una tienda. Prueba: salta el tutorial y entra en una tienda.", "en": "The tutorial no longer reappears after skipping nor gets stuck when opening a shop. Test: skip the tutorial, enter a shop."},
     {"es": "El botón de invocaciones se ilumina con su borde naranja y solo la huella en azul.", "en": "The summons button highlights with its orange border; only the paw is blue."},
     {"es": "Opciones: quitadas luz/viñeta, luz dinámica, animaciones de hechizos, cursor y transparencia. Quitados el botón Recall, los carteles Failed y las pestañas Para probar / A tener en cuenta.", "en": "Options: removed light/vignette, dynamic light, spell animations, cursor and transparency. Removed the Recall button, Failed texts and the To test / Keep in mind tabs."}

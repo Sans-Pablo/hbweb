@@ -623,7 +623,8 @@ export class Renderer {
       ctx.globalAlpha = 1;
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
-      this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      const over = s.hover && Math.max(Math.abs(gate.x - s.hover[0]), Math.abs(gate.y - s.hover[1])) <= 1;     // el rótulo solo aparece al pasar el ratón o al estar junto a la entrada
+      if (over || near) this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
   }

@@ -343,7 +343,7 @@ export class Gui {
   panelClick(x, y) {
     const a = ADDX + RESX;
     if (y <= 434 + RESY || y >= 475 + RESY) return;
-    if (this.petBall && x > 411 && x < 449) this.onAction?.("petmode");
+    if (this.petBall && x > 322 + a && x < 360 + a) this.onAction?.("petmode");
     else if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
     else if (x > 413 + a && x < 447 + a) this.onAction?.("char");
     else if (x > 447 + a && x < 484 + a) this.onAction?.("inv");
@@ -417,7 +417,7 @@ export class Gui {
     if (!ball) return;
     const c = ball.comp, pet = [...world.ents.values()].find(e => e.comp && e.master === me.id && !e.dead);
     const hp = pet ? pet.hp : Math.max(0, c.hp || 0), max = pet ? pet.maxHp : Math.max(1, c.max || 1), k = Math.max(0, Math.min(1, hp / Math.max(1, max)));
-    const bx = 411, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
+    const bx = 322 + a, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(bx, by, 38, 38);
     cx.strokeStyle = atk ? "#c85a3c" : "#6fae5a"; cx.lineWidth = 1; cx.strokeRect(bx + .5, by + .5, 37, 37);
     const mi = this.spr && miniOf(c.sp, kk => this.spr.frames(kk), c.cls);
