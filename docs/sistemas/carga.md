@@ -14,6 +14,10 @@ No existe en el original (carga todos los `.pak` al arrancar); es una optimizaci
 - **HD**: solo para lo que se dibuja (no se precarga por bundle).
 - **Servidor Node / pruebas**: pasan rejillas ya construidas (`maps[id].grid`), sin `ensure`.
 
+## Rejillas y login (v0.85.7)
+Online, main.js lanza `m.ensure()` de todos los mapas en segundo plano y NO espera (antes `await Promise.all`, ~33 MB antes de poder entrar). `NetConnection.gateState` retiene un estado `s` que cambia a un mapa sin rejilla hasta que llegue (`onState` caería a `farmGrid`, un mapa equivocado) y encola los siguientes. Las criptas se generan en cliente y no esperan. Test: `tests/net-maploading.test.mjs`.
+Medido en local: cripta→granja ≈60 ms sin peticiones (ya era instantáneo); el retraso visto tras salir de la cripta venía de red/caché fría, no medible en localhost.
+
 ## Caché
 `web/sw.js` (Cache API): cache-first para sprites, HD, equipo, fx, ui, sfx y música (sus URL llevan `?v=ASSET_VERSION`); red primero para JSON y `.bin`. Al cambiar sonidos/música sin versión, subir `CACHE`.
 

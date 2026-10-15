@@ -4128,6 +4128,23 @@
      "en": "Damage spells work in PvP (Effect_Damage_Spot): resistance, vitality, luck and Protect From Magic. Test in 2ndmiddle."
     }
    ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Reconexión y carga de mapas (v0.85.7)",
+    "en": "Reconnect and map loading (v0.85.7)"
+   },
+   "items": [
+    {
+     "es": "Si el servidor se reinicia o se apaga mientras juegas, el juego espera hasta 2 minutos y vuelve a entrar solo con tu personaje (antes parecía que el navegador se refrescaba y perdías la pantalla).",
+     "en": "If the server restarts or shuts down while you play, the game waits up to 2 minutes and logs you back in automatically with your character (before, it looked like a browser refresh and you lost the screen)."
+    },
+    {
+     "es": "El login ya no espera a descargar todos los mapas (~33 MB): se bajan en segundo plano y, al salir de la cripta, el cambio de mapa solo espera si su rejilla aún no ha llegado.",
+     "en": "Login no longer waits to download every map (~33 MB): they load in the background, and leaving the crypt only waits if that map's grid has not arrived yet."
+    }
+   ]
   }
  ],
  "tests": [

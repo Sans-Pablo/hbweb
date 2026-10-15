@@ -84,7 +84,9 @@ async function main() {
   const protoClash = !!(info && info.multiplayer && info.proto !== NET_PROTO);      // el servidor es de otra versión del protocolo
   const conn = online ? new NetConnection(grid, assets.npcDb, assets.data, assets.maps, base, assets.spawns)
     : new LocalConnection(new Adventure({ grid, npcDb: assets.npcDb, data: assets.data, spawns: assets.spawns, start: meta.start, maps: assets.maps, clock: () => new Date().getMinutes() }));
-  if (online) await Promise.all(Object.values(assets.maps).map(m => m.ensure?.()));     // el servidor no espera: las rejillas se bajan antes
+  // Las rejillas (~33 MB) se bajan en segundo plano (el login ya no las espera); NetConnection.gateState retiene el estado que
+  // cambia a un mapa cuya rejilla no ha llegado, y así la vuelta de la cripta no se bloquea esperando una descarga fría.
+  if (online) for (const m of Object.values(assets.maps)) m.ensure?.().catch(() => {});
   status.style.display = "none";
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
@@ -914,6 +916,11 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
     const hashId = online && /^#observar=([0-9]+)/.exec(location.hash);
     if (hashId) { box.style.display = "none"; conn.watch(+hashId[1]).then(id => { box.remove(); resolve(id); }, () => observe()); }
     else if (online && location.hash === "#observar") observe();
+    else if (online) {                                                // reentrada automática tras un reinicio del servidor (connection.js resumeAfterRestart)
+      let r = null;
+      try { r = JSON.parse(sessionStorage.getItem("hb.resume") || "null"); sessionStorage.removeItem("hb.resume"); } catch {}
+      if (r && r.n && Date.now() - r.t < 90000) { user.value = r.n; pass.value = r.p || ""; creating = false; submit(); }
+    }
   });
 }
 
