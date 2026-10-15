@@ -101,7 +101,7 @@ export class Fx {
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
-      case "miss": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16, 22); break;   // Game.cpp OBJECTDAMAGE con daño 0
+      case "miss": break;   // un golpe normal que falla no muestra texto (ticket 7); «Failed» queda solo para la resistencia a hechizos
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         if (!ev.bow) break;
         const c = this.world.ents.get(ev.id);

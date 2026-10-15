@@ -424,18 +424,7 @@ export class Renderer {
     if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
     this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
-    // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
-    if (this.pf.light) { /* perfilador: sin luz ni cielo */ }
-    else if (remaster && this.lighting !== false && this.lightFx) this.drawLights(s, ctx, VW, VH, camX, camY, time);   // luz dinámica: ambiente oscuro con focos
-    else if (remaster && this.lighting !== false) {
-      const cx = ppx - camX, cy = ppy - camY - 20, R = Math.max(VW, VH) * 0.75;
-      const g = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
-      g.addColorStop(0, "rgba(255,200,120,0.06)");
-      g.addColorStop(0.45, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(5,6,14,0.62)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, VW, VH);
-    }
+    // 5) sin luz propia: el original no tiene viñeta ni luz dinámica (ticket 12); solo noche y lluvia (5b)
 
     // 5b) noche y lluvia
     if (s.sky && !this.pf.light) s.sky.draw(ctx, VW, VH, s.fx?.sp);
@@ -1043,7 +1032,7 @@ export class Renderer {
     // encima de todo: nombre y vida
     if (e.dead) return;
     const top = y - this.mobHeight(key, f) * sc * (e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1) - 6;
-    if (remaster && e.kind !== "citizen" && !e.crop && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered || e.arena)) {
+    if (false && e.kind !== "citizen" && !e.crop && (s.world.map?.kind === "dungeon" || e.hp < e.maxHp || hovered || e.arena)) {
       overlays.push(() => {
         const w = 30, k = e.hp / e.maxHp;
         ctx.fillStyle = "rgba(0,0,0,.65)";

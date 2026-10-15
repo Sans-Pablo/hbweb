@@ -203,7 +203,7 @@ export class Controller {
       if (cit) { this.intent = null; this.path = []; this.noHold = true; this.ui.npcClick(cit); return; }
     }
     if (!ent && first) { const [px, py] = this.r.toWorld(this.pointer[0], this.pointer[1]); if (this.playerAt(px, py)) { this.intent = null; this.path = []; this.noHold = true; return; } }   // Game.cpp: FOE >= 0 (aliado/neutral) -> el clic no hace nada
-    if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
+    if ((this.ctrl || (this.ui.autoAttack && ent?.kind === "npc" && !ent.comp)) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
     if (!first && this.intent && this.intent.t === "attack") return;
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
     this.intent = { t: "move", x: tx, y: ty };

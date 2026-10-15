@@ -33,6 +33,12 @@
 - [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
 
+## Hilo MOTOR (pedido 2026-10-15, v0.83.7)
+- [x] 1 Reconexión (gracia 45 s + reconexión automática; sin probar en navegador real con pestaña oculta larga)
+- [x] 7 Sin Failed en fallo normal · [x] 9 Autoataque solo monstruos · [x] 12 sin viñeta/luz/barras de monstruos/aviso de mapa (la barra EXP sobre la cabeza no existe en el código)
+- [~] 8 el servidor ya rechaza atacar a no enemigos (canFight); sin gesto añadido
+- [ ] 2,3,4,5,6,10,11,13,14 pendientes. Test support-summon falla (ajeno a estos cambios, sin investigar).
+
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
 
 ### P0 · Servidor oficial siempre online y de mínima latencia (pedido 2026-10-13)

@@ -338,7 +338,7 @@ async function main() {
     sound.setMusic?.(opts.music); sound.setMusicVolume?.(opts.musicVol);
     MAGIC_MODE.free = false;                                   // magia con las reglas del servidor (la opción «magia libre» ya no existe)
     const q = opts.autoQuality !== true ? 0 : renderer.q || 0;       // calidad automática (el HD lo decide el jugador): 1 sin sombras largas y menos sombras, 2 sin luz/viñeta (el HD no se toca)
-    renderer.lighting = !!opts.lighting && q < 2; renderer.lightFx = !!opts.lightFx && q < 1; renderer.crowdMax = q >= 1 ? 25 : 70;
+    renderer.lighting = false; renderer.lightFx = false;  /* sin luz inventada (ticket 12) */ renderer.crowdMax = q >= 1 ? 25 : 70;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);

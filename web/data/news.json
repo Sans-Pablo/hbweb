@@ -1,5 +1,5 @@
 {
- "build": "0.83.6",
+ "build": "0.83.7",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -7,16 +7,49 @@
  "news": [
   {
    "date": "2026-10-15",
-   "title": {"es": "Personajes sin recuadros pálidos (v0.83.6)", "en": "Characters without pale boxes (v0.83.6)"},
+   "title": {
+    "es": "Reconexión y fidelidad (v0.83.7)",
+    "en": "Reconnect and fidelity (v0.83.7)"
+   },
    "items": [
-    {"es": "Con WebGL (por defecto) aparecían rectángulos claros alrededor de todos los personajes. Arreglado en el shader. Prueba: mira cualquier personaje, de día y de noche, sobre hierba oscura.", "en": "With WebGL (default) pale rectangles appeared around every character. Fixed in the shader. Test: look at any character, day and night, over dark grass."}
+    {
+     "es": "Si pierdes la conexión (pestaña en segundo plano mucho rato) el cliente reconecta solo y conservas tu personaje 45 s. Prueba: deja la pestaña oculta unos minutos y vuelve.",
+     "en": "If the connection drops (tab hidden for long) the client reconnects by itself and keeps your character for 45 s. Test: hide the tab for a few minutes and come back."
+    },
+    {
+     "es": "Un golpe normal que falla ya no muestra «Failed». Sin viñeta, luz dinámica, barras de vida de monstruos ni aviso de mapa (no existen en el original).",
+     "en": "A normal missed hit no longer shows Failed. No vignette, dynamic light, monster HP bars or map-entry notice (not in the original)."
+    },
+    {
+     "es": "El ataque automático solo apunta a monstruos, no a jugadores, bots ni mascotas.",
+     "en": "Auto-attack only targets monsters, not players, bots or pets."
+    }
    ]
   },
   {
    "date": "2026-10-15",
-   "title": {"es": "Entrada al mapa sin congelarse (v0.83.5)", "en": "Map entry without freezing (v0.83.5)"},
+   "title": {
+    "es": "Personajes sin recuadros pálidos (v0.83.6)",
+    "en": "Characters without pale boxes (v0.83.6)"
+   },
    "items": [
-    {"es": "Entrar a Promise Land tardaba 4-6 s con la pantalla casi parada (el minimapa); ahora ~1 s. Prueba: usa goto/viaja a un mapa grande y mira que no se congele. Misma calidad.", "en": "Entering Promise Land took 4-6 s with the screen almost frozen (the minimap); now ~1 s. Test: travel to a big map and check it does not freeze. Same quality."}
+    {
+     "es": "Con WebGL (por defecto) aparecían rectángulos claros alrededor de todos los personajes. Arreglado en el shader. Prueba: mira cualquier personaje, de día y de noche, sobre hierba oscura.",
+     "en": "With WebGL (default) pale rectangles appeared around every character. Fixed in the shader. Test: look at any character, day and night, over dark grass."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Entrada al mapa sin congelarse (v0.83.5)",
+    "en": "Map entry without freezing (v0.83.5)"
+   },
+   "items": [
+    {
+     "es": "Entrar a Promise Land tardaba 4-6 s con la pantalla casi parada (el minimapa); ahora ~1 s. Prueba: usa goto/viaja a un mapa grande y mira que no se congele. Misma calidad.",
+     "en": "Entering Promise Land took 4-6 s with the screen almost frozen (the minimap); now ~1 s. Test: travel to a big map and check it does not freeze. Same quality."
+    }
    ]
   },
   {
