@@ -50,3 +50,6 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 - `gui.js`: y máximo = H-52-20 (la barra inferior tapa lo de debajo). `domdrag.js`: `#chat` y `#log` con asa `.dh`, posición en `hbweb.pos.*`, doble clic restaura; no en móvil.
 
 - 0.85.7: ventanas hasta el borde exacto del navegador (gui.full); ver CHANGELOG.
+
+- 0.85.10: sin rombos celestes de salida sobre el suelo (test en ui-guard).
+- 0.85.9: ver docs/AUDITORIA_UI.md (tabla por ventana).

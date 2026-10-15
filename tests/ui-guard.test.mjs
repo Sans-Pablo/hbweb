@@ -17,4 +17,6 @@ const gui = fs.readFileSync(path.join(root, "src/client/gui.js"), "utf8");
 if (!/this\.full = rect/.test(gui)) fail("el lienzo de la GUI debe cubrir toda el área (this.full = rect)");
 if (!/const vl = /.test(gui) && !/vl = \(f\.x/.test(gui)) fail("el arrastre debe medirse contra los bordes del navegador");
 { const i = html.indexOf('id="join"'); if (/type=["']?password/i.test(html.slice(i, i + 1500))) fail("el login no debe usar input type=password (aviso de filtración de Chrome)"); }
+const rd = fs.readFileSync(path.join(root, "src/client/renderer.js"), "utf8");
+if (rd.includes("rgba(90,170,255,\" + (0.12") || rd.includes("ctx.moveTo(x, y - T / 2); ctx.lineTo(x + T / 2, y)")) fail("rombos celestes de salida sobre el suelo (no existen en el original)");
 console.log("OK ui-guard");

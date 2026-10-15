@@ -36,7 +36,7 @@ export function registerDialogs(gui, api) {
       g.aligned(0, 275, 69, side === 1 ? "Aresden Combatant" : side === 2 ? "Elvine Combatant" : "Traveller", INK);
       const L = (v, y, x1 = 180, x2 = 250) => g.aligned(x1, x2, y, String(v), INK);
       const s = me.stats;
-      L(me.level, 106); L(comma(me.exp), 125); L(comma(me.nextExp), 142);
+      L(me.level, 106); L(me.exp, 125); L(me.nextExp, 142);
       L(me.hp + "/" + me.maxHp, 173); L(me.mp + "/" + me.maxMp, 191); L(me.sp + "/" + me.maxSp, 208);
       L(Math.floor(me.weight / 100) + "/" + Math.floor(me.maxLoad / 100), 240);
       L(me.kills, 257);
@@ -241,7 +241,7 @@ export function registerDialogs(gui, api) {
     click(g, lx, ly, me) {
       let y = 0;
       for (const [id] of spellsOf(me, this.view)) {
-        if (lx >= 30 && lx <= 240 && ly >= 70 + y && ly <= 88 + y) { api.useMagic(id); g.close(3); return true; }
+        if (lx >= 30 && lx <= 240 && ly >= 70 + y && ly <= 88 + y) { api.useMagic(id); return true; }
         y += 18;
       }
       TAB_HIT.forEach(([a, b], i) => { if (lx >= a && lx <= b && ly >= 240 && ly <= 268) this.view = i; });
@@ -316,12 +316,12 @@ export function registerDialogs(gui, api) {
       const step = g.info?.ctrl ? 5 : 1;
       for (const [, k, y] of LU) {
         if (lx >= 195 && lx <= 205 && ly >= y + 2 && ly <= y + 8 && this.left(me) > 0) {
-          const n = step === 5 && this.left(me) < 5 ? 0 : step;
+          const n = Math.min(step, this.left(me));
           if (n) this.d[k] = (this.d[k] || 0) + n;
           return true;
         }
         if (lx >= 210 && lx <= 220 && ly >= y + 2 && ly <= y + 8 && (this.d[k] || 0) > 0) {
-          const n = step === 5 && this.d[k] < 5 ? 0 : step;
+          const n = Math.min(step, this.d[k]);
           if (n) this.d[k] -= n;
           return true;
         }
@@ -467,7 +467,7 @@ export function registerDialogs(gui, api) {
     click(g, lx, ly, me) {
       for (let i = 0; i < 17; i++) {
         const k = i + this.view; if (!SKILLS[k]) continue;
-        if (lx >= 44 && lx <= 179 && ly >= 45 + i * 15 && ly <= 59 + i * 15) {
+        if (lx >= 30 && lx <= 179 && ly >= 45 + i * 15 && ly <= 59 + i * 15) {
           const lv = (me.skills && me.skills[k]) || 0;
           if (k === 19 && lv !== 0) api.useSkill(k);            // REQ_USESKILL: Pretend-Corpse
           else if (SKILLS[k][1] !== 0 && lv !== 0) api.log("Esa habilidad aún no se puede usar en esta versión.");

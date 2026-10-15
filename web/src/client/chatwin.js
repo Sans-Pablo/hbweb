@@ -4,7 +4,7 @@ import { Win, THEME, wrap } from "./window.js";
 import { t } from "./i18n.js";
 
 export const CHAT_ID = 10;
-const COL = { 0: "#e6e6e6", 1: "#82c882", 2: "#ff8282", 3: "#8282ff", 4: "#e6e682", 5: "#7fc2ff", 6: "#ffa060", 7: "#8fe08f", 8: "#d6a0ff", 10: "#b4ffb4" };
+const COL = { 0: "#e1e1e1", 1: "#82c882", 2: "#ff8282", 3: "#8282ff", 4: "#e6e682", 5: "#7fc2ff", 6: "#ffa060", 7: "#8fe08f", 8: "#d6a0ff", 10: "#b4ffb4" };
 const TABS = [["Todo", null], ["Chat", [0, 6, 7]], ["Grupo", [5]], ["Clan", [8]], ["Sistema", [1, 2, 3, 4, 10]]];
 const LH = 15;
 

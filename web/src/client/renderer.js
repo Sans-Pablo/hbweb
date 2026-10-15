@@ -667,7 +667,7 @@ export class Renderer {
           const mine = s.me?.side || 0, foe = e.arena || (e.pk > 0) || (mine > 0 && e.side > 0 && e.side !== mine);     // _iGetFOE: rojo enemigo (otro bando) / verde aliado
           const sideName = e.side === 1 ? "Aresden Combatant" : e.side === 2 ? "Elvine Combatant" : "Traveller";
           const gl = guildLine(e);
-          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"], ...(gl ? [[gl, "180,180,180"]] : [])]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
+          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : mine > 0 && e.side > 0 ? "30,200,30" : "50,50,255"], ...(gl ? [[gl, "180,180,180"]] : [])]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
       return;
@@ -1325,18 +1325,11 @@ export class Renderer {
     ctx.fillText(text, x, y);
   }
 
-  // casillas de teletransporte (p. ej. la entrada a Promise Land en el borde del mapa): rombo azul que late, para saber dónde pisar
+  // casillas de teletransporte: solo rótulo de destino (sin rombos; el original no los dibuja)
   drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows) {
     const tps = s.world?.teleports; if (!tps?.size) return;
     const { ctx } = this, k = 0.5 + 0.5 * Math.sin(performance.now() / 300);
-    for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) {
-      const tx = tx0 + i, ty = ty0 + j;
-      if (!tps.has(this.grid.idx(tx, ty))) continue;
-      const x = tx * T - camX + T / 2, y = ty * T - camY + T / 2;
-      ctx.fillStyle = "rgba(90,170,255," + (0.12 + 0.14 * k) + ")";
-      ctx.beginPath(); ctx.moveTo(x, y - T / 2); ctx.lineTo(x + T / 2, y); ctx.lineTo(x, y + T / 2); ctx.lineTo(x - T / 2, y); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "rgba(170,225,255," + (0.5 + 0.4 * k) + ")"; ctx.lineWidth = 1.5; ctx.stroke();
-    }
+    // sin rombos azules sobre el suelo: el original no marca las casillas de salida (v0.85.10)
     // INVENTO del port (ticket 6): cada salida lleva el nombre del mapa de destino; si queda fuera de pantalla, una flecha en el borde apunta hacia ella
     // una sola flecha/rótulo por destino (la salida más cercana al centro de la vista): con dos se confundía; los destinos cerrados no llevan flecha
     const near = new Map(), cx0 = this.viewW / 2, cy0 = this.viewH / 2;

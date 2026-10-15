@@ -17,7 +17,7 @@ import { ARENA } from "../shared/systems/arena.js";
 import { BRANCH_NAMES, DUMMY_NAMES, DUMMY_COLORS, CLS_OF } from "../shared/systems/talents.js";
 import { getLang, t } from "./i18n.js";
 
-const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#7d1919";
+const INK = "#2d1919", QINK = "#371919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#c31919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
 const NPC_NAMES = { [NPC.SHOP]: "Shop Keeper", [NPC.MAGE]: "Sorcerer", [NPC.WAREHOUSE]: "Warehouse Keeper", [NPC.BLACKSMITH]: "BlackSmith Keeper" };
 // NpcTalkHandler: iWho 2 tienda, 3 herrería, 5 almacén, 6 mago -> texto contents{iWho+150}
@@ -66,10 +66,10 @@ export function registerNpcDialogs(gui, api) {
       const it = this.ask && bagItem(me, this.ask.uid);
       if (!it) return;
       const name = itemName(it.id, it.attr, it.comp), a = this.ask;
-      if (a.kind !== "list" && a.kind !== "deposit") g.text(30, 20, a.target ? name + ": give to " + a.target + "." : " Dropping " + name + ".", INK);
-      g.text(30, 35, "Decide the quantity.", INK);
-      g.text(40, 52, this.text, WHITE, { bold: true });
-      g.text(38, 57, "__________ (0 ~ " + it.count + ")", "#192319");
+      if (a.kind !== "list" && a.kind !== "deposit") g.text(30, 20, a.target ? name + ": give to " + a.target + "." : " Dropping " + name + ".", QINK);
+      g.text(30, 35, "Decide the quantity.", QINK);
+      g.text(40, 57, this.text, WHITE, { bold: true });
+      g.text(38, 62, "__________ (0 ~ " + it.count + ")", "#192319");
     },
     // el teclado va a este cuadro mientras esté abierto (Enter confirma, Esc cancela)
     key(e, g) {
@@ -285,7 +285,7 @@ export function registerNpcDialogs(gui, api) {
       if (real.gender === 2 && me.gender === 1 && !warn) warn = ["(Warning!) only for female.", ALERT];
       if (row.levelLimit) {
         const ok = me.level >= row.levelLimit;
-        lab(90, 190, "Level"); g.text(140, 190, ": above " + row.levelLimit, ok ? INK : RED);
+        lab(90, 190, "Level"); g.text(140, 190, ": above " + row.levelLimit, ok ? INK : "#7d1919");
         if (!ok && !warn) warn = ["(Warning!) Your level is too low for this item.", ALERT];
       }
       if (warn) center(warn[0], 258, warn[1]);

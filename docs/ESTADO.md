@@ -393,3 +393,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.7 (hb-ui): ventanas hasta el borde exacto (gui.full), guardia CSS + tests/ui-guard.test.mjs, login sin autocompletado, minimapa de cripta proporcional (106 px), quitado pitMob. No se halló ningún beforeunload ni overlay celeste concreto en el código; el cartel de Chrome se asume el de guardar contraseña.
 
 - 0.85.7 (hb-ui): el cartel era el aviso de filtración de Google Password Manager; el login ya no usa input type=password (texto con -webkit-text-security, name no estandar, autocomplete off). Login offline verificado.
+
+- 0.85.10 (hb-ui): quitados los rombos celestes de las casillas de salida (renderer.drawTeleportMarks); sin velo DOM/CSS detectado en vivo.
+- 0.85.9 (hb-ui): auditoría UI vs original, ver docs/AUDITORIA_UI.md (corregido y pendiente).
