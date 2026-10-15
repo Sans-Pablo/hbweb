@@ -334,3 +334,8 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 ## Hilo UI (v0.84.2)
 - Hechos: tickets 1, 2, 3, 6, 4 (casilla neutra `drawSlot`, solo en el hospital por ahora), 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
 - Pendientes: 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).
+
+## Hilo UI (v0.84.4)
+- Ticket 11 completo: barra inferior hasta los bordes (`Gui.edgeFill`, verificado a 1280x720) + arrastre a bordes; el área de juego ya era de pantalla completa.
+- Ticket 10 parcial (v0.84.3): solo el indicador Remastered/Legacy. Faltan limpieza de opciones y valores por defecto de F1.
+- Pendientes: 5 (migrar diálogos + constructor con opciones + retratos), 10 (resto), 12 (interfaz original total, minimapa móvil/reescalado en cripta), 14 (stats Olympia, mini mob en el foso). Requieren decisiones de diseño (formato Olympia no documentado, GUI de ancho variable).
