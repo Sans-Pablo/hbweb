@@ -616,9 +616,25 @@ export class Renderer {
       ctx.globalAlpha = 1;
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
-      this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      if (gate.target === "down") this.pitMob(gate, s.world.map.level + 1, x, y, closed);
+      const over = s.hover && Math.max(Math.abs(gate.x - s.hover[0]), Math.abs(gate.y - s.hover[1])) <= 1;     // el rótulo solo aparece al pasar el ratón o al estar junto a la entrada
+      if (over || near) this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
+  }
+
+  // Mini sprite del monstruo que espera abajo, sobre el pozo (ticket 14): el esqueleto de la cripta, con aro del color del rey en los pisos de jefe.
+  pitMob(gate, nextLevel, x, y, closed) {
+    const { ctx } = this;
+    const mi = this.pitMi || (this.pitMi = miniOf("Skeleton", k => this.spr.frames(k)));
+    const fr = mi && this.spr.frame(mi.key, mi.f); if (!fr || !this.spr.ready(mi.key)) return;
+    const [sx, sy, w, h] = fr, k = Math.min(1, 38 / Math.max(w, h)), dw = w * k, dh = h * k, cy = y - 8;
+    const tier = nextLevel % 5 === 0 ? Math.min(4, nextLevel / 5) : 0;
+    ctx.save();
+    if (tier) { ctx.strokeStyle = BOSS_COLORS[tier]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, cy + dh / 2 - 2, dw * 0.55, 6, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.globalAlpha = closed ? 0.6 : 0.95;
+    ctx.drawImage(this.spr.img[mi.key], sx, sy, w, h, x - dw / 2, cy - dh / 2, dw, dh);
+    ctx.restore();
   }
 
   // Demon Lv 50: al caminar deja una estela sutil de brasas pequeñas que se apagan en ~1,2 s (como la nieve del Frost). Coordenadas de mundo (this.cam = cámara);
@@ -1463,17 +1479,34 @@ export class Renderer {
   }
 
   // ¿está el puntero (coordenadas de ventana) sobre el minimapa de la esquina?
-  minimapHit(clientX, clientY) {
-    const r = this.canvas.getBoundingClientRect();
-    const vx = ((clientX - r.left) * this.dpr - this.ox) / this.scale, vy = ((clientY - r.top) * this.dpr - this.oy) / this.scale;
-    const size = this.miniSize || (this.mode === "remastered" ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, top = this.miniTop ?? pad;
-    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= top - 3 && vy <= top + size + 3;
+  // Rectángulo del minimapa: arrastrable (miniPos = esquina superior izquierda en píxeles de vista, se recuerda en localStorage);
+  // en mapas pequeños (criptas) se agranda para que las casillas no queden diminutas.
+  miniRect() {
+    let size = this.miniSize || (this.mode === "remastered" ? 170 : 140);
+    if (this.grid?.w && this.grid.w <= 64) size = Math.min(Math.round(size * 1.45), 240);
+    if (this.miniPos === undefined) { try { this.miniPos = JSON.parse(localStorage.getItem("hb.miniPos")); } catch { this.miniPos = null; } }
+    const pad = 10, p = this.miniPos;
+    const x0 = p ? Math.max(3, Math.min(this.viewW - size - 3, p.x)) : this.viewW - size - pad;
+    const y0 = p ? Math.max(3, Math.min(this.viewH - size - 3, p.y)) : this.miniTop ?? pad;
+    return { size, x0, y0 };
   }
+  toView(clientX, clientY) {
+    const r = this.canvas.getBoundingClientRect();
+    return { x: ((clientX - r.left) * this.dpr - this.ox) / this.scale, y: ((clientY - r.top) * this.dpr - this.oy) / this.scale };
+  }
+  minimapHit(clientX, clientY) {
+    const { x: vx, y: vy } = this.toView(clientX, clientY), { size, x0, y0 } = this.miniRect();
+    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= y0 - 3 && vy <= y0 + size + 3;
+  }
+  miniDragStart(clientX, clientY) { const v = this.toView(clientX, clientY), m = this.miniRect(); this.miniGrab = { dx: v.x - m.x0, dy: v.y - m.y0 }; }
+  miniDragMove(clientX, clientY) { if (!this.miniGrab) return; const v = this.toView(clientX, clientY); this.miniPos = { x: Math.round(v.x - this.miniGrab.dx), y: Math.round(v.y - this.miniGrab.dy) }; }
+  miniDragEnd() { if (!this.miniGrab) return; this.miniGrab = null; try { localStorage.setItem("hb.miniPos", JSON.stringify(this.miniPos)); } catch {} }
+  miniReset() { this.miniPos = null; try { localStorage.removeItem("hb.miniPos"); } catch {} }
 
   drawMinimap(s, ppx, ppy) {
     const { ctx } = this;
     const remaster = this.mode === "remastered";
-    const size = this.miniSize || (remaster ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, y0 = this.miniTop ?? pad;      // en móvil (mobile.js) más pequeño y bajo los botones
+    const { size, x0, y0 } = this.miniRect();      // en móvil (mobile.js) más pequeño y bajo los botones
     if (this.miniMissing && performance.now() - this.miniTry > 500) this.buildMinimap();   // las hojas del suelo llegan por tandas
     const sc = size / this.grid.w;
     ctx.globalAlpha = remaster ? 0.9 : 1;

@@ -189,7 +189,10 @@
   body.classic #xp .val { position: absolute; inset: -3px 0 0; text-align: center; font-size: 10px; color: #f3e9d0; }
   body.classic #buttons { grid-area: btn; align-self: center; display: flex; gap: 3px; }
   body.classic #buttons button { background: #3b3732; border: 1px solid #000; box-shadow: inset 0 0 0 1px #8a8173; padding: 1px 6px; font-size: 11px; }
-  body.classic #log { bottom: 62px; font-size: 12px; }
+  /* Legacy: registro de eventos arriba a la izquierda, 6 líneas cada 15 px, como ShowEventList del original (PutString(10, 10+i*15)) */
+  body.classic #log { top: 24px; bottom: auto; left: 10px; font-size: 12px; line-height: 15px; }
+  body.classic #log div:nth-last-child(n+7) { display: none; }
+  body.classic #chat { left: 50%; transform: translateX(-50%); bottom: 62px; }
   body.classic .panel { border-radius: 0; background: #2a2724; border: 2px solid #8a8173; box-shadow: none; }
   body.classic .panel h3 { font-family: "Courier New", monospace; }
   

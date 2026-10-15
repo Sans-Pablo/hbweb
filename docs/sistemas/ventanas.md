@@ -17,7 +17,9 @@ gui.register(new Mi());   // gui.toggle(71)
 Modo inmediato: `body` se llama cada fotograma; coordenadas locales (0,0 = esquina del marco), área útil `this.inner`.
 
 ## Widgets (`ui`)
-`text`, `para` (párrafo con ajuste, devuelve alto), `head`, `rule`, `btn`, `check`, `slider`, `input` (texto o número con min/max), `combo` (lista desplegable con filtro), `scroll` (zona con barra y rueda), `hit`, y `Flow` para filas que saltan de línea (`f.text/btn/input/combo/nl`, `f.bottom`).
+`text`, `para` (párrafo con ajuste, devuelve alto), `head`, `rule`, `btn`, `check`, `slider`, `input` (texto o número con min/max), `combo` (lista desplegable con filtro), `search` (campo con lupa y × que devuelve el texto buscado en minúsculas; úsalo en toda ventana con listas, p. ej. F1), `scroll` (zona con barra y rueda), `hit`, y `Flow` para filas que saltan de línea (`f.text/btn/input/combo/nl`, `f.bottom`).
+
+`btn` admite `{primary:true}` (filete dorado y rótulo en negrita: el Ok de los avisos). `THEME.pad/gap/row` (8/6/24) son los márgenes comunes para separar piezas.
 
 ## Prompts y acciones
 - `gui.ask(label, def, {numeric,min,max,maxLen}) → Promise<string|null>` y `gui.confirm(label) → Promise<bool>`: modales del lienzo (sustituyen a `prompt()`/`confirm()` del navegador; los usa el puesto de venta).
@@ -28,3 +30,15 @@ Modo inmediato: `body` se llama cada fotograma; coordenadas locales (0,0 = esqui
 Solo el login/creación de personaje (`#join`), el selector de archivo `#file-import` y, por ahora, los paneles heredados `#charpanel/#inv/#book` (hud.js) y el diario/seguimiento de misiones (`questui.js`). Migrarlos: crear un `Win` y quitar el panel.
 
 Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`); toda cadena nueva en español lleva entrada en `client/i18n.js`.
+
+## Diario de misiones (v0.84.0)
+`client/questwin.js`: `QuestWin` (id 49, J o botón «!» de la barra) lista la línea de misiones (✔ hechas, ▶ actual con objetivo, «???» futuras). `questui.js` queda solo como rastreador DOM plegable (▾/▸, se recuerda en `hbweb.qtrack`) bajo el minimapa. El botón Quest de F5 se retiró. Test: `tests/questwin.test.mjs`.
+
+## Pestañas de ClassicDialog (v0.84.1)
+`tabBox()` mide cada rótulo (negrita 12 px) y reparte el sobrante como hueco; `tabX(i)`/`tabW(i)` dan posición y caja de clic. Las filas con icono de bola dibujan una casilla cuadrada (translúcida, más clara al pasar el ratón).
+
+## Barra a los bordes (v0.84.4)
+`Gui.edgeFill()` dibuja a cada lado del lienzo 800x600 una tira con la primera/última columna del marco 14 de gamedialog2_6; solo en Remastered y no en móvil. Test: `tests/edgefill.test.mjs`.
+
+## Casillas (v0.84.2)
+`drawSlot(c,x,y,s,on,sel)` en `window.js`: hueco gris con bisel, brilla con `on` (hover) y dorado con `sel`. Test `tests/slot.test.mjs`.

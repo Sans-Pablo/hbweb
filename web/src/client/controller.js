@@ -29,6 +29,7 @@ export class Controller {
       e.preventDefault();
       ui.unlockAudio();
       if (e.button === 2 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { ui.closeMinimap(); return; }   // clic derecho cierra el minimapa
+      if (e.button === 0 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { renderer.miniDragStart(e.clientX, e.clientY); canvas.setPointerCapture?.(e.pointerId); return; }   // arrastrar el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
       if (e.shiftKey && e.button === 2) { this.intent = null; this.path = []; this.ui.petOrder(this.target().ent); return; }      // Shift + clic derecho: orden de ataque al compañero
@@ -40,8 +41,8 @@ export class Controller {
       canvas.setPointerCapture?.(e.pointerId);
       if (this.btn === 2) this.rightClick(); else this.click(true);
     });
-    canvas.addEventListener("pointermove", e => { ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
-    canvas.addEventListener("pointerup", e => { this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
+    canvas.addEventListener("pointermove", e => { renderer.miniDragMove(e.clientX, e.clientY); ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; });
+    canvas.addEventListener("pointerup", e => { renderer.miniDragEnd(); this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
     canvas.addEventListener("pointercancel", () => { this.down = false; ui.gui.up(); });
     // un objeto arrastrado nunca se queda pegado al cursor: si se suelta fuera del lienzo o se pierde el foco, se suelta igual
     addEventListener("pointerup", e => { if (ui.gui.item || ui.gui.drag) { this.down = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); } });

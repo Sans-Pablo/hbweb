@@ -6,6 +6,8 @@
 import { STEPS, SPEAKERS, TOTAL, SHOP_DOOR } from "../shared/systems/tutorial.js";
 import { drawPerson, apparelOf } from "./look.js";
 import { miniOf } from "./compicon.js";
+import { DialogBox } from "./dialogbox.js";
+import { THEME } from "./window.js";
 
 export const BOX_ID = 46, TRACK_ID = 47;
 const UI = {
@@ -30,6 +32,7 @@ export class Tutorial {
 
   // ---------------------------------------------------------------- estado y flujo
   onState(ev) {
+    if (ev.st === "on" && this.left) return;                 // eco atrasado del servidor tras saltar o terminar: no reabrir el tutorial (solo /tutorial lo reinicia)
     this.st = ev.st; this.claimed = ev.claimed || [];
     if (ev.st !== "on") { this.i = ev.i; this.hide(); return; }
     if (this.phase === "idle" || ev.i > this.i) { this.i = ev.i; this.enter(); }       // el cliente nunca retrocede por un eco atrasado del servidor
@@ -69,13 +72,13 @@ export class Tutorial {
     const n = this.i + 1;
     this.d.send({ t: "tut", op: "step", i: n });
     this.i = n;
-    if (n >= TOTAL) { this.st = "done"; this.hide(); this.d.toast(this.tx(UI.done)); return; }
+    if (n >= TOTAL) { this.st = "done"; this.left = true; this.hide(); this.d.toast(this.tx(UI.done)); return; }
     this.enter();
   }
   hide() { this.phase = "idle"; this.d.gui.close(BOX_ID); this.d.gui.close(TRACK_ID); }
   skipStep() { if (this.phase === "goal") this.goalDone(); }
-  skipAll() { this.d.send({ t: "tut", op: "skip" }); this.st = "skip"; this.hide(); this.d.toast(this.tx(UI.skipped)); }
-  restart() { this.d.send({ t: "tut", op: "reset" }); this.st = "on"; this.i = 0; this.enter(); }
+  skipAll() { this.d.send({ t: "tut", op: "skip" }); this.st = "skip"; this.left = true; this.hide(); this.d.toast(this.tx(UI.skipped)); }
+  restart() { this.d.send({ t: "tut", op: "reset" }); this.left = false; this.st = "on"; this.i = 0; this.enter(); }
 
   // ---------------------------------------------------------------- objetivos
   startGoal() { this.prog = 0; this.moved = 0; this.last = null; this.kills = 0; }
@@ -114,7 +117,12 @@ export class Tutorial {
   // cada fotograma: objetivos que se miden en el estado del juego (andar, correr, cuadros abiertos, mapa)
   update(me, world) {
     if (!this.asked && me) { this.asked = true; this.d.send({ t: "tut", op: "get" }); }
-    if (!me || !this.on || this.phase !== "goal") return;
+    if (!me || !this.on) return;
+    // si algo cerró el cuadro (abrir la tienda, cambio de mapa…) el estado y la ventana se vuelven a alinear: así «Siguiente» nunca queda bloqueado
+    const gui = this.d.gui, talk = this.phase === "lines" || this.phase === "after";
+    if (talk && !gui.isOpen(BOX_ID)) gui.open(BOX_ID);
+    else if (this.phase === "goal" && !gui.isOpen(TRACK_ID)) gui.open(TRACK_ID);
+    if (this.phase !== "goal") return;
     const g = this.step.goal;
     switch (g.k) {
       case "move": {
@@ -204,81 +212,62 @@ export class Tutorial {
     g.text(x + w / 2, y + 4, label, over ? "#fff" : "#e8dcc3", { align: "center", size: 11 });
     return over;
   }
-  // caja de conversación: en móvil se ajusta al ancho de la pantalla y a lo que mide el texto
-  textLines(c, text, w) { c.font = "13px Tahoma, Verdana, sans-serif"; return this.wrap(c, text, w); }
+  // caja de conversación (id 46): DialogBox de dialogbox.js; en móvil se ajusta al ancho de la pantalla y se pega abajo
   boxDialog() {
     const self = this;
-    return {
-      id: BOX_ID, x: 100, y: 392, w: 600, h: 146, fixed: true, mobileFixed: true, face: 96,
-      layout(g) {                                                   // móvil: ancho de pantalla, cara pequeña, alto según el texto, pegado abajo
-        this.w = Math.min(600, g.W - 12); this.face = this.w < 520 ? 64 : 96;
-        const l = self.line(), tw = this.w - (this.face + 32) - 14, n = l ? self.textLines(g.ctx, self.full(l), tw).length : 3;
-        this.h = Math.max(this.face + 56, 40 + n * 17 + 46);
-        this.x = (g.W - this.w) / 2; this.y = g.H - this.h - 6;
+    return new DialogBox({
+      id: BOX_ID, face: 80,
+      place: (g, b) => { b.x = Math.round((g.W - b.w) / 2); b.y = g.mobile ? g.H - b.h - 6 : 538 - b.h; },
+      spec() {
+        const l = self.line(); if (!l) return null;
+        const full = self.full(l), typing = self.typing(), last = self.li + 1 >= self.lines().length, sure = self.confirm > self.d.now();
+        return {
+          title: `${self.tx(UI.title)} ${Math.min(self.i + 1, TOTAL)}/${TOTAL}`,
+          face: (g, x, y, size) => self.drawFace(g, l.w, x, y, size), name: self.nameOf(l.w),
+          text: full, shown: self.shown(), click: () => self.advance(),
+          hint: typing || self.d.gui.mobile ? "" : "[" + self.tx(UI.key) + "]",
+          options: [
+            { label: self.tx(sure ? UI.sure : UI.skip), fn: () => self.askSkip(), color: sure ? THEME.hi : null, w: 130 },
+            ...(typing ? [] : [{ label: self.tx(last && self.i + 1 >= TOTAL ? UI.end : UI.next), fn: () => self.advance(), primary: true }]),
+          ],
+        };
       },
-      draw(g) {
-        const c = g.ctx, l = self.line(); if (!l) return;
-        if (g.mobile) this.layout(g);
-        const W = this.w, H = this.h, F = this.face, tx = F + 32;
-        const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y;
-        self.panel(c, W, H);
-        self.drawFace(g, l.w, 16, 16, F);
-        const nm = self.nameOf(l.w);
-        if (nm) g.text(tx, 16, nm, "#f0d27a", { bold: true, size: 14, shadow: true });
-        const full = self.full(l), txt = full.slice(0, self.shown());
-        const lines = self.textLines(c, full, W - tx - 14); let n = 0;
-        lines.forEach((ln, i) => { const part = txt.slice(n, n + ln.length + 1).slice(0, ln.length); n += ln.length + 1; if (part) g.text(tx, 38 + i * 17, part, "#f1e8d0", { size: 13 }); });
-        const last = self.li + 1 >= self.lines().length, typing = self.typing();
-        const pulse = (Math.floor(self.d.now() / 400) % 2) ? "#fff" : "#e0c070";
-        g.text(W - 18, H - 24, typing ? "" : self.tx(last && self.i + 1 >= TOTAL ? UI.end : UI.next), pulse, { align: "right", size: 12, bold: true });
-        if (!g.mobile) g.text(W - 18, H - 38, typing ? "" : "[" + self.tx(UI.key) + "]", "#a89868", { align: "right", size: 9 });
-        g.text(16, H - 22, `${self.tx(UI.title)} ${Math.min(self.i + 1, TOTAL)}/${TOTAL}`, "#a89868", { size: 10 });
-        self.btn(g, lx, ly, tx, H - 28, 150, 18, self.tx(self.confirm > self.d.now() ? UI.sure : UI.skip), self.confirm > self.d.now());
-      },
-      click(g, lx, ly) {
-        if (lx >= this.face + 32 && lx <= this.face + 32 + 150 && ly >= this.h - 28 && ly <= this.h - 10) { self.askSkip(); return true; }
-        self.advance(); return true;
-      },
-    };
+    });
   }
   askSkip() {
     if (this.confirm > this.d.now()) { this.confirm = 0; this.skipAll(); } else this.confirm = this.d.now() + 3500;
   }
+  // rastreador del objetivo (id 47): DialogBox sin cara con barra de progreso y flecha al destino
   trackDialog() {
-    const self = this, H = 66;
-    return {
-      id: TRACK_ID, x: 210, y: 8, w: 380, h: H, fixed: true, mobileFixed: true,
-      layout(g) { this.w = Math.min(380, g.W - 12); this.x = (g.W - this.w) / 2; this.y = 52; },       // móvil: debajo de las barras de estado
-      draw(g, me, world) {
-        const c = g.ctx, s = self.step; if (!s?.goal) return;
-        if (g.mobile) this.layout(g);
-        const W = this.w;
-        const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y;
-        self.panel(c, W, H);
-        g.text(12, 9, `${self.tx(UI.title)} ${self.i + 1}/${TOTAL} · ${self.tx(UI.goal)}`, "#a89868", { size: 10 });
-        g.text(12, 24, self.tx(s.goal), "#f0d27a", { bold: true, size: 13, shadow: true });
-        g.text(12, 42, self.tx(s.goal.hint), "#d8cfae", { size: 10 });
-        if (s.goal.k === "move") { c.fillStyle = "#2a2112"; c.fillRect(12, 56, 150, 4); c.fillStyle = "#6fcf4f"; c.fillRect(12, 56, 150 * self.prog, 4); }
-        const tgt = me && world && self.target(me, world);
-        if (tgt) {                                          // flecha hacia el destino
-          const dx = tgt[0] - me.x, dy = tgt[1] - me.y, dist = Math.max(Math.abs(dx), Math.abs(dy)), ang = Math.atan2(dy, dx), ax = W - 26, ay = 20;
-          c.save(); c.translate(ax, ay); c.rotate(ang);
-          c.fillStyle = "#f0d27a"; c.strokeStyle = "#3a2c14"; c.lineWidth = 1.5;
-          c.beginPath(); c.moveTo(14, 0); c.lineTo(-4, -10); c.lineTo(-1, 0); c.lineTo(-4, 10); c.closePath(); c.fill(); c.stroke(); c.restore();
-          g.text(ax - 22, 14, dist + " " + self.tx(UI.tiles), "#f1e8d0", { align: "right", size: 10 });
-        }
-        self.btn(g, lx, ly, W - 190, H - 22, 86, 16, self.tx(UI.skipStep), false);
-        self.btn(g, lx, ly, W - 98, H - 22, 90, 16, self.tx(self.confirm > self.d.now() ? UI.sure : UI.skip), self.confirm > self.d.now());
+    const self = this;
+    return new DialogBox({
+      id: TRACK_ID, w: 380,
+      place: (g, b) => { b.x = Math.round((g.W - b.w) / 2); b.y = g.mobile ? 52 : 8; },
+      spec(me, world) {
+        const s = self.step; if (!s?.goal) return null;
+        const sure = self.confirm > self.d.now();
+        return {
+          title: `${self.tx(UI.title)} ${self.i + 1}/${TOTAL} · ${self.tx(UI.goal)}`,
+          name: self.tx(s.goal), text: self.tx(s.goal.hint),
+          extra: (ui, x, y, w, box) => {
+            if (s.goal.k === "move") { if (ui) { const c = ui.c; c.fillStyle = "#120d06"; c.fillRect(x, y + 4, 150, 5); c.fillStyle = "#6fcf4f"; c.fillRect(x, y + 4, 150 * self.prog, 5); } }
+            const tgt = ui && me && world && self.target(me, world);
+            if (tgt) {                                          // flecha hacia el destino
+              const c = ui.c, dx = tgt[0] - me.x, dy = tgt[1] - me.y, dist = Math.max(Math.abs(dx), Math.abs(dy)), ang = Math.atan2(dy, dx), ax = box.w - 52, ay = 56;
+              c.save(); c.translate(ax, ay); c.rotate(ang);
+              c.fillStyle = "#f0d27a"; c.strokeStyle = "#3a2c14"; c.lineWidth = 1.5;
+              c.beginPath(); c.moveTo(14, 0); c.lineTo(-4, -10); c.lineTo(-1, 0); c.lineTo(-4, 10); c.closePath(); c.fill(); c.stroke(); c.restore();
+              ui.text(ax - 22 - ui.tw(dist + " " + self.tx(UI.tiles), 10), ay - 5, dist + " " + self.tx(UI.tiles), THEME.txt, { size: 10 });
+            }
+            return s.goal.k === "move" ? 12 : 0;
+          },
+          options: [
+            { label: self.tx(UI.skipStep), fn: () => self.skipStep() },
+            { label: self.tx(sure ? UI.sure : UI.skip), fn: () => self.askSkip(), color: sure ? THEME.hi : null, w: 120 },
+          ],
+        };
       },
-      click(g, lx, ly) {
-        const W = this.w;
-        if (ly >= H - 22 && ly <= H - 6) {
-          if (lx >= W - 190 && lx <= W - 104) self.skipStep();
-          else if (lx >= W - 98) self.askSkip();
-        }
-        return true;
-      },
-    };
+    });
   }
   // teclado: Espacio / Intro avanzan la conversación (devuelve true si la tecla se consumió)
   key(e) {

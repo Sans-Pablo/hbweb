@@ -199,7 +199,7 @@ export class Gui {
   }
 
   // fotograma teñido multiplicando por un color CSS (aproxima PutSpriteRGB; p. ej. el pelo)
-  mul(key, f, x, y, color) {
+  mul(key, f, x, y, color, add = false) {
     const m = this.manifest[key], fr = m && m.frames[f], o = this.img[key];
     if (!fr || !o || !o.naturalWidth) return;
     const [sx, sy, sw, sh, px, py] = fr, [img, k] = this.uiSrc(key), W = sw * k, H = sh * k;
@@ -207,7 +207,7 @@ export class Gui {
     t.width = W; t.height = H;
     g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, W, H);
     g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
-    g.globalCompositeOperation = "multiply"; g.fillStyle = color; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = add ? "lighter" : "multiply"; g.globalAlpha = add ? 0.55 : 1; g.fillStyle = color; g.fillRect(0, 0, W, H); g.globalAlpha = 1;      // add: mismo mezclado que el sprite del mundo (assets.tintedHair)
     g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
     this.ctx.drawImage(t, 0, 0, W, H, x + px, y + py, sw, sh);
   }
@@ -292,7 +292,7 @@ export class Gui {
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
       d.x = Math.max(0, Math.min(this.W - d.w, x - this.drag.dx));
-      d.y = Math.max(0, Math.min(this.H - (this.mobile ? 20 : 52 + 20), y - this.drag.dy));
+      d.y = Math.max(0, Math.min(this.H - 20, y - this.drag.dy));    // hasta los bordes de la pantalla (barra incluida)
     }
   }
   // devuelve true si la interfaz se queda con el clic
@@ -343,7 +343,7 @@ export class Gui {
   panelClick(x, y) {
     const a = ADDX + RESX;
     if (y <= 434 + RESY || y >= 475 + RESY) return;
-    if (this.petBall && x > 411 && x < 449) this.onAction?.("petmode");
+    if (this.petBall && x > 322 + a && x < 360 + a) this.onAction?.("petmode");
     else if (x > 362 + a && x < 404 + a) this.onAction?.("combat");
     else if (x > 413 + a && x < 447 + a) this.onAction?.("char");
     else if (x > 447 + a && x < 484 + a) this.onAction?.("inv");
@@ -351,8 +351,8 @@ export class Gui {
     else if (x > 521 + a && x < 558 + a) this.onAction?.("skill");
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
-    else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
-    else if (x > 669 + a && x < 706 + a) this.onAction?.("recall");
+    else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");
+    else if (x > 670 + a && x < 707 + a) this.onAction?.("quests");        // Misiones (ticket 6): botón propio, ya no cuelga del cuadro de personaje        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -388,17 +388,34 @@ export class Gui {
     if (!me) return;
     const info = uid ? (this.describe && this.describe(uid)) : (def && this.describeDef && this.describeDef(def));
     if (!info) return;
-    const c = this.ctx, rows = [[info.name, "#ffe9a0", true], ...info.lines.map(l => [l.t, l.c || "#e8e8d0", false])];
-    c.font = "12px Tahoma, Verdana, sans-serif";
-    const pad = info.sprite ? 50 : 0;
-    const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14 + pad, h = Math.max(rows.length * 14 + 10, info.sprite ? 56 : 0);
+    // Ficha estilo Olympia (ticket 14): cabecera con el nombre (color de rareza) y el icono, la estadística principal (daño/defensa) destacada,
+    // las bonificaciones en verde y, tras una línea fina, los datos secundarios (peso, fuerza, durabilidad) atenuados.
+    const c = this.ctx, MAIN = /^(Daño|Defensa|Damage|Defense)/, SUB = /^(Peso|Weight|Fuerza necesaria|Required strength)/;
+    const main = [], body = [], sub = [];
+    for (const l of info.lines) {
+      const r = { t: l.t, c: l.c || "#e8e8d0" };
+      if (MAIN.test(l.t) && !l.c) { r.c = "#fff2c0"; r.big = true; main.push(r); }
+      else if (SUB.test(l.t) && !l.c) { r.c = "#a89f88"; sub.push(r); }
+      else body.push(r);
+    }
+    const hdrH = Math.max(24, info.sprite ? 44 : 0), pad = info.sprite ? 46 : 0, RH = 14;
+    c.font = "bold 13px Tahoma, Verdana, sans-serif"; let tw = c.measureText(t(info.name)).width + pad;
+    c.font = "12px Tahoma, Verdana, sans-serif"; for (const r of [...main, ...body, ...sub]) tw = Math.max(tw, c.measureText(t(r.t)).width + (r.big ? 8 : 0));
+    const w = Math.ceil(tw) + 20, nRows = main.length + body.length + sub.length;
+    const h = hdrH + 6 + (nRows ? nRows * RH + 4 : 0) + (sub.length && main.length + body.length ? 5 : 0) + 4;
     let x = this.mouse.x + 18, y = this.mouse.y + 14;
     if (x + w > this.W) x = this.mouse.x - w - 8;
     if (y + h > this.H) y = this.H - h;
-    c.fillStyle = "rgba(10,8,4,.88)"; c.fillRect(x, y, w, h);
-    c.strokeStyle = "#8a7a4a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
-    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + 30);
-    rows.forEach((r, i) => this.text(x + 7 + pad, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));
+    c.fillStyle = "rgba(10,8,4,.92)"; c.fillRect(x, y, w, h);
+    const gr = c.createLinearGradient(x, y, x, y + hdrH); gr.addColorStop(0, "rgba(120,92,40,.75)"); gr.addColorStop(1, "rgba(50,36,14,.75)");
+    c.fillStyle = gr; c.fillRect(x + 1, y + 1, w - 2, hdrH - 1);
+    c.strokeStyle = "#b8964a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    c.fillStyle = "rgba(184,150,74,.55)"; c.fillRect(x + 1, y + hdrH, w - 2, 1);
+    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + hdrH / 2 + 2);
+    this.text(x + 8 + pad, y + Math.round((hdrH - 13) / 2), info.name, info.color || "#ffe9a0", { bold: true, size: 13, shadow: true });
+    let ty = y + hdrH + 5;
+    for (const r of [...main, ...body]) { this.text(x + 9, ty, r.t, r.c, r.big ? { bold: true } : {}); ty += RH; }
+    if (sub.length) { if (main.length + body.length) { c.fillStyle = "rgba(184,150,74,.3)"; c.fillRect(x + 8, ty + 1, w - 16, 1); ty += 5; } for (const r of sub) { this.text(x + 9, ty, r.t, r.c); ty += RH; } }
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)
@@ -418,7 +435,7 @@ export class Gui {
     if (!ball) return;
     const c = ball.comp, pet = [...world.ents.values()].find(e => e.comp && e.master === me.id && !e.dead);
     const hp = pet ? pet.hp : Math.max(0, c.hp || 0), max = pet ? pet.maxHp : Math.max(1, c.max || 1), k = Math.max(0, Math.min(1, hp / Math.max(1, max)));
-    const bx = 411, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
+    const bx = 322 + a, by = 436 + RESY, cx = this.ctx, m = this.mouse, atk = c.mode !== "peace";
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(bx, by, 38, 38);
     cx.strokeStyle = atk ? "#c85a3c" : "#6fae5a"; cx.lineWidth = 1; cx.strokeRect(bx + .5, by + .5, 37, 37);
     const mi = this.spr && miniOf(c.sp, kk => this.spr.frames(kk), c.cls);
@@ -453,7 +470,18 @@ export class Gui {
 
   // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
   summonsIcon(f, x) {
-    const c = this.ctx; c.save(); c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se vuelve azul
+    const c = this.ctx; this.put("summons_icon", f, x, 554);
+    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
+    c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+  }
+
+  // Botón de Misiones (ticket 6): mismo marco que «Summons», teñido de dorado y con un «!» encima
+  questIcon(f, x) {
+    const c = this.ctx; this.put("summons_icon", f, x, 554);
+    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
+    c.filter = "hue-rotate(-20deg) saturate(1.2) brightness(1.05)"; this.put("summons_icon", f, x, 554); c.restore();
+    this.text(x + 19, 554 + 21, "!", "#fff0b0", { align: "center", bold: true, shadow: true, size: 16 });
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)
@@ -555,9 +583,26 @@ export class Gui {
     if (rows.auraBy) this.text(x + 6, y + 2, "Aura of " + rows.auraBy, "#8fa6d8", { shadow: true, size: 9 });
   }
 
+  // Remastered (ticket 11): la barra inferior se prolonga hasta los bordes de la pantalla repitiendo su primera y última columna en dos lienzos laterales.
+  edgeFill() {
+    const m = this.manifest && this.manifest.gamedialog2_6, fr = m && m.frames[14], o = this.img.gamedialog2_6;
+    this.edges ||= [0, 1].map(() => { const e = document.createElement("canvas"); e.style.cssText = "position:absolute;pointer-events:none;z-index:" + (this.cv.style.zIndex || 1); this.cv.parentNode.insertBefore(e, this.cv); return e; });
+    const r = this.rect, host = this.cv.parentNode.getBoundingClientRect(), side = this.mobile || !this.spr?.hd || !fr || !o?.naturalWidth ? 0 : Math.max(0, (r.x - host.left));
+    const [sx, sy, sw, sh, px, py] = fr || [0, 0, 0, 0, 0, 0];
+    this.edges.forEach((e, i) => {
+      if (side < 1) { e.style.display = "none"; return; }
+      const w = Math.ceil(side), h = Math.ceil(sh * this.scale), key = w + "x" + h + (this.spr?.hd ? "h" : "");
+      e.style.display = "block"; e.style.width = w + "px"; e.style.height = h + "px"; e.style.top = (r.y - host.top + (548 + py) * this.scale) + "px";
+      e.style.left = (i ? r.x - host.left + r.w : 0) + "px";
+      if (e._k === key) return; e._k = key; e.width = w; e.height = h;
+      e.getContext("2d").drawImage(o, i ? sx + sw - 1 : sx, sy, 1, sh, 0, 0, w, h);
+    });
+  }
+
   gauges(me, world, info) {
     const m = this.mouse, a = RESX + ADDX;
     this.put("gamedialog2_6", 14, 0, 548);
+    this.edgeFill();
     // barras: se recorta el fotograma "vacío" desde la izquierda según lo que falta
     const bar = (cur, max, full) => Math.max(0, Math.min(full, full - Math.floor(cur * full / Math.max(1, max))));
     this.put("gamedialog2_6", 12, 23 + RESX, 437 + RESY, bar(me.hp, me.maxHp, 101));
@@ -587,20 +632,12 @@ export class Gui {
     this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#c8c878");
 
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
-      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"]];
+      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"], [670, -2, 0, "Quests"]];
       for (const [x0, f, dx, name] of icons) {
-        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
+        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === -2) this.questIcon(1, x0 + a); else if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }
     }
-    this.summonsIcon(0, 632 + a);
-    // Recall: icono en el siguiente hueco de la barra, con barra de canalización / enfriamiento
-    {
-      const rx = 669 + a, n = performance.now(), r = this.rc || {}, ch = r.ch > n, cd = r.cd > n, over = m.x > rx && m.x < rx + 37 && m.y > 436 + RESY && m.y < 478 + RESY;
-      this.put("recall_icon", over || ch ? 1 : 0, rx, 554);
-      if (cd) { const k = (r.cd - n) / 60000; this.ctx.fillStyle = "rgba(0,0,0,.55)"; this.ctx.fillRect(rx + 3, 554 + 4, 31, Math.round(33 * k)); }
-      if (ch) { const k = 1 - (r.ch - n) / r.chMs; this.ctx.fillStyle = "#e3b341"; this.ctx.fillRect(rx + 3, 554 + 38, Math.round(31 * k), 3); }
-      if (over) this.tip(ch ? "Recall (click: cancel)" : cd ? "Recall (" + Math.ceil((r.cd - n) / 1000) + " s)" : "Recall: return to the farm (3 s)", m.x - 20);
-    }
+    this.summonsIcon(0, 632 + a); this.questIcon(0, 670 + a);
     if (m.x > 400 && m.x < 410 && m.y > 432 + RESY) this.tip("Hunger (" + (100 - me.hunger) + "%)", m.x - 20);
   }
 

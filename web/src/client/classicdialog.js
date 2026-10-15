@@ -17,9 +17,11 @@
 //   7. Filas: top + visible*rowH <= 256 (el constructor lo calcula si no pasas `visible`).
 //   }
 //   gui.register(new Mio());   y   gui.open(50)
+import { drawSlot } from "./window.js";
 import { drawBallIcon } from "./compicon.js";
 import { itemDef, packKey } from "./names.js";
 export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
+let measureCtx = null;
 const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly < y2;
 
 export class ClassicDialog {
@@ -33,7 +35,16 @@ export class ClassicDialog {
   drawBody() {}
   onTab() {}
   // --- pintado
-  tabX(i) { return 30 + i * Math.floor((this.w - 50) / Math.max(1, this.tabs.length)); }
+  // Pestañas colocadas por el ancho real del texto (negrita 11 px) y repartiendo el sobrante: las cajas de clic no se pisan ni los rótulos se montan
+  tabBox() {
+    const key = this.tabs.join("|") + this.w; if (this._tb?.key === key) return this._tb;
+    const c = (measureCtx ||= document.createElement("canvas").getContext("2d")); c.font = "bold 12px Tahoma, Verdana, sans-serif";
+    const ws = this.tabs.map(n => Math.ceil(c.measureText(n).width)), room = this.w - 50, gap = Math.max(6, Math.floor((room - ws.reduce((a, b) => a + b, 0)) / Math.max(1, ws.length - 1)));
+    let x = 30; const xs = ws.map(w => { const r = x; x += w + gap; return r; });
+    return (this._tb = { key, xs, ws, gap });
+  }
+  tabW(i = 0) { const b = this.tabBox(); return b.ws[i] + b.gap; }
+  tabX(i) { return this.tabBox().xs[i]; }
   draw(g, me) {
     if (g.lintOn) g.lint = [];
     this.draw_(g, me);
@@ -55,7 +66,7 @@ export class ClassicDialog {
     g.put("dialogtext_1", this.hoverOk(lx, ly) ? 1 : 0, this.w - 104, 292);
     if (this.title) g.aligned(0, this.w, 22, this.title, INK, { bold: true });
     this.tabs.forEach((name, i) => {
-      const x = this.tabX(i), over = inside(lx, ly, x - 5, x + 85, 38, 58);
+      const x = this.tabX(i), over = inside(lx, ly, x - 5, x - 5 + this.tabW(i), 38, 58);
       g.text(x, 42, name, this.tab === i ? RED : over ? WHITE : DARK, { bold: true });
     });
     this.drawBody(g, me, lx, ly);
@@ -65,6 +76,7 @@ export class ClassicDialog {
       const r = rows[i + this.view]; if (!r) break;
       const y = this.top + i * this.rowH, over = inside(lx, ly, this.mx - 4, this.w - 12, y - 1, y + this.rowH - 2);
       const col = over ? WHITE : r.color || DARK;
+      if (r.ball) { drawSlot(g.ctx, this.mx - 1, y - 2, 18, over); }   // casilla cuadrada (estilo de las casillas de la interfaz)
       if (r.ball) { const d = itemDef(r.ball.id); if (d) drawBallIcon(g, r.ball, d, packKey(d), this.mx + 8, y + 7, 16); }
       g.text(this.mx + (r.ball ? 20 : 0), y, r.text, col, { size: 11 });
       if (r.right != null) g.text(this.w - 44, y, String(r.right), col, { size: 11 });
@@ -94,7 +106,7 @@ export class ClassicDialog {
   hoverOk(lx, ly) { return lx >= this.w - 104 && lx <= this.w - 30 && ly >= 292 && ly <= 312; }
   click(g, lx, ly, me) {
     if (this.hoverOk(lx, ly)) { g.close(this.id); return true; }
-    for (let i = 0; i < this.tabs.length; i++) { const x = this.tabX(i); if (inside(lx, ly, x - 5, x + 85, 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
+    for (let i = 0; i < this.tabs.length; i++) { const x = this.tabX(i); if (inside(lx, ly, x - 5, x - 5 + this.tabW(i), 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
     const rows = this.rows(me) || [], i = Math.floor((ly - this.top) / this.rowH);
     if (ly >= this.top && i >= 0 && i < this.visible && lx > this.mx - 4 && lx < this.w - 12) { const r = rows[i + this.view]; if (r && !r.disabled) { this.pick(r, me, g); return true; } }
     return this.fixed === true;       // clic en un hueco: se agarra el cuadro para moverlo (gui.down)

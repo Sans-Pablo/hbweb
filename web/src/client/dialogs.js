@@ -52,14 +52,12 @@ export function registerDialogs(gui, api) {
         }
       }
       const on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      g.put("dialogtext_1", on(15) ? 5 : 4, 15, 340);           // Quest
       g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      if (hit(15)) api.quests?.();
-      else if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
+      if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
       else if (hit(180)) { g.close(1); g.open(12); return true; }
       return false;
     },
@@ -98,7 +96,7 @@ export function registerDialogs(gui, api) {
       g.put(body, look.skin - 1, 171, 290);
       if (!worn[EQUIP.HEAD]) {
         const col = HAIR_COLORS[look.hairCol][1];
-        if (col) g.mul(hair, look.hair, 171, 290, col); else g.put(hair, look.hair, 171, 290);
+        if (col) g.mul(hair, look.hair, 171, 290, col, true); else g.put(hair, look.hair, 171, 290);
       }
       g.put(under, look.under, 171, 290);
       const skirt = female && worn[EQUIP.PANTS] && itemDef(worn[EQUIP.PANTS].id)?.sprite === 12 && itemDef(worn[EQUIP.PANTS].id)?.spriteFrame === 0;
@@ -393,7 +391,7 @@ export function registerDialogs(gui, api) {
   const optTog = (k, n) => ({ n, get: () => !!api.mods()[k], set: v => api.setOpt(k, v) });
   const SECTIONS = [
     ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas")]],
-    ["Gráficos", [{ n: "Modo Remastered", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD"), optTog("lighting", "Luz y viñeta"), optTog("lightFx", "Luz dinámica y sombras largas"), optTog("spellFx", "Animaciones de hechizos"), optTog("classicCursor", "Cursor clásico"), { n: "Transparencia de cuadros", get: () => api.sys().trans, set: v => api.setSys({ trans: v }) }]],
+    ["Gráficos", [{ n: "Remastered (apagado: Legacy)", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD")]],
     ["Sonido y chat", [{ n: "Sonido", get: () => api.sys().sound, set: v => api.setSys({ sound: v }) }, { n: "Música", get: () => api.sys().music, set: v => api.setSys({ music: v }) }, { n: "Susurros", get: () => api.sys().whisper, set: v => api.setSys({ whisper: v }) }, { n: "Gritos", get: () => api.sys().shout, set: v => api.setSys({ shout: v }) }]],
   ];
   const optRows = [];                                   // [x, y, fila] de cada interruptor, calculado al dibujar

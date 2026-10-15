@@ -8,7 +8,7 @@ const KEY = "hbweb.tested";
 const read = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { return new Set(); } };
 const write = s => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
 const L = o => (o && (o[getLang()] || o.es)) || "";
-const TABS = [["news", "Novedades", "News"], ["tests", "Para probar", "To test"], ["notes", "A tener en cuenta", "Keep in mind"], ["tools", "Herramientas", "Tools"]];
+const TABS = [["news", "Novedades", "News"], ["tools", "Herramientas", "Tools"]];
 const KITS = {
   potions: [["RedPotion", 50], ["BluePotion", 50], ["GreenPotion", 50]], arrows: [["Arrow", 500]],
   dyes: [["Dye(Red)", 1], ["Dye(Blue)", 1], ["Dye(Green)", 1], ["ArmorDye(Red)", 1], ["ArmorDye(Blue)", 1], ["ArmorDye(Gold)", 1]],
@@ -36,14 +36,17 @@ export class NewsWin extends Win {
       ui.btn(tx, ty, bw, label, () => { this.tab = k; this.blur(); }, { active: this.tab === k });
       tx += bw + 4;
     }
+    this.q = ui.search("q", I.x + w - 170, ty, 170);                 // buscador (ticket 3): filtra las novedades por texto
     const sy = ty + 28, sh = I.y + I.h - sy;
     ui.scroll(this.tab, I.x, sy, w, sh, (u, cw) => this["tab_" + this.tab](u, cw));
   }
   tab_news(u, cw) {
     let y = 0;
+    const q = this.q, hit = s => !q || L(s).toLowerCase().includes(q);
     for (const n of this.data.news) {
+      if (q && !hit(n.title) && !n.items.some(hit)) continue;
       u.head(0, y, L(n.title)); u.text(cw - u.tw(n.date), y, n.date, THEME.dim); y += 18;
-      for (const i of n.items) { u.text(4, y, "•", THEME.head); y += u.para(16, y, cw - 16, L(i)) + 2; }
+      for (const i of n.items) { if (q && !hit(i) && !hit(n.title)) continue; u.text(4, y, "•", THEME.head); y += u.para(16, y, cw - 16, L(i)) + 2; }
       y += 8;
     }
     return y;

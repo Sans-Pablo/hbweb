@@ -127,5 +127,10 @@ const mk = (save = null) => { const w = new World({ grid, npcDb, data, spawns: [
   assert.equal(T.phase, "goal"); assert.equal(T.i, 1); T.skipStep();
   while (open.has(BOX_ID)) { T.advance(); T.advance(); now += 5000; }
   assert.equal(p.tut.i, 2, "saltar paso avanza uno");
+  // el cuadro lo cierra otra cosa (tienda, cambio de mapa): el siguiente fotograma lo reabre y «Siguiente» no se bloquea
+  T.restart(); open.clear(); T.update(p, w); assert.ok(open.has(BOX_ID), "cuadro cerrado desde fuera: se reabre");
+  // eco atrasado del servidor tras saltar: no reaparece
+  T.skipAll(); T.onState({ st: "on", i: 3, claimed: [] }); assert.ok(!open.size && !T.on, "tras saltar no reaparece");
+  T.restart(); assert.ok(T.on && open.has(BOX_ID), "/tutorial lo reinicia");
 }
 console.log("OK tutorial");

@@ -67,7 +67,7 @@ export class Hud {
     if (cls) d.className = cls;
     this.logEl.appendChild(d);
     while (this.logEl.children.length > 10) this.logEl.firstChild.remove();
-    setTimeout(() => d.classList.add("old"), 7000);
+    setTimeout(() => d.classList.add("old"), document.body.classList.contains("classic") ? 5000 : 7000);   // original: 5000 ms (ShowEventList)
   }
 
   toast(text) {

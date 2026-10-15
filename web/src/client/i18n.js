@@ -14,7 +14,7 @@ const EN = {
   "Las herramientas aparecen al entrar en el juego.": "The tools appear once you enter the game.", "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.": "For testing only: what you do here is saved with the game. Messages appear in the chat.",
   "Clic derecho: cerrar": "Right click: close", "Cancelar salida": "Cancel logout", "Menú clásico": "Classic menu",
   "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado": "Gail only evolves companions of those who defeated the Golden King",
-  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Misión cumplida": "Quest complete", "de oro": "gold",
+  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Plegar": "Fold", "Misiones": "Quests", "Misión cumplida": "Quest complete", "de oro": "gold",
   "Guerrero": "Warrior", "Mago": "Mage", "Invocador": "Summoner", "ya tienes un summon de esa especie: deben ser distintos": "you already have a summon of that species: they must be different",
   "elige Healer, Buffer o Aura": "choose Healer, Buffer or Aura",
   // ---- 0.50.7
@@ -37,7 +37,7 @@ const EN = {
   "Inicia sesión primero.": "Log in first.",
   "Se cortó la conexión con el servidor.": "The connection to the server was lost.", "Dirección del servidor no válida.": "Invalid server address.", "Error del servidor.": "Server error.",
   // ---- pantalla de entrada y creación
-  "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Cargando mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
+  "Buscar…": "Search…", "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Cargando mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
   "Repite la contraseña": "Repeat password", "Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.": "Your character is saved only in this browser. You can make a backup in Options.",
   "Conexión perdida": "Connection lost", "El servidor se ha cerrado o se cortó internet.": "The server closed or the internet dropped.", "Volver a entrar": "Log back in",
   "Crear cuenta y entrar": "Create account and log in", "Escribe un nombre.": "Enter a name.", "Las contraseñas no coinciden.": "The passwords do not match.",
@@ -94,7 +94,7 @@ const EN = {
   "Nivel de detalle: alto": "Detail level: high", "Cambiado a modo correr.": "Switched to run mode.", "Cambiado a modo andar.": "Switched to walk mode.", "Sonido activado.": "Sound on.", "Sonido desactivado.": "Sound off.",
   "Modo de ataque seguro activado.": "Safe attack mode on.", "Modo de ataque seguro desactivado.": "Safe attack mode off.", "Modo de combate.": "Combat mode.", "Modo de paz.": "Peace mode.",
   "No tienes ninguna habilidad especial lista.": "You have no special ability ready.", "Mapa ampliado": "Large map", "Mapa normal": "Normal map", "Gráficos clásicos": "Classic graphics",
-  "Gráficos remastered": "Remastered graphics", "Partida guardada": "Game saved", "Aún no hay nada guardado": "Nothing saved yet",
+  "Gráficos remastered": "Remastered graphics", "Remastered (apagado: Legacy)": "Remastered (off: Legacy)", "Partida guardada": "Game saved", "Aún no hay nada guardado": "Nothing saved yet",
   "Bienvenido a la granja de Aresden. Pulsa F1 para ver las novedades y qué probar.": "Welcome to the Aresden farm. Press F1 for the news and what to test.",
   "Cripta de esqueletos: pisa el teletransportador de middled1n (78–80, 69–71) de Aresfarm.": "Skeleton crypt: step on the middled1n teleporter (78–80, 69–71) in Aresfarm.",
   "Partida en línea: se ha cargado tu progreso. Intro para hablar.": "Online game: your progress was loaded. Enter to chat.", "Partida en línea. Pulsa Intro para hablar con los demás.": "Online game. Press Enter to talk to the others.",

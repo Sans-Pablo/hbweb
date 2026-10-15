@@ -1,0 +1,12 @@
+import { readFileSync } from "node:fs";
+const r = p => readFileSync(new URL("../" + p, import.meta.url), "utf8");
+const html = r("web/index.html"), ren = r("web/src/client/renderer.js"), ctl = r("web/src/client/controller.js"), hud = r("web/src/client/hud.js");
+const ok = (c, m) => { if (!c) { console.error("FALLA: " + m); process.exit(1); } };
+ok(/body\.classic #log \{ top: 24px;[^}]*left: 10px/.test(html), "registro Legacy arriba a la izquierda");
+ok(/nth-last-child\(n\+7\)/.test(html), "6 líneas de registro");
+ok(/5000 : 7000/.test(hud), "5 s de vida del registro Legacy");
+for (const f of ["miniRect", "miniDragStart", "miniDragMove", "miniDragEnd", "miniReset"]) ok(ren.includes(f + "("), "renderer." + f);
+ok(ren.includes("hb.miniPos"), "posición persistente");
+ok(/grid\.w <= 64/.test(ren), "minimapa agrandado en mapas pequeños");
+ok(ctl.includes("miniDragStart") && ctl.includes("miniDragEnd"), "controlador arrastra el minimapa");
+console.log("OK interfaz-original");

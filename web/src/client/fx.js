@@ -119,7 +119,7 @@ export class Fx {
       }
       case "dummy-crit": this.text(ev.nid, "CRITICAL!", ev.cls === "healer" ? "#7fff7f" : ev.cls === "buffer" ? "#ffe84a" : "#7fc4ff", true, -18); break;
       case "castfail": this.text(ev.id, "el hechizo falla", "#a9b4c2"); break;
-      case "resist": this.text(ev.id, " * Failed! *", "#e8dc3c", false, 0, 16, 22); break;
+      case "resist": break;
       case "exp": if (mine) this.text(ev.id, "+" + ev.amount + " exp", "#e6c869", false, -16); break;
       case "levelup": {
         const p = this.at(ev.id);

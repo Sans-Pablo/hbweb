@@ -4,6 +4,12 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
+## Hilo UI (pedido 2026-10-15, v0.83.7)
+- [x] 1 hover turquesa (solo la huella) · [x] 2 tutorial (reaparece/bloqueo; sin verificar en vivo la tienda) · [~] 10 opciones limpias hecho; falta modos solo Remastered/Legacy y F1 ON/OFF (son órdenes del servidor, no UI)
+- [ ] 3-9, 11-14 sin empezar (ventanas, constructor de diálogos, misiones, hospital, botón mascota, cripta E, interfaz original, pelo F5, stats Olympia)
+
+- [x] (pedido 2026-10-15, cierre hilo UI) **Verificación en navegador de lo pendiente:** móvil vertical/horizontal, minimapa en cripta real (nivel 1 y 4), chat Legacy, plegado ▾/▸ del rastreador, pozo cerrado (mini esqueleto + aro de jefe) y abierto. Arreglado: el rastreador de misión se apartaba mal (tapaba el diálogo en horizontal móvil, lo tapaba el minimapa ampliado de cripta) -> `questUi.avoid` + media query; el log Legacy pisaba la línea de fps (top 24px). Flecha del tutorial: vista solo en el paso de mapa (sin probar talk/kill). Minimapa en móvil: sin probar.
+
 ## Hilo SISTEMAS (pedido 2026-10-15) — tickets por prioridad
 - [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Pendiente: orden explícita «recoge esto» para items tirados.
 - [ ] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
@@ -335,3 +341,30 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Hilo MOTOR 0.83.12: ciclo de susurros (flechas arriba/abajo). Zoom numpad: no existe en el original, no se hace. Ticket 8: cubierto (cliente no apunta a aliados + `Combat.canFight`). Sigue SIN HACER: medicion de FPS del ticket 3 (hace falta log `?gl=1&prof=1` con GPU) y verificacion manual de critico/casteo/«!» en navegador.
 - Hilo MOTOR 0.83.13: ticket 3 medido con `?prof=1` en el navegador integrado (software, tope 30 fps). ANTES: fase base 21.8 fps (45.8 ms/fotograma), primeros ~12 s tras entrar con fotogramas de 20-300 ms (suelo 5-33 ms). DESPUES (suelo reconstruido de uno en uno): base 30.2 fps, sinSuelo 26.4, resto 30; los tirones iniciales siguen (~9 s, suelo hasta 26 ms/fotograma, pico 367 ms en el primer fotograma): es el primer dibujo/decodificacion de hojas, no el bucle. En estado estable JS ~1.5-2 ms y dibujo ~0.8 ms: nada que recortar. Verificado en navegador: susurros (flechas), «Critical», «!» al matar, casteo Fire Ball. Dash solo por test.
 - Hilo MOTOR 0.83.14: ticket 3, causa real de los tirones de la entrada medida con hooks en página (no rAF, que el panel oculto estrangula). Primer `spr.put` de cada hoja de suelo (t9, t382, t429, t352, t404, t365, t403, t405): 57-158 ms, ~85 % del tiempo de `groundChunk` lento (716 de 844 ms de put). Precargar/decodificar el `<img>` no ayudaba; un `ImageBitmap` (createImageBitmap) se prepara fuera del hilo principal. ANTES (1 ejecución): 14 llamadas a `groundChunk` >5 ms, suma 1532 ms, pico 288 ms, última a 11.1 s. DESPUES (2 ejecuciones): 8 y 7 llamadas, suma 447 y 861 ms, pico 112 y 178 ms, última a 8.0 y 15.3 s (la 2.ª incluye crear personaje en cuenta nueva, arranque en frío). Mejora real pero con ruido alto (software, 3 muestras); quedan tirones puntuales de ~100 ms en el primer dibujo de cada hoja porque el primer put ocurre antes de que el bitmap esté listo. Limite restante: GPU/rasterizado del navegador integrado; falta confirmar en un PC con GPU (`?gl=1&prof=1`).
+## Hilo UI (rama Pablo-Claude/hb-ui-46a637) — v0.84.0
+- Hechos: 6 misiones (ventana + botón barra + rastreador plegable), 1 hover turquesa, 2 tutorial (cuadro con retrato, saltar con doble clic), 3 buscador/Ok destacado/márgenes comunes, 8 botón de mascota, 9 rótulo de la cripta, 11 arrastrar ventanas al borde, 13 pelo F5.
+- Pendientes: 4 cuadros neutros al hover, 5 migrar diálogos al sistema de ventanas + constructor, 7 hospital de mascotas, 10 modos Remastered/Legacy, 11 barra y área máxima (requiere GUI de ancho variable), 12 interfaz original total y minimapa móvil, 14 estadísticas estilo Olympia y mini sprite en pozos.
+
+## Hilo UI (v0.84.2)
+- Hechos: tickets 1, 2, 3, 6, 4 (casilla neutra `drawSlot`, solo en el hospital por ahora), 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
+- Pendientes: 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).
+
+## Hilo UI (v0.84.9)
+- Ticket 14 (v0.84.9): ficha de objeto estilo Olympia (`gui.itemTooltip`) y mini esqueleto sobre cada pozo de bajada (`renderer.pitMob`, aro de color en pisos de jefe). Verificado en escritorio (ficha de Dagger y pozo cerrado en cripta 1). Sin verificar: móvil, pozo abierto/piso de jefe. El formato Olympia no está documentado: se eligió una disposición propia.
+
+## Hilo UI (v0.84.8)
+- Ticket 12 (v0.84.8): Legacy con registro arriba-izquierda (original `ShowEventList`), chat sobre la barra, minimapa arrastrable y persistente, agrandado en criptas. Verificado en escritorio (log 6 líneas, arrastre y persistencia). No verificado: móvil, minimapa en cripta real.
+
+## Hilo UI (v0.84.7)
+- Ticket 10 cerrado (v0.84.7): opciones F12 ya reducidas a 3 secciones; modo Remastered/Legacy con etiqueta traducida. Los ON/OFF por defecto son los de `main.js` (`defaults`), documentados en el CHANGELOG. Menú F12 verificado en escritorio (la etiqueta nueva no se vio por caché del navegador; comprobado en la fuente servida).
+
+## Hilo UI (v0.84.6)
+- Ticket 5 (v0.84.6): conversación de NPC (id 21) migrada a `DialogBox`; verificado en escritorio con texto de prueba. Tienda/banco/venta mantienen el marco clásico (decisión: fieles al original).
+
+## Hilo UI (v0.84.5)
+- Ticket 5 (v0.84.5, parcial): `DialogBox` (dialogbox.js, ficha `docs/sistemas/dialogos.md`, test `dialogbox.test.mjs`); tutorial migrado (caja y rastreador), verificado en escritorio (caja y objetivo con barra). Móvil sin verificar. Faltan los diálogos de NPC (`npcdialogs.js`) por migrar. Crypt y chat quedan como están.
+
+## Hilo UI (v0.84.4)
+- Ticket 11 completo: barra inferior hasta los bordes (`Gui.edgeFill`, verificado a 1280x720) + arrastre a bordes; el área de juego ya era de pantalla completa.
+- Ticket 10 parcial (v0.84.3): solo el indicador Remastered/Legacy. Faltan limpieza de opciones y valores por defecto de F1.
+- Pendientes: 5 (migrar diálogos + constructor con opciones + retratos), 10 (resto), 12 (interfaz original total, minimapa móvil/reescalado en cripta), 14 (stats Olympia, mini mob en el foso). Requieren decisiones de diseño (formato Olympia no documentado, GUI de ancho variable).

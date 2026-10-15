@@ -20,6 +20,38 @@
 ## 0.83.7 · Motor: reconexión y fidelidad (2026-10-15)
 - Servidor: sesión fantasma 45 s y reconexión automática del cliente (test net-reconnect).
 - Sin "Failed" en golpes normales; fuera luz/viñeta, barras de vida de monstruos y aviso de mapa; ataque automático solo a monstruos.
+## 0.84.9 · Fichas y pozos (2026-10-15)
+- Ficha de objeto estilo Olympia: cabecera con nombre (color de rareza) e icono, daño/defensa destacado, bonificaciones en verde y datos secundarios (peso, fuerza, durabilidad) atenuados tras un separador. Cada pozo de bajada de la cripta muestra un mini esqueleto (con aro del color del rey en pisos de jefe; tenue si está cerrado). Ticket 14.
+
+## 0.84.8 · Interfaz original (2026-10-15)
+- Legacy: registro de eventos arriba a la izquierda (6 líneas, 5 s) como `ShowEventList` del original; entrada de chat sobre la barra. Minimapa arrastrable con posición recordada y más grande en criptas. Ticket 12. Ficha: `docs/sistemas/interfaz-original.md`.
+
+## 0.84.7 · Opciones limpias (2026-10-15)
+- Opciones (F12): el interruptor de modo se llama «Remastered (apagado: Legacy)» y tiene traducción. Valores por defecto revisados contra el original: correr, minimapa, barras de vida, info del suelo y HD activados; ataque automático se activa al entrar. Cierra el ticket 10.
+
+## 0.84.6 · Conversación de NPC (2026-10-15)
+- La conversación de los NPC de ciudad (diálogo 21, texto `contents` del original) usa `DialogBox` (marco de piedra, botón Ok). Ticket 5: tutorial + conversación migrados; tienda/banco/hospital conservan su marco clásico.
+
+## 0.84.5 · Cuadros de conversación (2026-10-15)
+- `DialogBox` (`dialogbox.js`): constructor de cuadros con cara, nombre, texto con efecto de máquina de escribir y botones de opción (numerables). El tutorial (conversación y rastreador de objetivo) pasa al sistema de ventanas con el marco de piedra. Ticket 5 (parcial: tutorial; el resto de diálogos de NPC se migrará con este constructor).
+
+## 0.84.4 · Barra a los bordes (2026-10-15)
+- Remastered: la barra inferior se prolonga hasta los bordes de la pantalla (`Gui.edgeFill`, dos lienzos laterales). El área de juego ya ocupaba toda la pantalla.
+
+## 0.84.3 · Modo Legacy (2026-10-15)
+- El modo «Clásico» se llama ahora Legacy en el indicador de fps (Remastered / Legacy). Resto del ticket 10 (limpieza de opciones, valores por defecto de F1) pendiente.
+
+## 0.84.2 · Casillas neutras (2026-10-15)
+- `drawSlot` (window.js): casilla gris con bisel al estilo del original, se enciende al pasar el ratón; la usan las bolas del hospital.
+
+## 0.84.1 · Hospital de compañeros (2026-10-15)
+- `ClassicDialog`: pestañas colocadas por el ancho real del texto (ya no se montan ni se pisan las cajas de clic); cada bola de la lista lleva su casilla cuadrada que se ilumina al pasar.
+
+## 0.84.0 · Diario de misiones (2026-10-15)
+- Misiones como ventana propia (`questwin.js`, J o botón «!» de la barra); rastreador plegable más abajo; se quita el botón Quest de F5.
+
+## 0.83.10 · Buscador y botón Ok destacado (2026-10-15)
+- `Ui.search` (lupa, ×, filtro en minúsculas) usado en F1; `btn {primary}` con borde dorado para el Ok de los avisos; `THEME.pad/gap/row` como márgenes comunes; el rastreador de misiones (`#qtrack`) limita su ancho al 42% de la pantalla.
 
 ## 0.83.6 · Personajes sin recuadros (2026-10-15)
 - Pablo vio rectángulos pálidos alrededor de todos los personajes tras pasar a GL por defecto. Causa: el canvas GL es premultiplicado y el shader podía sacar rgb>alfa (p. ej. alfa 0 con rgb>0 en los bordes); al volcarlo al atlas 2D con source-over eso suma luz. `getImageData` des-premultiplica y lo esconde, por eso la lectura del atlas parecía limpia. Ahora `o = vec4(min(c.rgb, vec3(c.a)), c.a)` en todos los modos. Sin cambio de calidad ni de coste apreciable.

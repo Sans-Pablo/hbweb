@@ -13,7 +13,14 @@ import { t } from "./i18n.js";
 export const THEME = {
   txt: "#f0e2bd", dim: "#a89a78", hi: "#ffe9a0", head: "#f2c14e", good: "#9fe07f", bad: "#ff8a6a", link: "#8fc7ff",
   title: "#2d1919", field: "#120d06", fieldOn: "#1d150a", line: "#6b5835", lineOn: "#e0b84a", sel: "rgba(224,184,74,.28)",
+  pad: 8, gap: 6, row: 24,                       // márgenes: separación al borde del hueco, entre piezas y alto de fila
 };
+// Casilla neutra al estilo del original (cuadros de objeto de Game.cpp: hueco gris oscuro con bisel); en reposo no destaca y se enciende al pasar/seleccionar
+export function drawSlot(c, x, y, s, on = false, sel = false) {
+  c.save(); c.fillStyle = on ? "rgba(150,150,150,.38)" : "rgba(60,60,60,.28)"; c.fillRect(x, y, s, s);
+  c.strokeStyle = on || sel ? (sel ? THEME.lineOn : "rgba(225,225,225,.85)") : "rgba(20,20,20,.55)"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, s - 1, s - 1);
+  c.strokeStyle = on ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(x + 1.5, y + s - 1.5); c.lineTo(x + 1.5, y + 1.5); c.lineTo(x + s - 1.5, y + 1.5); c.stroke(); c.restore();
+}
 const KEY = "gamedialog_1", FRAME = 2, BTN = "dialogtext_1";
 const cache = new Map();
 
@@ -112,7 +119,8 @@ export class Ui {
     if (this.vis(y, h)) {
       const cv = buttonCanvas(this.g, w, on), dn = over && this.g.mouse.down ? 1 : 0;
       if (cv) this.c.drawImage(cv, 0, 0, cv.width, cv.height, x + dn, y + dn, w, h); else { this.c.fillStyle = on ? "#8a5a2a" : "#5a5248"; this.c.fillRect(x, y, w, h); }
-      this.g.text(x + w / 2 + dn, y + 4 + dn, label, o.disabled ? "#8a8272" : o.color || (on ? "#ffe08a" : "#fff"), { align: "center", shadow: true });
+      if (o.primary && !o.disabled) { this.c.strokeStyle = over ? "#fff0b0" : THEME.lineOn; this.c.strokeRect(x + dn + 1.5, y + dn + 1.5, w - 3, h - 3); }   // botón principal (Ok): filete dorado
+      this.g.text(x + w / 2 + dn, y + 4 + dn, label, o.disabled ? "#8a8272" : o.color || (o.primary ? "#ffe9a0" : on ? "#ffe08a" : "#fff"), { align: "center", shadow: true, bold: !!o.primary });
     }
     if (!o.disabled) this.hit(x, y, w, h, { fn, tip: o.tip });
     if (over && o.tip) this.g.tip(o.tip, this.g.mouse.x + 12, this.g.mouse.y + 14);
@@ -159,6 +167,16 @@ export class Ui {
     this.hit(x, y, w, h, { fn: () => { if (win.focus !== id) win.focusOn(id); else if (o.arrow) win.blur(); }, wheel: o.num ? step : null, tip: o.tip });
     if (over && o.tip) this.g.tip(o.tip, this.g.mouse.x + 12, this.g.mouse.y + 14);
     return v;
+  }
+  // ---- buscador para ventanas con listas: campo con lupa y × para borrar; devuelve el texto buscado en minúsculas
+  search(id, x, y, w, o = {}) {
+    const win = this.win, c = this.c, q = this.input(id, x + 18, y, w - 18, { ph: o.ph || t("Buscar…"), maxLen: 40, tip: o.tip });
+    if (this.vis(y, 20)) {
+      c.strokeStyle = THEME.dim; c.lineWidth = 1.5; c.beginPath(); c.arc(x + 7, y + 8, 4, 0, 7); c.moveTo(x + 10, y + 11); c.lineTo(x + 14, y + 15); c.stroke(); c.lineWidth = 1;
+      if (q) { const over = this.hov(x + w - 18, y, 18, 20); this.g.text(x + w - 12, y + 4, "×", over ? THEME.hi : THEME.dim, { align: "center" }); }
+    }
+    if (q) this.hit(x + w - 18, y, 18, 20, { fn: () => { win.vals[id] = ""; win.blur(); } });
+    return q.trim().toLowerCase();
   }
   // ---- lista desplegable con filtro al escribir; `strict` obliga a que el valor sea una de las opciones
   combo(id, x, y, w, options, o = {}) {
@@ -346,7 +364,7 @@ class Prompt extends Win {
       const num = this.opts?.numeric;
       ui.input("v", 22, 40 + h + 8, iw, { num, min: this.opts?.min, max: this.opts?.max, maxLen: this.opts?.maxLen, enter: () => this.end(this.vals.v) });
       const by = this.h - 50;
-      ui.btn(w / 2 - 82, by, 76, "Ok", () => this.end(this.vals.v)); ui.btn(w / 2 + 6, by, 76, "Cancelar", () => this.end(null));
+      ui.btn(w / 2 - 82, by, 76, "Ok", () => this.end(this.vals.v), { primary: true }); ui.btn(w / 2 + 6, by, 76, "Cancelar", () => this.end(null));
     } else {
       const by = this.h - 50;
       ui.btn(w / 2 - 82, by, 76, "Sí", () => this.end(true)); ui.btn(w / 2 + 6, by, 76, "No", () => this.end(false));

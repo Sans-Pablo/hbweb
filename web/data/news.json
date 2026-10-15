@@ -1,5 +1,5 @@
 {
-  "build": "0.83.14",
+  "build": "0.84.9",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -7,115 +7,186 @@
   "news": [
     {
       "date": "2026-10-15",
-      "title": { "es": "Motor: primer dibujo del suelo (v0.83.14)", "en": "Engine: first ground draw (v0.83.14)" },
-      "items": [
-        { "es": "Menos tirones en los primeros segundos tras entrar: las hojas de suelo se dibujan desde un bitmap ya preparado y el precalentado cede el fotograma a los 4 ms.", "en": "Fewer hitches in the first seconds after entering: ground sheets are drawn from a pre-decoded bitmap and the pre-warm yields the frame after 4 ms." }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": { "es": "Motor: suelo sin tirones (v0.83.13)", "en": "Engine: smoother ground (v0.83.13)" },
-      "items": [
-        { "es": "Menos tirones al entrar en un mapa: los bloques del suelo se rehacen de uno en uno.", "en": "Fewer hitches on entering a map: ground blocks are rebuilt one at a time." }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": { "es": "Motor: ciclo de susurros (v0.83.12)", "en": "Engine: whisper cycling (v0.83.12)" },
-      "items": [
-        { "es": "Flecha arriba/abajo (con o sin el chat abierto) recorre los últimos 5 jugadores a los que susurraste y escribe «/to nombre » (como el original).", "en": "Up/Down arrows (chat open or not) cycle through the last 5 players you whispered and fill in \"/to name \" (as in the original)." }
-      ]
-    },
-    {
-      "date": "2026-10-15",
       "title": {
-        "es": "Motor: órdenes de chat con efecto (v0.83.11)",
-        "en": "Engine: chat commands now take effect (v0.83.11)"
+        "es": "Fichas y pozos (v0.84.9)",
+        "en": "Item cards and pits (v0.84.9)"
       },
       "items": [
         {
-          "es": "/showgrid dibuja la rejilla, /timestamp pone la hora en el chat, /bigitems agranda los objetos del suelo y /tooff silencia a un jugador (chat y burbuja).",
-          "en": "/showgrid draws the grid, /timestamp stamps chat lines, /bigitems enlarges ground items and /tooff mutes a player (chat and bubble)."
+          "es": "Pasa el ratón sobre un objeto: la ficha tiene cabecera, daño/defensa destacado y datos secundarios atenuados. En las criptas, cada pozo de bajada muestra un mini esqueleto del monstruo que espera abajo.",
+          "en": "Hover an item: the card has a header, highlighted damage/defense and dimmed secondary data. In crypts each down pit shows a mini skeleton of what waits below."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Motor: hasta 4 personajes por cuenta (v0.83.10)",
-        "en": "Engine: up to 4 characters per account (v0.83.10)"
+        "es": "Interfaz original (v0.84.8)",
+        "en": "Original interface (v0.84.8)"
       },
       "items": [
         {
-          "es": "Al entrar con tu cuenta eliges personaje (hasta 4) o creas uno nuevo en una ranura libre. Reconectar retoma el mismo personaje.",
-          "en": "After logging in you pick a character (up to 4) or create a new one in a free slot. Reconnecting resumes the same character."
+          "es": "En Legacy los mensajes salen arriba a la izquierda como en el original. El minimapa se arrastra con el ratón y se recuerda su sitio.",
+          "en": "In Legacy the messages show top-left like the original. Drag the minimap with the mouse; its place is remembered."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Motor: atajos, críticos y magia (v0.83.9)",
-        "en": "Engine: hotkeys, criticals and magic (v0.83.9)"
+        "es": "Opciones limpias (v0.84.7)",
+        "en": "Cleaner options (v0.84.7)"
       },
       "items": [
         {
-          "es": "Atajos y órdenes de chat como el original (Ctrl+A/D/F/R/S, /showframe, /fps, /whon, /whoff…).",
-          "en": "Hotkeys and chat commands like the original (Ctrl+A/D/F/R/S, /showframe, /fps, /whon, /whoff…)."
-        },
-        {
-          "es": "Crítico con hacha, martillo o vara alcanza 2 casillas.",
-          "en": "Critical with axe, hammer or wand reaches 2 tiles."
-        },
-        {
-          "es": "Elegir un hechizo con escudo/arma a dos manos avisa «Your hands must be free for casting magic.».",
-          "en": "Choosing a spell with a shield/two-handed weapon warns «Your hands must be free for casting magic.»."
-        },
-        {
-          "es": "Full mage: Magic y Magic Resistance al 100. Online: el aspecto se descarga antes de entrar (sin fotogramas negros).",
-          "en": "Full mage: Magic and Magic Resistance at 100. Online: the look is downloaded before entering (no black frames)."
+          "es": "En Opciones (F12) el modo se muestra como Remastered / Legacy.",
+          "en": "In Options (F12) the mode shows as Remastered / Legacy."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Comida de compañeros invertida (v0.83.8)",
-        "en": "Companion food inverted (v0.83.8)"
+        "es": "Conversación de NPC (v0.84.6)",
+        "en": "NPC conversation (v0.84.6)"
       },
       "items": [
         {
-          "es": "Pescado: sube puntos permanentes al compañero (rojo/Fish/Crucian vida, verde maná, amarillo/oro/salmón ataque); +2 si le gusta. Prueba: arrastra un pescado a la bola.",
-          "en": "Fish: gives the companion permanent points (red/Fish/Crucian life, green mana, yellow/gold/salmon attack); +2 if liked. Test: drag a fish onto the ball."
-        },
-        {
-          "es": "Granja (tomate, uvas, seta, etc.): solo cura vida o maná. Prueba: dale un tomate a un compañero herido.",
-          "en": "Farm produce (tomato, grapes, mushroom...): only heals life or mana. Test: give a tomato to a wounded companion."
-        },
-        {
-          "es": "Golpe mortal muestra el daño con '!' (-N!), como el original.",
-          "en": "A killing blow shows damage with '!' (-N!), as in the original."
+          "es": "Al hablar con un NPC de ciudad el texto sale en el nuevo marco de piedra con botón Ok.",
+          "en": "Talking to a city NPC shows the text in the new stone frame with an Ok button."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Reconexión y fidelidad (v0.83.7)",
-        "en": "Reconnect and fidelity (v0.83.7)"
+        "es": "Cuadros de conversación (v0.84.5)",
+        "en": "Conversation boxes (v0.84.5)"
       },
       "items": [
         {
-          "es": "Si pierdes la conexión (pestaña en segundo plano mucho rato) el cliente reconecta solo y conservas tu personaje 45 s. Prueba: deja la pestaña oculta unos minutos y vuelve.",
-          "en": "If the connection drops (tab hidden for long) the client reconnects by itself and keeps your character for 45 s. Test: hide the tab for a few minutes and come back."
+          "es": "El tutorial usa el nuevo marco de ventana: cara de Gandlf, texto que se escribe solo y botones Siguiente / Saltar. Prueba también en móvil.",
+          "en": "The tutorial uses the new window frame: Gandlf's face, typewriter text and Next / Skip buttons. Test on mobile too."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Barra a los bordes (v0.84.4)",
+        "en": "Bar to the edges (v0.84.4)"
+      },
+      "items": [
+        {
+          "es": "En Remastered con pantalla ancha, la barra inferior llega hasta los dos bordes.",
+          "en": "In Remastered on a wide screen the bottom bar reaches both edges."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Modo Legacy (v0.84.3)",
+        "en": "Legacy mode (v0.84.3)"
+      },
+      "items": [
+        {
+          "es": "El indicador de modo muestra Remastered o Legacy (antes Clásico).",
+          "en": "The mode indicator shows Remastered or Legacy (formerly Classic)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Casillas neutras (v0.84.2)",
+        "en": "Neutral slots (v0.84.2)"
+      },
+      "items": [
+        {
+          "es": "Las casillas de objetos son grises y neutras como en el original y se encienden al pasar el ratón.",
+          "en": "Item slots are neutral grey like the original and light up on hover."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Hospital de compañeros (v0.84.1)",
+        "en": "Pet hospital (v0.84.1)"
+      },
+      "items": [
+        {
+          "es": "Las pestañas de los diálogos clásicos (Cuidados, Bolas, Caramelos, Ayuda) ya no se montan y cambian al hacer clic. Cada bola tiene su casilla cuadrada.",
+          "en": "Classic dialog tabs (Cuidados, Bolas, Caramelos, Ayuda) no longer overlap and switch on click. Each ball has its own square slot."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Diario de misiones (v0.84.0)",
+        "en": "Quest journal (v0.84.0)"
+      },
+      "items": [
+        {
+          "es": "Las misiones tienen su ventana (tecla J o el nuevo botón «!» de la barra). El rastreador de arriba a la derecha se pliega con ▾ y ya no tapa el minimapa. Prueba: abre el diario, plega el rastreador y recarga.",
+          "en": "Quests have their own window (J key or the new '!' bar button). The top-right tracker folds with ▾ and no longer covers the minimap. Test: open the journal, fold the tracker and reload."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Buscador y márgenes comunes (v0.83.10)",
+        "en": "Search box and common margins (v0.83.10)"
+      },
+      "items": [
+        {
+          "es": "Nuevo cuadro de búsqueda (lupa y × para borrar) en las ventanas con listas; ya está en F1 (novedades). Prueba: abre F1 y escribe «pelo».",
+          "en": "New search box (magnifier and × to clear) for list windows; already in F1 (news). Test: open F1 and type \"pelo\"."
         },
         {
-          "es": "Un golpe normal que falla ya no muestra «Failed». Sin viñeta, luz dinámica, barras de vida de monstruos ni aviso de mapa (no existen en el original).",
-          "en": "A normal missed hit no longer shows Failed. No vignette, dynamic light, monster HP bars or map-entry notice (not in the original)."
+          "es": "El botón Ok de los avisos va destacado con borde dorado. El rastreador de misiones se encoge en pantallas estrechas.",
+          "en": "The Ok button on prompts is highlighted with a gold outline. The quest tracker shrinks on narrow screens."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Color de pelo y ventanas hasta el borde (v0.83.9)",
+        "en": "Hair colour and windows to the edge (v0.83.9)"
+      },
+      "items": [
+        {
+          "es": "El pelo del cuadro de personaje (F5) usa la misma mezcla que el sprite del mundo. Los cuadros se pueden arrastrar hasta los bordes de la pantalla.",
+          "en": "Hair in the character window (F5) uses the same blend as the world sprite. Windows can be dragged to the screen edges."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Interfaz más limpia y tutorial arreglado (v0.83.8)",
+        "en": "Cleaner interface and tutorial fix (v0.83.8)"
+      },
+      "items": [
+        {
+          "es": "El rótulo de salida/bajada de la cripta solo sale al pasar el ratón o al estar junto. El botón de modo del compañero se movió junto al de combate para no pisar la barra.",
+          "en": "The crypt exit/descent label only shows on hover or when next to it. The companion mode button moved next to the combat button so it no longer overlaps the bar."
         },
         {
-          "es": "El ataque automático solo apunta a monstruos, no a jugadores, bots ni mascotas.",
-          "en": "Auto-attack only targets monsters, not players, bots or pets."
+          "es": "El tutorial ya no reaparece tras saltarlo ni se bloquea al abrir una tienda. Prueba: salta el tutorial y entra en una tienda.",
+          "en": "The tutorial no longer reappears after skipping nor gets stuck when opening a shop. Test: skip the tutorial, enter a shop."
+        },
+        {
+          "es": "El botón de invocaciones se ilumina con su borde naranja y solo la huella en azul.",
+          "en": "The summons button highlights with its orange border; only the paw is blue."
+        },
+        {
+          "es": "Opciones: quitadas luz/viñeta, luz dinámica, animaciones de hechizos, cursor y transparencia. Quitados el botón Recall, los carteles Failed y las pestañas Para probar / A tener en cuenta.",
+          "en": "Options: removed light/vignette, dynamic light, spell animations, cursor and transparency. Removed the Recall button, Failed texts and the To test / Keep in mind tabs."
         }
       ]
     },
@@ -3534,6 +3605,138 @@
         {
           "es": "Los hechizos de los summons son un sistema nuevo: habla con el Hechicero de mascotas (granja élfica y tienda de armas) para enseñarles, y lánzalos desde la pestaña Grimorio.",
           "en": "Summon spells are a new system: talk to the Pet Sorcerer (elf farm and weapon shop) to teach them, and cast from the Grimoire tab."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: primer dibujo del suelo (v0.83.14)",
+        "en": "Engine: first ground draw (v0.83.14)"
+      },
+      "items": [
+        {
+          "es": "Menos tirones en los primeros segundos tras entrar: las hojas de suelo se dibujan desde un bitmap ya preparado y el precalentado cede el fotograma a los 4 ms.",
+          "en": "Fewer hitches in the first seconds after entering: ground sheets are drawn from a pre-decoded bitmap and the pre-warm yields the frame after 4 ms."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: suelo sin tirones (v0.83.13)",
+        "en": "Engine: smoother ground (v0.83.13)"
+      },
+      "items": [
+        {
+          "es": "Menos tirones al entrar en un mapa: los bloques del suelo se rehacen de uno en uno.",
+          "en": "Fewer hitches on entering a map: ground blocks are rebuilt one at a time."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: ciclo de susurros (v0.83.12)",
+        "en": "Engine: whisper cycling (v0.83.12)"
+      },
+      "items": [
+        {
+          "es": "Flecha arriba/abajo (con o sin el chat abierto) recorre los últimos 5 jugadores a los que susurraste y escribe «/to nombre » (como el original).",
+          "en": "Up/Down arrows (chat open or not) cycle through the last 5 players you whispered and fill in \"/to name \" (as in the original)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: órdenes de chat con efecto (v0.83.11)",
+        "en": "Engine: chat commands now take effect (v0.83.11)"
+      },
+      "items": [
+        {
+          "es": "/showgrid dibuja la rejilla, /timestamp pone la hora en el chat, /bigitems agranda los objetos del suelo y /tooff silencia a un jugador (chat y burbuja).",
+          "en": "/showgrid draws the grid, /timestamp stamps chat lines, /bigitems enlarges ground items and /tooff mutes a player (chat and bubble)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: hasta 4 personajes por cuenta (v0.83.10)",
+        "en": "Engine: up to 4 characters per account (v0.83.10)"
+      },
+      "items": [
+        {
+          "es": "Al entrar con tu cuenta eliges personaje (hasta 4) o creas uno nuevo en una ranura libre. Reconectar retoma el mismo personaje.",
+          "en": "After logging in you pick a character (up to 4) or create a new one in a free slot. Reconnecting resumes the same character."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: atajos, críticos y magia (v0.83.9)",
+        "en": "Engine: hotkeys, criticals and magic (v0.83.9)"
+      },
+      "items": [
+        {
+          "es": "Atajos y órdenes de chat como el original (Ctrl+A/D/F/R/S, /showframe, /fps, /whon, /whoff…).",
+          "en": "Hotkeys and chat commands like the original (Ctrl+A/D/F/R/S, /showframe, /fps, /whon, /whoff…)."
+        },
+        {
+          "es": "Crítico con hacha, martillo o vara alcanza 2 casillas.",
+          "en": "Critical with axe, hammer or wand reaches 2 tiles."
+        },
+        {
+          "es": "Elegir un hechizo con escudo/arma a dos manos avisa «Your hands must be free for casting magic.».",
+          "en": "Choosing a spell with a shield/two-handed weapon warns «Your hands must be free for casting magic.»."
+        },
+        {
+          "es": "Full mage: Magic y Magic Resistance al 100. Online: el aspecto se descarga antes de entrar (sin fotogramas negros).",
+          "en": "Full mage: Magic and Magic Resistance at 100. Online: the look is downloaded before entering (no black frames)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Comida de compañeros invertida (v0.83.8)",
+        "en": "Companion food inverted (v0.83.8)"
+      },
+      "items": [
+        {
+          "es": "Pescado: sube puntos permanentes al compañero (rojo/Fish/Crucian vida, verde maná, amarillo/oro/salmón ataque); +2 si le gusta. Prueba: arrastra un pescado a la bola.",
+          "en": "Fish: gives the companion permanent points (red/Fish/Crucian life, green mana, yellow/gold/salmon attack); +2 if liked. Test: drag a fish onto the ball."
+        },
+        {
+          "es": "Granja (tomate, uvas, seta, etc.): solo cura vida o maná. Prueba: dale un tomate a un compañero herido.",
+          "en": "Farm produce (tomato, grapes, mushroom...): only heals life or mana. Test: give a tomato to a wounded companion."
+        },
+        {
+          "es": "Golpe mortal muestra el daño con '!' (-N!), como el original.",
+          "en": "A killing blow shows damage with '!' (-N!), as in the original."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Reconexión y fidelidad (v0.83.7)",
+        "en": "Reconnect and fidelity (v0.83.7)"
+      },
+      "items": [
+        {
+          "es": "Si pierdes la conexión (pestaña en segundo plano mucho rato) el cliente reconecta solo y conservas tu personaje 45 s. Prueba: deja la pestaña oculta unos minutos y vuelve.",
+          "en": "If the connection drops (tab hidden for long) the client reconnects by itself and keeps your character for 45 s. Test: hide the tab for a few minutes and come back."
+        },
+        {
+          "es": "Un golpe normal que falla ya no muestra «Failed». Sin viñeta, luz dinámica, barras de vida de monstruos ni aviso de mapa (no existen en el original).",
+          "en": "A normal missed hit no longer shows Failed. No vignette, dynamic light, monster HP bars or map-entry notice (not in the original)."
+        },
+        {
+          "es": "El ataque automático solo apunta a monstruos, no a jugadores, bots ni mascotas.",
+          "en": "Auto-attack only targets monsters, not players, bots or pets."
         }
       ]
     }
