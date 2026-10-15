@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.5 · Cuadros de conversación (2026-10-15)
+- `DialogBox` (`dialogbox.js`): constructor de cuadros con cara, nombre, texto con efecto de máquina de escribir y botones de opción (numerables). El tutorial (conversación y rastreador de objetivo) pasa al sistema de ventanas con el marco de piedra. Ticket 5 (parcial: tutorial; el resto de diálogos de NPC se migrará con este constructor).
+
 ## 0.84.4 · Barra a los bordes (2026-10-15)
 - Remastered: la barra inferior se prolonga hasta los bordes de la pantalla (`Gui.edgeFill`, dos lienzos laterales). El área de juego ya ocupaba toda la pantalla.
 
