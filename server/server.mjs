@@ -349,8 +349,27 @@ const send = (c, obj) => {
 const sysMsg = (c, text) => send(c, { t: "msg", text });
 const online = () => [...clients].filter(c => c.pid).length;
 
+// Corte de red: el personaje se queda GRACE_MS en el mundo y el cliente puede retomarlo (misma id) al reconectar.
+const GRACE_MS = 45000;
+const ghosts = new Map();           // key de cuenta -> { pid, name, timer }
+function finishGhost(key) {
+  const g = ghosts.get(key); if (!g) return;
+  ghosts.delete(key); clearTimeout(g.timer);
+  saves[key] = adventure.saveOf(g.pid) || saves[key];
+  adventure.worldFor(g.pid).emit({ t: "chat", id: g.pid, name: "Servidor", text: g.name + " ha salido.", system: true });
+  adventure.removePlayer(g.pid);
+  log(`[-] ${g.name} se ha ido (${online()} conectados)`);
+  persist(true);
+}
 function drop(c, why) {
   if (!c.alive) return;
+  if (!why && c.pid && !c.watch && !ghosts.has(c.key)) {
+    c.alive = false; clients.delete(c);
+    const g = { pid: c.pid, name: c.name, timer: setTimeout(() => finishGhost(c.key), GRACE_MS) };
+    g.timer.unref?.(); ghosts.set(c.key, g); c.pid = null;
+    log(`[~] ${g.name} sin conexión (espera ${GRACE_MS / 1000}s)`);
+    return;
+  }
   if (why) { send(c, { t: "kicked", msg: why }); setTimeout(() => c.socket.destroy(), 100); }
   c.alive = false;
   clients.delete(c);
@@ -403,7 +422,15 @@ function handleJoin(c, m) {
   if (c.pid) return;
   if (!c.acc) { send(c, { t: "error", code: "auth", msg: "Inicia sesión primero." }); return; }
   const key = c.key;
-  for (const o of [...clients]) if (o !== c && o.pid && o.key === key) drop(o, "Has entrado desde otro sitio.");      // la sesión nueva sustituye a la vieja (p. ej. tras un corte de red)
+  for (const o of [...clients]) if (o !== c && o.pid && o.key === key) { send(o, { t: "kicked", msg: "Has entrado desde otro sitio." }); setTimeout(() => o.socket.destroy(), 100); drop(o); }      // la sesión nueva sustituye a la vieja (p. ej. tras un corte de red)
+  const gh = ghosts.get(key);
+  if (gh) {                                                                           // retoma el personaje tras un corte de red
+    ghosts.delete(key); clearTimeout(gh.timer);
+    c.pid = gh.pid; c.name = gh.name; c.ack = 0; c.queue.length = 0;
+    send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: true, resumed: true, version: VERSION.version, admin: ADMINS.has(key) });
+    log(`[+] ${c.name} reconectado`);
+    return;
+  }
   if (online() >= MAX_PLAYERS) { send(c, { t: "error", msg: "El servidor está lleno." }); return; }
   if (!saves[key] && !(m.create && typeof m.create === "object")) { send(c, { t: "error", code: "create", msg: "Crea tu personaje." }); return; }
   const had = !!saves[key];
@@ -462,7 +489,7 @@ function onMessage(c, text) {
 const muted = new Map();                                   // cuenta -> instante en que acaba el silencio
 const byName = n => [...clients].find(c => c.pid && (c.name.toLowerCase() === n.toLowerCase() || c.key === n.toLowerCase()));
 const saveBans = () => { try { writeJson(BANS, bans); } catch {} };
-let onExit = code => { persist(true); store.close(); process.exit(code); };
+let onExit = code => { for (const k of [...ghosts.keys()]) finishGhost(k); persist(true); store.close(); process.exit(code); };
 
 function adminState() {
   return {

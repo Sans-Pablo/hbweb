@@ -126,8 +126,33 @@ export class NetConnection {
       // El ping sale de un Worker: los setInterval de una pestaña oculta se frenan a 1/min y el servidor daba la conexión por muerta.
       const beat = () => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now(), p: this.ping })); };
       this.stopBeat = startBeat(beat, 2000);
-      document.addEventListener("visibilitychange", beat);
+      this.vis = () => { beat(); if (!document.hidden && this.pid && this.cred && this.ws !== ws) this.reconnect(); };
+      document.addEventListener("visibilitychange", this.vis);
     });
+  }
+  async reconnect() {
+    if (this.reconnecting) return;
+    this.reconnecting = true; this.status = "reconectando";
+    this.events.push({ t: "chat", system: true, text: "Conexión perdida, reconectando…", id: this.pid });
+    const until = performance.now() + 40000;
+    try {
+      for (let i = 0; performance.now() < until; i++) {
+        await new Promise(r => setTimeout(r, Math.min(3000, 500 + i * 500)));
+        try {
+          this.ws = null;
+          await this.open();
+          await this.request({ t: "auth", mode: "login", name: this.cred.name, pass: this.cred.pass, proto: NET_PROTO }, "authok");
+          const m = await this.request({ t: "join", create: null }, "welcome");
+          if (m.id !== this.pid) break;                                     // el servidor ya no tenía el personaje: hay que volver a entrar
+          this.world.ents.clear(); this.world.items.clear(); this.resync = true;
+          this.status = "conectado"; this.recvAt = performance.now();
+          this.events.push({ t: "chat", system: true, text: "Reconectado.", id: this.pid });
+          return;
+        } catch (e) { if (e.code === "proto" || /incorrectos|bloqueada/.test(e.message)) break; try { this.ws?.close(); } catch {} }
+      }
+    } finally { this.reconnecting = false; }
+    this.status = "desconectado";
+    this.events.push({ t: "disconnected", reason: "" });
   }
   request(msg, okType) {
     return new Promise((resolve, reject) => { this.waiting = { okType, resolve, reject }; this.ws.send(JSON.stringify(msg)); });
@@ -136,7 +161,7 @@ export class NetConnection {
   async login(mode, name, pass) {
     await this.open();
     const r = await this.request({ t: "auth", mode, name, pass, proto: NET_PROTO }, "authok");
-    this.admin = !!r.admin; this.account = r.name; this.serverVersion = r.version;
+    this.cred = { name, pass }; this.admin = !!r.admin; this.account = r.name; this.serverVersion = r.version;
     return r;
   }
   // entra en el mundo (create: personaje nuevo si la cuenta aún no tiene)
