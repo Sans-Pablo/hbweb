@@ -1353,11 +1353,17 @@ export class Renderer {
       ctx.strokeStyle = "rgba(170,225,255," + (0.5 + 0.4 * k) + ")"; ctx.lineWidth = 1.5; ctx.stroke();
     }
     // INVENTO del port (ticket 6): cada salida lleva el nombre del mapa de destino; si queda fuera de pantalla, una flecha en el borde apunta hacia ella
+    // una sola flecha/rótulo por destino (la salida más cercana al centro de la vista): con dos se confundía; los destinos cerrados no llevan flecha
+    const near = new Map(), cx0 = this.viewW / 2, cy0 = this.viewH / 2;
     for (const g of this.teleportGroups(tps)) {
+      const d = Math.hypot(g.x * T + T / 2 - camX - cx0, g.y * T + T / 2 - camY - cy0), c = near.get(g.map);
+      if (!c || d < c.d) near.set(g.map, { g, d });
+    }
+    for (const { g } of near.values()) {
       const x = g.x * T + T / 2 - camX, y = g.y * T + T / 2 - camY, m = 26, out = x < m || y < m || x > this.viewW - m || y > this.viewH - m;
       const txt = t(g.name || g.map) + (g.open ? "" : " (" + t("cerrado") + ")"), col = g.open ? "#bde8ff" : "#e0a090";
-      if (!out) { this.label(x, y - 26, txt + " ▸", col); continue; }
-      if (!s.dirArrows) continue;                                  // flechas de dirección en el borde: opción «Indicadores de dirección» (apagada por defecto)
+      if (!out) { this.label(x, y - 26, txt + (g.open ? " ▸" : ""), col); continue; }
+      if (!s.dirArrows || !g.open) continue;                                  // flechas de dirección en el borde: opción «Indicadores de dirección» (apagada por defecto)
       const cx = this.viewW / 2, cy = this.viewH / 2, a = Math.atan2(y - cy, x - cx), ex = Math.max(m, Math.min(this.viewW - m, x)), ey = Math.max(m + 40, Math.min(this.viewH - m, y));
       ctx.save(); ctx.translate(ex, ey); ctx.rotate(a); ctx.globalAlpha = 0.6 + 0.4 * k; ctx.fillStyle = col;
       ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-6, -8); ctx.lineTo(-6, 8); ctx.closePath(); ctx.fill(); ctx.restore();

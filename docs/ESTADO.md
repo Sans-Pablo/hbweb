@@ -381,3 +381,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] (pedido 2026-10-15, hilo auto-menu) Botón AUTO en el diálogo del personaje: ventana «Cazar» (zona, sprite 8 direcciones, ficha, Empezar/Parar) e «Ir a…» (granja, almacén, tienda, herrería, mago, granjero, hospital, hechicero de mascotas). Ver `docs/sistemas/auto.md`.
 - [ ] Pendiente: vaciar en el almacén y repetir el ciclo; probar en navegador herrería, mago, granjero, hospital y hechicero de mascotas; el enrutado solo parte de la granja de Aresden.
 - 0.85.1 (hilo UI): cerrado lo sin verificar de 0.85.0 (arrastre al borde, chat/log arrastrables en Legacy, buscador de compañeros, Opciones en vivo). Hospital sigue siendo ClassicDialog, no Win.
+
+- 0.85.5 (hb-ui): flechas de entrada únicas por destino y ninguna en cerrados; quitado «+N exp» flotante; F11 ya usaba `Win` común (verificado en ambos modos, sin diferencia reproducible).
