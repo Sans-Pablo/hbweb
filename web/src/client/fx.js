@@ -95,8 +95,8 @@ export class Fx {
     switch (ev.t) {
       case "damage":
         this.flash.set(ev.id, performance.now());
-        // Game.cpp (OBJECTDAMAGE): "-N" en amarillo (m_wR[13]*2), tamaño por daño (<12 / <40 / más); crítico = «Critical» (MOTION_EVENT_HANDLER3)
-        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount, "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) || ev.amount >= 40 ? 23 : ev.amount >= 12 ? 22 : 21);
+        // Game.cpp (OBJECTDAMAGE): "-N" en amarillo (m_wR[13]*2), tamaño por daño (<12 / <40 / más); golpe mortal = «-N!» (OBJECTDYING); crítico = «Critical» (MOTION_EVENT_HANDLER3)
+        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount + (ev.hp <= 0 ? "!" : ""), "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) || ev.amount >= 40 ? 23 : ev.amount >= 12 ? 22 : 21);
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
