@@ -335,6 +335,9 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Hechos: tickets 1, 2, 3, 6, 4 (casilla neutra `drawSlot`, solo en el hospital por ahora), 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
 - Pendientes: 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).
 
+## Hilo UI (v0.84.7)
+- Ticket 10 cerrado (v0.84.7): opciones F12 ya reducidas a 3 secciones; modo Remastered/Legacy con etiqueta traducida. Los ON/OFF por defecto son los de `main.js` (`defaults`), documentados en el CHANGELOG. Menú F12 verificado en escritorio (la etiqueta nueva no se vio por caché del navegador; comprobado en la fuente servida).
+
 ## Hilo UI (v0.84.6)
 - Ticket 5 (v0.84.6): conversación de NPC (id 21) migrada a `DialogBox`; verificado en escritorio con texto de prueba. Tienda/banco/venta mantienen el marco clásico (decisión: fieles al original).
 

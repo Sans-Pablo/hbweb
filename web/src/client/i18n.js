@@ -94,7 +94,7 @@ const EN = {
   "Nivel de detalle: alto": "Detail level: high", "Cambiado a modo correr.": "Switched to run mode.", "Cambiado a modo andar.": "Switched to walk mode.", "Sonido activado.": "Sound on.", "Sonido desactivado.": "Sound off.",
   "Modo de ataque seguro activado.": "Safe attack mode on.", "Modo de ataque seguro desactivado.": "Safe attack mode off.", "Modo de combate.": "Combat mode.", "Modo de paz.": "Peace mode.",
   "No tienes ninguna habilidad especial lista.": "You have no special ability ready.", "Mapa ampliado": "Large map", "Mapa normal": "Normal map", "Gráficos clásicos": "Classic graphics",
-  "Gráficos remastered": "Remastered graphics", "Partida guardada": "Game saved", "Aún no hay nada guardado": "Nothing saved yet",
+  "Gráficos remastered": "Remastered graphics", "Remastered (apagado: Legacy)": "Remastered (off: Legacy)", "Partida guardada": "Game saved", "Aún no hay nada guardado": "Nothing saved yet",
   "Bienvenido a la granja de Aresden. Pulsa F1 para ver las novedades y qué probar.": "Welcome to the Aresden farm. Press F1 for the news and what to test.",
   "Cripta de esqueletos: pisa el teletransportador de middled1n (78–80, 69–71) de Aresfarm.": "Skeleton crypt: step on the middled1n teleporter (78–80, 69–71) in Aresfarm.",
   "Partida en línea: se ha cargado tu progreso. Intro para hablar.": "Online game: your progress was loaded. Enter to chat.", "Partida en línea. Pulsa Intro para hablar con los demás.": "Online game. Press Enter to talk to the others.",

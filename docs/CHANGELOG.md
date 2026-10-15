@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.7 · Opciones limpias (2026-10-15)
+- Opciones (F12): el interruptor de modo se llama «Remastered (apagado: Legacy)» y tiene traducción. Valores por defecto revisados contra el original: correr, minimapa, barras de vida, info del suelo y HD activados; ataque automático se activa al entrar. Cierra el ticket 10.
+
 ## 0.84.6 · Conversación de NPC (2026-10-15)
 - La conversación de los NPC de ciudad (diálogo 21, texto `contents` del original) usa `DialogBox` (marco de piedra, botón Ok). Ticket 5: tutorial + conversación migrados; tienda/banco/hospital conservan su marco clásico.
 

@@ -391,7 +391,7 @@ export function registerDialogs(gui, api) {
   const optTog = (k, n) => ({ n, get: () => !!api.mods()[k], set: v => api.setOpt(k, v) });
   const SECTIONS = [
     ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas")]],
-    ["Gráficos", [{ n: "Modo Remastered", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD")]],
+    ["Gráficos", [{ n: "Remastered (apagado: Legacy)", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD")]],
     ["Sonido y chat", [{ n: "Sonido", get: () => api.sys().sound, set: v => api.setSys({ sound: v }) }, { n: "Música", get: () => api.sys().music, set: v => api.setSys({ music: v }) }, { n: "Susurros", get: () => api.sys().whisper, set: v => api.setSys({ whisper: v }) }, { n: "Gritos", get: () => api.sys().shout, set: v => api.setSys({ shout: v }) }]],
   ];
   const optRows = [];                                   // [x, y, fila] de cada interruptor, calculado al dibujar
