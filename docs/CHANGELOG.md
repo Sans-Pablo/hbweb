@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.17 — Sin indicador de tiempo sobre la cabeza
+- Se quitan las barras de tiempo de debuffs sobre la cabeza del personaje (`renderer.stateBars`); el original no las dibuja (Game.cpp DrawObject_*: solo auras y efectos).
+
 ## 0.84.16 · Motor: anillo de protección (2026-10-15)
 - Al lanzar Protection From Magic y similares se ve el anillo del original (Game.cpp efecto 52)
 
