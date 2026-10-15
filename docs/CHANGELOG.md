@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.12 · Motor: Pretend Corpse (2026-10-15)
+- Habilidad Pretend Corpse (skill 19, diálogo de habilidades): tirada de maestría; falla en zona de lucha o con alguien en las 8 casillas contiguas; el personaje se tumba, los monstruos lo ignoran, no regenera y se levanta al moverse, atacar o lanzar (HG.cpp UseSkillHandler).
+
 ## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
 - Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.
 
