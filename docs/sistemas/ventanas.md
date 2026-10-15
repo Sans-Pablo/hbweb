@@ -37,5 +37,8 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 ## Pestañas de ClassicDialog (v0.84.1)
 `tabBox()` mide cada rótulo (negrita 12 px) y reparte el sobrante como hueco; `tabX(i)`/`tabW(i)` dan posición y caja de clic. Las filas con icono de bola dibujan una casilla cuadrada (translúcida, más clara al pasar el ratón).
 
+## Barra a los bordes (v0.84.4)
+`Gui.edgeFill()` dibuja a cada lado del lienzo 800x600 una tira con la primera/última columna del marco 14 de gamedialog2_6; solo en Remastered y no en móvil. Test: `tests/edgefill.test.mjs`.
+
 ## Casillas (v0.84.2)
 `drawSlot(c,x,y,s,on,sel)` en `window.js`: hueco gris con bisel, brilla con `on` (hover) y dorado con `sel`. Test `tests/slot.test.mjs`.

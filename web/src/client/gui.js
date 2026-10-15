@@ -566,9 +566,26 @@ export class Gui {
     if (rows.auraBy) this.text(x + 6, y + 2, "Aura of " + rows.auraBy, "#8fa6d8", { shadow: true, size: 9 });
   }
 
+  // Remastered (ticket 11): la barra inferior se prolonga hasta los bordes de la pantalla repitiendo su primera y última columna en dos lienzos laterales.
+  edgeFill() {
+    const m = this.manifest && this.manifest.gamedialog2_6, fr = m && m.frames[14], o = this.img.gamedialog2_6;
+    this.edges ||= [0, 1].map(() => { const e = document.createElement("canvas"); e.style.cssText = "position:absolute;pointer-events:none;z-index:" + (this.cv.style.zIndex || 1); this.cv.parentNode.insertBefore(e, this.cv); return e; });
+    const r = this.rect, host = this.cv.parentNode.getBoundingClientRect(), side = this.mobile || !this.spr?.hd || !fr || !o?.naturalWidth ? 0 : Math.max(0, (r.x - host.left));
+    const [sx, sy, sw, sh, px, py] = fr || [0, 0, 0, 0, 0, 0];
+    this.edges.forEach((e, i) => {
+      if (side < 1) { e.style.display = "none"; return; }
+      const w = Math.ceil(side), h = Math.ceil(sh * this.scale), key = w + "x" + h + (this.spr?.hd ? "h" : "");
+      e.style.display = "block"; e.style.width = w + "px"; e.style.height = h + "px"; e.style.top = (r.y - host.top + (548 + py) * this.scale) + "px";
+      e.style.left = (i ? r.x - host.left + r.w : 0) + "px";
+      if (e._k === key) return; e._k = key; e.width = w; e.height = h;
+      e.getContext("2d").drawImage(o, i ? sx + sw - 1 : sx, sy, 1, sh, 0, 0, w, h);
+    });
+  }
+
   gauges(me, world, info) {
     const m = this.mouse, a = RESX + ADDX;
     this.put("gamedialog2_6", 14, 0, 548);
+    this.edgeFill();
     // barras: se recorta el fotograma "vacío" desde la izquierda según lo que falta
     const bar = (cur, max, full) => Math.max(0, Math.min(full, full - Math.floor(cur * full / Math.max(1, max))));
     this.put("gamedialog2_6", 12, 23 + RESX, 437 + RESY, bar(me.hp, me.maxHp, 101));

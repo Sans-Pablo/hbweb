@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.4 · Barra a los bordes (2026-10-15)
+- Remastered: la barra inferior se prolonga hasta los bordes de la pantalla (`Gui.edgeFill`, dos lienzos laterales). El área de juego ya ocupaba toda la pantalla.
+
 ## 0.84.3 · Modo Legacy (2026-10-15)
 - El modo «Clásico» se llama ahora Legacy en el indicador de fps (Remastered / Legacy). Resto del ticket 10 (limpieza de opciones, valores por defecto de F1) pendiente.
 
