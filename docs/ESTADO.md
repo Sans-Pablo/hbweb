@@ -10,7 +10,7 @@
 - [x] 3. Revamp del trade (Olympia; arrastrar item sobre otro personaje abre exchange; bag llena: definir cola/bag extra).
 - [x] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
 - [x] 5. Efecto de evolución de pet: el aura de Demon/Frost/Liche/Cyclops evolucionados ahora late ~6 s cada 60 s (fase propia por criatura, fundido suave) en vez de titilar siempre (`renderer.js`, `evoEnv`). Sin bump (0.83.6). Sin verificar visualmente en navegador; pendiente prueba de Pablo (si se refería a otro efecto, p. ej. la animación de evolución de `fx.js`, avisar).
-- [ ] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
+- [x] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
 - [ ] 7. Auto hunt / auto run.
 - [ ] 8. Stat simulator (Olympia).
 

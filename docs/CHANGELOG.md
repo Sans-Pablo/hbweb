@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.10 · Salidas del mapa señaladas (2026-10-15)
+- Cada salida (rombo azul) lleva el nombre del mapa de destino; si queda fuera de pantalla, una flecha en el borde apunta hacia ella; marcas en el minimapa. Los destinos aún no jugables salen «(cerrado)» (Aresden). Online: el cliente ya recibe las salidas del mapa (antes los rombos solo salían en local). Ficha `docs/sistemas/salidas.md`.
+
 ## 0.83.9 · Órdenes a los bots (2026-10-15)
 - Glosario de órdenes por chat a los habitantes (orders.js): «vamos a matar slimes» → te sigue y solo ataca a esa criatura; «vamos a hacer EK» → te sigue y solo ataca a jugadores enemigos. Si no entiende qué cazar, pregunta; si sigue sin entenderlo abre un ticket «el bot X no entendió esto del player Y» (kind order en el panel de errores).
 

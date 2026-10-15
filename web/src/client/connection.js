@@ -187,7 +187,7 @@ export class NetConnection {
       w.ents.clear(); w.items.clear();
       this.resync = true;
     }
-    if (m.map) { w.map = m.map; w.meta = this.maps[m.map.id]?.meta || null; w.generators = m.map.kind === "farm" ? this.farmSpawns : []; }
+    if (m.map) { w.map = m.map; w.meta = this.maps[m.map.id]?.meta || null; if (w._tpMeta !== w.meta || w._tpGrid !== w.grid) { w._tpMeta = w.meta; w._tpGrid = w.grid; w.teleports = new Map((w.meta?.teleports || []).map(t => [w.grid.idx(t.x, t.y), t])); } w.generators = m.map.kind === "farm" ? this.farmSpawns : []; }
     if (m.sk) { const was = w.dayOrNight; w.fixedDay = !!m.sk[0]; w.dayOrNight = m.sk[1]; w.weather = m.sk[2]; if (was !== m.sk[1] && this.pid && !w.fixedDay && this.sawSky) this.events.push({ t: "time", v: m.sk[1] }); this.sawSky = true; }
     if (m.fx) { w.dyn = m.fx[0]; w.bfx = m.fx[1]; }
     for (const o of m.e || []) this.applyEnt(o);

@@ -1,10 +1,17 @@
 {
- "build": "0.83.9",
+ "build": "0.83.10",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Salidas del mapa señaladas (v0.83.10)", "en": "Map exits marked (v0.83.10)"},
+   "items": [
+    {"es": "Cada salida de la granja (rombo azul) muestra el nombre del mapa al que lleva; fuera de pantalla, una flecha en el borde apunta hacia ella y el minimapa la marca. Aresden sale «(cerrado)». Prueba: caminar al oeste (x≈20) y al norte (Promise Land).", "en": "Each farm exit (blue diamond) shows the name of the map it leads to; off-screen, an edge arrow points to it and the minimap marks it. Aresden shows «(closed)». Test: walk west (x≈20) and north (Promise Land)."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Órdenes a los bots (v0.83.9)", "en": "Orders to bots (v0.83.9)"},
