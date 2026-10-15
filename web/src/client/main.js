@@ -451,7 +451,7 @@ async function main() {
       if (ent && (ent.kind === "npc" || (ent.kind === "player" && ent.id !== pid))) conn.send({ t: "pettarget", target: ent.id });
       else hud.log("Shift + clic derecho sobre un monstruo para que tu compañero lo ataque.");
     },
-    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adeghmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
+    isHotkey(e) { return /^F([1-9]|1[0-2])$/.test(e.key) || e.ctrlKey && /^[adefghmprstwx0-9]$/i.test(e.key) || ["Tab", "Insert", "Delete", "Home", "End", "PageUp"].includes(e.key); },
     // tecla pulsada fuera de los cuadros de texto
     hotkey(e) {
       const k = e.key, K = k.toLowerCase();
@@ -483,15 +483,20 @@ async function main() {
           return;
         }
         switch (K) {
-          case "a": e.preventDefault(); flag("force", "Modo de ataque automático activado.", "Modo de ataque automático desactivado."); return;
-          case "d": e.preventDefault(); setOpt("hdSprites", !opts.hdSprites); hud.log(opts.hdSprites ? "Sprites HD activados." : "Sprites originales (sin HD)."); return;   // revisar HD contra original; el nivel de detalle sigue en Opciones
+          case "a": e.preventDefault(); flag("force", "Auto Attack Mode has been enabled.", "Auto Attack Mode has been disabled."); return;
+          case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][flags.detail]); return;      // Game.cpp OnKeyUp 'D': m_cDetailLevel 0→1→2→0 con NOTIFY_MSG_DETAIL_LEVEL_*
+          case "f": e.preventDefault(); gui.toggle(43); return;                                  // Game.cpp OnKeyUp 'F': lista de amigos (cuadro 43)
           case "h": e.preventDefault(); ui.key("news"); return;
           case "p": e.preventDefault(); ui.autoParty(); return;
           case "e": e.preventDefault(); ui.autoTrade(); return;
           case "g": e.preventDefault(); guildUi.open(); return;
           case "m": e.preventDefault(); setOpt("map", !opts.map); return;
-          case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Cambiado a modo correr." : "Cambiado a modo andar."); return;
-          case "s": e.preventDefault(); setOpt("sound", !opts.sound); hud.log(opts.sound ? "Sonido activado." : "Sonido desactivado."); return;
+          case "r": e.preventDefault(); setOpt("run", !opts.run); hud.log(opts.run ? "Converted to running mode." : "Converted to walking mode."); return;   // NOTIFY_MSG_CONVERT_*
+          case "s": e.preventDefault(); {      // Game.cpp OnKeyUp 'S': música encendida→apaga la música; si no, sonido encendido→apaga el sonido; si no, enciende ambos
+            if (opts.music) { setOpt("music", false); hud.log("Music Off"); }
+            else if (opts.sound) { setOpt("sound", false); hud.log("Sound Off"); }
+            else { setOpt("music", true); hud.log("Music On"); setOpt("sound", true); hud.log("Sound On"); }
+          } return;
           case "t": e.preventDefault(); openChat("/to "); return;
           case "w": e.preventDefault(); document.body.classList.toggle("dialogtrans"); return;
           case "x": e.preventDefault(); ui.key("options"); return;
@@ -501,10 +506,10 @@ async function main() {
       switch (k) {
         case "Insert": e.preventDefault(); hud.quickUse("hp"); return;
         case "Delete": e.preventDefault(); hud.quickUse("mp"); return;
-        case "Home": e.preventDefault(); flag("safe", "Modo de ataque seguro activado.", "Modo de ataque seguro desactivado."); return;
-        case "Tab": e.preventDefault(); flag("combat", "Modo de combate.", "Modo de paz."); conn.send({ t: "combatmode", on: flags.combat }); return;
+        case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); return;
+        case "Tab": e.preventDefault(); flag("combat", "Converted to attack mode.", "Converted to peace mode."); conn.send({ t: "combatmode", on: flags.combat }); return;
         case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
-        case "PageUp": e.preventDefault(); hud.log("No tienes ninguna habilidad especial lista."); return;
+        case "PageUp": e.preventDefault(); hud.log("No item with special ability is equipped."); return;     // Game.cpp OnKeyUp 33 + ON_KEY_UP26 (el port no tiene habilidades especiales de objeto)
         case "+": hud.toast("Mapa ampliado"); return;
         case "-": hud.toast("Mapa normal"); return;
         case "Escape": ui.cancelPointing(); if (ui.partyCb) { ui.cancelPick(); partyUi.reset(); } ui.key("escape"); return;
@@ -601,6 +606,35 @@ async function main() {
   chatIn.addEventListener("input", chTag);
   // como en el original (Game.cpp): tras un mensaje con «!» o «$» la siguiente línea ya empieza con ese prefijo
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre || flags.chPrefix || ""; chTag(); chatIn.focus(); }
+  // Órdenes locales del chat: Game.cpp bCheckLocalChatCommand (textos de lan_eng.h BCHECK_LOCAL_CHAT_COMMAND1..21)
+  const mutes = new Set();
+  const localToggle = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); return true; };
+  function localCmd(t) {
+    const m = /^\/(\w+)(?:\s+(\S+))?/.exec(t); if (!m) return false;
+    const c = m[1].toLowerCase(), a = m[2];
+    if (c === "showframe" || c === "fps") { flags.showFps = !flags.showFps; fpsEl.style.display = flags.showFps === false ? "none" : ""; return true; }
+    if (c === "timestamp") return localToggle("timestamp", "Time stamping on messages is now turned on.", "Time stamping on messages is now turned off.");
+    if (c === "showgrid" || c === "grid") { flags.grid = !flags.grid; return true; }
+    if (c === "showalldmg") return localToggle("allDmg", "Damage is now shown by groups of hits.", "Damage is now shown one after another.");
+    if (c === "bigitems") return localToggle("bigItems", "Items on ground are now shown as large.", "Items on ground are now shown as small.");
+    if (c === "ekscreenshot") return localToggle("ekShot", "Auto screenshot upon Enemy kill is now turned on.", "Auto screenshot upon Enemy kill is now turned off.");
+    if (c === "notifyme") return localToggle("notifyMe", "You will now be notified outside game if your name is mentioned.", "Notification of your name outside game is now disabled.");
+    if (c === "manufill") return localToggle("manuFill", "Items will now be automatically chosen while manufacturing.", "Items will now be manually chosen while manufacturing.");
+    if (c === "whon") { flags.whisper = true; hud.log("Enable to listen to whispers."); return true; }
+    if (c === "whoff") { flags.whisper = false; hud.log("Unable to listen to whispers."); return true; }
+    if (c === "shon") { flags.shout = true; hud.log("Enable to chat in public."); return true; }
+    if (c === "shoff") { flags.shout = false; hud.log("Unable to chat in public."); return true; }
+    if (c === "tooff" || c === "toon") {
+      if (!a) return true;
+      if (a.length > 10) { hud.log("The character's name you want to refuse is too long."); return true; }
+      if (c === "tooff") {
+        if (a === (world.ents.get(pid)?.name)) hud.log("You can't refuse your own messages.");
+        else if (!mutes.has(a)) { mutes.add(a); hud.log("Character " + a + " has been listed on the message refusing list."); }
+      } else if (mutes.delete(a)) hud.log("Character " + a + " has been released from the message refusing list.");
+      flags.mutes = mutes; return true;
+    }
+    return false;
+  }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
     if (e.key === "Enter") {
@@ -625,6 +659,7 @@ async function main() {
         hud.log("Clima: " + w.weather);
       }
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
+      else if (localCmd(t)) { /* orden local del original (bCheckLocalChatCommand) */ }
       else if (/^\/(to|w)\s+\S+\s*$/i.test(t)) hud.log("Uso: /to nombre texto");
       else if (t) { flags.lastChat = t; flags.chPrefix = /^[!$@]/.test(t) ? t[0] : ""; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
