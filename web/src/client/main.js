@@ -721,6 +721,7 @@ async function main() {
       perf.frame(dt, now - d0, renderer, { ents: world.ents.size, pl: online ? [...world.ents.values()].filter(e => e.kind === "player").length : 1, ping: online ? conn.ping : 0, map: world.map?.name, x: me.x, y: me.y, act: me.act }); }
     const h0 = performance.now();
     hud.update(world, ctl.hoverEnt); questUi.render();
+    questUi.avoid(miniOn() && view.mapStyle !== "overlay" ? (() => { const r = renderer.miniRect(), b = renderer.canvas.getBoundingClientRect(); return { right: (r.x0 + r.size) * renderer.scale / renderer.dpr + renderer.ox / renderer.dpr + b.left, bottom: (r.y0 + r.size + 6) * renderer.scale / renderer.dpr + renderer.oy / renderer.dpr + b.top }; })() : null);      // el rastreador baja bajo el minimapa si lo tapa (criptas: minimapa grande)
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();
     { const m = world.ents.get(pid); if (m?.dead && !ui.wasDead) gui.open(19); ui.wasDead = !!m?.dead; }      // GAME.cpp: al morir aparece el cuadro con Restart
