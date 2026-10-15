@@ -318,14 +318,10 @@ export class Adventure {
       else this.runs.get(gkey(p)).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
       return this.descend(p, w, level, true);
     }
-<<<<<<< HEAD
-    if (enemyMap(p, String(cmd.map || "").toLowerCase())) return w.reject(p, cmd, "no puedes entrar en la granja del bando enemigo");
-    const to = cmd.map === "arefarm" ? this.farm : this.staticWorld(String(cmd.map || "").toLowerCase());
-=======
     const mid = String(cmd.map || "").toLowerCase();
     if (!GOTO_MAPS.includes(mid)) return w.reject(p, cmd, "destino no permitido (solo Promise Land, Aresfarm, Elvine Farm y la cripta)");
+    if (enemyMap(p, mid)) return w.reject(p, cmd, "no puedes entrar en la granja del bando enemigo");
     const to = mid === "arefarm" ? this.farm : this.staticWorld(mid);
->>>>>>> Pablo-Claude/hb-sistemas-5a6b41
     if (!to) return w.reject(p, cmd, "mapa no disponible (puede estar cargándose)");
     if (to === w) return true;
     const init = this.maps[to.map.id]?.meta.initial;

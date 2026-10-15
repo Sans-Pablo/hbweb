@@ -25,6 +25,7 @@ results.elvfarm = await go("elvfarm");
 for (const m of ["aresden", "elvine", "middleland", "arejail"]) results[m] = await go(m);
 console.log(JSON.stringify(results), [...types].join(","));
 ws.close(); srv.kill();
-const ok = results.elvfarm === "elvfarm" && ["aresden", "elvine", "middleland", "arejail"].every(m => results[m] === "elvfarm");
+// el jugador de prueba es de Aresden: la farm enemiga (elvfarm) también se rechaza; ningún otro mapa es alcanzable
+const ok = ["elvfarm", "aresden", "elvine", "middleland", "arejail"].every(m => results[m] === start);
 console.log(ok ? "OK net-goto" : "FALLO net-goto");
 process.exit(ok ? 0 : 1);

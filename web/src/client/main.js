@@ -780,13 +780,8 @@ async function main() {
     if (prof && perfStarted && !document.hidden) { const r = prof.step(d0, dt); renderer.pf = prof.pf; document.title = "prof: " + prof.name; if (r) perf.push({ ev: "prof", ...r }); }
     renderer.render({
       world, me, dt, fx,
-<<<<<<< HEAD
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid || !!flags.grid, bigItems: !!flags.bigItems, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
-=======
-      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, dirArrows: !!opts.dirArrows, showGrid: view.showGrid || !!flags.grid, bigItems: !!flags.bigItems, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
->>>>>>> Pablo-Claude/hb-ui-46a637
     });
     { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
     { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }
