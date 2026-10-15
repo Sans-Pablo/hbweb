@@ -19,7 +19,7 @@ import { createCharacter } from "./create.js";
 import { Gui } from "./gui.js";
 import { apparelOf, equipKeys } from "./look.js";
 import { itemDef, itemName, packKey } from "./names.js";
-import { ITYPE, EFFECT } from "../shared/items.js";
+import { ITYPE, EFFECT, EQUIP } from "../shared/items.js";
 import { realStats } from "../shared/attributes.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
