@@ -30,6 +30,7 @@ export class Tutorial {
 
   // ---------------------------------------------------------------- estado y flujo
   onState(ev) {
+    if (ev.st === "on" && this.left) return;                 // eco atrasado del servidor tras saltar o terminar: no reabrir el tutorial (solo /tutorial lo reinicia)
     this.st = ev.st; this.claimed = ev.claimed || [];
     if (ev.st !== "on") { this.i = ev.i; this.hide(); return; }
     if (this.phase === "idle" || ev.i > this.i) { this.i = ev.i; this.enter(); }       // el cliente nunca retrocede por un eco atrasado del servidor
@@ -69,13 +70,13 @@ export class Tutorial {
     const n = this.i + 1;
     this.d.send({ t: "tut", op: "step", i: n });
     this.i = n;
-    if (n >= TOTAL) { this.st = "done"; this.hide(); this.d.toast(this.tx(UI.done)); return; }
+    if (n >= TOTAL) { this.st = "done"; this.left = true; this.hide(); this.d.toast(this.tx(UI.done)); return; }
     this.enter();
   }
   hide() { this.phase = "idle"; this.d.gui.close(BOX_ID); this.d.gui.close(TRACK_ID); }
   skipStep() { if (this.phase === "goal") this.goalDone(); }
-  skipAll() { this.d.send({ t: "tut", op: "skip" }); this.st = "skip"; this.hide(); this.d.toast(this.tx(UI.skipped)); }
-  restart() { this.d.send({ t: "tut", op: "reset" }); this.st = "on"; this.i = 0; this.enter(); }
+  skipAll() { this.d.send({ t: "tut", op: "skip" }); this.st = "skip"; this.left = true; this.hide(); this.d.toast(this.tx(UI.skipped)); }
+  restart() { this.d.send({ t: "tut", op: "reset" }); this.left = false; this.st = "on"; this.i = 0; this.enter(); }
 
   // ---------------------------------------------------------------- objetivos
   startGoal() { this.prog = 0; this.moved = 0; this.last = null; this.kills = 0; }
@@ -114,7 +115,12 @@ export class Tutorial {
   // cada fotograma: objetivos que se miden en el estado del juego (andar, correr, cuadros abiertos, mapa)
   update(me, world) {
     if (!this.asked && me) { this.asked = true; this.d.send({ t: "tut", op: "get" }); }
-    if (!me || !this.on || this.phase !== "goal") return;
+    if (!me || !this.on) return;
+    // si algo cerró el cuadro (abrir la tienda, cambio de mapa…) el estado y la ventana se vuelven a alinear: así «Siguiente» nunca queda bloqueado
+    const gui = this.d.gui, talk = this.phase === "lines" || this.phase === "after";
+    if (talk && !gui.isOpen(BOX_ID)) gui.open(BOX_ID);
+    else if (this.phase === "goal" && !gui.isOpen(TRACK_ID)) gui.open(TRACK_ID);
+    if (this.phase !== "goal") return;
     const g = this.step.goal;
     switch (g.k) {
       case "move": {

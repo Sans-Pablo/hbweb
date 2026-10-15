@@ -352,7 +352,6 @@ export class Gui {
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
     else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
-    else if (x > 669 + a && x < 706 + a) this.onAction?.("recall");
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -453,7 +452,10 @@ export class Gui {
 
   // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
   summonsIcon(f, x) {
-    const c = this.ctx; c.save(); c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se vuelve azul
+    const c = this.ctx; this.put("summons_icon", f, x, 554);
+    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
+    c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)
@@ -593,14 +595,6 @@ export class Gui {
       }
     }
     this.summonsIcon(0, 632 + a);
-    // Recall: icono en el siguiente hueco de la barra, con barra de canalización / enfriamiento
-    {
-      const rx = 669 + a, n = performance.now(), r = this.rc || {}, ch = r.ch > n, cd = r.cd > n, over = m.x > rx && m.x < rx + 37 && m.y > 436 + RESY && m.y < 478 + RESY;
-      this.put("recall_icon", over || ch ? 1 : 0, rx, 554);
-      if (cd) { const k = (r.cd - n) / 60000; this.ctx.fillStyle = "rgba(0,0,0,.55)"; this.ctx.fillRect(rx + 3, 554 + 4, 31, Math.round(33 * k)); }
-      if (ch) { const k = 1 - (r.ch - n) / r.chMs; this.ctx.fillStyle = "#e3b341"; this.ctx.fillRect(rx + 3, 554 + 38, Math.round(31 * k), 3); }
-      if (over) this.tip(ch ? "Recall (click: cancel)" : cd ? "Recall (" + Math.ceil((r.cd - n) / 1000) + " s)" : "Recall: return to the farm (3 s)", m.x - 20);
-    }
     if (m.x > 400 && m.x < 410 && m.y > 432 + RESY) this.tip("Hunger (" + (100 - me.hunger) + "%)", m.x - 20);
   }
 

@@ -8,7 +8,7 @@ const KEY = "hbweb.tested";
 const read = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { return new Set(); } };
 const write = s => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
 const L = o => (o && (o[getLang()] || o.es)) || "";
-const TABS = [["news", "Novedades", "News"], ["tests", "Para probar", "To test"], ["notes", "A tener en cuenta", "Keep in mind"], ["tools", "Herramientas", "Tools"]];
+const TABS = [["news", "Novedades", "News"], ["tools", "Herramientas", "Tools"]];
 const KITS = {
   potions: [["RedPotion", 50], ["BluePotion", 50], ["GreenPotion", 50]], arrows: [["Arrow", 500]],
   dyes: [["Dye(Red)", 1], ["Dye(Blue)", 1], ["Dye(Green)", 1], ["ArmorDye(Red)", 1], ["ArmorDye(Blue)", 1], ["ArmorDye(Gold)", 1]],

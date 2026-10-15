@@ -4,6 +4,10 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
+## Hilo UI (pedido 2026-10-15, v0.83.7)
+- [x] 1 hover turquesa (solo la huella) · [x] 2 tutorial (reaparece/bloqueo; sin verificar en vivo la tienda) · [~] 10 opciones limpias hecho; falta modos solo Remastered/Legacy y F1 ON/OFF (son órdenes del servidor, no UI)
+- [ ] 3-9, 11-14 sin empezar (ventanas, constructor de diálogos, misiones, hospital, botón mascota, cripta E, interfaz original, pelo F5, stats Olympia)
+
 ## Hilo SISTEMAS (pedido 2026-10-15) — tickets por prioridad
 - [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Pendiente: orden explícita «recoge esto» para items tirados.
 - [ ] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
