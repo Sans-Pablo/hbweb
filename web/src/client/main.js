@@ -44,6 +44,7 @@ import { observerBar, rosterPanel, brainPanel } from "./watchpanel.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
+import { parseAuto, label as autoLabel } from "../shared/systems/autoplay.js";
 import { PerfLog } from "./perflog.js";
 import { Profiler } from "./profiler.js";
 const EMBED = new URLSearchParams(location.search).has("embed");                  // marco del panel dividido (observador.html): solo el juego
@@ -391,6 +392,7 @@ async function main() {
       conn.send({ t: "guildinvite", name: e.name }); hud.log("Invitación enviada a " + e.name + ".");
     },
     // Ctrl+E (o «/trade nombre»): comerciar con el jugador bajo el cursor (o el más cercano a ≤ 10 casillas)
+    autoLog: m => hud.log(m[getLang() === "en" ? 1 : 0]),
     autoTrade(name) {
       const me = world.ents.get(pid); if (!me || me.dead) return;
       const e = name ? [...world.ents.values()].find(o => o.kind === "player" && o.name.toLowerCase() === name.toLowerCase()) : ctl.hoverPlayer || [...world.ents.values()].filter(o => o.kind === "player" && !o.dead && o.id !== pid).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
@@ -618,6 +620,13 @@ async function main() {
       else if (t === "/puesto" || t === "/stall") stallUi.setup();
       else if (t === "/tutorial") tutorial.restart();
       else if (t === "/tutorial off") tutorial.skipAll();
+      else if (/^/autos+S/.test(t)) {                                           // /auto hunt slime · /auto run almacén · /auto stop (autoplay.js)
+        const a = parseAuto(t.slice(6), Object.keys(assets.npcDb)), L = n => (getLang() === "en" ? n[1] : n[0]);
+        if (!a) hud.log(L(["Uso: /auto hunt <criatura> · /auto run <almacén|tienda|herrería|mago|granjero|hospital> · /auto stop", "Usage: /auto hunt <creature> · /auto run <warehouse|shop|blacksmith|sorcerer|farmer|hospital> · /auto stop"]));
+        else if (a.kind === "bad") hud.log(L(["No sé qué es «" + a.why + "».", "I don't know what \"" + a.why + "\" is."]));
+        else if (a.kind === "stop") { ctl.setAuto(null); hud.log(L(["Modo automático detenido.", "Auto mode stopped."])); }
+        else { ctl.setAuto(a); hud.log(L([a.kind === "hunt" ? "Caza automática: " + a.mob + " (un clic la cancela)." : "Voy a " + autoLabel(a, "es") + " (un clic lo cancela).", a.kind === "hunt" ? "Auto hunt: " + a.mob + " (click to cancel)." : "Heading to " + autoLabel(a, "en") + " (click to cancel)."])); }
+      }
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
       else if (/^\/time (day|night|auto)$/.test(t) && !online) {                      // solo para pruebas: fuerza la hora del cielo
