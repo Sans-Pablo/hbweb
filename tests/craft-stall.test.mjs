@@ -29,12 +29,12 @@ H.hp = H.maxHp; H.res._stallAt = 1; H.res._petAt = H.res._gatherAt = 1e12;
 const stallOf = () => a.stallDb.find(s => s.owner === "helga");
 assert.ok(run(150000, () => !!stallOf()), "el granjero abre puesto; log: " + H.bot.log.slice(-5).join(" | "));
 const s = stallOf(); assert.equal(s.map, "wrhus_1f"); assert.ok(s.items.length === 2 && s.items.every(r => !H.bag.some(i => i.uid === r.inst.uid)));
-// un bot con summon que ama el champiñón (832) quiere esa fila y no la de otro
+// un bot con summon que quiere pescado (100, ticket 14) quiere esa fila y no la de otro
 const ball = { uid: 9101, id: C.SPECIES["Amphis"][1], count: 1, comp: { sp: "Amphis", lvl: 12, exp: 0, on: true, nm: "Amphis", mode: "attack" } };
 A.bag = A.bag.filter(i => !i.comp); A.bag.push(ball); A.gold = 5000;
 const row = (id, count = 9, price = 20) => ({ inst: { id, count, uid: 1 }, price });
-assert.ok(foodWanted(home, A, row(832)) > 0 && foodWanted(home, A, row(832)) <= 4, "compra hasta PER_ERRAND");
-assert.equal(foodWanted(home, A, row(820)), 0, "no le gusta");
-A.gold = 100; assert.equal(foodWanted(home, A, row(832)), 0, "respeta la reserva de oro");
-assert.equal(foodWanted(home, H, row(832)), 0, "los artesanos no compran comida de summon");
+assert.ok(foodWanted(home, A, row(100)) > 0 && foodWanted(home, A, row(100)) <= 4, "compra hasta PER_ERRAND");
+assert.equal(foodWanted(home, A, row(829)), 0, "la comida que solo cura no mejora al summon");
+A.gold = 100; assert.equal(foodWanted(home, A, row(100)), 0, "respeta la reserva de oro");
+assert.equal(foodWanted(home, H, row(100)), 0, "los artesanos no compran comida de summon");
 console.log("OK craft-stall");

@@ -252,15 +252,16 @@ export function candy(w, p, d, destUid, roll) {
   return amount;
 }
 
-// Productos de agricultura como comida de compañeros (diseño del port: el original no tiene compañeros).
-//  hp: tomate / mp: uvas y uvas azules / atk: seta -> suben 1 punto permanente (tope FEED_CAP). El resto cura; el ginseng revive.
+// Ticket 14 (esquema invertido): el PESCADO (fishing.js) sube puntos permanentes del compañero (+1 hp / mp / atk hasta FEED_CAP, +2 si le gusta) y los
+// productos de AGRICULTURA solo curan (vida o maná; el ginseng revive). Diseño del port: el original no tiene compañeros.
 export const FEED_CAP = 100;
-// Pescado (fishing.js): comida de carnívoros, cura según la pieza. 100 Fish, 101 RedFish, 102 GreenFish, 103 YellowFish, 570 RedCarp, 571 GreenCarp, 572 GoldCarp, 573 CrucianCarp, 575 Salmon
-export const FISH_FEED = { 100: 30, 573: 25, 103: 35, 102: 45, 101: 55, 575: 65, 570: 70, 571: 80, 572: 120 };
+// Pescado: 100 Fish, 101 RedFish, 102 GreenFish, 103 YellowFish, 570 RedCarp, 571 GreenCarp, 572 GoldCarp, 573 CrucianCarp, 575 Salmon -> estadística que sube (por color)
+export const FISH_FEED = { 100: "hp", 573: "hp", 101: "hp", 570: "hp", 102: "mp", 571: "mp", 103: "atk", 572: "atk", 575: "atk" };
 export const NO_MEAT = ["Slime", "Giant-Ant", "Clay-Golem", "Stone-Golem", "Cannibal-Plant", "Beholder", "Giant-Crayfish", "Healer", "Buffer", "Aura"];   // no comen pescado
-export const FEED = { ...Object.fromEntries(Object.entries(FISH_FEED).map(([id, h]) => [id, { heal: h, fish: true }])), 829: { stat: "hp" }, 830: { stat: "mp" }, 831: { stat: "mp" }, 832: { stat: "atk" },
+export const FEED = { ...Object.fromEntries(Object.entries(FISH_FEED).map(([id, st]) => [id, { stat: st, fish: true }])),
+  829: { heal: 35 }, 830: { mana: 25 }, 831: { mana: 35 }, 832: { heal: 45 },
   820: { heal: 20 }, 821: { heal: 25 }, 822: { heal: 30 }, 823: { mana: 20 }, 824: { heal: 40 }, 825: { heal: 50 }, 826: { heal: 60 }, 827: { mana: 30 }, 828: { heal: 80 }, 721: { revive: true } };
-// Gustos por especie (INVENTO del port): lo que le gusta cura/sube un 50% más (los puntos permanentes suben de 2 en 2), lo que no le apetece lo rechaza
+// Gustos por especie (INVENTO del port): lo que le gusta cura un 50% más (el pescado querido sube los puntos de 2 en 2), lo que no le apetece lo rechaza
 // y no se consume. El resto, normal. El Ginseng (revivir) nunca se rechaza. Ids: 820 Sandía, 821 Calabaza, 822 Ajo, 823 Cebada, 824 Zanahoria, 825 Rábano,
 // 826 Maíz, 827 Campanilla, 828 Melón, 829 Tomate, 830 Uva, 831 Uva azul, 832 Champiñón.
 export const TASTE = {

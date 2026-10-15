@@ -19,16 +19,16 @@ a.command(id, { t: "dbg", op: "bot", n: 1, level: 25 });
 const [B] = [...a.bots.values()], w = a.farm;
 const ball = (uid, sp, on) => ({ uid, id: C.SPECIES[sp][1], count: 1, comp: { sp, lvl: 12, exp: 0, on, nm: sp, mode: "attack" } });
 B.bag = B.bag.filter(i => !i.comp);
-const main = ball(9101, "Amphis", true), second = ball(9102, "Orc", true);      // Amphis ama el champiñón (832, atk); Orc, maíz/calabaza (sin estadística)
+const main = ball(9101, "Amphis", true), second = ball(9102, "Slime", true);      // ticket 14: el pescado sube estadísticas; el Slime no come pescado
 B.bag.push(main, second);
-assert.equal(wanted(main).id, 832);
-assert.equal(wanted(second), null, "lo que solo cura no cuenta");
+assert.ok(C.FISH_FEED[wanted(main).id]);
+assert.equal(wanted(second), null, "el Slime rechaza el pescado");
 B.gold = 10; assert.equal(feedSummons(w, B), 0, "sin oro no compra");
 B.gold = 100000; const logs = [];
 const n = feedSummons(w, B, t => logs.push(t));
-assert.ok(n > 0 && main.comp.fb.atk > 0, "el principal sube su ataque");
+assert.ok(n > 0 && Object.values(main.comp.fb).some(v => v > 0), "el principal sube estadísticas");
 assert.equal(B.gold, 100000 - n * FOOD_PRICE, "paga cada pieza");
 assert.ok(logs.length === 1, "lo cuenta en su diario");
 for (let i = 0; i < 80; i++) feedSummons(w, B);
-assert.equal(main.comp.fb.atk, C.FEED_CAP, "se detiene en el tope");
+assert.ok(Object.values(main.comp.fb).every(v => v === C.FEED_CAP) && wanted(main) === null, "se detiene en el tope");
 console.log("OK summon-food");

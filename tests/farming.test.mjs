@@ -51,14 +51,14 @@ assert.equal(F.PRODUCT[14][0], 721);
 assert.equal(F.probability(w, 10, 20, 1), 0);
 console.log("farming OK");
 
-// Comida de compañeros: tomate +1 vida, uvas +1 maná, seta +1 ataque
+// Comida de compañeros (ticket 14): el pescado sube estadísticas (+2 si le gusta), la granja solo cura
 import * as C from "../web/src/shared/systems/companion.js";
-const ball = newInst(w, 1, 1); ball.comp = { sp: "Giant-Ant", lvl: 5, exp: 0, on: false }; p.bag.push(ball);
+const ball = newInst(w, 1, 1); ball.comp = { sp: "Orc", lvl: 5, exp: 0, on: false }; p.bag.push(ball);
 const base = C.statsOf(p, ball.comp);
-for (const it of [829, 830, 832]) { const f = give(it); w.command(id, { t: "use", uid: f.uid, dest: ball.uid }); }
+for (const it of [100, 102, 103]) { const f = give(it); w.command(id, { t: "use", uid: f.uid, dest: ball.uid }); }
 const after = C.statsOf(p, ball.comp);
-assert.equal(after.hp, base.hp + 1); assert.equal(after.mp, base.mp + 1); assert.equal(after.dmg, base.dmg + 1);
-assert.deepEqual(ball.comp.fb, { hp: 1, mp: 1, atk: 1 });
+assert.equal(after.hp, base.hp + 2); assert.equal(after.mp, base.mp + 2); assert.equal(after.dmg, base.dmg + 2);
+assert.deepEqual(ball.comp.fb, { hp: 2, mp: 2, atk: 2 });
 console.log("farming feed OK");
 
 // Bots granjeros: siembran y cosechan solos
@@ -83,15 +83,15 @@ console.log("farming feed OK");
 
 // Gustos del summon: lo que le gusta rinde más, lo que no le apetece se rechaza y no se gasta
 {
-  const hate = give(823), love = give(832); ball.comp.sp = "Amphis"; const atk0 = ball.comp.fb.atk;
+  const hate = give(823), love = give(100); ball.comp.sp = "Amphis"; const hp0 = ball.comp.fb.hp;
   w.command(id, { t: "use", uid: hate.uid, dest: ball.uid });
   assert.ok(p.bag.includes(hate), "la cebada no se gasta si el Amphis la rechaza");
   assert.match(String(lastReject()), /no quiere comer eso/);
   w.command(id, { t: "use", uid: love.uid, dest: ball.uid });
-  assert.ok(!p.bag.includes(love), "el champiñón gustado se consume"); assert.equal(ball.comp.fb.atk, atk0 + 2, "lo que le gusta sube de 2 en 2");
+  assert.ok(!p.bag.includes(love), "el pescado gustado se consume"); assert.equal(ball.comp.fb.hp, hp0 + 2, "lo que le gusta sube de 2 en 2");
   const ev = events.filter(e => e.t === "candy").pop();
-  assert.ok(ev, "evento de curación");
+  assert.ok(ev, "evento de comida");
   const t = F.PRODUCT && (await import("../web/src/shared/systems/companion.js")).tasteOf;
-  assert.equal(t("Giant-Ant", 823), "love"); assert.equal(t("Giant-Ant", 822), "hate"); assert.equal(t("Giant-Ant", 829), "ok");
+  assert.equal(t("Giant-Ant", 823), "love"); assert.equal(t("Giant-Ant", 822), "hate"); assert.equal(t("Giant-Ant", 829), "ok"); assert.equal(t("Giant-Ant", 100), "hate"); assert.equal(t("Orc", 100), "love");
   console.log("farming taste OK");
 }

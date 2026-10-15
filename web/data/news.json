@@ -1,10 +1,31 @@
 {
- "build": "0.83.7",
+ "build": "0.83.8",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Comida de compañeros invertida (v0.83.8)",
+    "en": "Companion food inverted (v0.83.8)"
+   },
+   "items": [
+    {
+     "es": "Pescado: sube puntos permanentes al compañero (rojo/Fish/Crucian vida, verde maná, amarillo/oro/salmón ataque); +2 si le gusta. Prueba: arrastra un pescado a la bola.",
+     "en": "Fish: gives the companion permanent points (red/Fish/Crucian life, green mana, yellow/gold/salmon attack); +2 if liked. Test: drag a fish onto the ball."
+    },
+    {
+     "es": "Granja (tomate, uvas, seta, etc.): solo cura vida o maná. Prueba: dale un tomate a un compañero herido.",
+     "en": "Farm produce (tomato, grapes, mushroom...): only heals life or mana. Test: give a tomato to a wounded companion."
+    },
+    {
+     "es": "Golpe mortal muestra el daño con '!' (-N!), como el original.",
+     "en": "A killing blow shows damage with '!' (-N!), as in the original."
+    }
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {

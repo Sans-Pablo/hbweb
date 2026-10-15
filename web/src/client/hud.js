@@ -205,7 +205,7 @@ export class Hud {
   // productos de granja: qué le hacen a un compañero y si a los que llevas les gusta (companion.TASTE)
   feedLines(d, me, L) {
     const f = FEED[d.id], N = { hp: "vida máxima", mp: "maná máximo", atk: "daño" };
-    L.push("Comida de compañero: " + (f.revive ? "revive a tu compañero inconsciente." : f.stat ? "+1 " + N[f.stat] + " permanente." : f.heal ? "cura " + f.heal + " de vida." : "devuelve " + f.mana + " de maná."));
+    L.push("Comida de compañero: " + (f.revive ? "revive a tu compañero inconsciente." : f.stat ? "+1 " + N[f.stat] + " permanente (pescado)." : f.heal ? "cura " + f.heal + " de vida." : "devuelve " + f.mana + " de maná."));
     const T = { love: "le encanta (+50 %)", hate: "lo rechaza" };
     for (const b of (me?.bag || []).filter(i => i.comp)) { const t = f.revive ? "ok" : tasteOf(b.comp.sp, d.id); if (T[t]) L.push('<span style="color:' + (t === "love" ? "#9fe39a" : "#e39a9a") + '">' + (b.comp.nm || b.comp.sp) + ": " + T[t] + "</span>"); }
     L.push("Arrástralo sobre la bola o usa el doble clic con el compañero fuera.");

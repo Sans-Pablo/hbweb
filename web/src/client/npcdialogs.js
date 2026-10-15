@@ -474,7 +474,7 @@ export function registerNpcDialogs(gui, api) {
       "EVOLUCIÓN: Orc, Pixie y Skeleton nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
       "BOLAS: compra una bola de nivel 1; previsualiza antes.",
       "CARAMELOS: rojo vida, azul maná, verde revive. Arrástralos al compañero.",
-      "COMIDA: la de la granja da mejoras permanentes; arrástrala al compañero o a su bola.",
+      "COMIDA: el pescado da mejoras permanentes y la granja cura; arrástrala al compañero o a su bola.",
       "DOOMY: Healer (verde) cura, Buff (amarillo) protege, Aura (azul) regenera."];
     helpLines(g) { return this.constructor.HELP.flatMap(p => this.wrap(g, t(p), this.w - 40, 10)); }
     rows(me) {
