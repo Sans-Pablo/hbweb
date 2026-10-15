@@ -388,17 +388,34 @@ export class Gui {
     if (!me) return;
     const info = uid ? (this.describe && this.describe(uid)) : (def && this.describeDef && this.describeDef(def));
     if (!info) return;
-    const c = this.ctx, rows = [[info.name, "#ffe9a0", true], ...info.lines.map(l => [l.t, l.c || "#e8e8d0", false])];
-    c.font = "12px Tahoma, Verdana, sans-serif";
-    const pad = info.sprite ? 50 : 0;
-    const w = Math.max(...rows.map(r => c.measureText(r[0]).width)) + 14 + pad, h = Math.max(rows.length * 14 + 10, info.sprite ? 56 : 0);
+    // Ficha estilo Olympia (ticket 14): cabecera con el nombre (color de rareza) y el icono, la estadística principal (daño/defensa) destacada,
+    // las bonificaciones en verde y, tras una línea fina, los datos secundarios (peso, fuerza, durabilidad) atenuados.
+    const c = this.ctx, MAIN = /^(Daño|Defensa|Damage|Defense)/, SUB = /^(Peso|Weight|Fuerza necesaria|Required strength)/;
+    const main = [], body = [], sub = [];
+    for (const l of info.lines) {
+      const r = { t: l.t, c: l.c || "#e8e8d0" };
+      if (MAIN.test(l.t) && !l.c) { r.c = "#fff2c0"; r.big = true; main.push(r); }
+      else if (SUB.test(l.t) && !l.c) { r.c = "#a89f88"; sub.push(r); }
+      else body.push(r);
+    }
+    const hdrH = Math.max(24, info.sprite ? 44 : 0), pad = info.sprite ? 46 : 0, RH = 14;
+    c.font = "bold 13px Tahoma, Verdana, sans-serif"; let tw = c.measureText(t(info.name)).width + pad;
+    c.font = "12px Tahoma, Verdana, sans-serif"; for (const r of [...main, ...body, ...sub]) tw = Math.max(tw, c.measureText(t(r.t)).width + (r.big ? 8 : 0));
+    const w = Math.ceil(tw) + 20, nRows = main.length + body.length + sub.length;
+    const h = hdrH + 6 + (nRows ? nRows * RH + 4 : 0) + (sub.length && main.length + body.length ? 5 : 0) + 4;
     let x = this.mouse.x + 18, y = this.mouse.y + 14;
     if (x + w > this.W) x = this.mouse.x - w - 8;
     if (y + h > this.H) y = this.H - h;
-    c.fillStyle = "rgba(10,8,4,.88)"; c.fillRect(x, y, w, h);
-    c.strokeStyle = "#8a7a4a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
-    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + 30);
-    rows.forEach((r, i) => this.text(x + 7 + pad, y + 5 + i * 14, r[0], r[1], { bold: r[2] }));
+    c.fillStyle = "rgba(10,8,4,.92)"; c.fillRect(x, y, w, h);
+    const gr = c.createLinearGradient(x, y, x, y + hdrH); gr.addColorStop(0, "rgba(120,92,40,.75)"); gr.addColorStop(1, "rgba(50,36,14,.75)");
+    c.fillStyle = gr; c.fillRect(x + 1, y + 1, w - 2, hdrH - 1);
+    c.strokeStyle = "#b8964a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    c.fillStyle = "rgba(184,150,74,.55)"; c.fillRect(x + 1, y + hdrH, w - 2, 1);
+    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + hdrH / 2 + 2);
+    this.text(x + 8 + pad, y + Math.round((hdrH - 13) / 2), info.name, info.color || "#ffe9a0", { bold: true, size: 13, shadow: true });
+    let ty = y + hdrH + 5;
+    for (const r of [...main, ...body]) { this.text(x + 9, ty, r.t, r.c, r.big ? { bold: true } : {}); ty += RH; }
+    if (sub.length) { if (main.length + body.length) { c.fillStyle = "rgba(184,150,74,.3)"; c.fillRect(x + 8, ty + 1, w - 16, 1); ty += 5; } for (const r of sub) { this.text(x + 9, ty, r.t, r.c); ty += RH; } }
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)

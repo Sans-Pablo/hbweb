@@ -335,6 +335,9 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Hechos: tickets 1, 2, 3, 6, 4 (casilla neutra `drawSlot`, solo en el hospital por ahora), 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
 - Pendientes: 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).
 
+## Hilo UI (v0.84.9)
+- Ticket 14 (v0.84.9): ficha de objeto estilo Olympia (`gui.itemTooltip`) y mini esqueleto sobre cada pozo de bajada (`renderer.pitMob`, aro de color en pisos de jefe). Verificado en escritorio (ficha de Dagger y pozo cerrado en cripta 1). Sin verificar: móvil, pozo abierto/piso de jefe. El formato Olympia no está documentado: se eligió una disposición propia.
+
 ## Hilo UI (v0.84.8)
 - Ticket 12 (v0.84.8): Legacy con registro arriba-izquierda (original `ShowEventList`), chat sobre la barra, minimapa arrastrable y persistente, agrandado en criptas. Verificado en escritorio (log 6 líneas, arrastre y persistencia). No verificado: móvil, minimapa en cripta real.
 

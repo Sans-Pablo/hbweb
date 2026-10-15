@@ -623,10 +623,25 @@ export class Renderer {
       ctx.globalAlpha = 1;
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
+      if (gate.target === "down") this.pitMob(gate, s.world.map.level + 1, x, y, closed);
       const over = s.hover && Math.max(Math.abs(gate.x - s.hover[0]), Math.abs(gate.y - s.hover[1])) <= 1;     // el rótulo solo aparece al pasar el ratón o al estar junto a la entrada
       if (over || near) this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
       ctx.restore();
     }
+  }
+
+  // Mini sprite del monstruo que espera abajo, sobre el pozo (ticket 14): el esqueleto de la cripta, con aro del color del rey en los pisos de jefe.
+  pitMob(gate, nextLevel, x, y, closed) {
+    const { ctx } = this;
+    const mi = this.pitMi || (this.pitMi = miniOf("Skeleton", k => this.spr.frames(k)));
+    const fr = mi && this.spr.frame(mi.key, mi.f); if (!fr || !this.spr.ready(mi.key)) return;
+    const [sx, sy, w, h] = fr, k = Math.min(1, 38 / Math.max(w, h)), dw = w * k, dh = h * k, cy = y - 8;
+    const tier = nextLevel % 5 === 0 ? Math.min(4, nextLevel / 5) : 0;
+    ctx.save();
+    if (tier) { ctx.strokeStyle = BOSS_COLORS[tier]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, cy + dh / 2 - 2, dw * 0.55, 6, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.globalAlpha = closed ? 0.6 : 0.95;
+    ctx.drawImage(this.spr.img[mi.key], sx, sy, w, h, x - dw / 2, cy - dh / 2, dw, dh);
+    ctx.restore();
   }
 
   // Demon Lv 50: al caminar deja una estela sutil de brasas pequeñas que se apagan en ~1,2 s (como la nieve del Frost). Coordenadas de mundo (this.cam = cámara);

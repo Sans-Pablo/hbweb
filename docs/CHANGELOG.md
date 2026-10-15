@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.9 · Fichas y pozos (2026-10-15)
+- Ficha de objeto estilo Olympia: cabecera con nombre (color de rareza) e icono, daño/defensa destacado, bonificaciones en verde y datos secundarios (peso, fuerza, durabilidad) atenuados tras un separador. Cada pozo de bajada de la cripta muestra un mini esqueleto (con aro del color del rey en pisos de jefe; tenue si está cerrado). Ticket 14.
+
 ## 0.84.8 · Interfaz original (2026-10-15)
 - Legacy: registro de eventos arriba a la izquierda (6 líneas, 5 s) como `ShowEventList` del original; entrada de chat sobre la barra. Minimapa arrastrable con posición recordada y más grande en criptas. Ticket 12. Ficha: `docs/sistemas/interfaz-original.md`.
 
