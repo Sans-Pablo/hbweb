@@ -15,8 +15,8 @@ ws.onmessage = e => {
   if (m.t === "s") for (const o of m.e || []) { ents++; if (watching && o.id === watching.id && o.o) own = o; }
 };
 await new Promise(r => { ws.onopen = r; });
-ws.send(JSON.stringify({ t: "bots" }));
-for (let i = 0; i < 50 && !list; i++) await new Promise(r => setTimeout(r, 100));
+// los habitantes se crean tras abrir el puerto: se repite la petición hasta tener la lista completa (CI lenta)
+for (let i = 0; i < 100 && !(list && list.length === 8); i++) { if (i % 10 === 0) ws.send(JSON.stringify({ t: "bots" })); await new Promise(r => setTimeout(r, 100)); }
 const fail = m => { console.log("FALLO net-observe:", m); srv.kill(); process.exit(1); };
 if (!list || list.length !== 8) fail("lista " + JSON.stringify(list?.length));
 const b = list[0];
