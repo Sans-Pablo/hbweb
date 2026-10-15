@@ -114,3 +114,9 @@ export function rollKillDrop(rng, npc, opts = {}) {
   if (d && NEVER_DROP.test(d.name)) return null;                              // equipo Knight, Hero y Sang-Ah: nunca cae de un monstruo
   return r.id !== GOLD && d && !usable(d) ? null : r;                         // red de seguridad: nada que un nivel 50 no pueda usar
 }
+
+// Resumen del botín posible de un tipo de monstruo (para el panel del menú automático): nivel de generación y ids de objeto.
+export function dropInfo(type) {
+  const gen = GEN_LEVEL[type] || 0, flat = a => (a || []).flat(2).filter(Boolean);
+  return { gen, weak: gen > 0 && gen <= 2, items: [...new Set([...(MELEE[gen] || []), ...(WAND[gen] ? [WAND[gen]] : []), ...flat(ARMOR[gen])])] };
+}

@@ -8,6 +8,19 @@
     {
       "date": "2026-10-15",
       "title": {
+        "es": "Menú AUTO (v0.84.11)",
+        "en": "AUTO menu (v0.84.11)"
+      },
+      "items": [
+        {
+          "es": "Nuevo botón AUTO en el diálogo del personaje: elige zona y criatura (con su sprite y ficha) y el personaje caza solo, recoge y vuelve a la granja con la mochila llena; la pestaña «Ir a…» lo lleva al almacén, tienda, herrería, mago, granjero, hospital o hechicero de mascotas. Prueba: abrir el diálogo del personaje → AUTO. Falta: vaciar en el almacén y repetir.",
+          "en": "New AUTO button in the character dialog: pick a zone and creature (with its sprite and info) and the character hunts alone, loots and returns to the farm with a full bag; the “Go to…” tab takes it to the warehouse, shop, blacksmith, sorcerer, farmer, hospital or pet sorcerer. Test: open the character dialog → AUTO. Missing: emptying at the warehouse and repeating."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
         "es": "Ventanas uniformes (v0.83.14)",
         "en": "Uniform windows (v0.83.14)"
       },

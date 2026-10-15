@@ -51,6 +51,7 @@ import { registerNews, NEWS_ID } from "./newswin.js";
 import { registerQuests, QUEST_ID } from "./questwin.js";
 import { registerBug, BUG_ID } from "./bugwin.js";
 import { registerStatSim, STATSIM_ID } from "./statsim.js";
+import { registerAutoWin } from "./autowin.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -148,6 +149,7 @@ async function main() {
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
   
+  registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
   registerNews(gui); registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
   registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }

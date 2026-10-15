@@ -9,10 +9,14 @@ import { dist } from "../const.js";
 import { NPC } from "./shopsys.js";
 import { groundTop } from "./ground.js";
 import { mobOf } from "./orders.js";
+import { findPath } from "../path.js";
 
-export const HP_STOP = 0.35, IDLE_STOP_MS = 20000, SIGHT = 40, LOOT_RANGE = 7;
+export const HP_STOP = 0.35, IDLE_STOP_MS = 20000, SIGHT = 40, LOOT_RANGE = 7, BAG_MAX = 50, ZONE_PAD = 8;
+export const FARM = "arefarm", FARM_HOME = [65, 75];               // adventure.js FARM_HOME
+export const BUILDINGS = { warehouse: "wrhus_1f", shop: "gshop_1f", smith: "bsmith_1f" };   // mapa interior de cada destino de ciudad
 // destino -> filtro de habitante (los de rol propio llevan e.role; el resto, e.type de shopsys.js NPC)
 export const PLACES = {
+  farm: { re: /^(granja|farm|casa|home|aresfarm)$/, es: "la granja", en: "the farm" },
   warehouse: { re: /alm[ae]c[ae]n|warehouse|banco|bank|cofre|bodega/, type: NPC.WAREHOUSE, es: "el almacén", en: "the warehouse" },
   shop: { re: /tienda|shop|comprar|vender|sell|buy/, type: NPC.SHOP, es: "la tienda", en: "the shop" },
   smith: { re: /herrer|blacksmith|smith|forja/, type: NPC.BLACKSMITH, es: "la herrería", en: "the blacksmith" },
@@ -24,13 +28,13 @@ export const PLACES = {
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 export function placeOf(text) {
   const t = norm(text);
-  for (const k of ["petmage", "hospital", "warehouse", "smith", "mage", "farmer", "shop"]) if (PLACES[k].re.test(t)) return k;
+  for (const k of ["farm", "petmage", "hospital", "warehouse", "smith", "mage", "farmer", "shop"]) if (PLACES[k].re.test(t)) return k;
   return null;
 }
 // habitante más cercano de ese destino en el mapa actual (o null)
 export function placeEnt(w, me, place) {
   const P = PLACES[place]; let best = null, bd = 1e9;
-  if (!P) return null;
+  if (!P || !(P.role || P.type)) return null;
   for (const e of w.ents.values()) {
     if (e.kind !== "citizen" || (P.role ? e.role !== P.role : e.role || e.type !== P.type)) continue;
     const d = dist(me, e); if (d < bd) { bd = d; best = e; }
@@ -47,26 +51,77 @@ export function parseAuto(text, names = []) {                                  /
 }
 export const label = (a, lang = "es") => !a ? "" : a.kind === "hunt" ? a.mob : PLACES[a.place]?.[lang] || "";
 
+// Paso hacia el mapa `to`: desde la granja se pisa el teletransportador de ese edificio; desde dentro, el que sale a la granja.
+// null = ya estás; { stop } si no hay camino (otro mapa, la granja de Elvine, la cripta…).
+export function viaTeleport(w, me, to) {
+  const cur = w.map?.id || FARM;
+  if (cur === to) return null;
+  const next = cur === FARM ? to : FARM;
+  let best = null, bd = 1e9;
+  for (const t of w.teleports?.values?.() || []) {
+    if (String(t.map).toLowerCase() !== next) continue;
+    const d = dist(me, t); if (d < bd) { bd = d; best = t; }
+  }
+  if (!best) return { stop: true, msg: ["No encuentro el camino a ese destino desde aquí.", "I can't find the way to that place from here."] };
+  return { intent: { t: "move", x: best.x, y: best.y } };
+}
+export const inRect = (r, x, y, pad = 0) => x >= r[0] - pad && x <= r[2] + pad && y >= r[1] - pad && y <= r[3] + pad;
+
+// Casilla alcanzable a ≤2 del habitante (el diálogo se abre a esa distancia; muchos están tras un mostrador): la de camino más corto.
+export function approach(w, me, e) {
+  let best = null, bl = 1e9;
+  for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) {
+    const x = e.x + dx, y = e.y + dy;
+    if (!w.grid.inside(x, y) || w.grid.blocked(x, y) || (w.grid.occupant?.(x, y) !== undefined && (x !== me.x || y !== me.y))) continue;
+    const l = x === me.x && y === me.y ? 0 : findPath(w.grid, me.x, me.y, x, y, me.id, 6000).length;
+    if (x !== me.x || y !== me.y) if (!l) continue;
+    if (l < bl) { bl = l; best = [x, y]; }
+  }
+  return best;
+}
+
 export function decide(w, me, a) {
   if (!a) return {};
   if (me.dead) return { stop: true, msg: ["Has muerto: modo automático detenido.", "You died: auto mode stopped."] };
   if (a.kind === "run") {
+    if (a.place === "farm") {
+      const v = viaTeleport(w, me, FARM); if (v) return v;
+      if (dist(me, { x: FARM_HOME[0], y: FARM_HOME[1] }) <= 3) return { stop: true, msg: ["Estoy en la granja.", "I'm at the farm."] };
+      const sp = w.freeSpotNear?.(...FARM_HOME) || FARM_HOME;
+      return { intent: { t: "move", x: sp[0], y: sp[1] } };
+    }
     const e = placeEnt(w, me, a.place);
+    if (!e && BUILDINGS[a.place]) { const v = viaTeleport(w, me, BUILDINGS[a.place]); if (v) return v; }
+    else if (!e && (w.map?.id || FARM) !== FARM) { const v = viaTeleport(w, me, FARM); if (v && !v.stop) return v; }
     if (!e) return { stop: true, msg: ["No hay " + PLACES[a.place].es + " en este mapa.", "There is no " + PLACES[a.place].en + " on this map."] };
     if (dist(me, e) <= 2) return { stop: true, open: e, msg: ["Llegué a " + PLACES[a.place].es + ".", "Arrived at " + PLACES[a.place].en + "."] };
-    const spot = w.freeSpotNear?.(e.x, e.y + 1) || [e.x, e.y + 1];
+    const spot = approach(w, me, e);
+    if (!spot) return { stop: true, msg: ["No encuentro cómo llegar a " + PLACES[a.place].es + ".", "I can't find a way to reach " + PLACES[a.place].en + "."] };
     return { intent: { t: "move", x: spot[0], y: spot[1] } };
   }
   if (me.hp < me.maxHp * HP_STOP) return { stop: true, msg: ["Vida baja: caza automática detenida.", "Low health: auto hunt stopped."] };
+  const z = a.zone;
+  if (z) {                                                                           // caza con zona: ir, cazar dentro y volver a la granja con la mochila llena
+    if ((me.bag?.length || 0) >= BAG_MAX) a.full = true;
+    if (a.full) {
+      const v = viaTeleport(w, me, FARM);
+      if (v) { const first = !a.said; a.said = true; return first && !v.stop ? { ...v, msg: ["Mochila llena: vuelvo a la granja.", "Bag full: heading back to the farm."] } : v; }
+      if (dist(me, { x: FARM_HOME[0], y: FARM_HOME[1] }) <= 3) return { stop: true, msg: ["Mochila llena: ciclo terminado en la granja.", "Bag full: cycle finished at the farm."] };
+      const sp = w.freeSpotNear?.(...FARM_HOME) || FARM_HOME;
+      return { intent: { t: "move", x: sp[0], y: sp[1] } };
+    }
+    if ((w.map?.id || FARM) !== z.map) { const v = viaTeleport(w, me, z.map); if (v) return v; }
+  }
   let t = null, bd = 1e9;
   for (const e of w.ents.values()) {
     if (e.kind !== "npc" || e.dead || e.name !== a.mob) continue;
+    if (z && !inRect(z.rect, e.x, e.y, ZONE_PAD)) continue;
     const d = dist(me, e); if (d <= SIGHT && d < bd) { bd = d; t = e; }
   }
   if (t) { a.idle = null; return { intent: { t: "attack", id: t.id } }; }
   for (let dx = -LOOT_RANGE; dx <= LOOT_RANGE; dx++) for (let dy = -LOOT_RANGE; dy <= LOOT_RANGE; dy++) {       // sin presas a la vista: botín cercano
     const x = me.x + dx, y = me.y + dy;
-    if (!w.grid.inside(x, y) || !groundTop(w, x, y) || a.skip?.has(x + "," + y)) continue;
+    if (!w.grid.inside(x, y) || !groundTop(w, x, y) || a.skip?.has(x + "," + y) || (z && !inRect(z.rect, x, y, ZONE_PAD))) continue;
     const d = Math.max(Math.abs(dx), Math.abs(dy)); if (d < bd) { bd = d; t = { x, y }; }
   }
   if (t) {
@@ -74,6 +129,10 @@ export function decide(w, me, a) {
     a.tries[k] ||= 0;
     if (t.x === me.x && t.y === me.y && ++a.tries[k] > 2) a.skip.add(k);       // no cabe en la mochila: no insiste
     return { intent: { t: "pickup", x: t.x, y: t.y } };
+  }
+  if (z && !inRect(z.rect, me.x, me.y)) {                                         // sin presas a la vista: al centro de la zona
+    const cx = (z.rect[0] + z.rect[2]) >> 1, cy = (z.rect[1] + z.rect[3]) >> 1, sp = w.freeSpotNear?.(cx, cy) || [cx, cy];
+    return { intent: { t: "move", x: sp[0], y: sp[1] } };
   }
   a.idle ??= w.time;
   if (w.time - a.idle > IDLE_STOP_MS) return { stop: true, msg: ["No quedan " + a.mob + " a la vista: caza automática detenida.", "No " + a.mob + " left in sight: auto hunt stopped."] };

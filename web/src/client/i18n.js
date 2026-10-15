@@ -9,6 +9,18 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  // ---- menú automático (autowin.js, autoplay.js)
+  "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
+  "Modo automático detenido.": "Auto mode stopped.", "Mapa: Granja de Aresden": "Map: Aresden Farm", "Zona": "Zone",
+  "Corre hasta el sitio, entra en el edificio si hace falta y abre su diálogo. Un clic cancela.": "Runs to the place, enters the building if needed and opens its dialog. A click cancels.",
+  "Almacén, tienda y herrería se alcanzan desde la granja de Aresden.": "Warehouse, shop and blacksmith are reached from the Aresden farm.",
+  "Esta cuenta no tiene zonas de caza disponibles.": "This account has no hunting zones available.",
+  "Criatura": "Creature", "Vida (aprox.)": "HP (approx.)", "Daño": "Damage", "Experiencia": "Experience", "Nivel de botín": "Loot level", "Oro": "Gold", "Apariciones": "Spawns",
+  "Botín posible": "Possible loot", "suelta poco": "drops little", "Casi nada": "Almost nothing",
+  "Corre a la zona, caza, recoge el botín y, con la mochila llena, vuelve a la granja y termina.": "Runs to the zone, hunts, picks up loot and, with a full bag, returns to the farm and ends.",
+  "La granja": "The farm", "El almacén": "The warehouse", "La tienda": "The shop", "La herrería": "The blacksmith", "El mago": "The sorcerer", "El granjero": "The farmer", "El hospital de mascotas": "The pet hospital", "El hechicero de mascotas": "The pet sorcerer",
+  "Mochila llena: vuelvo a la granja.": "Bag full: heading back to the farm.", "Mochila llena: ciclo terminado en la granja.": "Bag full: cycle finished at the farm.",
+  "No encuentro el camino a ese destino desde aquí.": "I can't find the way to that place from here.",
   // ---- ventanas del lienzo (window.js, newswin.js)
   "Informar de un fallo": "Report a bug", "Cuenta qué ha pasado y dónde (solo texto). Se envía con tu nombre, versión, mapa y posición.": "Tell us what happened and where (text only). Sent with your name, version, map and position.", "Enviar": "Send", "Enviado. ¡Gracias!": "Sent. Thank you!",
   "Novedades y pruebas": "News and tests", "Sí": "Yes", "No": "No", "Esta ventana (F1) reemplaza la ayuda original.": "This window (F1) replaces the original help.",

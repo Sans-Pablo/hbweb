@@ -5,7 +5,7 @@ import { Adventure } from "../web/src/shared/adventure.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { GameData } from "../web/src/shared/data.js";
 import { seededRandom, setDungeonPalette } from "../web/src/shared/dungeon.js";
-import { decide, parseAuto, placeOf, placeEnt, PLACES, IDLE_STOP_MS } from "../web/src/shared/systems/autoplay.js";
+import { decide, parseAuto, placeOf, placeEnt, approach, viaTeleport, PLACES, IDLE_STOP_MS, FARM_HOME, BAG_MAX } from "../web/src/shared/systems/autoplay.js";
 import { groundPush } from "../web/src/shared/systems/ground.js";
 import { newInst } from "../web/src/shared/systems/itemsys.js";
 
@@ -56,5 +56,21 @@ d = decide(w, me, { kind: "run", place: "farmer" }); assert.equal(d.intent.t, "m
 me.x = e.x + 1; me.y = e.y; d = decide(w, me, { kind: "run", place: "farmer" });
 assert.ok(d.stop && d.open === e, "al llegar abre el diálogo y termina");
 d = decide(w, me, { kind: "run", place: "warehouse" }); assert.ok(d.stop && d.msg && !d.open, "sin almacén en el mapa lo dice");
+// ---- menú AUTO: granja, aproximación junto a un habitante, caza por zona y vuelta con la mochila llena
+assert.equal(placeOf("granja"), "farm"); assert.deepEqual(parseAuto("run granja"), { kind: "run", place: "farm" });
+me.x = e.x + 6; me.y = e.y; const ap = approach(w, me, e);
+assert.ok(ap && Math.max(Math.abs(ap[0] - e.x), Math.abs(ap[1] - e.y)) <= 2 && !w.grid.blocked(ap[0], ap[1]), "approach: casilla libre a <=2 del habitante");
+assert.equal(viaTeleport(w, me, "aresden_farm_nope")?.stop ?? true, true, "sin teletransportador no inventa camino");
+const [fx, fy] = FARM_HOME; me.x = fx + 15; me.y = fy;
+d = decide(w, me, { kind: "run", place: "farm" }); assert.equal(d.intent?.t, "move", "run farm: anda hacia la casa");
+me.x = fx; me.y = fy; d = decide(w, me, { kind: "run", place: "farm" }); assert.ok(d.stop, "run farm: al llegar termina");
+const zone = { map: "arefarm", rect: [me.x - 2, me.y - 2, me.x + 2, me.y + 2] };
+const zau = { kind: "hunt", mob: "Slime", zone };
+w.items.clear(); const [zx, zy] = spot(1, 1); const zs = w.makeEnt("npc", zx, zy); zs.name = "Slime";
+d = decide(w, me, zau); assert.deepEqual(d.intent, { t: "attack", id: zs.id }, "caza dentro de la zona");
+zs.x = me.x + 30; zs.y = me.y; d = decide(w, me, zau); assert.ok(!d.intent || d.intent.t !== "attack", "ignora presas fuera de la zona");
+me.bag = new Array(BAG_MAX).fill(1); me.x = fx + 20; zau.full = false;
+d = decide(w, me, zau); assert.ok(zau.full, "mochila llena: marca el ciclo de vuelta"); assert.equal(d.intent?.t, "move", "y vuelve a la granja");
+me.x = fx; me.y = fy; d = decide(w, me, zau); assert.ok(d.stop, "en la granja con la mochila llena termina el ciclo");
 for (const k of Object.keys(PLACES)) assert.ok(PLACES[k].es && PLACES[k].en);
 console.log("OK autoplay");

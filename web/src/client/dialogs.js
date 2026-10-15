@@ -54,10 +54,14 @@ export function registerDialogs(gui, api) {
       const on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
       g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
+      { const c = g.ctx, o = on(16);                            // AUTO (INVENTO del port): menú automático, autowin.js
+        c.fillStyle = o ? "#7a5a30" : "#5a4020"; c.fillRect(16, 340, 74, 20); c.strokeStyle = "#e8d6a0"; c.strokeRect(16.5, 340.5, 73, 19);
+        g.aligned(16, 90, 344, "AUTO", "#fff", { size: 11, bold: true }); }
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
+      if (hit(16)) { g.toggle(74); return true; }
+      else if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
       else if (hit(180)) { g.close(1); g.open(12); return true; }
       return false;
     },

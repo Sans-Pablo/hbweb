@@ -6,3 +6,10 @@ INVENTO del port (Olympia tenía auto-caza; el original no). Lógica pura en `sh
 - `/auto run <almacén|tienda|herrería|mago|granjero|hospital|hechicero de mascotas>`: camina hasta el habitante más cercano de ese tipo (NPC.cfg: Warehouse Keeper 20, Shop Keeper 15, BlackSmith 24, Magician 19; el resto por `role`) y abre su diálogo. Si no hay en el mapa, avisa y para.
 - `/auto stop`, cualquier clic o clic derecho lo cancelan.
 - Test: `tests/autoplay.test.mjs`.
+
+## Menú AUTO (v0.84.11)
+- Botón AUTO en el diálogo 1 → ventana id 74 (`client/autowin.js`, registrada en main.js). Pestañas «Cazar» e «Ir a…». Empezar llama a `ctl.setAuto({kind:"hunt", mob, zone:{map,rect}})`; los destinos, a `{kind:"run", place}`.
+- Caza con zona: fuera del mapa o de la zona (rect ± ZONE_PAD) viaja primero (`viaTeleport`: granja ↔ edificio por su teletransportador); ignora presas fuera de la zona. Con ≥ BAG_MAX objetos (o `auto.full`) vuelve a FARM_HOME y TERMINA el ciclo con aviso; vaciar en el almacén y repetir NO está hecho.
+- `approach(w, me, e)`: casilla a ≤2 del habitante con camino más corto (salta bloqueadas y ocupadas); si no hay, para con aviso. `run farm` anda a FARM_HOME.
+- La ficha usa `drops.js dropInfo(type)` y NPC.cfg; el sprite sale de `mobSprite` (8 direcciones, 1,8 s cada una).
+- Test: `tests/autoplay.test.mjs`.

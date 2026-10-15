@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.84.11 · Menú AUTO (2026-10-15)
+- Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.
+- `autoplay.js`: caza con zona (va, caza dentro, recoge; con la mochila llena vuelve a la granja y termina el ciclo), ruta a la granja y `approach()` (casilla libre y alcanzable a ≤2 del habitante, p. ej. tras un mostrador). `/auto hunt` y `/auto run` siguen igual. Sin cambio de protocolo.
+- NO hecho: vaciar en el almacén y repetir el ciclo. Verificado en navegador (localhost): ventana, caza de Slime, vuelta a la granja con mochila llena (forzada), almacén. Sin verificar: herrería, mago, granjero, hospital, hechicero de mascotas, comandos de chat y la maquetación del texto de ayuda.
+
 ## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
 - Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.
 
