@@ -525,6 +525,7 @@ async function main() {
         case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); return;
         case "Tab": e.preventDefault(); flag("combat", "Converted to attack mode.", "Converted to peace mode."); conn.send({ t: "combatmode", on: flags.combat }); return;
         case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
+        case "ArrowUp": case "ArrowDown": e.preventDefault(); whisperCycle(k === "ArrowUp" ? 1 : -1); return;      // Game.cpp VK_UP/VK_DOWN: recorre los últimos susurros
         case "PageUp": e.preventDefault(); hud.log("No item with special ability is equipped."); return;     // Game.cpp OnKeyUp 33 + ON_KEY_UP26 (el port no tiene habilidades especiales de objeto)
         case "+": hud.toast("Mapa ampliado"); return;
         case "-": hud.toast("Mapa normal"); return;
@@ -622,6 +623,17 @@ async function main() {
   const chTag = () => { const h = CH_HINT[chatIn.value[0]]; chatIn.className = h ? "ch-" + h[0] : ""; chatIn.placeholder = tr(h ? h[1] : "Escribe y pulsa Intro (Esc para cancelar)"); };
   chatIn.addEventListener("input", chTag);
   // como en el original (Game.cpp): tras un mensaje con «!» o «$» la siguiente línea ya empieza con ese prefijo
+  // Game.cpp OnKeyDown VK_UP/VK_DOWN + NotifyMsg_WhisperMode: lista de los últimos MAXWHISPERMSG (5) destinatarios; la flecha pone «/to nombre » en la línea de chat
+  const WHISPER_MAX = 5;
+  function whisperCycle(d) {
+    const l = flags.whispers || []; if (!l.length) return;
+    flags.wIdx = ((flags.wIdx ?? 0) + d + l.length) % l.length;
+    openChat("/to " + l[flags.wIdx] + " ");
+  }
+  function whisperNote(name) {
+    const l = (flags.whispers || []).filter(n => n.toLowerCase() !== name.toLowerCase());
+    l.unshift(name); l.length = Math.min(l.length, WHISPER_MAX); flags.whispers = l; flags.wIdx = 0;
+  }
   function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre || flags.chPrefix || ""; chTag(); chatIn.focus(); }
   // Órdenes locales del chat: Game.cpp bCheckLocalChatCommand (textos de lan_eng.h BCHECK_LOCAL_CHAT_COMMAND1..21)
   const mutes = new Set();
@@ -678,9 +690,10 @@ async function main() {
       else if (t === "/magicshop") gui.open(16);          // provisional: abre la tienda de magia hasta que haya un mago en una ciudad
       else if (localCmd(t)) { /* orden local del original (bCheckLocalChatCommand) */ }
       else if (/^\/(to|w)\s+\S+\s*$/i.test(t)) hud.log("Uso: /to nombre texto");
-      else if (t) { flags.lastChat = t; flags.chPrefix = /^[!$@]/.test(t) ? t[0] : ""; conn.send({ t: "say", text: t }); }
+      else if (t) { const wm = /^\/(?:to|w)\s+(\S+)\s+\S/i.exec(t); if (wm) whisperNote(wm[1]); flags.lastChat = t; flags.chPrefix = /^[!$@]/.test(t) ? t[0] : ""; conn.send({ t: "say", text: t }); }
       chatBox.classList.remove("open"); chatIn.blur();
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
+    else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); whisperCycle(e.key === "ArrowUp" ? 1 : -1); }
   });
 
   let qSum = 0, qN = 0, qGood = 0;

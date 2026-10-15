@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.83.12 · Motor: ciclo de susurros (2026-10-15)
+- Ticket 10: Flecha arriba/abajo recorre los últimos 5 destinatarios de susurro (Game.cpp OnKeyDown VK_UP/VK_DOWN, NotifyMsg_WhisperMode). El zoom con el teclado numérico no existe en el original (las teclas del numpad no hacen nada, Game.cpp ~24636): no se implementa.
+- Ticket 8 (no reverencia/ataque a aliados): cubierto sin cambios, el cliente nunca apunta a aliados (controller.js click) y el servidor lo rechaza (Combat.canFight, test shared-crypt).
+
 ## 0.83.11 · Motor: ordenes locales con efecto (2026-10-15)
 - Ticket 10: `/showgrid`, `/timestamp`, `/bigitems` y `/tooff` ahora tienen efecto (antes solo cambiaban un flag). Verificado en navegador. Pendiente: ciclo de susurros y zoom numpad. `.claude/launch.json` corregido (rutas con barras).
 

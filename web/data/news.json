@@ -1,10 +1,17 @@
 {
-  "build": "0.83.11",
+  "build": "0.83.12",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": { "es": "Motor: ciclo de susurros (v0.83.12)", "en": "Engine: whisper cycling (v0.83.12)" },
+      "items": [
+        { "es": "Flecha arriba/abajo (con o sin el chat abierto) recorre los últimos 5 jugadores a los que susurraste y escribe «/to nombre » (como el original).", "en": "Up/Down arrows (chat open or not) cycle through the last 5 players you whispered and fill in \"/to name \" (as in the original)." }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {
