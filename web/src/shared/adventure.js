@@ -452,10 +452,21 @@ export class Adventure {
     return true;
   }
 
+  // HG.cpp ~1498 (RequestInitPlayer): jugador de otro bando (no GM ni neutral) en un mapa de bando ajeno -> m_iTimeLeft_ForceRecall = 1 (recall inmediato)
+  recallEnemies() {
+    for (const [id, w] of this.locations) {
+      const p = w.ents.get(id);
+      if (!p || p.kind !== "player" || p.dead || !enemyMap(p, w.map.id)) continue;
+      const home = this.homeOf(p);
+      if (home !== w) { this.transfer(p, w, home, home.home); w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "recall forzado: no puedes estar en la granja del bando enemigo" }); }
+    }
+  }
+
   tick(dt) {
     Human.tick(this);                                                                        // horarios de los habitantes (human.js; apagado salvo en el servidor)
     for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
     if (this.time - (this._guardAt || 0) >= 1000) { this._guardAt = this.time; for (const w of [...this.instances.values()]) this.guardPrivate(w); }
+    if (this.time - (this._sideAt || 0) >= 1000) { this._sideAt = this.time; this.recallEnemies(); }
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

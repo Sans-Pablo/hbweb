@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.84.19 · Motor: cierre de pendientes (2026-10-15)
+- Crítico: al mantener Alt con el contador de críticos lleno se resalta el icono (Game.cpp 16221-16235).
+- Recall forzado: un jugador de otro bando en una granja enemiga vuelve a su casa en ≤1 s (HG.cpp RequestInitPlayer ~1498, m_iTimeLeft_ForceRecall = 1).
+- Paralyze: los golpes cuerpo a cuerpo solo liberan Hold Person; el daño de hechizos y los campos de fuego/veneno liberan cualquier hold; la tormenta de hielo solo el tipo 1 (HG.cpp Effect_Damage_Spot ~18307, ~19451). El original no tiene "patada".
+- Pretend Corpse: falla con un cadáver en tu casilla (GetDeadOwner); la comprobación de las 8 casillas se omite para GM (HG.cpp ~19794). El bloqueo por reliquia no aplica: el port no tiene reliquias.
+- Tests: farm-recall, feign, paralyze.
+- Verificado jugando en localhost (?offline=1): hechizo hace daño, Paralyze, anillo de Protection From Magic (efecto 52), Pretend Corpse, Alt resalta; Shift+clic es un clic normal.
+
 ## 0.84.18 · Dash y sin controles Shift del summon (2026-10-15)
 - Dash: el original solo exige SP > 0 (Game.cpp OBJECTATTACKMOVE: `(m_bShiftPressed || m_bRunningMode) && m_iSP > 0`, maestría 100, Ctrl+clic a (2,2)/(0,2)/(2,0)); antes pedía SP >= 2 y Shift no contaba como correr.
 - Se quitan todos los controles Shift del summon (Shift+clic izq. ir a casilla, der. atacar), también el Alt+clic de orden de ataque del summon; Shift queda libre para la mecánica original. Pendiente: reimplementar el control del pet con otra tecla.

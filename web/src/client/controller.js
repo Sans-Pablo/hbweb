@@ -44,7 +44,9 @@ export class Controller {
     canvas.addEventListener("pointermove", e => { renderer.miniDragMove(e.clientX, e.clientY); ui.gui.move(e.clientX, e.clientY); this.pointer = [e.clientX, e.clientY]; this.ctrl = e.ctrlKey; this.shift = e.shiftKey; });
     addEventListener("keydown", e => { if (e.key === "Shift") this.shift = true; });                       // Game.cpp: m_bShiftPressed cuenta como correr para el dash (OBJECTATTACKMOVE)
     addEventListener("keyup", e => { if (e.key === "Shift") this.shift = false; });
-    addEventListener("blur", () => { this.shift = false; });
+    addEventListener("blur", () => { this.shift = false; ui.gui.alt = false; });
+    addEventListener("keydown", e => { if (e.key === "Alt") ui.gui.alt = true; });                           // Game.cpp DrawDialogBoxs: GetAsyncKeyState(VK_MENU) ilumina el contador de críticos
+    addEventListener("keyup", e => { if (e.key === "Alt") ui.gui.alt = false; });
     canvas.addEventListener("pointerup", e => { renderer.miniDragEnd(); this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
     canvas.addEventListener("pointercancel", () => { this.down = false; ui.gui.up(); });
     // un objeto arrastrado nunca se queda pegado al cursor: si se suelta fuera del lienzo o se pierde el foco, se suelta igual

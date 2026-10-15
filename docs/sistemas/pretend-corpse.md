@@ -8,3 +8,6 @@ Original: `HG.cpp` `UseSkillHandler` (SKILLEFFECTTYPE_PRETEND, value1=1). Códig
 - Se levanta (`stand`) al mover, atacar, lanzar magia o volver a usar la habilidad (ClearSkillUsingStatus del original).
 - Evento `skillend` (privado): `ok`, `up`.
 - No implementado: bloqueo por reliquia (no hay sistema de reliquias) ni "dueño muerto en la casilla".
+
+## v0.84.19
+- Falla con un cadáver en tu casilla (GetDeadOwner); la comprobación de las 8 casillas se omite para GM (HG.cpp ~19794). Bloqueo por reliquia: no aplica, el port no tiene reliquias.

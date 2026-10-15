@@ -26,7 +26,8 @@ export function useSkill(w, p, cmd) {
   const fail = () => { w.emit({ t: "skillend", id: p.id, skill: sk, ok: false }); return true; };
   if (dice(w.rng, 1, 100) > m) return fail();                         // UseSkillHandler: tirada contra la maestría
   if (w.fightZone) return fail();                                     // m_bIsFightZone
-  for (let d = 1; d <= 8; d++) if (w.grid.occupant(p.x + DX[d], p.y + DY[d]) !== undefined) return fail();   // cualquier dueño en las 8 casillas contiguas
+  for (const e of w.ents.values()) if (e !== p && e.dead && e.x === p.x && e.y === p.y) return fail();   // GetDeadOwner: un cadáver en tu casilla
+  if (!p.gm) for (let d = 1; d <= 8; d++) if (w.grid.occupant(p.x + DX[d], p.y + DY[d]) !== undefined) return fail();   // cualquier dueño en las 8 casillas contiguas
   sclear(w, p, "invis");                                              // RemoveMagicEffect(INVISIBILITY)
   gainSSN(p, sk, 1);                                                  // SkillUp(sk, 1)
   p.feign = true;

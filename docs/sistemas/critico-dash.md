@@ -20,3 +20,6 @@ Ctrl+clic = atacar; con el objetivo a 2 casillas en línea y corriendo (modo cor
 
 ## Protocolo y pruebas
 `NET_PROTO` = 8 (el comando `attack` lleva `crit`/`dash`; no cambia). Tests: `tests/crit-dash.test.mjs`, `tests/bot-crit.test.mjs` (los bots maestros usan crítico y dash: `systems/bot.js`, bloque melee).
+
+## v0.84.19
+- Con el contador de críticos lleno, mantener Alt resalta el icono (Game.cpp 16221-16235); `gui.alt` lo fija el controlador y se limpia al perder el foco.

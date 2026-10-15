@@ -40,6 +40,11 @@ w.fightZone = true; w.tick(500);
 w.command(aid, { t: "useskill", skill: 19 });
 assert(!a.feign, "en zona de lucha falla");
 w.fightZone = false;
+// GetDeadOwner: un cadáver en la propia casilla impide fingir
+b.dead = true; w.grid.release(b.x, b.y, bid); b.x = b.fx = a.x; b.y = b.fy = a.y; w.tick(500);
+w.command(aid, { t: "useskill", skill: 19 });
+assert(!a.feign, "con un cadáver en la casilla falla");
+b.dead = false; b.x = b.fx = a.x + 6; w.grid.occupy(b.x, b.y, bid);
 // maestría baja: la tirada falla a veces
 a.skills[19] = 1; let fails = 0;
 for (let i = 0; i < 40; i++) { w.tick(500); w.command(aid, { t: "useskill", skill: 19 }); if (a.feign) w.command(aid, { t: "useskill", skill: 19 }); else fails++; }

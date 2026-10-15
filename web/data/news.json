@@ -1,10 +1,23 @@
 {
-  "build": "0.84.18",
+  "build": "0.84.19",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: cierre de pendientes (v0.84.19)",
+        "en": "Engine: backlog closed (v0.84.19)"
+      },
+      "items": [
+        {
+          "es": "Alt con el contador de críticos lleno resalta el icono. Un jugador en la granja del bando enemigo vuelve a casa (recall forzado). El daño mágico libera Paralyze (los golpes no). Pretend Corpse falla sobre un cadáver.",
+          "en": "Alt with the critical counter full highlights the icon. A player on the enemy side's farm is force-recalled home. Spell damage releases Paralyze (melee does not). Pretend Corpse fails on top of a corpse."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {

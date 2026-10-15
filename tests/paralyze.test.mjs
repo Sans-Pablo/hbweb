@@ -24,4 +24,10 @@ assert(!w.command(bid, { t: "move", dir: 3 }), "paralizado no anda");
 sset(w, b, "hold", 1, 10000);                       // Hold Person
 damagePlayer(w, b, 1, a);
 assert(!sget(w, b, "hold"), "un golpe libera Hold Person");
+sset(w, b, "hold", 2, 10000);                       // Paralyze + daño mágico (HG.cpp Effect_Damage_Spot ~18307): lo libera
+damagePlayer(w, b, 1, a, "fire");
+assert(!sget(w, b, "hold"), "el daño mágico libera Paralyze");
+sset(w, b, "hold", 2, 10000);                       // tormenta de hielo (~19451): solo Hold Person
+damagePlayer(w, b, 1, a, "ice");
+assert(sget(w, b, "hold") === 2, "el hielo no libera Paralyze");
 console.log("OK");
