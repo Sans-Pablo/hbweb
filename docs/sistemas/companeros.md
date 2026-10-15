@@ -32,7 +32,7 @@ Los summons son la parte principal del juego: cuota de daño hasta 0,9 del daño
 ## Summons v0.18.0
 - Ventana (id 43): movible, cabecera con el monstruo caminando (`petdialog.walker`, hojas de movimiento de su especie) y su nombre debajo, nivel, vida, barra y números de EXP (`need(lvl)`), y 4 botones con icono (Info, Support, Damage, Warrior; `tools/make_crypt_assets.py`). `ClassicDialog.mx` es el margen izquierdo del texto; un clic en un hueco devuelve false para arrastrar.
 - Panel de la barra: barra azul de EXP bajo la vida del summon (tooltip con números).
-- **Alt + clic** (controller → `ui.petOrder` → `pettarget`, evento con `tn`): mensaje «Ordenas a X atacar a Y» y diálogo `companion.attack` (voz). Etapas `stage` (baby 1-9, young 10-24, veteran 25-39, elite 40+), `species` y `milestone` (10/25/40/50) en `voice.json` (`tools/mkvoice_phases.py`).
+- Órdenes al summon por clic: quitadas en v0.84.18 (los comandos `pettarget`/`petgo` del servidor siguen, pendiente otra tecla). Etapas `stage` (baby 1-9, young 10-24, veteran 25-39, elite 40+), `species` y `milestone` (10/25/40/50) en `voice.json` (`tools/mkvoice_phases.py`).
 - **Recall** (botón a la derecha de la barra, comando `recall`): `RECALL_CHANNEL_MS` 3 s quieto y sin combate, `RECALL_COOLDOWN_MS` 60 s; eventos `recalling/recalled/recallfail`. Test: `tests/recall.test.mjs`.
 - Quitados Ctrl+0..9 (círculos de magia) y Ctrl+Q.
 

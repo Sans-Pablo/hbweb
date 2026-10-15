@@ -189,6 +189,16 @@ export function giveExp(w, p, amount) {
   Quests.onLevel(w, p);
 }
 
+// Combat.cpp (char/combat.cpp ~1186 jugador, ~1476 NPC): un golpe libera Hold Person (tipo 1); Paralyze (tipo 2) NO se libera al jugador y al NPC solo si tiene
+// más de 50 dados de golpe y sale 1d10==5. Nunca se libera por una tirada de 1/3.
+// any = daño mágico: HG.cpp Effect_Damage_Spot (~18307/18456/18834/18917) y campos de fuego/veneno (~19351/19570) sueltan cualquier Hold,
+// también Paralyze; el golpe físico (combat.cpp ~1186/~1476) y la tormenta de hielo (~19451) solo sueltan Hold Person.
+export function releaseHold(w, t, any = false) {
+  const h = sget(w, t, "hold"); if (!h) return;
+  if (any) { sclear(w, t, "hold"); return; }
+  if (h === 1 || h.v === 1) sclear(w, t, "hold");
+  else if (t.kind === "npc" && (t.cfg.hitDice | 0) > 50 && R.dice(w.rng, 1, 10) === 5) sclear(w, t, "hold");
+}
 export function damagePlayer(w, p, dmg, from, elem) {
   if (p.god) return;                                                   // herramientas de prueba: inmortal
   if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
@@ -197,6 +207,7 @@ export function damagePlayer(w, p, dmg, from, elem) {
   { const ab = sget(w, p, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico
   p.hp -= dmg;
   p.lastCombat = w.time;
+  releaseHold(w, p, !!elem && elem !== "ice");
   if (dmg > 0 && !p.dead) chargeCritHit(p);
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });
   if (p.hp <= 0) {
@@ -285,8 +296,8 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   retarget(w, n, p);
   if (R.dice(w.rng, 1, 3) === 2 && !n.cfg.actionLimit) {
     n.nextAct = w.time + n.cfg.actionTime;
-    if (sget(w, n, "hold")) sclear(w, n, "hold");              // un golpe libera al paralizado
   }
+  releaseHold(w, n, skill == null);                                      // skill null = hechizo
   if (!w.busy(n) || n.act === ACT.DAMAGE) {
     w.setAct(n, ACT.DAMAGE, n.dur.damage);
     n.busyUntil = w.time + n.dur.damage;

@@ -1,9 +1,42 @@
 # Changelog
 
+<<<<<<< HEAD
 ## 0.84.11 · Menú AUTO (2026-10-15)
 - Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.
 - `autoplay.js`: caza con zona (va, caza dentro, recoge; con la mochila llena vuelve a la granja y termina el ciclo), ruta a la granja y `approach()` (casilla libre y alcanzable a ≤2 del habitante, p. ej. tras un mostrador). `/auto hunt` y `/auto run` siguen igual. Sin cambio de protocolo.
 - NO hecho: vaciar en el almacén y repetir el ciclo. Verificado en navegador (localhost): ventana, caza de Slime, vuelta a la granja con mochila llena (forzada), almacén. Sin verificar: herrería, mago, granjero, hospital, hechicero de mascotas, comandos de chat y la maquetación del texto de ayuda.
+=======
+## 0.84.19 · Motor: cierre de pendientes (2026-10-15)
+- Crítico: al mantener Alt con el contador de críticos lleno se resalta el icono (Game.cpp 16221-16235).
+- Recall forzado: un jugador de otro bando en una granja enemiga vuelve a su casa en ≤1 s (HG.cpp RequestInitPlayer ~1498, m_iTimeLeft_ForceRecall = 1).
+- Paralyze: los golpes cuerpo a cuerpo solo liberan Hold Person; el daño de hechizos y los campos de fuego/veneno liberan cualquier hold; la tormenta de hielo solo el tipo 1 (HG.cpp Effect_Damage_Spot ~18307, ~19451). El original no tiene "patada".
+- Pretend Corpse: falla con un cadáver en tu casilla (GetDeadOwner); la comprobación de las 8 casillas se omite para GM (HG.cpp ~19794). El bloqueo por reliquia no aplica: el port no tiene reliquias.
+- Tests: farm-recall, feign, paralyze.
+- Verificado jugando en localhost (?offline=1): hechizo hace daño, Paralyze, anillo de Protection From Magic (efecto 52), Pretend Corpse, Alt resalta; Shift+clic es un clic normal.
+
+## 0.84.18 · Dash y sin controles Shift del summon (2026-10-15)
+- Dash: el original solo exige SP > 0 (Game.cpp OBJECTATTACKMOVE: `(m_bShiftPressed || m_bRunningMode) && m_iSP > 0`, maestría 100, Ctrl+clic a (2,2)/(0,2)/(2,0)); antes pedía SP >= 2 y Shift no contaba como correr.
+- Se quitan todos los controles Shift del summon (Shift+clic izq. ir a casilla, der. atacar), también el Alt+clic de orden de ataque del summon; Shift queda libre para la mecánica original. Pendiente: reimplementar el control del pet con otra tecla.
+
+## 0.84.17 — Sin indicador de tiempo sobre la cabeza
+- Se quitan las barras de tiempo de debuffs sobre la cabeza del personaje (`renderer.stateBars`); el original no las dibuja (Game.cpp DrawObject_*: solo auras y efectos).
+
+## 0.84.16 · Motor: anillo de protección (2026-10-15)
+- Al lanzar Protection From Magic y similares se ve el anillo del original (Game.cpp efecto 52)
+
+## 0.84.15 · Motor: granjas por bando (2026-10-15)
+- No se puede entrar en la granja del bando enemigo (HG.cpp iGetMapLocationSide / teletransporte)
+
+## 0.84.14 · Motor: magia a objetivos en movimiento (2026-10-15)
+
+- Los hechizos ofensivos siguen al ocupante de la casilla hasta que sale el hechizo (HG.cpp PlayerMagicHandler resuelve al instante; aquí la animación lo retrasa y los monstruos en movimiento esquivaban). `tests/magic-moving.test.mjs`.
+
+## 0.84.13 · Motor: Paralyze (2026-10-15)
+- Paralyze (tipo 2) ya no se libera con los golpes; solo Hold Person (tipo 1) y, en NPC de más de 50 dados, 1d10==5 (char/combat.cpp). Antes se soltaba con 1/3 por golpe. Test paralyze.test.mjs.
+
+## 0.84.12 · Motor: Pretend Corpse (2026-10-15)
+- Habilidad Pretend Corpse (skill 19, diálogo de habilidades): tirada de maestría; falla en zona de lucha o con alguien en las 8 casillas contiguas; el personaje se tumba, los monstruos lo ignoran, no regenera y se levanta al moverse, atacar o lanzar (HG.cpp UseSkillHandler).
+>>>>>>> Pablo-Claude/hb-motor-65f058
 
 ## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
 - Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.

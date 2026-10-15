@@ -37,7 +37,6 @@ export const CAST_CFG = { Liche: { color: "#be64ff", core: "#ebc8ff", bright: 0.
 fetch("data/cast_circle.json").then(r => r.ok ? r.json() : null).then(j => { if (j) for (const k in j) CAST_CFG[k] = { ...CAST_CFG[k], ...j[k] }; }).catch(() => {});
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(",");
 
-const STATE_COL = [["hold", "#ffd34d"], ["ice", "#6ac8ff"], ["confuse", "#c28aff"], ["illusion", "#ff8ad8"], ["armorbreak", "#ff6a6a"], ["inhibit", "#9aa0ff"], ["poison", "#7fe07f"], ["berserk", "#ff9a3c"], ["protect", "#ffffff"], ["invis", "#b0b0b0"]];
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;
@@ -333,8 +332,6 @@ export class Renderer {
     }
 
 
-    this.drawPetOrder(s, camX, camY);
-
     // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
     ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = (this.q || 0) >= 1 ? "low" : "medium";     // "high" re-muestrea cada sprite con un filtro caro: con 30 personajes en pantalla eran 20 fps
     const P1 = performance.now();
@@ -449,22 +446,8 @@ export class Renderer {
     pt.ground = P1 - P0; pt.ents = P2 - P1; pt.light = P3 - P2; pt.fx = P4 - P3;
   }
 
-  // Indicador de debuffs con el tiempo que les queda (barras sobre la cabeza; psychic.js y demás)
-  stateBars(e, x, y, w) {
-    const ctx = this.ctx, top = y - (e.kind === "player" ? 70 : 52);
-    let i = 0;
-    for (const [k, col] of STATE_COL) {
-      const s = e.st[k]; if (!s || s.until === Infinity || s.until <= w.time) continue;
-      const f = Math.min(1, (s.until - w.time) / 10000);
-      ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(x - 13, top - i * 4, 26, 3);
-      ctx.fillStyle = col; ctx.fillRect(x - 12, top - i * 4 + 0.5, 24 * f, 2);
-      i++;
-    }
-  }
-
   // Auras de los escudos y del veneno (CheckActiveAura / CheckActiveAura2 del cliente original)
   auras(e, x, y, w, below) {
-    if (e.st && !below) this.stateBars(e, x, y, w);
     if (!e.st || !below) return;
     const sp = this.fx?.sp || null;
     if (!sp) return;
@@ -581,25 +564,6 @@ export class Renderer {
   }
 
   // arena de apuestas (systems/arena.js): arena de arena con borde discontinuo dorado sobre el suelo de Aresfarm
-
-  // Orden al summon: pelotitas (como el camino del personaje) desde él hasta la casilla (celestes, "ve allí") o hasta el objetivo (rojas, "ataca"). Desaparece al cumplirse o a los 15 s; el summon que anda solo no dibuja nada.
-  drawPetOrder(s, camX, camY) {
-    const o = s.petOrder; if (!o) return;
-    const w = s.world, { ctx } = this, perf = performance.now();
-    const pet = [...w.ents.values()].find(e => e.comp && e.master === s.me?.id && !e.dead);
-    let tx, ty;
-    if (o.kind === "go") { tx = o.x; ty = o.y; if (pet && pet.x === tx && pet.y === ty) o.done = true; }
-    else { const t = w.ents.get(o.target); if (!t || t.dead) o.done = true; else { tx = t.x; ty = t.y; } }
-    if (!pet || o.done || perf - o.at > 15000) { s.petOrder = null; if (o.done || !pet) o.at = -1e9; return; }
-    const atk = o.kind === "atk", fade = Math.min(1, (15000 - (perf - o.at)) / 1500);
-    const col = atk ? "255,70,60" : "150,225,255", n = Math.max(Math.abs(tx - pet.x), Math.abs(ty - pet.y));      // mismas pelotitas que el camino del personaje: rojo = ataque, celeste claro = ir allí
-    ctx.save(); ctx.fillStyle = "rgba(" + col + "," + 0.75 * fade + ")";
-    for (let i = 1; i <= n; i++) {
-      const x = Math.round(pet.x + (tx - pet.x) * i / n), y = Math.round(pet.y + (ty - pet.y) * i / n);
-      ctx.beginPath(); ctx.arc(x * T + 16 - camX, y * T + 18 - camY, i === n ? 3.6 : 1.8, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.restore();
-  }
 
   drawPortals(s, camX, camY) {
     const { ctx } = this;

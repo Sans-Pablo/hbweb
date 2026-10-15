@@ -3,6 +3,7 @@ import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as Bal from "../balance.js";
 import { dice } from "../rules.js";
 import { gainSSN } from "../skills.js";
+import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
 import { damageNpc } from "./combatsys.js";
@@ -35,6 +36,7 @@ function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
   if (sp && M.freeFor(p)) p.magic[cmd.spell] = 1;
   if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
+  Feign.stand(w, p);                                     // lanzar también te levanta
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (M.freeFor(p)) return sp;
@@ -75,7 +77,14 @@ export function cast(w, p, cmd) {
   p.prep = null;
   if (!pre || !wait) { w.setAct(p, ACT.MAGIC, ms); p.busyUntil = w.time + ms; }
   w.emit({ t: "cast", id: p.id, spell: cmd.spell, x, y, attr: sp.attr, type: sp.type });
-  w.after(pre ? wait + 80 : ms, () => resolve(w, p, cmd.spell, sp, x, y, cost));
+  // HG.cpp PlayerMagicHandler resuelve al recibir la orden; aquí la animación retrasa el golpe, así que se sigue al ocupante de la casilla
+  // hasta que sale el hechizo (si no, un monstruo en movimiento lo esquiva)
+  const tid = w.grid.occupant(x, y);
+  w.after(pre ? wait + 80 : ms, () => {
+    const t = tid === undefined ? null : w.ents.get(tid);
+    const live = t && !t.dead && !t.feign && t.id !== p.id;
+    resolve(w, p, cmd.spell, sp, live ? t.x : x, live ? t.y : y, cost);
+  });
   return true;
 }
 

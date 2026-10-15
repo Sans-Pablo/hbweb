@@ -176,11 +176,6 @@ export class Voice {
         const st = this.d.companion.evolve?.[sizeStep(ev.lvl, ev.sp)];
         if (st) setTimeout(() => this.talkPet(world, "evolve", "pevo", { chance: 1, cool: 0, first: "me", list: [st] }), 900);
       } break;
-      case "pettarget": if (ev.id === this.pid) {                                        // Alt + clic: el personaje da la orden y el compañero responde
-        const tn = ev.tn || "", nm = tn === "Fantasma skeleton" ? { es: "Fantasma skeleton", en: "Ghost skeleton" } : { es: tn.replace(/-/g, " "), en: tn.replace(/-/g, " ") };
-        const fs = this.fearStage(world);
-        this.talkPet(world, "attack", "patk", { chance: 1, cool: 1500, fill: nm, list: fs >= 0 ? this.d.fear.attack[fs] : null });
-      } break;
       case "death": if (pet && ev.by === pet.id) this.talkPet(world, "kill", "pkill", { chance: 0.18, cool: 25000, first: "pet" }); break;
       case "dummy-agro": if (ev.id === this.pid && pet) this.say(pet.id, { es: "¡Me atacan!", en: "I'm targeted!" }, 2500); break;
       case "dummy-cast": if (ev.id === this.pid) this.say(ev.nid, { es: ev.es || ev.txt, en: ev.en || ev.txt }, ev.es ? 3200 : 1800); break;

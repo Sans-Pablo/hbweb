@@ -23,7 +23,7 @@ export function tickVitals(w, p) {
     if (p.hunger > 0) p.hunger--;
   }
   const plus = p.hunger >= 0 && p.hunger <= 30 ? (30 - p.hunger) * 1000 : 0;
-  if (p.hunger <= 0) return;                                 // con el estómago vacío no hay recuperación
+  if (p.hunger <= 0 || p.feign) return;      // TimeHitPointsUp/StaminarPointsUp/ManaUp: m_bSkillUsingStatus[19] no recupera                                 // con el estómago vacío no hay recuperación
   if (now - p.tSp >= SP_MS + plus) {
     p.tSp = now;
     if (p.sp < p.maxSp) {
