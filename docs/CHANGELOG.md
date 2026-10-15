@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.5 · Motor: sonidos, combate, conexión (2026-10-15)
+- Sonidos de arma por tipo (`audio.js attackSfx/hitSfx`; `damage` lleva `wt` = arma del atacante, 1 monstruo, 0 hechizo; combat.cpp 1128/1381). Test `sonidos-arma`.
+- Crítico/dash vs original: furia solo con attackMode<20 (combat.cpp 695), `critBonus` (ITEMSTAT_CRITICAL) se suma al crítico (combat.cpp 765), el paso del dash no gasta SP (HG.cpp 820, bIsRun=FALSE). Resto (reachOf, cargas, bonos) ya coincidía.
+- Conexión: `connection.js` reconecta solo al cerrarse el socket o al volver a la pestaña (antes `reconnect()` no se llamaba nunca); se limpia el Worker/listener por socket. Sin cambio de protocolo.
+
 ## 0.84.11 · Menú AUTO (2026-10-15)
 - Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.
 - `autoplay.js`: caza con zona (va, caza dentro, recoge; con la mochila llena vuelve a la granja y termina el ciclo), ruta a la granja y `approach()` (casilla libre y alcanzable a ≤2 del habitante, p. ej. tras un mostrador). `/auto hunt` y `/auto run` siguen igual. Sin cambio de protocolo.

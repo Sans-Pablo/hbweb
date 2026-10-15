@@ -23,3 +23,6 @@ Ctrl+clic = atacar; con el objetivo a 2 casillas en línea y corriendo (modo cor
 
 ## v0.84.19
 - Con el contador de críticos lleno, mantener Alt resalta el icono (Game.cpp 16221-16235); `gui.alt` lo fija el controlador y se limpia al perder el foco.
+
+## v0.85.5
+- Revisado contra combat.cpp/HG.cpp: la furia no duplica un crítico (attackMode>=20); `eff.critBonus` (ITEMSTAT_CRITICAL) se suma a sm y l en el crítico; el paso del dash no gasta SP (iClientMotion_Move_Handler con bIsRun=FALSE).

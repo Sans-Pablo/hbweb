@@ -1,10 +1,31 @@
 {
- "build": "0.85.4",
+ "build": "0.85.5",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Motor: sonidos de arma, combate y conexión (v0.85.5)",
+    "en": "Engine: weapon sounds, combat and connection (v0.85.5)"
+   },
+   "items": [
+    {
+     "es": "Los golpes suenan distinto según el arma (puños, espada corta/larga, hacha, martillo, báculo, arco) y según el arma del atacante al recibir un golpe, como en el original.",
+     "en": "Hits sound different per weapon type (fists, short/long sword, axe, hammer, staff, bow), and the impact depends on the attacker weapon, as in the original."
+    },
+    {
+     "es": "Combate: la furia ya no duplica el daño de un crítico y el bono CRITICAL de las armas se suma al crítico; el paso del dash no gasta aliento (solo exige SP > 0).",
+     "en": "Combat: berserk no longer doubles a critical hit, the CRITICAL weapon bonus is added on crits, and the dash step costs no stamina (only SP > 0)."
+    },
+    {
+     "es": "Conexión: si la pestaña queda en segundo plano y el socket se cae, el juego reconecta solo y resincroniza en vez de mostrar «Connection lost».",
+     "en": "Connection: if the tab sleeps in the background and the socket drops, the game reconnects and resyncs instead of showing Connection lost."
+    }
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {

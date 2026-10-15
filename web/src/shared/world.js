@@ -221,7 +221,7 @@ const COMMANDS = {
     let lead = 0;
     if (dash) {
       if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
-      p.sp -= 1; p.lastMove = w.time; lead = PLAYER.runMs;
+      p.lastMove = w.time; lead = PLAYER.runMs;   // OBJECTATTACKMOVE llama a iClientMotion_Move_Handler(..., bIsRun=FALSE) (HG.cpp 820): el paso no gasta SP
     }
     const crit = critOk && !dash;
     if (crit) p.superAttack -= 1;
