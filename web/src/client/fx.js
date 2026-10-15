@@ -87,7 +87,7 @@ export class Fx {
   text(id, text, color, big = false, dy = 0, size = 0, spr = 0) {
     const p = this.at(id);
     if (!p) return;
-    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, size, spr, born: performance.now(), dx: (Math.random() - 0.5) * 14 });
+    this.texts.push({ x: p[0], y: p[1] - 64 + dy, text, color, big, size, spr, born: performance.now(), dx: 0 });
   }
 
   onEvent(ev) {
@@ -113,7 +113,7 @@ export class Fx {
         break;
       }
       // Game.cpp OBJECTMAGIC: sobre el lanzador aparece «<Nombre del hechizo>!» (CMsg tipo 41, rojo 255,80,80)
-      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#d23c3c", false, 0, 14, 22); break; }
+      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#ff5050", false, 0, 14, 22); break; }
       case "spell": {
         const c = this.world.ents.get(ev.id);
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);

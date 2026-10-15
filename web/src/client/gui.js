@@ -640,12 +640,13 @@ export class Gui {
       this.tip(this.flags.combat ? (this.flags.safe ? "Safe Attack" : "Attack") : "Peace");
     }
     const ctrl = info.ctrl;
-    const mid = ctrl ? "Rest Exp: " + Math.max(0, me.nextExp - me.exp) : (world.map?.name || "") + " (" + me.x + "," + me.y + ")";
+    const hoverExp = m.x > 144 + a && m.x < 317 + a && m.y > 434 + RESY && m.y < 477 + RESY;   // original DrawDialogBox_... "Required Exp" (Game.cpp: texto 250,250,220 al pasar por la barra central)
+    const mid = (ctrl || hoverExp) ? "Required Exp: " + Math.max(0, me.nextExp - me.exp) : (world.map?.name || "") + " (" + me.x + "," + me.y + ")";
     this.aligned(140 + RESX + 1, 323 + RESX + 1, 456 + RESY + 1, mid, "#000");
-    this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#c8c878");
+    this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#fafadc");
 
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
-      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"], [670, -2, 0, "Quests"]];
+      const icons = [[410, 6, 2, "Character Menu"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spell Book"], [521, 9, 1, "Skill List"], [558, 10, 0, "Chat History"], [595, 11, 1, "Options"], [632, -1, 0, "Summons"], [670, -2, 0, "Quests"]];
       for (const [x0, f, dx, name] of icons) {
         if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === -2) this.questIcon(1, x0 + a); else if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }

@@ -667,7 +667,7 @@ export class Renderer {
           const mine = s.me?.side || 0, foe = e.arena || (e.pk > 0) || (mine > 0 && e.side > 0 && e.side !== mine);     // _iGetFOE: rojo enemigo (otro bando) / verde aliado
           const sideName = e.side === 1 ? "Aresden Combatant" : e.side === 2 ? "Elvine Combatant" : "Traveller";
           const gl = guildLine(e);
-          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : "30,200,30"], ...(gl ? [[gl, "180,180,180"]] : [])]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
+          this.origName(x, y, [[nm, "255,255,255"], [foe && !(mine > 0 && e.side > 0) ? "Criminal" : sideName, foe ? "255,0,0" : mine > 0 && e.side > 0 ? "30,200,30" : "50,50,255"], ...(gl ? [[gl, "180,180,180"]] : [])]);   // DRAW_OBJECT_NAME60 / DEF_MSG_PK
         }
       });
       return;

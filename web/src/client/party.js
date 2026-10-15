@@ -10,7 +10,7 @@ const TEXT = {
   1: ["%s offered you to", "join the party. You can", "share the experience by", "the ratio of level if", "you join the party."],
   2: ["Click the character which", "you want to join. Press", "cancel button to cancel", "joining the party."],
   3: ["You asked %s to", "join party. Please wait", "until he responds. Press", "cancel button to cancel", "making party."],
-  4: ["The character name", "of your party."],
+  4: ["The character names", "of your party members."],
   5: ["withdrawing from the party.", "Please wait a moment."],
   6: ["You withdrew from the party."],
   7: ["Failed in withdrawing from the party.", "If you fail repeatedly, you", "can withdraw from the party", "by logging out."],
@@ -35,10 +35,10 @@ export function registerParty(gui, api) {
           const hot = on && within(lx, ly, 80, 195, y - 5, y + 15);
           line(y, s, !on ? GRAY : hot ? WHITE : DARK);
         });
-        (inParty ? ["You are in a party. You can", "withdraw from the party or", "see the list of party members."] : ["You are not in a party.", "You can make a party with", "other players."]).forEach((s, i) => line(155 + i * 15, s));
+        (inParty ? ["You are in a party. You can", "withdraw from the party or", "see the list of party members."] : ["You are not in a party.", "You can make a party with", "other players."]).forEach((s, i) => line(175 + i * 15, s));
       } else if (this.mode === 4) {
-        line(95, lines[0]); line(110, lines[1]);
-        (me?.party?.names || []).forEach((n, i) => g.aligned(17, 270, 140 + 15 * i, n + (me.party.lvls?.[i] ? "  Lv " + me.party.lvls[i] : ""), INK));
+        line(50, lines[0]); line(65, lines[1]);
+        (me?.party?.names || []).forEach((n, i) => g.aligned(10, 260, 95 + 15 * i, n, INK));
       } else lines.forEach((s, i) => line(base + i * 15 + (this.mode === 1 && i === 0 ? 0 : 0), s.replace("%s", this.name)));
       const hov = (x) => within(lx, ly, x, x + BTN.w, BTN.y, BTN.y + BTN.h);
       const put = (x, a, b) => g.put("dialogtext_1", hov(x) ? b : a, x, BTN.y);
