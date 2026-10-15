@@ -4,6 +4,7 @@
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
 import { generateLevel } from "../shared/dungeon.js";
 import { ACT, DX, DY, PLAYER, LIMITS, NET_PROTO, mobDurations } from "../shared/const.js";
+export const SERVER_DOWN = /^El servidor se (apaga|reinicia)/;      // mensajes de server.mjs (cierre por señal y comando restart/stop)
 
 export class LocalConnection {
   constructor(adventure) {
@@ -138,7 +139,7 @@ export class NetConnection {
     if (this.reconnecting) return;
     this.reconnecting = true; this.status = "reconectando";
     this.events.push({ t: "chat", system: true, text: "Conexión perdida, reconectando…", id: this.pid });
-    const until = performance.now() + 40000;
+    const until = performance.now() + (this.serverDown ? 120000 : 40000);        // reinicio del servidor: se espera más a que vuelva
     try {
       for (let i = 0; performance.now() < until; i++) {
         await new Promise(r => setTimeout(r, Math.min(3000, 500 + i * 500)));
@@ -147,7 +148,7 @@ export class NetConnection {
           await this.open();
           await this.request({ t: "auth", mode: "login", name: this.cred.name, pass: this.cred.pass, proto: NET_PROTO }, "authok");
           const m = await this.request({ t: "join", create: null, slot: this.slot }, "welcome");
-          if (m.id !== this.pid) break;                                     // el servidor ya no tenía el personaje: hay que volver a entrar
+          if (m.id !== this.pid) { this.resumeAfterRestart(); return; }     // el servidor se reinició: el personaje tiene otro id (la interfaz lo captura al arrancar), se reentra solo
           this.world.ents.clear(); this.world.items.clear(); this.resync = true;
           this.status = "conectado"; this.recvAt = performance.now();
           this.events.push({ t: "chat", system: true, text: "Reconectado.", id: this.pid });
@@ -157,6 +158,13 @@ export class NetConnection {
     } finally { this.reconnecting = false; }
     this.status = "desconectado";
     this.events.push({ t: "disconnected", reason: "" });
+  }
+  // El servidor volvió con otro id para el personaje: se recarga la página y askNameAndJoin entra solo con las credenciales
+  // guardadas en sessionStorage (solo esta pestaña, 90 s, se borran al leerlas). Si no hay sessionStorage, pantalla "Volver a entrar".
+  resumeAfterRestart() {
+    this.reconnecting = false;
+    try { sessionStorage.setItem("hb.resume", JSON.stringify({ n: this.cred.name, p: this.cred.pass, t: Date.now() })); location.reload(); return; } catch {}
+    this.status = "desconectado"; this.events.push({ t: "disconnected", reason: "" });
   }
   request(msg, okType) {
     return new Promise((resolve, reject) => { this.waiting = { okType, resolve, reject }; this.ws.send(JSON.stringify(msg)); });
@@ -199,12 +207,31 @@ export class NetConnection {
     if (this.waiting && (m.t === this.waiting.okType || m.t === "error")) {
       const w = this.waiting; this.waiting = null;
       if (m.t === "error") { const e = new Error(m.msg); e.code = m.code; w.reject(e); } else w.resolve(m);
-    } else if (m.t === "s") this.onState(m);
+    } else if (m.t === "s") this.gateState(m);
     else if (m.t === "pong") this.ping = Math.round(performance.now() - m.c);
     else if (m.t === "msg") this.events.push({ t: "chat", system: true, text: m.text, id: this.pid });
     else if (m.t === "brain") this.brain = m.b;
-    else if (m.t === "kicked") this.kickMsg = m.msg;
+    else if (m.t === "kicked") { if (SERVER_DOWN.test(m.msg || "")) this.serverDown = true; else this.kickMsg = m.msg; }   // apagado/reinicio del servidor: no es una expulsión, se reconecta
     else if (m.t === "unwatched") { this.events.push({ t: "chat", system: true, text: m.why || "Fin de la observación.", id: this.pid }); setTimeout(() => { location.hash = "#observar"; location.reload(); }, 2500); }
+  }
+
+  // Las rejillas estáticas se bajan en segundo plano (main.js ya no bloquea el login con ~33 MB). Un estado que cambia a un mapa
+  // cuya rejilla aún no llegó espera a ella y los siguientes se encolan para no desordenar el mundo.
+  gateState(m) {
+    const need = m.map && m.map.id !== this.world.map.id && m.map.kind !== "dungeon" && this.maps[m.map.id]?.ensure && !this.maps[m.map.id].grid;
+    if (!this.stateQ && !need) return this.onState(m);
+    (this.stateQ ||= []).push(m);
+    if (this.stateWait) return;
+    this.stateWait = true;
+    const drain = async () => {
+      while (this.stateQ.length) {
+        const s = this.stateQ[0], mp = s.map && s.map.kind !== "dungeon" && this.maps[s.map.id];
+        if (mp?.ensure && !mp.grid) { try { await mp.ensure(); } catch { await new Promise(r => setTimeout(r, 1000)); continue; } }
+        this.stateQ.shift(); this.onState(s);
+      }
+      this.stateQ = null; this.stateWait = false;
+    };
+    drain();
   }
 
   onState(m) {

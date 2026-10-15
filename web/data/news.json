@@ -1,10 +1,27 @@
 {
- "build": "0.85.6",
+ "build": "0.85.7",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Reconexión y carga de mapas (v0.85.7)",
+    "en": "Reconnect and map loading (v0.85.7)"
+   },
+   "items": [
+    {
+     "es": "Si el servidor se reinicia o se apaga mientras juegas, el juego espera hasta 2 minutos y vuelve a entrar solo con tu personaje (antes parecía que el navegador se refrescaba y perdías la pantalla).",
+     "en": "If the server restarts or shuts down while you play, the game waits up to 2 minutes and logs you back in automatically with your character (before, it looked like a browser refresh and you lost the screen)."
+    },
+    {
+     "es": "El login ya no espera a descargar todos los mapas (~33 MB): se bajan en segundo plano y, al salir de la cripta, el cambio de mapa solo espera si su rejilla aún no ha llegado.",
+     "en": "Login no longer waits to download every map (~33 MB): they load in the background, and leaving the crypt only waits if that map's grid has not arrived yet."
+    }
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {
