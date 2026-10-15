@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.13 · Motor: Paralyze (2026-10-15)
+- Paralyze (tipo 2) ya no se libera con los golpes; solo Hold Person (tipo 1) y, en NPC de más de 50 dados, 1d10==5 (char/combat.cpp). Antes se soltaba con 1/3 por golpe. Test paralyze.test.mjs.
+
 ## 0.84.12 · Motor: Pretend Corpse (2026-10-15)
 - Habilidad Pretend Corpse (skill 19, diálogo de habilidades): tirada de maestría; falla en zona de lucha o con alguien en las 8 casillas contiguas; el personaje se tumba, los monstruos lo ignoran, no regenera y se levanta al moverse, atacar o lanzar (HG.cpp UseSkillHandler).
 

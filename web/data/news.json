@@ -1,10 +1,23 @@
 {
-  "build": "0.84.12",
+  "build": "0.84.13",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: Paralyze (v0.84.13)",
+        "en": "Motor: Paralyze (v0.84.13)"
+      },
+      "items": [
+        {
+          "es": "Paralyze ya no se rompe con los golpes (solo Hold Person); el paralizado puede ser golpeado hasta matarlo, como en el original (combat.cpp).",
+          "en": "Paralyze is no longer broken by hits (only Hold Person is); a paralyzed target can be beaten down, as in the original."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {
