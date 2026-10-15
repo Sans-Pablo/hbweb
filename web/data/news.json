@@ -1,10 +1,17 @@
 {
- "build": "0.83.8",
+ "build": "0.83.9",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Color de pelo y ventanas hasta el borde (v0.83.9)", "en": "Hair colour and windows to the edge (v0.83.9)"},
+   "items": [
+    {"es": "El pelo del cuadro de personaje (F5) usa la misma mezcla que el sprite del mundo. Los cuadros se pueden arrastrar hasta los bordes de la pantalla.", "en": "Hair in the character window (F5) uses the same blend as the world sprite. Windows can be dragged to the screen edges."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Interfaz más limpia y tutorial arreglado (v0.83.8)", "en": "Cleaner interface and tutorial fix (v0.83.8)"},

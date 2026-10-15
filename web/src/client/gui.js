@@ -199,7 +199,7 @@ export class Gui {
   }
 
   // fotograma teñido multiplicando por un color CSS (aproxima PutSpriteRGB; p. ej. el pelo)
-  mul(key, f, x, y, color) {
+  mul(key, f, x, y, color, add = false) {
     const m = this.manifest[key], fr = m && m.frames[f], o = this.img[key];
     if (!fr || !o || !o.naturalWidth) return;
     const [sx, sy, sw, sh, px, py] = fr, [img, k] = this.uiSrc(key), W = sw * k, H = sh * k;
@@ -207,7 +207,7 @@ export class Gui {
     t.width = W; t.height = H;
     g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, W, H);
     g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
-    g.globalCompositeOperation = "multiply"; g.fillStyle = color; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = add ? "lighter" : "multiply"; g.globalAlpha = add ? 0.55 : 1; g.fillStyle = color; g.fillRect(0, 0, W, H); g.globalAlpha = 1;      // add: mismo mezclado que el sprite del mundo (assets.tintedHair)
     g.globalCompositeOperation = "destination-in"; g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
     this.ctx.drawImage(t, 0, 0, W, H, x + px, y + py, sw, sh);
   }
@@ -292,7 +292,7 @@ export class Gui {
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
       d.x = Math.max(0, Math.min(this.W - d.w, x - this.drag.dx));
-      d.y = Math.max(0, Math.min(this.H - (this.mobile ? 20 : 52 + 20), y - this.drag.dy));
+      d.y = Math.max(0, Math.min(this.H - 20, y - this.drag.dy));    // hasta los bordes de la pantalla (barra incluida)
     }
   }
   // devuelve true si la interfaz se queda con el clic

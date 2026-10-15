@@ -98,7 +98,7 @@ export function registerDialogs(gui, api) {
       g.put(body, look.skin - 1, 171, 290);
       if (!worn[EQUIP.HEAD]) {
         const col = HAIR_COLORS[look.hairCol][1];
-        if (col) g.mul(hair, look.hair, 171, 290, col); else g.put(hair, look.hair, 171, 290);
+        if (col) g.mul(hair, look.hair, 171, 290, col, true); else g.put(hair, look.hair, 171, 290);
       }
       g.put(under, look.under, 171, 290);
       const skirt = female && worn[EQUIP.PANTS] && itemDef(worn[EQUIP.PANTS].id)?.sprite === 12 && itemDef(worn[EQUIP.PANTS].id)?.spriteFrame === 0;
