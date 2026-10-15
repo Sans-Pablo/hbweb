@@ -1,10 +1,17 @@
 {
- "build": "0.84.0",
+ "build": "0.84.1",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Hospital de compañeros (v0.84.1)", "en": "Pet hospital (v0.84.1)"},
+   "items": [
+    {"es": "Las pestañas de los diálogos clásicos (Cuidados, Bolas, Caramelos, Ayuda) ya no se montan y cambian al hacer clic. Cada bola tiene su casilla cuadrada.", "en": "Classic dialog tabs (Cuidados, Bolas, Caramelos, Ayuda) no longer overlap and switch on click. Each ball has its own square slot."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Diario de misiones (v0.84.0)", "en": "Quest journal (v0.84.0)"},

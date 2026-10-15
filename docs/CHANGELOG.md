@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.1 · Hospital de compañeros (2026-10-15)
+- `ClassicDialog`: pestañas colocadas por el ancho real del texto (ya no se montan ni se pisan las cajas de clic); cada bola de la lista lleva su casilla cuadrada que se ilumina al pasar.
+
 ## 0.84.0 · Diario de misiones (2026-10-15)
 - Misiones como ventana propia (`questwin.js`, J o botón «!» de la barra); rastreador plegable más abajo; se quita el botón Quest de F5.
 
