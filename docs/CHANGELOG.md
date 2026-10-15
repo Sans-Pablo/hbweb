@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.10 · Sin rombos celestes (2026-10-16)
+- Quitados los rombos azules translúcidos que se dibujaban sobre el suelo en las casillas de salida (`drawTeleportMarks`); el original no los tiene. Se conserva solo el rótulo del destino. Test en `ui-guard`.
+
 ## 0.85.9 · Auditoría UI (2026-10-16)
 - Auditoría de la interfaz contra el original (`docs/AUDITORIA_UI.md`). Corregido: tooltips de la barra, Required Exp, color de chat 0, textos flotantes, registro Legacy y=10, color de nombre neutral, Character sin comas, Magic sin cerrar, Level Up Ctrl, Skills x30, Party, Cantidad y Tienda.
 

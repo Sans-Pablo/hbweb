@@ -1,10 +1,11 @@
 {
- "build": "0.85.9",
+ "build": "0.85.10",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date":"2026-10-16","title":{"es":"Sin rombos celestes (v0.85.10)","en":"No light-blue diamonds (v0.85.10)"},"items":[{"es":"Desaparecen los rombos celestes translúcidos del suelo junto a las salidas (tienda, cripta). Solo queda el rótulo del destino.","en":"The translucent light-blue diamonds on the ground at exits (shop, crypt) are gone. Only the destination label remains."}]},
   {"date":"2026-10-16","title":{"es":"Auditoría de la interfaz (v0.85.9)","en":"UI audit (v0.85.9)"},"items":[{"es":"Revisión ventana a ventana contra el original: tooltips de la barra, Required Exp, registro arriba a la izquierda, Party, Magic (ya no se cierra), Level Up con Ctrl, cantidad y tienda. Pendientes en docs/AUDITORIA_UI.md.","en":"Window-by-window review against the original: bar tooltips, Required Exp, top-left log, Party, Magic (no longer closes), Ctrl in Level Up, quantity and shop. Pending list in docs/AUDITORIA_UI.md."}]},
   {
    "date": "2026-10-16",
