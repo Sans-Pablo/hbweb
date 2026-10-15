@@ -69,7 +69,7 @@ export class Gui {
       let tall = 350, wide = 340;                      // el cuadro abierto más grande manda: debe caber entero (mín. 0.5)
       for (const id of this.order) { const d = this.dialogs.get(id); if (!d.mobileFixed) { tall = Math.max(tall, d.h + 8); wide = Math.max(wide, d.w + 8); } }
       const k = Math.max(0.5, Math.min(1.3, Math.min(vh / tall, vw / wide)));
-      this.scale = k; this.W = vw / k; this.H = vh / k; this.rect = { x: 0, y: 0, w: vw, h: vh };
+      this.scale = k; this.W = vw / k; this.H = vh / k; this.rect = { x: 0, y: 0, w: vw, h: vh }; this.full = this.rect;
       const s = this.cv.style; s.left = "0px"; s.top = "0px"; s.width = vw + "px"; s.height = vh + "px";
       const pw = Math.round(vw * this.dpr), ph = Math.round(vh * this.dpr);
       if (this.cv.width !== pw || this.cv.height !== ph) { this.cv.width = pw; this.cv.height = ph; }
@@ -79,9 +79,10 @@ export class Gui {
     this.scale = Math.min(rect.w / W, rect.h / H);
     const cssW = W * this.scale, cssH = H * this.scale;
     this.rect = { x: rect.x + (rect.w - cssW) / 2, y: rect.y + rect.h - cssH, w: cssW, h: cssH };
+    this.full = rect;                                  // el lienzo cubre toda el área visible: las ventanas llegan al borde exacto del navegador sin recortarse
     const s = this.cv.style;
-    s.left = this.rect.x + "px"; s.top = this.rect.y + "px"; s.width = cssW + "px"; s.height = cssH + "px";
-    const pw = Math.round(cssW * this.dpr), ph = Math.round(cssH * this.dpr);
+    s.left = rect.x + "px"; s.top = rect.y + "px"; s.width = rect.w + "px"; s.height = rect.h + "px";
+    const pw = Math.round(rect.w * this.dpr), ph = Math.round(rect.h * this.dpr);
     if (this.cv.width !== pw || this.cv.height !== ph) { this.cv.width = pw; this.cv.height = ph; }
   }
 
@@ -292,7 +293,8 @@ export class Gui {
     if (this.cap) this.cap.fn(x, y);
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
-      d.x = Math.max(60 - d.w, Math.min(this.W - 60, x - this.drag.dx));   // se puede arrastrar hasta el borde (queda a la vista un asa de 60 px)
+      const f = this.full || this.rect, vl = (f.x - this.rect.x) / this.scale, vr = (f.x + f.w - this.rect.x) / this.scale;   // bordes del navegador en coordenadas GUI
+      d.x = Math.max(vl + 60 - d.w, Math.min(vr - 60, x - this.drag.dx));   // se puede arrastrar hasta el borde exacto del navegador (queda a la vista un asa de 60 px)
       d.y = Math.max(0, Math.min(this.H - 52 - 20, y - this.drag.dy));   // hasta el borde de la pantalla; por abajo la barra inferior (52 px) tapa la ventana, así que el asa se detiene justo encima
     }
   }
@@ -360,8 +362,9 @@ export class Gui {
   draw(me, world, info = {}) {
     if (!this.ready) return;
     const c = this.ctx;
-    c.setTransform(this.scale * this.dpr, 0, 0, this.scale * this.dpr, 0, 0);
-    c.clearRect(0, 0, this.W, this.H);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, this.cv.width, this.cv.height);
+    const f = this.full || this.rect, k = this.scale * this.dpr;
+    c.setTransform(k, 0, 0, k, (this.rect.x - f.x) * this.dpr, (this.rect.y - f.y) * this.dpr);
     c.imageSmoothingEnabled = false;
     this.tips = [];
     this.info = info;
@@ -370,7 +373,7 @@ export class Gui {
     for (const id of this.order) {
       const d = this.dialogs.get(id);
       if (d.hidden) continue;
-      if (d.modal) { c.fillStyle = "rgba(0,0,0,.45)"; c.fillRect(0, 0, this.W, this.H); }
+      if (d.modal) { c.fillStyle = "rgba(0,0,0,.45)"; const f = this.full || this.rect, o = this.scale; c.fillRect((f.x - this.rect.x) / o, (f.y - this.rect.y) / o, f.w / o, f.h / o); }
       c.save(); c.translate(d.x, d.y);
       c.beginPath(); c.rect(0, 0, d.w, d.h); c.clip();
       d.draw(this, me, world);

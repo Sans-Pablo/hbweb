@@ -7,6 +7,6 @@ ok(/nth-last-child\(n\+7\)/.test(html), "6 líneas de registro");
 ok(/5000 : 7000/.test(hud), "5 s de vida del registro Legacy");
 for (const f of ["miniRect", "miniDragStart", "miniDragMove", "miniDragEnd", "miniReset"]) ok(ren.includes(f + "("), "renderer." + f);
 ok(ren.includes("hb.miniPos"), "posición persistente");
-ok(/grid\.w <= 64/.test(ren), "minimapa agrandado en mapas pequeños");
+ok(/grid.w < 96/.test(ren), "minimapa proporcional en mapas pequenos (0.85.7)");
 ok(ctl.includes("miniDragStart") && ctl.includes("miniDragEnd"), "controlador arrastra el minimapa");
 console.log("OK interfaz-original");

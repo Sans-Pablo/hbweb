@@ -23,6 +23,11 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--parch);
     font: 14px/1.45 "Segoe UI", system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  /* GUARDIA (tests/ui-guard.test.mjs): nada de resaltados/sombras azules del navegador sobre el juego y su interfaz */
+  html, body, canvas, #ui, #ui * { -webkit-tap-highlight-color: transparent; }
+  canvas, button { outline: none; }
+  ::selection { background: transparent; }
+  input::selection, textarea::selection { background: rgba(255,255,255,.28); }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated;
     touch-action: none; cursor: var(--cursor); }
   #loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--stone); color: var(--muted); z-index: 10; }
@@ -222,11 +227,11 @@ body.dialogtrans .panel { opacity: .55; }
 <div id="loading"><div><b>HELBREATH WEB</b><span>Cargando…</span><div id="loadinfo"></div></div></div>
 <script type="module">import { showLoadInfo } from "./src/client/loadinfo.js"; showLoadInfo(document.getElementById("loadinfo")); showLoadInfo(document.getElementById("joininfo"), true);</script>
 
-<div id="join"><form onsubmit="return false"><b>HELBREATH WEB</b><p class="where"></p>
+<div id="join"><form onsubmit="return false" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other"><b>HELBREATH WEB</b><p class="where"></p>
   <div id="joininfo"></div>
   <div class="langsw"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">English</button></div>
   <div class="tabs"><button type="button" data-tab="login" class="on">Entrar</button><button type="button" data-tab="new">Crear cuenta</button></div>
-  <label>Nombre<input class="user" maxlength="16" autocomplete="username" spellcheck="false"></label>
+  <label>Nombre<input class="user" maxlength="16" autocomplete="off" data-lpignore="true" spellcheck="false"></label>
   <label class="pw">Contraseña<input class="pass" type="password" autocomplete="current-password"></label>
   <label class="pw2">Repite la contraseña<input class="pass2" type="password" autocomplete="new-password"></label>
   <button type="submit" class="go">Entrar</button><p class="msg"></p>

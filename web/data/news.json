@@ -1,10 +1,23 @@
 {
- "build": "0.85.6",
+ "build": "0.85.7",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Bordes, minimapa y limpieza de UI (v0.85.7)",
+    "en": "Edges, minimap and UI cleanup (v0.85.7)"
+   },
+   "items": [
+    {"es": "Las ventanas se pueden arrastrar hasta el borde exacto del navegador (Character Info ya no queda cortada).", "en": "Windows can be dragged to the exact browser edge (Character Info is no longer clipped)."},
+    {"es": "Minimapa de la cripta más pequeño (proporcional al mapa).", "en": "Crypt minimap is smaller (proportional to the map)."},
+    {"es": "Quitado el mini esqueleto de la entrada de la cripta.", "en": "Removed the mini skeleton at the crypt entrance."},
+    {"es": "Sin sombras celestes en la interfaz ni cartel de Chrome al entrar (formulario sin autocompletado).", "en": "No light-blue UI shadows and no Chrome banner on login (autofill disabled)."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {

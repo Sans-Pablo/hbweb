@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.85.7 · Bordes y minimapa (2026-10-16)
+- Las ventanas llegan al borde exacto del navegador (gui.js: `full` = lienzo completo; el arrastre ya no se recorta en la franja del letterbox).
+- Guardia anti sombras/overlay celeste: CSS (tap-highlight, outline, selection) en index.html + `tests/ui-guard.test.mjs` (también prohíbe `beforeunload`).
+- Formulario de login sin autocompletado/gestor de contraseñas (evita el cartel de Chrome).
+- Minimapa de mapas pequeños (cripta) proporcional al tamaño del mapa (106 px en vez de 240).
+- Quitado el mini esqueleto de la entrada de la cripta (`pitMob`).
+
 ## 0.85.5 · AUTO: pozos, contador y almacén (2026-10-15)
 - Menú AUTO: casilla «No recoger objetos» (`auto.nopick`: sin presas no pisa el botín) y la zona muestra el nombre del pozo («Pozo N · criatura») junto a las coordenadas.
 - Mini ventana «Auto hunt» (id 75, `AutoMini` en autowin.js): criatura, pozo, muertes, tiempo y ritmo/h. Se abre al empezar; main.js cuenta los eventos `death` con `by` = tú (`auto.kills`). Sin cambio de protocolo.

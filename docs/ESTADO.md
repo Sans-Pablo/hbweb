@@ -385,3 +385,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.1 (hilo UI): cerrado lo sin verificar de 0.85.0 (arrastre al borde, chat/log arrastrables en Legacy, buscador de compañeros, Opciones en vivo). Hospital sigue siendo ClassicDialog, no Win.
 
 - 0.85.5 (hb-ui): flechas de entrada únicas por destino y ninguna en cerrados; quitado «+N exp» flotante; F11 ya usaba `Win` común (verificado en ambos modos, sin diferencia reproducible).
+
+- 0.85.7 (hb-ui): ventanas hasta el borde exacto (gui.full), guardia CSS + tests/ui-guard.test.mjs, login sin autocompletado, minimapa de cripta proporcional (106 px), quitado pitMob. No se halló ningún beforeunload ni overlay celeste concreto en el código; el cartel de Chrome se asume el de guardar contraseña.
