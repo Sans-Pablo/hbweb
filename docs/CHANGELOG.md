@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
+- Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.
+
 ## 0.83.13 · Motor: suelo sin tirones (2026-10-15)
 - Ticket 3 (FPS): los bloques de suelo que esperaban una hoja se rehacían todos en el mismo fotograma al llegar; ahora uno por fotograma (renderer.js `groundChunk`). Medido con `?prof=1`: fase base 21.8 → 30.2 fps (tope del navegador integrado, 30). Quedan tirones de 3-5 s tras entrar (primer dibujo de hojas).
 - Verificado en navegador: «!» al matar, «Critical» con carga de super ataque, lanzar Fire Ball (texto, daño en área, sin «Failed» en fallo normal), flechas de susurro. Dash solo por test (`crit-dash`).

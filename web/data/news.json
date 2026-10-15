@@ -1,10 +1,17 @@
 {
-  "build": "0.83.13",
+  "build": "0.83.14",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": { "es": "Motor: primer dibujo del suelo (v0.83.14)", "en": "Engine: first ground draw (v0.83.14)" },
+      "items": [
+        { "es": "Menos tirones en los primeros segundos tras entrar: las hojas de suelo se dibujan desde un bitmap ya preparado y el precalentado cede el fotograma a los 4 ms.", "en": "Fewer hitches in the first seconds after entering: ground sheets are drawn from a pre-decoded bitmap and the pre-warm yields the frame after 4 ms." }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": { "es": "Motor: suelo sin tirones (v0.83.13)", "en": "Engine: smoother ground (v0.83.13)" },

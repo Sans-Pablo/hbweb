@@ -160,7 +160,9 @@ export class Renderer {
       st = { c, g, j: 0, ready: true, miss: new Set() }; wip.set(k, st);
     }
     const { g } = st;
-    for (const end = Math.min(CHUNK, st.j + rows); st.j < end; st.j++) for (let i = 0; i < CHUNK; i++) {
+    const t0 = performance.now();
+    // el precalentado (rows < CHUNK) corta a los 4 ms (mínimo una fila): en los primeros segundos cada fila cuesta 20-30 ms (hojas recién subidas a GPU) y 3 filas daban pasos de 60-230 ms
+    for (const end = Math.min(CHUNK, st.j + rows); st.j < end && !(rows < CHUNK && st.j > 0 && performance.now() - t0 > 4); st.j++) for (let i = 0; i < CHUNK; i++) {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + st.j);
       if (t) {
         if (!this.spr.ready("t" + t.spr)) { st.ready = false; st.miss.add("t" + t.spr); }

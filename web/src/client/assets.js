@@ -206,7 +206,10 @@ export class Sprites {
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key);
     const flt = this.recolor ? (this.modelFx ? this.recolor + " " + this.modelFx : this.recolor) : this.modelFx;      // modelFx: solo el bestiario (modelo «IA + luz»)
     if (flt) { ctx.save(); ctx.filter = flt; }      // solo el bestiario: matiz/saturación/brillo para probar paletas
-    ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
+    // hojas de suelo: la primera drawImage de un <img> grande costaba 60-135 ms en el hilo principal (subida a GPU, medido por put); un ImageBitmap se prepara fuera de él
+    let src = img;
+    if (key.charCodeAt(0) === 116) { const bm = this._bm || (this._bm = new Map()), b = bm.get(img); if (b instanceof ImageBitmap) src = b; else if (b === undefined) { bm.set(img, 0); createImageBitmap(img).then(r => bm.set(img, r), () => {}); } }
+    ctx.drawImage(src, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
     if (flt) ctx.restore();
   }
 
