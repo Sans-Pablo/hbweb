@@ -413,21 +413,28 @@ async function handleAuth(c, m) {
     }
     const key = acc.name.toLowerCase();
     if (bans.accounts[key]) { send(c, { t: "error", msg: "Cuenta bloqueada" + (bans.accounts[key].why ? ": " + bans.accounts[key].why : ".") }); return; }
-    c.acc = acc.name; c.key = key; c.name = acc.name;
-    send(c, { t: "authok", name: acc.name, hasChar: !!saves[key], admin: ADMINS.has(key), proto: PROTO, version: VERSION.version });
+    c.acc = acc.name; c.key = key; c.akey = key; c.name = acc.name;
+    send(c, { t: "authok", name: acc.name, hasChar: !!saves[key], chars: charList(key), admin: ADMINS.has(key), proto: PROTO, version: VERSION.version });
   } finally { c.busy = false; }
 }
+
+// Hasta 4 personajes por cuenta (pantalla de seleccion del original). Ranura 0 = clave de la cuenta (partidas antiguas); 1-3 = "<cuenta>#n".
+const MAX_SLOTS = 4;
+const slotKey = (akey, slot) => slot ? akey + "#" + slot : akey;
+const charList = akey => { const l = []; for (let i = 0; i < MAX_SLOTS; i++) { const sv = saves[slotKey(akey, i)]; if (sv) l.push({ slot: i, name: sv.charName || sv.name || akey, level: sv.level || 1, gender: sv.gender }); } return l; };
 
 function handleJoin(c, m) {
   if (c.pid) return;
   if (!c.acc) { send(c, { t: "error", code: "auth", msg: "Inicia sesión primero." }); return; }
-  const key = c.key;
-  for (const o of [...clients]) if (o !== c && o.pid && o.key === key) { send(o, { t: "kicked", msg: "Has entrado desde otro sitio." }); setTimeout(() => o.socket.destroy(), 100); drop(o); }      // la sesión nueva sustituye a la vieja (p. ej. tras un corte de red)
+  const akey = c.akey, slot = Number.isInteger(m.slot) && m.slot >= 0 && m.slot < MAX_SLOTS ? m.slot : (charList(akey)[0]?.slot ?? 0);
+  const key = c.key = slotKey(akey, slot);
+  for (const k of [...ghosts.keys()]) if (k !== key && (k === akey || k.startsWith(akey + "#"))) finishGhost(k);      // una cuenta, un personaje conectado a la vez
+  for (const o of [...clients]) if (o !== c && o.pid && o.akey === akey) { send(o, { t: "kicked", msg: "Has entrado desde otro sitio." }); setTimeout(() => o.socket.destroy(), 100); drop(o); }      // la sesión nueva sustituye a la vieja (p. ej. tras un corte de red)
   const gh = ghosts.get(key);
   if (gh) {                                                                           // retoma el personaje tras un corte de red
     ghosts.delete(key); clearTimeout(gh.timer);
     c.pid = gh.pid; c.name = gh.name; c.ack = 0; c.queue.length = 0;
-    send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: true, resumed: true, version: VERSION.version, admin: ADMINS.has(key) });
+    send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: true, resumed: true, version: VERSION.version, admin: ADMINS.has(akey), slot });
     log(`[+] ${c.name} reconectado`);
     return;
   }
@@ -447,7 +454,7 @@ function handleJoin(c, m) {
   const p = adventure.worldFor(c.pid).ents.get(c.pid);
   c.name = p?.name || c.acc;
   if (!saves[key]) { saves[key] = adventure.saveOf(c.pid); persist(true); }       // personaje nuevo: a disco ya, no a los 5 s
-  send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: had, version: VERSION.version, admin: ADMINS.has(key) });
+  send(c, { t: "welcome", id: c.pid, time: adventure.time, returning: had, version: VERSION.version, admin: ADMINS.has(akey), slot });
   log(`[+] ${c.name} (${c.acc}) ha entrado (${online()} conectados)`);
   adventure.farm.emit({ t: "chat", id: c.pid, name: "Servidor", text: c.name + " ha entrado en la granja.", system: true });
 }
@@ -474,7 +481,7 @@ function onMessage(c, text) {
     if (cmd.t === "say") {                                                            // chat: límites, silencio y comandos de administrador
       const txt = String(cmd.text ?? "").slice(0, 120).trim(), now = Date.now();
       if (!txt) return;
-      if (ADMINS.has(c.key) && txt.startsWith("/")) { for (const l of String(adminCmd(txt.slice(1), c.name) || "").split("\n")) if (l) sysMsg(c, l); return; }
+      if (ADMINS.has(c.akey) && txt.startsWith("/")) { for (const l of String(adminCmd(txt.slice(1), c.name) || "").split("\n")) if (l) sysMsg(c, l); return; }
       if (muted.get(c.key) > now) { sysMsg(c, "Estás silenciado."); return; }
       if (now - c.lastSay < 600) return;
       c.lastSay = now; cmd.text = txt;

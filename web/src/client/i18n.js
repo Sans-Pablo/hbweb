@@ -52,7 +52,7 @@ const EN = {
   "Directo y valiente: pocas palabras y mucha acción.": "Direct and brave: few words, lots of action.",
   "Prueba local (un jugador)": "Local test (single player)", "Género": "Gender", "Hombre": "Male", "Mujer": "Female", "Color de pelo": "Hair color",
   "Todos los puntos repartidos": "All points assigned", "Nombre no válido: hasta 10 letras o números, sin espacios ni símbolos.": "Invalid name: up to 10 letters or numbers, no spaces or symbols.",
-  "Preparando el mapa…": "Preparing the map…", "Preparando el terreno…": "Preparing the terrain…", "Cargando personajes…": "Loading characters…", "Entrando al mundo…": "Entering the world…",
+  "Preparando el mapa…": "Preparing the map…", "Preparando el terreno…": "Preparing the terrain…", "Cargando personajes…": "Loading characters…", "Entrando al mundo…": "Entering the world…", "Elige personaje": "Choose character", "Nuevo personaje": "New character",
   // ---- barra y paneles
   "Poción de vida": "Health potion", "Poción de maná": "Mana potion", "Poción de resistencia": "Stamina potion", "Personaje (F5)": "Character (F5)", "Mochila (F6)": "Bag (F6)",
   "Magia (F7)": "Magic (F7)", "Gráficos": "Graphics", "Sonido": "Sound", "Opciones (F12)": "Options (F12)", "Novedades (F1)": "News (F1)", "Mochila": "Bag", "Libro de magia": "Spellbook",

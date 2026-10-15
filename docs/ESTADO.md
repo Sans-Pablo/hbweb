@@ -33,13 +33,13 @@
 - [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
 
-## Hilo MOTOR (pedido 2026-10-15, v0.83.8)
+## Hilo MOTOR (pedido 2026-10-15, v0.83.10)
 - Ticket 14 HECHO (0.83.8): pescado = estadísticas, granja = cura. Ticket 6 HECHO. support-summon arreglado (semilla 34).
 - [x] 1 Reconexión (gracia 45 s + reconexión automática; sin probar en navegador real con pestaña oculta larga)
 - [x] 7 Sin Failed en fallo normal · [x] 9 Autoataque solo monstruos · [x] 12 sin viñeta/luz/barras de monstruos/aviso de mapa (la barra EXP sobre la cabeza no existe en el código)
 - [~] 8 el servidor ya rechaza atacar a no enemigos (canFight); sin gesto añadido
 - [x] 4 críticos/dash · [x] 5 magia (flujo prepare→apuntar→lanzar, nombre sobre el personaje y bloqueo de movimiento ya existían; añadido aviso de manos libres) · [x] 10 atajos y órdenes · [x] 13 full mage · [x] 2 carga (ya había pantalla de carga y terreno precalentado; añadida precarga del aspecto online)
-- [ ] 3 FPS: ya hay perfilador y GL (no repetido). [ ] 11 hasta 4 personajes por cuenta: NO hecho (cambia guardado, protocolo y pantalla de creación; sesión propia). [ ] 10: efectos reales de /showgrid, /timestamp, /bigitems, filtrado de /tooff y zoom numpad. Sin verificar en navegador. support-summon arreglado (semilla 34).
+- [ ] 3 FPS: ya hay perfilador y GL (no repetido). [x] 11 hasta 4 personajes por cuenta (0.83.10, test net-chars, verificado en navegador; admin y silencio por cuenta). Sin FPS nuevo que medir en este PC: no se reproduce el bajo FPS. [ ] 10: efectos reales de /showgrid, /timestamp, /bigitems, filtrado de /tooff y zoom numpad. Sin verificar en navegador. support-summon arreglado (semilla 34).
 
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
 

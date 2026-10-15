@@ -27,3 +27,6 @@ Sin límite de cuentas por IP (0.28.0): tras el túnel todos comparten IP. `maxR
 
 ## Copias de seguridad y reinicio (0.79.6)
 `store.backup()` hace `VACUUM INTO server/data/backups/hb-AAAA-MM-DD.sqlite` (una por día, conserva 7), al arrancar y cada 6 h. Si `listen` da EADDRINUSE, `server.mjs` reintenta cada 1 s hasta 30 veces. Test: `tests/store-backup.test.mjs`. Restaurar: parar el servidor y copiar la copia sobre `hb.sqlite`.
+
+## Varios personajes por cuenta (0.83.10)
+Hasta 4 por cuenta. El guardado de la ranura 0 usa la clave de la cuenta (partidas antiguas); las ranuras 1-3, `<cuenta>#n`. `authok` devuelve `chars:[{slot,name,level,gender}]`; `join` lleva `slot` (si falta, el primer personaje existente) y el cliente lo recuerda para `reconnect()`. Una cuenta solo puede tener un personaje conectado (el fantasma de otro se cierra). Admin y expulsión por sesión usan la clave de la cuenta (`c.akey`). Test: `tests/net-chars.test.mjs`.

@@ -142,7 +142,7 @@ export class NetConnection {
           this.ws = null;
           await this.open();
           await this.request({ t: "auth", mode: "login", name: this.cred.name, pass: this.cred.pass, proto: NET_PROTO }, "authok");
-          const m = await this.request({ t: "join", create: null }, "welcome");
+          const m = await this.request({ t: "join", create: null, slot: this.slot }, "welcome");
           if (m.id !== this.pid) break;                                     // el servidor ya no tenía el personaje: hay que volver a entrar
           this.world.ents.clear(); this.world.items.clear(); this.resync = true;
           this.status = "conectado"; this.recvAt = performance.now();
@@ -165,9 +165,10 @@ export class NetConnection {
     return r;
   }
   // entra en el mundo (create: personaje nuevo si la cuenta aún no tiene)
-  async join(name, create = null) {
+  async join(name, create = null, slot = 0) {
     await this.open();
-    const m = await this.request({ t: "join", create }, "welcome");
+    this.slot = slot;                                                  // hasta 4 personajes por cuenta; reconnect() retoma el mismo
+    const m = await this.request({ t: "join", create, slot }, "welcome");
     this.pid = m.id;
     this.serverTime = this.world.time = m.time;
     this.recvAt = performance.now();

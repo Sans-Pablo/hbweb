@@ -16,6 +16,22 @@ import { Hud } from "./hud.js";
 import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
+
+// Seleccion de personaje: devuelve la ranura elegida (una existente o la primera libre para crear uno nuevo). Max. 4 por cuenta.
+function chooseCharacter(chars) {
+  return new Promise(resolve => {
+    const d = document.createElement("div");
+    d.style.cssText = "position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.75);z-index:50;font:14px sans-serif;color:#eee";
+    const inner = document.createElement("div");
+    inner.style.cssText = "background:#222;border:1px solid #888;padding:18px;display:grid;gap:8px;min-width:260px";
+    inner.innerHTML = "<b>Elige personaje</b>";
+    const add = (txt, slot) => { const b = document.createElement("button"); b.textContent = txt; b.onclick = () => { d.remove(); resolve(slot); }; inner.appendChild(b); };
+    for (const c of chars) add(c.name + " (nivel " + c.level + ")", c.slot);
+    const free = [0, 1, 2, 3].find(i => !chars.some(c => c.slot === i));
+    if (free !== undefined) add("Nuevo personaje", free);
+    d.appendChild(inner); document.body.appendChild(d);
+  });
+}
 import { Gui } from "./gui.js";
 import { apparelOf, equipKeys } from "./look.js";
 import { itemDef, itemName, packKey } from "./names.js";
@@ -848,21 +864,26 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
       try {
         if (!name) throw new Error("Escribe un nombre.");
         if (creating && pass.value !== pass2.value) throw new Error("Las contraseñas no coinciden.");
-        let hasChar = false;
+        let hasChar = false, chars = [];
         if (online) {
           const r = await conn.login(creating ? "register" : "login", name, pass.value);
-          name = r.name; hasChar = r.hasChar;
+          name = r.name; hasChar = r.hasChar; chars = r.chars || [];
         } else if (creating) await Accounts.createAccount(name, pass.value);   // una partida guardada antes con ese nombre se conserva
         else await Accounts.login(name, pass.value);
         store.set("name", name);
         msg.textContent = "Entrando…";
-        let create = null;
-        if (online ? !hasChar : !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
+        let create = null, slot = 0;
+        if (online && chars.length) {                                  // seleccion de personaje (hasta 4 por cuenta, como el servidor original)
+          box.style.display = "none";
+          slot = await chooseCharacter(chars);
+          hasChar = chars.some(c => c.slot === slot);
+          if (!hasChar) { create = await createCharacter(spr, name); }
+        } else if (online ? !hasChar : !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
           box.style.display = "none";
           create = await createCharacter(spr, name);
         }
         let id;
-        try { id = await conn.join(name, create); } catch (e) { box.style.display = "grid"; throw e; }
+        try { id = await conn.join(name, create, slot); } catch (e) { box.style.display = "grid"; throw e; }
         {                                                      // descargar el aspecto antes de empezar (también online; tope 5 s)
           const me = conn.state?.ents?.get(id);
           if (me) { const lk = spr.lookKeys(me.gender, me.look); await Promise.race([Promise.all([spr.preload(lk), spr.preloadHd(lk)]), new Promise(r => setTimeout(r, 5000))]); }
