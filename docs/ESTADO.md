@@ -38,7 +38,8 @@
 - [x] 1 Reconexión (gracia 45 s + reconexión automática; sin probar en navegador real con pestaña oculta larga)
 - [x] 7 Sin Failed en fallo normal · [x] 9 Autoataque solo monstruos · [x] 12 sin viñeta/luz/barras de monstruos/aviso de mapa (la barra EXP sobre la cabeza no existe en el código)
 - [~] 8 el servidor ya rechaza atacar a no enemigos (canFight); sin gesto añadido
-- [ ] 2,3,4,5,6,10,11,13,14 pendientes. Test support-summon falla (ajeno a estos cambios, sin investigar).
+- [x] 4 críticos/dash · [x] 5 magia (flujo prepare→apuntar→lanzar, nombre sobre el personaje y bloqueo de movimiento ya existían; añadido aviso de manos libres) · [x] 10 atajos y órdenes · [x] 13 full mage · [x] 2 carga (ya había pantalla de carga y terreno precalentado; añadida precarga del aspecto online)
+- [ ] 3 FPS: ya hay perfilador y GL (no repetido). [ ] 11 hasta 4 personajes por cuenta: NO hecho (cambia guardado, protocolo y pantalla de creación; sesión propia). [ ] 10: efectos reales de /showgrid, /timestamp, /bigitems, filtrado de /tooff y zoom numpad. Sin verificar en navegador. support-summon arreglado (semilla 34).
 
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
 

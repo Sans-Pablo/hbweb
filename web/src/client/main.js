@@ -863,9 +863,9 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
         }
         let id;
         try { id = await conn.join(name, create); } catch (e) { box.style.display = "grid"; throw e; }
-        if (!online) {                                         // descargar el aspecto antes de empezar
-          const me = conn.state.ents.get(id);
-          if (me) { const lk = spr.lookKeys(me.gender, me.look); await Promise.all([spr.preload(lk), spr.preloadHd(lk)]); }
+        {                                                      // descargar el aspecto antes de empezar (también online; tope 5 s)
+          const me = conn.state?.ents?.get(id);
+          if (me) { const lk = spr.lookKeys(me.gender, me.look); await Promise.race([Promise.all([spr.preload(lk), spr.preloadHd(lk)]), new Promise(r => setTimeout(r, 5000))]); }
         }
         box.remove();
         resolve(id);
