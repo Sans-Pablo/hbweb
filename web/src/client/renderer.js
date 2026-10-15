@@ -1471,17 +1471,34 @@ export class Renderer {
   }
 
   // ¿está el puntero (coordenadas de ventana) sobre el minimapa de la esquina?
-  minimapHit(clientX, clientY) {
-    const r = this.canvas.getBoundingClientRect();
-    const vx = ((clientX - r.left) * this.dpr - this.ox) / this.scale, vy = ((clientY - r.top) * this.dpr - this.oy) / this.scale;
-    const size = this.miniSize || (this.mode === "remastered" ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, top = this.miniTop ?? pad;
-    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= top - 3 && vy <= top + size + 3;
+  // Rectángulo del minimapa: arrastrable (miniPos = esquina superior izquierda en píxeles de vista, se recuerda en localStorage);
+  // en mapas pequeños (criptas) se agranda para que las casillas no queden diminutas.
+  miniRect() {
+    let size = this.miniSize || (this.mode === "remastered" ? 170 : 140);
+    if (this.grid?.w && this.grid.w <= 64) size = Math.min(Math.round(size * 1.45), 240);
+    if (this.miniPos === undefined) { try { this.miniPos = JSON.parse(localStorage.getItem("hb.miniPos")); } catch { this.miniPos = null; } }
+    const pad = 10, p = this.miniPos;
+    const x0 = p ? Math.max(3, Math.min(this.viewW - size - 3, p.x)) : this.viewW - size - pad;
+    const y0 = p ? Math.max(3, Math.min(this.viewH - size - 3, p.y)) : this.miniTop ?? pad;
+    return { size, x0, y0 };
   }
+  toView(clientX, clientY) {
+    const r = this.canvas.getBoundingClientRect();
+    return { x: ((clientX - r.left) * this.dpr - this.ox) / this.scale, y: ((clientY - r.top) * this.dpr - this.oy) / this.scale };
+  }
+  minimapHit(clientX, clientY) {
+    const { x: vx, y: vy } = this.toView(clientX, clientY), { size, x0, y0 } = this.miniRect();
+    return vx >= x0 - 3 && vx <= x0 + size + 3 && vy >= y0 - 3 && vy <= y0 + size + 3;
+  }
+  miniDragStart(clientX, clientY) { const v = this.toView(clientX, clientY), m = this.miniRect(); this.miniGrab = { dx: v.x - m.x0, dy: v.y - m.y0 }; }
+  miniDragMove(clientX, clientY) { if (!this.miniGrab) return; const v = this.toView(clientX, clientY); this.miniPos = { x: Math.round(v.x - this.miniGrab.dx), y: Math.round(v.y - this.miniGrab.dy) }; }
+  miniDragEnd() { if (!this.miniGrab) return; this.miniGrab = null; try { localStorage.setItem("hb.miniPos", JSON.stringify(this.miniPos)); } catch {} }
+  miniReset() { this.miniPos = null; try { localStorage.removeItem("hb.miniPos"); } catch {} }
 
   drawMinimap(s, ppx, ppy) {
     const { ctx } = this;
     const remaster = this.mode === "remastered";
-    const size = this.miniSize || (remaster ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, y0 = this.miniTop ?? pad;      // en móvil (mobile.js) más pequeño y bajo los botones
+    const { size, x0, y0 } = this.miniRect();      // en móvil (mobile.js) más pequeño y bajo los botones
     if (this.miniMissing && performance.now() - this.miniTry > 500) this.buildMinimap();   // las hojas del suelo llegan por tandas
     const sc = size / this.grid.w;
     ctx.globalAlpha = remaster ? 0.9 : 1;

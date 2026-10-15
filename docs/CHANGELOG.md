@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.8 · Interfaz original (2026-10-15)
+- Legacy: registro de eventos arriba a la izquierda (6 líneas, 5 s) como `ShowEventList` del original; entrada de chat sobre la barra. Minimapa arrastrable con posición recordada y más grande en criptas. Ticket 12. Ficha: `docs/sistemas/interfaz-original.md`.
+
 ## 0.84.7 · Opciones limpias (2026-10-15)
 - Opciones (F12): el interruptor de modo se llama «Remastered (apagado: Legacy)» y tiene traducción. Valores por defecto revisados contra el original: correr, minimapa, barras de vida, info del suelo y HD activados; ataque automático se activa al entrar. Cierra el ticket 10.
 

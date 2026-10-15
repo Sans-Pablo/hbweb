@@ -1,10 +1,11 @@
 {
- "build": "0.84.7",
+ "build": "0.84.8",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date": "2026-10-15", "title": {"es": "Interfaz original (v0.84.8)", "en": "Original interface (v0.84.8)"}, "items": [{"es": "En Legacy los mensajes salen arriba a la izquierda como en el original. El minimapa se arrastra con el ratón y se recuerda su sitio.", "en": "In Legacy the messages show top-left like the original. Drag the minimap with the mouse; its place is remembered."}]},
   {"date": "2026-10-15", "title": {"es": "Opciones limpias (v0.84.7)", "en": "Cleaner options (v0.84.7)"}, "items": [{"es": "En Opciones (F12) el modo se muestra como Remastered / Legacy.", "en": "In Options (F12) the mode shows as Remastered / Legacy."}]},
   {"date": "2026-10-15", "title": {"es": "Conversación de NPC (v0.84.6)", "en": "NPC conversation (v0.84.6)"}, "items": [{"es": "Al hablar con un NPC de ciudad el texto sale en el nuevo marco de piedra con botón Ok.", "en": "Talking to a city NPC shows the text in the new stone frame with an Ok button."}]},
   {"date": "2026-10-15", "title": {"es": "Cuadros de conversación (v0.84.5)", "en": "Conversation boxes (v0.84.5)"}, "items": [{"es": "El tutorial usa el nuevo marco de ventana: cara de Gandlf, texto que se escribe solo y botones Siguiente / Saltar. Prueba también en móvil.", "en": "The tutorial uses the new window frame: Gandlf's face, typewriter text and Next / Skip buttons. Test on mobile too."}]},
