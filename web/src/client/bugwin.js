@@ -12,7 +12,7 @@ export function sendBug(kind, text) {
 
 export class BugWin extends Win {
   constructor() { super({ id: BUG_ID, title: "Informar de un fallo", w: 420, h: 190, x: 190, y: 150 }); this.state = ""; }
-  opened() { this.vals.text = ""; this.state = ""; this.focus = "text"; }
+  opened() { this.vals.text = ""; this.state = ""; this.focusOn("text"); }
   body(ui) {
     const I = this.inner;
     const h = ui.para(I.x, I.y, I.w, "Cuenta qué ha pasado y dónde (solo texto). Se envía con tu nombre, versión, mapa y posición.", THEME.txt);
