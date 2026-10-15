@@ -9,6 +9,7 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
+import { DialogBox } from "./dialogbox.js";
 import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
 import { ARENA } from "../shared/systems/arena.js";
@@ -89,26 +90,16 @@ export function registerNpcDialogs(gui, api) {
   gui.register(quantity);
 
   // ------------------------------------------------------------ 21: conversación (DrawDialogBox_NpcTalk)
-  const talkText = {
-    id: 21, x: 200, y: 100, w: 258, h: 339, lines: [], view: 0, drag: false,
-    begin(n) { this.lines = (api.talk || {})[n] || []; this.view = 0; gui.open(21); },
-    draw(g) {
-      const [lx, ly] = rel(g, this), n = this.lines.length;
-      g.put("gamedialog_1", 2, 0, 0);
-      button(g, lx, ly, BTN.right, 0, 1);
-      if (n > 17) {
-        g.put("gamedialog_1", 3, 0, 0);
-        g.put("gamedialog_1", 7, 242, Math.floor((274 * this.view) / (n - 17)) + 35);
-        if (this.drag && g.mouse.down) this.view = clamp(Math.floor(((ly - 40) * (n - 17)) / 274), 0, n - 17); else this.drag = false;
-      }
-      for (let i = 0; i < 17; i++) { const s = this.lines[i + this.view]; if (s != null) g.aligned(0, this.w, 57 + i * 15, s, INK); }
-    },
-    click(g, lx, ly) {
-      if (onButton(lx, ly, BTN.right)) { g.close(21); return true; }
-      if (this.lines.length > 17 && within(lx, ly, 240, 260, 40, 320)) { this.drag = true; return true; }
-      return false;
-    },
-  };
+  // v0.84.5: DialogBox (ventana de piedra); el texto es el contents{iWho+150} del original, unido en párrafo
+  const talkText = new DialogBox({
+    id: 21, w: 520, place: (g, b) => { b.x = Math.round((g.W - b.w) / 2); b.y = Math.max(8, Math.round((g.H - b.h) / 2) - 40); },
+    spec: () => talkText.lines.length ? {
+      title: NPC_NAMES[trade.npc?.type] || "", text: talkText.lines.join(" ").replace(/\s+/g, " ").trim(),
+      options: [{ label: "Ok", primary: true, fn: () => gui.close(21) }], click: null,
+    } : null,
+  });
+  talkText.lines = [];
+  talkText.begin = function (n) { this.lines = (api.talk || {})[n] || []; gui.open(21); };
   gui.register(talkText);
 
   // ------------------------------------------------------------ 20: menú del NPC

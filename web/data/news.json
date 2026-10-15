@@ -1,10 +1,11 @@
 {
- "build": "0.84.5",
+ "build": "0.84.6",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date": "2026-10-15", "title": {"es": "Conversación de NPC (v0.84.6)", "en": "NPC conversation (v0.84.6)"}, "items": [{"es": "Al hablar con un NPC de ciudad el texto sale en el nuevo marco de piedra con botón Ok.", "en": "Talking to a city NPC shows the text in the new stone frame with an Ok button."}]},
   {"date": "2026-10-15", "title": {"es": "Cuadros de conversación (v0.84.5)", "en": "Conversation boxes (v0.84.5)"}, "items": [{"es": "El tutorial usa el nuevo marco de ventana: cara de Gandlf, texto que se escribe solo y botones Siguiente / Saltar. Prueba también en móvil.", "en": "The tutorial uses the new window frame: Gandlf's face, typewriter text and Next / Skip buttons. Test on mobile too."}]},
   {"date": "2026-10-15", "title": {"es": "Barra a los bordes (v0.84.4)", "en": "Bar to the edges (v0.84.4)"}, "items": [{"es": "En Remastered con pantalla ancha, la barra inferior llega hasta los dos bordes.", "en": "In Remastered on a wide screen the bottom bar reaches both edges."}]},
   {"date": "2026-10-15", "title": {"es": "Modo Legacy (v0.84.3)", "en": "Legacy mode (v0.84.3)"}, "items": [{"es": "El indicador de modo muestra Remastered o Legacy (antes Clásico).", "en": "The mode indicator shows Remastered or Legacy (formerly Classic)."}]},

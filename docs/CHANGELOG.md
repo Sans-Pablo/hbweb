@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.6 · Conversación de NPC (2026-10-15)
+- La conversación de los NPC de ciudad (diálogo 21, texto `contents` del original) usa `DialogBox` (marco de piedra, botón Ok). Ticket 5: tutorial + conversación migrados; tienda/banco/hospital conservan su marco clásico.
+
 ## 0.84.5 · Cuadros de conversación (2026-10-15)
 - `DialogBox` (`dialogbox.js`): constructor de cuadros con cara, nombre, texto con efecto de máquina de escribir y botones de opción (numerables). El tutorial (conversación y rastreador de objetivo) pasa al sistema de ventanas con el marco de piedra. Ticket 5 (parcial: tutorial; el resto de diálogos de NPC se migrará con este constructor).
 
