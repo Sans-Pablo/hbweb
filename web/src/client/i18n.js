@@ -14,7 +14,7 @@ const EN = {
   "Las herramientas aparecen al entrar en el juego.": "The tools appear once you enter the game.", "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.": "For testing only: what you do here is saved with the game. Messages appear in the chat.",
   "Clic derecho: cerrar": "Right click: close", "Cancelar salida": "Cancel logout", "Menú clásico": "Classic menu",
   "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado": "Gail only evolves companions of those who defeated the Golden King",
-  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Misión cumplida": "Quest complete", "de oro": "gold",
+  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Plegar": "Fold", "Misiones": "Quests", "Misión cumplida": "Quest complete", "de oro": "gold",
   "Guerrero": "Warrior", "Mago": "Mage", "Invocador": "Summoner", "ya tienes un summon de esa especie: deben ser distintos": "you already have a summon of that species: they must be different",
   "elige Healer, Buffer o Aura": "choose Healer, Buffer or Aura",
   // ---- 0.50.7

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.0 · Diario de misiones (2026-10-15)
+- Misiones como ventana propia (`questwin.js`, J o botón «!» de la barra); rastreador plegable más abajo; se quita el botón Quest de F5.
+
 ## 0.83.10 · Buscador y botón Ok destacado (2026-10-15)
 - `Ui.search` (lupa, ×, filtro en minúsculas) usado en F1; `btn {primary}` con borde dorado para el Ok de los avisos; `THEME.pad/gap/row` como márgenes comunes; el rastreador de misiones (`#qtrack`) limita su ancho al 42% de la pantalla.
 

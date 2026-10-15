@@ -30,3 +30,6 @@ Modo inmediato: `body` se llama cada fotograma; coordenadas locales (0,0 = esqui
 Solo el login/creación de personaje (`#join`), el selector de archivo `#file-import` y, por ahora, los paneles heredados `#charpanel/#inv/#book` (hud.js) y el diario/seguimiento de misiones (`questui.js`). Migrarlos: crear un `Win` y quitar el panel.
 
 Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`); toda cadena nueva en español lleva entrada en `client/i18n.js`.
+
+## Diario de misiones (v0.84.0)
+`client/questwin.js`: `QuestWin` (id 49, J o botón «!» de la barra) lista la línea de misiones (✔ hechas, ▶ actual con objetivo, «???» futuras). `questui.js` queda solo como rastreador DOM plegable (▾/▸, se recuerda en `hbweb.qtrack`) bajo el minimapa. El botón Quest de F5 se retiró. Test: `tests/questwin.test.mjs`.

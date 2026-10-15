@@ -351,7 +351,8 @@ export class Gui {
     else if (x > 521 + a && x < 558 + a) this.onAction?.("skill");
     else if (x > 558 + a && x < 595 + a) this.onAction?.("chat");
     else if (x > 595 + a && x < 631 + a) this.onAction?.("sys");
-    else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
+    else if (x > 632 + a && x < 669 + a) this.onAction?.("pets");
+    else if (x > 670 + a && x < 707 + a) this.onAction?.("quests");        // Misiones (ticket 6): botón propio, ya no cuelga del cuadro de personaje        // «Summons» y «Recall» (inventos del port) van tras el menú del sistema
   }
 
   // ---------------------------------------------------------------- fotograma
@@ -456,6 +457,14 @@ export class Gui {
     const c = this.ctx; this.put("summons_icon", f, x, 554);
     c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
     c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+  }
+
+  // Botón de Misiones (ticket 6): mismo marco que «Summons», teñido de dorado y con un «!» encima
+  questIcon(f, x) {
+    const c = this.ctx; this.put("summons_icon", f, x, 554);
+    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
+    c.filter = "hue-rotate(-20deg) saturate(1.2) brightness(1.05)"; this.put("summons_icon", f, x, 554); c.restore();
+    this.text(x + 19, 554 + 21, "!", "#fff0b0", { align: "center", bold: true, shadow: true, size: 16 });
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)
@@ -589,12 +598,12 @@ export class Gui {
     this.aligned(140 + RESX, 323 + RESX, 456 + RESY, mid, "#c8c878");
 
     if (m.y > 436 + RESY && m.y < 478 + RESY) {
-      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"]];
+      const icons = [[410, 6, 2, "Character"], [447, 7, 1, "Inventory"], [484, 8, 1, "Spellbook"], [521, 9, 1, "Skills"], [558, 10, 0, "Chat Log"], [595, 11, 1, "System Menu"], [632, -1, 0, "Summons"], [670, -2, 0, "Quests"]];
       for (const [x0, f, dx, name] of icons) {
-        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
+        if (m.x > x0 + a && m.x < x0 + 37 + a) { if (f === -2) this.questIcon(1, x0 + a); else if (f < 0) this.summonsIcon(1, x0 + a); else this.put("gamedialog2_6", f, x0 + a + dx, 434 + RESY); this.tip(name, m.x - (f === 11 ? 20 : 10)); }
       }
     }
-    this.summonsIcon(0, 632 + a);
+    this.summonsIcon(0, 632 + a); this.questIcon(0, 670 + a);
     if (m.x > 400 && m.x < 410 && m.y > 432 + RESY) this.tip("Hunger (" + (100 - me.hunger) + "%)", m.x - 20);
   }
 

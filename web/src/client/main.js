@@ -32,6 +32,7 @@ import { registerPetDialog } from "./petdialog.js";
 import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
+import { registerQuests, QUEST_ID } from "./questwin.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -127,7 +128,7 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
-  registerNews(gui); registerPrompts(gui);
+  registerNews(gui); registerQuests(gui); registerPrompts(gui);
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
@@ -136,9 +137,9 @@ async function main() {
   status.remove();
   const logout = { n: null, t: 0 };
   const chatLog = [];
-  const questUi = createQuestUi(() => world.ents.get(pid));
+  const questUi = createQuestUi(() => world.ents.get(pid), () => gui.toggle(QUEST_ID));
   const guiApi = {
-    quests: () => questUi.toggle(),
+    quests: () => gui.toggle(QUEST_ID),
     stall: () => stallUi.setup(),
     chatLog,
     log: m => hud.log(m),
@@ -567,7 +568,7 @@ async function main() {
   hud.canWhisper = () => flags.whisper;
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), quests: () => gui.toggle(QUEST_ID), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });

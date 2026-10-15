@@ -1,10 +1,17 @@
 {
- "build": "0.83.10",
+ "build": "0.84.0",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Diario de misiones (v0.84.0)", "en": "Quest journal (v0.84.0)"},
+   "items": [
+    {"es": "Las misiones tienen su ventana (tecla J o el nuevo botón «!» de la barra). El rastreador de arriba a la derecha se pliega con ▾ y ya no tapa el minimapa. Prueba: abre el diario, plega el rastreador y recarga.", "en": "Quests have their own window (J key or the new '!' bar button). The top-right tracker folds with ▾ and no longer covers the minimap. Test: open the journal, fold the tracker and reload."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Buscador y márgenes comunes (v0.83.10)", "en": "Search box and common margins (v0.83.10)"},

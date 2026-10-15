@@ -52,14 +52,12 @@ export function registerDialogs(gui, api) {
         }
       }
       const on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      g.put("dialogtext_1", on(15) ? 5 : 4, 15, 340);           // Quest
       g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
-      if (hit(15)) api.quests?.();
-      else if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
+      if (hit(98)) { if (!g.isOpen(32)) api.party?.(); else g.close(32); }
       else if (hit(180)) { g.close(1); g.open(12); return true; }
       return false;
     },
