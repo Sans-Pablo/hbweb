@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.83.13 · Motor: suelo sin tirones (2026-10-15)
+- Ticket 3 (FPS): los bloques de suelo que esperaban una hoja se rehacían todos en el mismo fotograma al llegar; ahora uno por fotograma (renderer.js `groundChunk`). Medido con `?prof=1`: fase base 21.8 → 30.2 fps (tope del navegador integrado, 30). Quedan tirones de 3-5 s tras entrar (primer dibujo de hojas).
+- Verificado en navegador: «!» al matar, «Critical» con carga de super ataque, lanzar Fire Ball (texto, daño en área, sin «Failed» en fallo normal), flechas de susurro. Dash solo por test (`crit-dash`).
+
 ## 0.83.12 · Motor: ciclo de susurros (2026-10-15)
 - Ticket 10: Flecha arriba/abajo recorre los últimos 5 destinatarios de susurro (Game.cpp OnKeyDown VK_UP/VK_DOWN, NotifyMsg_WhisperMode). El zoom con el teclado numérico no existe en el original (las teclas del numpad no hacen nada, Game.cpp ~24636): no se implementa.
 - Ticket 8 (no reverencia/ataque a aliados): cubierto sin cambios, el cliente nunca apunta a aliados (controller.js click) y el servidor lo rechaza (Combat.canFight, test shared-crypt).

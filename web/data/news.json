@@ -1,10 +1,17 @@
 {
-  "build": "0.83.12",
+  "build": "0.83.13",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": { "es": "Motor: suelo sin tirones (v0.83.13)", "en": "Engine: smoother ground (v0.83.13)" },
+      "items": [
+        { "es": "Menos tirones al entrar en un mapa: los bloques del suelo se rehacen de uno en uno.", "en": "Fewer hitches on entering a map: ground blocks are rebuilt one at a time." }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": { "es": "Motor: ciclo de susurros (v0.83.12)", "en": "Engine: whisper cycling (v0.83.12)" },
