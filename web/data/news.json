@@ -1,10 +1,11 @@
 {
- "build": "0.84.2",
+ "build": "0.84.3",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date": "2026-10-15", "title": {"es": "Modo Legacy (v0.84.3)", "en": "Legacy mode (v0.84.3)"}, "items": [{"es": "El indicador de modo muestra Remastered o Legacy (antes Clásico).", "en": "The mode indicator shows Remastered or Legacy (formerly Classic)."}]},
   {
    "date": "2026-10-15",
    "title": {"es": "Casillas neutras (v0.84.2)", "en": "Neutral slots (v0.84.2)"},

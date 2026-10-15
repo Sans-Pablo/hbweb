@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.3 · Modo Legacy (2026-10-15)
+- El modo «Clásico» se llama ahora Legacy en el indicador de fps (Remastered / Legacy). Resto del ticket 10 (limpieza de opciones, valores por defecto de F1) pendiente.
+
 ## 0.84.2 · Casillas neutras (2026-10-15)
 - `drawSlot` (window.js): casilla gris con bisel al estilo del original, se enciende al pasar el ratón; la usan las bolas del hospital.
 

@@ -322,7 +322,7 @@ async function main() {
     renderer.setMode(m);
     sound.setMode(m);
     
-    document.getElementById("modename").textContent = m === "classic" ? "Clásico" : "Remastered";
+    document.getElementById("modename").textContent = m === "classic" ? "Legacy" : "Remastered";
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
