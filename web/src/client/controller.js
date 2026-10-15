@@ -275,7 +275,10 @@ export class Controller {
       this.intent = null; this.path = [];
       return;
     }
-    const p = findPath(this.grid, me.x, me.y, it.x, it.y, me.id);
+    let avoid = null;                                      // en modo automático el camino no pisa teletransportadores (el almacén tiene dos salidas junto al mostrador): solo si es el destino
+    if (this.auto && world.teleports?.size) avoid = new Set(world.teleports.keys());
+    let p = findPath(this.grid, me.x, me.y, it.x, it.y, me.id, 40000, avoid);
+    if (!p.length && avoid) p = findPath(this.grid, me.x, me.y, it.x, it.y, me.id);
     if (!p.length) { this.intent = null; this.path = []; return; }
     this.path = p;
     if (!this.conn.send({ t: "move", dir: p[0], run })) {

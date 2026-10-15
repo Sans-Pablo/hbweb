@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.5 · AUTO: pozos, contador y almacén (2026-10-15)
+- Menú AUTO: casilla «No recoger objetos» (`auto.nopick`: sin presas no pisa el botín) y la zona muestra el nombre del pozo («Pozo N · criatura») junto a las coordenadas.
+- Mini ventana «Auto hunt» (id 75, `AutoMini` en autowin.js): criatura, pozo, muertes, tiempo y ritmo/h. Se abre al empezar; main.js cuenta los eventos `death` con `by` = tú (`auto.kills`). Sin cambio de protocolo.
+- Atasco en el almacén: `viaTeleport` elige la entrada de camino más corto (no la más cercana en línea recta), el auto no pisa casillas de teletransporte al andar (salvo el destino) y `approach` no elige una. Test en tests/autoplay.test.mjs. Sin verificar en el navegador.
 ## 0.84.11 · Menú AUTO (2026-10-15)
 - Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.
 - `autoplay.js`: caza con zona (va, caza dentro, recoge; con la mochila llena vuelve a la granja y termina el ciclo), ruta a la granja y `approach()` (casilla libre y alcanzable a ≤2 del habitante, p. ej. tras un mostrador). `/auto hunt` y `/auto run` siguen igual. Sin cambio de protocolo.

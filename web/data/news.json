@@ -1,10 +1,31 @@
 {
- "build": "0.85.4",
+ "build": "0.85.5",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "AUTO: pozos, contador y almacén (v0.85.5)",
+    "en": "AUTO: pits, counter and warehouse (v0.85.5)"
+   },
+   "items": [
+    {
+     "es": "Casilla «No recoger objetos» en la pestaña Cazar, y cada zona muestra el nombre de su pozo.",
+     "en": "«Don't pick up items» checkbox in the Hunt tab; each zone shows its pit name."
+    },
+    {
+     "es": "Mini ventana con las muertes, el tiempo y el ritmo de la caza automática.",
+     "en": "Mini window with kills, time and rate of the auto hunt."
+    },
+    {
+     "es": "El modo automático ya no se atasca en el almacén (dos entradas / casillas de salida).",
+     "en": "Auto mode no longer gets stuck in the warehouse (two entrances / exit tiles)."
+    }
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {

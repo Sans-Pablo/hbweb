@@ -11,6 +11,9 @@ const listeners = new Set();
 const EN = {
   // ---- menú automático (autowin.js, autoplay.js)
   "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
+  "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",
+  "Cazando": "Hunting", "Cazando (sin recoger)": "Hunting (no pickup)", "Detenido": "Stopped",
+  "Sin caza activa. Empieza una desde el menú AUTO.": "No active hunt. Start one from the AUTO menu.",
   "Modo automático detenido.": "Auto mode stopped.", "Mapa: Granja de Aresden": "Map: Aresden Farm", "Zona": "Zone",
   "Corre hasta el sitio, entra en el edificio si hace falta y abre su diálogo. Un clic cancela.": "Runs to the place, enters the building if needed and opens its dialog. A click cancels.",
   "Almacén, tienda y herrería se alcanzan desde la granja de Aresden.": "Warehouse, shop and blacksmith are reached from the Aresden farm.",

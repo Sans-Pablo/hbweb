@@ -72,5 +72,16 @@ zs.x = me.x + 30; zs.y = me.y; d = decide(w, me, zau); assert.ok(!d.intent || d.
 me.bag = new Array(BAG_MAX).fill(1); me.x = fx + 20; zau.full = false;
 d = decide(w, me, zau); assert.ok(zau.full, "mochila llena: marca el ciclo de vuelta"); assert.equal(d.intent?.t, "move", "y vuelve a la granja");
 me.x = fx; me.y = fy; d = decide(w, me, zau); assert.ok(d.stop, "en la granja con la mochila llena termina el ciclo");
+// ---- «No recoger objetos»: con botín a la vista y sin presas, no lo pisa
+zs.dead = true; me.x = fx; me.y = fy; w.items.clear(); { const [bx, by] = spot(2, 2); groundPush(w, bx, by, newInst(w, 1, 1));
+  assert.equal(decide(w, me, { kind: "hunt", mob: "Slime" }).intent?.t, "pickup", "sin nopick recoge");
+  assert.ok(!decide(w, me, { kind: "hunt", mob: "Slime", nopick: true }).intent, "nopick: no recoge"); w.items.clear(); }
+// ---- almacén con dos entradas: elige la de camino más corto y la aproximación no pisa casillas de teletransporte
+{ const [ax, ay] = spot(3, 0), [bx, by] = spot(0, 12), tp = new Map();
+  tp.set(w.grid.idx(ax, ay), { x: ax, y: ay, map: "wrhus_1f" }); tp.set(w.grid.idx(bx, by), { x: bx, y: by, map: "wrhus_1f" });
+  const fw = Object.create(w); fw.teleports = tp; me.x = fx; me.y = fy;
+  const v = viaTeleport(fw, me, "wrhus_1f"); assert.equal(v.intent?.t, "move"); assert.deepEqual([v.intent.x, v.intent.y], [ax, ay], "entrada más corta");
+  const c = w.makeEnt("citizen", ax + 1, ay); const sp = approach(fw, me, c);
+  assert.ok(sp && !tp.has(w.grid.idx(sp[0], sp[1])), "approach no elige una casilla de teletransporte"); }
 for (const k of Object.keys(PLACES)) assert.ok(PLACES[k].es && PLACES[k].en);
 console.log("OK autoplay");

@@ -58,9 +58,10 @@ export function viaTeleport(w, me, to) {
   if (cur === to) return null;
   const next = cur === FARM ? to : FARM;
   let best = null, bd = 1e9;
-  for (const t of w.teleports?.values?.() || []) {
+  for (const t of w.teleports?.values?.() || []) {                       // varias entradas (el almacén tiene dos): la de camino más corto, no la más cercana en línea recta
     if (String(t.map).toLowerCase() !== next) continue;
-    const d = dist(me, t); if (d < bd) { bd = d; best = t; }
+    const l = w.grid && !(t.x === me.x && t.y === me.y) ? findPath(w.grid, me.x, me.y, t.x, t.y, me.id, 6000).length : 0;
+    const d = w.grid && l ? l : t.x === me.x && t.y === me.y ? 0 : 1e6 + dist(me, t); if (d < bd) { bd = d; best = t; }
   }
   if (!best) return { stop: true, msg: ["No encuentro el camino a ese destino desde aquí.", "I can't find the way to that place from here."] };
   return { intent: { t: "move", x: best.x, y: best.y } };
@@ -72,7 +73,7 @@ export function approach(w, me, e) {
   let best = null, bl = 1e9;
   for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) {
     const x = e.x + dx, y = e.y + dy;
-    if (!w.grid.inside(x, y) || w.grid.blocked(x, y) || (w.grid.occupant?.(x, y) !== undefined && (x !== me.x || y !== me.y))) continue;
+    if (!w.grid.inside(x, y) || w.grid.blocked(x, y) || w.teleports?.has?.(w.grid.idx(x, y)) || (w.grid.occupant?.(x, y) !== undefined && (x !== me.x || y !== me.y))) continue;
     const l = x === me.x && y === me.y ? 0 : findPath(w.grid, me.x, me.y, x, y, me.id, 6000).length;
     if (x !== me.x || y !== me.y) if (!l) continue;
     if (l < bl) { bl = l; best = [x, y]; }
@@ -119,7 +120,8 @@ export function decide(w, me, a) {
     const d = dist(me, e); if (d <= SIGHT && d < bd) { bd = d; t = e; }
   }
   if (t) { a.idle = null; return { intent: { t: "attack", id: t.id } }; }
-  for (let dx = -LOOT_RANGE; dx <= LOOT_RANGE; dx++) for (let dy = -LOOT_RANGE; dy <= LOOT_RANGE; dy++) {       // sin presas a la vista: botín cercano
+  // a.nopick (opción «No recoger objetos»): no pisa el botín; a.kills lo cuenta main.js con el evento "death" y lo muestra la mini ventana (autowin.js)
+  if (!a.nopick) for (let dx = -LOOT_RANGE; dx <= LOOT_RANGE; dx++) for (let dy = -LOOT_RANGE; dy <= LOOT_RANGE; dy++) {       // sin presas a la vista: botín cercano
     const x = me.x + dx, y = me.y + dy;
     if (!w.grid.inside(x, y) || !groundTop(w, x, y) || a.skip?.has(x + "," + y) || (z && !inRect(z.rect, x, y, ZONE_PAD))) continue;
     const d = Math.max(Math.abs(dx), Math.abs(dy)); if (d < bd) { bd = d; t = { x, y }; }

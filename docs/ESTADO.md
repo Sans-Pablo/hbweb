@@ -22,6 +22,7 @@
 - [x] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
 - [x] 5. Efecto de evolución de pet: el aura de Demon/Frost/Liche/Cyclops evolucionados ahora late ~6 s cada 60 s (fase propia por criatura, fundido suave) en vez de titilar siempre (`renderer.js`, `evoEnv`). Sin bump (0.83.6). Interpretación: pulso de aura 6 s cada 60 s; si se refería a otro efecto, p. ej. la animación de evolución de `fx.js`, avisar).
 - [x] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
+- [x] (pedido 2026-10-15, v0.85.5) AUTO: no recoger objetos, mini ventana de muertes, nombre del pozo, atasco en el almacén (sin verificar en navegador).
 - [x] 7. Auto hunt / auto run (v0.83.11, docs/sistemas/auto.md).
 - [x] 8. Stat simulator (Olympia): `/stats`, ventana id 73 (`client/statsim.js`, `docs/sistemas/statsim.md`).
 

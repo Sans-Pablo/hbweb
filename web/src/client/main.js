@@ -753,6 +753,7 @@ async function main() {
     const rainNow = !world.fixedDay && world.weather >= 1 && world.weather <= 3;
     if (rainNow !== raining) { raining = rainNow; sound.rain(raining); }
     for (const ev of events) {
+      if (ev.t === "death" && ev.by === pid && !ev.pet && ctl.auto?.kind === "hunt") ctl.auto.kills = (ctl.auto.kills || 0) + 1;      // contador de la mini ventana del auto hunt (autowin.js)
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.id === pid) gui.recallEvent(ev);
       tutorial.onEvent(ev); questUi.onEvent(ev, world.ents.get(pid), hud);

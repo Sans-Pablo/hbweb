@@ -13,3 +13,8 @@ INVENTO del port (Olympia tenía auto-caza; el original no). Lógica pura en `sh
 - `approach(w, me, e)`: casilla a ≤2 del habitante con camino más corto (salta bloqueadas y ocupadas); si no hay, para con aviso. `run farm` anda a FARM_HOME.
 - La ficha usa `drops.js dropInfo(type)` y NPC.cfg; el sprite sale de `mobSprite` (8 direcciones, 1,8 s cada una).
 - Test: `tests/autoplay.test.mjs`.
+
+## v0.85.5: pozos, contador, almacén
+- `auto.nopick` (casilla del menú, no en `/auto`): `decide` se salta el bucle de botín. `auto.kills` lo suma main.js con `death` (`by` = pid, sin mascotas); la mini ventana id 75 (`AutoMini`) lo muestra con tiempo y ritmo.
+- Zona = spawn de arefarm.spawns.json: se muestra «Pozo id · criatura (rect)».
+- Almacén: `viaTeleport` ordena entradas por longitud de `findPath`; controller.js pasa `avoid` (casillas de `w.teleports`) al andar en auto (reintenta sin él); `approach` descarta casillas de teletransporte.

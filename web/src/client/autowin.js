@@ -10,13 +10,19 @@ import { t } from "./i18n.js";
 import { PLACES, FARM } from "../shared/systems/autoplay.js";
 import { dropInfo } from "../shared/drops.js";
 
-export const AUTO_ID = 74;
+export const AUTO_ID = 74, AUTO_MINI_ID = 75;
 const GO = ["farm", "warehouse", "shop", "smith", "mage", "farmer", "hospital", "petmage"];
 const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const CHANGE_MS = 1800;                                   // cada cuánto gira el modelo a la siguiente dirección
 
 export class AutoWin extends Win {
-  constructor(api) { super({ id: AUTO_ID, title: "Menú automático", w: 460, h: 420, x: 170, y: 50 }); this.api = api; this.tab = "hunt"; this.zi = 0; this.mi = 0; }
+  constructor(api) { super({ id: AUTO_ID, title: "Menú automático", w: 460, h: 420, x: 170, y: 50 }); this.api = api; this.tab = "hunt"; this.zi = 0; this.mi = 0; this.nopick = false; }
+  // arranca la caza; la mini ventana (contador) se abre sola y sigue la misma orden aunque termine
+  startHunt(z) {
+    const a = { kind: "hunt", mob: z.name, zone: { map: FARM, rect: z.rect }, nopick: this.nopick, kills: 0, t0: performance.now(), pit: z.id };
+    this.api.start(a); this.g?.open(AUTO_MINI_ID);
+    if (this.mini) this.mini.run = a;
+  }
   zones() {                                                 // zonas = spawns agrupados por criatura (id/rect del JSON de la granja)
     return (this.api.spawns() || []).filter(s => s.name && this.api.npcDb[s.name]);
   }
@@ -42,7 +48,7 @@ export class AutoWin extends Win {
     ui.text(I.x, I.y + 36, "Mapa: Granja de Aresden", THEME.head);
     ui.text(I.x, I.y + 56, "Zona", THEME.txt);
     ui.btn(I.x + 44, I.y + 52, 24, "<", () => { this.zi = (this.zi + zs.length - 1) % zs.length; });
-    ui.text(I.x + 76, I.y + 56, (this.zi + 1) + "/" + zs.length + "  " + z.name + " (" + z.rect.join(",") + ")", THEME.txt);
+    ui.text(I.x + 76, I.y + 56, (this.zi + 1) + "/" + zs.length + "  " + pitName(z) + " (" + z.rect.join(",") + ")", THEME.txt);
     ui.btn(I.x + I.w - 24, I.y + 52, 24, ">", () => { this.zi = (this.zi + 1) % zs.length; });
     // sprite animado: ataque en las 8 direcciones
     const bx = I.x, by = I.y + 84, bw = 170, bh = 150, c = ui.c;
@@ -58,8 +64,9 @@ export class AutoWin extends Win {
     row("Oro", cfg.goldMin + "–" + cfg.goldMax); row("Apariciones", String(z.max));
     ui.head(I.x, by + bh + 8, "Botín posible");
     ui.para(I.x, by + bh + 26, I.w, d.items.length ? names + (d.weak ? " (" + "suelta poco" + ")" : "") : "Casi nada", THEME.txt, { size: 11 });
-    ui.para(I.x, I.y + I.h - 52, I.w, "Corre a la zona, caza, recoge el botín y, con la mochila llena, vuelve a la granja y termina.", THEME.txt, { size: 11 });
-    ui.btn(I.x, I.h - 22 + I.y, 150, on ? "Reiniciar caza" : "Empezar", () => api.start({ kind: "hunt", mob: z.name, zone: { map: FARM, rect: z.rect } }), { primary: true });
+    ui.para(I.x, I.y + I.h - 70, I.w, "Corre a la zona, caza, recoge el botín y, con la mochila llena, vuelve a la granja y termina.", THEME.txt, { size: 11 });
+    ui.check(I.x, I.y + I.h - 44, "No recoger objetos", this.nopick, v => { this.nopick = v; });
+    ui.btn(I.x, I.h - 22 + I.y, 150, on ? "Reiniciar caza" : "Empezar", () => this.startHunt(z), { primary: true });
   }
   // criatura atacando, girando por las 8 direcciones (misma ruta de dibujo que summonpreview.js)
   model(ui, cfg, name, ax, ay) {
@@ -74,4 +81,23 @@ export class AutoWin extends Win {
     c.drawImage(g.spr.img[key], sx, sy, w, h, ax + px * s, ay + py * s, w * s, h * s);
   }
 }
-export function registerAutoWin(gui, api) { const w = new AutoWin(api); gui.register(w); return w; }
+// nombre del pozo (zona de aparición): su número del fichero de spawns más la criatura, p. ej. «Pozo 3 · Slime»
+const pitName = z => t("Pozo") + " " + z.id + " · " + z.name;
+
+// Mini ventana del auto hunt: criatura, pozo, muertes, tiempo y ritmo. Sigue la orden `run` (la de la caza actual o la última).
+export class AutoMini extends Win {
+  constructor(api) { super({ id: AUTO_MINI_ID, title: "Auto hunt", w: 230, h: 150, x: 560, y: 60 }); this.api = api; this.run = null; }
+  body(ui) {
+    const I = this.inner, ctl = this.api.ctl(), a = ctl.auto?.kind === "hunt" ? ctl.auto : this.run;
+    if (ctl.auto?.kind === "hunt") this.run = a;
+    if (!a) { ui.para(I.x, I.y, I.w, "Sin caza activa. Empieza una desde el menú AUTO.", THEME.txt, { size: 11 }); return; }
+    const on = ctl.auto === a, secs = Math.max(1, Math.round((on ? performance.now() : (a.t1 ||= performance.now())) - a.t0) / 1000), k = a.kills || 0;
+    const mm = Math.floor(secs / 60), ss = String(Math.floor(secs % 60)).padStart(2, "0");
+    ui.text(I.x, I.y, a.mob + (a.pit ? "  (" + t("Pozo") + " " + a.pit + ")" : ""), THEME.head);
+    ui.text(I.x, I.y + 20, "Muertes", THEME.txt); ui.text(I.x + 90, I.y + 20, String(k), THEME.head, { bold: true });
+    ui.text(I.x, I.y + 38, "Tiempo", THEME.txt); ui.text(I.x + 90, I.y + 38, mm + ":" + ss, THEME.txt);
+    ui.text(I.x, I.y + 56, "Ritmo", THEME.txt); ui.text(I.x + 90, I.y + 56, (k * 3600 / secs).toFixed(0) + " /h", THEME.txt);
+    ui.text(I.x, I.y + 74, on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", on ? THEME.txt : THEME.bad);
+  }
+}
+export function registerAutoWin(gui, api) { const w = new AutoWin(api), m = new AutoMini(api); w.mini = m; gui.register(w); gui.register(m); return w; }
