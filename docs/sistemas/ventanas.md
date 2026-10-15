@@ -17,7 +17,9 @@ gui.register(new Mi());   // gui.toggle(71)
 Modo inmediato: `body` se llama cada fotograma; coordenadas locales (0,0 = esquina del marco), área útil `this.inner`.
 
 ## Widgets (`ui`)
-`text`, `para` (párrafo con ajuste, devuelve alto), `head`, `rule`, `btn`, `check`, `slider`, `input` (texto o número con min/max), `combo` (lista desplegable con filtro), `scroll` (zona con barra y rueda), `hit`, y `Flow` para filas que saltan de línea (`f.text/btn/input/combo/nl`, `f.bottom`).
+`text`, `para` (párrafo con ajuste, devuelve alto), `head`, `rule`, `btn`, `check`, `slider`, `input` (texto o número con min/max), `combo` (lista desplegable con filtro), `search` (campo con lupa y × que devuelve el texto buscado en minúsculas; úsalo en toda ventana con listas, p. ej. F1), `scroll` (zona con barra y rueda), `hit`, y `Flow` para filas que saltan de línea (`f.text/btn/input/combo/nl`, `f.bottom`).
+
+`btn` admite `{primary:true}` (filete dorado y rótulo en negrita: el Ok de los avisos). `THEME.pad/gap/row` (8/6/24) son los márgenes comunes para separar piezas.
 
 ## Prompts y acciones
 - `gui.ask(label, def, {numeric,min,max,maxLen}) → Promise<string|null>` y `gui.confirm(label) → Promise<bool>`: modales del lienzo (sustituyen a `prompt()`/`confirm()` del navegador; los usa el puesto de venta).

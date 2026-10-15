@@ -40,4 +40,12 @@ g.close(91); assert.equal(await p, false, "cerrar el modal por cualquier vía re
 
 // Esc cierra una ventana normal; con un campo con foco, solo lo suelta
 key("Escape"); assert.ok(!g.isOpen(71));
+// buscador de listas (ui.search): devuelve el texto en minúsculas, la × lo borra
+{
+  let got = null; const w = new Win({ id: 72, title: "Lista", w: 300, h: 200, x: 100, y: 100 }); w.body = ui => { got = ui.search("q", 24, 40, 200); };
+  g.register(w); g.open(72); w.draw(g, null, null); assert.equal(got, "");
+  w.vals.q = " Pelo "; w.draw(g, null, null); assert.equal(got, "pelo");
+  const x = w.hits.find(h => h.fn && h.x >= 24 + 200 - 18 && h.w <= 18); assert.ok(x, "× visible con texto"); x.fn(); assert.equal(w.vals.q, "");
+  g.close(72);
+}
 console.log("OK");

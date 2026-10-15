@@ -8,7 +8,7 @@ const GOAL = {
   boss: (g, [a]) => a + "/" + g.n, ek: (g, [a]) => a + "/" + g.n, pet: (g, [a]) => t("Nivel del compañero") + " " + a + "/" + g.n, staff: (g, [a]) => a + "/1", trade: (g, [a]) => a + "/1",
   final: (g, [a]) => t("Nivel del summon") + " " + a + "/" + g.n, king: (g, [a]) => a + "/" + g.n, gold: (g, [a]) => a + "/" + g.n,
 };
-const CSS = `#qtrack{position:absolute;right:8px;top:92px;max-width:230px;padding:6px 9px;background:rgba(20,16,22,.72);border:1px solid #756959;color:#e8dcc3;font:12px Tahoma,Verdana,sans-serif;cursor:pointer;z-index:20;line-height:1.35}
+const CSS = `#qtrack{position:absolute;right:8px;top:92px;max-width:min(230px,42vw);padding:6px 9px;background:rgba(20,16,22,.72);border:1px solid #756959;color:#e8dcc3;font:12px Tahoma,Verdana,sans-serif;cursor:pointer;z-index:20;line-height:1.35}
 #qtrack b{display:block;color:#f2d98a;font-size:12px}#qtrack i{font-style:normal;color:#a9d3a0}
 #qpanel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,94vw);max-height:80vh;overflow:auto;padding:16px 18px;background:#211d22;border:1px solid #756959;color:#e8dcc3;font:13px Tahoma,Verdana,sans-serif;z-index:60;display:none}
 #qpanel h2{margin:0 0 6px;font-size:17px;color:#f2d98a}#qpanel .row{padding:5px 0;border-top:1px solid #3a3138}#qpanel .done{color:#8b8;opacity:.8}#qpanel .cur{color:#fff;background:#2f2733;padding:6px}#qpanel .ch{margin:10px 0 2px;color:#b9a77f;font-weight:700}

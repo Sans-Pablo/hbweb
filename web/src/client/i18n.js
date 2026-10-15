@@ -37,7 +37,7 @@ const EN = {
   "Inicia sesión primero.": "Log in first.",
   "Se cortó la conexión con el servidor.": "The connection to the server was lost.", "Dirección del servidor no válida.": "Invalid server address.", "Error del servidor.": "Server error.",
   // ---- pantalla de entrada y creación
-  "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Cargando mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
+  "Buscar…": "Search…", "Cargando…": "Loading…", "Cargando el mapa…": "Loading map…", "Cargando mapa…": "Loading map…", "Entrar": "Log in", "Crear cuenta": "Create account", "Nombre": "Name", "Contraseña": "Password",
   "Repite la contraseña": "Repeat password", "Tu personaje se guarda solo en este navegador. Puedes hacer una copia en Opciones.": "Your character is saved only in this browser. You can make a backup in Options.",
   "Conexión perdida": "Connection lost", "El servidor se ha cerrado o se cortó internet.": "The server closed or the internet dropped.", "Volver a entrar": "Log back in",
   "Crear cuenta y entrar": "Create account and log in", "Escribe un nombre.": "Enter a name.", "Las contraseñas no coinciden.": "The passwords do not match.",

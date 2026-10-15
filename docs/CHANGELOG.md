@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.10 · Buscador y botón Ok destacado (2026-10-15)
+- `Ui.search` (lupa, ×, filtro en minúsculas) usado en F1; `btn {primary}` con borde dorado para el Ok de los avisos; `THEME.pad/gap/row` como márgenes comunes; el rastreador de misiones (`#qtrack`) limita su ancho al 42% de la pantalla.
+
 ## 0.83.6 · Personajes sin recuadros (2026-10-15)
 - Pablo vio rectángulos pálidos alrededor de todos los personajes tras pasar a GL por defecto. Causa: el canvas GL es premultiplicado y el shader podía sacar rgb>alfa (p. ej. alfa 0 con rgb>0 en los bordes); al volcarlo al atlas 2D con source-over eso suma luz. `getImageData` des-premultiplica y lo esconde, por eso la lectura del atlas parecía limpia. Ahora `o = vec4(min(c.rgb, vec3(c.a)), c.a)` en todos los modos. Sin cambio de calidad ni de coste apreciable.
 
