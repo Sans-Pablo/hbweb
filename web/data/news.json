@@ -4192,6 +4192,19 @@
      "en": "Window-by-window review against the original: bar tooltips, Required Exp, top-left log, Party, Magic (no longer closes), Ctrl in Level Up, quantity and shop. Pending list in docs/AUDITORIA_UI.md."
     }
    ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Auditoría de datos vs original (v0.85.9)",
+    "en": "Data audit vs original (v0.85.9)"
+   },
+   "items": [
+    {
+     "es": "Comparación automática de objetos, monstruos, magias y teleports con los ficheros originales; informe en docs/AUDITORIA_DATOS.md. Sin cambios de juego.",
+     "en": "Automatic comparison of items, monsters, spells and teleports against the original files; report in docs/AUDITORIA_DATOS.md. No gameplay changes."
+    }
+   ]
   }
  ],
  "tests": [
