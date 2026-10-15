@@ -21,3 +21,6 @@ Nada. Efectos 102–172 sin sprite: por diseño no se dibujan; el teletransporte
 
 ## Objetivo en movimiento (v0.84.14)
 El servidor original resuelve el hechizo al recibir la orden (HG.cpp `PlayerMagicHandler`); aquí la animación de lanzar (~640 ms) retrasa el golpe, y un monstruo que andaba salía de la casilla y esquivaba todo («las magias no hacen daño»). `magicsys.cast` recuerda al ocupante de la casilla al lanzar y `resolve` golpea donde está al soltarlo. Test: `tests/magic-moving.test.mjs`.
+
+## Anillo de protección (v0.84.16)
+Protection From Magic / Defense Shield (efectos 124 y 133) añaden el efecto 52 sobre el objetivo; el dibujado de ese tipo faltaba. Ahora `spellfx.js` lo pinta como el original (Game.cpp DrawEffects `case 52` «Protection Ring»: efecto 24, 15 fotogramas a 80 ms). Test: `tests/spellfx-ring.test.mjs`.

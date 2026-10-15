@@ -357,6 +357,7 @@ export class SpellFx {
         }
         case 50: P(22, f <= 6 ? f : 6, x, y, "add", f <= 6 ? 1 : fade(-5 * (f - 6))); break;
         case 51: P(28, f + 11, x, y, "add", .25); break;
+        case 52: if (f >= 0) P(24, f, x, y, "add"); break;                      // Game.cpp DrawEffects case 52 «Protection Ring»: efecto 24, fotograma a fotograma
         case 53: P(25, f, x, y); break;
         case 54: P(28, Math.max(0, f), x, y); break;
         case 55: P(28, Math.max(0, f), e.mx, e.my); break;

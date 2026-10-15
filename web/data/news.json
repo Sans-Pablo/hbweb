@@ -1,10 +1,23 @@
 {
-  "build": "0.84.15",
+  "build": "0.84.16",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: anillo de protección (v0.84.16)",
+        "en": "Motor: anillo de protección (v0.84.16)"
+      },
+      "items": [
+        {
+          "es": "Al lanzar Protection From Magic y similares se ve el anillo del original (Game.cpp efecto 52)",
+          "en": "Casting Protection From Magic and similar spells now shows the original ring effect (Game.cpp effect 52)"
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {

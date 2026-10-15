@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.16 · Motor: anillo de protección (2026-10-15)
+- Al lanzar Protection From Magic y similares se ve el anillo del original (Game.cpp efecto 52)
+
 ## 0.84.15 · Motor: granjas por bando (2026-10-15)
 - No se puede entrar en la granja del bando enemigo (HG.cpp iGetMapLocationSide / teletransporte)
 
