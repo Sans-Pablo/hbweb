@@ -48,11 +48,19 @@ function levelAdjust(result, circle, level) {
 }
 
 // Probabilidad (%) de que el hechizo salga (si < 100 se tira 1d100).
-export function castChance(p, id) {
+// Clima sobre la probabilidad (PlayerMagicHandler HG.cpp:10317): lluvia 1/2/3 resta 1/24, 1/12, 1/5.
+export const weatherCast = (r, weather) => weather === 1 ? r - Math.floor(r / 24) : weather === 2 ? r - Math.floor(r / 12) : weather === 3 ? r - Math.floor(r / 5) : r;
+// Bono de clima al daño (iGetWhetherMagicBonusEffect HG.cpp:22933): con lluvia +1 a los hechizos 10, 37, 43, 51 y -1 a 20 y 30.
+export function weatherBonus(id, weather) {
+  if (weather < 1 || weather > 3) return 0;
+  return id === 10 || id === 37 || id === 43 || id === 51 ? 1 : id === 20 || id === 30 ? -1 : 0;
+}
+export function castChance(p, id, weather = 0) {
   const circle = circleOf(id), mastery = p.skills[4] || 1;
   let r = Math.floor((mastery / 100) * MC_PROB[circle]);
   if (p.stats.int > 50) r += Math.floor((p.stats.int - 50) / 2);
   r = levelAdjust(r, circle, p.level);
+  r = weatherCast(r, weather);
   r += p.eff.castBonus || 0;                                 // atributo "Special" de las varitas
   return r <= 0 ? 1 : r;
 }

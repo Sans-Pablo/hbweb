@@ -74,7 +74,7 @@ export function cast(w, p, cmd) {
   const sp = usable(w, p, cmd); if (!sp) return false;
   if (sget(w, p, "inhibit")) return w.reject(p, cmd, "inhibido");
   const x = cmd.x | 0, y = cmd.y | 0;
-  if (!w.grid.inside(x, y) || dist(p, { x, y }) > 14) return w.reject(p, cmd, "demasiado lejos");
+  if (!w.grid.inside(x, y) || dist(p, { x, y }) > 11) return w.reject(p, cmd, "demasiado lejos");   // alcance 11 (HG.cpp:10241)
   const cost = M.manaCost(p, sp, cmd.spell);
   if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
 
@@ -111,13 +111,16 @@ function resist(w, tgt, power) {
     rr = (tgt.skills[3] || 0) + (tgt.eff.addMR || 0);
     if (tgt.stats.mag > 50) rr += tgt.stats.mag - 50;
   }
-  return M.resists(w.rng, power, rr);
+  const r = M.resists(w.rng, power, rr);
+  if (r && tgt.kind === "player") gainSSN(tgt, 3, 1);                   // CheckResistingMagicSuccess (combat.cpp:54): SkillUp(MAGICRES, 1)
+  return r;
 }
 
 function resolve(w, p, id, sp, x, y, cost) {
   if (p.dead) return;
   // ¿sale el hechizo?
-  const chance = M.castChance(p, id);
+  const chance = M.castChance(p, id, w.weather | 0);
+  const wb = M.weatherBonus(id, w.weather | 0);
   if (!M.freeFor(p) && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
   if (!M.freeFor(p) && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
   p.mp = Math.max(0, p.mp - cost);
@@ -134,7 +137,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
-    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * Bal.spellDmgMul(id));
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damageNpc(w, tgt, dmg, p, null, half);
@@ -146,7 +149,7 @@ function resolve(w, p, id, sp, x, y, cost) {
   const hurtPlayer = (tgt, n, d, k) => {
     if (!canFight(w, p, tgt)) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
-    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k, !!w.fightZone) * Bal.spellDmgMul(id));
+    let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
     if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
     if (dmg < 0) dmg = 0;
     if (dice(w.rng, 1, 10) < 5 && tgt.hp <= dmg) dmg = 1;
@@ -247,6 +250,7 @@ function resolve(w, p, id, sp, x, y, cost) {
         if (target && target.kind === "player" && !target.dead && !resist(w, target, power)) {
           const res = (target.skills[23] || 0) + (target.eff.addPR || 0);
           if (dice(w.rng, 1, 100) >= res) poison(w, target, sp.v5);
+          else gainSSN(target, 23, 1);                                 // checkResistingPoisonSuccess (combat.cpp:69): SkillUp(POISONRES, 1)
         }
       } else if (target && target.kind === "player") sclear(w, target, "poison");
       break;
@@ -283,8 +287,8 @@ function resolve(w, p, id, sp, x, y, cost) {
       }
       break;
     }
-    case 29:                                                           // Cancellation: quita los efectos a un jugador
-      if (target && target.kind === "player" && !target.dead) for (const k of ["invis", "ice", "hold", "protect", "berserk", "confuse"]) sclear(w, target, k);
+    case 29:                                                           // Cancellation (HG.cpp:10595): cualquier objetivo, jugador o monstruo (polimorfia no existe en el port)
+      if (target && !target.dead) for (const k of ["invis", "ice", "hold", "protect", "berserk", "confuse", "inhibit"]) sclear(w, target, k);
       break;
     case 33:                                                           // Scan
       if (target && !resist(w, target, power))
@@ -294,9 +298,8 @@ function resolve(w, p, id, sp, x, y, cost) {
       if (target && target !== p && target.kind === "player" && !target.dead && !resist(w, target, power)) sset(w, target, "confuse", sp.v4, secs);
       else if (target && target !== p) w.emit({ t: "resist", id: target.id });
       break;
-    case 31:                                                           // Inhibition Casting: el jugador no puede lanzar hechizos
-      if (target && target !== p && target.kind === "player" && !target.dead && !resist(w, target, power)) sset(w, target, "inhibit", 1, (sp.last || sp.v4) * 1000);
-      else if (target && target !== p) w.emit({ t: "resist", id: target.id });
+    case 31:                                                           // Inhibition Casting (HG.cpp:10608): sin tirada de resistencia; solo la anula Protect AMP (5)
+      if (target && target !== p && target.kind === "player" && !target.dead && sget(w, target, "protect") !== 5) sset(w, target, "inhibit", 1, (sp.last || sp.v4) * 1000);
       break;
     case 32: {                                                         // Resurrection: levanta a un jugador caído de la casilla (el original lo pide con un cuadro; aquí es directo)
       const down = [...w.ents.values()].find(e => e.kind === "player" && e.dead && e.x === x && e.y === y && e !== p);
