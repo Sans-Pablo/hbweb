@@ -1,5 +1,5 @@
 {
- "build": "0.85.2",
+ "build": "0.85.3",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -3983,6 +3983,27 @@
     {
      "es": "Críticos: el contador de cargas aparece junto al indicador paz/ataque del menú (Game.cpp, final de DrawDialogBoxs: claro con maestría 100, oscuro con menos). La carga, el gasto, el alcance y el daño ya seguían al servidor original (tests crit-dash, bot-crit).",
      "en": "Criticals: the charge counter is drawn beside the peace/attack icon (Game.cpp DrawDialogBoxs: bright at mastery 100, dark below). Charge, cost, reach and damage already follow the original server."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Bolas de invocación propias (v0.84.11)",
+    "en": "Dedicated summon balls (v0.84.11)"
+   },
+   "items": [
+    {
+     "es": "Cada especie de compañero tiene su propia bola (ids 2001-2032) con su icono. Prueba: F1 → Herramientas → Summons → Give ball con varias especies y mirar la mochila y el Hospital.",
+     "en": "Each companion species now has its own ball item (ids 2001-2032) with its own icon. Test: F1 → Tools → Summons → Give ball with several species and check the bag and the Hospital."
+    },
+    {
+     "es": "«Ir a» solo ofrece Promise Land, Aresfarm, Elvine Farm y las criptas.",
+     "en": "“Go to” now only offers Promise Land, Aresfarm, Elvine Farm and the crypts."
+    },
+    {
+     "es": "Posible arreglo del sprite negro al quitarse la capa (la caché mezclaba capa y botas del mismo color). Sin reproducir el fallo: si vuelve a verse, avisar.",
+     "en": "Possible fix for the black sprite when taking the cape off (the cache mixed a cape and boots of the same colour). Not reproduced: report it if it shows up again."
     }
    ]
   }

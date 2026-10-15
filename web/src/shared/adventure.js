@@ -17,6 +17,8 @@ import * as Human from "./systems/human.js";
 import * as Residents from "./systems/residents.js";
 import * as Quests from "./systems/quests.js";
 
+// Destinos del menú «Ir a» (INVENTO del port, petición del diseño): Promise Land (2ndmiddle), las dos granjas; la cripta tiene su propio salto (op crypt).
+export const GOTO_MAPS = ["2ndmiddle", "arefarm", "elvfarm"];
 export const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "Mina de Aresden", arebrk11: "Cuartel de Aresden", arebrk12: "Cuartel de Aresden", arebrk21: "Cuartel de Aresden", arebrk22: "Cuartel de Aresden", wrhus_1: "Almacén", wrhus_1f: "Almacén", arewrhus: "Almacén", cityhall_1: "Ayuntamiento", resurr1: "Templo de resurrección", gshop_1: "Tienda general", gshop_1f: "Tienda general", arejail: "Prisión", cath_1: "Catedral", wzdtwr_1: "Torre del mago", bsmith_1: "Herrería", bsmith_1f: "Herrería", gldhall_1: "Sala del gremio", cmdhall_1: "Sala de mando", huntzone1: "Arena de apuestas", elvfarm: "Elvine Farm", "2ndmiddle": "Promise Land", middled1n: "Cripta de esqueletos" };
 
 // Punto de retorno de Aresfarm (Recall, muerte, salidas de cripta/arena/tienda): lo pidió el diseño; el original usa el punto de reaparición de cada mapa (Map.cfg initial)
@@ -316,8 +318,14 @@ export class Adventure {
       else this.runs.get(gkey(p)).seed = Math.floor((this.options.rng || Math.random)() * 4294967296) >>> 0;
       return this.descend(p, w, level, true);
     }
+<<<<<<< HEAD
     if (enemyMap(p, String(cmd.map || "").toLowerCase())) return w.reject(p, cmd, "no puedes entrar en la granja del bando enemigo");
     const to = cmd.map === "arefarm" ? this.farm : this.staticWorld(String(cmd.map || "").toLowerCase());
+=======
+    const mid = String(cmd.map || "").toLowerCase();
+    if (!GOTO_MAPS.includes(mid)) return w.reject(p, cmd, "destino no permitido (solo Promise Land, Aresfarm, Elvine Farm y la cripta)");
+    const to = mid === "arefarm" ? this.farm : this.staticWorld(mid);
+>>>>>>> Pablo-Claude/hb-sistemas-5a6b41
     if (!to) return w.reject(p, cmd, "mapa no disponible (puede estar cargándose)");
     if (to === w) return true;
     const init = this.maps[to.map.id]?.meta.initial;

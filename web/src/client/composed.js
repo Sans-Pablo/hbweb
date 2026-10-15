@@ -51,7 +51,7 @@ export class PersonCache {
   keyOf(gender, look, group, d, f, ap) {
     const c = ap && ap.col;
     return (this.spr.hd ? "H" : "N") + gender + "|" + look.skin + "," + look.under + "," + look.hair + "," + look.hairCol + "|" + group + "," + d + "," + f + "|" +
-      (ap ? ap.armor + "," + ap.arms + "," + ap.pants + "," + ap.boots + "," + ap.mantle + "," + ap.helm + "," + ap.shield + "," + ap.weapon : "") + (c ? "|" + Object.values(c).join(",") : "");
+      (ap ? ap.armor + "," + ap.arms + "," + ap.pants + "," + ap.boots + "," + ap.mantle + "," + ap.helm + "," + ap.shield + "," + ap.weapon : "") + (c ? "|" + Object.keys(c).sort().map(k => k + c[k]).join(",") : "");   // con el nombre de la ranura: capa y botas del mismo color no deben compartir imagen
   }
 
   // Precalienta (tras dibujar las entidades, con el tiempo sobrante) los 2 fotogramas siguientes de cada persona vista este fotograma:

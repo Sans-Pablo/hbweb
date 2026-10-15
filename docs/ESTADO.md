@@ -43,6 +43,9 @@
 - [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
 
+## Hilo SISTEMAS (v0.84.11)
+- [x] Bolas de invocación propias por especie (2001-2032, icono ip20; drops 651-655 sin cambios) · [x] Ir a solo Promise Land/Aresfarm/Elvine Farm/criptas · [~] sprite negro sin capa: arreglada una colisión de caché (`keyOf`), el fallo original no se reprodujo. Verificado en localhost: iconos en la mochila (Orc, Troll, Unicorn).
+
 ## Hilo MOTOR (pedido 2026-10-15, v0.83.10)
 - Ticket 14 HECHO (0.83.8): pescado = estadísticas, granja = cura. Ticket 6 HECHO. support-summon arreglado (semilla 34).
 - [x] 1 Reconexión (gracia 45 s + reconexión automática; sin probar en navegador real con pestaña oculta larga)
