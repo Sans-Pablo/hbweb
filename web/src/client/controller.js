@@ -5,6 +5,7 @@ import { TILE as T, PLAYER, dist, dirTo } from "../shared/const.js";
 import { reachOf, isFoe } from "../shared/systems/combatsys.js";
 import { findPath } from "../shared/path.js";
 import { posOf, mobSprite } from "./anim.js";
+import { decide as autoDecide } from "../shared/systems/autoplay.js";
 
 export class Controller {
   constructor({ conn, grid, renderer, canvas, ui }) {
@@ -15,6 +16,7 @@ export class Controller {
     this.keys = new Set();
     this.intent = null;           // {t:"move", x, y} | {t:"attack", id} | {t:"pickup", x, y}
     this.path = [];
+    this.auto = null;             // modo automático (autoplay.js): {kind:"hunt",mob} | {kind:"run",place}; cualquier clic lo cancela
     this.hover = null;
     this.hoverEnt = null;
     this.pointer = null;          // posición del ratón (clientX, clientY)
@@ -167,7 +169,9 @@ export class Controller {
   // Botón derecho (Client/Game.cpp, CommandProcessor, rama cRB): cancela el hechizo preparado; sobre un monstruo ataca sin moverse
   // (de cerca, o a distancia con arco); sobre un habitante de la ciudad no hace nada; sobre el suelo el personaje solo MIRA hacia
   // esa casilla (DEF_OBJECTSTOP con la nueva dirección) sin andar.
+  setAuto(a) { this.auto = a; this.intent = null; this.path = []; }
   rightClick() {
+    this.auto = null;
     const me = this.me;
     if (!me || me.dead || !this.pointer) return;
     if (this.ui.pointing != null || this.ui.petPointing != null) { this.ui.cancelPointing(); return; }
@@ -184,6 +188,7 @@ export class Controller {
 
   click(first) {
     if (!this.pointer) return;
+    if (first && this.auto) { this.auto = null; this.ui.autoLog?.(["Modo automático cancelado.", "Auto mode cancelled."]); }
     const me = this.me;
     if (!me || me.dead) return;
     if (this.ui.partyCb) {                                // invitar a un grupo: este clic elige el personaje
@@ -229,6 +234,13 @@ export class Controller {
     if (this.down && !this.noHold && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
 
     if (world.busy(me)) return;
+    if (this.auto && !this.intent) {                       // modo automático: decide como lo haría un clic
+      const d = autoDecide(world, me, this.auto);
+      if (d.msg) this.ui.autoLog?.(d.msg);
+      if (d.stop) this.auto = null;
+      if (d.open) this.ui.npcClick(d.open);
+      if (d.intent) this.intent = d.intent;
+    }
     const run = (this.ui.run || this.forceRun) && me.sp >= 1;
     const it = this.intent;
     if (!it) { this.path = []; return; }

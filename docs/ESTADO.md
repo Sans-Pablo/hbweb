@@ -11,14 +11,14 @@
 - [x] (pedido 2026-10-15, cierre hilo UI) **Verificación en navegador de lo pendiente:** móvil vertical/horizontal, minimapa en cripta real (nivel 1 y 4), chat Legacy, plegado ▾/▸ del rastreador, pozo cerrado (mini esqueleto + aro de jefe) y abierto. Arreglado: el rastreador de misión se apartaba mal (tapaba el diálogo en horizontal móvil, lo tapaba el minimapa ampliado de cripta) -> `questUi.avoid` + media query; el log Legacy pisaba la línea de fps (top 24px). Flecha del tutorial: vista solo en el paso de mapa (sin probar talk/kill). Minimapa en móvil: sin probar.
 
 ## Hilo SISTEMAS (pedido 2026-10-15) — tickets por prioridad
-- [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Pendiente: orden explícita «recoge esto» para items tirados.
-- [ ] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
-- [ ] 3. Revamp del trade (Olympia; arrastrar item sobre otro personaje abre exchange; bag llena: definir cola/bag extra).
-- [ ] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
-- [ ] 5. Efecto de evolución de pet ~1 vez/min, sin titileo.
-- [ ] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
-- [ ] 7. Auto hunt / auto run.
-- [ ] 8. Stat simulator (Olympia).
+- [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Orden «recoge esto» (v0.83.13): el bot recoge 30 s lo tirado por su jugador.
+- [x] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
+- [x] 3. Revamp del trade (Olympia; arrastrar item sobre otro personaje abre exchange; bag llena: definir cola/bag extra).
+- [x] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
+- [x] 5. Efecto de evolución de pet: el aura de Demon/Frost/Liche/Cyclops evolucionados ahora late ~6 s cada 60 s (fase propia por criatura, fundido suave) en vez de titilar siempre (`renderer.js`, `evoEnv`). Sin bump (0.83.6). Interpretación: pulso de aura 6 s cada 60 s; si se refería a otro efecto, p. ej. la animación de evolución de `fx.js`, avisar).
+- [x] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
+- [x] 7. Auto hunt / auto run (v0.83.11, docs/sistemas/auto.md).
+- [x] 8. Stat simulator (Olympia): `/stats`, ventana id 73 (`client/statsim.js`, `docs/sistemas/statsim.md`).
 
 - [x] (pedido 2026-10-15, v0.83.6, "sprites mal alrededor de todos los personajes") **Recuadros pálidos con GL:** premultiplicado inválido (rgb>alfa) en el shader; recortado con `min(rgb, alfa)`.
 - [x] (pedido 2026-10-15, v0.83.5, "prueba autónomamente en Chrome, 10 bots de cada ciudad, mide frames") **Prueba autónoma:** 41 jugadores + 15 Orcs en Promise Land = 45-60 fps; arreglado el congelamiento de 4-6 s al entrar (minimapa) y el tope de `dbg bot`. Script de medida en la sesión (Playwright + Chrome real).

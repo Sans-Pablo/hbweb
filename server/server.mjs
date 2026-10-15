@@ -39,6 +39,7 @@ import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
 import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./accounts.mjs";
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
 import { openBotStats } from "./botstats.mjs";
+import { openBugs } from "./bugs.mjs";
 
 const PROTO = NET_PROTO;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -125,7 +126,9 @@ function resetResidents() {
 { const ef = path.join(STORE, "bots-epoch.txt"); let cur = ""; try { cur = fs.readFileSync(ef, "utf8").trim(); } catch {}
   if (cur !== BOT_EPOCH) { resetResidents(); try { fs.writeFileSync(ef, BOT_EPOCH); } catch {} log("[habitantes] época " + BOT_EPOCH + ": los habitantes empiezan de nuevo en nivel 1 y el informe anterior queda archivado."); } }
 const informe = openReport(STORE, { version: VERSION.version, log });
+const bugs = openBugs(STORE);
 const botStats = openBotStats(adventure, log);
+adventure.order = o => bugs.add({ kind: "order", user: o.user, map: o.map, x: o.x, y: o.y, text: "el bot " + o.bot + " no entendió esto del player " + o.user + ": «" + o.text + "»" }, "bot-orders");   // ticket con el texto que hay que enseñarle (orders.js)
 adventure.report = r => { informe.add(r); botStats.idea(r); };               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 if (Array.isArray(saves["sys:stalls"]?.list)) adventure.stallDb.push(...saves["sys:stalls"].list);
@@ -211,6 +214,19 @@ const server = http.createServer((req, res) => {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     let body = ""; req.on("data", d => { body += d; if (body.length > 2000) req.destroy(); });
     req.on("end", () => { let line = ""; try { line = JSON.parse(body).line; } catch {} json(req, res, 200, { out: adminCmd(String(line || ""), "panel") }); });
+    return;
+  }
+  if (url.pathname === "/api/bug" && req.method === "POST") {      // reporte de un tester (F11) o error de JS del cliente (main.js): público y con límite por IP
+    let body = ""; req.on("data", d => { body += d; if (body.length > 4000) req.destroy(); });
+    req.on("end", () => { let b = {}; try { b = JSON.parse(body); } catch {} const r = bugs.add(b, req.socket.remoteAddress); json(req, res, r ? 200 : 429, r ? { ok: true, id: r.id } : { ok: false }); });
+    return;
+  }
+  if (url.pathname === "/api/admin/bugs") {                         // panel web de errores (web/menu.html); POST {id, status} marca abierto/arreglado/descartado
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    if (req.method === "POST") {
+      let body = ""; req.on("data", d => { body += d; if (body.length > 400) req.destroy(); });
+      req.on("end", () => { let b = {}; try { b = JSON.parse(body); } catch {} const r = bugs.setStatus(b.id, b.status); json(req, res, r ? 200 : 400, r || { error: "id o estado no válidos" }); });
+    } else json(req, res, 200, { list: bugs.list(url.searchParams.get("status") || "") });
     return;
   }
   if (url.pathname === "/api/perflog" && req.method === "POST") {      // registro de rendimiento del cliente (perflog.js): JSONL por jugador y sesión en data/perf/

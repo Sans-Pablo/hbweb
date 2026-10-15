@@ -14,6 +14,7 @@ import { DUMMY_COLORS, DUMMY_NAMES } from "../shared/systems/talents.js";
 import { radiusOf } from "../shared/systems/dummy.js";
 import { itemDef, itemName, groundKey } from "./names.js";
 import { attrLines } from "../shared/attributes.js";
+import { MAP_NAMES, ALLOWED_MAPS } from "../shared/adventure.js";
 const guildLine = e => { const g = e.guild ? [e.guild.name, e.guild.rank] : e.gd; return g ? g[0] + (g[1] === 0 ? " Guildmaster" : " Guildsman") : null; };
 import { sellPriceOf } from "../shared/systems/shopsys.js";
 import { isStack } from "../shared/items.js";
@@ -823,9 +824,11 @@ export class Renderer {
       }
     }
     const fade = alive ? 1 : act === ACT.DYING ? Math.max(0, 1 - (time - (e.actStart || 0)) / Math.max(1, e.actDur || 700) * 1.6) : 0;   // al morir las luces se apagan en fundido
-    if (e.comp && fade > 0 && (look(e.name) === "Liche" ? e.clvl >= 20 : look(e.name) === "Demon" ? e.clvl >= 10 : look(e.name) === "Cyclops" || look(e.name) === "Tutelary-Angel" ? e.clvl >= 30 : e.clvl >= 20 && look(e.name) === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
+    // Ticket 5: el aura de evolución no titila sin parar; late una vez por minuto (~6 s, fundido suave), con fase propia por criatura.
+    const evoEnv = (() => { const per = 60000, dur = 6000, ph = (time + (e.id * 7919) % per) % per; return ph < dur ? Math.sin(ph / dur * Math.PI) : 0; })();
+    if (e.comp && fade > 0 && evoEnv > 0.02 && (look(e.name) === "Liche" ? e.clvl >= 20 : look(e.name) === "Demon" ? e.clvl >= 10 : look(e.name) === "Cyclops" || look(e.name) === "Tutelary-Angel" ? e.clvl >= 30 : e.clvl >= 20 && look(e.name) === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
       const sp = this.fx?.sp, seed = e.id * 997, T = time + seed, rnd = (k) => { const h = Math.sin(k * 12.9898 + e.id) * 43758.5453; return h - Math.floor(h); };
-      ctx.save(); ctx.globalAlpha = (look(e.name) === "Liche" || look(e.name) === "Cyclops" ? 1 : 0.5) * fade;                            // Demon y Frost más sutiles, a la altura del Liche
+      ctx.save(); ctx.globalAlpha = (look(e.name) === "Liche" || look(e.name) === "Cyclops" ? 1 : 0.5) * fade * evoEnv;                          // Demon y Frost más sutiles, a la altura del Liche
       if (look(e.name) === "Demon") {                                                          // Lv 10 ojos de brasa, 40 calor y chispas lentas, 50 más intensos
         const L = e.clvl, pulse = 0.5 + 0.5 * Math.sin(T / 380);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
@@ -1385,6 +1388,32 @@ export class Renderer {
       ctx.beginPath(); ctx.moveTo(x, y - T / 2); ctx.lineTo(x + T / 2, y); ctx.lineTo(x, y + T / 2); ctx.lineTo(x - T / 2, y); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = "rgba(170,225,255," + (0.5 + 0.4 * k) + ")"; ctx.lineWidth = 1.5; ctx.stroke();
     }
+    // INVENTO del port (ticket 6): cada salida lleva el nombre del mapa de destino; si queda fuera de pantalla, una flecha en el borde apunta hacia ella
+    for (const g of this.teleportGroups(tps)) {
+      const x = g.x * T + T / 2 - camX, y = g.y * T + T / 2 - camY, m = 26, out = x < m || y < m || x > this.viewW - m || y > this.viewH - m;
+      const txt = t(g.name || g.map) + (g.open ? "" : " (" + t("cerrado") + ")"), col = g.open ? "#bde8ff" : "#e0a090";
+      if (!out) { this.label(x, y - 26, txt + " ▸", col); continue; }
+      const cx = this.viewW / 2, cy = this.viewH / 2, a = Math.atan2(y - cy, x - cx), ex = Math.max(m, Math.min(this.viewW - m, x)), ey = Math.max(m + 40, Math.min(this.viewH - m, y));
+      ctx.save(); ctx.translate(ex, ey); ctx.rotate(a); ctx.globalAlpha = 0.6 + 0.4 * k; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-6, -8); ctx.lineTo(-6, 8); ctx.closePath(); ctx.fill(); ctx.restore();
+      this.label(Math.max(60, Math.min(this.viewW - 60, ex)), ey + (ey > cy ? -14 : 24), txt, col);
+    }
+  }
+  // salidas del mapa agrupadas por destino (centro de cada grupo contiguo)
+  teleportGroups(tps) {
+    if (this._tpg?.src === tps) return this._tpg.list;
+    const by = new Map(), list = [];
+    for (const tp of tps.values()) { const k = tp.map + ">" + tp.dx + "," + tp.dy; (by.get(k) || by.set(k, []).get(k)).push(tp); }
+    for (const a of by.values()) {
+      const left = [...a];
+      while (left.length) {                                        // componente contigua (8 vecinos)
+        const comp = [left.pop()];
+        for (let i = 0; i < comp.length; i++) for (let j = left.length - 1; j >= 0; j--) if (Math.abs(left[j].x - comp[i].x) <= 1 && Math.abs(left[j].y - comp[i].y) <= 1) comp.push(...left.splice(j, 1));
+        const id = comp[0].map.toLowerCase();
+        list.push({ x: comp.reduce((n, c) => n + c.x, 0) / comp.length, y: comp.reduce((n, c) => n + c.y, 0) / comp.length, map: id, name: MAP_NAMES[id], open: ALLOWED_MAPS.has(id) || id === "middled1n" });
+      }
+    }
+    this._tpg = { src: tps, list }; return list;
   }
 
   drawGrid(camX, camY, tx0, ty0, cols, rows) {
@@ -1534,6 +1563,7 @@ export class Renderer {
     for (const gate of s.world.map?.portals || []) {
       ctx.fillStyle = "#8de4ff"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
     }
+    if (s.world.teleports?.size) for (const g of this.teleportGroups(s.world.teleports)) { ctx.fillStyle = g.open ? "#5aaaff" : "#a06a5a"; ctx.fillRect(x0 + g.x * sc - 2, y0 + g.y * sc - 2, 4, 4); }   // salidas del mapa (ticket 6)
     ctx.fillStyle = "#9fe07f";
     ctx.beginPath(); ctx.arc(x0 + ppx / T * sc, y0 + ppy / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
   }

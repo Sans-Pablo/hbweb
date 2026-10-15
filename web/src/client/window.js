@@ -9,6 +9,7 @@
 // Widgets: text, para, head, rule, btn, check, slider, input (texto o número), combo (lista con filtro), scroll (zona con barra) y `Flow`
 // para colocar filas que saltan de línea. Ver docs/sistemas/ventanas.md.
 import { t } from "./i18n.js";
+import { font, LAYOUT } from "./uistyle.js";
 
 export const THEME = {
   txt: "#f0e2bd", dim: "#a89a78", hi: "#ffe9a0", head: "#f2c14e", good: "#9fe07f", bad: "#ff8a6a", link: "#8fc7ff",
@@ -68,7 +69,7 @@ export function buttonCanvas(g, w, hover) {
 const wraps = new Map();
 export function wrap(c, s, w, size = 12, bold = false) {
   const key = `${size}${bold ? "b" : ""}|${w}|${s}`; let r = wraps.get(key); if (r) return r;
-  c.font = (bold ? "bold " : "") + size + "px Tahoma, Verdana, sans-serif"; r = [];
+  c.font = font(size, bold); r = [];
   for (const para of s.split("\n")) {
     let cur = "";
     for (const word of para.split(" ")) {
@@ -100,16 +101,16 @@ export class Ui {
     return m.x >= Math.max(ax, cl.x) && m.x < Math.min(ax + w, cl.x + cl.w) && m.y >= Math.max(ay, cl.y) && m.y < Math.min(ay + h, cl.y + cl.h);
   }
   vis(y, h = 0) { return !this.view || (y + h >= this.view.t && y <= this.view.b); }
-  tw(s, size = 12, bold = false) { this.c.font = (bold ? "bold " : "") + size + "px Tahoma, Verdana, sans-serif"; return this.c.measureText(t(s)).width; }
+  tw(s, size = 12, bold = false) { this.c.font = font(size, bold); return this.c.measureText(t(s)).width; }
 
   // ---- texto
-  text(x, y, s, color = THEME.txt, o = {}) { if (this.vis(y, 14)) this.g.text(x, y, s, color, o); return this; }
+  text(x, y, s, color = THEME.txt, o = {}) { if (this.vis(y, 14)) this.g.text(x, y, s, color, { shadow: true, ...o }); return this; }
   head(x, y, s) { this.text(x, y, s, THEME.head, { bold: true, shadow: true }); }
   rule(x, y, w) { const c = this.c; c.fillStyle = "rgba(0,0,0,.55)"; c.fillRect(x, y, w, 1); c.fillStyle = "rgba(255,225,170,.18)"; c.fillRect(x, y + 1, w, 1); }
   // párrafo con saltos de línea; devuelve la altura que ocupa
   para(x, y, w, s, color = THEME.txt, o = {}) {
     const size = o.size || 12, lh = o.lh || size + 3, lines = wrap(this.c, t(s), w, size, o.bold);
-    for (let i = 0; i < lines.length; i++) if (lines[i] && this.vis(y + i * lh, lh)) this.g.text(x, y + i * lh, lines[i], color, o);
+    for (let i = 0; i < lines.length; i++) if (lines[i] && this.vis(y + i * lh, lh)) this.g.text(x, y + i * lh, lines[i], color, { shadow: true, ...o });
     return lines.length * lh;
   }
 
@@ -262,7 +263,7 @@ export class Win {
     this.x = o.x ?? Math.round((800 - o.w) / 2); this.y = o.y ?? Math.max(4, Math.round((548 - o.h) / 2));
     this.vals = {}; this.fields = {}; this.combos = {}; this.sc = {}; this.hits = []; this.lastOk = {};
     this.focus = null; this.typed = false; this.popHi = -1; this.popOff = 0;
-    this.inner = { x: 22, y: 38, w: o.w - 44, h: o.h - 64 };
+    this.inner = { x: LAYOUT.padX, y: LAYOUT.padTop, w: o.w - 2 * LAYOUT.padX, h: o.h - LAYOUT.padTop - LAYOUT.padBottom };
   }
   onOpen(g) { this.g = g; this.focus = null; this.popRect = null; this.opened?.(g); }
   // ---- campos
@@ -286,7 +287,7 @@ export class Win {
     const c = g.ctx, ui = this.ui = new Ui(this, g); this.g = g;
     const fr = frameCanvas(g, this.w, this.h);
     if (fr) c.drawImage(fr, 0, 0, fr.width, fr.height, 0, 0, this.w, this.h); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); c.fillStyle = "#2a2014"; c.fillRect(17, 31, this.w - 34, this.h - 53); }
-    if (this.title) g.text(this.w / 2, 15, this.title, THEME.title, { align: "center", bold: true });
+    if (this.title) g.text(this.w / 2, LAYOUT.titleY, this.title, THEME.title, { align: "center", bold: true });
     this.body(ui, me, world);
     ui.finish();
     if (!this.nox) {                                                   // aspa de cierre

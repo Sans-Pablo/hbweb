@@ -10,10 +10,13 @@ const listeners = new Set();
 
 const EN = {
   // ---- ventanas del lienzo (window.js, newswin.js)
+  "Informar de un fallo": "Report a bug", "Cuenta qué ha pasado y dónde (solo texto). Se envía con tu nombre, versión, mapa y posición.": "Tell us what happened and where (text only). Sent with your name, version, map and position.", "Enviar": "Send", "Enviado. ¡Gracias!": "Sent. Thank you!",
   "Novedades y pruebas": "News and tests", "Sí": "Yes", "No": "No", "Esta ventana (F1) reemplaza la ayuda original.": "This window (F1) replaces the original help.",
   "Las herramientas aparecen al entrar en el juego.": "The tools appear once you enter the game.", "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.": "For testing only: what you do here is saved with the game. Messages appear in the chat.",
   "Clic derecho: cerrar": "Right click: close", "Cancelar salida": "Cancel logout", "Menú clásico": "Classic menu",
   "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado": "Gail only evolves companions of those who defeated the Golden King",
+  "Almacén": "Warehouse", "Herrería": "Blacksmith", "Tienda general": "General store", "Cuartel de Aresden": "Aresden barracks", "Mina de Aresden": "Aresden mine", "Cripta de esqueletos": "Skeleton crypt", "cerrado": "closed", "Prisión": "Jail", "Ayuntamiento": "City hall",
+  "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Misión cumplida": "Quest complete", "de oro": "gold",
   "Nivel": "Level", "Cripta nivel": "Crypt level", "Nivel del compañero": "Companion level", "Nivel del summon": "Summon level", "Misión": "Quest", "Línea de misiones completada": "Quest line complete", "Eres un maestro de tu camino.": "You are a master of your path.", "Diario de misiones": "Quest journal", "Plegar": "Fold", "Misiones": "Quests", "Misión cumplida": "Quest complete", "de oro": "gold",
   "Guerrero": "Warrior", "Mago": "Mage", "Invocador": "Summoner", "ya tienes un summon de esa especie: deben ser distintos": "you already have a summon of that species: they must be different",
   "elige Healer, Buffer o Aura": "choose Healer, Buffer or Aura",
@@ -61,7 +64,7 @@ const EN = {
   "Ataque automático (clic izquierdo sobre un monstruo)": "Auto attack (left click on a monster)", "Mostrar casillas bloqueadas": "Show blocked tiles", "Mejoras": "Enhancements",
   "Cursor clásico del juego": "Classic game cursor", "Sprites y terreno en HD (solo Remastered)": "HD sprites and terrain (Remastered only)", "Luz y viñeta (solo Remastered)": "Lighting and vignette (Remastered only)",
   "Animaciones de hechizos": "Spell animations", "Magia libre: todos los hechizos, sin coste de MP (pruebas)": "Free magic: all spells, no MP cost (testing)", "Cuenta": "Account",
-  "Guardar ahora": "Save now", "Repetir tutorial": "Repeat tutorial", "Exportar copia": "Export backup", "Importar copia": "Import backup", "Cerrar sesión": "Log out", "Clásico": "Classic", "Idioma": "Language",
+  "Simulador de estadísticas": "Stat simulator", "Prueba cómo quedaría tu personaje sin gastar puntos. Ctrl = de 5 en 5.": "Try how your character would turn out without spending points. Ctrl = steps of 5.", "Puntos sin gastar:": "Unspent points:", "Sin límite": "No limit", "Ahora": "Now", "Prueba": "Test", "Carga": "Load", "Reiniciar": "Reset", "Solo cuenta atributos base (sin equipo).": "Base attributes only (no equipment).", "Guardar ahora": "Save now", "Repetir tutorial": "Repeat tutorial", "Exportar copia": "Export backup", "Importar copia": "Import backup", "Cerrar sesión": "Log out", "Clásico": "Classic", "Idioma": "Language",
   "Has muerto": "You died", "Reaparecer": "Respawn",
   "Clic izquierdo: andar (correr si el modo correr está activo) · sobre ti: recoger": "Left click: walk (run if run mode is on) · on yourself: pick up",
   "Clic derecho: atacar al monstruo adyacente ·": "Right click: attack the adjacent monster ·", "+clic izquierdo: ir a atacar": "+left click: go and attack",

@@ -272,6 +272,7 @@ export class Tutorial {
   // teclado: Espacio / Intro avanzan la conversación (devuelve true si la tecla se consumió)
   key(e) {
     if (!this.d.gui.isOpen(BOX_ID)) return false;
+    for (const d of this.d.gui.dialogs.values()) if (d.focus && d.id !== BOX_ID && !d.hidden && this.d.gui.isOpen(d.id)) return false;      // un campo de texto con el foco se queda el teclado (Espacio/Intro no avanzan el tutorial)
     if (e.key === " " || e.key === "Enter") return this.advance();
     return false;
   }

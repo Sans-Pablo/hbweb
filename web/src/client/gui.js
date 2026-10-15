@@ -8,6 +8,7 @@ import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
+import { font, MIN_SIZE } from "./uistyle.js";
 import { DYE_RGB } from "./look.js";
 import { WEAPON_RGB } from "./assets.js";
 import { imgUrl } from "./imgurl.js";
@@ -216,10 +217,10 @@ export class Gui {
   text(x, y, s, color = "#fafadc", { align = "left", shadow = false, bold = false, size = 12 } = {}) {
     const c = this.ctx;
     s = t(s);
-    c.font = (bold ? "bold " : "") + size + "px Tahoma, Verdana, sans-serif";
+    c.font = font(size, bold);
     c.textBaseline = "top";
     c.textAlign = align;
-    if (this.lint) { const w = c.measureText(s).width; this.lint.push({ s, x: align === "center" ? x - w / 2 : align === "right" ? x - w : x, y, w, h: size + 1 }); }
+    if (this.lint) { const w = c.measureText(s).width; this.lint.push({ s, x: align === "center" ? x - w / 2 : align === "right" ? x - w : x, y, w, h: Math.max(MIN_SIZE, size) + 1 }); }
     if (shadow) { c.fillStyle = "#000"; c.fillText(s, x + 1, y + 1); }
     c.fillStyle = color;
     c.fillText(s, x, y);

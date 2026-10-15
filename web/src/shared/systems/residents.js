@@ -30,6 +30,7 @@ import * as Stall from "./stall.js";
 import * as Quests from "./quests.js";
 import * as Leisure from "./leisure.js";
 import * as SFood from "./summonfood.js";
+import * as Orders from "./orders.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -443,6 +444,32 @@ function noteThread(adv, w, speaker, text) {
   return fresh ? null : th;
 }
 const threadOf = (adv, w, a, b) => (adv._threads || []).find(t => w.time - t.at < 45000 && t.who.includes(a) && t.who.includes(b));
+// ÓRDENES (orders.js). true = ya está respondido. Si no entiende lo que debe cazar, pregunta; si la segunda respuesta tampoco se entiende, abre un ticket.
+const SAY = {
+  hunt: { es: "¡Vamos! Voy contigo a por {m}.", en: "Let's go! I'm with you, hunting {m}." },
+  ek: { es: "¡Va! Te sigo a hacer EK, solo a los enemigos.", en: "On it! I'll follow you for EK, enemies only." },
+  ask: { es: "No sé qué quieres que cace: ¿cómo se llama la criatura?", en: "I'm not sure what to hunt: what is the creature called?" },
+  giveup: { es: "Sigo sin entenderlo. Se lo paso a los desarrolladores para aprenderlo.", en: "I still don't get it. I'll pass it on to the devs so I can learn it." },
+  pickup: { es: "¡Voy, lo recojo!", en: "On it, I'll pick it up!" },
+  no: { es: "Vale, lo dejo.", en: "Okay, forget it." },
+};
+function obey(adv, w, p, human, text, lang) {
+  const r = p.res, n = human.name, say = (k, m = "") => { r.reply = { at: w.time + 900 + Math.floor(w.rng() * 800), text: SAY[k][lang].replace("{m}", m), follow: k === "hunt" || k === "ek" ? n : null, to: n, lang, depth: 0, toBot: false }; return true; };
+  const go = o => { if (p.bot.owner != null && p.bot.owner !== human.id) return false; p.bot.only = o.kind === "hunt" ? o.mob : "@ek"; p.bot.owner = human.id; r.followUntil = w.time + 10 * 60000; p.bot.partyAt = w.time + 3000; return true; };
+  const q = r._ask && r._ask.to === n && w.time - r._ask.at < 60000 ? r._ask : null; r._ask = null;
+  if (q) {
+    const mob = Orders.mobOf(text), yn = Orders.answerOf(text);
+    if (mob) { go({ kind: "hunt", mob }); return say("hunt", mob); }
+    if (yn === false) return say("no");
+    adv.order?.({ bot: p.name, user: n, text: q.text + " / " + text, map: w.map.name || w.map.id, x: p.x, y: p.y });   // ticket: el bot no entendió la orden (texto a enseñarle)
+    return say("giveup");
+  }
+  const o = Orders.parse(text);
+  if (!o) return false;
+  if (o.kind === "unsure") { r._ask = { to: n, at: w.time, text }; return say("ask"); }
+  if (o.kind === "pickup") { p.bot.pickFrom = human.id; p.bot.pickUntil = w.time + 30000; return say("pickup"); }   // 30 s para recoger lo que tiró este jugador
+  go(o); return say(o.kind, o.mob);
+}
 function queueReply(adv, w, p, human, text, depth = 0) {
   const r = p.res, lang = langOf(text), n = human.name, intent = human.res && intentOf(text) === "party" ? "other" : intentOf(text);      // entre habitantes una frase suelta de «vamos» no forma grupo (eso lo deciden ellos en el consejo, council.js)
   const th = human.res ? threadOf(adv, w, p.name, n) : null;
@@ -450,6 +477,7 @@ function queueReply(adv, w, p, human, text, depth = 0) {
   (r.hl ||= {})[n] = lang;
   befriend(p, n, 1); r.chats++; r._rcd = w.time;
   if (human.res) logTalk(p, w, n, text, "l");
+  if (!human.res && obey(adv, w, p, human, text, lang)) return;                         // órdenes del glosario (orders.js): no pasan por el modelo
   if (!human.res && typeof adv.llm === "function" && adv.llm.ready !== false) return askGrounded(adv, w, p, human, text, lang);
   let key = human.res && intent === "other" ? "banterr" : intent, extra = null;
   if (intent === "party") { key = relOf(p, n) >= 2 || w.rng() < 0.5 ? "yes" : "shy"; extra = key === "yes" ? n : null; }
@@ -461,7 +489,7 @@ function queueReply(adv, w, p, human, text, depth = 0) {
 }
 
 const CH = { speak: (adv, p, t) => speak(adv, p, t), blog, remember: (p, a, b) => remember(p, a, b), relOf: (p, who) => relOf(p, who), cryptNeed: (r, L) => cryptNeed(r, L),
-  leave(adv, m, lead, why) { const w = adv.worldFor(m.id); m.bot.owner = null; m.bot.partyAt = 0; m.res._leaveAt = 0; try { Party.leave(w, m, true); } catch {} blog(w, m, `Dejo el grupo de ${lead.name}: ${why}.`); remember(m, "Dejé el grupo de " + lead.name + " por desacuerdo.", "I left " + lead.name + "'s party over a disagreement."); befriend(m, lead.name, -1); } };
+  leave(adv, m, lead, why) { const w = adv.worldFor(m.id); m.bot.owner = null; m.bot.only = null; m.bot.partyAt = 0; m.res._leaveAt = 0; try { Party.leave(w, m, true); } catch {} blog(w, m, `Dejo el grupo de ${lead.name}: ${why}.`); remember(m, "Dejé el grupo de " + lead.name + " por desacuerdo.", "I left " + lead.name + "'s party over a disagreement."); befriend(m, lead.name, -1); } };
 export function think(adv, p) {
   const r = p.res, w = adv.worldFor(p.id);
   if (!r || w.time < r.next) return;
@@ -479,7 +507,7 @@ export function think(adv, p) {
     }
   }
   if (r.followUntil && w.time > r.followUntil) {                                     // se acabó el acompañamiento: vuelve a su vida
-    r.followUntil = 0; p.bot.owner = null; Party.leave(w, p, true);
+    r.followUntil = 0; p.bot.owner = null; p.bot.only = null; Party.leave(w, p, true);
     if (w !== home) { adv.transfer(p, w, home, home.home); p.bot.home = { x: p.x, y: p.y }; p.bot.path = null; p.bot.target = null; }
   }
   if (r._wid !== w.map.id) worldChanged(adv, w, p, r, home);
@@ -887,7 +915,8 @@ function pets(adv, w, p, r, home) {
   if (p.dead || w.pvp || w.map.kind === "dungeon" || w.time < (r._petThink ||= 0)) return;
   r._petThink = w.time + 2500;
   const b = p.bot, live = liveOf(w, p);
-  const want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
+  let want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
+  if (!want && !live && supporter(p, r)) { const cur = ballOf(p); if (!cur || cur.comp.down || !Tal.CLS_OF[cur.comp.sp]) want = balls(p).find(i => Tal.CLS_OF[i.comp.sp] && !i.comp.down) || null; }   // su bola activa cayó (o es de escuela) y no hay summon fuera: saca uno de apoyo sano en vez de esperar al hospital
   const qb = w.time < (r._supHold || 0) ? null : qBall(p);          // el mago de apoyo suelta un rato la bola de la misión para sacar a su summon de apoyo (0.78.0)
   if (!want && qb && !qb.comp.down && !qb.comp.on && Comp.activeBall(p) && !w.fightZone && w.time - p.lastCombat > 4000) { adv.command(p.id, { t: "use", uid: Comp.activeBall(p).uid }); r._wantBall = qb.uid; r._petUseAt = 0; }
   const ball = want || (qb && !qb.comp.down ? qb : null) || ballOf(p), c = ball?.comp;

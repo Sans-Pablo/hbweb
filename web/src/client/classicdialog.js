@@ -20,8 +20,9 @@
 import { drawSlot } from "./window.js";
 import { drawBallIcon } from "./compicon.js";
 import { itemDef, packKey } from "./names.js";
-export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
-let measureCtx = null;
+import { font, LAYOUT, INK, DARK, WHITE, RED } from "./uistyle.js";
+export { INK, DARK, WHITE, RED };
+let tabMeasure = null;
 const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly < y2;
 
 export class ClassicDialog {
@@ -35,16 +36,15 @@ export class ClassicDialog {
   drawBody() {}
   onTab() {}
   // --- pintado
-  // Pestañas colocadas por el ancho real del texto (negrita 11 px) y repartiendo el sobrante: las cajas de clic no se pisan ni los rótulos se montan
-  tabBox() {
-    const key = this.tabs.join("|") + this.w; if (this._tb?.key === key) return this._tb;
-    const c = (measureCtx ||= document.createElement("canvas").getContext("2d")); c.font = "bold 12px Tahoma, Verdana, sans-serif";
-    const ws = this.tabs.map(n => Math.ceil(c.measureText(n).width)), room = this.w - 50, gap = Math.max(6, Math.floor((room - ws.reduce((a, b) => a + b, 0)) / Math.max(1, ws.length - 1)));
-    let x = 30; const xs = ws.map(w => { const r = x; x += w + gap; return r; });
-    return (this._tb = { key, xs, ws, gap });
+  // Pestañas repartidas por su ancho real (negrita 12 px): así no se pisan aunque el texto traducido sea largo.
+  tabBox(i) {
+    const c = (tabMeasure ||= document.createElement("canvas").getContext("2d")); c.font = font(12, true);
+    const ws = this.tabs.map(n => Math.ceil(c.measureText(n).width)), room = this.w - 44, free = Math.max(0, room - ws.reduce((a, b) => a + b, 0));
+    const gap = this.tabs.length > 1 ? Math.min(28, free / (this.tabs.length - 1)) : 0;
+    let x = 22; for (let k = 0; k < i; k++) x += ws[k] + gap;
+    return { x: Math.round(x), w: ws[i] };
   }
-  tabW(i = 0) { const b = this.tabBox(); return b.ws[i] + b.gap; }
-  tabX(i) { return this.tabBox().xs[i]; }
+  tabX(i) { return this.tabBox(i).x; }
   draw(g, me) {
     if (g.lintOn) g.lint = [];
     this.draw_(g, me);
@@ -64,9 +64,9 @@ export class ClassicDialog {
     const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, rows = this.rows(me) || [];
     g.put("gamedialog_1", 2, 0, 0);
     g.put("dialogtext_1", this.hoverOk(lx, ly) ? 1 : 0, this.w - 104, 292);
-    if (this.title) g.aligned(0, this.w, 22, this.title, INK, { bold: true });
+    if (this.title) g.aligned(0, this.w, LAYOUT.titleY, this.title, INK, { bold: true });
     this.tabs.forEach((name, i) => {
-      const x = this.tabX(i), over = inside(lx, ly, x - 5, x - 5 + this.tabW(i), 38, 58);
+      const { x, w } = this.tabBox(i), over = inside(lx, ly, x - 4, x + w + 4, 38, 58);
       g.text(x, 42, name, this.tab === i ? RED : over ? WHITE : DARK, { bold: true });
     });
     this.drawBody(g, me, lx, ly);
@@ -90,7 +90,7 @@ export class ClassicDialog {
   }
   // Texto de ayuda en una zona fija del cuadro (no flota junto al ratón: no tapa filas ni estorba al hacer clic)
   wrap(g, text, maxW, size = 10) {
-    const c = g.ctx; c.font = size + "px Tahoma, Verdana, sans-serif";
+    const c = g.ctx; c.font = font(size);
     const out = []; let line = "";
     for (const word of String(text).split(" ")) {
       const t = line ? line + " " + word : word;
@@ -106,7 +106,7 @@ export class ClassicDialog {
   hoverOk(lx, ly) { return lx >= this.w - 104 && lx <= this.w - 30 && ly >= 292 && ly <= 312; }
   click(g, lx, ly, me) {
     if (this.hoverOk(lx, ly)) { g.close(this.id); return true; }
-    for (let i = 0; i < this.tabs.length; i++) { const x = this.tabX(i); if (inside(lx, ly, x - 5, x - 5 + this.tabW(i), 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
+    for (let i = 0; i < this.tabs.length; i++) { const { x, w } = this.tabBox(i); if (inside(lx, ly, x - 4, x + w + 4, 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
     const rows = this.rows(me) || [], i = Math.floor((ly - this.top) / this.rowH);
     if (ly >= this.top && i >= 0 && i < this.visible && lx > this.mx - 4 && lx < this.w - 12) { const r = rows[i + this.view]; if (r && !r.disabled) { this.pick(r, me, g); return true; } }
     return this.fixed === true;       // clic en un hueco: se agarra el cuadro para moverlo (gui.down)

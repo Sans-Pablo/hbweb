@@ -1,0 +1,21 @@
+// Reportes de fallos (server/bugs.mjs) y esquema de data/backlog.json.
+import fs from "node:fs"; import os from "node:os"; import path from "node:path"; import assert from "node:assert";
+import { openBugs } from "../server/bugs.mjs";
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bugs-"));
+let b = openBugs(dir);
+const r = b.add({ text: "  se cuelga\n ", user: "Ana", x: 3, y: 4 }, "1.1.1.1", 1000);
+assert(r && r.id === 1 && r.text === "se cuelga" && r.status === "open");
+assert.equal(b.add({ text: "   " }, "1.1.1.1", 1000), null);
+const e1 = b.add({ kind: "error", text: "boom" }, "2.2.2.2", 1000), e2 = b.add({ kind: "error", text: "boom" }, "2.2.2.2", 2000);
+assert(e1.id === e2.id && e2.n === 2);
+for (let i = 0; i < 8; i++) b.add({ text: "x" + i }, "3.3.3.3", 5000);
+assert.equal(b.add({ text: "otro" }, "3.3.3.3", 5001), null, "límite por IP");
+assert(b.add({ text: "otro" }, "3.3.3.3", 5000 + 60001), "el límite caduca");
+assert.equal(b.setStatus(1, "mal"), null);
+b.setStatus(1, "fixed");
+b = openBugs(dir);
+assert.equal(b.list("fixed").length, 1, "el estado persiste");
+assert(b.list("open").every(x => x.status === "open"));
+const bl = JSON.parse(fs.readFileSync(new URL("../web/data/backlog.json", import.meta.url)));
+for (const t of bl.tickets) assert(t.id && t.prio && t.title && t.text && t.interp && ["open", "doing", "done"].includes(t.status), "ticket " + t.id);
+console.log("OK bugs");

@@ -8,185 +8,116 @@
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Fichas y pozos (v0.84.9)",
-        "en": "Item cards and pits (v0.84.9)"
+        "es": "Ventanas uniformes (v0.83.14)",
+        "en": "Uniform windows (v0.83.14)"
       },
       "items": [
         {
-          "es": "Pasa el ratón sobre un objeto: la ficha tiene cabecera, daño/defensa destacado y datos secundarios atenuados. En las criptas, cada pozo de bajada muestra un mini esqueleto del monstruo que espera abajo.",
-          "en": "Hover an item: the card has a header, highlighted damage/defense and dimmed secondary data. In crypts each down pit shows a mini skeleton of what waits below."
+          "es": "Todas las ventanas comparten ahora fuente, margen y altura del título; las pestañas ya no se pisan (Hospital de compañeros) y el texto es más legible. Prueba: abrir /stats, F11, el Hospital, Guild, Puesto y Summons y comprobar que nada se corta ni se solapa.",
+          "en": "All windows now share font, margins and title height; tabs no longer overlap (Companion hospital) and text is easier to read. Test: open /stats, F11, the Hospital, Guild, Stall and Summons and check nothing is clipped or overlapping."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Interfaz original (v0.84.8)",
-        "en": "Original interface (v0.84.8)"
+        "es": "Auditoría de sistemas (v0.83.13)",
+        "en": "Systems audit (v0.83.13)"
       },
       "items": [
         {
-          "es": "En Legacy los mensajes salen arriba a la izquierda como en el original. El minimapa se arrastra con el ratón y se recuerda su sitio.",
-          "en": "In Legacy the messages show top-left like the original. Drag the minimap with the mouse; its place is remembered."
+          "es": "Dile a un bot «recoge esto» tras tirar un objeto y lo recogerá (30 s). Prueba: tirar una poción junto a tu bot; sin orden la ignora, con la orden la coge.",
+          "en": "Tell a bot pick up that after dropping an item and it will take it (30 s). Test: drop a potion next to your bot; without the order it ignores it, with it it picks it up."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Opciones limpias (v0.84.7)",
-        "en": "Cleaner options (v0.84.7)"
+        "es": "Simulador de estadísticas (v0.83.12)",
+        "en": "Stat simulator (v0.83.12)"
       },
       "items": [
         {
-          "es": "En Opciones (F12) el modo se muestra como Remastered / Legacy.",
-          "en": "In Options (F12) the mode shows as Remastered / Legacy."
+          "es": "Escribe /stats en el chat: ventana para probar el reparto de puntos sin gastarlos (Str, Vit, Dex, Int, Mag, Chr), con nivel simulado y casilla «Sin límite». Muestra HP, MP, SP y carga actuales frente a los de la prueba. Ctrl = de 5 en 5. Prueba: repartir, reiniciar, subir el nivel, comprobar el tope de 200.",
+          "en": "Type /stats in chat: a window to try point allocation without spending points (Str, Vit, Dex, Int, Mag, Chr), with simulated level and a \"No limit\" box. Shows current vs simulated HP, MP, SP and load. Ctrl = steps of 5. Test: allocate, reset, raise the level, check the 200 cap."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Conversación de NPC (v0.84.6)",
-        "en": "NPC conversation (v0.84.6)"
+        "es": "Modo automático (v0.83.11)",
+        "en": "Auto mode (v0.83.11)"
       },
       "items": [
         {
-          "es": "Al hablar con un NPC de ciudad el texto sale en el nuevo marco de piedra con botón Ok.",
-          "en": "Talking to a city NPC shows the text in the new stone frame with an Ok button."
+          "es": "/auto hunt slime caza solo slimes (ataca, recoge el botín; para con vida baja o sin presas). /auto run almacén (o tienda, herrería, mago, granjero, hospital) te lleva hasta ese habitante y abre su diálogo. Un clic o /auto stop lo cancela. Prueba: escribirlos en el chat y ver que se detiene al tocar el suelo.",
+          "en": "/auto hunt slime hunts only slimes (attacks, loots; stops on low health or no prey). /auto run warehouse (or shop, blacksmith, sorcerer, farmer, hospital) walks you to that resident and opens their dialog. A click or /auto stop cancels it. Test: type them in chat and check a click stops it."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Cuadros de conversación (v0.84.5)",
-        "en": "Conversation boxes (v0.84.5)"
+        "es": "Salidas del mapa señaladas (v0.83.10)",
+        "en": "Map exits marked (v0.83.10)"
       },
       "items": [
         {
-          "es": "El tutorial usa el nuevo marco de ventana: cara de Gandlf, texto que se escribe solo y botones Siguiente / Saltar. Prueba también en móvil.",
-          "en": "The tutorial uses the new window frame: Gandlf's face, typewriter text and Next / Skip buttons. Test on mobile too."
+          "es": "Cada salida de la granja (rombo azul) muestra el nombre del mapa al que lleva; fuera de pantalla, una flecha en el borde apunta hacia ella y el minimapa la marca. Aresden sale «(cerrado)». Prueba: caminar al oeste (x≈20) y al norte (Promise Land).",
+          "en": "Each farm exit (blue diamond) shows the name of the map it leads to; off-screen, an edge arrow points to it and the minimap marks it. Aresden shows «(closed)». Test: walk west (x≈20) and north (Promise Land)."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Barra a los bordes (v0.84.4)",
-        "en": "Bar to the edges (v0.84.4)"
+        "es": "Órdenes a los bots (v0.83.9)",
+        "en": "Orders to bots (v0.83.9)"
       },
       "items": [
         {
-          "es": "En Remastered con pantalla ancha, la barra inferior llega hasta los dos bordes.",
-          "en": "In Remastered on a wide screen the bottom bar reaches both edges."
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": {
-        "es": "Modo Legacy (v0.84.3)",
-        "en": "Legacy mode (v0.84.3)"
-      },
-      "items": [
-        {
-          "es": "El indicador de modo muestra Remastered o Legacy (antes Clásico).",
-          "en": "The mode indicator shows Remastered or Legacy (formerly Classic)."
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": {
-        "es": "Casillas neutras (v0.84.2)",
-        "en": "Neutral slots (v0.84.2)"
-      },
-      "items": [
-        {
-          "es": "Las casillas de objetos son grises y neutras como en el original y se encienden al pasar el ratón.",
-          "en": "Item slots are neutral grey like the original and light up on hover."
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": {
-        "es": "Hospital de compañeros (v0.84.1)",
-        "en": "Pet hospital (v0.84.1)"
-      },
-      "items": [
-        {
-          "es": "Las pestañas de los diálogos clásicos (Cuidados, Bolas, Caramelos, Ayuda) ya no se montan y cambian al hacer clic. Cada bola tiene su casilla cuadrada.",
-          "en": "Classic dialog tabs (Cuidados, Bolas, Caramelos, Ayuda) no longer overlap and switch on click. Each ball has its own square slot."
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": {
-        "es": "Diario de misiones (v0.84.0)",
-        "en": "Quest journal (v0.84.0)"
-      },
-      "items": [
-        {
-          "es": "Las misiones tienen su ventana (tecla J o el nuevo botón «!» de la barra). El rastreador de arriba a la derecha se pliega con ▾ y ya no tapa el minimapa. Prueba: abre el diario, plega el rastreador y recarga.",
-          "en": "Quests have their own window (J key or the new '!' bar button). The top-right tracker folds with ▾ and no longer covers the minimap. Test: open the journal, fold the tracker and reload."
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "title": {
-        "es": "Buscador y márgenes comunes (v0.83.10)",
-        "en": "Search box and common margins (v0.83.10)"
-      },
-      "items": [
-        {
-          "es": "Nuevo cuadro de búsqueda (lupa y × para borrar) en las ventanas con listas; ya está en F1 (novedades). Prueba: abre F1 y escribe «pelo».",
-          "en": "New search box (magnifier and × to clear) for list windows; already in F1 (news). Test: open F1 and type \"pelo\"."
+          "es": "Dile a un bot «vamos a matar slimes» (o orcos, esqueletos…): te sigue y ataca solo a esa criatura. «Vamos a hacer EK»: te sigue y ataca solo a enemigos. Prueba: pedirlo y ver que ignora otros monstruos.",
+          "en": "Tell a bot «let's kill slimes» (or orcs, skeletons…): it follows you and attacks only that creature. «Let's do EK»: it follows and attacks only enemies. Test: ask it and check it ignores other monsters."
         },
         {
-          "es": "El botón Ok de los avisos va destacado con borde dorado. El rastreador de misiones se encoge en pantallas estrechas.",
-          "en": "The Ok button on prompts is highlighted with a gold outline. The quest tracker shrinks on narrow screens."
+          "es": "Si no entiende la criatura, pregunta cómo se llama; si sigue sin entenderlo, lo anota como ticket para los desarrolladores (menu.html, tipo order).",
+          "en": "If it doesn't know the creature it asks its name; if still not understood it files a ticket for the devs (menu.html, kind order)."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Color de pelo y ventanas hasta el borde (v0.83.9)",
-        "en": "Hair colour and windows to the edge (v0.83.9)"
+        "es": "Trade estilo Olympia (v0.83.8)",
+        "en": "Olympia-style trade (v0.83.8)"
       },
       "items": [
         {
-          "es": "El pelo del cuadro de personaje (F5) usa la misma mezcla que el sprite del mundo. Los cuadros se pueden arrastrar hasta los bordes de la pantalla.",
-          "en": "Hair in the character window (F5) uses the same blend as the world sprite. Windows can be dragged to the screen edges."
+          "es": "Arrastra un objeto de la mochila sobre otro jugador: se abre el intercambio con el objeto ya ofrecido. Prueba: arrastrar, aceptar, confirmar.",
+          "en": "Drag a bag item onto another player: the exchange opens with the item already offered. Test: drag, accept, confirm."
+        },
+        {
+          "es": "Con la mochila llena el trato se completa igualmente: lo que no cabe espera en una cola de recepción (máx. 12) y entra solo al liberar espacio. Prueba: recibir un objeto con la mochila llena.",
+          "en": "With a full bag the deal still completes: what does not fit waits in a reception queue (max 12) and enters when you free space. Test: receive an item with a full bag."
         }
       ]
     },
     {
       "date": "2026-10-15",
       "title": {
-        "es": "Interfaz más limpia y tutorial arreglado (v0.83.8)",
-        "en": "Cleaner interface and tutorial fix (v0.83.8)"
+        "es": "Reporte de fallos y menú web (v0.83.7)",
+        "en": "Bug reports and web menu (v0.83.7)"
       },
       "items": [
         {
-          "es": "El rótulo de salida/bajada de la cripta solo sale al pasar el ratón o al estar junto. El botón de modo del compañero se movió junto al de combate para no pisar la barra.",
-          "en": "The crypt exit/descent label only shows on hover or when next to it. The companion mode button moved next to the combat button so it no longer overlaps the bar."
+          "es": "F11 abre una ventana para informar de un fallo (solo texto). La transparencia de diálogos pasa a Shift+F11.",
+          "en": "F11 opens a bug report window (text only). Dialog transparency moved to Shift+F11."
         },
         {
-          "es": "El tutorial ya no reaparece tras saltarlo ni se bloquea al abrir una tienda. Prueba: salta el tutorial y entra en una tienda.",
-          "en": "The tutorial no longer reappears after skipping nor gets stuck when opening a shop. Test: skip the tutorial, enter a shop."
-        },
-        {
-          "es": "El botón de invocaciones se ilumina con su borde naranja y solo la huella en azul.",
-          "en": "The summons button highlights with its orange border; only the paw is blue."
-        },
-        {
-          "es": "Opciones: quitadas luz/viñeta, luz dinámica, animaciones de hechizos, cursor y transparencia. Quitados el botón Recall, los carteles Failed y las pestañas Para probar / A tener en cuenta.",
-          "en": "Options: removed light/vignette, dynamic light, spell animations, cursor and transparency. Removed the Recall button, Failed texts and the To test / Keep in mind tabs."
+          "es": "Los errores de JavaScript se envían solos al servidor. Nuevo menu.html con Changelog, Backlog y Errores.",
+          "en": "JavaScript errors are sent automatically. New menu.html with Changelog, Backlog and Errors."
         }
       ]
     },
@@ -3605,6 +3536,191 @@
         {
           "es": "Los hechizos de los summons son un sistema nuevo: habla con el Hechicero de mascotas (granja élfica y tienda de armas) para enseñarles, y lánzalos desde la pestaña Grimorio.",
           "en": "Summon spells are a new system: talk to the Pet Sorcerer (elf farm and weapon shop) to teach them, and cast from the Grimoire tab."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Fichas y pozos (v0.84.9)",
+        "en": "Item cards and pits (v0.84.9)"
+      },
+      "items": [
+        {
+          "es": "Pasa el ratón sobre un objeto: la ficha tiene cabecera, daño/defensa destacado y datos secundarios atenuados. En las criptas, cada pozo de bajada muestra un mini esqueleto del monstruo que espera abajo.",
+          "en": "Hover an item: the card has a header, highlighted damage/defense and dimmed secondary data. In crypts each down pit shows a mini skeleton of what waits below."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Interfaz original (v0.84.8)",
+        "en": "Original interface (v0.84.8)"
+      },
+      "items": [
+        {
+          "es": "En Legacy los mensajes salen arriba a la izquierda como en el original. El minimapa se arrastra con el ratón y se recuerda su sitio.",
+          "en": "In Legacy the messages show top-left like the original. Drag the minimap with the mouse; its place is remembered."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Opciones limpias (v0.84.7)",
+        "en": "Cleaner options (v0.84.7)"
+      },
+      "items": [
+        {
+          "es": "En Opciones (F12) el modo se muestra como Remastered / Legacy.",
+          "en": "In Options (F12) the mode shows as Remastered / Legacy."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Conversación de NPC (v0.84.6)",
+        "en": "NPC conversation (v0.84.6)"
+      },
+      "items": [
+        {
+          "es": "Al hablar con un NPC de ciudad el texto sale en el nuevo marco de piedra con botón Ok.",
+          "en": "Talking to a city NPC shows the text in the new stone frame with an Ok button."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Cuadros de conversación (v0.84.5)",
+        "en": "Conversation boxes (v0.84.5)"
+      },
+      "items": [
+        {
+          "es": "El tutorial usa el nuevo marco de ventana: cara de Gandlf, texto que se escribe solo y botones Siguiente / Saltar. Prueba también en móvil.",
+          "en": "The tutorial uses the new window frame: Gandlf's face, typewriter text and Next / Skip buttons. Test on mobile too."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Barra a los bordes (v0.84.4)",
+        "en": "Bar to the edges (v0.84.4)"
+      },
+      "items": [
+        {
+          "es": "En Remastered con pantalla ancha, la barra inferior llega hasta los dos bordes.",
+          "en": "In Remastered on a wide screen the bottom bar reaches both edges."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Modo Legacy (v0.84.3)",
+        "en": "Legacy mode (v0.84.3)"
+      },
+      "items": [
+        {
+          "es": "El indicador de modo muestra Remastered o Legacy (antes Clásico).",
+          "en": "The mode indicator shows Remastered or Legacy (formerly Classic)."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Casillas neutras (v0.84.2)",
+        "en": "Neutral slots (v0.84.2)"
+      },
+      "items": [
+        {
+          "es": "Las casillas de objetos son grises y neutras como en el original y se encienden al pasar el ratón.",
+          "en": "Item slots are neutral grey like the original and light up on hover."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Hospital de compañeros (v0.84.1)",
+        "en": "Pet hospital (v0.84.1)"
+      },
+      "items": [
+        {
+          "es": "Las pestañas de los diálogos clásicos (Cuidados, Bolas, Caramelos, Ayuda) ya no se montan y cambian al hacer clic. Cada bola tiene su casilla cuadrada.",
+          "en": "Classic dialog tabs (Cuidados, Bolas, Caramelos, Ayuda) no longer overlap and switch on click. Each ball has its own square slot."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Diario de misiones (v0.84.0)",
+        "en": "Quest journal (v0.84.0)"
+      },
+      "items": [
+        {
+          "es": "Las misiones tienen su ventana (tecla J o el nuevo botón «!» de la barra). El rastreador de arriba a la derecha se pliega con ▾ y ya no tapa el minimapa. Prueba: abre el diario, plega el rastreador y recarga.",
+          "en": "Quests have their own window (J key or the new '!' bar button). The top-right tracker folds with ▾ and no longer covers the minimap. Test: open the journal, fold the tracker and reload."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Buscador y márgenes comunes (v0.83.10)",
+        "en": "Search box and common margins (v0.83.10)"
+      },
+      "items": [
+        {
+          "es": "Nuevo cuadro de búsqueda (lupa y × para borrar) en las ventanas con listas; ya está en F1 (novedades). Prueba: abre F1 y escribe «pelo».",
+          "en": "New search box (magnifier and × to clear) for list windows; already in F1 (news). Test: open F1 and type \"pelo\"."
+        },
+        {
+          "es": "El botón Ok de los avisos va destacado con borde dorado. El rastreador de misiones se encoge en pantallas estrechas.",
+          "en": "The Ok button on prompts is highlighted with a gold outline. The quest tracker shrinks on narrow screens."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Color de pelo y ventanas hasta el borde (v0.83.9)",
+        "en": "Hair colour and windows to the edge (v0.83.9)"
+      },
+      "items": [
+        {
+          "es": "El pelo del cuadro de personaje (F5) usa la misma mezcla que el sprite del mundo. Los cuadros se pueden arrastrar hasta los bordes de la pantalla.",
+          "en": "Hair in the character window (F5) uses the same blend as the world sprite. Windows can be dragged to the screen edges."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Interfaz más limpia y tutorial arreglado (v0.83.8)",
+        "en": "Cleaner interface and tutorial fix (v0.83.8)"
+      },
+      "items": [
+        {
+          "es": "El rótulo de salida/bajada de la cripta solo sale al pasar el ratón o al estar junto. El botón de modo del compañero se movió junto al de combate para no pisar la barra.",
+          "en": "The crypt exit/descent label only shows on hover or when next to it. The companion mode button moved next to the combat button so it no longer overlaps the bar."
+        },
+        {
+          "es": "El tutorial ya no reaparece tras saltarlo ni se bloquea al abrir una tienda. Prueba: salta el tutorial y entra en una tienda.",
+          "en": "The tutorial no longer reappears after skipping nor gets stuck when opening a shop. Test: skip the tutorial, enter a shop."
+        },
+        {
+          "es": "El botón de invocaciones se ilumina con su borde naranja y solo la huella en azul.",
+          "en": "The summons button highlights with its orange border; only the paw is blue."
+        },
+        {
+          "es": "Opciones: quitadas luz/viñeta, luz dinámica, animaciones de hechizos, cursor y transparencia. Quitados el botón Recall, los carteles Failed y las pestañas Para probar / A tener en cuenta.",
+          "en": "Options: removed light/vignette, dynamic light, spell animations, cursor and transparency. Removed the Recall button, Failed texts and the To test / Keep in mind tabs."
         }
       ]
     },

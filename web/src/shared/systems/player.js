@@ -116,6 +116,7 @@ function loadSave(w, p, s) {
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
   if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
+  if (Array.isArray(s.pending) && s.pending.length) p.pending = s.pending.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
   if (s.hunt) p.hunt = { ...s.hunt };
   restoreArena(w, p, s);                                       // historial de la arena y apuesta pendiente (se cobra el resultado fijado)
   if (s.delve) p.delve = { deepest: Math.max(1, s.delve.deepest | 0), ...(s.delve.cleared ? { cleared: s.delve.cleared | 0 } : {}), ...(s.delve.king ? { king: s.delve.king | 0 } : {}) };         // progreso en la cripta de esqueletos
@@ -145,6 +146,7 @@ export function saveOf(w, id) {
     level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
+    ...(p.pending?.length ? { pending: p.pending.map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })) } : {}),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.cleared ? { cleared: p.delve.cleared } : {}), ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p), quests: Quests.toSave(p),
     bag: p.bag.map(i => ({ uid: i.uid, id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}), ...(Number.isFinite(i.x) ? { x: i.x, y: i.y } : {}) })), equip: { ...p.equip },
   };

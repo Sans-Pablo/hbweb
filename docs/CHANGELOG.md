@@ -52,6 +52,29 @@
 
 ## 0.83.10 · Buscador y botón Ok destacado (2026-10-15)
 - `Ui.search` (lupa, ×, filtro en minúsculas) usado en F1; `btn {primary}` con borde dorado para el Ok de los avisos; `THEME.pad/gap/row` como márgenes comunes; el rastreador de misiones (`#qtrack`) limita su ancho al 42% de la pantalla.
+## 0.83.14 · Ventanas uniformes (2026-10-15)
+- Pase de diseño a todas las ventanas: módulo común `client/uistyle.js` (fuente, tamaño mínimo 10 px, medidas y paleta). Título a la misma altura en Win y cuadros clásicos; pestañas de los cuadros clásicos repartidas por su ancho real (ya no se pisan «Cuidados/Bolas/Caramelos/Ayuda»); texto de las ventanas Win con sombra para más contraste; /stats con el botón Reiniciar dentro del marco; ventana de fallos (F11) sin hueco sobrante. Ficha: docs/sistemas/ventanas.md.
+
+## 0.83.13 · Auditoría de sistemas (2026-10-15)
+- «Recoge esto» (o «pick up that») hace que el bot recoja lo que tiraste durante 30 s. Los bots de apoyo con summon vuelven a invocar su pet si se queda sin él.
+
+## 0.83.12 · Simulador de estadísticas (2026-10-15)
+- /stats abre una ventana para probar el reparto de puntos (Str/Vit/Dex/Int/Mag/Chr, nivel simulado, opción sin límite) y ver HP, MP, SP y carga actuales frente a los simulados, sin gastar puntos. Arreglado además el regex de /auto en main.js (rompía la carga del cliente).
+
+## 0.83.11 · Modo automático (2026-10-15)
+- /auto hunt <criatura>: caza solo ese tipo (ataca a la más cercana, recoge el botín, para con vida < 35 % o 20 s sin presas). /auto run <almacén|tienda|herrería|mago|granjero|hospital>: camina hasta ese habitante y abre su diálogo. Un clic o /auto stop lo cancela. Solo cliente: usa las mismas órdenes que un clic (sin cambio de protocolo). Ficha: docs/sistemas/auto.md.
+
+## 0.83.10 · Salidas del mapa señaladas (2026-10-15)
+- Cada salida (rombo azul) lleva el nombre del mapa de destino; si queda fuera de pantalla, una flecha en el borde apunta hacia ella; marcas en el minimapa. Los destinos aún no jugables salen «(cerrado)» (Aresden). Online: el cliente ya recibe las salidas del mapa (antes los rombos solo salían en local). Ficha `docs/sistemas/salidas.md`.
+
+## 0.83.9 · Órdenes a los bots (2026-10-15)
+- Glosario de órdenes por chat a los habitantes (orders.js): «vamos a matar slimes» → te sigue y solo ataca a esa criatura; «vamos a hacer EK» → te sigue y solo ataca a jugadores enemigos. Si no entiende qué cazar, pregunta; si sigue sin entenderlo abre un ticket «el bot X no entendió esto del player Y» (kind order en el panel de errores).
+
+## 0.83.8 · Trade estilo Olympia (2026-10-15)
+- Arrastrar un objeto de la mochila sobre otro jugador abre el intercambio con ese objeto ya ofrecido. Mochila llena: el trato ya no se cancela; lo que no cabe espera en una cola de recepción (máx. 12, se guarda) y entra solo al liberar peso/casillas. Ficha `docs/sistemas/trade.md`.
+
+## 0.83.7 · Reporte de fallos y menú web (2026-10-15)
+- F11 = informe rápido de fallo (solo texto) → `/api/bug`; Shift+F11 = transparencia. Errores de JS enviados solos. `server/bugs.mjs`, `web/menu.html` (Changelog, Backlog, Errores), `web/data/backlog.json`. Aura de pets evolucionados: un latido por minuto.
 
 ## 0.83.6 · Personajes sin recuadros (2026-10-15)
 - Pablo vio rectángulos pálidos alrededor de todos los personajes tras pasar a GL por defecto. Causa: el canvas GL es premultiplicado y el shader podía sacar rgb>alfa (p. ej. alfa 0 con rgb>0 en los bordes); al volcarlo al atlas 2D con source-over eso suma luz. `getImageData` des-premultiplica y lo esconde, por eso la lectura del atlas parecía limpia. Ahora `o = vec4(min(c.rgb, vec3(c.a)), c.a)` en todos los modos. Sin cambio de calidad ni de coste apreciable.

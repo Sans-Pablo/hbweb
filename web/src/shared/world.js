@@ -257,7 +257,7 @@ const COMMANDS = {
   guilddisband: (w, p) => Guild.disband(w, p),
   guildcolor: (w, p, cmd) => Guild.setColors(w, p, cmd.cape === undefined ? NaN : +cmd.cape, cmd.boots === undefined ? NaN : +cmd.boots),
   guildinfo: (w, p) => Guild.info(w, p),
-  tradereq: (w, p, cmd) => Trade.request(w, p, String(cmd.name || "").slice(0, 12)),
+  tradereq: (w, p, cmd) => Trade.request(w, p, String(cmd.name || "").slice(0, 12), cmd.uid),
   tradeanswer: (w, p, cmd) => Trade.answer(w, p, cmd.r === 1),
   tradeset: (w, p, cmd) => Trade.setItem(w, p, cmd.uid),
   tradeunset: (w, p, cmd) => Trade.unsetItem(w, p, cmd.uid),

@@ -49,6 +49,8 @@ import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
 import { registerQuests, QUEST_ID } from "./questwin.js";
+import { registerBug, BUG_ID } from "./bugwin.js";
+import { registerStatSim, STATSIM_ID } from "./statsim.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -60,6 +62,7 @@ import { observerBar, rosterPanel, brainPanel } from "./watchpanel.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
+import { parseAuto, label as autoLabel } from "../shared/systems/autoplay.js";
 import { PerfLog } from "./perflog.js";
 import { Profiler } from "./profiler.js";
 const EMBED = new URLSearchParams(location.search).has("embed");                  // marco del panel dividido (observador.html): solo el juego
@@ -144,7 +147,9 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
-  registerNews(gui); registerQuests(gui); registerPrompts(gui);
+  
+  registerNews(gui); registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
+  registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
@@ -270,6 +275,10 @@ async function main() {
       if (pet) { conn.send({ t: "use", uid: inst.uid, dest: pet.ball }); return; }
     }
     if (!dlg && y < 548 && dropOnCitizen(inst.uid, x, y, cx, cy)) return;
+    if (!dlg && y < 548 && cx !== undefined) {                    // objeto soltado sobre otro jugador (estilo Olympia): abre el intercambio con eso ya ofrecido
+      const [wx, wy] = renderer.toWorld(cx, cy), o = ctl.playerAt(wx, wy);
+      if (o && o.id !== pid && !o.dead) { if (Math.max(Math.abs(o.x - me.x), Math.abs(o.y - me.y)) > 10) hud.log("Too far to trade."); else tradeUi.start(o.name, inst.uid); return; }
+    }
     if (dlg && dlg.id === 33) { tradeUi.drop(inst.uid); return; }           // sobre la ventana de intercambio: ofrecerlo
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);
@@ -402,6 +411,7 @@ async function main() {
       conn.send({ t: "guildinvite", name: e.name }); hud.log("Invitación enviada a " + e.name + ".");
     },
     // Ctrl+E (o «/trade nombre»): comerciar con el jugador bajo el cursor (o el más cercano a ≤ 10 casillas)
+    autoLog: m => hud.log(m[getLang() === "en" ? 1 : 0]),
     autoTrade(name) {
       const me = world.ents.get(pid); if (!me || me.dead) return;
       const e = name ? [...world.ents.values()].find(o => o.kind === "player" && o.name.toLowerCase() === name.toLowerCase()) : ctl.hoverPlayer || [...world.ents.values()].filter(o => o.kind === "player" && !o.dead && o.id !== pid).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
@@ -487,7 +497,7 @@ async function main() {
           case "F8": ui.key("skill"); break;
           case "F9": gui.toggle(10); break;
           case "F10": gui.toggle(43); break;
-          case "F11": document.body.classList.toggle("dialogtrans"); break;
+          case "F11": if (e.shiftKey) document.body.classList.toggle("dialogtrans"); else gui.toggle(BUG_ID); break;
           case "F12": ui.key("options"); break;
         }
         return;
@@ -674,8 +684,16 @@ async function main() {
       else if (/^\/guild(\s|$)/.test(t)) guildUi.command(t);
       else if (/^\/trade(\s|$)/.test(t)) ui.autoTrade(t.slice(7).trim());
       else if (t === "/puesto" || t === "/stall") stallUi.setup();
+      else if (t === "/stats" || t === "/simula" || t === "/sim") gui.toggle(STATSIM_ID);                // simulador de estadísticas (statsim.js)
       else if (t === "/tutorial") tutorial.restart();
       else if (t === "/tutorial off") tutorial.skipAll();
+      else if (/^\/auto\s+\S/.test(t)) {                                           // /auto hunt slime · /auto run almacén · /auto stop (autoplay.js)
+        const a = parseAuto(t.slice(6), Object.keys(assets.npcDb)), L = n => (getLang() === "en" ? n[1] : n[0]);
+        if (!a) hud.log(L(["Uso: /auto hunt <criatura> · /auto run <almacén|tienda|herrería|mago|granjero|hospital> · /auto stop", "Usage: /auto hunt <creature> · /auto run <warehouse|shop|blacksmith|sorcerer|farmer|hospital> · /auto stop"]));
+        else if (a.kind === "bad") hud.log(L(["No sé qué es «" + a.why + "».", "I don't know what \"" + a.why + "\" is."]));
+        else if (a.kind === "stop") { ctl.setAuto(null); hud.log(L(["Modo automático detenido.", "Auto mode stopped."])); }
+        else { ctl.setAuto(a); hud.log(L([a.kind === "hunt" ? "Caza automática: " + a.mob + " (un clic la cancela)." : "Voy a " + autoLabel(a, "es") + " (un clic lo cancela).", a.kind === "hunt" ? "Auto hunt: " + a.mob + " (click to cancel)." : "Heading to " + autoLabel(a, "en") + " (click to cancel)."])); }
+      }
       else if (t === "/auto") { setOpt("autoAttack", !opts.autoAttack); hud.log(opts.autoAttack ? "Ataque automático activado." : "Ataque automático desactivado."); }
       else if (/^\/gold \d+$/.test(t) && !online) { const me = world.ents.get(pid); me.gold += +t.slice(6); hud.log("Gold: " + me.gold); }   // solo para pruebas
       else if (/^\/time (day|night|auto)$/.test(t) && !online) {                      // solo para pruebas: fuerza la hora del cielo

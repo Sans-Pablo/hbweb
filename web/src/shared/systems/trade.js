@@ -33,11 +33,12 @@ export function cancel(w, p, why = "") {
 }
 const busy = p => !!(p.trade || p.tradeReq || p.tradeQuery);
 
-export function request(w, p, name) {
+export function request(w, p, name, uid) {
   const key = String(name || "").toLowerCase();
   const t = [...w.ents.values()].find(e => e.kind === "player" && e !== p && e.name.toLowerCase() === key);
   if (!t || t.dead || p.dead || busy(p) || busy(t) || !near(p, t) || w.pvp && t.side !== p.side) return w.reject(p, { t: "tradereq" }, "no puede comerciar ahora");
-  p.tradeReq = { to: t.id, at: w.time }; t.tradeQuery = { from: p.id };
+  const pre = uid != null ? Inv.instOf(p, uid) : null;                  // objeto arrastrado sobre el jugador (estilo Olympia): ya va en la oferta al abrirse
+  p.tradeReq = { to: t.id, at: w.time, ...(pre && !pre.comp && !Inv.isEquipped(p, uid) && pre.id !== GOLD ? { item: uid } : {}) }; t.tradeQuery = { from: p.id };
   w.emit({ t: "tradequery", id: t.id, from: p.name });
   return true;
 }
@@ -45,11 +46,12 @@ export function answer(w, p, yes) {
   const q = p.tradeQuery; if (!q) return false;
   const f = w.ents.get(q.from); delete p.tradeQuery;
   if (!f || f.dead || f.tradeReq?.to !== p.id) return false;
-  delete f.tradeReq;
+  const pre = f.tradeReq.item; delete f.tradeReq;
   if (!yes) { w.emit({ t: "trade", id: f.id, k: "refused", name: p.name }); return true; }
   if (!near(p, f)) return w.reject(p, { t: "tradeanswer" }, "está demasiado lejos");
   p.trade = { with: f.id, offer: [], gold: 0, ok: false }; f.trade = { with: p.id, offer: [], gold: 0, ok: false };
   w.emit({ t: "trade", id: p.id, k: "open", name: f.name }); w.emit({ t: "trade", id: f.id, k: "open", name: p.name });
+  if (pre != null && Inv.instOf(f, pre)) f.trade.offer.push(pre);
   push(w, p); return true;
 }
 function changed(w, p) { const o = other(w, p); p.trade.ok = false; if (o?.trade) o.trade.ok = false; push(w, p); }
@@ -63,13 +65,19 @@ export function setItem(w, p, uid) {
 export function unsetItem(w, p, uid) { const t = p.trade; if (!t) return false; t.offer = t.offer.filter(u => u !== uid); changed(w, p); return true; }
 export function setGold(w, p, n) { const t = p.trade; if (!t) return false; t.gold = Math.max(0, Math.min(p.gold, Math.floor(+n) || 0)); changed(w, p); return true; }
 
-// ¿Cabe todo en la mochila de `to` tras el cambio? (peso y casillas)
-function fits(w, to, give, get, goldDelta) {
-  let weight = Inv.totalWeight(to, w.data) + itemWeight(w.data.item(GOLD), Math.max(0, goldDelta)) - itemWeight(w.data.item(GOLD), Math.max(0, -goldDelta));
-  let slots = to.bag.length - give.length;
-  for (const i of give) { const d = w.data.item(i.id); weight -= itemWeight(d, isStack(d) ? i.count : 1); }
-  for (const i of get) { const d = w.data.item(i.id); weight += itemWeight(d, isStack(d) ? i.count : 1); if (!(isStack(d) && to.bag.some(x => x.id === i.id))) slots++; }
-  return weight <= Inv.maxLoad(to) && slots <= MAX_ITEMS;
+// Mochila llena: lo que no cabe NO cancela el trato. Se guarda en la cola de recepción (p.pending, máx. PENDING_MAX objetos) y entra solo en
+// cuanto hay peso y casillas libres (deliver, cada segundo desde tick). El oro siempre entra. Si la cola tampoco admite lo que sobra, no se confirma.
+export const PENDING_MAX = 12;
+function fitsOne(w, to, i) {
+  const d = w.data.item(i.id), stacks = isStack(d) && to.bag.some(x => x.id === i.id);
+  return Inv.totalWeight(to, w.data) + itemWeight(d, isStack(d) ? i.count : 1) <= Inv.maxLoad(to) && (stacks || to.bag.length < MAX_ITEMS);
+}
+export function deliver(w, p) {
+  if (!p.pending?.length) return;
+  let n = 0;
+  for (const i of [...p.pending]) if (fitsOne(w, p, i)) { Inv.addToBag(p, w.data, i); p.pending.splice(p.pending.indexOf(i), 1); n++; }
+  if (!p.pending.length) delete p.pending;
+  if (n) { w.recalc(p); w.emit({ t: "trade", id: p.id, k: "delivered", n }); }
 }
 export function confirm(w, p) {
   const t = p.trade, o = other(w, p); if (!t || !o?.trade) return false;
@@ -78,11 +86,12 @@ export function confirm(w, p) {
   if (!o.trade.ok) return true;
   const mine = t.offer.map(u => Inv.instOf(p, u)).filter(Boolean), theirs = o.trade.offer.map(u => Inv.instOf(o, u)).filter(Boolean);
   const gm = Math.min(t.gold, p.gold), go = Math.min(o.trade.gold, o.gold);
-  if (!fits(w, p, mine, theirs, go - gm) || !fits(w, o, theirs, mine, gm - go)) { t.ok = o.trade.ok = false; push(w, p); w.emit({ t: "trade", id: p.id, k: "nofit" }); w.emit({ t: "trade", id: o.id, k: "nofit" }); return false; }
+  const over = (to, get) => get.filter(i => !fitsOne(w, to, i)).length;     // conservador: no cuenta lo que libera quien entrega
+  if ((p.pending?.length || 0) + over(p, theirs) > PENDING_MAX || (o.pending?.length || 0) + over(o, mine) > PENDING_MAX) { t.ok = o.trade.ok = false; push(w, p); w.emit({ t: "trade", id: p.id, k: "nofit" }); w.emit({ t: "trade", id: o.id, k: "nofit" }); return false; }
   for (const i of mine) Inv.removeFromBag(p, i.uid);
   for (const i of theirs) Inv.removeFromBag(o, i.uid);
-  for (const i of theirs) Inv.addToBag(p, w.data, i);
-  for (const i of mine) Inv.addToBag(o, w.data, i);
+  const take = (to, list) => { for (const i of list) { if (fitsOne(w, to, i)) Inv.addToBag(to, w.data, i); else { (to.pending ||= []).push(i); w.emit({ t: "trade", id: to.id, k: "queued", n: to.pending.length }); } } };
+  take(p, theirs); take(o, mine);
   p.gold += go - gm; o.gold += gm - go;
   const sum = (a, g) => ({ items: a.map(i => ({ id: i.id, count: i.count || 1 })), gold: g });
   delete p.trade; delete o.trade;
@@ -95,6 +104,7 @@ export function confirm(w, p) {
 // Cada segundo: se cancela el trato si alguien se aleja, muere o se va (lo llama World.tick)
 export function tick(w) {
   for (const p of w.ents.values()) {
+    if (p.kind === "player" && p.pending) deliver(w, p);
     if (p.kind !== "player" || !(p.trade || p.tradeReq)) continue;
     const o = p.trade ? w.ents.get(p.trade.with) : w.ents.get(p.tradeReq.to);
     if (!o || o.dead || p.dead || !near(p, o) || (p.tradeReq && w.time - p.tradeReq.at > 30000)) cancel(w, p, "se cancela el trato");
