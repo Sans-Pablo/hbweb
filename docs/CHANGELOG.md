@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.7 · Reporte de fallos y menú web (2026-10-15)
+- F11 = informe rápido de fallo (solo texto) → `/api/bug`; Shift+F11 = transparencia. Errores de JS enviados solos. `server/bugs.mjs`, `web/menu.html` (Changelog, Backlog, Errores), `web/data/backlog.json`. Aura de pets evolucionados: un latido por minuto.
+
 ## 0.83.6 · Personajes sin recuadros (2026-10-15)
 - Pablo vio rectángulos pálidos alrededor de todos los personajes tras pasar a GL por defecto. Causa: el canvas GL es premultiplicado y el shader podía sacar rgb>alfa (p. ej. alfa 0 con rgb>0 en los bordes); al volcarlo al atlas 2D con source-over eso suma luz. `getImageData` des-premultiplica y lo esconde, por eso la lectura del atlas parecía limpia. Ahora `o = vec4(min(c.rgb, vec3(c.a)), c.a)` en todos los modos. Sin cambio de calidad ni de coste apreciable.
 

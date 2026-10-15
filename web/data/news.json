@@ -1,10 +1,18 @@
 {
- "build": "0.83.6",
+ "build": "0.83.7",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Reporte de fallos y menú web (v0.83.7)", "en": "Bug reports and web menu (v0.83.7)"},
+   "items": [
+    {"es": "F11 abre una ventana para informar de un fallo (solo texto). La transparencia de diálogos pasa a Shift+F11.", "en": "F11 opens a bug report window (text only). Dialog transparency moved to Shift+F11."},
+    {"es": "Los errores de JavaScript se envían solos al servidor. Nuevo menu.html con Changelog, Backlog y Errores.", "en": "JavaScript errors are sent automatically. New menu.html with Changelog, Backlog and Errors."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Personajes sin recuadros pálidos (v0.83.6)", "en": "Characters without pale boxes (v0.83.6)"},

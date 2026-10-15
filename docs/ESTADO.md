@@ -6,7 +6,7 @@
 
 ## Hilo SISTEMAS (pedido 2026-10-15) — tickets por prioridad
 - [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Pendiente: orden explícita «recoge esto» para items tirados.
-- [ ] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
+- [x] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
 - [ ] 3. Revamp del trade (Olympia; arrastrar item sobre otro personaje abre exchange; bag llena: definir cola/bag extra).
 - [ ] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
 - [x] 5. Efecto de evolución de pet: el aura de Demon/Frost/Liche/Cyclops evolucionados ahora late ~6 s cada 60 s (fase propia por criatura, fundido suave) en vez de titilar siempre (`renderer.js`, `evoEnv`). Sin bump (0.83.6). Sin verificar visualmente en navegador; pendiente prueba de Pablo (si se refería a otro efecto, p. ej. la animación de evolución de `fx.js`, avisar).

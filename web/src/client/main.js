@@ -32,6 +32,7 @@ import { registerPetDialog } from "./petdialog.js";
 import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
+import { registerBug, BUG_ID } from "./bugwin.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -128,6 +129,7 @@ async function main() {
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
   registerNews(gui); registerPrompts(gui);
+  registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
@@ -470,7 +472,7 @@ async function main() {
           case "F8": ui.key("skill"); break;
           case "F9": gui.toggle(10); break;
           case "F10": gui.toggle(43); break;
-          case "F11": document.body.classList.toggle("dialogtrans"); break;
+          case "F11": if (e.shiftKey) document.body.classList.toggle("dialogtrans"); else gui.toggle(BUG_ID); break;
           case "F12": ui.key("options"); break;
         }
         return;

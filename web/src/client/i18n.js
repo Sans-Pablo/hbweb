@@ -10,6 +10,7 @@ const listeners = new Set();
 
 const EN = {
   // ---- ventanas del lienzo (window.js, newswin.js)
+  "Informar de un fallo": "Report a bug", "Cuenta qué ha pasado y dónde (solo texto). Se envía con tu nombre, versión, mapa y posición.": "Tell us what happened and where (text only). Sent with your name, version, map and position.", "Enviar": "Send", "Enviado. ¡Gracias!": "Sent. Thank you!",
   "Novedades y pruebas": "News and tests", "Sí": "Yes", "No": "No", "Esta ventana (F1) reemplaza la ayuda original.": "This window (F1) replaces the original help.",
   "Las herramientas aparecen al entrar en el juego.": "The tools appear once you enter the game.", "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.": "For testing only: what you do here is saved with the game. Messages appear in the chat.",
   "Clic derecho: cerrar": "Right click: close", "Cancelar salida": "Cancel logout", "Menú clásico": "Classic menu",
