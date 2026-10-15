@@ -18,6 +18,7 @@
 //   }
 //   gui.register(new Mio());   y   gui.open(50)
 import { drawSlot } from "./window.js";
+import { DlgSearch } from "./dlgsearch.js";
 import { drawBallIcon } from "./compicon.js";
 import { itemDef, packKey } from "./names.js";
 import { font, LAYOUT, INK, DARK, WHITE, RED } from "./uistyle.js";
@@ -26,9 +27,10 @@ let tabMeasure = null;
 const inside = (lx, ly, x1, x2, y1, y2) => lx > x1 && lx < x2 && ly > y1 && ly < y2;
 
 export class ClassicDialog {
-  constructor({ id, x = 150, y = 110, w = 258, h = 339, title = "", tabs = [], rowH = 17, top = 80, visible = null, footer = "" }) {
+  constructor({ id, x = 150, y = 110, w = 258, h = 339, title = "", tabs = [], rowH = 17, top = 80, visible = null, footer = "", search = false }) {
     visible = visible ?? Math.max(1, Math.floor((256 - top) / rowH));                     // las filas acaban donde empieza la zona de ayuda (y 260)
-    Object.assign(this, { id, x, y, w, h, title, tabs, rowH, top, visible, footer, tab: 0, view: 0, mx: 14 });      // mx = margen izquierdo del texto
+    Object.assign(this, { id, x, y, w, h, title, tabs, rowH, top, visible, footer, tab: 0, view: 0, mx: 14 });
+    this.s = search ? new DlgSearch(14, 292, w - 14 - 112) : null;       // buscador opcional: a la izquierda del botón Ok; filtra las filas por su texto // mx = margen izquierdo del texto
   }
   // --- para sobrescribir
   rows() { return []; }
@@ -61,7 +63,7 @@ export class ClassicDialog {
     });
   }
   draw_(g, me) {
-    const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, rows = this.rows(me) || [];
+    const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, rows = (this.rows(me) || []).filter(r => !this.s || this.s.match(r.text));
     g.put("gamedialog_1", 2, 0, 0);
     g.put("dialogtext_1", this.hoverOk(lx, ly) ? 1 : 0, this.w - 104, 292);
     if (this.title) g.aligned(0, this.w, LAYOUT.titleY, this.title, INK, { bold: true });
@@ -69,6 +71,7 @@ export class ClassicDialog {
       const { x, w } = this.tabBox(i), over = inside(lx, ly, x - 4, x + w + 4, 38, 58);
       g.text(x, 42, name, this.tab === i ? RED : over ? WHITE : DARK, { bold: true });
     });
+    this.s?.draw(g);
     this.drawBody(g, me, lx, ly);
     this.view = Math.max(0, Math.min(this.view, Math.max(0, rows.length - this.visible)));
     let hint = this.hintText || "";
@@ -103,11 +106,15 @@ export class ClassicDialog {
     const lines = this.wrap(g, text, this.w - this.mx - 22).slice(0, 2);
     lines.forEach((l, i) => g.text(this.mx, 262 + i * 12, l, INK, { size: 10 }));
   }
+  key(e) { return this.s ? this.s.key(e) : false; }
+  get focus() { return !!this.s?.on; }
+  onClose() { this.s?.reset(); }
   hoverOk(lx, ly) { return lx >= this.w - 104 && lx <= this.w - 30 && ly >= 292 && ly <= 312; }
   click(g, lx, ly, me) {
+    if (this.s?.click(lx, ly)) return true;
     if (this.hoverOk(lx, ly)) { g.close(this.id); return true; }
     for (let i = 0; i < this.tabs.length; i++) { const { x, w } = this.tabBox(i); if (inside(lx, ly, x - 4, x + w + 4, 38, 58)) { this.tab = i; this.view = 0; this.onTab(i, me); return true; } }
-    const rows = this.rows(me) || [], i = Math.floor((ly - this.top) / this.rowH);
+    const rows = (this.rows(me) || []).filter(r => !this.s || this.s.match(r.text)), i = Math.floor((ly - this.top) / this.rowH);
     if (ly >= this.top && i >= 0 && i < this.visible && lx > this.mx - 4 && lx < this.w - 12) { const r = rows[i + this.view]; if (r && !r.disabled) { this.pick(r, me, g); return true; } }
     return this.fixed === true;       // clic en un hueco: se agarra el cuadro para moverlo (gui.down)
   }

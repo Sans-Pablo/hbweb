@@ -1,6 +1,7 @@
 # Changelog
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## 0.84.11 · Menú AUTO (2026-10-15)
 - Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.
 - `autoplay.js`: caza con zona (va, caza dentro, recoge; con la mochila llena vuelve a la granja y termina el ciclo), ruta a la granja y `approach()` (casilla libre y alcanzable a ≤2 del habitante, p. ej. tras un mostrador). `/auto hunt` y `/auto run` siguen igual. Sin cambio de protocolo.
@@ -37,6 +38,15 @@
 ## 0.84.12 · Motor: Pretend Corpse (2026-10-15)
 - Habilidad Pretend Corpse (skill 19, diálogo de habilidades): tirada de maestría; falla en zona de lucha o con alguien en las 8 casillas contiguas; el personaje se tumba, los monstruos lo ignoran, no regenera y se levanta al moverse, atacar o lanzar (HG.cpp UseSkillHandler).
 >>>>>>> Pablo-Claude/hb-motor-65f058
+=======
+## 0.85.1 · Ventanas hasta el borde (2026-10-15)
+- Cierre de lo sin verificar de 0.85.0: el arrastre de ventanas del lienzo llega al borde de pantalla (por abajo se detiene sobre la barra inferior, 52 px, para no perder el asa); chat y registro (DOM, también en Legacy) son arrastrables con asa propia (domdrag.js), posición guardada y doble clic para restaurar; buscador de compañeros probado con bola; interruptores de Opciones (mini quest, indicadores de dirección) probados en vivo.
+
+## 0.85.0 · Ventanas y buscadores (2026-10-15)
+- Hilo UI, backlog nuevo: ventana de elegir personaje eliminada; chat en ventana de formato nuevo (chatwin.js); rastreador de misiones con el formato nuevo y opción en Opciones; ventanas movibles hasta el borde de pantalla (lienzo y rastreador); buscador de objetos (dlgsearch.js) en tienda, herrería, almacén, hospital y compañeros; barras inferiores con bordes estirados; indicadores de dirección como opción (apagados por defecto); mensaje de lanzar hechizo con la fuente original (sin toast).
+- Hospital: se mantiene el ClassicDialog con pestañas (mismo marco de madera que los demás cuadros) + buscador; no se reconstruyó como Win.
+- Sin verificar: arrastre de ventanas al borde exacto, chat/log Legacy (DOM) no arrastrable, buscador de compañeros con filas, interruptores de Opciones en vivo.
+>>>>>>> Pablo-Claude/hb-ui-46a637
 
 ## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
 - Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.

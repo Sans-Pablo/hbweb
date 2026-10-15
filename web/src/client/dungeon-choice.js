@@ -3,7 +3,7 @@ export function chooseDungeon(conn, info) {
   if (document.getElementById("dungeon-choice")) return;
   const dialog = document.createElement("dialog");
   dialog.id = "dungeon-choice";
-  dialog.style.cssText = "background:#211d22;color:#e8dcc3;border:1px solid #756959;padding:24px;max-width:440px;font:14px Tahoma,sans-serif";
+  dialog.style.cssText = "background:#211d22;color:#e8dcc3;border:1px solid #756959;padding:24px;max-width:440px;font:14px Tahoma,Verdana,sans-serif";
   const title = document.createElement("h2"); title.textContent = "Cripta de esqueletos";
   const text = document.createElement("p");
   text.textContent = `Has llegado hasta el nivel ${info.deepest} de ${info.total}. ¿Quieres reiniciar la cripta desde el nivel 1 o continuar en el nivel ${info.deepest}?`;

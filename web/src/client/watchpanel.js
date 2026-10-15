@@ -37,7 +37,7 @@ export function observerBar(conn) {
 // Plantel a la izquierda, plegable, con búsqueda y filtro de bando.
 export function rosterPanel(conn) {
   const el = document.createElement("div"); el.id = "roster";
-  el.style.cssText = "position:fixed;top:0;left:0;bottom:0;z-index:54;width:262px;display:flex;flex-direction:column;background:rgba(14,11,5,.93);color:#f0e2b8;border-right:1px solid #6b5a33;font:12px/1.35 system-ui,sans-serif;transition:transform .15s";
+  el.style.cssText = "position:fixed;top:0;left:0;bottom:0;z-index:54;width:262px;display:flex;flex-direction:column;background:rgba(14,11,5,.93);color:#f0e2b8;border-right:1px solid #6b5a33;font:12px/1.35 Tahoma,Verdana,sans-serif;transition:transform .15s";
   el.innerHTML = `<style>#roster .r{display:grid;grid-template-columns:16px 1fr auto;gap:0 5px;padding:3px 7px;cursor:pointer;border-left:3px solid transparent;align-items:center}#roster .r:hover{background:#3a2f18}#roster .r.me{background:#4a3a14;border-left-color:#ffd76a}
     #roster .hp{height:3px;background:#3a1f1a;border-radius:2px;grid-column:2/4}#roster .hp i{display:block;height:100%;background:#c0392b;border-radius:2px}#roster .g{padding:4px 7px 2px;color:#b9a572;font-size:11px;text-transform:uppercase;background:#1b1608;position:sticky;top:0;display:flex;justify-content:space-between}
     #roster .d{color:#998;font-size:11px;grid-column:2/4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#roster .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}</style>
@@ -79,7 +79,7 @@ export function brainPanel(conn) {
   let el = document.getElementById("brain");
   if (!el) {
     el = document.createElement("div"); el.id = "brain"; el.dataset.open = "1";
-    el.style.cssText = "position:fixed;top:34px;right:6px;z-index:54;width:340px;max-height:calc(100vh - 44px);overflow:auto;background:rgba(20,15,6,.93);color:#f0e2b8;border:1px solid #6b5a33;border-radius:8px;padding:6px 10px;font:12px/1.4 sans-serif";
+    el.style.cssText = "position:fixed;top:34px;right:6px;z-index:54;width:340px;max-height:calc(100vh - 44px);overflow:auto;background:rgba(20,15,6,.93);color:#f0e2b8;border:1px solid #6b5a33;border-radius:8px;padding:6px 10px;font:12px/1.4 Tahoma,Verdana,sans-serif";
     el.onclick = e => {
       const a = e.target.dataset?.a;
       if (a === "tog") { el.dataset.open = el.dataset.open === "1" ? "0" : "1"; el._k = ""; }

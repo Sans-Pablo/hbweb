@@ -1,5 +1,5 @@
 {
- "build": "0.85.3",
+ "build": "0.85.4",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -4004,6 +4004,23 @@
     {
      "es": "Posible arreglo del sprite negro al quitarse la capa (la caché mezclaba capa y botas del mismo color). Sin reproducir el fallo: si vuelve a verse, avisar.",
      "en": "Possible fix for the black sprite when taking the cape off (the cache mixed a cape and boots of the same colour). Not reproduced: report it if it shows up again."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Ventanas y buscadores (v0.85.0)",
+    "en": "Windows and search (v0.85.0)"
+   },
+   "items": [
+    {
+     "es": "Buscador de objetos en Tienda, Herrería, Almacén, Hospital y Compañeros (caja abajo a la izquierda, junto al Ok). Prueba: abrir cada uno, escribir parte de un nombre y comprobar que la lista se filtra y el objeto elegido es el correcto.",
+     "en": "Item search in Shop, Blacksmith, Warehouse, Hospital and Companions (box at the bottom left, next to Ok). Test: open each, type part of a name and check the list filters and the chosen item is the right one."
+    },
+    {
+     "es": "El chat y el rastreador de misiones tienen formato nuevo; Opciones permite ocultar el rastreador y activar los indicadores de dirección (apagados por defecto). Las ventanas se pueden arrastrar hasta el borde.",
+     "en": "Chat and quest tracker use the new format; Options can hide the tracker and enable direction indicators (off by default). Windows can be dragged to the screen edge."
     }
    ]
   }

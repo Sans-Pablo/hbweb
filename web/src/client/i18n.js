@@ -35,7 +35,7 @@ const EN = {
   // ---- 0.50.7
   "el oro no se puede tirar: usa el intercambio": "gold can't be dropped: use trade",
   "Elige un summon de escuela (Orc fuego, Pixie hielo, Skeleton rayo) y enséñale hechizos con tu Int y tu oro.": "Choose a school summon (Orc fire, Pixie ice, Skeleton lightning) and teach it spells with your Int and gold.",
-  "Todo": "All", "Grupo": "Party", "Clan": "Guild", "Sistema": "System",
+  "Todo": "All", "Sin mensajes.": "No messages.", "Indicadores de dirección": "Direction indicators", "Mini misión (rastreador)": "Mini quest (tracker)", "Grupo": "Party", "Clan": "Guild", "Sistema": "System",
   // ---- modo online (server/server.mjs, connection.js, main.js)
   " · conectados: ": " · online: ", "El servidor es de otra versión del juego. Recarga la página (Ctrl+F5) o espera a que se actualice.": "The server runs a different version of the game. Reload the page (Ctrl+F5) or wait for the update.",
   "El servidor no está disponible ahora mismo: prueba local (un jugador, se guarda en este navegador).": "The server is not available right now: local test (single player, saved in this browser).",

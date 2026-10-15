@@ -292,8 +292,8 @@ export class Gui {
     if (this.cap) this.cap.fn(x, y);
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
-      d.x = Math.max(0, Math.min(this.W - d.w, x - this.drag.dx));
-      d.y = Math.max(0, Math.min(this.H - 20, y - this.drag.dy));    // hasta los bordes de la pantalla (barra incluida)
+      d.x = Math.max(60 - d.w, Math.min(this.W - 60, x - this.drag.dx));   // se puede arrastrar hasta el borde (queda a la vista un asa de 60 px)
+      d.y = Math.max(0, Math.min(this.H - 52 - 20, y - this.drag.dy));   // hasta el borde de la pantalla; por abajo la barra inferior (52 px) tapa la ventana, así que el asa se detiene justo encima
     }
   }
   // devuelve true si la interfaz se queda con el clic
@@ -584,19 +584,24 @@ export class Gui {
     if (rows.auraBy) this.text(x + 6, y + 2, "Aura of " + rows.auraBy, "#8fa6d8", { shadow: true, size: 9 });
   }
 
-  // Remastered (ticket 11): la barra inferior se prolonga hasta los bordes de la pantalla repitiendo su primera y última columna en dos lienzos laterales.
+  // Remastered (ticket 11; v0.85: antes repetía una sola columna y salían rayas estiradas): la barra inferior se prolonga hasta los bordes de la pantalla
+  // repitiendo, en espejo y sin costuras, los 72 px lisos de cada extremo de la barra (a escala, sin deformar).
   edgeFill() {
     const m = this.manifest && this.manifest.gamedialog2_6, fr = m && m.frames[14], o = this.img.gamedialog2_6;
     this.edges ||= [0, 1].map(() => { const e = document.createElement("canvas"); e.style.cssText = "position:absolute;pointer-events:none;z-index:" + (this.cv.style.zIndex || 1); this.cv.parentNode.insertBefore(e, this.cv); return e; });
     const r = this.rect, host = this.cv.parentNode.getBoundingClientRect(), side = this.mobile || !this.spr?.hd || !fr || !o?.naturalWidth ? 0 : Math.max(0, (r.x - host.left));
-    const [sx, sy, sw, sh, px, py] = fr || [0, 0, 0, 0, 0, 0];
+    const [sx, sy, sw, sh, px, py] = fr || [0, 0, 0, 0, 0, 0], SEG = 72;
     this.edges.forEach((e, i) => {
       if (side < 1) { e.style.display = "none"; return; }
       const w = Math.ceil(side), h = Math.ceil(sh * this.scale), key = w + "x" + h + (this.spr?.hd ? "h" : "");
       e.style.display = "block"; e.style.width = w + "px"; e.style.height = h + "px"; e.style.top = (r.y - host.top + (548 + py) * this.scale) + "px";
       e.style.left = (i ? r.x - host.left + r.w : 0) + "px";
       if (e._k === key) return; e._k = key; e.width = w; e.height = h;
-      e.getContext("2d").drawImage(o, i ? sx + sw - 1 : sx, sy, 1, sh, 0, 0, w, h);
+      const c = e.getContext("2d"), T = SEG * this.scale, src = i ? sx + sw - SEG : sx;
+      for (let k = 0; k * T < w; k++) {                                       // baldosa k a partir del borde de la barra; las pares van en espejo
+        const d0 = Math.round(k * T), d1 = Math.round((k + 1) * T) + 1, x0 = i ? d0 : w - d1 + 1, flip = k % 2 === 0;
+        c.save(); if (flip) { c.translate(x0 + d1 - d0, 0); c.scale(-1, 1); c.drawImage(o, src, sy, SEG, sh, 0, 0, d1 - d0, h); } else c.drawImage(o, src, sy, SEG, sh, x0, 0, d1 - d0, h); c.restore();
+      }
     });
   }
 

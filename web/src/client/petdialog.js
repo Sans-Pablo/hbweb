@@ -15,7 +15,7 @@ const BX = 14, BY = 108, BPITCH = 52;
 
 export function registerPetDialog(gui, api) {
   const dlg = new class extends ClassicDialog {
-    constructor() { super({ id: 43, title: "Summons", tabs: [], rowH: 20, top: 156, visible: 5 }); this.mx = 24; }
+    constructor() { super({ id: 43, title: "Summons", tabs: [], rowH: 20, top: 156, visible: 5, search: true }); this.mx = 24; }
     ball(me) { return me && (activeBall(me) || me.bag.find(i => i.comp)); }
     rows(me) {
       const b = this.ball(me); if (!b) return [];

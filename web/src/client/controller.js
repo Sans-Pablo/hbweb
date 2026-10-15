@@ -50,6 +50,7 @@ export class Controller {
     canvas.addEventListener("pointerup", e => { renderer.miniDragEnd(); this.down = false; this.noHold = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); });
     canvas.addEventListener("pointercancel", () => { this.down = false; ui.gui.up(); });
     // un objeto arrastrado nunca se queda pegado al cursor: si se suelta fuera del lienzo o se pierde el foco, se suelta igual
+    addEventListener("pointermove", e => { if (ui.gui.drag) ui.gui.move(e.clientX, e.clientY); });   // el arrastre de una ventana sigue aunque el puntero salga del lienzo
     addEventListener("pointerup", e => { if (ui.gui.item || ui.gui.drag) { this.down = false; this.guiDrag = false; ui.gui.up(e.clientX, e.clientY); } });
     addEventListener("blur", () => { this.down = false; this.guiDrag = false; ui.gui.cancelDrag?.(); });
     canvas.addEventListener("pointerleave", () => { if (!this.down) this.pointer = null; });
