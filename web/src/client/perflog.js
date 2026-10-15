@@ -14,10 +14,11 @@ export class PerfLog {
   start(name, extra = {}) {
     this.name = String(name || "?"); this.on = true; this.t0 = performance.now(); this.acc = this.fresh(); this.lastT = this.t0;
     this.push({ ev: "start", user: this.name, version: this.version, ua: navigator.userAgent, screen: [screen.width, screen.height], inner: [innerWidth, innerHeight],
-      dpr: window.devicePixelRatio, cores: navigator.hardwareConcurrency, mem: navigator.deviceMemory, gpu: this.gpu(), ...extra });
+      dpr: window.devicePixelRatio, cores: navigator.hardwareConcurrency, mem: navigator.deviceMemory, gpu: this.gpu(), gl: !!window.hb?.renderer?.glc, ...extra });
     this.timer = setInterval(() => this.flush(), 8000);
   }
-  fresh() { return { n: 0, dt: 0, max: 0, long: 0, draw: 0, drawMax: 0, g: 0, e: 0, l: 0, f: 0 }; }
+  fresh() { return { m: {}, n: 0, dt: 0, max: 0, long: 0, draw: 0, drawMax: 0, g: 0, e: 0, l: 0, f: 0 }; }
+  mark(k, ms) { const a = this.acc; if (a) a.m[k] = (a.m[k] || 0) + ms; }      // ms acumulados de una fase fuera del renderer (pre, post, tot)
   push(o) { this.buf.push({ t: Math.round(performance.now() - this.t0), ...o }); }
   // llamar una vez por fotograma tras dibujar: dt = ms desde el fotograma anterior, draw = ms del renderer.render, r = renderer, extra = datos del mundo
   frame(dt, draw, r, extra) {
@@ -32,7 +33,8 @@ export class PerfLog {
       gMs: k(a.g), eMs: k(a.e), lMs: k(a.l), fxMs: k(a.f), onscreen: r.crowdLast, q: r.q || 0, scale: +r.scale.toFixed(2),
       pc: { hit: st.hit - p.hit, comp: st.comp - p.comp, direct: st.direct - p.direct, rec: st.recycled - p.recycled, n: r.pcache.map.size,
         warm: st.warm - p.warm, ms: { comp: +(st.msComp - p.msComp).toFixed(1), direct: +(st.msDirect - p.msDirect).toFixed(1), nd: (st.nDirect || 0) - (p.nDirect || 0), hit: +(st.msHit - p.msHit).toFixed(1), warm: +(st.msWarm - p.msWarm).toFixed(1) }, cp: Object.fromEntries(Object.entries(st.cp).map(([k, v]) => [k, +(v - (p.cp ? p.cp[k] : 0)).toFixed(1)])) },
-      ...extra };
+      ...(r.glc ? { glx: { ...r.glc.st, msUp: +r.glc.st.msUp.toFixed(1), msTone: +(r.glc.st.msTone || 0).toFixed(1), tex: r.glc.tex.size } } : {}),
+      js: Object.fromEntries(Object.entries(a.m).map(([q, v]) => [q, k(v)])), ...extra };
     const m = performance.memory; if (m) s.heapMB = Math.round(m.usedJSHeapSize / 1048576);
     this.pc0 = { ...st, cp: { ...st.cp } };
     this.push(s); this.acc = this.fresh(); this.lastT = now;

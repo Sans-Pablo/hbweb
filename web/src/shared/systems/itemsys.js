@@ -50,6 +50,7 @@ export function dropItem(w, p, uid, amount) {
   if (isStack(d) && amount > 0 && amount < inst.count) { inst.count -= amount; out = { ...inst, uid: w.nextItem++, count: amount }; }
   else out = Inv.removeFromBag(p, uid);
   w.recalc(p);
+  out.dropBy = p.id;                  // lo tiró un jugador/bot: los bots no lo recogen por su cuenta (ticket «bots locos con un drop»)
   groundPush(w, p.x, p.y, out);
   return true;
 }

@@ -52,4 +52,8 @@ assert.equal(a.bots.size, 0); assert.ok(!w.ents.has(A.id));
 // los bots se van con su dueño
 a.command(id, { t: "dbg", op: "bot", n: 1 }); const orphan = [...a.bots.keys()][0];
 a.removePlayer(id); assert.equal(a.bots.size, 0); assert.ok(!a.farm.ents.has(orphan));
+// el tope de 40 invocados no cuenta a los 40 habitantes permanentes
+{ const id2 = a.addPlayer("Admin2", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }); const r = [...a.bots.values()].filter(b => b.res).length; a.command(id2, { t: "dbg", op: "botclear" });
+  for (let i = 0; i < 5; i++) a.command(id2, { t: "dbg", op: "bot", n: 10, level: 5 });
+  assert.equal([...a.bots.values()].filter(b => !b.res).length, 40); assert.equal([...a.bots.values()].filter(b => b.res).length, r); a.command(id, { t: "dbg", op: "botclear" }); }
 console.log("OK bot");

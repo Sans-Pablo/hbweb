@@ -123,7 +123,10 @@ export class NetConnection {
         if (this.waiting) { this.waiting.reject(new Error(this.kickMsg || "Se cortó la conexión con el servidor.")); this.waiting = null; }
         this.events.push({ t: "disconnected", reason: this.kickMsg || "" });
       };
-      this.pinger = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now(), p: this.ping })); }, 2000);
+      // El ping sale de un Worker: los setInterval de una pestaña oculta se frenan a 1/min y el servidor daba la conexión por muerta.
+      const beat = () => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now(), p: this.ping })); };
+      this.stopBeat = startBeat(beat, 2000);
+      document.addEventListener("visibilitychange", beat);
     });
   }
   request(msg, okType) {
@@ -311,3 +314,16 @@ function dirToward(a, b) {
   return a.dir;
 }
 
+
+// temporizador que no se frena en segundo plano (Worker); si no hay Worker, setInterval
+function startBeat(fn, ms) {
+  try {
+    const url = URL.createObjectURL(new Blob([`setInterval(()=>postMessage(0),${ms})`], { type: "text/javascript" }));
+    const w = new Worker(url);
+    w.onmessage = fn;
+    return () => { w.terminate(); URL.revokeObjectURL(url); };
+  } catch {
+    const id = setInterval(fn, ms);
+    return () => clearInterval(id);
+  }
+}

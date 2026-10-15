@@ -63,7 +63,7 @@ const VERSION = readJson(path.join(DATA, "version.json"), { version: "?", name: 
 const TICK_MS = 50;
 const VIEW = 26;                   // casillas alrededor del jugador que se le envían
 const MAX_MSG_PER_SEC = 60;        // por conexión: más es un cliente roto o un ataque
-const IDLE_MS = 45000;             // sin mensajes (el cliente manda un ping cada 2 s) => conexión muerta
+const IDLE_MS = 180000;           // sin mensajes (el cliente manda un ping cada 2 s desde un Worker; margen para pestañas en segundo plano) => conexión muerta
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ------------------------------------------------------------------ mundo
@@ -720,7 +720,7 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 adventure.llm = openLlm(CFG.llm, env, console.log);          // siempre presente: reintenta conectar con el modelo local cada minuto
 // consola del servidor: los mismos comandos que el chat de un admin
-if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("line", l => console.log(adminCmd(l, "consola")));
+if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("line", l => console.log(l.trim() ? adminCmd(l, "consola") : adminCmd("restart", "consola")));      // Intro vacío = reiniciar (el lanzador abre el navegador)
 // Cierre brusco (ventana cerrada, error inesperado): guardar todo antes de salir; el lanzador vuelve a arrancar el servidor
 process.on("uncaughtException", e => { console.error("Error inesperado:", e); crashLog("uncaught", e); try { persist(true); store.close(); } catch {} process.exit(1); });
 process.on("unhandledRejection", e => { console.error("Promesa rechazada:", e); crashLog("rejection", e); });

@@ -23,25 +23,42 @@ function sprFontWidth(text, type) {
   for (const ch of text) { const f = SPRFONT.man.frames[ch.charCodeAt(0) - 32 + 95 * type]; if (f) w += f[2]; }
   return w;
 }
-function sprFontDraw(ctx, text, cx, y, type, rgb, alpha = 1) {
-  const fr = SPRFONT.man.frames, T = SPRFONT.tint, g = T.getContext("2d");
-  let x = Math.round(cx - sprFontWidth(text, type) / 2);
-  ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = false;
+// Cada texto (cifra de daño, mensaje…) se compone una sola vez —sombra y glifos teñidos— en un canvas pequeño y luego es un drawImage
+const SPRTXT = new Map(), SPRTXT_MAX = 200, SPRPAD = 12;
+function sprFontBake(text, type, rgb) {
+  const fr = SPRFONT.man.frames, W = sprFontWidth(text, type), H = 40;
+  const c = document.createElement("canvas"); c.width = W + SPRPAD * 2; c.height = H + SPRPAD * 2;
+  const g = c.getContext("2d"); g.imageSmoothingEnabled = false;
+  const t = document.createElement("canvas"), tg = t.getContext("2d");
+  let x = SPRPAD;
   for (const ch of text) {
     const f = fr[ch.charCodeAt(0) - 32 + 95 * type];
     if (!f) continue;
-    const [sx, sy, sw, sh, px, py] = f;
-    T.width = sw; T.height = sh;
-    g.drawImage(SPRFONT.img, sx, sy, sw, sh, 0, 0, sw, sh);
-    g.globalCompositeOperation = "source-atop"; g.fillStyle = "rgb(" + rgb + ")"; g.fillRect(0, 0, sw, sh);
-    ctx.globalAlpha = alpha * 0.7;
-    ctx.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px, y + py + 1, sw, sh);
-    ctx.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px + 1, y + py + 1, sw, sh);
-    ctx.globalAlpha = alpha;
-    ctx.drawImage(T, 0, 0, sw, sh, x + px, y + py, sw, sh);
+    const [sx, sy, sw, sh, px, py] = f, oy = SPRPAD + 12;
+    t.width = sw; t.height = sh;
+    tg.drawImage(SPRFONT.img, sx, sy, sw, sh, 0, 0, sw, sh);
+    tg.globalCompositeOperation = "source-atop"; tg.fillStyle = "rgb(" + rgb + ")"; tg.fillRect(0, 0, sw, sh);
+    g.globalAlpha = 0.7;
+    g.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px, oy + py + 1, sw, sh);
+    g.drawImage(SPRFONT.img, sx, sy, sw, sh, x + px + 1, oy + py + 1, sw, sh);
+    g.globalAlpha = 1;
+    g.drawImage(t, 0, 0, sw, sh, x + px, oy + py, sw, sh);
     x += sw;
   }
-  ctx.restore();
+  return c;
+}
+function sprFontDraw(ctx, text, cx, y, type, rgb, alpha = 1) {
+  const key = type + "|" + rgb + "|" + text;
+  let c = SPRTXT.get(key);
+  if (!c) {
+    if (SPRTXT.size >= SPRTXT_MAX) SPRTXT.delete(SPRTXT.keys().next().value);
+    c = sprFontBake(text, type, rgb); SPRTXT.set(key, c);
+  }
+  const x = Math.round(cx - sprFontWidth(text, type) / 2);
+  const ga = ctx.globalAlpha, sm = ctx.imageSmoothingEnabled;
+  ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(c, x - SPRPAD, y - SPRPAD - 12);
+  ctx.globalAlpha = ga; ctx.imageSmoothingEnabled = sm;
 }
 export class Fx {
   constructor(world, me) {
@@ -163,6 +180,13 @@ export class Fx {
       const a = Math.random() * Math.PI * 2, v = (0.3 + Math.random()) * speed;
       this.parts.push({ x: p[0], y: p[1] - 24, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.2, life: 500 + Math.random() * 500, born: performance.now(), rgba });
     }
+  }
+
+  // Poda lo caducado sin pintar (perfilador ?prof=1 con fx apagado: que no se acumule)
+  cull() {
+    const now = performance.now();
+    this.rings = this.rings.filter(r => now - r.born < 900); this.parts = this.parts.filter(p => now - p.born < p.life);
+    this.texts = this.texts.filter(t => now - t.born < 1100); this.sp.update();
   }
 
   // classic = texto plano como el original (sube y desaparece); remastered = animado

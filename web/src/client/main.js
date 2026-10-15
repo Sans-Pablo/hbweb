@@ -44,6 +44,7 @@ import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
 import { PerfLog } from "./perflog.js";
+import { Profiler } from "./profiler.js";
 const EMBED = new URLSearchParams(location.search).has("embed");                  // marco del panel dividido (observador.html): solo el juego
 
 const store = {
@@ -79,7 +80,8 @@ async function main() {
   status.style.display = "none";
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
-  const perf = new PerfLog(); let perfStarted = false;      // registro de rendimiento del jugador (login -> logout), ver perflog.js
+  const perf = new PerfLog(); let perfStarted = false;
+  const prof = new URLSearchParams(location.search).get("prof") === "1" ? new Profiler() : null;      // ?prof=1: perfilador A/B (profiler.js)      // registro de rendimiento del jugador (login -> logout), ver perflog.js
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { perf.version = v.version; }).catch(() => {});
   let world = conn.state;
   if (conn.observing && EMBED) setInterval(() => parent.postMessage({ hbBrain: conn.brain, id: conn.pid, name: conn.watchName }, location.origin), 500);   // panel dividido: el marco solo muestra el juego; el resto lo pinta la página madre
@@ -93,6 +95,17 @@ async function main() {
   const o0 = (() => { try { return JSON.parse(store.get("opts", "{}")); } catch { return {}; } })();
   assets.sprites.hd = (o0.mode || "remastered") === "remastered" && o0.hdSprites !== false;
   await stream.enter(world, assets.npcDb);
+  // el personaje con su equipo y los jugadores ya a la vista, antes de quitar el diálogo de carga (si no, salían fotogramas negros/a trozos al entrar)
+  {
+    status.querySelector("span").textContent = tr("Cargando personajes…");
+    const ks = new Set();
+    for (const e of world.ents.values()) if (e.kind === "player") {
+      const ap = e.id === pid ? apparelOf(e, itemDef) : e.ap;
+      if (ap) for (const k of equipKeys(e.gender || 1, ap)) ks.add(k);
+    }
+    await Promise.race([stream.wantAll([...ks], 3), new Promise(r => setTimeout(r, 8000))]);
+    await Promise.race([assets.sprites.preload(["ip0", "ig0", "ip1", "ig1"]), new Promise(r => setTimeout(r, 3000))]);
+  }
   stream.onChange = null;
 
   const canvas = document.getElementById("game");
@@ -109,7 +122,6 @@ async function main() {
         if ((cx + cy) % 3 === 0) await new Promise(r => setTimeout(r, 0));
       }
     }
-    status.remove();
   }
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
@@ -119,6 +131,9 @@ async function main() {
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
   gui.setGameSprites(assets.sprites);
+  status.querySelector("span").textContent = tr("Entrando al mundo…");
+  await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)); setTimeout(r, 500); });      // dos fotogramas de relleno: el primero que ve el jugador ya está completo
+  status.remove();
   const logout = { n: null, t: 0 };
   const chatLog = [];
   const questUi = createQuestUi(() => world.ents.get(pid));
@@ -632,6 +647,7 @@ async function main() {
   function frame(t) {
     const dt = Math.min(100, t - last);             // si la pestaña estuvo oculta, no saltar
     last = t;
+    const f0 = performance.now();
     frames++; fpsT += dt;
     // Calidad automática: para mantener 60 fps estables baja un nivel si el fotograma medio supera 22 ms (≈2 s) y sube uno tras ~6 s por debajo de 13 ms
     if (opts.autoQuality === true && !document.hidden && t > 20000) {      // los primeros 20 s (carga de hojas) no cuentan
@@ -692,6 +708,8 @@ async function main() {
     tutorial.update(me, world);
     mob?.update(me, world);
     const d0 = performance.now();
+    perf.mark("pre", d0 - f0);
+    if (prof && perfStarted && !document.hidden) { const r = prof.step(d0, dt); renderer.pf = prof.pf; document.title = "prof: " + prof.name; if (r) perf.push({ ev: "prof", ...r }); }
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
@@ -700,6 +718,7 @@ async function main() {
     { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
     { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }
       perf.frame(dt, now - d0, renderer, { ents: world.ents.size, pl: online ? [...world.ents.values()].filter(e => e.kind === "player").length : 1, ping: online ? conn.ping : 0, map: world.map?.name, x: me.x, y: me.y, act: me.act }); }
+    const h0 = performance.now();
     hud.update(world, ctl.hoverEnt); questUi.render();
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();
@@ -716,6 +735,7 @@ async function main() {
     }
     gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur, statusPanel: opts.statusPanel === true });
     canvas.style.cursor = opts.classicCursor ? "none" : ctl.hoverEnt ? "var(--cursor-attack)" : "var(--cursor)";
+    { const e = performance.now(); perf.mark("post", e - h0); perf.mark("tot", e - f0); }      // fuera del mundo: HUD + gui; tot = todo el JS del fotograma
   }
   requestAnimationFrame(loop);
 

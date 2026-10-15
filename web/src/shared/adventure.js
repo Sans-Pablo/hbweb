@@ -246,7 +246,8 @@ export class Adventure {
   botOp(p, c) {
     if (c.op === "botclear") { let n = 0; for (const [id, b] of [...this.bots]) if (!b.res) { this.removePlayer(id); n++; } return n; }
     const n = Math.max(1, Math.min(10, c.n | 0 || 1)), solo = !!c.solo, out = [];
-    for (let i = 0; i < n && this.bots.size < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level }));
+    let have = 0; for (const b of this.bots.values()) if (!b.res) have++;            // el tope de 40 cuenta solo los invocados, no los 40 habitantes
+    for (let i = 0; i < n && have + i < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level }));
     return out;
   }
   removePlayer(id) {

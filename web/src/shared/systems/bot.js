@@ -516,14 +516,14 @@ function run(adv, w, p, b) {
   // botín cercano (solo si no hay peligro a la vista)
   if (!b.rest && !b.noLoot && !b.travel) {
     const here = groundTop(w, p.x, p.y);
-    if (here && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
+    if (here && !here.dropBy && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
     let best = null, bd = 0;
     const LR = (b.lootBoost || 0) > w.time ? 9 : 5;                                       // actividad de guild «loot»: rastrea más lejos
     for (let y = p.y - LR; y <= p.y + LR; y++) for (let x = p.x - LR; x <= p.x + LR; x++) {
-      const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
-      const lv = it ? lootValue(w, p, it) : 0; if (lv > 0) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)), sc = lv / (d + 2); if (sc > bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = sc; } }
+      const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && !claimedByOther(w, p, x, y) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
+      const lv = it && !it.dropBy ? lootValue(w, p, it) : 0; if (lv > 0) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)), sc = lv / (d + 2); if (sc > bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = sc; } }
     }
-    if (best) { think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
+    if (best) { claim(w, p, best.x, best.y); think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
   }
   if (b.farmer && !b.rest && !b.travel && !owner && farm(adv, w, p, b)) return;
   // viaje planeado (p. ej. a Promise Land): anda hasta la casilla del teletransportador
@@ -618,3 +618,7 @@ export function lootValue(w, p, it) {
   return v.value >= (load > 0.6 ? 400 : 120) ? v.value * 0.2 : 0;                  // basura: solo si se vende bien y hay sitio
 }
 const wanted = (w, p, it) => lootValue(w, p, it) > 0;
+// Arbitraje del botín: un bot reclama una casilla (8 s, renovable) y los demás la ignoran; lo tirado por jugadores no se toca.
+const CLAIM_MS = 8000;
+const claimedByOther = (w, p, x, y) => { const c = w.lootClaims?.get(w.grid.idx(x, y)); return !!c && c.id !== p.id && c.until > w.time; };
+const claim = (w, p, x, y) => { (w.lootClaims ||= new Map()).set(w.grid.idx(x, y), { id: p.id, until: w.time + CLAIM_MS }); };

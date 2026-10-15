@@ -3,14 +3,16 @@
 // en vez de 8-15 piezas con tintes (los teñidos usan lienzos temporales y composición, lo más caro). Misma calidad: se compone a
 // la resolución en pantalla (S px por píxel de mundo, máx. 2) con suavizado alto y se vuelca tal cual.
 import { drawPerson, bodyKey } from "./look.js";
+import { hex3 } from "./glcompose.js";
+import { WEAPON_RGB } from "./assets.js";
 
 const PW = 2048, PH = 2048, MAXP = 8;          // páginas de atlas: 8 × 16 MB, la más antigua se recicla entera
 const LW = 440, LH = 440, OX = 220, OY = 320;    // lienzo de trabajo (px de mundo) y posición del pivote en él
 const GAP = 2;
 
 export class PersonCache {
-  constructor(spr) {
-    this.spr = spr;
+  constructor(spr, glc = null) {
+    this.spr = spr; this.glc = glc;                 // glc: compositor WebGL2 (?gl=1); sin él, Canvas2D como siempre
     if (!spr.wtCache) spr.wtCache = new Map();    // el grabador hereda la caché de armas teñidas (si no, la crearía por su cuenta)
     this.pages = []; this.cur = -1; this.map = new Map();
     this.S = 0; this.scratch = null; this.budget = 6; this.frame = 0;
@@ -29,9 +31,22 @@ export class PersonCache {
     rec.put = (c, key, f, x, y) => { track(key, f, x, y); tm("put", () => spr.put(c, key, f, x, y)); };
     rec.tintedHair = (c, key, f, x, y, rgb, add) => { track(key, f, x, y); tm("tint", () => spr.tintedHair(c, key, f, x, y, rgb, add)); };
     rec.putWeapon = (c, key, f, x, y, col) => { track(key, f, x, y); tm("weap", () => spr.putWeapon(c, key, f, x, y, col)); };
+    if (glc) {                                       // mismas piezas y orden, pero teñidas en el shader (sin lienzos temporales)
+      const gq = (key, f, x, y, mode, tint) => {
+        const fr = spr.frame(key, f); if (!fr || !spr.ready(key)) return;
+        const [img, k] = spr.src(key);
+        if (!glc.quad(img, fr[0] * k, fr[1] * k, fr[2] * k, fr[3] * k, x + fr[4], y + fr[5], fr[2], fr[3], mode, tint)) rec.miss++;      // hoja sin subir y presupuesto agotado: se reintenta
+      };
+      rec.put = (c, key, f, x, y) => { track(key, f, x, y); tm("put", () => gq(key, f, x, y, 0)); };
+      rec.tintedHair = (c, key, f, x, y, rgb, add) => { track(key, f, x, y); tm("tint", () => gq(key, f, x, y, add ? 2 : 1, hex3(rgb))); };
+      rec.putWeapon = (c, key, f, x, y, col) => {
+        track(key, f, x, y); const o = WEAPON_RGB[col];
+        tm("weap", () => o ? gq(key, f, x, y, 3, [o[0] / 255, o[1] / 255, o[2] / 255]) : gq(key, f, x, y, 0));
+      };
+    }
   }
 
-  newFrame() { this.budget = 6; this.frame++; this.seen.clear(); }
+  newFrame() { this.budget = 6; this.frame++; this.seen.clear(); if (this.glc) this.glc.newFrame(); }
 
   keyOf(gender, look, group, d, f, ap) {
     const c = ap && ap.col;
@@ -44,6 +59,7 @@ export class PersonCache {
   warm(ms) {
     const spr = this.spr; if (spr.recolor || spr.modelFx || !this.S) return;
     const t0 = performance.now();
+    if (this.glc) this.glc.pump(2);                  // subidas de hojas aplazadas, repartidas entre fotogramas
     for (const a of this.seen.values()) {
       const n = spr.frames(bodyKey(a.gender, a.look, a.group, a.d)); if (n < 2) continue;
       for (let i = 1; i <= 2; i++) {
@@ -61,6 +77,7 @@ export class PersonCache {
   setScale(S) {
     if (S === this.S) return;
     this.S = S; this.flush();
+    if (this.glc) { this.scratch = this.glc.cv; return; }
     this.scratch = document.createElement("canvas"); this.scratch.width = Math.ceil(LW * S); this.scratch.height = Math.ceil(LH * S);
     this.sg = this.scratch.getContext("2d"); this.sg.imageSmoothingEnabled = true; this.sg.imageSmoothingQuality = "high";
   }
@@ -97,24 +114,33 @@ export class PersonCache {
       this.budget--;
       e = this.compose(key, gender, look, group, d, f, ap);
       if (!e) { this.st.direct++; return false; }
-      ctx.drawImage(e.p.cv, e.sx, e.sy, e.w, e.h, x + e.dx, y + e.dy, e.w / S, e.h / S);
+      this.blit(ctx, e, x, y, S);
       this.st.comp++; this.st.msComp += performance.now() - T0;
       return true;
     }
     this.st.hit++;
-    ctx.drawImage(e.p.cv, e.sx, e.sy, e.w, e.h, x + e.dx, y + e.dy, e.w / S, e.h / S);
+    this.blit(ctx, e, x, y, S);
     this.st.msHit += performance.now() - T0;
     return true;
+  }
+
+  // El atlas ya está a resolución de pantalla (~1:1): con "medium" Chrome regeneraba los mipmaps de la página en cada cambio. Se restaura la calidad del llamador.
+  blit(ctx, e, x, y, S) {
+    const q0 = ctx.imageSmoothingQuality; ctx.imageSmoothingQuality = "low";
+    ctx.drawImage(e.p.cv, e.sx, e.sy, e.w, e.h, x + e.dx, y + e.dy, e.w / S, e.h / S);
+    ctx.imageSmoothingQuality = q0;
   }
 
   compose(key, gender, look, group, d, f, ap) {
     const { spr, rec, sg, S } = this;
     const cp = this.st.cp, T0 = performance.now(); cp.n++;
     rec.bb = null; rec.miss = 0;
-    sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, this.scratch.width, this.scratch.height);
+    if (this.glc) this.glc.begin(Math.ceil(LW * S), Math.ceil(LH * S), S, OX, OY);
+    else { sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, this.scratch.width, this.scratch.height); }
     cp.clear += performance.now() - T0;
-    sg.setTransform(S, 0, 0, S, OX * S, OY * S);
+    if (!this.glc) sg.setTransform(S, 0, 0, S, OX * S, OY * S);
     drawPerson(sg, rec, gender, look, group, d, f, 0, 0, ap);
+    if (this.glc) { const T = performance.now(); this.glc.flush(); cp.put += performance.now() - T; }      // una composición = un solo drawArrays
     const bb = rec.bb;
     if (rec.miss || !bb || bb[0] < -OX + 1 || bb[1] < -OY + 1 || bb[2] > LW - OX - 1 || bb[3] > LH - OY - 1) {
       this.map.set(key, { t: this.frame });                                             // reintentar más tarde

@@ -178,6 +178,7 @@ function Anunciar {
     else { Write-Host "   Los jugadores entran por https://sans-pablo.github.io/hbweb/ (con esta dirección en web\data\server.json; mira docs\ONLINE.md)" }
   } elseif ($quick) { Write-Host "   No se pudo crear el enlace de internet (mira tools\tunnel.log). En tu Wi-Fi sí funciona." -ForegroundColor Red }
   Write-Host "   Informe de los bots-probadores: server\data\Informe de bots.md  (o «Ver informe de bots.bat»)"
+  Write-Host "   Pulsa Intro aquí para reiniciar el servidor y abrir un navegador nuevo."
   Write-Host "   Para apagar: cierra esta ventana (o Ctrl+C). Los datos están en server\data\."
   Write-Host "  ================================================================" -ForegroundColor Yellow
   if (-not $SinNavegador) { Start-Process "http://localhost:$port/" }
@@ -192,10 +193,11 @@ try {
     $srv = Start-Process -FilePath $node -ArgumentList "`"$(Join-Path $root 'server\server.mjs')`"", $port -NoNewWindow -PassThru
     $null = $srv.Handle                                                   # necesario para que ExitCode esté disponible
     if ($primera) { $primera = $false; Anunciar }
+    elseif ($reabrir) { $reabrir = $false; for ($i = 0; $i -lt 40; $i++) { try { $null = Invoke-WebRequest "http://localhost:$port/" -UseBasicParsing -TimeoutSec 2; break } catch { Start-Sleep -Milliseconds 500 } }; Start-Process "http://localhost:$port/?gl=1" }      # Intro en la ventana = reinicio + navegador nuevo
     $srv.WaitForExit()
     $c = $srv.ExitCode
     if ($c -eq 0) { break }
-    if ($c -eq 42) { Write-Host "  Reiniciando el servidor..." -ForegroundColor Yellow; Start-Sleep 1; continue }
+    if ($c -eq 42) { Write-Host "  Reiniciando el servidor..." -ForegroundColor Yellow; Start-Sleep 1; if (-not $SinNavegador) { $reabrir = $true }; continue }
     $caidas.Add([datetime]::Now)
     $ahora = [datetime]::Now; $recientes = @($caidas | Where-Object { ($ahora - $_).TotalSeconds -le 60 })
     Aviso "El servidor se cerró (código $c)."

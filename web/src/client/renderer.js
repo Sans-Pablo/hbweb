@@ -22,6 +22,7 @@ import { CROP_NAMES } from "../shared/systems/farming.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
 import { PersonCache } from "./composed.js";
+import { GLCompose } from "./glcompose.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
@@ -39,9 +40,12 @@ const STATE_COL = [["hold", "#ffd34d"], ["ice", "#6ac8ff"], ["confuse", "#c28aff
 export class Renderer {
   constructor(canvas, assets, grid) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext("2d", { alpha: false });
+    this.ctx = canvas.getContext("2d", { alpha: false, desynchronized: new URLSearchParams(location.search).get("desync") === "1" });      // desynchronized (?desync=1): sin esperar al compositor; en 0.83.2 causó parpadeo, por eso es opcional
     this.spr = assets.sprites;
-    this.pcache = new PersonCache(this.spr);               // personajes compuestos en atlas: un drawImage por persona
+    this.glc = null;                                       // compositor WebGL2 (teñidos y tono del suelo en shader), por defecto desde 0.83.4; ?gl=0 lo apaga y vuelve al 2D
+    if (new URLSearchParams(location.search).get("gl") !== "0") { try { this.glc = new GLCompose(); } catch (e) { console.warn("WebGL2 no disponible, sigue el 2D", e); } }
+    this.pcache = new PersonCache(this.spr, this.glc);               // personajes compuestos en atlas: un drawImage por persona
+    this.pf = {};                                          // perfilador (?prof=1): fases a omitir {ground, ents, light, fx, med}
     this.pt = { ground: 0, ents: 0, light: 0, fx: 0 };      // ms por fase del último fotograma (registro de rendimiento)
     this.grid = grid;
     this.mapName = assets.meta.map;
@@ -168,10 +172,13 @@ export class Renderer {
     if (st.ready && hd) {
       // El ajuste de tono pinta (multiply/lighter) sobre todo el bloque: donde no hay casilla (interiores: tienda, herrería, almacén; borde del mapa) dejaba manchas blancas/grises.
       // Se guarda el alfa original y se recorta el resultado a él.
-      const keep = this.toneMask || (this.toneMask = document.createElement("canvas")), kg = keep.getContext("2d");
-      keep.width = st.c.width; keep.height = st.c.height; kg.drawImage(st.c, 0, 0);
-      this.blendTone(st.c, g, cx, cy, Q);
-      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-in"; g.drawImage(keep, 0, 0); g.restore();
+      if (this.glc) this.blendTone(st.c, g, cx, cy, Q);          // en el shader: ya respeta el alfa del bloque
+      else {
+        const keep = this.toneMask || (this.toneMask = document.createElement("canvas")), kg = keep.getContext("2d");
+        keep.width = st.c.width; keep.height = st.c.height; kg.drawImage(st.c, 0, 0);
+        this.blendTone(st.c, g, cx, cy, Q);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-in"; g.drawImage(keep, 0, 0); g.restore();
+      }
     }
     // Una hoja pendiente no debe dejar un bloque vacío guardado para toda la partida.
     if (st.ready) { this.chunks.set(k, st.c); late.delete(k); } else late.set(k, { c: st.c, t: now, miss: [...st.miss] });
@@ -222,6 +229,11 @@ export class Renderer {
     }
     dx.putImageData(di, 0, 0); bx.putImageData(bi, 0, 0);
     const P = T * Q;
+    if (this.glc) {
+      this.glc.tone(c, dk, br, N, M);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "copy"; g.drawImage(this.glc.cv, 0, 0); g.restore();
+      return;
+    }
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.globalCompositeOperation = "multiply"; g.drawImage(dk, -P, -P, M * P, M * P);
     g.globalCompositeOperation = "lighter"; g.globalAlpha = 0.14; g.drawImage(br, -P, -P, M * P, M * P);
@@ -266,7 +278,7 @@ export class Renderer {
     this.pcache.newFrame();
     // 1) suelo
     const span = CHUNK * T;
-    for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
+    if (!this.pf.ground) for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
       for (let cx = Math.floor(camX / span); cx * span < camX + VW; cx++)
         if (cx >= 0 && cy >= 0) {
           // bordes del bloque alineados a píxel físico: con zoom fraccionario quedaba una línea oscura entre bloques
@@ -392,7 +404,7 @@ export class Renderer {
         const list = buckets.get(ty * 100000 + tx);
         if (list) {
           if (list.length > 1) list.sort((a, b) => (a[0].dead ? 0 : 1) - (b[0].dead ? 0 : 1));
-          for (const [e, x, y] of list) { this.crowdNow++; this.drawEntity(e, x, y, s, overlays); }
+          for (const [e, x, y] of list) { this.crowdNow++; if (!this.pf.ents) this.drawEntity(e, x, y, s, overlays); }
         }
         const t = this.grid.tile(tx, ty);
         if (!t || !t.obj) continue;
@@ -413,7 +425,8 @@ export class Renderer {
     this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
     // 5) luz (remastered): viñeta y una luz cálida alrededor del personaje
-    if (remaster && this.lighting !== false && this.lightFx) this.drawLights(s, ctx, VW, VH, camX, camY, time);   // luz dinámica: ambiente oscuro con focos
+    if (this.pf.light) { /* perfilador: sin luz ni cielo */ }
+    else if (remaster && this.lighting !== false && this.lightFx) this.drawLights(s, ctx, VW, VH, camX, camY, time);   // luz dinámica: ambiente oscuro con focos
     else if (remaster && this.lighting !== false) {
       const cx = ppx - camX, cy = ppy - camY - 20, R = Math.max(VW, VH) * 0.75;
       const g = ctx.createRadialGradient(cx, cy, 60, cx, cy, R);
@@ -425,16 +438,16 @@ export class Renderer {
     }
 
     // 5b) noche y lluvia
-    if (s.sky) s.sky.draw(ctx, VW, VH, s.fx?.sp);
+    if (s.sky && !this.pf.light) s.sky.draw(ctx, VW, VH, s.fx?.sp);
 
     const P3 = performance.now();
     // 6) barras de vida, nombres, etiquetas, efectos
     this.rects = [];
-    for (const o of overlays) o();
+    if (!this.pf.fx) for (const o of overlays) o();
     for (const [x, y, text, color] of labels) this.label(x, y, text, color);
     for (const o of this.bq) o();                       // bocadillos: encima de nombres y etiquetas, sin pisarse entre sí
     this.bq = [];
-    s.fx.draw(ctx, camX, camY, this.mode);
+    if (!this.pf.fx) s.fx.draw(ctx, camX, camY, this.mode); else s.fx.cull?.();      // perfilador: sin pintar, pero sin acumular partículas
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
     ctx.restore();
@@ -1390,32 +1403,34 @@ export class Renderer {
   }
 
   // ---------------------------------------------------------------- minimapa
+  // Una imagen por casilla escrita directamente en un ImageData (antes: ~560 000 drawImage/fillRect por mapa, 4 s de congelación al entrar).
+  // El color de cada (hoja, fotograma) se reduce una sola vez con el mismo filtro "high" de antes y se guarda.
   buildMinimap() {
-    const g = this.grid;
-    const m = document.createElement("canvas");
-    m.width = g.w; m.height = g.h;
-    const c = m.getContext("2d");
-    c.imageSmoothingEnabled = true;
-    c.imageSmoothingQuality = "high";
+    const g = this.grid, W = g.w, H = g.h;
+    const mc = this.miniCol || (this.miniCol = new Map()), one = this.mini1 || (this.mini1 = (() => { const c = document.createElement("canvas"); c.width = c.height = 1; const x = c.getContext("2d", { willReadFrequently: true }); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return x; })());
+    const m = document.createElement("canvas"); m.width = W; m.height = H;
+    const o = document.createElement("canvas"); o.width = W; o.height = H;
+    const md = new ImageData(W, H), od = new ImageData(W, H), a = md.data, b = od.data;
     let missing = 0;                                        // casillas cuya hoja aún no llegó: se repinta el minimapa cuando estén
-    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
-      const t = g.tile(x, y), key = "t" + t.spr, fr = this.spr.frame(key, t.frame);
-      if (!fr || !this.spr.ready(key)) { missing++; c.fillStyle = g.blocked(x, y) ? "#302c28" : "#71675b"; c.fillRect(x, y, 1, 1); continue; }
-      c.drawImage(this.spr.img[key], fr[0], fr[1], fr[2], fr[3], x, y, 1, 1);
+    const col = (key, f, fr) => {
+      const k = key + ":" + f; let v = mc.get(k);
+      if (!v) { one.clearRect(0, 0, 1, 1); one.drawImage(this.spr.img[key], fr[0], fr[1], fr[2], fr[3], 0, 0, 1, 1); v = one.getImageData(0, 0, 1, 1).data; mc.set(k, v); }
+      return v;
+    };
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const t = g.tile(x, y), key = "t" + t.spr, fr = this.spr.frame(key, t.frame), i = (y * W + x) * 4, bl = g.blocked(x, y);
+      let r, gg, bb, al;
+      if (!fr || !this.spr.ready(key)) { missing++; if (bl) { r = 0x30; gg = 0x2c; bb = 0x28; } else { r = 0x71; gg = 0x67; bb = 0x5b; } al = 255; }
+      else { const v = col(key, t.frame, fr); r = v[0]; gg = v[1]; bb = v[2]; al = v[3]; }
+      if (bl) { const A = al / 255, a2 = A + .35 * (1 - A), k = a2 ? .65 * A / a2 : 0; r *= k; gg *= k; bb *= k; al = a2 * 255; }      // velo negro .35 por encima
+      a[i] = r; a[i + 1] = gg; a[i + 2] = bb; a[i + 3] = al;
+      // versión "líneas" para el mapa superpuesto: solo los bordes de lo que bloquea el paso
+      if (bl) {
+        if (!g.blocked(x - 1, y) || !g.blocked(x + 1, y) || !g.blocked(x, y - 1) || !g.blocked(x, y + 1)) { b[i] = 226; b[i + 1] = 208; b[i + 2] = 150; b[i + 3] = 230; }
+      } else { b[i] = 90; b[i + 1] = 140; b[i + 2] = 200; b[i + 3] = 46; }
     }
-    c.fillStyle = "rgba(0,0,0,.35)";
-    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) if (g.blocked(x, y)) c.fillRect(x, y, 1, 1);
+    m.getContext("2d").putImageData(md, 0, 0); o.getContext("2d").putImageData(od, 0, 0);
     this.minimap = m; this.miniMissing = missing; this.miniTry = performance.now();
-    // versión "líneas" para el mapa superpuesto: solo los bordes de lo que bloquea el paso
-    const o = document.createElement("canvas");
-    o.width = g.w; o.height = g.h;
-    const oc = o.getContext("2d");
-    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
-      if (g.blocked(x, y)) {
-        const edge = !g.blocked(x - 1, y) || !g.blocked(x + 1, y) || !g.blocked(x, y - 1) || !g.blocked(x, y + 1);
-        if (edge) { oc.fillStyle = "rgba(226,208,150,.9)"; oc.fillRect(x, y, 1, 1); }
-      } else { oc.fillStyle = "rgba(90,140,200,.18)"; oc.fillRect(x, y, 1, 1); }
-    }
     this.overlayImg = o;
   }
 

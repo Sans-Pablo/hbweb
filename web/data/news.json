@@ -1,10 +1,88 @@
 {
- "build": "0.82.9",
+ "build": "0.83.6",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Personajes sin recuadros pálidos (v0.83.6)", "en": "Characters without pale boxes (v0.83.6)"},
+   "items": [
+    {"es": "Con WebGL (por defecto) aparecían rectángulos claros alrededor de todos los personajes. Arreglado en el shader. Prueba: mira cualquier personaje, de día y de noche, sobre hierba oscura.", "en": "With WebGL (default) pale rectangles appeared around every character. Fixed in the shader. Test: look at any character, day and night, over dark grass."}
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Entrada al mapa sin congelarse (v0.83.5)", "en": "Map entry without freezing (v0.83.5)"},
+   "items": [
+    {"es": "Entrar a Promise Land tardaba 4-6 s con la pantalla casi parada (el minimapa); ahora ~1 s. Prueba: usa goto/viaja a un mapa grande y mira que no se congele. Misma calidad.", "en": "Entering Promise Land took 4-6 s with the screen almost frozen (the minimap); now ~1 s. Test: travel to a big map and check it does not freeze. Same quality."}
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "WebGL por defecto, menos subidas y fx (v0.83.4)",
+    "en": "WebGL by default, fewer uploads and fx (v0.83.4)"
+   },
+   "items": [
+    {
+     "es": "Abre http://localhost:8088/ (ya usa WebGL sin ?gl=1; ?gl=0 vuelve al 2D). Entra en Promise Land con gente y corre en círculos ~45 s; sal con logout y dime que está el log. Misma calidad gráfica.",
+     "en": "Open http://localhost:8088/ (WebGL is now on without ?gl=1; ?gl=0 goes back to 2D). Enter Promise Land with a crowd and run in circles ~45 s; log out and tell me the log is ready. Same graphics quality."
+    },
+    {
+     "es": "Menos subidas de texturas por fotograma (3 ms) y textos de daño/mensajes en caché: debería notarse menos tirón al correr.",
+     "en": "Fewer texture uploads per frame (3 ms) and cached damage/message texts: less stutter when running."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Sin parpadeo y perfilador corregido (v0.83.3)",
+    "en": "No flicker, fixed profiler (v0.83.3)"
+   },
+   "items": [
+    {
+     "es": "Abre http://localhost:8088/?gl=1&prof=1, entra en Promise Land con mucha gente y corre en círculos ~45 s (el título de la pestaña muestra la fase: se apagan suelo, entidades, luces y fx por turnos). Sal con logout y dime que está el log.",
+     "en": "Open http://localhost:8088/?gl=1&prof=1, enter Promise Land with a crowd and run in circles ~45 s (the tab title shows the phase: ground, entities, lights and fx are switched off in turns). Log out and tell me the log is ready."
+    },
+    {
+     "es": "Sin ?prof=1 todo se ve igual (misma calidad); los atlas usan smoothing low y el lienzo vuelve a ir sincronizado (desynchronized causaba parpadeo) (?desync=1 para activarlo).",
+     "en": "Without ?prof=1 everything looks the same (same quality); atlases use low smoothing and the canvas is synchronized again (desynchronized caused flicker) (?desync=1 to enable it)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "WebGL2: un solo draw por personaje (v0.83.1)",
+    "en": "WebGL2: one draw per character (v0.83.1)"
+   },
+   "items": [
+    {
+     "es": "Vuelve a probar con ?gl=1 en Promise Land con mucha gente: debería ir más fluido (los quads de cada personaje van en un solo draw, sin expulsar texturas y con las subidas repartidas entre fotogramas). Misma calidad. Sal con logout para que quede el log.",
+     "en": "Test again with ?gl=1 in Promise Land with a crowd: it should be smoother (each character's quads go in a single draw, textures are no longer evicted and uploads are spread across frames). Same quality. Log out so the log is saved."
+    },
+    {
+     "es": "Si ves recuadros claros alrededor de los personajes, compara la misma escena con y sin ?gl=1 y dínoslo.",
+     "en": "If you see pale boxes around characters, compare the same scene with and without ?gl=1 and tell us."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "title": {
+    "es": "Renderer WebGL2 opcional (v0.83.0)",
+    "en": "Optional WebGL2 renderer (v0.83.0)"
+   },
+   "items": [
+    {
+     "es": "Prueba abriendo el juego con ?gl=1 al final de la dirección (http://localhost:8088/?gl=1): los teñidos de personajes y el tono del suelo se hacen en la GPU. Misma calidad. Compara los fps en Promise Land con y sin ?gl=1 y sal con logout para que quede el log.",
+     "en": "Try it by adding ?gl=1 to the address (http://localhost:8088/?gl=1): character tints and ground tone are computed on the GPU. Same quality. Compare fps in Promise Land with and without ?gl=1 and log out so the log is saved."
+    }
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {

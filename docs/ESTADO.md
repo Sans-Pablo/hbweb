@@ -4,7 +4,26 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
-- [ ] (pedido 2026-10-15, v0.82.9) **Armas teñidas sin lectura de GPU (`willReadFrequently` en `weaponTinted`):** hecho; pendiente que Pablo pruebe en Promise Land y leer `pc.cp.weap`.
+## Hilo SISTEMAS (pedido 2026-10-15) — tickets por prioridad
+- [x] 1. **Bots locos con un drop:** `bot.js` reclamo por casilla (8 s, `w.lootClaims`): solo un bot va a cada botín; lo tirado por un jugador/bot (`dropBy`, `itemsys.dropItem`) los bots no lo recogen solos. Test `tests/bot-loot-claim.test.mjs`. Sin bump de versión (queda en 0.83.6; se agrupa con la siguiente entrega). Pendiente: orden explícita «recoge esto» para items tirados.
+- [ ] 2. Changelog + Backlog web (tickets con prioridad, reinterpretación) y reporte rápido F11 + panel de errores.
+- [ ] 3. Revamp del trade (Olympia; arrastrar item sobre otro personaje abre exchange; bag llena: definir cola/bag extra).
+- [ ] 4. Obediencia de bots + glosario de órdenes + ticket «el bot X no entendió».
+- [ ] 5. Efecto de evolución de pet ~1 vez/min, sin titileo.
+- [ ] 6. Indicación de paso al mapa de farm contiguo (hacia Ares).
+- [ ] 7. Auto hunt / auto run.
+- [ ] 8. Stat simulator (Olympia).
+
+- [x] (pedido 2026-10-15, v0.83.6, "sprites mal alrededor de todos los personajes") **Recuadros pálidos con GL:** premultiplicado inválido (rgb>alfa) en el shader; recortado con `min(rgb, alfa)`.
+- [x] (pedido 2026-10-15, v0.83.5, "prueba autónomamente en Chrome, 10 bots de cada ciudad, mide frames") **Prueba autónoma:** 41 jugadores + 15 Orcs en Promise Land = 45-60 fps; arreglado el congelamiento de 4-6 s al entrar (minimapa) y el tope de `dbg bot`. Script de medida en la sesión (Playwright + Chrome real).
+- [ ] (pedido 2026-10-15, v0.83.4, "haz ?gl=1 el modo por defecto y reduce subidas de texturas y coste de fx al correr") **GL por defecto:** hecho (?gl=0 para 2D), UPMS 3 ms, caché de textos sprFont. Pendiente prueba de Pablo corriendo en Promise Land y leer el log (`fxMs`, `glx.up`).
+- [ ] (pedido 2026-10-15, v0.83.3, "mucho flickering, revisa el log") **Parpadeo:** `desynchronized` desactivado por defecto; log 0.83.2 quieto = 60 fps (cuello solo al correr/cargar); pendiente prueba corriendo con `?gl=1&prof=1`.
+- [x] (pedido 2026-10-15, v0.83.2) **Perfilador A/B (?prof=1) + suavizado low en atlas + desynchronized, sin bajar calidad:** hecho. Pendiente prueba de Pablo en Promise Land con gente en `http://localhost:8088/?gl=1&prof=1` (quieto ~45 s) y enviar log: eventos `prof` dicen qué capa cuesta GPU.
+- [x] (pedido 2026-10-15, v0.83.1, lanzador) **Reinicio con una tecla:** Intro en la ventana del servidor = `restart` + navegador nuevo en `http://localhost:8088/?gl=1` (`tools/iniciar.ps1`, consola de `server.mjs`). Sin cambio de versión (solo herramienta).
+- [ ] (pedido 2026-10-15, v0.83.1) **Un draw por composición, tope de texturas y subidas repartidas, sin bajar calidad; mirar recuadros claros alrededor de personajes (captura ?gl=1):** hecho el batching/tope/reparto (verificado en pruebas sintéticas del navegador). Pendiente prueba de Pablo en Promise Land con gente (`glx.draws/quads/defer/up`, `js.tot`) y A/B con/sin `?gl=1` para los recuadros (causa no hallada).
+- [ ] (pedido 2026-10-15, v0.83.0) **Repensar el dibujado de sprites (más moderno):** renderer WebGL2 opcional `?gl=1` (compositor de personajes y tono del suelo en shader, 2D intacto). Pendiente prueba de Pablo en Promise Land (fps con/sin `?gl=1`); siguiente paso posible: dibujar entidades directamente en GL sin atlas 2D. **Log ?gl=1 (Pablo, 17:19):** 60 fps estables, tint 0.2 ms (2D: 125-640 ms/ventana); quedan picos de 100 ms por subida de texturas (66 hojas, 596 ms) y suelo 2D (gMs 10-22); propuesta 0.83.1 precarga repartida de texturas.
+- [ ] (pedido 2026-10-15, v0.82.10) **Todavía fps bajos (26-33) con 13 a la vista pese a 0.82.9:** añadida medición `js.pre/post/tot` para ver si el cuello es HUD/gui o GPU; pendiente prueba de Pablo.
+- [x] (pedido 2026-10-15, v0.82.9) **Armas teñidas sin lectura de GPU (`willReadFrequently` en `weaponTinted`):** hecho; pendiente que Pablo pruebe en Promise Land y leer `pc.cp.weap`.
 - [x] (pedido 2026-10-15, v0.82.8) **Analizar log 0.82.7 + medir compose + warm 1/fotograma:** hecho; probado: 37.8 fps en multitud; las armas teñidas (`pc.cp.weap`) eran 3.6 de 4.5 ms por composición.
 - [x] (pedido 2026-10-15, v0.82.7) **Fps en multitud (Promise Land, 35 jugadores → 8-16 fps):** precalentamiento de la caché de personajes (2 fotogramas siguientes, 3 ms/fotograma) + medición compose/directo/acierto en el log. Pendiente: Pablo repite en Promise Land y se lee el log.
 - [x] (pedido 2026-10-15, v0.82.6) **Máxima calidad siempre + empaquetado:** caché de personajes compuestos en atlas (un drawImage por persona), sin bajar calidad (nivel 3 retirado, auto-calidad off) + registro de rendimiento del jugador zzzz (data/perf/*.jsonl) para analizar tras el test. Pendiente: Pablo prueba y hace logout; leer el log.

@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.83.6 · Personajes sin recuadros (2026-10-15)
+- Pablo vio rectángulos pálidos alrededor de todos los personajes tras pasar a GL por defecto. Causa: el canvas GL es premultiplicado y el shader podía sacar rgb>alfa (p. ej. alfa 0 con rgb>0 en los bordes); al volcarlo al atlas 2D con source-over eso suma luz. `getImageData` des-premultiplica y lo esconde, por eso la lectura del atlas parecía limpia. Ahora `o = vec4(min(c.rgb, vec3(c.a)), c.a)` en todos los modos. Sin cambio de calidad ni de coste apreciable.
+
+## 0.83.5 · Entrada al mapa sin congelarse (2026-10-15)
+- Prueba autónoma en Chrome real (RTX 4060, 1920x1080, Promise Land, 40 bots + 15 Orcs): perfil CPU de la entrada = 4,4 s en `buildMinimap` (≈560 000 `drawImage`/`fillRect` de 1 px por mapa, repetidos cada 500 ms mientras faltan hojas). Ahora se escribe en un `ImageData` y el color de cada (hoja, fotograma) se reduce una vez: ~0,16 s. Misma calidad. Entrada: de 4-6 s a ~1 s; en estado estable 57-60 fps (45-57 mientras 40 bots matan 15 Orcs; la parte JS del fotograma es 2-3 ms).
+- `dbg bot`: el tope de 40 invocados contaba a los 40 habitantes permanentes y nunca se creaba ninguno; ahora cuenta solo los invocados. Los bots invocados se crean en el mapa del dueño (invócalos tras `goto`).
+
+## 0.83.4 · WebGL por defecto, menos subidas y fx (2026-10-15)
+- `?gl=1` pasa a ser el modo por defecto (`?gl=0` lo apaga). Presupuesto de subida de texturas 6→3 ms y `pump` no sube si el fotograma ya subió. Textos del fx (sprFont) en caché por texto/tipo/color: un drawImage en vez de glifo a glifo con canvas redimensionado. Sin bajar calidad.
+
+## 0.83.3 · Sin desynchronized, perfilador corregido (2026-10-15)
+- Log 0.83.2 (?gl=1&prof=1, quieto en Promise Land): 60 fps estables con 18-20 a la vista en casi todas las fases (suelo 0.1 ms, entidades 0.4, luces 0.01); la bajada a 30-47 fps al final coincide con reactivar fx tras 12 s apagado (fxMs 0.02 → 3-4 ms): artefacto del perfilador (partículas sin podar).
+- Pablo vio mucho parpadeo: `desynchronized` pasa a ser opcional (`?desync=1`); el perfilador apaga capas a propósito, lo que también parpadea.
+- `Fx.cull()` poda sin pintar cuando el perfilador apaga fx. Siguiente prueba: correr en círculos durante `?prof=1` (parado todo cuesta poco).
+
+## 0.83.2 · Perfilador A/B y suavizado low (2026-10-15)
+- Log 0.83.1: fps 30-45 con JS de 5-9 ms y fotogramas múltiplos de 16.7 ms, tanto en GL como en 2D: el cuello es GPU/compositor/vsync, no JS.
+- `?prof=1` (`client/profiler.js`): en la misma escena alterna base, sin suelo, sin entidades, sin luces+cielo, sin fx/overlays, nada, base2 (6 s cada una, 1.5 s de calentamiento) y escribe eventos `prof` {phase, fps, frameMs, maxMs} en el log; el título de la pestaña muestra la fase.
+- Atlas de personajes dibujados con `imageSmoothingQuality="low"` (el atlas ya está a escala de pantalla; "medium" regeneraba mipmaps de páginas de 2048² en cada cambio). Se restaura la calidad del llamador. Sin pérdida visual.
+- Lienzo principal con `desynchronized:true` (menos latencia de compositor); `?desync=0` lo desactiva para comparar.
+
+## 0.83.1 · GL: un draw por composición (2026-10-15)
+- Log ?gl=1 (0.83.0): 15-25 fps con 22-35 entidades, ~20k draws, ~600 subidas de textura (3.2 s) y textura expulsada por el tope de 360 MB.
+- `glcompose.js` reescrito: los quads de una composición se acumulan (13 floats/vértice, hasta 8 hojas en unidades de textura 0-7, tono en 8/9) y salen en un solo `drawArrays`; vacía al llenarse (96 quads o más de 8 hojas), en `begin`, `evict` y al final de `compose`.
+- Tope de texturas 360 MB → 1.6 GB (sin expulsiones). Subidas con presupuesto de 6 ms/fotograma: lo que no cabe se aplaza, la composición se reintenta a los 8 fotogramas y `warm` sube las pendientes. Calidad sin cambios.
+- Log: `glx` incluye `quads` y `defer`. Recuadros claros alrededor de los personajes: no reproducidos; pendiente A/B con y sin `?gl=1`.
+
+## 0.83.0 · Renderer WebGL2 tras ?gl=1 (2026-10-15)
+- Diagnóstico (log 0.82.10): el JS cuesta 6-10 ms/fotograma; los picos (suelo 105 ms, entidades 55-125 ms) son teñidos con lienzos temporales de Canvas2D, que no agrupa órdenes y fuerza sincronías con la GPU.
+- Nuevo `client/glcompose.js`: compositor WebGL2 (hojas como texturas, un shader). Con `?gl=1`: personajes (ropa multiplicada, pelo sumado 0.55, armas con desplazamiento por canal) y tono del suelo (multiply + 0.14·lighter) se calculan en shader y se vuelcan a los atlas/bloques 2D existentes. Sin `?gl=1` todo igual que 0.82.10.
+- Log: `gl` en el evento start y `glx` {up, msUp, tone, msTone, draws, tex} por ventana.
+
+## 0.82.10 · Medición fuera del mundo (2026-10-15)
+- Log 0.82.9 (Promise Land): armas teñidas ya no cuestan (weap 0; antes 3.6 ms por composición) y entidades <1 ms con 13 a la vista; aun así 26-33 fps con fotogramas de 33-50 ms aunque `drawMs` es solo 5-8 ms: el tiempo no está en el dibujado del mundo.
+- Log: `js` {pre, post, tot}: ms medios por fotograma de lo anterior al mundo (conn.update, eventos, ctl, voz), de HUD+gui y de todo el JS del fotograma. Si `tot` es bajo frente a `frameMs`, el cuello es GPU/compositor.
+
 ## 0.82.9 · Armas teñidas sin lectura de GPU (2026-10-15)
 - Análisis del log 0.82.8 (Promise Land): 37.8 fps con ≥20 a la vista (25 antes); cada composición 4.5 ms, de los que 3.6 ms eran armas teñidas (`weaponTinted`: `getImageData` desde GPU).
 - `weaponTinted` crea su lienzo con `willReadFrequently:true` (mismo resultado píxel a píxel, sin bajar calidad).
