@@ -1,10 +1,17 @@
 {
- "build": "0.84.1",
+ "build": "0.84.2",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Casillas neutras (v0.84.2)", "en": "Neutral slots (v0.84.2)"},
+   "items": [
+    {"es": "Las casillas de objetos son grises y neutras como en el original y se encienden al pasar el ratón.", "en": "Item slots are neutral grey like the original and light up on hover."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Hospital de compañeros (v0.84.1)", "en": "Pet hospital (v0.84.1)"},

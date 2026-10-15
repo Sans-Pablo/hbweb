@@ -36,3 +36,6 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 
 ## Pestañas de ClassicDialog (v0.84.1)
 `tabBox()` mide cada rótulo (negrita 12 px) y reparte el sobrante como hueco; `tabX(i)`/`tabW(i)` dan posición y caja de clic. Las filas con icono de bola dibujan una casilla cuadrada (translúcida, más clara al pasar el ratón).
+
+## Casillas (v0.84.2)
+`drawSlot(c,x,y,s,on,sel)` en `window.js`: hueco gris con bisel, brilla con `on` (hover) y dorado con `sel`. Test `tests/slot.test.mjs`.

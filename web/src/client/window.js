@@ -15,6 +15,12 @@ export const THEME = {
   title: "#2d1919", field: "#120d06", fieldOn: "#1d150a", line: "#6b5835", lineOn: "#e0b84a", sel: "rgba(224,184,74,.28)",
   pad: 8, gap: 6, row: 24,                       // márgenes: separación al borde del hueco, entre piezas y alto de fila
 };
+// Casilla neutra al estilo del original (cuadros de objeto de Game.cpp: hueco gris oscuro con bisel); en reposo no destaca y se enciende al pasar/seleccionar
+export function drawSlot(c, x, y, s, on = false, sel = false) {
+  c.save(); c.fillStyle = on ? "rgba(150,150,150,.38)" : "rgba(60,60,60,.28)"; c.fillRect(x, y, s, s);
+  c.strokeStyle = on || sel ? (sel ? THEME.lineOn : "rgba(225,225,225,.85)") : "rgba(20,20,20,.55)"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, s - 1, s - 1);
+  c.strokeStyle = on ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(x + 1.5, y + s - 1.5); c.lineTo(x + 1.5, y + 1.5); c.lineTo(x + s - 1.5, y + 1.5); c.stroke(); c.restore();
+}
 const KEY = "gamedialog_1", FRAME = 2, BTN = "dialogtext_1";
 const cache = new Map();
 

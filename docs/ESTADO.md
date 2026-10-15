@@ -331,6 +331,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Hechos: 6 misiones (ventana + botón barra + rastreador plegable), 1 hover turquesa, 2 tutorial (cuadro con retrato, saltar con doble clic), 3 buscador/Ok destacado/márgenes comunes, 8 botón de mascota, 9 rótulo de la cripta, 11 arrastrar ventanas al borde, 13 pelo F5.
 - Pendientes: 4 cuadros neutros al hover, 5 migrar diálogos al sistema de ventanas + constructor, 7 hospital de mascotas, 10 modos Remastered/Legacy, 11 barra y área máxima (requiere GUI de ancho variable), 12 interfaz original total y minimapa móvil, 14 estadísticas estilo Olympia y mini sprite en pozos.
 
-## Hilo UI (v0.84.1)
-- Hechos: tickets 1, 2, 3, 6, 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
-- Pendientes: 4 (casillas neutras), 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).
+## Hilo UI (v0.84.2)
+- Hechos: tickets 1, 2, 3, 6, 4 (casilla neutra `drawSlot`, solo en el hospital por ahora), 7 (pestañas + casillas), 8, 9, 11 (arrastre a bordes), 13.
+- Pendientes: 5 (migrar diálogos + constructor + retratos), 10 (modos Remastered/Legacy), 11 (barra a los bordes), 12 (interfaz original total, minimapa móvil), 14 (stats Olympia, mini mob en el foso).

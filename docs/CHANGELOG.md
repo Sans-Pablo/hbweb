@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.84.2 · Casillas neutras (2026-10-15)
+- `drawSlot` (window.js): casilla gris con bisel al estilo del original, se enciende al pasar el ratón; la usan las bolas del hospital.
+
 ## 0.84.1 · Hospital de compañeros (2026-10-15)
 - `ClassicDialog`: pestañas colocadas por el ancho real del texto (ya no se montan ni se pisan las cajas de clic); cada bola de la lista lleva su casilla cuadrada que se ilumina al pasar.
 

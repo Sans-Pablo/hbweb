@@ -17,6 +17,7 @@
 //   7. Filas: top + visible*rowH <= 256 (el constructor lo calcula si no pasas `visible`).
 //   }
 //   gui.register(new Mio());   y   gui.open(50)
+import { drawSlot } from "./window.js";
 import { drawBallIcon } from "./compicon.js";
 import { itemDef, packKey } from "./names.js";
 export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
@@ -75,7 +76,7 @@ export class ClassicDialog {
       const r = rows[i + this.view]; if (!r) break;
       const y = this.top + i * this.rowH, over = inside(lx, ly, this.mx - 4, this.w - 12, y - 1, y + this.rowH - 2);
       const col = over ? WHITE : r.color || DARK;
-      if (r.ball) { g.ctx.fillStyle = over ? "rgba(255,255,255,.35)" : "rgba(40,25,10,.28)"; g.ctx.fillRect(this.mx - 1, y - 2, 18, 18); g.ctx.strokeStyle = "rgba(45,25,25,.7)"; g.ctx.strokeRect(this.mx - 0.5, y - 1.5, 17, 17); }   // casilla cuadrada (estilo de las casillas de la interfaz)
+      if (r.ball) { drawSlot(g.ctx, this.mx - 1, y - 2, 18, over); }   // casilla cuadrada (estilo de las casillas de la interfaz)
       if (r.ball) { const d = itemDef(r.ball.id); if (d) drawBallIcon(g, r.ball, d, packKey(d), this.mx + 8, y + 7, 16); }
       g.text(this.mx + (r.ball ? 20 : 0), y, r.text, col, { size: 11 });
       if (r.right != null) g.text(this.w - 44, y, String(r.right), col, { size: 11 });
