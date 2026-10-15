@@ -1,10 +1,17 @@
 {
- "build": "0.83.12",
+ "build": "0.83.13",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Auditoría de sistemas (v0.83.13)", "en": "Systems audit (v0.83.13)"},
+   "items": [
+    {"es": "Dile a un bot «recoge esto» tras tirar un objeto y lo recogerá (30 s). Prueba: tirar una poción junto a tu bot; sin orden la ignora, con la orden la coge.", "en": "Tell a bot pick up that after dropping an item and it will take it (30 s). Test: drop a potion next to your bot; without the order it ignores it, with it it picks it up."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Simulador de estadísticas (v0.83.12)", "en": "Stat simulator (v0.83.12)"},

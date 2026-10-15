@@ -450,6 +450,7 @@ const SAY = {
   ek: { es: "¡Va! Te sigo a hacer EK, solo a los enemigos.", en: "On it! I'll follow you for EK, enemies only." },
   ask: { es: "No sé qué quieres que cace: ¿cómo se llama la criatura?", en: "I'm not sure what to hunt: what is the creature called?" },
   giveup: { es: "Sigo sin entenderlo. Se lo paso a los desarrolladores para aprenderlo.", en: "I still don't get it. I'll pass it on to the devs so I can learn it." },
+  pickup: { es: "¡Voy, lo recojo!", en: "On it, I'll pick it up!" },
   no: { es: "Vale, lo dejo.", en: "Okay, forget it." },
 };
 function obey(adv, w, p, human, text, lang) {
@@ -466,6 +467,7 @@ function obey(adv, w, p, human, text, lang) {
   const o = Orders.parse(text);
   if (!o) return false;
   if (o.kind === "unsure") { r._ask = { to: n, at: w.time, text }; return say("ask"); }
+  if (o.kind === "pickup") { p.bot.pickFrom = human.id; p.bot.pickUntil = w.time + 30000; return say("pickup"); }   // 30 s para recoger lo que tiró este jugador
   go(o); return say(o.kind, o.mob);
 }
 function queueReply(adv, w, p, human, text, depth = 0) {
@@ -913,7 +915,8 @@ function pets(adv, w, p, r, home) {
   if (p.dead || w.pvp || w.map.kind === "dungeon" || w.time < (r._petThink ||= 0)) return;
   r._petThink = w.time + 2500;
   const b = p.bot, live = liveOf(w, p);
-  const want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
+  let want = r._wantBall && p.bag.find(i => i.uid === r._wantBall && i.comp && !i.comp.bad && !i.comp.down);
+  if (!want && !live && supporter(p, r)) { const cur = ballOf(p); if (!cur || cur.comp.down || !Tal.CLS_OF[cur.comp.sp]) want = balls(p).find(i => Tal.CLS_OF[i.comp.sp] && !i.comp.down) || null; }   // su bola activa cayó (o es de escuela) y no hay summon fuera: saca uno de apoyo sano en vez de esperar al hospital
   const qb = w.time < (r._supHold || 0) ? null : qBall(p);          // el mago de apoyo suelta un rato la bola de la misión para sacar a su summon de apoyo (0.78.0)
   if (!want && qb && !qb.comp.down && !qb.comp.on && Comp.activeBall(p) && !w.fightZone && w.time - p.lastCombat > 4000) { adv.command(p.id, { t: "use", uid: Comp.activeBall(p).uid }); r._wantBall = qb.uid; r._petUseAt = 0; }
   const ball = want || (qb && !qb.comp.down ? qb : null) || ballOf(p), c = ball?.comp;

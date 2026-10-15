@@ -12,3 +12,4 @@ INVENTO del port (sin equivalente en el original). Glosario determinista, sin mo
 - Ticket: `adv.order` → `bugs.add({kind:"order"})` (ip "bot-orders"): «el bot X no entendió esto del player Y: «…»». Se ve en web/menu.html.
 - `only` solo se aplica con dueño (`pickTarget` en bot.js); se limpia al expirar el seguimiento y en `CH.leave`.
 - Test: `tests/orders.test.mjs`.
+- «recoge esto / pick up that» (kind `pickup`): el bot recoge durante 30 s los objetos tirados por ese jugador (`p.bot.pickFrom/pickUntil`, `bot.js` `mine`); sin la orden no toca lo tirado (`dropBy`). Admite el nombre del bot al final.

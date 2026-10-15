@@ -39,10 +39,11 @@ export function mobOf(s, names = []) {
 export function parse(text, names = []) {
   const t = norm(text); if (!t) return null;
   if (/\b(hacer|hacemos|hagamos|farmear|farmeamos|ir a por|do|get|go for|farm)\b.*\b(ek|eks|enemy kills?)\b|\b(ek|eks)\b.*\b(vamos|ven|go|let s)\b|^(vamos|let s go|lets go) (a )?(ek|eks)$/.test(t)) return { kind: "ek" };
+  if (/(^| )(recoge|recoger|recogelo|recogelos|coge|coger|agarra|toma|pick up|pickup|grab|take)( .*)? (esto|eso|esos|estos|todo|this|that|these|it|everything)( [a-z]+)?$|^(recoge|coge|pick up|grab)( [a-z]+)?$/.test(t)) return { kind: "pickup" };   // lo tirado por un jugador: los bots no lo recogen solos (bot.js, dropBy)
   const m = t.match(/\b(?:matar|mata|cazar|caza|farmear|farmea|limpiar|limpia|kill|killing|hunt|hunting|farm|farming|grind|exterminar|liquidar)\s+(?:a\s+|a los\s+|a las\s+|los\s+|las\s+|el\s+|la\s+|some\s+|the\s+)?(.+)$/);
   if (m) { const mob = mobOf(m[1], names); return mob ? { kind: "hunt", mob } : { kind: "unsure", why: m[1] }; }
   return null;                                                                            // lo demás (grupo, hola, etc.) sigue por intentOf
 }
-export const label = (o, lang) => o.kind === "hunt" ? o.mob : o.kind === "ek" ? "EK" : "";
+export const label = (o, lang) => o.kind === "hunt" ? o.mob : o.kind === "ek" ? "EK" : o.kind === "pickup" ? "pickup" : "";
 // Pregunta si hay duda; «sí/no» a esa pregunta se resuelve con answerOf
 export const answerOf = text => { const t = norm(text); return /^(si|sí|yes|yep|ok|vale|claro|exacto|eso|correcto|y)\b/.test(t) ? true : t.split(" ").length <= 2 && /^(no|nope|nah|negativo)\b/.test(t) ? false : null; };   // «no» suelto (con el nombre del bot, 2 palabras); «no sé…» no cuenta

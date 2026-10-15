@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.13 · Auditoría de sistemas (2026-10-15)
+- «Recoge esto» (o «pick up that») hace que el bot recoja lo que tiraste durante 30 s. Los bots de apoyo con summon vuelven a invocar su pet si se queda sin él.
+
 ## 0.83.12 · Simulador de estadísticas (2026-10-15)
 - /stats abre una ventana para probar el reparto de puntos (Str/Vit/Dex/Int/Mag/Chr, nivel simulado, opción sin límite) y ver HP, MP, SP y carga actuales frente a los simulados, sin gastar puntos. Arreglado además el regex de /auto en main.js (rompía la carga del cliente).
 

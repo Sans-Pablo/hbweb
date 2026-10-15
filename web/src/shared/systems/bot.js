@@ -516,13 +516,13 @@ function run(adv, w, p, b) {
   }
   // botín cercano (solo si no hay peligro a la vista)
   if (!b.rest && !b.noLoot && !b.travel) {
-    const here = groundTop(w, p.x, p.y);
-    if (here && !here.dropBy && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
+    const here = groundTop(w, p.x, p.y), mine = it => it && it.dropBy === b.pickFrom && w.time < (b.pickUntil || 0);   // orden «recoge esto» (orders.js): lo tirado por su jugador sí
+    if (here && (!here.dropBy || mine(here)) && wanted(w, p, here)) { if (w.time - (b.lootLog || 0) > 5000) { b.lootLog = w.time; blog(w, p, `Recojo ${w.data.item(here.id)?.name || here.id}.`); } adv.command(p.id, { t: "pickup" }); return; }
     let best = null, bd = 0;
     const LR = (b.lootBoost || 0) > w.time ? 9 : 5;                                       // actividad de guild «loot»: rastrea más lejos
     for (let y = p.y - LR; y <= p.y + LR; y++) for (let x = p.x - LR; x <= p.x + LR; x++) {
       const it = w.grid.inside(x, y) && !w.teleports.has(w.grid.idx(x, y)) && !claimedByOther(w, p, x, y) && groundTop(w, x, y);          // el botín sobre un teletransportador se deja
-      const lv = it && !it.dropBy ? lootValue(w, p, it) : 0; if (lv > 0) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)), sc = lv / (d + 2); if (sc > bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = sc; } }
+      const lv = it && (!it.dropBy || mine(it)) ? lootValue(w, p, it) : 0; if (lv > 0) { const d = Math.max(Math.abs(x - p.x), Math.abs(y - p.y)), sc = lv / (d + 2); if (sc > bd && (!owner || dist(owner, { x, y }) < 12)) { best = { x, y }; bd = sc; } }
     }
     if (best) { claim(w, p, best.x, best.y); think_(w, p, b, "loot"); if (!step(adv, w, p, b, best.x, best.y, false) && b.fails > 6) { b.noLoot = true; w.after(15000, () => { b.noLoot = false; }); b.fails = 0; } return; }
   }

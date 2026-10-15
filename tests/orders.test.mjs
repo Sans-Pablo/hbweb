@@ -40,4 +40,13 @@ say("vamos a hacer EK"); assert.equal(A.bot.only, "@ek");
 say("vamos a matar a la mama de pedro"); assert.equal(tickets.length, 0, "primero pregunta");
 say("no se"); assert.equal(tickets.length, 1, "no lo entiende: ticket"); assert.match(tickets[0].text, /mama de pedro/);
 say("vamos a matar a la mama de pedro"); say("orcos"); assert.equal(A.bot.only, "Orc", "la aclaración se entiende"); assert.equal(tickets.length, 1);
+assert.deepEqual(parse("recoge esto"), { kind: "pickup" }); assert.deepEqual(parse("pick up that"), { kind: "pickup" });
+{ // «recoge esto»: el bot solo recoge lo tirado por su jugador tras la orden (bot.js, dropBy)
+  const { groundPush } = await import("../web/src/shared/systems/ground.js");
+  A.bot.only = null; A.bot.owner = hid; A.res.followUntil = a.farm.time + 600000; H.x = A.x + 2; H.y = A.y;
+  const d = data.named("RedPotion"), potions = () => A.bag.filter(i => i.id === d.id).reduce((n, i) => n + (i.count || 1), 0);
+  const put = () => groundPush(w, A.x + 1, A.y, { uid: w.nextItem++, id: d.id, count: 1, life: d.maxLife, dropBy: hid }, false);
+  const n0 = potions(); put(); tickN(10000); assert.equal(potions(), n0, "sin orden no lo recoge");
+  say("recoge esto"); tickN(10000); assert.equal(potions(), n0 + 1, "con la orden lo recoge");
+}
 console.log("OK orders");
