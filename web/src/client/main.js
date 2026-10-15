@@ -255,6 +255,10 @@ async function main() {
       if (pet) { conn.send({ t: "use", uid: inst.uid, dest: pet.ball }); return; }
     }
     if (!dlg && y < 548 && dropOnCitizen(inst.uid, x, y, cx, cy)) return;
+    if (!dlg && y < 548 && cx !== undefined) {                    // objeto soltado sobre otro jugador (estilo Olympia): abre el intercambio con eso ya ofrecido
+      const [wx, wy] = renderer.toWorld(cx, cy), o = ctl.playerAt(wx, wy);
+      if (o && o.id !== pid && !o.dead) { if (Math.max(Math.abs(o.x - me.x), Math.abs(o.y - me.y)) > 10) hud.log("Too far to trade."); else tradeUi.start(o.name, inst.uid); return; }
+    }
     if (dlg && dlg.id === 33) { tradeUi.drop(inst.uid); return; }           // sobre la ventana de intercambio: ofrecerlo
     if (dlg && dlg.id === 1) {                                   // sobre el personaje: equipar
       if (d.type === ITYPE.EQUIP && !Object.values(me.equip || {}).includes(inst.uid)) hud.act("equip", inst.uid);

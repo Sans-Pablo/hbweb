@@ -106,7 +106,7 @@ export function registerTrade(gui, api) {
       if (dlg.mode !== "trade" || !dlg.st || dlg.st.mine.items.length >= 4 || dlg.st.mine.items.some(i => i.uid === uid)) return;
       api.send({ t: "tradeset", uid });
     },
-    start(name) { api.send({ t: "tradereq", name }); dlg.mode = "wait"; dlg.name = name; open(); },
+    start(name, uid) { api.send({ t: "tradereq", name, ...(uid != null ? { uid } : {}) }); dlg.mode = "wait"; dlg.name = name; open(); },
     onEvent(ev, me) {
       if (ev.id !== me?.id) return;
       if (ev.t === "tradequery") { if (ev.from == null) { if (dlg.mode === "query") { dlg.mode = "off"; gui.close(33); } } else { dlg.mode = "query"; dlg.name = ev.from; open(); } return; }
@@ -120,7 +120,9 @@ export function registerTrade(gui, api) {
         }
         case "cancel": api.log("The trade was cancelled."); dlg.mode = "off"; dlg.st = null; gui.close(33); break;
         case "refused": api.log(ev.name + " does not want to trade."); dlg.mode = "off"; gui.close(33); break;
-        case "nofit": api.log("It doesn't fit: weight or bag space.", "bad"); break;
+        case "nofit": api.log("It doesn't fit: weight or bag space, and the reception queue is full.", "bad"); break;
+        case "queued": api.log("Your bag is full: " + ev.n + " item(s) wait in the reception queue and enter when you free space.", "bad"); break;
+        case "delivered": api.log(ev.n + " item(s) waiting from a trade have entered your bag.", "gold"); break;
       }
     },
   };

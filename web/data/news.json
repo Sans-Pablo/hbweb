@@ -1,10 +1,18 @@
 {
- "build": "0.83.7",
+ "build": "0.83.8",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Trade estilo Olympia (v0.83.8)", "en": "Olympia-style trade (v0.83.8)"},
+   "items": [
+    {"es": "Arrastra un objeto de la mochila sobre otro jugador: se abre el intercambio con el objeto ya ofrecido. Prueba: arrastrar, aceptar, confirmar.", "en": "Drag a bag item onto another player: the exchange opens with the item already offered. Test: drag, accept, confirm."},
+    {"es": "Con la mochila llena el trato se completa igualmente: lo que no cabe espera en una cola de recepción (máx. 12) y entra solo al liberar espacio. Prueba: recibir un objeto con la mochila llena.", "en": "With a full bag the deal still completes: what does not fit waits in a reception queue (max 12) and enters when you free space. Test: receive an item with a full bag."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Reporte de fallos y menú web (v0.83.7)", "en": "Bug reports and web menu (v0.83.7)"},

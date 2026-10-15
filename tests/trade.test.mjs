@@ -49,5 +49,22 @@ w.command(A.id, { t: "tradecancel" }); assert.ok(!A.trade && !B.trade);
 w.command(A.id, { t: "tradereq", name: "Beta" }); w.command(B.id, { t: "tradeanswer", r: 1 }); w.drainEvents();
 B.x += 30; w.tick(1100); assert.ok(!A.trade && !B.trade, "se cancela al alejarse");
 B.x -= 30;
-// peso: no cabe -> no se hace y se desconfirma
+// arrastrar un objeto sobre el jugador (estilo Olympia): tradereq con uid -> ya viene ofrecido al aceptar
+const gift = give(B, "Dagger");
+w.command(B.id, { t: "tradereq", name: "Alfa", uid: gift.uid }); w.drainEvents(); w.command(A.id, { t: "tradeanswer", r: 1 }); w.drainEvents();
+assert.deepEqual(B.trade.offer, [gift.uid], "el objeto arrastrado queda ofrecido"); assert.ok(A.trade);
+w.command(A.id, { t: "tradecancel" });
+// un objeto equipado o ajeno no se pre-ofrece
+w.command(B.id, { t: "tradereq", name: "Alfa", uid: 999999 }); w.command(A.id, { t: "tradeanswer", r: 1 }); assert.deepEqual(B.trade.offer, []); w.command(A.id, { t: "tradecancel" }); w.drainEvents();
+// mochila llena: no se cancela, el objeto espera en la cola de recepción y entra cuando hay hueco
+for (let k = 0; A.bag.length < 50; k++) { const r = newInst(w, data.named("Dagger").id, 1); Inv.addToBag(A, data, r); if (k > 200) break; }
+const full = A.bag.length;
+w.command(B.id, { t: "tradereq", name: "Alfa", uid: gift.uid }); w.command(A.id, { t: "tradeanswer", r: 1 }); w.drainEvents();
+w.command(A.id, { t: "tradeok" }); w.command(B.id, { t: "tradeok" });
+const ev = w.drainEvents();
+assert.ok(ev.some(v => v.t === "trade" && v.k === "done" && v.id === A.id) && ev.some(v => v.k === "queued" && v.id === A.id), "se hizo el trato y avisó de la cola");
+assert.equal(A.bag.length, full, "la mochila llena no recibe nada"); assert.equal(A.pending?.length, 1); assert.ok(!B.bag.some(i => i.uid === gift.uid));
+w.tick(1100); assert.equal(A.pending?.length, 1, "sigue en cola mientras no haya sitio");
+for (let k = 0; k < 30; k++) Inv.removeFromBag(A, A.bag[A.bag.length - 1].uid); w.recalc(A); w.tick(1100);
+assert.ok(!A.pending && A.bag.some(i => i.id === gift.id) && w.drainEvents().some(v => v.k === "delivered" && v.id === A.id), "al liberar hueco entra solo");
 console.log("OK");

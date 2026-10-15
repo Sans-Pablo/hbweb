@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.8 · Trade estilo Olympia (2026-10-15)
+- Arrastrar un objeto de la mochila sobre otro jugador abre el intercambio con ese objeto ya ofrecido. Mochila llena: el trato ya no se cancela; lo que no cabe espera en una cola de recepción (máx. 12, se guarda) y entra solo al liberar peso/casillas. Ficha `docs/sistemas/trade.md`.
+
 ## 0.83.7 · Reporte de fallos y menú web (2026-10-15)
 - F11 = informe rápido de fallo (solo texto) → `/api/bug`; Shift+F11 = transparencia. Errores de JS enviados solos. `server/bugs.mjs`, `web/menu.html` (Changelog, Backlog, Errores), `web/data/backlog.json`. Aura de pets evolucionados: un latido por minuto.
 
