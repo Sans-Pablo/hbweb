@@ -103,10 +103,12 @@ export class Fx {
       case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
       case "miss": break;   // un golpe normal que falla no muestra texto (ticket 7); «Failed» queda solo para la resistencia a hechizos
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
-        if (!ev.bow) break;
         const c = this.world.ents.get(ev.id);
         if (!c) break;
         const sx = c.x, sy = c.y, tx = ev.tx, ty = ev.ty, dur = c.actDur || 296;
+        // fotograma 5: destello del ataque crítico (V3 ≥ 20 → efecto 20-27) y, con StormBlade, el efecto 81 (MapData.cpp OBJECTATTACK; el 250 usa un sprite ausente)
+        if (ev.at >= 20 || ev.wt === 15) setTimeout(() => { if (ev.at >= 20) this.sp.add(ev.at, sx, sy, tx, ty); if (ev.wt === 15) this.sp.add(81, sx, sy, tx, ty); }, dur * 5 / 8);
+        if (!ev.bow) break;
         setTimeout(() => this.sp.add(2, sx, sy, tx, ty), dur * 5 / 8);
         break;
       }

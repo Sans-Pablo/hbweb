@@ -52,7 +52,7 @@ export function chargeCritTick(w, p) {
 }
 function chargeCritHit(p) { if (((p.critHits = (p.critHits || 0) + 1)) >= CRIT.hitsTaken) { p.critHits = 0; addSuperCharge(p); } }
 export function playerHit(w, p, t, fx = {}) {
-  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
   const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
@@ -80,10 +80,10 @@ export function canFight(w, p, t) {
   if (!isFoe(p, t)) return false;
   return !(p.party && t.party && p.party.id === t.party.id);
 }
-// Multiplicador del daño entre jugadores (invento del port): subido para que un duelo se decida en unos 15-25 golpes, no en minutos; las pets y las pociones deciden el resto.
-export const PVP_DMG = 1.7;
+// El original no multiplica el daño entre jugadores (combat.cpp): 1. Bal.pvpMul() queda como mando de balance (por defecto 1).
+export const PVP_DMG = 1;
 export function hitPlayer(w, p, t, fx = {}) {
-  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
+  if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
   const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
@@ -93,11 +93,10 @@ export function hitPlayer(w, p, t, fx = {}) {
   wearWeapon(w, p);
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
-  const a = absorbOnHit(w.rng, t, ap);
+  const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
   a.damage = Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul()));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
-  if (!t.dead) knockback(w, p, t, a.damage);
 }
 
 // Promise Land: matar a un jugador enemigo compensa el riesgo (invento del port, para fomentar el combate): recompensa en oro según su nivel y su racha
@@ -228,15 +227,10 @@ export function damagePlayer(w, p, dmg, from, elem) {
   }
 }
 
-// Retroceso (iCalculateAttackEffect, CAE_SKIPDAMAGEMOVE): un golpe físico de 40 o más empuja una casilla al jugador en
-// dirección contraria al atacante (DEF_NOTIFY_DAMAGEMOVE); en zona de lucha hacen falta 60. El cliente anima DEF_OBJECTDAMAGEMOVE (4 x 24 ms).
+// Retroceso: el original NO mueve al objetivo (combat.cpp envía NOTIFY_DAMAGEMOVE y el cliente solo guarda m_sDamageMove, Game.cpp ~26410):
+// nadie "vuela" al recibir 40 o más, y menos un paralizado. Se conserva la función como no-op por compatibilidad.
 export const KNOCK_MS = 96;
-export function knockback(w, n, t, damage) {
-  if (t.dead || damage < 40 || (n.x === t.x && n.y === t.y)) return;
-  const d = dirTo(n.x, n.y, t.x, t.y);
-  const face = t.dir, busy = t.busyUntil;
-  if (w.tryStep(t, d, KNOCK_MS, ACT.DAMAGE)) { t.dir = face; t.busyUntil = Math.max(busy, t.busyUntil); t.knockAt = t.actStart; w.emit({ t: "knock", id: t.id, dir: d }); }
-}
+export function knockback() {}
 
 // El monstruo golpea: acierto contra la defensa del jugador, absorción por la parte del cuerpo, desgaste.
 export function npcStrikes(w, n, t) {
@@ -249,7 +243,7 @@ export function npcStrikes(w, n, t) {
   damage = Math.max(1, Bal.scale(damage, Bal.monsterDmgMul(n.name)));
   let ap = R.absorbOnPlayer(w.rng, damage, t.stats);
   if (ap <= 0) return miss();
-  const a = absorbOnHit(w.rng, t, ap);
+  const a = absorbOnHit(w.rng, t, ap, n.dir === t.dir);
   if (t.side !== 0) {
     if (a.shielded) wear(w, t, t.equip[EQUIP.LHAND], 1);
     for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
@@ -257,7 +251,6 @@ export function npcStrikes(w, n, t) {
   if (a.shielded) gainSSN(t, 11, 1);
   damagePlayer(w, t, a.damage, n);
   if (a.damage > 0) Boss.onBossHit(w, n);
-  knockback(w, n, t, a.damage);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
   if (!t.dead && t.eff.chargeCrit > 0 && R.dice(w.rng, 1, 100) < t.eff.chargeCrit) addSuperCharge(t);

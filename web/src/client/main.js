@@ -419,6 +419,7 @@ async function main() {
       if (!freeFor(me) && (!me.magic || !me.magic[id])) return;
       if (ui.pointing != null) return;
       if (!freeFor(me) && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
+      ctl.intent = null; ctl.path = []; ctl.auto = null; ctl.noHold = true;      // lanzar frena al personaje: ni sigue el camino ni corre
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro

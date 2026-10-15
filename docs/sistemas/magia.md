@@ -24,3 +24,6 @@ El servidor original resuelve el hechizo al recibir la orden (HG.cpp `PlayerMagi
 
 ## Anillo de protección (v0.84.16)
 Protection From Magic / Defense Shield (efectos 124 y 133) añaden el efecto 52 sobre el objetivo; el dibujado de ese tipo faltaba. Ahora `spellfx.js` lo pinta como el original (Game.cpp DrawEffects `case 52` «Protection Ring»: efecto 24, 15 fotogramas a 80 ms). Test: `tests/spellfx-ring.test.mjs`.
+
+## Magia contra jugadores (PvP)
+`magicsys.js hurtPlayer` porta HG.cpp Effect_Damage_Spot: solo con `canFight` (mapa PvP, fuera de zonas seguras, bando/party distintos, nunca uno mismo); resistencia, `dice(1,vit/10)-1`, suerte, Protect From Magic ÷2 y protección elemental/PFM en `damagePlayer`. Test `tests/magic-pvp.test.mjs`.
