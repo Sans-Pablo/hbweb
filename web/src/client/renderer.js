@@ -814,9 +814,11 @@ export class Renderer {
       }
     }
     const fade = alive ? 1 : act === ACT.DYING ? Math.max(0, 1 - (time - (e.actStart || 0)) / Math.max(1, e.actDur || 700) * 1.6) : 0;   // al morir las luces se apagan en fundido
-    if (e.comp && fade > 0 && (look(e.name) === "Liche" ? e.clvl >= 20 : look(e.name) === "Demon" ? e.clvl >= 10 : look(e.name) === "Cyclops" || look(e.name) === "Tutelary-Angel" ? e.clvl >= 30 : e.clvl >= 20 && look(e.name) === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
+    // Ticket 5: el aura de evolución no titila sin parar; late una vez por minuto (~6 s, fundido suave), con fase propia por criatura.
+    const evoEnv = (() => { const per = 60000, dur = 6000, ph = (time + (e.id * 7919) % per) % per; return ph < dur ? Math.sin(ph / dur * Math.PI) : 0; })();
+    if (e.comp && fade > 0 && evoEnv > 0.02 && (look(e.name) === "Liche" ? e.clvl >= 20 : look(e.name) === "Demon" ? e.clvl >= 10 : look(e.name) === "Cyclops" || look(e.name) === "Tutelary-Angel" ? e.clvl >= 30 : e.clvl >= 20 && look(e.name) === "Frost")) {   // summon evolucionado en nivel máximo: aura propia continua (solo Demon, Frost y Liche Lv 50)
       const sp = this.fx?.sp, seed = e.id * 997, T = time + seed, rnd = (k) => { const h = Math.sin(k * 12.9898 + e.id) * 43758.5453; return h - Math.floor(h); };
-      ctx.save(); ctx.globalAlpha = (look(e.name) === "Liche" || look(e.name) === "Cyclops" ? 1 : 0.5) * fade;                            // Demon y Frost más sutiles, a la altura del Liche
+      ctx.save(); ctx.globalAlpha = (look(e.name) === "Liche" || look(e.name) === "Cyclops" ? 1 : 0.5) * fade * evoEnv;                          // Demon y Frost más sutiles, a la altura del Liche
       if (look(e.name) === "Demon") {                                                          // Lv 10 ojos de brasa, 40 calor y chispas lentas, 50 más intensos
         const L = e.clvl, pulse = 0.5 + 0.5 * Math.sin(T / 380);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
