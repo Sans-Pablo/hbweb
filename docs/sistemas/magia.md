@@ -18,3 +18,6 @@ Modo de prueba: `MAGIC_MODE.free` (sin maná ni requisitos); los tests lo desact
 Nada. Efectos 102–172 sin sprite: por diseño no se dibujan; el teletransporte entre mapas se cubre con Recall; PvP existe (ver online.md); Inhibición y Confusión implementadas (test magic-pvp).
 
 > v0.82.0: los hechizos de los summons ya no viven aquí; ver `petgrimoire.md`.
+
+## Objetivo en movimiento (v0.84.14)
+El servidor original resuelve el hechizo al recibir la orden (HG.cpp `PlayerMagicHandler`); aquí la animación de lanzar (~640 ms) retrasa el golpe, y un monstruo que andaba salía de la casilla y esquivaba todo («las magias no hacen daño»). `magicsys.cast` recuerda al ocupante de la casilla al lanzar y `resolve` golpea donde está al soltarlo. Test: `tests/magic-moving.test.mjs`.

@@ -5,7 +5,7 @@
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
 ## Hilo MOTOR/COMBATE (pedido 2026-10-15)
-- [x] 1 Críticos: contador en HUD (v0.84.11); la lógica ya coincidía con el original. [x] 2 Pretend Corpse (v0.84.12, docs/sistemas/pretend-corpse.md). [x] 3 Paralyze (v0.84.13, docs/sistemas/paralyze.md).
+- [x] 1 Críticos: contador en HUD (v0.84.11); la lógica ya coincidía con el original. [x] 2 Pretend Corpse (v0.84.12, docs/sistemas/pretend-corpse.md). [x] 3 Paralyze (v0.84.13, docs/sistemas/paralyze.md). [x] 4 Magia sin daño (v0.84.14, objetivo en movimiento; fórmulas de acierto/resistencia ya coincidían con el original).
 
 ## Hilo UI (pedido 2026-10-15, v0.83.7)
 - [x] 1 hover turquesa (solo la huella) · [x] 2 tutorial (reaparece/bloqueo; sin verificar en vivo la tienda) · [~] 10 opciones limpias hecho; falta modos solo Remastered/Legacy y F1 ON/OFF (son órdenes del servidor, no UI)

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.84.14 · Motor: magia a objetivos en movimiento (2026-10-15)
+
+- Los hechizos ofensivos siguen al ocupante de la casilla hasta que sale el hechizo (HG.cpp PlayerMagicHandler resuelve al instante; aquí la animación lo retrasa y los monstruos en movimiento esquivaban). `tests/magic-moving.test.mjs`.
+
 ## 0.84.13 · Motor: Paralyze (2026-10-15)
 - Paralyze (tipo 2) ya no se libera con los golpes; solo Hold Person (tipo 1) y, en NPC de más de 50 dados, 1d10==5 (char/combat.cpp). Antes se soltaba con 1/3 por golpe. Test paralyze.test.mjs.
 

@@ -77,7 +77,14 @@ export function cast(w, p, cmd) {
   p.prep = null;
   if (!pre || !wait) { w.setAct(p, ACT.MAGIC, ms); p.busyUntil = w.time + ms; }
   w.emit({ t: "cast", id: p.id, spell: cmd.spell, x, y, attr: sp.attr, type: sp.type });
-  w.after(pre ? wait + 80 : ms, () => resolve(w, p, cmd.spell, sp, x, y, cost));
+  // HG.cpp PlayerMagicHandler resuelve al recibir la orden; aquí la animación retrasa el golpe, así que se sigue al ocupante de la casilla
+  // hasta que sale el hechizo (si no, un monstruo en movimiento lo esquiva)
+  const tid = w.grid.occupant(x, y);
+  w.after(pre ? wait + 80 : ms, () => {
+    const t = tid === undefined ? null : w.ents.get(tid);
+    const live = t && !t.dead && !t.feign && t.id !== p.id;
+    resolve(w, p, cmd.spell, sp, live ? t.x : x, live ? t.y : y, cost);
+  });
   return true;
 }
 
