@@ -43,7 +43,7 @@ export function registerStall(gui, api) {
     }
     card(g, me) {
       const X = 262, it = this.hov;
-      g.aligned(X, X + 258, 22, "Ficha del objeto", INK, { bold: true });
+      g.aligned(X, X + 258, 15, "Ficha del objeto", INK, { bold: true });
       const info = it && g.describeDef && g.describeDef(it.id, it);
       if (!info) { this.wrap(g, "Pasa el ratón sobre un objeto para ver su sprite, sus estadísticas y cómo se compara con lo que llevas puesto.", 226, 11).forEach((l, i) => g.text(X + 16, 90 + i * 14, l, INK, { size: 11 })); return; }
       if (info.sprite) g.putGame(info.sprite[0], info.sprite[1], X + 129, 82);

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.14 · Ventanas uniformes (2026-10-15)
+- Pase de diseño a todas las ventanas: módulo común `client/uistyle.js` (fuente, tamaño mínimo 10 px, medidas y paleta). Título a la misma altura en Win y cuadros clásicos; pestañas de los cuadros clásicos repartidas por su ancho real (ya no se pisan «Cuidados/Bolas/Caramelos/Ayuda»); texto de las ventanas Win con sombra para más contraste; /stats con el botón Reiniciar dentro del marco; ventana de fallos (F11) sin hueco sobrante. Ficha: docs/sistemas/ventanas.md.
+
 ## 0.83.13 · Auditoría de sistemas (2026-10-15)
 - «Recoge esto» (o «pick up that») hace que el bot recoja lo que tiraste durante 30 s. Los bots de apoyo con summon vuelven a invocar su pet si se queda sin él.
 

@@ -24,7 +24,7 @@ export function registerPetMage(gui, api) {
       return ids.map(id => {
         const need = PG.needLevel(magic, school, id, c.sp), known = PG.knows(c, id), lock = c.lvl < need;
         return { learn: id, text: magic[id].name.replace(/-/g, " ") + " · Lv " + need + " · Int " + PG.intNeeded(magic, school, id), right: known ? "✔" : PG.goldCost(magic, school, id),
-          color: known ? "#1a6b1a" : lock ? "#777" : null, tip: known ? "Tu summon ya la conoce" : lock ? "Tu summon necesita nivel " + need : "Comprar: " + PG.goldCost(magic, school, id) + " de oro" };
+          color: known ? "#1a6b1a" : lock ? "#5a4636" : null, tip: known ? "Tu summon ya la conoce" : lock ? "Tu summon necesita nivel " + need : "Comprar: " + PG.goldCost(magic, school, id) + " de oro" };
       }).sort((a, b) => PG.needLevel(magic, school, a.learn, c.sp) - PG.needLevel(magic, school, b.learn, c.sp));
     }
     drawBody(g, me) {

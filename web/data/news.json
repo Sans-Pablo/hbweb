@@ -1,10 +1,17 @@
 {
- "build": "0.83.13",
+ "build": "0.83.14",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Ventanas uniformes (v0.83.14)", "en": "Uniform windows (v0.83.14)"},
+   "items": [
+    {"es": "Todas las ventanas comparten ahora fuente, margen y altura del título; las pestañas ya no se pisan (Hospital de compañeros) y el texto es más legible. Prueba: abrir /stats, F11, el Hospital, Guild, Puesto y Summons y comprobar que nada se corta ni se solapa.", "en": "All windows now share font, margins and title height; tabs no longer overlap (Companion hospital) and text is easier to read. Test: open /stats, F11, the Hospital, Guild, Stall and Summons and check nothing is clipped or overlapping."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Auditoría de sistemas (v0.83.13)", "en": "Systems audit (v0.83.13)"},

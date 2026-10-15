@@ -6,6 +6,9 @@ Código: `client/window.js` (toolkit), `client/newswin.js` (F1), prompts `gui.as
 
 **Estilo:** marco clásico (`gamedialog_1`, fotograma 2, 9-slice), botones de piedra de `dialogtext_1`, texto con la tipografía del juego. Los colores están en `THEME`.
 
+## Estilo común (`client/uistyle.js`)
+Una sola fuente para `Win`, `ClassicDialog` y `gui.text`: `font(size,bold)` (Tahoma, mínimo `MIN_SIZE`=10 px), `LAYOUT` (título a y=15, margen 22, hueco 6, fila 18, botón 20) y la paleta `INK/DARK/RED/GOOD/DIM`. Los textos de `Ui.text/para` llevan sombra por defecto. En `ClassicDialog` las pestañas se reparten por su ancho medido (`tabBox`), no a paso fijo. Los cuadros originales (ids 1–60) no se tocan. Revisión visual: abrir cada id con `hb.gui.open(id)` en `?offline=1`.
+
 ## Cómo crear una ventana
 ```js
 class Mi extends Win {

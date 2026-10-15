@@ -11,7 +11,7 @@ export function sendBug(kind, text) {
 }
 
 export class BugWin extends Win {
-  constructor() { super({ id: BUG_ID, title: "Informar de un fallo", w: 420, h: 190, x: 190, y: 150 }); this.state = ""; }
+  constructor() { super({ id: BUG_ID, title: "Informar de un fallo", w: 420, h: 158, x: 190, y: 150 }); this.state = ""; }
   opened() { this.vals.text = ""; this.state = ""; this.focusOn("text"); }
   body(ui) {
     const I = this.inner;
