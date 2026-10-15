@@ -390,7 +390,7 @@ export function registerDialogs(gui, api) {
   // ------------------------------------------------------------ 60: opciones (F12): todas juntas
   const optTog = (k, n) => ({ n, get: () => !!api.mods()[k], set: v => api.setOpt(k, v) });
   const SECTIONS = [
-    ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas")]],
+    ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas"), optTog("dirArrows", "Indicadores de dirección"), optTog("questTrack", "Mini misión (rastreador)")]],
     ["Gráficos", [{ n: "Remastered (apagado: Legacy)", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD")]],
     ["Sonido y chat", [{ n: "Sonido", get: () => api.sys().sound, set: v => api.setSys({ sound: v }) }, { n: "Música", get: () => api.sys().music, set: v => api.setSys({ music: v }) }, { n: "Susurros", get: () => api.sys().whisper, set: v => api.setSys({ whisper: v }) }, { n: "Gritos", get: () => api.sys().shout, set: v => api.setSys({ shout: v }) }]],
   ];
@@ -474,70 +474,4 @@ export function registerDialogs(gui, api) {
     wheel(g, dir) { this.view = Math.max(0, Math.min(SKILLS.length - 17, this.view + (dir > 0 ? -1 : 1))); },
   };
   gui.register(skill);
-
-  // ------------------------------------------------------------ 10: historial de chat (F9). api.chatLog: más nuevo primero, {t, type}
-  // Panel propio (más grande que el original): filtros por canal y líneas largas partidas en varias filas.
-  const CHAT_COL = { 0: "rgb(230,230,230)", 1: "rgb(130,200,130)", 2: "rgb(255,130,130)", 3: "rgb(130,130,255)", 4: "rgb(230,230,130)", 5: "rgb(127,194,255)", 6: "rgb(255,160,96)", 7: "rgb(143,224,143)", 8: "rgb(214,160,255)", 10: "rgb(180,255,180)" };
-  const CHAT_TABS = [["Todo", null], ["Chat", [0, 6, 7]], ["Grupo", [5]], ["Clan", [8]], ["Sistema", [1, 2, 3, 4, 10]]];
-  const CW = 520, CH = 300, CTOP = 28, CLINE = 14, CROWS = Math.floor((CH - CTOP - 10) / CLINE);
-  let chatWrap = { key: "", rows: [] };
-  const wrapChat = (g, tab, wpx) => {
-    const log = api.chatLog, key = tab + "|" + log.length + "|" + (log[0]?.t || "");
-    if (chatWrap.key === key) return chatWrap.rows;
-    const types = CHAT_TABS[tab][1], c = g.ctx, rows = [];
-    c.font = "11px Tahoma, Verdana, sans-serif";
-    for (const e of log) {
-      if (types && !types.includes(e.type)) continue;
-      const words = String(e.t).split(" "), lines = []; let cur = "";
-      for (const w of words) {
-        const tryS = cur ? cur + " " + w : w;
-        if (cur && c.measureText(tryS).width > wpx) { lines.push(cur); cur = "  " + w; } else cur = tryS;
-      }
-      lines.push(cur);
-      for (let i = lines.length - 1; i >= 0; i--) rows.push({ s: lines[i], col: CHAT_COL[e.type] || CHAT_COL[0] });   // más nuevo primero; dentro del mensaje, de abajo arriba
-      if (rows.length > 800) break;
-    }
-    chatWrap = { key, rows };
-    return rows;
-  };
-  gui.register({
-    id: 10, x: 140, y: 250, w: CW, h: CH, view: 0, tab: 0,
-    draw(g) {
-      const c = g.ctx, wpx = CW - 40;
-      c.fillStyle = "rgba(20,16,10,.88)"; c.fillRect(0, 0, CW, CH); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, CW - 2, CH - 2);
-      const rows = wrapChat(g, this.tab, wpx), maxView = Math.max(0, rows.length - CROWS);
-      this.view = Math.max(0, Math.min(maxView, this.view));
-      let tx = 8;
-      CHAT_TABS.forEach(([n], i) => {
-        const w = Math.ceil(c.measureText(t(n)).width) + 18;
-        c.fillStyle = i === this.tab ? "#6a5430" : "#3a2e1c"; c.fillRect(tx, 6, w, 18); c.strokeStyle = "#8a7448"; c.lineWidth = 1; c.strokeRect(tx + .5, 6.5, w - 1, 17);
-        g.text(tx + w / 2, 9, n, i === this.tab ? "#fff" : "#c8b48a", { align: "center", size: 11 });
-        tx += w + 4;
-      });
-      for (let i = 0; i < CROWS; i++) {
-        const r = rows[i + this.view]; if (!r) continue;
-        g.text(10, CH - 10 - CLINE - i * CLINE, r.s, r.col, { shadow: true, size: 11 });
-      }
-      const th = CH - CTOP - 10;                                  // barra de desplazamiento
-      c.fillStyle = "#2a2014"; c.fillRect(CW - 18, CTOP, 8, th);
-      if (maxView > 0) { const kh = Math.max(14, th * CROWS / rows.length); c.fillStyle = "#a88a50"; c.fillRect(CW - 18, CTOP + (th - kh) * (1 - this.view / maxView), 8, kh); }
-      const m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
-      if (m.down && this.sb && maxView > 0) this.view = Math.round(maxView * (1 - Math.max(0, Math.min(1, (ly - CTOP) / th))));
-      if (!m.down) this.sb = false;
-      this.rows = rows;
-    },
-    click(g, lx, ly) {
-      if (lx >= CW - 22 && ly >= CTOP) { this.sb = true; return true; }
-      if (ly >= 6 && ly <= 24) {
-        let tx = 8; const c = g.ctx; c.font = "11px Tahoma, Verdana, sans-serif";
-        for (let i = 0; i < CHAT_TABS.length; i++) {
-          const w = Math.ceil(c.measureText(t(CHAT_TABS[i][0])).width) + 18;
-          if (lx >= tx && lx <= tx + w) { this.tab = i; this.view = 0; return true; }
-          tx += w + 4;
-        }
-      }
-      return false;
-    },
-    wheel(g, dir) { this.view += dir > 0 ? 2 : -2; },
-  });
 }

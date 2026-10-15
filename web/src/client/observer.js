@@ -15,7 +15,7 @@ export function pickBot(conn, { onCancel } = {}) {
     const box = document.createElement("div");
     box.id = "observer";
     box.innerHTML = `<style>
-      #observer { position: fixed; inset: 0; z-index: 60; background: rgba(8,6,3,.94); color: #f0e2b8; font: 13px system-ui, sans-serif; display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; }
+      #observer { position: fixed; inset: 0; z-index: 60; background: rgba(8,6,3,.94); color: #f0e2b8; font: 13px Tahoma,Verdana,sans-serif; display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; }
       #observer h2 { margin: 0 0 6px; color: #ffd76a; font-size: 18px; } #observer .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
       #observer button, #observer select { background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
       #observer .wrap { overflow: auto; flex: 1; border: 1px solid #4a3f28; border-radius: 6px; } #observer table { border-collapse: collapse; width: 100%; min-width: 900px; }

@@ -9,6 +9,7 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
 import { ClassicDialog } from "./classicdialog.js";
+import { DlgSearch } from "./dlgsearch.js";
 import { DialogBox } from "./dialogbox.js";
 import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
 import { isTier2, TIER2, TRADE_LEVEL } from "../shared/systems/schools.js";
@@ -211,16 +212,21 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 11: tienda
   const shop = {
-    id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false,
+    id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false, s: new DlgSearch(24, 314, 190),
+    vis() { return this.rows.map((row, idx) => ({ row, idx })).filter(e => this.s.match(e.row.display)); },      // buscador: filtra por nombre y conserva el índice real (el detalle usa this.mode - 1)
+    key(e) { return this.s.key(e); },
+    get focus() { return this.s.on; },                   // el tutorial cede el teclado mientras se escribe en el buscador
+    onClose() { this.s.reset(); },
     begin(type, farm = false) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => farm ? /^(SeedBag[(]|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
     onOpen() { if (!this.rows.length) this.begin(this.type); },
     maxQty(me) { return Math.max(1, MAX_ITEMS - bagCount(me)); },
     price(me, row) { return listPrice(stat(me, "chr"), row.price); },
     scrollTo(my, n) { this.view = clamp(Math.round(((my - 35) * (n - SHOP_ROWS)) / 274), 0, Math.max(0, n - SHOP_ROWS)); },
     draw(g, me) {
-      const [lx, ly] = rel(g, this), n = this.rows.length;
+      const L = this.vis(), [lx, ly] = rel(g, this), n = L.length;
       g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", 11, 0, 0);
       if (this.mode === 0) {
+        this.s.draw(g);
         if (n > SHOP_ROWS) {
           g.put("gamedialog_1", 3, 0, 0);
           g.put("gamedialog_1", 7, 242, Math.floor((274 * this.view) / (n - SHOP_ROWS)) + 35);
@@ -229,7 +235,7 @@ export function registerNpcDialogs(gui, api) {
         this.view = clamp(this.view, 0, Math.max(0, n - SHOP_ROWS));
         shadowed(g, 23, 45, "ITEM", INK); shadowed(g, 191, 45, "PRICE", INK);
         for (let i = 0; i < SHOP_ROWS; i++) {
-          const row = this.rows[i + this.view]; if (!row) break;
+          const row = L[i + this.view]?.row; if (!row) break;
           const over = within(lx, ly, 20, 220, i * SHOP_ROW_H + 65, i * SHOP_ROW_H + 79), col = over ? WHITE : DARK;
           if (over) { const real = api.itemByName(row.name.replace(/^(10|100)Arrows$/, "Arrow")); if (real) g.hoverDef = real.id; }      // BUG-009: ficha al pasar el cursor
           g.aligned(10, 190, i * SHOP_ROW_H + 65, row.display, col);
@@ -295,11 +301,13 @@ export function registerNpcDialogs(gui, api) {
     click(g, lx, ly, me) {
       me = api.me();
       if (this.mode === 0) {
-        if (this.rows.length > SHOP_ROWS && within(lx, ly, 235, 260, 10, 330)) { this.drag = true; this.scrollTo(ly, this.rows.length); return true; }
+        if (this.s.click(lx, ly)) return true;
+        const L = this.vis();
+        if (L.length > SHOP_ROWS && within(lx, ly, 235, 260, 10, 330)) { this.drag = true; this.scrollTo(ly, L.length); return true; }
         for (let i = 0; i < SHOP_ROWS; i++) {
           if (!within(lx, ly, 20, 220, i * SHOP_ROW_H + 65, i * SHOP_ROW_H + 79)) continue;
           if (bagCount(me) >= MAX_ITEMS) { api.log("You cannot buy anything because your bag is full."); return true; }
-          if (this.rows[this.view + i]) { this.mode = this.view + i + 1; this.qty = 1; }
+          if (L[this.view + i]) { this.mode = L[this.view + i].idx + 1; this.qty = 1; }
           return true;
         }
         return false;
@@ -318,7 +326,7 @@ export function registerNpcDialogs(gui, api) {
       return false;
     },
     wheel(g, dir) {
-      if (this.mode === 0) this.view = clamp(this.view - dir, 0, Math.max(0, this.rows.length - SHOP_ROWS));
+      if (this.mode === 0) this.view = clamp(this.view - dir, 0, Math.max(0, this.vis().length - SHOP_ROWS));
       else this.qty = clamp(this.qty + dir, 1, this.maxQty(api.me()));
     },
   };
@@ -400,12 +408,16 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 14: almacén
   const bank = {
-    id: 14, x: 140, y: 110, w: 258, h: 339, view: 0, drag: false,
+    id: 14, x: 140, y: 110, w: 258, h: 339, view: 0, drag: false, s: new DlgSearch(24, 314, 190),
     list() { return api.me()?.bank || []; },
+    vis() { return this.list().map((it, idx) => ({ it, idx })).filter(e => this.s.match(itemName(e.it.id, e.it.attr, e.it.comp))); },      // buscador: índice real para retirar
+    key(e) { return this.s.key(e); },
+    get focus() { return this.s.on; },                   // el tutorial cede el teclado mientras se escribe en el buscador
+    onClose() { this.s.reset(); },
     scrollTo(my, n) { this.view = clamp(Math.round(((my - 35) * (n - BANK_ROWS)) / 274), 0, Math.max(0, n - BANK_ROWS)); },
     draw(g, me) {
-      const [lx, ly] = rel(g, this), list = this.list(), n = list.length;
-      g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", 21, 0, 0);
+      const [lx, ly] = rel(g, this), list = this.vis().map(e => e.it), n = list.length;
+      g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", 21, 0, 0); this.s.draw(g);
       this.view = clamp(this.view, 0, Math.max(0, n - BANK_ROWS));
       let hovered = false, y = 45;
       for (let i = 0; i < BANK_ROWS; i++) {
@@ -433,18 +445,19 @@ export function registerNpcDialogs(gui, api) {
       }
     },
     click(g, lx, ly) {
-      const me = api.me(), list = this.list();
+      const me = api.me(), V = this.vis(), list = V.map(e => e.it);
+      if (this.s.click(lx, ly)) return true;
       if (list.length > BANK_ROWS && within(lx, ly, 230, 260, 10, 330)) { this.drag = true; if (ly >= 40) this.scrollTo(ly, list.length); else this.view = 0; return true; }
       for (let i = 0; i < BANK_ROWS; i++) {
         if (!inside(lx, ly, 30, 210, 110 + i * BANK_ROW_H - 1, 124 + i * BANK_ROW_H + 1)) continue;
         if (!list[this.view + i]) return true;
         if (bagCount(me) >= MAX_ITEMS) { api.log("You cannot withdraw the item because your bag is full."); return true; }
-        api.send({ t: "withdraw", index: this.view + i });
+        api.send({ t: "withdraw", index: V[this.view + i].idx });
         return true;
       }
       return false;
     },
-    wheel(g, dir) { this.view = clamp(this.view - dir * (this.list().length > 50 ? 2 : 1), 0, Math.max(0, this.list().length - BANK_ROWS)); },
+    wheel(g, dir) { this.view = clamp(this.view - dir * (this.list().length > 50 ? 2 : 1), 0, Math.max(0, this.vis().length - BANK_ROWS)); },
     // bItemDrop_Bank: soltar un objeto de la mochila sobre el almacén lo deposita
     drop(uid, mx, my) {
       const me = api.me(), it = me && bagItem(me, uid), d = it && itemDef(it.id);
@@ -459,7 +472,7 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
   const hospital = new class extends ClassicDialog {
-    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], footer: "Un caído no se invoca hasta revivirlo." }); }
+    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], search: true, footer: "Un caído no se invoca hasta revivirlo." }); }
     // BUG-008: texto de la pestaña de ayuda (cada elemento es un párrafo; se ajusta al ancho del cuadro)
     static HELP = ["CUIDADOS: cura a los heridos (2 de oro por punto de vida) o revive a los caídos (más caro).",
       "EVOLUCIÓN: Orc, Pixie y Skeleton nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",

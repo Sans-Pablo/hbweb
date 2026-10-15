@@ -17,21 +17,6 @@ import { Sound } from "./audio.js";
 import * as Accounts from "./accounts.js";
 import { createCharacter } from "./create.js";
 
-// Seleccion de personaje: devuelve la ranura elegida (una existente o la primera libre para crear uno nuevo). Max. 4 por cuenta.
-function chooseCharacter(chars) {
-  return new Promise(resolve => {
-    const d = document.createElement("div");
-    d.style.cssText = "position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.75);z-index:50;font:14px sans-serif;color:#eee";
-    const inner = document.createElement("div");
-    inner.style.cssText = "background:#222;border:1px solid #888;padding:18px;display:grid;gap:8px;min-width:260px";
-    inner.innerHTML = "<b>Elige personaje</b>";
-    const add = (txt, slot) => { const b = document.createElement("button"); b.textContent = txt; b.onclick = () => { d.remove(); resolve(slot); }; inner.appendChild(b); };
-    for (const c of chars) add(c.name + " (nivel " + c.level + ")", c.slot);
-    const free = [0, 1, 2, 3].find(i => !chars.some(c => c.slot === i));
-    if (free !== undefined) add("Nuevo personaje", free);
-    d.appendChild(inner); document.body.appendChild(d);
-  });
-}
 import { Gui } from "./gui.js";
 import { apparelOf, equipKeys } from "./look.js";
 import { itemDef, itemName, packKey } from "./names.js";
@@ -49,6 +34,7 @@ import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
 import { registerQuests, QUEST_ID } from "./questwin.js";
+import { registerChat } from "./chatwin.js";
 import { registerBug, BUG_ID } from "./bugwin.js";
 import { registerStatSim, STATSIM_ID } from "./statsim.js";
 import { registerPrompts } from "./window.js";
@@ -197,7 +183,7 @@ async function main() {
     learn: id => conn.send({ t: "learn", spell: id }),
     statReset: () => conn.send({ t: "statreset" }),
   };
-  registerDialogs(gui, guiApi);
+  registerDialogs(gui, guiApi); registerChat(gui, guiApi);
   // tienda, herrería, almacén y mago: cuadros de los NPC de ciudad
   const summonPreview = registerSummonPreview(gui, { npc: sp => assets.npcDb[sp], want: k => stream.want(k, 2), magic: assets.data.magic, item: id => assets.data.item?.(id), me: () => world.ents.get(pid), send: c => conn.send(c) });
   const npcUi = registerNpcDialogs(gui, {
@@ -351,7 +337,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true };
+  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true, questTrack: true, dirArrows: false };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)
@@ -367,6 +353,7 @@ async function main() {
     renderer.lighting = false; renderer.lightFx = false;  /* sin luz inventada (ticket 12) */ renderer.crowdMax = q >= 1 ? 25 : 70;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
+    questUi.setEnabled(opts.questTrack !== false);
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
     store.set("opts", JSON.stringify(opts));
@@ -432,13 +419,11 @@ async function main() {
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
       gui.close(3);
       document.body.classList.add("pointing");
-      hud.toast(m.name);
     },
     usePetSpell(id) {
       const me = world.ents.get(pid);
       if (!me || me.dead || ui.pointing != null) return;
       ui.petPointing = id; document.body.classList.add("pointing");
-      hud.toast(hud.magicData?.[id]?.name || "");
     },
     cancelPointing(silent) {
       if (ui.petPointing != null) { ui.petPointing = null; document.body.classList.remove("pointing"); if (!silent) hud.log("Hechizo cancelado."); return; }
@@ -797,7 +782,7 @@ async function main() {
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid || !!flags.grid, bigItems: !!flags.bigItems, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
+      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, dirArrows: !!opts.dirArrows, showGrid: view.showGrid || !!flags.grid, bigItems: !!flags.bigItems, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
     { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }
@@ -907,11 +892,8 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
         store.set("name", name);
         msg.textContent = "Entrando…";
         let create = null, slot = 0;
-        if (online && chars.length) {                                  // seleccion de personaje (hasta 4 por cuenta, como el servidor original)
-          box.style.display = "none";
-          slot = await chooseCharacter(chars);
-          hasChar = chars.some(c => c.slot === slot);
-          if (!hasChar) { create = await createCharacter(spr, name); }
+        if (online && chars.length) {                                  // sin ventana de seleccion: se entra directamente con el primer personaje de la cuenta
+          slot = chars[0].slot;
         } else if (online ? !hasChar : !LocalConnection.hasSave(name)) {      // cuenta sin personaje: pantalla de creación
           box.style.display = "none";
           create = await createCharacter(spr, name);

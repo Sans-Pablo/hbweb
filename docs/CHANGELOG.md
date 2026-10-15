@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.0 · Ventanas y buscadores (2026-10-15)
+- Hilo UI, backlog nuevo: ventana de elegir personaje eliminada; chat en ventana de formato nuevo (chatwin.js); rastreador de misiones con el formato nuevo y opción en Opciones; ventanas movibles hasta el borde de pantalla (lienzo y rastreador); buscador de objetos (dlgsearch.js) en tienda, herrería, almacén, hospital y compañeros; barras inferiores con bordes estirados; indicadores de dirección como opción (apagados por defecto); mensaje de lanzar hechizo con la fuente original (sin toast).
+- Hospital: se mantiene el ClassicDialog con pestañas (mismo marco de madera que los demás cuadros) + buscador; no se reconstruyó como Win.
+- Sin verificar: arrastre de ventanas al borde exacto, chat/log Legacy (DOM) no arrastrable, buscador de compañeros con filas, interruptores de Opciones en vivo.
+
 ## 0.83.14 · Motor: primer dibujo del suelo (2026-10-15)
 - Ticket 3 (FPS): causa de los tirones de ~10 s al entrar medida con hooks en página: el primer `drawImage` de cada hoja de suelo (`t9`, `t382`, `t429`…) cuesta 57-158 ms (~85 % del tiempo perdido). Ahora esas hojas se dibujan desde un `ImageBitmap` (assets.js `put`) y el precalentado corta a los 4 ms por bloque (renderer.js `groundChunk`). Llamadas a `groundChunk` >5 ms al entrar: 14 → 8 y 7, suma 1532 → 447 y 861 ms, pico 288 → 112 y 178 ms.
 

@@ -5,6 +5,7 @@
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
 ## Hilo UI (pedido 2026-10-15, v0.83.7)
+- [x] (backlog nuevo UI, v0.85.0) 1 sin elegir personaje · 2 chat nuevo · 3 rastreador+opción · 4 ventanas movibles (lienzo y rastreador; chat/log Legacy DOM no, borde exacto sin probar) · 5 buscadores (tienda verificada de punta a punta; almacén y hospital se ven; compañeros sin filas sin probar) · 6 fuente homogénea · 7 hospital: ClassicDialog con pestañas + buscador (no es un Win) · 8 bordes de barras · 9 flechas de dirección opcionales (apagadas) · 10 texto de hechizo con fuente original. Ficha: docs/sistemas/buscadores.md.
 - [x] 1 hover turquesa (solo la huella) · [x] 2 tutorial (reaparece/bloqueo; sin verificar en vivo la tienda) · [~] 10 opciones limpias hecho; falta modos solo Remastered/Legacy y F1 ON/OFF (son órdenes del servidor, no UI)
 - [ ] 3-9, 11-14 sin empezar (ventanas, constructor de diálogos, misiones, hospital, botón mascota, cripta E, interfaz original, pelo F5, stats Olympia)
 

@@ -1393,6 +1393,7 @@ export class Renderer {
       const x = g.x * T + T / 2 - camX, y = g.y * T + T / 2 - camY, m = 26, out = x < m || y < m || x > this.viewW - m || y > this.viewH - m;
       const txt = t(g.name || g.map) + (g.open ? "" : " (" + t("cerrado") + ")"), col = g.open ? "#bde8ff" : "#e0a090";
       if (!out) { this.label(x, y - 26, txt + " ▸", col); continue; }
+      if (!s.dirArrows) continue;                                  // flechas de dirección en el borde: opción «Indicadores de dirección» (apagada por defecto)
       const cx = this.viewW / 2, cy = this.viewH / 2, a = Math.atan2(y - cy, x - cx), ex = Math.max(m, Math.min(this.viewW - m, x)), ey = Math.max(m + 40, Math.min(this.viewH - m, y));
       ctx.save(); ctx.translate(ex, ey); ctx.rotate(a); ctx.globalAlpha = 0.6 + 0.4 * k; ctx.fillStyle = col;
       ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-6, -8); ctx.lineTo(-6, 8); ctx.closePath(); ctx.fill(); ctx.restore();
