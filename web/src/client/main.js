@@ -33,6 +33,7 @@ import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
 import { registerBug, BUG_ID } from "./bugwin.js";
+import { registerStatSim, STATSIM_ID } from "./statsim.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -129,7 +130,7 @@ async function main() {
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
-  registerNews(gui); registerPrompts(gui);
+  registerNews(gui); registerPrompts(gui); registerStatSim(gui);
   registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
@@ -618,9 +619,10 @@ async function main() {
       else if (/^\/guild(\s|$)/.test(t)) guildUi.command(t);
       else if (/^\/trade(\s|$)/.test(t)) ui.autoTrade(t.slice(7).trim());
       else if (t === "/puesto" || t === "/stall") stallUi.setup();
+      else if (t === "/stats" || t === "/simula" || t === "/sim") gui.toggle(STATSIM_ID);                // simulador de estadísticas (statsim.js)
       else if (t === "/tutorial") tutorial.restart();
       else if (t === "/tutorial off") tutorial.skipAll();
-      else if (/^/autos+S/.test(t)) {                                           // /auto hunt slime · /auto run almacén · /auto stop (autoplay.js)
+      else if (/^\/auto\s+\S/.test(t)) {                                           // /auto hunt slime · /auto run almacén · /auto stop (autoplay.js)
         const a = parseAuto(t.slice(6), Object.keys(assets.npcDb)), L = n => (getLang() === "en" ? n[1] : n[0]);
         if (!a) hud.log(L(["Uso: /auto hunt <criatura> · /auto run <almacén|tienda|herrería|mago|granjero|hospital> · /auto stop", "Usage: /auto hunt <creature> · /auto run <warehouse|shop|blacksmith|sorcerer|farmer|hospital> · /auto stop"]));
         else if (a.kind === "bad") hud.log(L(["No sé qué es «" + a.why + "».", "I don't know what \"" + a.why + "\" is."]));

@@ -1,10 +1,17 @@
 {
- "build": "0.83.11",
+ "build": "0.83.12",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Simulador de estadísticas (v0.83.12)", "en": "Stat simulator (v0.83.12)"},
+   "items": [
+    {"es": "Escribe /stats en el chat: ventana para probar el reparto de puntos sin gastarlos (Str, Vit, Dex, Int, Mag, Chr), con nivel simulado y casilla «Sin límite». Muestra HP, MP, SP y carga actuales frente a los de la prueba. Ctrl = de 5 en 5. Prueba: repartir, reiniciar, subir el nivel, comprobar el tope de 200.", "en": "Type /stats in chat: a window to try point allocation without spending points (Str, Vit, Dex, Int, Mag, Chr), with simulated level and a \"No limit\" box. Shows current vs simulated HP, MP, SP and load. Ctrl = steps of 5. Test: allocate, reset, raise the level, check the 200 cap."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Modo automático (v0.83.11)", "en": "Auto mode (v0.83.11)"},

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.12 · Simulador de estadísticas (2026-10-15)
+- /stats abre una ventana para probar el reparto de puntos (Str/Vit/Dex/Int/Mag/Chr, nivel simulado, opción sin límite) y ver HP, MP, SP y carga actuales frente a los simulados, sin gastar puntos. Arreglado además el regex de /auto en main.js (rompía la carga del cliente).
+
 ## 0.83.11 · Modo automático (2026-10-15)
 - /auto hunt <criatura>: caza solo ese tipo (ataca a la más cercana, recoge el botín, para con vida < 35 % o 20 s sin presas). /auto run <almacén|tienda|herrería|mago|granjero|hospital>: camina hasta ese habitante y abre su diálogo. Un clic o /auto stop lo cancela. Solo cliente: usa las mismas órdenes que un clic (sin cambio de protocolo). Ficha: docs/sistemas/auto.md.
 

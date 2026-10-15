@@ -8,6 +8,6 @@
     {"id":5,"prio":5,"status":"done","title":"Efecto de evolución del pet cada minuto","text":"El efecto de evolución aparece aproximadamente una vez por minuto.","interp":"El aura de los pets evolucionados pasa de parpadeo continuo a un latido de 6 s por minuto."},
     {"id":6,"prio":6,"status":"done","title":"Indicar el paso al mapa de farm contiguo","text":"Señalar cómo pasar de la granja al mapa vecino (al menos hacia Ares).","interp":"Marca/portal visible y texto en el borde correspondiente."},
     {"id":7,"prio":7,"status": "done","title":"Auto caza y auto recados","text":"Auto-caza de un tipo de criatura en un pozo; auto-ruta a almacén, tienda, etc.","interp":"Modo automático del personaje con objetivo y ruta."},
-    {"id":8,"prio":8,"status":"open","title":"Simulador de stats","text":"Como el de Olympia.","interp":"Ventana donde probar el reparto de puntos sin gastarlos."}
+    {"id":8,"prio":8,"status":"done","title":"Simulador de stats","text":"Como el de Olympia.","interp":"Ventana donde probar el reparto de puntos sin gastarlos."}
   ]
 }
