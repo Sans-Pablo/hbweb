@@ -4,6 +4,19 @@ import { posOf } from "./anim.js";
 
 const MUSIC_VOL = 0.35;
 
+// Sonido del golpe dado por tipo de arma (MapData.cpp, tablas de ataque ~2498-2700): 1-2 puños/manos C1, 3-19 armas cortas C2,
+// 20-39 C18, 41-59 arcos C3; 0 y 40 sin sonido. El arco (ev.bow) también suena C3.
+export function attackSfx(ev) {
+  const t = ev.wt | 0;
+  if (ev.bow || (t > 40 && t < 60)) return "C3";
+  if (t >= 20 && t < 40) return "C18";
+  if (t >= 3 && t < 20) return "C2";
+  if (t >= 1 && t < 3) return "C1";
+  return null;
+}
+// Sonido del golpe recibido según el arma del atacante (MapData.cpp ~2880-2960; sAttackerWeapon de combat.cpp): sin arma/hechizo C5, 1-39 C6, 40-59 C7.
+export function hitSfx(t) { return t >= 40 && t < 60 ? "C7" : t >= 1 && t < 40 ? "C6" : "C5"; }
+
 export class Sound {
   constructor(world, me) {
     this.world = world;

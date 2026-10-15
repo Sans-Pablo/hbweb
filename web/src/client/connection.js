@@ -117,16 +117,20 @@ export class NetConnection {
       ws.onopen = () => { opened = true; resolve(); };
       ws.onmessage = e => this.onMessage(JSON.parse(e.data));
       ws.onclose = () => {
-        clearInterval(this.pinger);
         if (!opened) { reject(new Error("No se pudo conectar con el servidor.")); return; }
+        if (this.ws !== ws) return;                                      // un socket viejo que ya se sustituyó
+        if (this.reconnecting) { if (this.waiting) { this.waiting.reject(new Error("Se cortó la conexión con el servidor.")); this.waiting = null; } return; }   // reconnect() reintenta solo
+        if (this.pid && this.cred && !this.observing && !this.kickMsg) { this.waiting = null; this.reconnect(); return; }   // corte de red o pestaña dormida: reentrar sin pantalla de "Connection lost"
         this.status = "desconectado";
         if (this.waiting) { this.waiting.reject(new Error(this.kickMsg || "Se cortó la conexión con el servidor.")); this.waiting = null; }
         this.events.push({ t: "disconnected", reason: this.kickMsg || "" });
       };
       // El ping sale de un Worker: los setInterval de una pestaña oculta se frenan a 1/min y el servidor daba la conexión por muerta.
       const beat = () => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: "ping", c: performance.now(), p: this.ping })); };
+      this.stopBeat?.(); if (this.vis) document.removeEventListener("visibilitychange", this.vis);
       this.stopBeat = startBeat(beat, 2000);
-      this.vis = () => { beat(); if (!document.hidden && this.pid && this.cred && this.ws !== ws) this.reconnect(); };
+      // al volver a la pestaña: si el socket murió mientras dormía, se reconecta y se resincroniza (resync) sin esperar al ping
+      this.vis = () => { if (ws.readyState === 1) beat(); else if (!document.hidden && this.ws === ws && this.pid && this.cred && !this.observing && !this.kickMsg) this.reconnect(); };
       document.addEventListener("visibilitychange", this.vis);
     });
   }

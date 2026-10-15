@@ -8,6 +8,10 @@
 - Flechas de entrada a lugares (`renderer.drawTeleportMarks`): una sola por mapa de destino (la entrada más cercana a la vista); los destinos cerrados no llevan flecha.
 - Quitado el texto flotante «+N exp» (no es del original; el evento `exp` se sigue emitiendo, el cliente lo ignora).
 - F11 (id 72) ya es una `Win` con el formato común, igual que el menú AUTO; sin cambios.
+## 0.85.5 · Motor: sonidos, combate, conexión (2026-10-15)
+- Sonidos de arma por tipo (`audio.js attackSfx/hitSfx`; `damage` lleva `wt` = arma del atacante, 1 monstruo, 0 hechizo; combat.cpp 1128/1381). Test `sonidos-arma`.
+- Crítico/dash vs original: furia solo con attackMode<20 (combat.cpp 695), `critBonus` (ITEMSTAT_CRITICAL) se suma al crítico (combat.cpp 765), el paso del dash no gasta SP (HG.cpp 820, bIsRun=FALSE). Resto (reachOf, cargas, bonos) ya coincidía.
+- Conexión: `connection.js` reconecta solo al cerrarse el socket o al volver a la pestaña (antes `reconnect()` no se llamaba nunca); se limpia el Worker/listener por socket. Sin cambio de protocolo.
 
 ## 0.84.11 · Menú AUTO (2026-10-15)
 - Botón AUTO en el diálogo del personaje (junto a Party y Level Set) que abre la ventana id 74 (`client/autowin.js`, formato window.js, arrastrable). Pestaña «Cazar»: zona de la granja, sprite de la criatura atacando en 8 direcciones y ficha (vida, daño, oro, experiencia, botín de `drops.js dropInfo`); Empezar/Parar. Pestaña «Ir a…»: granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas.

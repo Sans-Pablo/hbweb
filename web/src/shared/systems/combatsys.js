@@ -199,6 +199,9 @@ export function releaseHold(w, t, any = false) {
   if (h === 1 || h.v === 1) sclear(w, t, "hold");
   else if (t.kind === "npc" && (t.cfg.hitDice | 0) > 50 && R.dice(w.rng, 1, 10) === 5) sclear(w, t, "hold");
 }
+// sAttackerWeapon de OBJECTDAMAGE (combat.cpp 1128/1381): (m_sAppr2 & 0x0FF0) >> 4 si atacan jugadores, 1 si es un monstruo; el hechizo manda NULL (0).
+// El cliente elige con él el sonido del golpe recibido (MapData.cpp).
+function attackerWeapon(a) { return a.kind === "player" ? (a.eff?.wtype | 0) : 1; }
 export function damagePlayer(w, p, dmg, from, elem) {
   if (p.god) return;                                                   // herramientas de prueba: inmortal
   if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
@@ -209,7 +212,7 @@ export function damagePlayer(w, p, dmg, from, elem) {
   p.lastCombat = w.time;
   releaseHold(w, p, !!elem && elem !== "ice");
   if (dmg > 0 && !p.dead) chargeCritHit(p);
-  w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp });
+  w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp, wt: elem ? 0 : attackerWeapon(from) });
   if (p.hp <= 0) {
     p.hp = 0; p.dead = true; p.deadAt = w.time;
     w.setAct(p, ACT.DYING, PLAYER.dyingMs);
@@ -280,7 +283,7 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   p.lastCombat = w.time;
   const vamp = auraVamp(w, p);                                          // Vampiric Aura del Dummy: parte del daño vuelve como vida
   if (vamp > 0 && p.hp < p.maxHp && !p.dead) { const heal = Math.max(1, Math.round(dmg * vamp / 100)); p.hp = Math.min(p.maxHp, p.hp + heal); w.emit({ t: "heal", id: p.id, amount: heal, by: p.id }); }
-  w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp });
+  w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp, wt: skill == null ? 0 : attackerWeapon(p) });
   // experiencia por golpe: el daño hecho, hasta agotar los 2/3 de la experiencia del monstruo
   if (n.noDieRemainExp > 0) {
     const gain = Math.min(dmg, n.noDieRemainExp);

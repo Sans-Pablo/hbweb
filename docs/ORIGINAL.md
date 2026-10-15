@@ -12,4 +12,4 @@ En este PC: `C:\Users\sansp\Documents\HelbreathOriginal` (Git Bash: `/c/Users/sa
 
 Búsquedas útiles: `grep -rn "SuperAttack\|bIsDash" --include=*.cpp --include=*.h .` (crítico y dash: `char/combat.cpp`, `Client.h`, `Game.cpp`).
 
-**Pendiente de revisar contra esta fuente:** cifras de crítico/dash (`CRIT` en `combat.js`) y comportamiento de magos/invocadores a distancia (ver `ESTADO.md`).
+**Pendiente de revisar contra esta fuente:** comportamiento de magos/invocadores a distancia (ver `ESTADO.md`).

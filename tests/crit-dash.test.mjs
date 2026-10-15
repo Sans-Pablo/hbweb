@@ -73,7 +73,7 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   const sp0 = p.sp, evs = w.events.length;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "corriendo sí");
   tick(1500);
-  assert.equal(p.x, 29, "avanza una casilla"); assert.ok(p.sp < sp0, "cuesta aliento");
+  assert.equal(p.x, 29, "avanza una casilla"); assert.ok(p.sp <= sp0, "el paso del dash no gasta SP (bIsRun=FALSE)");
   assert.ok(w.events.slice(evs).some(e => e.t === "crit" && e.dash), "evento dash");
   put(p, 28, 31); p.busyUntil = 0; p.lastAttack = -1e9; n.x = 30; n.y = 30; p.sp = 50;
   assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "salto de caballo: sin dash");
@@ -83,5 +83,16 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   assert.ok(!w.command(id, { t: "attack", target: n.id, dash: true }), "sin aliento no hay dash");
   p.sp = 1; p.busyUntil = 0;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "con SP > 0 basta (Game.cpp: m_iSP > 0)");
+}
+// furia solo duplica golpes normales; el crítico suma critBonus (combat.cpp 695/765)
+{
+  const nn = spawn(40, 40), mk = () => nn;
+  const hit = ctx => { const n = mk(); n.cfg.defenseRatio = 1; let d = 0; for (let i = 0; i < 30 && !d; i++) { p.combo = 0; p.hunger = 100; p.sp = 100; d = strikeNpc(rng, p, n, false, ctx).damage; } return d; };
+  p.eff.critBonus = 0;
+  const base = hit({ crit: true }), bz = hit({ crit: true, berserk: true });
+  assert.ok(base > 0 && bz <= base * 1.3, "la furia no duplica el crítico");
+  p.eff.critBonus = 500;
+  assert.ok(hit({ crit: true }) >= base + 400, "critBonus se suma al crítico");
+  assert.ok(hit({}) < 500, "y no a un golpe normal");
 }
 console.log("OK crit-dash");
