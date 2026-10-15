@@ -1,4 +1,4 @@
-// Todas las magias de escuela se pueden enseñar y lanzar con un summon de nivel 50, y hacen daño. node tests/schools-all.test.mjs
+// Todas las magias de escuela se pueden enseñar y lanzar con un summon de nivel 50, y hacen daño. node tests/petgrimoire-all.test.mjs
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
@@ -10,6 +10,7 @@ import * as C from "../web/src/shared/systems/companion.js";
 import { newInst } from "../web/src/shared/systems/itemsys.js";
 import * as Inv from "../web/src/shared/inventory.js";
 import * as S from "../web/src/shared/systems/schools.js";
+import * as PG from "../web/src/shared/systems/petgrimoire.js";
 const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
 const npcDb = J("npc.json"), magic = J("magic.json");
 const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
@@ -19,6 +20,7 @@ const A = w.ents.get(w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vi
 A.level = 50; A.stats.str = 400; A.stats.int = 100; A.stats.mag = 100; w.recalc(A); A.hp = A.maxHp; A.gold = 1e6; A.quests.u.trade = 1;
 { const st = newInst(w, 861); Inv.addToBag(A, w.data, st); assert.ok(Inv.equip(A, w.data, st.uid).ok, "Ice Wand en la mano"); w.recalc(A); A.hp = A.maxHp; }
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);
+const mage = spawnCitizen(w, PG.PETMAGE.name, A.x + 2, A.y + 3, PG.PETMAGE.role, PG.PETMAGE.skin);
 const tick = ms => { for (let i = 0; i < ms / 50; i++) w.tick(50); };
 for (const [school, sp] of [["fire", "Orc"], ["ice", "Tutelary-Angel"], ["lightning", "Skeleton"]]) {
   { const r = w.command(A.id, { t: "petbuy", npc: nurse.id, sp }); assert.ok(r); }
@@ -26,20 +28,21 @@ for (const [school, sp] of [["fire", "Orc"], ["ice", "Tutelary-Angel"], ["lightn
   for (const b of A.bag) if (b.comp) b.comp.on = false;
   A.mp = A.maxMp;
   { const r = w.command(A.id, { t: "use", uid: ball.uid }); assert.ok(r); } w.command(A.id, { t: "petmode", mode: "peace" });
-  for (const id of Object.keys(S.unlockLevels(magic, school)).map(Number)) {
-    assert.ok(w.command(A.id, { t: "learn", spell: id }), sp + " aprende " + magic[id].name);
-    const pet = [...w.ents.values()].find(e => e.comp && e.master === A.id); tick(2000);
+  for (const id of Object.keys(PG.catalog(magic, school)).map(Number)) {
+    assert.ok(w.command(A.id, { t: "pgteach", npc: mage.id, spell: id }), sp + " aprende " + magic[id].name);
+    const pet = [...w.ents.values()].find(e => e.comp && e.master === A.id && e.ball === ball.uid); tick(2000);
     const gen = { name: "Slime", rect: [A.x + 3, A.y, A.x + 3, A.y], alive: 0, max: 0, respawn: false }, tgt = spawnFrom(w, gen); tgt.hp = tgt.maxHp = 5000;
     const hp0 = tgt.hp; let paid = 0, dmg = false;
     for (let tries = 0; tries < 6 && !dmg; tries++) {                               // un monstruo puede resistir la magia: se repite
-      A.lastCast = -1e9; pet.mp = 9999; const mp0 = pet.mp;
-      const ok = w.command(A.id, { t: "cast", spell: id, x: tgt.x, y: tgt.y });
+      A.lastCast = -1e9; pet.mp = 9999; w.tick(50); const mp0 = pet.mp;
+      const ok = w.command(A.id, { t: "pgcast", spell: id, x: tgt.x, y: tgt.y });
       assert.ok(ok, sp + " lanza " + magic[id].name + " " + JSON.stringify(w.events.slice(-1)));
       tick(2500); paid = mp0 - pet.mp; dmg = tgt.hp < hp0;
     }
-    assert.ok(paid >= S.spellMana(magic, school, id) - 1, "paga el maná de nivel de " + magic[id].name);
+    if (paid < PG.manaCost(magic, school, id) - 1) console.log("DBG", magic[id].name, paid, pet.mp, PG.manaCost(magic, school, id), pet.name);
+    assert.ok(paid >= PG.manaCost(magic, school, id) - 1, "paga el maná de nivel de " + magic[id].name);
     assert.ok(dmg, magic[id].name + " hace daño");
     tgt.dead = true; w.grid.release(tgt.x, tgt.y, tgt.id); w.ents.delete(tgt.id);
   }
 }
-console.log("OK schools-all");
+console.log("OK petgrimoire-all");

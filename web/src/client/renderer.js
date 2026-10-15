@@ -21,6 +21,7 @@ import { miniOf } from "./compicon.js";
 import { CROP_NAMES } from "../shared/systems/farming.js";
 import { posOf, playerSprite, mobSprite, actionAt } from "./anim.js";
 import { bodyKey, drawPerson, apparelOf, DEFAULT_LOOK } from "./look.js";
+import { PersonCache } from "./composed.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
@@ -40,6 +41,8 @@ export class Renderer {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d", { alpha: false });
     this.spr = assets.sprites;
+    this.pcache = new PersonCache(this.spr);               // personajes compuestos en atlas: un drawImage por persona
+    this.pt = { ground: 0, ents: 0, light: 0, fx: 0 };      // ms por fase del último fotograma (registro de rendimiento)
     this.grid = grid;
     this.mapName = assets.meta.map;
     this.mode = "remastered";
@@ -53,7 +56,7 @@ export class Renderer {
 
   setMap(grid, name) {
     this.grid = grid; this.mapName = name;
-    this.cam = null; this.chunks.clear(); this.buildMinimap();
+    this.cam = null; this.chunks.clear(); this.late?.clear(); this.wip?.clear(); this.buildMinimap();   // late/wip también: guardaban bloques del mapa anterior
   }
 
   // Luz dinámica (remastered): una capa de ambiente oscuro a la que cada personaje le abre un foco cálido, más un brillo aditivo encima.
@@ -160,8 +163,16 @@ export class Renderer {
       }
     }
     if (st.j < CHUNK) return null;                          // a medias: quien lo pide por precalentado lo ignora
+    if (hd && rows < CHUNK && !st.fin) { st.fin = true; return null; }   // el ajuste de tono (1024 px, varios drawImage) va en otro fotograma: antes se sumaba al último reparto de filas y daba el tirón
     wip.delete(k);
-    if (st.ready && hd) this.blendTone(st.c, g, cx, cy, Q);
+    if (st.ready && hd) {
+      // El ajuste de tono pinta (multiply/lighter) sobre todo el bloque: donde no hay casilla (interiores: tienda, herrería, almacén; borde del mapa) dejaba manchas blancas/grises.
+      // Se guarda el alfa original y se recorta el resultado a él.
+      const keep = this.toneMask || (this.toneMask = document.createElement("canvas")), kg = keep.getContext("2d");
+      keep.width = st.c.width; keep.height = st.c.height; kg.drawImage(st.c, 0, 0);
+      this.blendTone(st.c, g, cx, cy, Q);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-in"; g.drawImage(keep, 0, 0); g.restore();
+    }
     // Una hoja pendiente no debe dejar un bloque vacío guardado para toda la partida.
     if (st.ready) { this.chunks.set(k, st.c); late.delete(k); } else late.set(k, { c: st.c, t: now, miss: [...st.miss] });
     if (this.chunks.size > 160) this.chunks.delete(this.chunks.keys().next().value);
@@ -251,6 +262,8 @@ export class Renderer {
     const tx0 = Math.floor(camX / T), ty0 = Math.floor(camY / T);
     const cols = Math.ceil(VW / T) + 1, rows = Math.ceil(VH / T) + 1;
 
+    const P0 = performance.now();
+    this.pcache.newFrame();
     // 1) suelo
     const span = CHUNK * T;
     for (let cy = Math.floor(camY / span); cy * span < camY + VH; cy++)
@@ -262,14 +275,22 @@ export class Renderer {
           ctx.drawImage(this.groundChunk(cx, cy), x0 / sc, y0 / sc, (x1 - x0) / sc, (y1 - y0) / sc);
         }
 
-    // precalienta (1 por fotograma) los bloques de alrededor para que al llegar a ellos ya estén hechos: sin tirón al andar
+    // precalienta (1 paso por fotograma) los bloques de alrededor, primero los que quedan en la dirección de la marcha: sin tirón al correr
     {
       const hdk = this.spr.hd ? "h" : "", c0x = Math.floor(camX / span), c0y = Math.floor(camY / span), c1x = Math.floor((camX + VW) / span), c1y = Math.floor((camY + VH) / span);
-      let built = false;
-      for (let r = 1; r <= 2 && !built; r++)
-        for (let cy = c0y - r; cy <= c1y + r && !built; cy++)
-          for (let cx = c0x - r; cx <= c1x + r && !built; cx++)
-            if (cx >= 0 && cy >= 0 && !this.chunks.has(cx + "," + cy + hdk)) { this.groundChunk(cx, cy, 3); built = true; }
+      const pv = this.pcam, dt = Math.max(s.dt || 16, 1); this.pcam = [camX, camY];
+      let vx = 0, vy = 0;
+      if (pv) { vx = (camX - pv[0]) / dt; vy = (camY - pv[1]) / dt; }
+      const lim = span * 1.5, ax = Math.max(-lim, Math.min(lim, vx * 1500)), ay = Math.max(-lim, Math.min(lim, vy * 1500));
+      const mx = camX + VW / 2 + ax, my = camY + VH / 2 + ay;
+      let best = null, bd = Infinity;
+      for (let cy = c0y - 2; cy <= c1y + 2; cy++)
+        for (let cx = c0x - 2; cx <= c1x + 2; cx++) {
+          if (cx < 0 || cy < 0 || this.chunks.has(cx + "," + cy + hdk)) continue;
+          const d = Math.hypot((cx + 0.5) * span - mx, (cy + 0.5) * span - my);
+          if (d < bd) { bd = d; best = [cx, cy]; }
+        }
+      if (best) this.groundChunk(best[0], best[1], 3);
     }
 
     this.drawPortals(s, camX, camY);
@@ -298,7 +319,8 @@ export class Renderer {
     this.drawPetOrder(s, camX, camY);
 
     // sprites HD: se reducen con suavizado (los de 1x siguen sin él, como el original)
-    ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingEnabled = !!this.spr.hd; ctx.imageSmoothingQuality = (this.q || 0) >= 1 ? "low" : "medium";     // "high" re-muestrea cada sprite con un filtro caro: con 30 personajes en pantalla eran 20 fps
+    const P1 = performance.now();
     // 3) objetos en el suelo
     const labels = [];
     for (const list of s.world.items.values()) {
@@ -385,6 +407,8 @@ export class Renderer {
     }
 
     this.crowdLast = this.crowdNow;
+    const P2 = performance.now();
+    this.pcache.warm(3);                                  // tiempo sobrante: precalienta los fotogramas siguientes de los personajes visibles
     if (s.showGrid) this.drawGrid(camX, camY, tx0, ty0, cols, rows);
     this.drawTeleportMarks(s, camX, camY, tx0, ty0, cols, rows);
 
@@ -403,6 +427,7 @@ export class Renderer {
     // 5b) noche y lluvia
     if (s.sky) s.sky.draw(ctx, VW, VH, s.fx?.sp);
 
+    const P3 = performance.now();
     // 6) barras de vida, nombres, etiquetas, efectos
     this.rects = [];
     for (const o of overlays) o();
@@ -413,6 +438,8 @@ export class Renderer {
     if (remaster && s.clickFx) this.drawClickFx(s.clickFx, camX, camY);
     if (s.showMinimap) (s.mapStyle === "overlay" ? this.drawOverlayMap : this.drawMinimap).call(this, s, ppx, ppy);
     ctx.restore();
+    const P4 = performance.now(), pt = this.pt;
+    pt.ground = P1 - P0; pt.ents = P2 - P1; pt.light = P3 - P2; pt.fx = P4 - P3;
   }
 
   // Indicador de debuffs con el tiempo que les queda (barras sobre la cabeza; psychic.js y demás)
@@ -645,8 +672,8 @@ export class Renderer {
       if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
-      if (this.crowd < 70 || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
-      drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap);
+      if (this.crowd < (this.crowdMax || 70) || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
+      if (!this.pcache.draw(ctx, gender, look, group, d, f, x, y, ap, Math.min(2, Math.ceil(this.scale * 2) / 2))) { const T = performance.now(); drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap); this.pcache.st.msDirect += performance.now() - T; this.pcache.st.nDirect = (this.pcache.st.nDirect || 0) + 1; }
       ctx.globalAlpha = 1;
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
       if (zerk) spr.tinted(ctx, body, f, x, y, "#ff2a1a", 0.35);
@@ -659,7 +686,7 @@ export class Renderer {
       if (talking) this.bq.push(() => this.label(x, y - 62 - (other && !e.dead ? 17 : 0), bubble.text.length > 64 ? bubble.text.slice(0, 63) + "…" : bubble.text, "#ffffff", true));   // los bocadillos se dibujan al final y esquivan lo ya escrito
       overlays.push(() => {
         const yy = y - 78;
-        if (!other && s.pid !== undefined && !e.dead) {              // mi nombre se ve siempre
+        if (!other && s.pid !== undefined && !e.dead && s.hoverSelf) {   // mi nombre, como el de los demás, solo al pasar el ratón (Game.cpp DrawObjects: nombre únicamente bajo el cursor)
           const gl = guildLine(e);                                       // DEF_MSG_GUILDMASTER / GUILDSMAN: «<Guild> Guildmaster» en gris bajo el nombre
           this.origName(x, y, gl ? [[e.name, "255,255,255"], [gl, "180,180,180"]] : [[e.name, "255,255,255"]]);
         } else if (other && !e.dead && s.hoverPlayer === e) {          // el de los demás solo al pasar el ratón por encima
@@ -709,7 +736,7 @@ export class Renderer {
       else if (cc && (look(e.name) === "Liche" || look(e.name) === "Frost") && e.clvl < 30) { /* idem */ }
       else if (cc) { if (look(e.name) === "Demon") { const ag = performance.now() - cc.at; flare = Math.max(0, Math.min(1, ag / 200, (1700 - ag) / 600)); } this.castCircle(ctx, x, y, cc, e, s.fx || this.fx); } }          // círculo de casteo del summon en nivel máximo: bajo sus pies, antes de la sombra y el sprite
     ctx.globalAlpha = alpha;
-    if (!e.dead && !NO_SHADOW.has(e.type) && this.crowd < 70) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75, ...this.shK);   // DrawObject_OnStop: sin sombra
+    if (!e.dead && !NO_SHADOW.has(e.type) && this.crowd < (this.crowdMax || 70)) spr.shadow(ctx, key, f, x, y, remaster ? 0.45 : 0.75, ...this.shK);   // DrawObject_OnStop: sin sombra
     const big = e.crystal ? 1.8 : e.boss === 4 ? 1.44 : e.boss ? 1.2 : 1;           // el último jefe (dorado) un 20 % mayor que los demás
     if (big !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(big, big); ctx.translate(-x, -y); }          // jefe: sprite un 20 % mayor y teñido
     const hover = e.comp && e.name === "Tutelary-Angel" ? 10 * (e.clvl >= 50 ? 1.2 : 1) + 1.5 * Math.sin(performance.now() / 450 + e.id) : 0;   // Pixie: flota sobre el suelo (la sombra queda abajo)
@@ -1370,14 +1397,15 @@ export class Renderer {
     const c = m.getContext("2d");
     c.imageSmoothingEnabled = true;
     c.imageSmoothingQuality = "high";
+    let missing = 0;                                        // casillas cuya hoja aún no llegó: se repinta el minimapa cuando estén
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
       const t = g.tile(x, y), key = "t" + t.spr, fr = this.spr.frame(key, t.frame);
-      if (!fr || !this.spr.ready(key)) { c.fillStyle = g.blocked(x, y) ? "#302c28" : "#71675b"; c.fillRect(x, y, 1, 1); continue; }
+      if (!fr || !this.spr.ready(key)) { missing++; c.fillStyle = g.blocked(x, y) ? "#302c28" : "#71675b"; c.fillRect(x, y, 1, 1); continue; }
       c.drawImage(this.spr.img[key], fr[0], fr[1], fr[2], fr[3], x, y, 1, 1);
     }
     c.fillStyle = "rgba(0,0,0,.35)";
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) if (g.blocked(x, y)) c.fillRect(x, y, 1, 1);
-    this.minimap = m;
+    this.minimap = m; this.miniMissing = missing; this.miniTry = performance.now();
     // versión "líneas" para el mapa superpuesto: solo los bordes de lo que bloquea el paso
     const o = document.createElement("canvas");
     o.width = g.w; o.height = g.h;
@@ -1438,6 +1466,7 @@ export class Renderer {
     const { ctx } = this;
     const remaster = this.mode === "remastered";
     const size = this.miniSize || (remaster ? 170 : 140), pad = 10, x0 = this.viewW - size - pad, y0 = this.miniTop ?? pad;      // en móvil (mobile.js) más pequeño y bajo los botones
+    if (this.miniMissing && performance.now() - this.miniTry > 500) this.buildMinimap();   // las hojas del suelo llegan por tandas
     const sc = size / this.grid.w;
     ctx.globalAlpha = remaster ? 0.9 : 1;
     ctx.fillStyle = "#14161a";
@@ -1446,6 +1475,7 @@ export class Renderer {
     ctx.drawImage(this.minimap, x0, y0, size, size);
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = 1;
+    if (this.miniMissing) { ctx.fillStyle = "rgba(20,22,26,.55)"; ctx.fillRect(x0, y0, size, size); ctx.fillStyle = "#e8dcc0"; ctx.font = "12px sans-serif"; ctx.textAlign = "center"; ctx.fillText("Cargando mapa…", x0 + size / 2, y0 + size / 2); ctx.textAlign = "left"; }
     ctx.strokeStyle = "rgba(232,220,192,.6)";
     ctx.lineWidth = 1 / this.scale;
     ctx.strokeRect(x0 + this.camX / T * sc, y0 + this.camY / T * sc, this.viewW / T * sc, this.viewH / T * sc);

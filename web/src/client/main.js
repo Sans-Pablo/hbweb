@@ -23,6 +23,7 @@ import { ITYPE, EFFECT } from "../shared/items.js";
 import { realStats } from "../shared/attributes.js";
 import { registerDialogs } from "./dialogs.js";
 import { registerNpcDialogs } from "./npcdialogs.js";
+import { registerPetMage } from "./petmage.js";
 import { registerParty } from "./party.js";
 import { registerTrade } from "./trade.js";
 import { registerStall } from "./stall.js";
@@ -39,10 +40,10 @@ import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
 import { pickBot } from "./observer.js";
 import { observerBar, rosterPanel, brainPanel } from "./watchpanel.js";
-import { SCHOOL_OF, spellSchool, taught } from "../shared/systems/schools.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
+import { PerfLog } from "./perflog.js";
 const EMBED = new URLSearchParams(location.search).has("embed");                  // marco del panel dividido (observador.html): solo el juego
 
 const store = {
@@ -78,6 +79,8 @@ async function main() {
   status.style.display = "none";
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
   const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
+  const perf = new PerfLog(); let perfStarted = false;      // registro de rendimiento del jugador (login -> logout), ver perflog.js
+  fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { perf.version = v.version; }).catch(() => {});
   let world = conn.state;
   if (conn.observing && EMBED) setInterval(() => parent.postMessage({ hbBrain: conn.brain, id: conn.pid, name: conn.watchName }, location.origin), 500);   // panel dividido: el marco solo muestra el juego; el resto lo pinta la página madre
   else if (conn.observing) { observerBar(conn); rosterPanel(conn); setInterval(() => brainPanel(conn), 500); }
@@ -86,11 +89,28 @@ async function main() {
   status.style.display = "";
   const bar = () => { status.querySelector("span").textContent = tr("Cargando el mapa…") + " " + Math.round(100 * stream.progress(world, assets.npcDb)) + "%"; };
   stream.onChange = bar; bar();
+  // antes de pedir las hojas: así el streaming baja también las HD/IA del suelo (antes se pedían tarde, al dibujar: cuadrados negros)
+  const o0 = (() => { try { return JSON.parse(store.get("opts", "{}")); } catch { return {}; } })();
+  assets.sprites.hd = (o0.mode || "remastered") === "remastered" && o0.hdSprites !== false;
   await stream.enter(world, assets.npcDb);
-  stream.onChange = null; status.remove();
+  stream.onChange = null;
 
   const canvas = document.getElementById("game");
   const renderer = new Renderer(canvas, assets, grid);
+  // Precalienta el suelo de alrededor del personaje tras la pantalla de carga: el primer fotograma ya sale completo.
+  {
+    status.querySelector("span").textContent = tr("Preparando el terreno…");
+    await new Promise(r => setTimeout(r, 30));
+    const m0 = world.ents.get(pid);
+    if (m0) {
+      const cx0 = Math.floor(m0.x / 16), cy0 = Math.floor(m0.y / 16);
+      for (let cy = Math.max(0, cy0 - 2); cy <= cy0 + 2; cy++) for (let cx = Math.max(0, cx0 - 2); cx <= cx0 + 2; cx++) {
+        try { renderer.groundChunk(cx, cy); } catch {}
+        if ((cx + cy) % 3 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    status.remove();
+  }
   const fx = new Fx(world, pid);
   const hud = new Hud(conn);
   const gui = new Gui(document.getElementById("gui"));
@@ -132,7 +152,7 @@ async function main() {
       hud.log("Logging out... " + logout.n);
       logout.t = setInterval(() => {
         logout.n--;
-        if (logout.n <= 0) { clearInterval(logout.t); conn.save?.(); location.reload(); } else hud.log("Logging out... " + logout.n);
+        if (logout.n <= 0) { clearInterval(logout.t); perf.end("logout"); conn.save?.(); location.reload(); } else hud.log("Logging out... " + logout.n);
       }, 1000);
     },
     restart: () => conn.send({ t: "respawn" }),
@@ -149,6 +169,8 @@ async function main() {
     nurse: () => [...world.ents.values()].find(e => e.role === "pethospital"),
     shops: assets.shops, talk: assets.talk, itemByName: n => assets.data.named(n),
   });
+  const petMageUi = registerPetMage(gui, { send: c => conn.send(c), magic: () => hud.magicData, petCast: id => ui.usePetSpell(id) });
+  npcUi.hooks.petMage = petMageUi;
   // grupo (party): cuadro 32 del original; el clic sobre un personaje del mundo elige a quién invitar (ui.partyPick)
   const partyUi = registerParty(gui, {
     me: () => world.ents.get(pid), send: c => conn.send(c), log: (m, c) => hud.log(m, c),
@@ -300,7 +322,8 @@ async function main() {
     sound.setVolume?.(opts.soundVol);
     sound.setMusic?.(opts.music); sound.setMusicVolume?.(opts.musicVol);
     MAGIC_MODE.free = false;                                   // magia con las reglas del servidor (la opción «magia libre» ya no existe)
-    renderer.lighting = !!opts.lighting; renderer.lightFx = !!opts.lightFx;
+    const q = opts.autoQuality !== true ? 0 : renderer.q || 0;       // calidad automática (el HD lo decide el jugador): 1 sin sombras largas y menos sombras, 2 sin luz/viñeta (el HD no se toca)
+    renderer.lighting = !!opts.lighting && q < 2; renderer.lightFx = !!opts.lightFx && q < 1; renderer.crowdMax = q >= 1 ? 25 : 70;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
@@ -327,6 +350,7 @@ async function main() {
     quick: k => hud.quickUse(k),
     get spell() { return hud.spell; },
     pointing: null,
+    petPointing: null,                                // hechizo del grimorio del summon (pgcast): el siguiente clic elige el objetivo
     partyCb: null,
     // mientras se elige a quién invitar, Personaje y Grupo se ocultan para no tapar a nadie
     partyPick(cb) { ui.partyCb = cb; document.body.classList.add("pointing"); for (const id of [1, 32]) { const d = gui.dialogs.get(id); if (d) d.hidden = true; } },
@@ -358,11 +382,9 @@ async function main() {
       const me = world.ents.get(pid), m = hud.magicData?.[id];
       if (!MAGIC_MODE.player) { hud.log("Los hechizos están cerrados.", "bad"); return; }
       if (!me || me.dead || !m) return;
-      // magia de escuela: la lanza el summon que la conoce (su maná, no el del jugador); el servidor comprueba nivel y maná del summon
-      const ball = me.bag?.find(i => i.comp?.on), school = ball && SCHOOL_OF[ball.comp.sp], bySummon = !!school && !freeFor(me) && spellSchool(m) === school && taught(ball.comp, id);
-      if (!bySummon && (!me.magic || !me.magic[id])) return;
+      if (!freeFor(me) && (!me.magic || !me.magic[id])) return;
       if (ui.pointing != null) return;
-      if (!bySummon && !freeFor(me) && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
+      if (!freeFor(me) && m.mana > me.mp) { hud.log("No tienes MP suficiente.", "bad"); return; }
       ui.pointing = id; hud.spell = id; hud.bookKey = "";
       recent = { spell: id };
       conn.send({ t: "prepare", spell: id });          // empieza la animación de lanzar al elegirlo en el libro
@@ -370,7 +392,14 @@ async function main() {
       document.body.classList.add("pointing");
       hud.toast(m.name);
     },
+    usePetSpell(id) {
+      const me = world.ents.get(pid);
+      if (!me || me.dead || ui.pointing != null) return;
+      ui.petPointing = id; document.body.classList.add("pointing");
+      hud.toast(hud.magicData?.[id]?.name || "");
+    },
     cancelPointing(silent) {
+      if (ui.petPointing != null) { ui.petPointing = null; document.body.classList.remove("pointing"); if (!silent) hud.log("Hechizo cancelado."); return; }
       if (ui.pointing == null) return;
       ui.pointing = null; document.body.classList.remove("pointing");
       if (!silent) hud.log("Hechizo cancelado.");
@@ -587,6 +616,7 @@ async function main() {
     } else if (e.key === "Escape") { chatBox.classList.remove("open"); chatIn.blur(); }
   });
 
+  let qSum = 0, qN = 0, qGood = 0;
   let last = performance.now(), fps = 0, frames = 0, fpsT = 0, drawSum = 0, drawMax = 0;
   const fpsEl = document.getElementById("fps");
   let buildTag = "";                                // versión y nombre de la compilación (data/version.json), junto a los fps
@@ -603,9 +633,20 @@ async function main() {
     const dt = Math.min(100, t - last);             // si la pestaña estuvo oculta, no saltar
     last = t;
     frames++; fpsT += dt;
+    // Calidad automática: para mantener 60 fps estables baja un nivel si el fotograma medio supera 22 ms (≈2 s) y sube uno tras ~6 s por debajo de 13 ms
+    if (opts.autoQuality === true && !document.hidden && t > 20000) {      // los primeros 20 s (carga de hojas) no cuentan
+      qSum += dt; qN++;
+      if (qN >= 90) {
+        const avg = qSum / qN; qSum = qN = 0;
+        if (avg > 22 && (renderer.q || 0) < 2) { renderer.q = (renderer.q || 0) + 1; qGood = 0; applyOpts(); hud.log("Calidad gráfica reducida automáticamente (nivel " + renderer.q + ") para mantener los fps."); }
+        else if (avg < 13 && (renderer.q || 0) > 0) { if (++qGood >= 4) { renderer.q--; qGood = 0; applyOpts(); } }
+        else qGood = 0;
+      }
+    }
     if (fpsT > 500) {
       const frames0 = frames; fps = Math.round(frames * 1000 / fpsT); frames = 0; fpsT = 0;
-      let txt = fps + " fps · dibujo " + (drawSum / Math.max(1, frames0)).toFixed(1) + "/" + drawMax.toFixed(0) + " ms" + buildTag; drawSum = 0; drawMax = 0;
+      let txt = fps + " fps · dibujo " + (drawSum / Math.max(1, frames0)).toFixed(1) + "/" + drawMax.toFixed(0) + " ms" + buildTag;
+      { const p = renderer.pt, c = renderer.pcache.st; txt += " · suelo " + p.ground.toFixed(1) + " ent " + p.ents.toFixed(1) + " luz " + p.light.toFixed(1) + " fx " + p.fx.toFixed(1) + " · caché " + c.hit + "/" + c.comp + "/" + c.direct; } drawSum = 0; drawMax = 0;
       if (online) {
         const n = [...world.ents.values()].filter(e => e.kind === "player").length;
         txt += " · " + n + (n === 1 ? " jugador" : " jugadores") + " · " + conn.ping + " ms";
@@ -653,10 +694,12 @@ async function main() {
     const d0 = performance.now();
     renderer.render({
       world, me, dt, fx,
-      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
+      sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
       labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
+    { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }
+      perf.frame(dt, now - d0, renderer, { ents: world.ents.size, pl: online ? [...world.ents.values()].filter(e => e.kind === "player").length : 1, ping: online ? conn.ping : 0, map: world.map?.name, x: me.x, y: me.y, act: me.act }); }
     hud.update(world, ctl.hoverEnt); questUi.render();
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
     npcUi.sweep();
@@ -667,7 +710,7 @@ async function main() {
       const ov = gui.dialogAt(gui.mouse.x, gui.mouse.y) || gui.mouse.y >= 548;
       const he = ctl.hoverEnt, foe = he && he.kind !== "player";
       cur = 0;
-      if (!ov && ui.pointing != null) cur = foe ? 5 : 4;
+      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = foe ? 5 : 4;
       else if (!ov && he) cur = foe ? 3 : 6;
       if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }

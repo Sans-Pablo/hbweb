@@ -69,9 +69,15 @@ export function playerHit(w, p, t, fx = {}) {
 // ---- PvP (INVENTO del port: el original calcula el golpe contra jugadores en iCalculateAttackEffect con las mismas piezas que contra monstruos).
 // Solo en mapas con `w.pvp` (Promise Land) y fuera de las zonas sin ataque. Todos los jugadores son combatientes siempre: pelean los de bandos
 // distintos y también los viajeros (bando 0, sin bando) contra cualquiera; no se golpean entre sí los del mismo bando (1 o 2) ni los de la misma party.
+// Client.cpp _iGetFOE: soy criminal (m_iPKCount != 0) -> todos son enemigos (también los aliados); el objetivo es criminal (STATUS_PK) -> enemigo;
+// del mismo bando -> aliado (no se ataca); de bando distinto -> enemigo. Desvío del port: los viajeros (sin bando) también se pelean (en el original son neutrales)
+export function isFoe(p, t) {
+  if (p.pkCount > 0 || t.pkCount > 0) return true;
+  return !(p.side > 0 && p.side === t.side);
+}
 export function canFight(w, p, t) {
   if (!w.pvp || t === p || t.kind !== "player" || p.dead || t.dead || w.safeAt(p.x, p.y) || w.safeAt(t.x, t.y)) return false;
-  if (p.side > 0 && p.side === t.side && !(t.pkCount > 0)) return false;          // un criminal del propio bando sí es atacable (IsPlayerHostile)
+  if (!isFoe(p, t)) return false;
   return !(p.party && t.party && p.party.id === t.party.id);
 }
 // Multiplicador del daño entre jugadores (invento del port): subido para que un duelo se decida en unos 15-25 golpes, no en minutos; las pets y las pociones deciden el resto.

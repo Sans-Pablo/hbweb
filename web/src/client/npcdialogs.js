@@ -29,6 +29,7 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const stat = (me, k) => (me.stats ? me.stats[k] : 10);
 
 export function registerNpcDialogs(gui, api) {
+  const hooks = {};                   // petMage: cuadro del Hechicero de mascotas (client/petmage.js), lo pone main.js
   const g0 = gui;
   const trade = {                     // lo que se está comprando / vendiendo ahora mismo
     npc: null,                        // { id, type, x, y } del NPC con el que se habla
@@ -190,6 +191,7 @@ export function registerNpcDialogs(gui, api) {
       for (const l of FARMER_HELP) api.log(l);
       shop.begin(1, true); gui.open(11); return true;
     }
+    if (e.role === "petmage") { hooks.petMage?.open(e); return true; }
     if (e.role === HOSPITAL.role) { trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y }; hospital.tab = 0; hospital.view = 0; gui.open(41); return true; }
     const cfg = MENU[e.type]; if (!cfg) return false;
     trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
@@ -596,7 +598,7 @@ export function registerNpcDialogs(gui, api) {
 
   const bag = { disabled: uid => trade.busy.has(uid) };
   return {
-    clickNpc, dropOnNpc, onEvent, trade, bag,
+    clickNpc, dropOnNpc, onEvent, trade, bag, hooks,
     // cierra los cuadros cuyo objeto ya no está en la mochila (vendido, soltado...); se llama una vez por fotograma
     sweep() {
       const me = api.me(); if (!me) return;

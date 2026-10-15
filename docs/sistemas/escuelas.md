@@ -21,3 +21,5 @@ Código: `shared/systems/schools.js`; integración en `magicsys.js` (`usable`, `
 - `usable`: solo magias de escuela (cualquier otra se rechaza) y con nivel suficiente. `cast` → `command()`: el summon se gira, hace el gesto de ataque y emite `dummy-cast` con el nombre.
 - Libro (`dialogs.js`): filtra por la escuela de la bola elegida; gris «(Lv N)» si el summon aún no la domina.
 - Maná en pantalla: `petPanel` (barra azul), `partyFrames` (miembros y summons). Red: `pub()` envía `mp`/`mm` (NET_PROTO 4).
+
+> v0.82.0: las escuelas de summon se enseñan y lanzan con el sistema `petgrimoire.md` (NPC Hechicero de mascotas).

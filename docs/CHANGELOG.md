@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.82.9 · Armas teñidas sin lectura de GPU (2026-10-15)
+- Análisis del log 0.82.8 (Promise Land): 37.8 fps con ≥20 a la vista (25 antes); cada composición 4.5 ms, de los que 3.6 ms eran armas teñidas (`weaponTinted`: `getImageData` desde GPU).
+- `weaponTinted` crea su lienzo con `willReadFrequently:true` (mismo resultado píxel a píxel, sin bajar calidad).
+- Corrección: el desglose del log está en `pc.cp`, no en `pc.cp`.
+
+## 0.82.8 · Medición de composición + precalentamiento ligero (2026-10-15)
+- Análisis del log 0.82.7 (Promise Land): 21.5 fps (17.7 antes); aciertos 0.006 ms; composición 13.9 ms a demanda y 9.5 ms en precalentamiento vs 2.7 ms directo; el warm se pasaba del tope (27 % del tiempo, cae en lMs).
+- `warm` compone como máximo 1 por fotograma.
+- Log: `pc.ms.cp` {clear, put, tint, weap, atlas, n}: ms por fase dentro de `compose` (limpiar lienzo, piezas normales, pelo/armadura teñidos, armas teñidas, copia al atlas).
+
+## 0.82.7 · Caché con precalentamiento + medición (2026-10-15)
+- Análisis del log de zzzz (0.82.6): Aresfarm con 16-20 jugadores en pantalla 55-60 fps; Promise Land con 34-35 → 8-16 fps, 45-65 ms/fotograma en entidades, con 20-50 composiciones y 60-120 dibujos directos por segundo (la caché estaba fría: cada jugador distinto necesita sus fotogramas).
+- `PersonCache.warm(3)`: tras las entidades, con tope de 3 ms, compone los 2 fotogramas siguientes de cada personaje visto este fotograma.
+- Log: `pc.warm` y `pc.ms` {comp, direct, nd, hit, warm} (ms acumulados por segundo) para separar el coste de componer, dibujar directo y de acierto.
+
+## 0.82.6 · Personajes en atlas + registro de rendimiento (2026-10-15)
+- Caché de personajes compuestos (`client/composed.js`): cada persona (cuerpo, pelo teñido, armadura, arma, escudo…) se pinta una vez por aspecto/acción/dirección/fotograma, a la resolución real de pantalla (máx. 2 px por px de mundo, suavizado alto), y se guarda recortada en páginas de atlas (8 × 2048², la más antigua se recicla). Dibujarla cuesta un único `drawImage` en vez de 8-15 piezas con tintes. Sin pérdida de calidad; máx. 6 composiciones por fotograma, el resto se dibuja pieza a pieza.
+- Se retira el nivel 3 de calidad automática (resolución al 70 %) y la calidad automática pasa a estar apagada por defecto: siempre máxima calidad.
+- Tiempos por fase del dibujado (suelo / entidades / luz / efectos) y contadores de la caché junto a los fps.
+- Registro de rendimiento (`client/perflog.js` → `POST /api/perflog` → `data/perf/<jugador>_<sesión>.jsonl`): desde el login hasta el logout, una muestra por segundo (fps, ms por fase, tirones >50 ms, caché, jugadores, posición, GPU, pantalla).
+
+## 0.82.5 · Resolución adaptativa (2026-10-15)
+- Nuevo nivel 3 de calidad automática: si tras bajar a nivel 2 el fotograma medio sigue por encima de 22 ms, el juego dibuja a 70 % de resolución interna (el lienzo se escala en pantalla) y limita a 14 las entidades con detalle completo. Sube de nivel solo cuando vuelve a ir sobrado. El HD no se toca.
+
+## 0.82.4 · Menos coste por sprite (2026-10-15)
+- Con ~30 personajes en pantalla el dibujo costaba 30-47 ms (19-24 fps). Los sprites se pintaban con suavizado `high` (filtro caro por cada pieza); ahora `medium`, y `low` cuando la calidad automática ya bajó de nivel.
+- `Sprites.put` ya no crea un array por llamada para el filtro de color.
+
+## 0.82.3 · Suelo sin tirones al correr (2026-10-15)
+- El precalentado del suelo elige primero el bloque que queda en la dirección de la marcha (antes recorría los anillos en orden fijo y al correr a veces llegaba tarde y el bloque se construía de golpe en pantalla).
+- El ajuste de tono del bloque HD (el paso más caro) se hace en un fotograma aparte del reparto de filas: ningún fotograma suma las dos cosas.
+
+## 0.82.2 · Carga sin cuadrados negros (2026-10-15)
+- Al entrar en el mundo el cliente activaba el modo HD/IA después de pedir las hojas del mapa, así que las hojas HD del suelo se bajaban tarde, al dibujar: bloques de suelo negros y tirones al correr. Ahora `main.js` fija `sprites.hd` antes de `stream.enter` y el streaming baja a la vez la hoja original y la HD/IA.
+- Tras la carga se precalienta el suelo de 5x5 bloques alrededor del personaje (`renderer.groundChunk`) antes de quitar la pantalla: el primer fotograma sale completo.
+
+## 0.82.0 · Magia de summons aparte (2026-10-13)
+- La magia del jugador vuelve a ser la original de Helbreath (libro con círculos, comprar/aprender, `cast` lanzado por el personaje con su maná). El modo «Full mage» (F1) ya puede lanzar todas las magias.
+- Magia de summons reescrita como sistema aparte: `systems/petgrimoire.js` (comandos `pgteach`/`pgcast`, grimorio `comp.grim`), NPC «Hechicero de mascotas» (elvfarm y gshop_1f) y diálogo propio (`client/petmage.js`, pestañas Enseñar / Grimorio). El summon lanza desde su maná al apuntar con el grimorio.
+- `schools.js` queda solo con datos; arena, residentes y summoninfo usan el sistema nuevo. Tests `petgrimoire*.test.mjs` (sustituyen a schools*).
+- Tests `bot-crit` y `support-summon` hechos robustos a la semilla.
+
+## 0.80.6 · Calidad gráfica automática (2026-10-13)
+- `main.js`: si el fotograma medio supera 22 ms (≈2 s) baja un nivel de calidad (1 sin sombras largas y menos sombras, 2 sin luz/viñeta, 3 sin HD) y sube uno tras ~6 s por debajo de 13 ms. Opción `autoQuality` (por defecto activa).
+- `tools/perf.py`: escenario `correr` (jugador corriendo con 20 bots) y variantes de renderer con `RSET='{"hd":false,"lighting":false}'`.
+
 ## 0.81.0 · Crítico, dash y fuente de sprites (2026-10-13)
 - Crítico (Alt+clic) y dash de guerreros arreglados: el dash ya no exige haber corrido (el servidor lo rechazaba y el cliente reenviaba sin parar), exige línea recta/diagonal a 2 casillas, y el crítico tiene el alcance del original (espada larga 3, esgrima 4, StormBlade 5).
 - Los bots maestros usan crítico y dash (`tests/bot-crit.test.mjs`).

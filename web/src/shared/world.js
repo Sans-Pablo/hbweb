@@ -15,6 +15,7 @@ import * as Npc from "./systems/npcsys.js";
 import * as ItemSys from "./systems/itemsys.js";
 import { tickVitals, runStepsPerSp } from "./systems/vitals.js";
 import * as MagicSys from "./systems/magicsys.js";
+import * as PetGrimoire from "./systems/petgrimoire.js";
 import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
 import * as Debug from "./systems/debug.js";
@@ -242,6 +243,8 @@ const COMMANDS = {
   prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   cast: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.cast(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
   learn: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.learn(w, p, cmd.spell) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
+  pgteach: (w, p, cmd) => PetGrimoire.teach(w, p, cmd),   // grimorio de summons: sistema aparte de la magia del jugador
+  pgcast: (w, p, cmd) => PetGrimoire.cast(w, p, cmd),
   pickup: (w, p) => ItemSys.startPickup(w, p),
   partyreq: (w, p, cmd) => Party.request(w, p, String(cmd.name || "").slice(0, 12), cmd.auto === true),
   partyaccept: (w, p, cmd) => Party.answer(w, p, cmd.r | 0),

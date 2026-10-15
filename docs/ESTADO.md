@@ -4,6 +4,14 @@
 
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
+- [ ] (pedido 2026-10-15, v0.82.9) **Armas teñidas sin lectura de GPU (`willReadFrequently` en `weaponTinted`):** hecho; pendiente que Pablo pruebe en Promise Land y leer `pc.cp.weap`.
+- [x] (pedido 2026-10-15, v0.82.8) **Analizar log 0.82.7 + medir compose + warm 1/fotograma:** hecho; probado: 37.8 fps en multitud; las armas teñidas (`pc.cp.weap`) eran 3.6 de 4.5 ms por composición.
+- [x] (pedido 2026-10-15, v0.82.7) **Fps en multitud (Promise Land, 35 jugadores → 8-16 fps):** precalentamiento de la caché de personajes (2 fotogramas siguientes, 3 ms/fotograma) + medición compose/directo/acierto en el log. Pendiente: Pablo repite en Promise Land y se lee el log.
+- [x] (pedido 2026-10-15, v0.82.6) **Máxima calidad siempre + empaquetado:** caché de personajes compuestos en atlas (un drawImage por persona), sin bajar calidad (nivel 3 retirado, auto-calidad off) + registro de rendimiento del jugador zzzz (data/perf/*.jsonl) para analizar tras el test. Pendiente: Pablo prueba y hace logout; leer el log.
+- [x] (pedido 2026-10-15, v0.82.5, SUPERADO por 0.82.6) **Más fps con multitud:** calidad automática nivel 3 (resolución interna 70 %, crowdMax 14). Pendiente de confirmar; si sigue bajo: caché de personaje compuesto por frame.
+- [x] (pedido 2026-10-15, v0.82.4) **FPS bajos (19-24) con ~30 jugadores:** suavizado de sprites `high`→`medium`/`low` y `put` sin arrays. Pendiente de confirmar; si sigue bajo, siguiente: texturas HD grandes / coste por pieza de personaje.
+- [x] (pedido 2026-10-15, v0.82.3) **Tirones al correr:** precalentado del suelo dirigido por la marcha y tono HD en fotograma aparte (`renderer.js`). Pendiente de confirmar por Pablo; medición headless muy ruidosa (rasterizado por software), `tools/perf.py correr`.
+- [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
 
 ## TO-DO por prioridad (2026-10-12, v0.79.5) — meta: release de testers, solo acto 1
@@ -289,3 +297,9 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Petición: escenarios de rendimiento con magias/bots/monstruos, medir y capturas. HECHO v0.80.5 → `tools/perf.py` (`HB_HEADED=1`), capturas en pruebas/rendimiento/. Pendiente: magia p95 de fotograma ~26-39 ms (picos de drawImage en hojas IA grandes; ImageBitmap probado y descartado: peor).
 
 - Petición «fuente de sprites para daño/casteo + revisar críticos y dash + bots»: HECHO v0.81.0 (local, sin commit ni push: hay trabajo del otro agente mezclado). Crit/dash en `critico-dash.md`, fuente en `fx.js` (`sprFontDraw`). Pendiente: apilado de líneas del daño y la fuente en el resto de avisos.
+- Petición: 60 fps estables con las gráficas nuevas / al correr cerca de otros jugadores. HECHO v0.80.6 (calidad automática). Nota: la GPU de pruebas estaba al 94 % por otras apps (ollama, Discord…), lo que dispara los ms.
+- Petición «restaura la magia normal de Helbreath y reescribe la magia de pets como sistema nuevo (otro NPC, otro menú)»: HECHO v0.82.0 (local). Ficha `petgrimoire.md`. Pendiente: probar a mano el diálogo 46 y el apuntado del grimorio en el navegador.
+
+- [x] (0.82.0) Compendio del juego en un artifact (testers, desvíos, dev): https://claude.ai/artifact/H9RKBrnNGb8RaPYgmaNTay
+
+- Petición (9 puntos): HD ya no vuelve a original solo; minimapa con «Cargando mapa…»; nombre propio solo en hover; F1 Skills 100; ataque a jugadores según `_iGetFOE` (aliados del mismo bando no se atacan (viajeros sí: desvío del port) ni se pisan al clicar; criminales sí): HECHO v0.82.1 (local). Pendiente: fuente de daño más nítida (sin IA disponible), alternar Force Attack con Ctrl+A. El FAIL de magia a summons es la tirada de resistencia original (poca skill), no un fallo de daño.

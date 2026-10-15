@@ -7,7 +7,6 @@ import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { packKey, iconKey } from "./names.js";
 import { HAIR_COLORS } from "./look.js";
 import { castChance, manaCost } from "../shared/magic.js";
-import { SCHOOL_OF, SCHOOL_NAMES, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 
 const INK = "#2d1919";                         // RGB(45,25,25): texto del cliente sobre fondo de pergamino
 const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -201,13 +200,10 @@ export function registerDialogs(gui, api) {
   const CIRCLES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
   const TAB_X = [30, 43, 61, 86, 106, 121, 142, 169, 202, 222];                // posiciones de la marca del círculo (sprfonts 20..29)
   const TAB_HIT = [[16, 38], [39, 56], [57, 81], [82, 101], [102, 116], [117, 137], [138, 165], [166, 197], [198, 217], [218, 239]];
-  const asCaster = me => ({ skills: me.skills || {}, stats: me.stats, level: me.level, eff: me.eff || {} });
-  // El libro solo muestra las magias de la escuela del summon elegido (Orc/Demon fuego, Tutelary-Angel/Frost hielo, Skeleton/Liche rayo)
-  const bookSchool = me => { const b = me.bag && me.bag.find(i => i.comp && i.comp.on); return b ? { sp: b.comp.sp, lvl: b.comp.lvl, comp: b.comp, school: SCHOOL_OF[b.comp.sp] || null } : null; };
+  const asCaster = me => ({ skills: me.skills || {}, stats: me.stats, level: me.level, eff: me.eff || {}, fullMage: me.fullMage });
   const spellsOf = (me, view) => {
-    const out = [], bs = bookSchool(me);
-    if (!bs || !bs.school) return out;
-    for (let i = 0; i < 9; i++) { const id = view * 10 + i, m = api.magic[id]; if (m && spellSchool(m) === bs.school && taught(bs.comp, id)) out.push([id, m, spellLevel(api.magic, bs.school, id, bs.sp)]); }
+    const out = [];
+    for (let i = 0; i < 9; i++) { const id = view * 10 + i, m = api.magic[id]; if (me.magic && me.magic[id] && m) out.push([id, m]); }
     return out;
   };
   const mg = {
@@ -216,29 +212,24 @@ export function registerDialogs(gui, api) {
       g.put("gamedialog_0", 1, 0, 0);
       g.put("dialogtext_0", 7, 0, 0);
       g.aligned(3, 256, 50, "Circle " + CIRCLES[this.view], "#000", { bold: true });
-      { const b = bookSchool(me), key = b && b.sp;                          // al cambiar de summon, se abre el primer círculo con magias
-        if (key !== this.seenSp) { this.seenSp = key; if (this.keepView) this.keepView = false; else if (b && b.school) for (let v = 0; v < 10; v++) if (spellsOf(me, v).length) { this.view = v; break; } } }
       const list = spellsOf(me, this.view), caster = asCaster(me);
       let y = 0;
-      const bs = bookSchool(me);
-      for (const [id, m, need] of list) {
-        const cost = spellMana(api.magic, bs.school, id), name = m.name.replace(/-/g, " "), locked = need == null || bs.lvl < need;
+      for (const [id, m] of list) {
+        const cost = manaCost(caster, m, id), name = m.name.replace(/-/g, " ");
         const over = g.mouse.x - this.x >= 30 && g.mouse.x - this.x <= 240 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
-        const col = locked ? "rgb(110,100,90)" : over ? "#fff" : "rgb(8,0,66)";
-        g.text(30, 72 + y, name + (locked ? "  (Lv " + need + ")" : ""), col, { bold: true }); g.text(206, 72 + y, String(cost).padStart(3, " "), col, { bold: true });
+        const col = cost > me.mp ? "rgb(41,16,41)" : over ? "#fff" : "rgb(8,0,66)";
+        g.text(30, 72 + y, name, col, { bold: true }); g.text(206, 72 + y, String(cost).padStart(3, " "), col, { bold: true });
         y += 18;
       }
       if (!list.length) {
-        const empty = !bs || !bs.school ? ["This is your summon's spellbook.", "Choose a school summon: Orc (fire),", "Pixie (ice) or Skeleton", "(lightning), then teach it spells at", "the Sorcerer (your Int pays for it)."] : ["Your " + SCHOOL_NAMES[bs.school] + " summon knows no spells", "in this circle. Teach it at the Sorcerer."];
-        empty.forEach((t, i) => g.aligned(3, 256, 100 + 15 * i, t, "#000"));
+        ["You have not learned any magic.", "You can learn magic at the Wizard", "Tower in town. To learn a spell", "you need sufficient gold and INT."].forEach((t, i) => g.aligned(3, 256, 100 + 15 * i, t, "#000"));
       }
       g.put("interface_1", 19, 30, 250);
       g.put("interface_1", 20 + this.view, TAB_X[this.view], 250);
       let r = castChance(caster, this.view * 10), total = r;
       void total;
       r = Math.min(100, r);
-      if (bookSchool(me)?.school) r = 100;                                  // la magia de escuela la lanza el summon: sin fallo
-      else if (me.sp < 1) r = Math.floor(r * 9 / 10);
+      if (me.sp < 1) r = Math.floor(r * 9 / 10);
       r = Math.max(1, r);
       const t = "Casting Probability: " + r + "%";
       g.aligned(0, 256, 267, t, "#000", { bold: true });
@@ -247,8 +238,8 @@ export function registerDialogs(gui, api) {
     },
     click(g, lx, ly, me) {
       let y = 0;
-      for (const [id, , need] of spellsOf(me, this.view)) {
-        if (lx >= 30 && lx <= 240 && ly >= 70 + y && ly <= 88 + y) { const bs = bookSchool(me); if (need == null || bs.lvl < need) { api.log("Your summon needs level " + need + " for that spell."); return true; } api.useMagic(id); g.close(3); return true; }
+      for (const [id] of spellsOf(me, this.view)) {
+        if (lx >= 30 && lx <= 240 && ly >= 70 + y && ly <= 88 + y) { api.useMagic(id); g.close(3); return true; }
         y += 18;
       }
       TAB_HIT.forEach(([a, b], i) => { if (lx >= a && lx <= b && ly >= 240 && ly <= 268) this.view = i; });
@@ -263,27 +254,21 @@ export function registerDialogs(gui, api) {
   const SHOP_TAB = [[44, 52, 0], [57, 70, 1], [75, 95, 2], [100, 115, 3], [120, 131, 4], [135, 152, 5], [156, 179, 6], [183, 212, 7], [216, 232, 8], [236, 247, 9]];
   const shop = {
     id: 16, x: 110, y: 90, w: 304, h: 328, view: 0,
-    // El Mago enseña al SUMMON elegido: solo salen los hechizos de su escuela, con el nivel del summon, la Int y el oro que cuestan
-    list(me) { const out = [], bs = bookSchool(me); if (!bs || !bs.school) return out; for (let i = 0; i < 9; i++) { const id = this.view * 10 + i, m = api.magic[id]; if (m && spellSchool(m) === bs.school && spellLevel(api.magic, bs.school, id, bs.sp) != null) out.push([id, m]); } return out; },
+    list(me) { const out = []; for (let i = 0; i < 9; i++) { const id = this.view * 10 + i, m = api.magic[id]; if (m && m.cost >= 0) out.push([id, m]); } return out; },
     draw(g, me) {
       g.put("gamedialog_3", 1, 0, 0); g.put("dialogtext_0", 14, 0, 0);
-      const bs = bookSchool(me);
-      if (bs?.school && bs.sp !== this.seenSp) { this.seenSp = bs.sp; for (let v = 0; v < 10; v++) { this.view = v; if (this.list(me).length) break; } }
-      g.text(23, 55, "Spell Name", INK); g.text(146, 55, "Smn Lv", INK, { size: 10 }); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
+      g.text(23, 55, "Spell Name", INK); g.text(192, 55, "Int", INK); g.text(250, 55, "Cost", INK);
       let y = 0;
       for (const [id, m] of this.list(me)) {
-        const known = taught(bs.comp, id), need = spellLevel(api.magic, bs.school, id, bs.sp), int = spellInt(api.magic, bs.school, id), gold = spellGold(api.magic, bs.school, id), name = m.name.replace(/-/g, " ");
+        const known = me.magic && me.magic[id], name = m.name.replace(/-/g, " ");
         const over = g.mouse.x - this.x >= 24 && g.mouse.x - this.x <= 159 && g.mouse.y - this.y >= 70 + y && g.mouse.y - this.y <= 84 + y;
-        const can = !known && bs.lvl >= need && me.stats.int >= int && me.gold >= gold;
-        const col = known ? "rgb(41,16,41)" : !can ? "rgb(150,60,50)" : over ? "#fff" : "rgb(8,0,66)";
-        g.text(24, 72 + y, name + (known ? " ✓" : ""), col, { bold: true }); g.text(150, 72 + y, String(need).padStart(2, " "), col, { bold: true });
-        g.text(200, 72 + y, String(int).padStart(3, " "), col, { bold: true }); g.text(236, 72 + y, String(gold).padStart(5, " "), col, { bold: true });
+        const col = known ? "rgb(41,16,41)" : over ? "#fff" : "rgb(8,0,66)";
+        g.text(24, 72 + y, name, col, { bold: true }); g.text(200, 72 + y, String(m.reqInt).padStart(3, " "), col, { bold: true }); g.text(241, 72 + y, String(m.cost).padStart(3, " "), col, { bold: true });
         y += 18;
       }
-      if (!this.list(me).length) (!bs || !bs.school ? ["Choose a school summon first:", "Orc (fire), Pixie (ice) or", "Skeleton (lightning)."] : ["No spells of your " + SCHOOL_NAMES[bs.school] + " school", "in this circle."]).forEach((t, i) => g.aligned(0, 304, 100 + 15 * i, t, INK));
       g.put("interface_1", 19, 55, 250);
       g.put("interface_1", 20 + this.view, SHOP_TAB[this.view][0] - 20 + 31 - 0, 250);
-      g.aligned(0, 304, 270, "Smn Lv = level your SUMMON needs (not yours).", INK, { size: 10 }); g.aligned(0, 304, 284, "Teach your summon a new spell.", INK, { size: 10 });
+      g.aligned(0, 304, 275, "Select a magic which you want to learn.", INK);
       { const lx = g.mouse.x - this.x, ly = g.mouse.y - this.y, over = lx >= 24 && lx <= 200 && ly >= 303 && ly <= 317, cost = 300 + 60 * me.level;      // reinicio de estadísticas (shared/systems/respec.js)
         const armed = this.resetAt && performance.now() - this.resetAt < 4000;
         g.text(24, 305, armed ? "[ Click again to confirm (" + cost + " gold) ]" : "[ Reset stats · " + cost + " gold ]", over ? "#fff" : armed ? "#c31919" : "rgb(8,0,66)", { size: 10, bold: true }); }
@@ -291,7 +276,7 @@ export function registerDialogs(gui, api) {
     click(g, lx, ly, me) {
       let y = 0;
       for (const [id] of this.list(me)) {
-        if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!taught(bookSchool(me)?.comp, id)) api.learn(id); return true; }
+        if (lx >= 24 && lx <= 159 && ly >= 70 + y && ly <= 84 + y) { if (!(me.magic && me.magic[id])) api.learn(id); return true; }
         y += 18;
       }
       if (lx >= 24 && lx <= 200 && ly >= 303 && ly <= 317) { if (this.resetAt && performance.now() - this.resetAt < 4000) { api.statReset(); this.resetAt = 0; } else this.resetAt = performance.now(); return true; }

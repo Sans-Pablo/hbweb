@@ -213,6 +213,16 @@ const server = http.createServer((req, res) => {
     req.on("end", () => { let line = ""; try { line = JSON.parse(body).line; } catch {} json(req, res, 200, { out: adminCmd(String(line || ""), "panel") }); });
     return;
   }
+  if (url.pathname === "/api/perflog" && req.method === "POST") {      // registro de rendimiento del cliente (perflog.js): JSONL por jugador y sesión en data/perf/
+    const clean = x => String(x || "").replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 40) || "x";
+    const f = path.join(STORE, "perf", clean(url.searchParams.get("u")) + "_" + clean(url.searchParams.get("s")) + ".jsonl");
+    let body = ""; req.on("data", d => { body += d; if (body.length > 300000) req.destroy(); });
+    req.on("end", () => {
+      try { fs.mkdirSync(path.dirname(f), { recursive: true }); if (!fs.existsSync(f) || fs.statSync(f).size < 20e6) fs.appendFileSync(f, body); } catch {}
+      res.writeHead(204); res.end();
+    });
+    return;
+  }
   if (url.pathname === "/api/dev/anclas") {      // herramienta de arte (web/anclas.html): puntos de ojos hechos a mano -> art/anchors_manual.json, solo desde este PC
     if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { res.writeHead(403); res.end(); return; }
     const f = path.resolve(WEB, "..", "art", "anchors_manual.json");

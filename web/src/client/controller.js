@@ -2,7 +2,7 @@
 // Igual que el cliente original, el camino se calcula aquí y se manda paso a paso;
 // el servidor (World) valida cada paso y cada golpe.
 import { TILE as T, PLAYER, dist, dirTo } from "../shared/const.js";
-import { reachOf } from "../shared/systems/combatsys.js";
+import { reachOf, isFoe } from "../shared/systems/combatsys.js";
 import { findPath } from "../shared/path.js";
 import { posOf, mobSprite } from "./anim.js";
 
@@ -77,7 +77,7 @@ export class Controller {
   enemyPlayer(e) {
     const me = this.me, w = this.world;
     if (!me || e.kind !== "player" || e === me || !(w.map?.id === "2ndmiddle" || w.map?.shared) || w.safeAt?.(me.x, me.y) || w.safeAt?.(e.x, e.y)) return false;
-    if (me.side > 0 && me.side === e.side) return false;
+    if (!isFoe({ pkCount: me.pkCount || me.pk || 0, side: me.side }, { pkCount: e.pkCount || e.pk || 0, side: e.side })) return false;       // _iGetFOE: un aliado o un viajero no se ataca, ni se toca (no hace nada)
     return !(me.party && e.party && me.party.id === e.party.id);
   }
 
@@ -128,10 +128,10 @@ export class Controller {
   // NPC de ciudad bajo un punto del mundo
   pickCitizen(wx, wy) { return this.pick(wx, wy, "citizen"); }
   // otro jugador bajo el cursor (solo para mostrar su nombre)
-  playerAt(wx, wy) {
+  playerAt(wx, wy, self = false) {
     let best = null, bestD = 1e9; const time = this.world.time;
     for (const e of this.world.ents.values()) {
-      if (e.kind !== "player" || e.dead || e.id === this.conn.pid) continue;
+      if (e.kind !== "player" || e.dead || (e.id === this.conn.pid) !== self) continue;
       const [px, py] = posOf(e, time);
       if (Math.abs(wx - px) > 18 || wy < py - 56 || wy > py + 14) continue;
       const d = Math.hypot(wx - px, wy - (py - 28));
@@ -169,7 +169,7 @@ export class Controller {
   rightClick() {
     const me = this.me;
     if (!me || me.dead || !this.pointer) return;
-    if (this.ui.pointing != null) { this.ui.cancelPointing(); return; }
+    if (this.ui.pointing != null || this.ui.petPointing != null) { this.ui.cancelPointing(); return; }
     if (this.ui.partyCb) { this.ui.cancelPick(); this.ui.gui.dialogs.get(32).mode = 0; return; }
     const { ent, x, y } = this.target();
     if (ent) { this.intent = null; this.path = []; this.strike(me, ent); return; }
@@ -190,6 +190,10 @@ export class Controller {
       return;
     }
     const { ent, x: tx, y: ty } = this.target();
+    if (this.ui.petPointing != null) {                    // hechizo del summon (pgcast): este clic elige el objetivo
+      if (first) { this.conn.send({ t: "pgcast", spell: this.ui.petPointing, x: tx, y: ty }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
+      return;
+    }
     if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
       if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
       return;
@@ -198,6 +202,7 @@ export class Controller {
       const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]), cit = this.pickCitizen(wx, wy);
       if (cit) { this.intent = null; this.path = []; this.noHold = true; this.ui.npcClick(cit); return; }
     }
+    if (!ent && first) { const [px, py] = this.r.toWorld(this.pointer[0], this.pointer[1]); if (this.playerAt(px, py)) { this.intent = null; this.path = []; this.noHold = true; return; } }   // Game.cpp: FOE >= 0 (aliado/neutral) -> el clic no hace nada
     if ((this.ctrl || this.ui.autoAttack) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
     if (!first && this.intent && this.intent.t === "attack") return;
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
@@ -215,8 +220,8 @@ export class Controller {
       this.hover = [Math.floor(wx / T), Math.floor(wy / T)];
       this.hoverEnt = this.pick(wx, wy);
       this.hoverCit = this.hoverEnt ? null : this.pickCitizen(wx, wy);
-      this.hoverPlayer = this.playerAt(wx, wy);
-    } else { this.hover = null; this.hoverEnt = null; this.hoverCit = null; this.hoverPlayer = null; }
+      this.hoverPlayer = this.playerAt(wx, wy); this.hoverSelf = !!this.playerAt(wx, wy, true);
+    } else { this.hover = null; this.hoverEnt = null; this.hoverCit = null; this.hoverPlayer = null; this.hoverSelf = false; }
     if (!me || me.dead) { this.intent = null; this.path = []; return; }
 
     // mantener pulsado = seguir andando hacia el cursor (como Diablo / el original)

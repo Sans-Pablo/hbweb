@@ -127,7 +127,7 @@ export function buyBall(w, p, cmd) {
   if (!w.npcDb[sp]) return w.reject(p, cmd, "esa especie no existe en los datos (Orc-Mage no está en NPC.cfg)");          // se vendía una bola de una especie que no se puede invocar
   if (p.gold < HOSPITAL.ballPrice) { w.emit({ t: "nogold", id: p.id }); return false; }
   const ball = newInst(w, SPECIES[sp][1]);
-  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(cls ? { cls, fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };          // el summon de apoyo nace con su clase (Healer/Buffer/Aura); un summon de escuela nace sin hechizos: se los enseñas tú
+  ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(cls ? { cls, fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { grim: [] } : {}) };          // el summon de apoyo nace con su clase (Healer/Buffer/Aura); un summon de escuela nace sin hechizos: se los enseñas tú
   const d = w.data.item(ball.id);
   if (!d || p.bag.length >= MAX_ITEMS || !Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); return false; }
   p.gold -= HOSPITAL.ballPrice;
@@ -149,7 +149,7 @@ export function tradeUp(w, p, cmd) {
   if (!Quests.canTrade(p)) return w.reject(p, cmd, "Gail solo evoluciona compañeros de quien ha vencido al Rey dorado");
   for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) return w.reject(p, cmd, "guárdalo antes");
   const from = c.sp, ball = newInst(w, SPECIES[to][1]);
-  ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack", spells: [...(c.spells || [])] };           // lo que le enseñaste se conserva
+  ball.comp = { sp: to, lvl: 1, exp: 0, on: false, nm: c.nm, mode: c.mode || "attack", grim: [...(c.grim || c.spells || [])] };           // lo que le enseñaste se conserva
   Inv.removeFromBag(p, inst.uid);
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);

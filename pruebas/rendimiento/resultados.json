@@ -1,22 +1,14 @@
 {
- "magia": {
-  "fps": 49.1,
-  "drawAvg": 6.3,
-  "drawP95": 11.8,
-  "drawMax": 64.8,
-  "frameP95": 31.7,
-  "frameMax": 73,
-  "ents": 181,
-  "ping": null
- },
- "extremo": {
-  "fps": 7.9,
-  "drawAvg": 49.95,
-  "drawP95": 94.9,
-  "drawMax": 195.5,
-  "frameP95": 198.5,
-  "frameMax": 292,
-  "ents": 217,
-  "ping": null
+ "correr": {
+  "fps": 24.7,
+  "drawAvg": 13.91,
+  "drawP95": 14.1,
+  "drawMax": 319.8,
+  "frameP95": 55.7,
+  "frameMax": 418,
+  "ents": 172,
+  "ping": null,
+  "q": 2,
+  "errores": []
  }
 }

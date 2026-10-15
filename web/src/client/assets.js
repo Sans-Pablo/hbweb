@@ -204,7 +204,7 @@ export class Sprites {
     if (!fr) return;
     if (!this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key);
-    const flt = [this.recolor, this.modelFx].filter(Boolean).join(" ");      // modelFx: solo el bestiario (modelo «IA + luz»)
+    const flt = this.recolor ? (this.modelFx ? this.recolor + " " + this.modelFx : this.recolor) : this.modelFx;      // modelFx: solo el bestiario (modelo «IA + luz»)
     if (flt) { ctx.save(); ctx.filter = flt; }      // solo el bestiario: matiz/saturación/brillo para probar paletas
     ctx.drawImage(img, sx * k, sy * k, w * k, h * k, x + pvx, y + pvy, w, h);
     if (flt) ctx.restore();
@@ -239,7 +239,7 @@ export class Sprites {
     if (!cv) {
       const [sx, sy, w, h] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
       cv = document.createElement("canvas"); cv.width = W; cv.height = H;
-      const g = cv.getContext("2d"); g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+      const g = cv.getContext("2d", { willReadFrequently: true }); g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H); // lectura en CPU: evita el getImageData desde GPU (3.6 ms por composición en 0.82.8)
       try {
         const id = g.getImageData(0, 0, W, H), d = id.data;
         for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { d[i] = Math.max(0, Math.min(255, d[i] + off[0])); d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + off[1])); d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + off[2])); }

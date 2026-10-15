@@ -44,7 +44,7 @@ const OPS = {
     say(w, p, p.fullMage ? "Full mage: on (stats 200, all spells, no mana cost)" : "Full mage: off (spells stay learned)");
   },
   god(w, p) { p.god = !p.god; say(w, p, p.god ? "Invulnerable: on" : "Invulnerable: off"); },
-  skills(w, p, c) { const n = num(c.n, 0, 100, 50); for (const k of Object.keys(SKILL_NAMES)) p.skills[k] = n; w.recalc(p); say(w, p, "All skills set to " + n); },
+  skills(w, p, c) { const n = num(c.n, 0, 100, 100); for (const k of Object.keys(SKILL_NAMES)) p.skills[k] = n; w.recalc(p); say(w, p, "All skills set to " + n); },
   // todos (jugadores y habitantes, en todos los mapas) vuelven al nivel 1 con sus atributos de partida, como al arrancar el servidor
   resetall(w, p) { const n = w.hooks?.resetAll?.(); say(w, p, n ? "Reset all: " + n + " character(s) back to level 1" : "Reset all not available here"); },
   botsnew(w, p) { const n = w.hooks?.restartBots?.(); say(w, p, n ? "Bots restarted from scratch (" + n + " new residents)" : "Not available here"); },
@@ -89,7 +89,7 @@ const OPS = {
   ball(w, p, c) {
     const sp = String(c.sp || ""); if (!Comp.SPECIES[sp]) return say(w, p, "Unknown species");
     const b = newInst(w, Comp.SPECIES[sp][1]);
-    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack", ...(Tal.CLS_OF[sp] ? { cls: Tal.CLS_OF[sp], fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { spells: [] } : {}) };
+    b.comp = { sp, lvl: num(c.lvl, 1, Comp.MAX_COMP_LEVEL, 1), exp: 0, on: false, nm: Comp.randomName(w.rng), mode: "attack", ...(Tal.CLS_OF[sp] ? { cls: Tal.CLS_OF[sp], fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { grim: [] } : {}) };
     Inv.addToBag(p, w.data, b); w.recalc(p);
     w.emit({ t: "petbought", id: p.id, sp, cls: b.comp.cls, nm: b.comp.nm, uid: b.uid, price: 0 });
   },

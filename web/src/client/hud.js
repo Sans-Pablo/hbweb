@@ -1,7 +1,7 @@
 import { DUMMY_NAMES } from "../shared/systems/talents.js";
 import { shown } from "../shared/systems/evolutions.js";
 import { imgUrl } from "./imgurl.js";
-import { MAGIC_MODE } from "../shared/magic.js";
+import { MAGIC_MODE, SUPPORTED_TYPES } from "../shared/magic.js";
 import { talent as talentDef } from "../shared/systems/talents.js";
 const talentName = id => talentDef(id)?.name || id;
 // Interfaz en HTML encima del lienzo. Cambia de aspecto con el modo (clase en <body>):
@@ -10,7 +10,6 @@ import * as R from "../shared/rules.js";
 import { itemDef, itemName, packKey } from "./names.js";
 import { classLabel, classOk } from "../shared/classgear.js";
 import { FEED, tasteOf, statsOf as companionStats, need as companionNeed } from "../shared/systems/companion.js";
-import { SCHOOL_OF, spellSchool, spellLevel, spellInt, spellGold, spellMana, taught } from "../shared/systems/schools.js";
 import { SKILL_NAMES } from "../shared/skills.js";
 import { EQUIP, ITYPE, EFFECT, isStack } from "../shared/items.js";
 import { PROT_CAP, PROT_OVERRIDE, rarityOf, RARITY_COLOR } from "../shared/rarity.js";
@@ -99,6 +98,7 @@ export class Hud {
       case "companion-lost": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " ha caído: pierde experiencia (nivel " + ev.lvl + ").", "bad"); break;
       case "companion-evolve": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " está a punto de cambiar de tamaño…", "gold"); break;
       case "companion-resummon": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " vuelve más grande.", "gold"); break;
+      case "pglearned": if (ev.id === me) this.log(ev.nm + " aprende " + this.magicData?.[ev.spell]?.name + " (" + ev.gold + " de oro).", "gold"); break;
       case "petskill": if (ev.id === me) this.log(ev.nm + ": " + ev.skill + "!", "gold"); break;
       case "companion-lvl": if (ev.id === me) this.log((ev.nm || shown(ev.sp)) + " sube al nivel " + ev.lvl + ".", "gold"); break;
       case "levelup": if (ev.id === me) { this.log("¡Subes al nivel " + ev.level + "! Tienes 3 puntos para repartir (botón Level Up).", "gold"); this.toast("Nivel " + ev.level); } break;
@@ -268,22 +268,16 @@ export class Hud {
 
   renderBook(me) {
     const M = this.magicData || {};
-    const ball = me.bag && me.bag.find(i => i.comp && i.comp.on), c = ball && ball.comp, school = c && SCHOOL_OF[c.sp];
-    const bu = ball ? ball.uid : 0;
-    if (this.ballUid !== undefined && this.ballUid !== bu && this.spell != null) { this.spell = null; }   // al cambiar de summon, la magia de F4 se reinicia
-    this.ballUid = bu;
-    const key = [JSON.stringify(c && [c.sp, c.lvl, c.spells]), me.gold, me.stats.int, this.spell].join("|");
+    const key = [JSON.stringify(me.magic), me.gold, me.stats.int, this.spell, me.fullMage].join("|");
     if (this.bookKey === key) return;
     this.bookKey = key;
-    // el libro es del summon elegido: sus hechizos aprendidos (Elegir) y los que el personaje puede enseñarle (Aprender: Int y oro)
-    let html = school ? "" : "<p>Elige un summon de escuela (Orc fuego, Pixie hielo, Skeleton rayo) y enséñale hechizos con tu Int y tu oro.</p>";
+    let html = "";
     for (const id of Object.keys(M).map(Number).sort((a, b) => a - b)) {
-      const m = M[id]; if (!school || spellSchool(m) !== school) continue;
-      const need = spellLevel(M, school, id, c.sp); if (need == null) continue;
-      const known = taught(c, id), int = spellInt(M, school, id), gold = spellGold(M, school, id), ok = c.lvl >= need && me.stats.int >= int && me.gold >= gold;
+      const m = M[id]; if (m.cost < 0 || !SUPPORTED_TYPES.has(m.type)) continue;
+      const known = me.magic && me.magic[id];
       const act = known ? `<button data-pick="${id}"${this.spell === id ? " class=on" : ""}>${this.spell === id ? "Elegido" : "Elegir"}</button>`
-        : `<button data-learn="${id}"${ok ? "" : " class=dis"}>Enseñar ${gold}</button>`;
-      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> Summon Lv ${need} · MP ${spellMana(M, school, id)} · Int ${int}</small></span>${act}</div>`;
+        : `<button data-learn="${id}"${(me.stats.int < m.reqInt || me.gold < m.cost) ? " class=dis" : ""}>Aprender ${m.cost}</button>`;
+      html += `<div class="sp${known ? " known" : ""}"><span>${m.name}<small> círculo ${Math.floor(id / 10) + 1} · MP ${m.mana} · Int ${m.reqInt}</small></span>${act}</div>`;
     }
     $("#book .list").innerHTML = html;
   }

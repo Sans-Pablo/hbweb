@@ -16,6 +16,7 @@ import { ACT, dirTo, dist, mobDurations } from "../const.js";
 import { spawnFrom } from "./npcsys.js";
 import { greedyStep } from "../path.js";
 import * as Sch from "./schools.js";
+import * as PG from "./petgrimoire.js";
 
 export const ARENA = {
   npc: "Kennedy", role: "arena", reach: 10,        // ficha de NPC.cfg sin función en el juego base; vive en la tienda general (gshop_1f)
@@ -33,17 +34,17 @@ const roleOf = c => Tal.spec(c) || "none";
 // Mismo cálculo que un compañero de verdad (companion.statsOf). Los gladiadores pelean con "movimientos":
 //  - todos: Golpe crítico (14 %), Power Strike (x2,2), Guard (reduce el daño), Second Wind (cura una vez) y Frenzy (doble ritmo con poca vida);
 //  - las especies de escuela (Orc/Demon fuego, Tutelary-Angel/Frost hielo, Skeleton/Liche rayo) lanzan los hechizos de Magic.cfg de su escuela
-//    que su nivel desbloquea (Sch.spellLevel), pagando maná; el maná del combate se recupera deprisa para que el espectáculo no se apague.
+//    que su nivel desbloquea (PG.needLevel), pagando maná; el maná del combate se recupera deprisa para que el espectáculo no se apague.
 const MOVES = { power: { lvl: 1, cd: 5500, mul: 2.2 }, guard: { lvl: 8, cd: 13000, ms: 3200, taken: 0.45 }, wind: { lvl: 15, heal: 0.25 }, frenzy: { lvl: 20, cd: 24000, ms: 5000 } };
 function fighterOf(w, p, c, key, extra = {}) {
   const st = Comp.statsOf(p, c), cfg = w.npcDb[c.sp], dur = mobDurations(cfg.type);
   const mul = extra.boost || 1, mg = {}, school = Sch.SCHOOL_OF[c.sp];
   if (school && w.magic) {                                          // los 3 mejores hechizos de su escuela que ya puede lanzar
-    const ids = Object.keys(Sch.unlockLevels(w.magic, school)).map(Number).filter(id => Sch.spellLevel(w.magic, school, id, c.sp) <= c.lvl)
-      .sort((x, y) => Sch.spellMana(w.magic, school, y) - Sch.spellMana(w.magic, school, x)).slice(0, 3);
-    for (const id of ids) { const m = w.magic[id]; mg[id] = { mana: Sch.spellMana(w.magic, school, id), v4: m.v4, v5: m.v5, v6: m.v6 }; }
+    const ids = Object.keys(PG.catalog(w.magic, school)).map(Number).filter(id => PG.needLevel(w.magic, school, id, c.sp) <= c.lvl)
+      .sort((x, y) => PG.manaCost(w.magic, school, y) - PG.manaCost(w.magic, school, x)).slice(0, 3);
+    for (const id of ids) { const m = w.magic[id]; mg[id] = { mana: PG.manaCost(w.magic, school, id), v4: m.v4, v5: m.v5, v6: m.v6 }; }
   }
-  const spellMul = Sch.levelPower(c.lvl) * (Sch.isTier2(c.sp) ? Sch.TIER_MULT.dmg : 1);
+  const spellMul = PG.levelPower(c.lvl) * (Sch.isTier2(c.sp) ? Sch.TIER_MULT.dmg : 1);
   return {
     key, sp: c.sp, nm: extra.nm || c.nm || c.sp, lvl: c.lvl, role: roleOf(c), champion: !!extra.champion,
     hp: Math.max(5, Math.round(st.hp * mul)), dmg: Math.max(1, Math.round(st.dmg * mul)),

@@ -16,3 +16,5 @@ Modo de prueba: `MAGIC_MODE.free` (sin maná ni requisitos); los tests lo desact
 
 ## Pendiente
 Nada. Efectos 102–172 sin sprite: por diseño no se dibujan; el teletransporte entre mapas se cubre con Recall; PvP existe (ver online.md); Inhibición y Confusión implementadas (test magic-pvp).
+
+> v0.82.0: los hechizos de los summons ya no viven aquí; ver `petgrimoire.md`.

@@ -21,6 +21,6 @@ const sup = ["Petra","Lyra","Olga","Yara"].map(n => a.residents().find(x => x.na
 for (const s of sup) { s.level = 30; s.gold = 8000; s.hp = s.maxHp; s.res._petAt = 1; }
 import * as Tal from "../web/src/shared/systems/talents.js";
 const seen = new Set();
-for (let m = 1; m <= 12; m++) { run(60000); for (const s of sup) if (s.bag.some(i => i.comp?.on && Tal.CLS_OF[i.comp.sp])) seen.add(s.name); }
+for (let m = 1; m <= 360; m++) { run(2000); for (const s of sup) if (s.bag.some(i => i.comp?.on && Tal.CLS_OF[i.comp.sp])) seen.add(s.name); }
 assert.ok(seen.size >= 2, "al menos dos magos de apoyo invocan un summon de apoyo (vistos: " + [...seen] + ")");
 console.log("OK support-summon", [...seen].join(","));

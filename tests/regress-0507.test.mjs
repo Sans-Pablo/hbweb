@@ -6,7 +6,6 @@ const res = rd("shared/systems/residents.js"), bos = rd("shared/systems/bosses.j
 for (const k of ["greet:", "again:", "idle:", "admire:"]) assert.ok(res.includes("  " + k + " [["), "CANNED " + k);
 assert.ok(res.includes('say2(adv, w, p, "admire"'), "los bots admiran un summon al máximo");
 assert.ok(bos.includes("DYN.ICESTORM") && !bos.includes('kind: "frost"'), "el jefe glacial usa Tormentas de Hielo, sin suelo");
-assert.ok(hud.includes("this.ballUid !== bu"), "cambiar de summon reinicia F4");
 console.log("OK regress-0507");
 // el bot no dice nombres internos
 {

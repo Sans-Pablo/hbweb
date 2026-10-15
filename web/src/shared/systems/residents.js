@@ -18,6 +18,7 @@ import { canFight } from "./combatsys.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
+import * as PG from "./petgrimoire.js";
 import * as Trade from "./trade.js";
 import * as Guild from "./guild.js";
 import * as Inv from "../inventory.js";
@@ -918,15 +919,15 @@ function pets(adv, w, p, r, home) {
     if (school && w.magic) {
       if (w.time - (r._teachAt || 0) > 20000) {
         r._teachAt = w.time;
-        const ids = Object.entries(Sch.unlockLevels(w.magic, school)).filter(([id, lv]) => !Sch.taught(c, id) && lv <= c.lvl).sort((x, y) => x[1] - y[1]);
-        for (const [id] of ids) if (p.stats.int >= Sch.spellInt(w.magic, school, id) && p.gold >= Sch.spellGold(w.magic, school, id) + potReserve(p)) { adv.command(p.id, { t: "learn", spell: +id }); break; }
+        const ids = Object.entries(PG.catalog(w.magic, school)).filter(([id, lv]) => !PG.knows(c, id) && lv <= c.lvl).sort((x, y) => x[1] - y[1]);
+        for (const [id] of ids) if (p.stats.int >= PG.intNeeded(w.magic, school, id) && p.gold >= PG.goldCost(w.magic, school, id) + potReserve(p)) { adv.command(p.id, { t: "pgteach", spell: +id, npc: 0 }); break; }
       }
       const n = live;
       let t = b.target?.kind === "npc" ? b.target : null;                                // sin objetivo propio: el monstruo más cercano al summon (él también pelea solo)
       if (!t && n) { let bd = 9; for (const e of w.ents.values()) if (e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit && !w.safeAt(e.x, e.y)) { const d = dist(n, e); if (d < bd) { bd = d; t = e; } } }
       if (n && t && !t.dead && dist(p, t) <= 12 && w.time - (r._castAt || 0) > 2500) {
-        const known = (c.spells || []).filter(id => Sch.spellLevel(w.magic, school, id, c.sp) <= c.lvl && (n.mp ?? 0) >= Sch.spellMana(w.magic, school, id)).sort((x, y) => Sch.spellMana(w.magic, school, y) - Sch.spellMana(w.magic, school, x));
-        if (known.length) { r._castAt = w.time; adv.command(p.id, { t: "cast", spell: known[0], x: t.x, y: t.y }); blog(w, p, `Mi summon lanza «${w.magic[known[0]].name}» contra ${t.name}.`); }
+        const known = PG.grimOf(c).filter(id => PG.needLevel(w.magic, school, id, c.sp) <= c.lvl && (n.mp ?? 0) >= PG.manaCost(w.magic, school, id)).sort((x, y) => PG.manaCost(w.magic, school, y) - PG.manaCost(w.magic, school, x));
+        if (known.length) { r._castAt = w.time; adv.command(p.id, { t: "pgcast", spell: known[0], x: t.x, y: t.y }); blog(w, p, `Mi summon lanza «${w.magic[known[0]].name}» contra ${t.name}.`); }
       }
     }
     // órdenes y caramelos

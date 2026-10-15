@@ -20,7 +20,7 @@ const A = a.residents().find(x => x.name === "Aldric"), w = a.farm;
 const sword = data.named("LongSword");
 const inst = { uid: w.nextItem++, id: sword.id, count: 1, life: sword.maxLife };
 A.level = 60; A.bag.push(inst); A.equip[sword.equipPos ?? 8] = inst.uid; w.recalc(A);
-A.skills[A.eff.skill] = 100; A.superAttack = 3; A.sp = A.maxSp;
+for (const k of [3,4,5,6,7,8,9,10,11,12]) A.skills[k] = 100;  A.superAttack = 3; A.sp = A.maxSp;   // cualquier arma que se equipe el bot tiene maestría
 const seen = { crit: 0, dash: 0 };
 for (let i = 0; i < 40; i++) {
   const g = { name: "Slime", rect: [A.x + 2, A.y, A.x + 2, A.y], alive: 0, max: 0, respawn: false };

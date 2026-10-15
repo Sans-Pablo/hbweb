@@ -79,7 +79,7 @@ export class NewsWin extends Win {
       f.text("Lv"); num(f, "lvl", 30, 1, 50); f.btn("Set level", () => this.send({ op: "level", n: n("lvl") }));
       f.btn("+1000 exp", s({ op: "exp", n: 1000 })); f.btn("+100k gold", s({ op: "gold", n: 100000 })); f.btn("+5 points", s({ op: "points", n: 5 }));
       f.btn("Heal all", s({ op: "heal" })); f.btn(es("Reset all (todos a nivel 1)", "Reset all (everyone to level 1)"), async () => { if (await this.g.confirm("Reset all?")) this.send({ op: "resetall" }); });
-      f.btn("Full mage on/off", s({ op: "fullmage" })); f.btn("Invulnerable on/off", s({ op: "god" })); f.btn(es("0 restricciones on/off", "0 restrictions on/off"), s({ op: "free" })); f.btn("Skills 50", s({ op: "skills", n: 50 }));
+      f.btn("Full mage on/off", s({ op: "fullmage" })); f.btn("Invulnerable on/off", s({ op: "god" })); f.btn(es("0 restricciones on/off", "0 restrictions on/off"), s({ op: "free" })); f.btn("Skills 100", s({ op: "skills", n: 100 }));
       f.nl(); f.combo("stat", 70, ["str", "vit", "dex", "int", "mag", "chr"], { def: "str" }); num(f, "statv", 50, 1, 500); f.btn("Set stat", () => this.send({ op: "stat", key: v("stat"), n: n("statv") }));
     });
     sec(es("Ir a", "Go to"), f => {

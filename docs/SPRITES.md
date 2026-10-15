@@ -39,3 +39,6 @@ La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~l
 
 ## Fuente de sprites de texto (interface2_1)
 `interface2_1` (285 fotogramas = 3 tipos x 95 glifos): glifo = `código-32 + 95*tipo`, avance = ancho del fotograma. Usada en `fx.js` (`sprFontDraw`) para daño, fallo y conjuros; mensajes tipo 21/22/23 -> tipo 2/1/0. Las cifras (`interface2_0` 6-15) las dibuja `gui.num`.
+
+## Caché de personajes compuestos (v0.82.6)
+`client/composed.js` (`PersonCache`): `drawPerson` se ejecuta sobre un grabador (`Object.create(spr)` que mide la caja de cada pieza) y el resultado recortado va a páginas de atlas 2048² (8 máx., reciclaje de la más antigua). Clave = género+aspecto+acción/dirección/fotograma+equipo+tintes. No aplica con `spr.recolor`/`spr.modelFx` (bestiario) ni si falta alguna hoja (reintento cada 8 fotogramas). Escala de caché = min(2, ceil(scale*2)/2). Contadores en el texto de fps (`caché acierto/compuestos/directos`). `warm(3)` (0.82.7): precompone los 2 fotogramas siguientes de los personajes vistos, máx. 3 ms/fotograma.

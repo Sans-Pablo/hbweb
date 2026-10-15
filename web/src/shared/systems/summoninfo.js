@@ -1,7 +1,8 @@
 // Ficha de un summon para la ventana de vista previa de la tienda de bolas (INVENTO del port): estadísticas, hechizos,
 // leyenda y etapas de evolución. Solo lectura: no toca el mundo.
 import { stagesOf, MAX_COMP_LEVEL, statsOf } from "./companion.js";
-import { SCHOOL_OF, TIER2, SCHOOL_NAMES, unlockLevels, spellLevel } from "./schools.js";
+import { SCHOOL_OF, TIER2, SCHOOL_NAMES } from "./schools.js";
+import { catalog as unlockLevels, needLevel as spellLevel } from "./petgrimoire.js";
 import { CHAINS } from "./evolutions.js";
 
 // Leyenda breve de cada especie (en español; i18n.js trae la inglesa)
