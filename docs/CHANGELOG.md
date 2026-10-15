@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.11 · Motor: ordenes locales con efecto (2026-10-15)
+- Ticket 10: `/showgrid`, `/timestamp`, `/bigitems` y `/tooff` ahora tienen efecto (antes solo cambiaban un flag). Verificado en navegador. Pendiente: ciclo de susurros y zoom numpad. `.claude/launch.json` corregido (rutas con barras).
+
 ## 0.83.10 · Motor: 4 personajes por cuenta (2026-10-15)
 - Ticket 11: hasta 4 personajes por cuenta (ranura 0 = clave de la cuenta, 1-3 = `<cuenta>#n`), `authok.chars`, `join.slot`, pantalla de selección y nombre único. NET_PROTO 11. Test `net-chars`. Verificado en navegador (servidor local, selección y entrada con el 2.º personaje).
 

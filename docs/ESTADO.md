@@ -330,3 +330,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] (0.82.0) Compendio del juego en un artifact (testers, desvíos, dev): https://claude.ai/artifact/H9RKBrnNGb8RaPYgmaNTay
 
 - Petición (9 puntos): HD ya no vuelve a original solo; minimapa con «Cargando mapa…»; nombre propio solo en hover; F1 Skills 100; ataque a jugadores según `_iGetFOE` (aliados del mismo bando no se atacan (viajeros sí: desvío del port) ni se pisan al clicar; criminales sí): HECHO v0.82.1 (local). Pendiente: fuente de daño más nítida (sin IA disponible), alternar Force Attack con Ctrl+A. El FAIL de magia a summons es la tirada de resistencia original (poca skill), no un fallo de daño.
+
+- Hilo MOTOR 0.83.11: ticket 10 con efecto en /showgrid, /timestamp, /bigitems, /tooff (verificado en navegador integrado). SIN HACER: ciclo de susurros, zoom numpad, gesto del ticket 8, medicion de FPS (ticket 3: el navegador integrado es por software, hace falta log `?gl=1&prof=1` de un PC con GPU).

@@ -60,6 +60,7 @@ export class Hud {
   }
 
   log(text, cls = "") {
+    if (this.stamp?.() && /^(chat|shout|side|party|guild)$/.test(cls)) { const n = new Date(); text = "[" + String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0") + "] " + text; }      // /timestamp
     this.onLog?.(text, cls);
     const d = document.createElement("div");
     d.textContent = text;
@@ -132,7 +133,7 @@ export class Hud {
         this.log(ev.on ? "Estás " + names[ev.key] + "." : "Ya no estás " + names[ev.key] + ".", ev.on && bad ? "bad" : "");
       } break;
       case "respawn": if (ev.id === me) this.log("Vuelves a la granja con el HP lleno."); break;
-      case "chat": this.log(ev.system ? ev.text : (ev.ch === "shout" ? "[Shout] " : ev.ch === "side" ? "[Side] " : "") + ev.name + ": " + ev.text, ev.system ? "gold" : ev.ch === "shout" ? "shout" : ev.ch === "side" ? "side" : "chat"); break;
+      case "chat": if (!ev.system && this.muted?.(ev.name)) break; this.log(ev.system ? ev.text : (ev.ch === "shout" ? "[Shout] " : ev.ch === "side" ? "[Side] " : "") + ev.name + ": " + ev.text, ev.system ? "gold" : ev.ch === "shout" ? "shout" : ev.ch === "side" ? "side" : "chat"); break;
       case "whisper": if (ev.id === me && (ev.to || this.canWhisper?.() !== false)) this.log(ev.to ? "[To " + ev.to + "] " + ev.text : "[" + ev.name + " whispers] " + ev.text, "party"); break;
       case "disconnected": this.log("Se ha perdido la conexión con el servidor.", "bad"); break;
     }

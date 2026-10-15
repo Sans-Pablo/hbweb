@@ -1,10 +1,23 @@
 {
-  "build": "0.83.10",
+  "build": "0.83.11",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: órdenes de chat con efecto (v0.83.11)",
+        "en": "Engine: chat commands now take effect (v0.83.11)"
+      },
+      "items": [
+        {
+          "es": "/showgrid dibuja la rejilla, /timestamp pone la hora en el chat, /bigitems agranda los objetos del suelo y /tooff silencia a un jugador (chat y burbuja).",
+          "en": "/showgrid draws the grid, /timestamp stamps chat lines, /bigitems enlarges ground items and /tooff mutes a player (chat and bubble)."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {

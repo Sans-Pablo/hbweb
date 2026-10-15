@@ -586,6 +586,7 @@ async function main() {
   gui.actions.tutorial = () => { gui.close(60); tutorial.restart(); };
   addEventListener("visibilitychange", () => { if (document.hidden) conn.save?.(); });
   hud.canWhisper = () => flags.whisper;
+  hud.stamp = () => flags.timestamp; hud.muted = n => !!n && !!flags.mutes?.has(n);     // /timestamp y /tooff (bCheckLocalChatCommand)
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
   gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
@@ -749,7 +750,7 @@ async function main() {
         if (sp) for (let k = 0; k < 40; k++) stream.want(sp + k, 2);
       }
       if (ev.t === "time") sound.playRaw(ev.v === 2 ? "E31" : "E32", 1, 0);          // NotifyMsg_TimeChange
-      if (ev.t === "chat" && !ev.system && ev.ch !== "side") bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
+      if (ev.t === "chat" && !ev.system && ev.ch !== "side") !flags.mutes?.has(ev.name) && bubbles.set(ev.id, { text: ev.text, until: performance.now() + 5000 });
       if (ev.t === "disconnected") { const l = document.getElementById("lost"); if (ev.reason) l.querySelector("p").textContent = ev.reason; l.style.display = "grid"; }
     }
     const me = world.ents.get(pid);
@@ -764,7 +765,7 @@ async function main() {
     renderer.render({
       world, me, dt, fx,
       sky, hover: ctl.hover, hoverEnt: ctl.hoverEnt, hoverCit: ctl.hoverCit, hoverPlayer: ctl.hoverPlayer, hoverSelf: ctl.hoverSelf, path: ctl.path, petOrder: hud.petOrder, clickFx: ctl.clickFx,
-      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
+      labels: ctl.keys.has("alt"), groundInfo: opts.groundInfo !== false, groundCost: opts.groundCost !== false, showGrid: view.showGrid || !!flags.grid, bigItems: !!flags.bigItems, showMinimap: miniOn(), mapStyle: view.mapStyle, bubbles, pid,
     });
     { const d = performance.now() - d0; drawSum += d; if (d > drawMax) drawMax = d; }      // coste del dibujado del mundo (media/pico por medio segundo)
     { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }

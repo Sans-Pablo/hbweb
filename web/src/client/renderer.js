@@ -340,7 +340,7 @@ export class Renderer {
       const x = it.x * T + 16 - camX, y = it.y * T + 16 - camY;
       if (x < -40 || y < -40 || x > VW + 40 || y > VH + 40) continue;
       const d = itemDef(it.id);
-      if (d) this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y);
+      if (d) { if (s.bigItems) { ctx.save(); ctx.translate(x, y); ctx.scale(1.6, 1.6); this.spr.put(ctx, groundKey(d), d.spriteFrame, 0, 0); ctx.restore(); } else this.spr.put(ctx, groundKey(d), d.spriteFrame, x, y); }      // /bigitems
       const rar = it.id === 90 ? 0 : rarityOf(it.id, it.attr);
       if (rar >= 2) {                                                   // rayo de luz sobre el botín raro/único
         const g = ctx.createLinearGradient(0, y - 70, 0, y);
