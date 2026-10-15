@@ -623,6 +623,8 @@ export class Gui {
     this.dungeonInfo(world);
     if (this.flags.safe) this.put("gamedialog2_6", 4, 368 + a - 2, 440 + RESY);
     else if (this.flags.combat) this.put("gamedialog2_6", 5, 368 + a - 1, 440 + RESY);
+    // contador de críticos junto al indicador paz/ataque (Game.cpp, DrawDialogBoxs final: maestría 100 = número claro; menos = oscuro)
+    if ((me.superAttack | 0) > 0) this.num(380 + a, 454 + RESY, me.superAttack, ((me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100) ? [220, 200, 200] : [10, 10, 10]);
     if (m.x > 362 + a && m.x < 404 + a && m.y > 434 + RESY && m.y < 475 + RESY) {
       this.put("gamedialog2_6", 16, 362 + a - 1, 434 + RESY);
       this.tip(this.flags.combat ? (this.flags.safe ? "Safe Attack" : "Attack") : "Peace");

@@ -1,10 +1,23 @@
 {
-  "build": "0.84.9",
+  "build": "0.84.11",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: contador de críticos (v0.84.11)",
+        "en": "Motor: contador de críticos (v0.84.11)"
+      },
+      "items": [
+        {
+          "es": "Críticos: el contador de cargas aparece junto al indicador paz/ataque del menú (Game.cpp, final de DrawDialogBoxs: claro con maestría 100, oscuro con menos). La carga, el gasto, el alcance y el daño ya seguían al servidor original (tests crit-dash, bot-crit).",
+          "en": "Criticals: the charge counter is drawn beside the peace/attack icon (Game.cpp DrawDialogBoxs: bright at mastery 100, dark below). Charge, cost, reach and damage already follow the original server."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {
