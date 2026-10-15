@@ -32,6 +32,7 @@ p.hp = 1; dbg({ op: "god" }); w().ents.get(id).hp = p.maxHp;
 assert.ok(dbg({ op: "crypt", level: 7 })); assert.equal(w().map.level, 7); assert.ok(w().map.kind === "dungeon");
 dbg({ op: "clear" }); assert.ok(w().cleared);
 assert.ok(dbg({ op: "goto", map: "arefarm" })); assert.equal(w(), a.farm);
+assert.ok(!dbg({ op: "goto", map: "aresden" }), "Ir a: solo Promise Land, granjas y cripta"); assert.equal(w(), a.farm);
 dbg({ op: "sky", day: 2, weather: 1 }); a.tick(100); assert.equal(w().dayOrNight, 2);
 // reset all: vuelta al principio de jugador y bots
 const bot = a.spawnBot(null, { level: 12 }); assert.ok(bot.level >= 12); dbg({ op: "level", n: 30 }); dbg({ op: "gold", n: 9999 });

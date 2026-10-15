@@ -2,6 +2,7 @@
 import { Win, Flow, THEME } from "./window.js";
 import { getLang } from "./i18n.js";
 import { SPECIES as ALL_SPECIES } from "../shared/systems/companion.js";
+import { GOTO_MAPS } from "../shared/adventure.js";
 
 export const NEWS_ID = 70;
 const KEY = "hbweb.tested";
@@ -73,7 +74,7 @@ export class NewsWin extends Win {
     const hb = window.hbDev;
     if (!hb) return u.para(0, 0, cw, "Las herramientas aparecen al entrar en el juego.", THEME.dim);
     const lang = getLang(), es = (a, b) => (lang === "en" ? b : a), s = c => () => this.send(c);
-    this.lists ||= { items: [...hb.data.items.values()].map(i => i.name).filter(Boolean).sort(), mobs: Object.keys(hb.npcDb).sort(), maps: ["arefarm", ...hb.mapIds.filter(m => m !== "arefarm")] };
+    this.lists ||= { items: [...hb.data.items.values()].map(i => i.name).filter(Boolean).sort(), mobs: Object.keys(hb.npcDb).sort(), maps: GOTO_MAPS.filter(m => hb.mapIds.includes(m)) };
     let y = u.para(0, 0, cw, "Solo para pruebas: lo que hagas aquí se guarda con la partida. Los mensajes salen en el chat.", THEME.dim) + 6;
     const sec = (title, fn) => { u.head(0, y, title); y += 16; const f = new Flow(u, 0, y, cw, { rh: 24 }); fn(f); y = f.bottom + 6; };
     const n = id => this.n(id), v = id => this.v(id);

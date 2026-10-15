@@ -29,6 +29,7 @@ function tintOf(g, sp, m) {
   tints.set(sp, col); return col;
 }
 const ballCache = new Map();
+const BALL_SPRITE = 23;                               // sprite de Item.cfg que no existe: la hoja ip20 la hornea tools/ballitems.mjs
 // bola de la mochila: un 15 % más grande, con el color de su especie y el sprite pequeño justo en el centro
 export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
   const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;

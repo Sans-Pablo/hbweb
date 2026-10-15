@@ -1,5 +1,5 @@
 // Compañeros (clase Cazador). INVENTO del port, sin equivalente en el original; se apoya en lo que sí existe:
-// el hechizo Summon Creature (npcsys.summonFor) y los objetos GreenBall..PearlBall de Item.cfg (651..655) como "bola" contenedora.
+// el hechizo Summon Creature (npcsys.summonFor) y objetos-bola propios por especie (ids 2001..2032, tools/ballitems.mjs) como "bola" contenedora; 651..655 (GreenBall..PearlBall de Item.cfg) siguen siendo botín normal.
 //  - Las bolas SOLO se consiguen en la tienda (Gail, hospital de compañeros): matar monstruos no las da. Usarla la elige como compañero
 //    (siempre esa especie) y lo invoca; volver a usarla lo guarda. La bola guarda especie, nivel y experiencia (inst.comp).
 //  - Estadísticas COMPARTIDAS: el daño y la vida del compañero salen del daño medio y la vida del dueño, multiplicados por una
@@ -27,13 +27,14 @@ const SYL_A = ["Bru", "Chi", "Dro", "Fen", "Gru", "Kor", "Lum", "Mok", "Nib", "P
 const SYL_B = ["bo", "ra", "ki", "mo", "tu", "lo", "na", "zi", "ko", "pa", "du", "ri", "so", "ga", "fi"];
 const SYL_C = ["", "", "x", "n", "k", "s", "z", "to", "ly", "ko"];
 export const randomName = rng => { const p = a => a[Math.floor(rng() * a.length)]; return p(SYL_A) + p(SYL_B) + p(SYL_C); };
-// especie -> muertes para una bola, id de Item.cfg de la bola; el orden es el rango (poder de la especie)
+// especie -> muertes para una bola, id del objeto-bola PROPIO de la especie (2001+, items.json; ya no se reutilizan las GreenBall..PearlBall 651..655 de Item.cfg, que siguen siendo
+// materiales sueltos). El orden es el rango (poder de la especie); una especie nueva se añade al final con el siguiente id y se regenera con tools/ballitems.mjs
 export const SPECIES = {
-  "Slime": [500, 651], "Giant-Ant": [500, 651], "Amphis": [500, 652], "Orc": [600, 652], "Skeleton": [600, 653], "Clay-Golem": [700, 653],
-  "Stone-Golem": [700, 654], "Orc-Mage": [800, 654], "Hellbound": [900, 655], "Cyclops": [1000, 655], "Troll": [1000, 655], "Orge": [1000, 655],
-  "Tentocle": [900, 654], "Tutelary-Angel": [900, 655], "Cannibal-Plant": [900, 655], "Scorpion": [600, 652], "Guard": [700, 654], "Dark-Elf": [800, 654], "Unicorn": [900, 655], "Giant-Frog": [700, 653],
-  "Demon": [0, 652], "Frost": [0, 654], "Beholder": [0, 654], "Liche": [0, 655], "Giant-Crayfish": [0, 653], "Temple-Knight": [0, 655], "Elf-Master": [0, 654], "Centaurus": [0, 655], "Stalker": [0, 654],
-  "Healer": [500, 652], "Buffer": [500, 652], "Aura": [500, 652],     // las especies superiores (0 muertes) salen de evolutions.js: solo por cambio al nivel 50, no se compran
+  "Slime": [500, 2001], "Giant-Ant": [500, 2002], "Amphis": [500, 2003], "Orc": [600, 2004], "Skeleton": [600, 2005], "Clay-Golem": [700, 2006],
+  "Stone-Golem": [700, 2007], "Orc-Mage": [800, 2008], "Hellbound": [900, 2009], "Cyclops": [1000, 2010], "Troll": [1000, 2011], "Orge": [1000, 2012],
+  "Tentocle": [900, 2013], "Tutelary-Angel": [900, 2014], "Cannibal-Plant": [900, 2015], "Scorpion": [600, 2016], "Guard": [700, 2017], "Dark-Elf": [800, 2018], "Unicorn": [900, 2019], "Giant-Frog": [700, 2020],
+  "Demon": [0, 2021], "Frost": [0, 2022], "Beholder": [0, 2023], "Liche": [0, 2024], "Giant-Crayfish": [0, 2025], "Temple-Knight": [0, 2026], "Elf-Master": [0, 2027], "Centaurus": [0, 2028], "Stalker": [0, 2029],
+  "Healer": [500, 2030], "Buffer": [500, 2031], "Aura": [500, 2032],     // las especies superiores (0 muertes) salen de evolutions.js: solo por cambio al nivel 50, no se compran
 };
 const RANKS = Object.keys(SPECIES);
 export const rankOf = sp => Math.max(0, RANKS.indexOf(sp));
