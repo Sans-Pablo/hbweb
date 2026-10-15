@@ -299,11 +299,11 @@ export function npcThink(w, n) {
   if (sget(w, n, "hold")) return;                                              // paralizado: ni anda ni ataca
   if ((sget(w, n, "confuse") || sget(w, n, "illusion")) && w.rng() < 0.5) { w.tryStep(n, 1 + Math.floor(w.rng() * 8), n.dur.move, ACT.MOVE); return; }       // confundido: la mitad de los pasos al azar (psychic.js)
   let t = n.target ? w.ents.get(n.target) : null;
-  if (t && (t.dead || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
+  if (t && (t.dead || t.feign || dist(n, t) > CHASE_LIMIT || sget(w, t, "invis"))) { n.target = null; t = null; }
   if (!t) {                                                                    // el más cercano entre jugadores y compañeros (los demás seguidores no atraen)
     let bd = 1e9;
     for (const e of w.ents.values()) {
-      if (e.dead || !(e.kind === "player" ? !sget(w, e, "invis") : e.comp)) continue;
+      if (e.dead || e.feign || !(e.kind === "player" ? !sget(w, e, "invis") : e.comp)) continue;
       const d = dist(n, e) * (e.dummy ? Dummy.AGRO_FACTOR : 1);                 // reflejo de agro: el Dummy atrae a los monstruos
       if (dist(n, e) <= n.cfg.searchRange && d < bd) { t = e; bd = d; n.target = e.id; if (e.dummy) Dummy.agroWarn(w, e, n); }
     }

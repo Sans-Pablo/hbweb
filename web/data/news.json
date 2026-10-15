@@ -1,10 +1,23 @@
 {
-  "build": "0.84.11",
+  "build": "0.84.12",
   "intro": {
     "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
     "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
   },
   "news": [
+    {
+      "date": "2026-10-15",
+      "title": {
+        "es": "Motor: Pretend Corpse (v0.84.12)",
+        "en": "Motor: Pretend Corpse (v0.84.12)"
+      },
+      "items": [
+        {
+          "es": "Habilidad Pretend Corpse (skill 19, Habilidades > Pretend Corpse): tirada de maestría, falla en zona de lucha o con alguien en las 8 casillas contiguas; el personaje se tumba, los monstruos lo ignoran, no regenera y se levanta al moverse, atacar o lanzar (HG.cpp UseSkillHandler).",
+          "en": "Pretend Corpse skill (Skills dialog): mastery roll, fails in fight zones or with anyone on the 8 adjacent tiles; you lie down, monsters ignore you, no regen, you get up when you move, attack or cast."
+        }
+      ]
+    },
     {
       "date": "2026-10-15",
       "title": {

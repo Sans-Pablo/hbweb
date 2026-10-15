@@ -449,7 +449,7 @@ export function registerDialogs(gui, api) {
       for (let i = 0; i < 17; i++) {
         const k = i + this.view; if (!SKILLS[k]) continue;
         const [nm, use] = SKILLS[k], lv = (me.skills && me.skills[k]) || 0, name = nm.replace(/-/g, " "), pct = String(lv).padStart(3, " ") + "%";
-        const usable = use === 1 && lv !== 0, over = lx >= 25 && lx <= 166 && ly >= 45 + i * 15 && ly <= 59 + i * 15;
+        const usable = use !== 0 && lv !== 0, over = lx >= 25 && lx <= 166 && ly >= 45 + i * 15 && ly <= 59 + i * 15;
         const col = usable ? (over ? "#fff" : "rgb(34,30,120)") : "rgb(5,5,5)";
         g.text(30, 45 + i * 15, name, col); g.text(183, 45 + i * 15, pct, col);
         if (this.down === k) g.tint("interface2_0", 21, 215, 47 + i * 15, [50, 50, 50]); else g.put("interface2_0", 20, 215, 47 + i * 15);
@@ -465,7 +465,8 @@ export function registerDialogs(gui, api) {
         const k = i + this.view; if (!SKILLS[k]) continue;
         if (lx >= 44 && lx <= 179 && ly >= 45 + i * 15 && ly <= 59 + i * 15) {
           const lv = (me.skills && me.skills[k]) || 0;
-          if (SKILLS[k][1] === 1 && lv !== 0) api.log("Esa habilidad aún no se puede usar en esta versión.");
+          if (k === 19 && lv !== 0) api.useSkill(k);            // REQ_USESKILL: Pretend-Corpse
+          else if (SKILLS[k][1] !== 0 && lv !== 0) api.log("Esa habilidad aún no se puede usar en esta versión.");
           return true;
         } else if (lx >= 215 && lx <= 240 && ly >= 45 + i * 15 && ly <= 59 + i * 15) { this.down = this.down === k ? -1 : k; return true; }
       }

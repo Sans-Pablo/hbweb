@@ -193,6 +193,7 @@ async function main() {
       }, 1000);
     },
     restart: () => conn.send({ t: "respawn" }),
+    useSkill: k => conn.send({ t: "useskill", skill: k }),
     stat: (k, n = 1) => conn.send({ t: "stat", stat: k, n }),
     learn: id => conn.send({ t: "learn", spell: id }),
     statReset: () => conn.send({ t: "statreset" }),

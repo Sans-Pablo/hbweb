@@ -91,6 +91,7 @@ export class Hud {
       case "recalling": if (ev.id === me) this.log("Recall: quédate quieto " + Math.round(ev.ms / 1000) + " segundos…", "gold"); break;
       case "recalled": if (ev.id === me) this.log("Recall: vuelves a la granja.", "gold"); break;
       case "recallfail": if (ev.id === me) this.log(ev.why === "cancel" ? "Recall cancelado." : "Recall interrumpido: te moviste o entraste en combate.", "bad"); break;
+      case "skillend": if (ev.id === me && !ev.up) this.log(ev.ok ? "You succeeded in using the ability!" : "You failed the ability attempt.", ev.ok ? "gold" : "bad"); break;    // NotifyMsg_SkillUsingEnd
       case "petname": if (ev.id === me) this.log("Tu compañero se llama ahora " + ev.nm + "."); break;
       case "petmode": if (ev.id === me) this.log((ev.nm || "Tu compañero") + (ev.mode === "peace" ? " está en paz: solo te sigue." : " ataca todo lo que ve.")); break;
       case "petgo": if (ev.id === me) this.petOrder = { kind: "go", x: ev.x, y: ev.y, at: performance.now() }; break;

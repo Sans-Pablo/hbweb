@@ -3,6 +3,7 @@ import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as Bal from "../balance.js";
 import { dice } from "../rules.js";
 import { gainSSN } from "../skills.js";
+import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
 import { damageNpc } from "./combatsys.js";
@@ -35,6 +36,7 @@ function usable(w, p, cmd) {
   const sp = w.magic[cmd.spell];
   if (sp && M.freeFor(p)) p.magic[cmd.spell] = 1;
   if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
+  Feign.stand(w, p);                                     // lanzar también te levanta
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
   // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
   if (M.freeFor(p)) return sp;
