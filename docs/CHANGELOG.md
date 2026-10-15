@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.83.9 · Órdenes a los bots (2026-10-15)
+- Glosario de órdenes por chat a los habitantes (orders.js): «vamos a matar slimes» → te sigue y solo ataca a esa criatura; «vamos a hacer EK» → te sigue y solo ataca a jugadores enemigos. Si no entiende qué cazar, pregunta; si sigue sin entenderlo abre un ticket «el bot X no entendió esto del player Y» (kind order en el panel de errores).
+
 ## 0.83.8 · Trade estilo Olympia (2026-10-15)
 - Arrastrar un objeto de la mochila sobre otro jugador abre el intercambio con ese objeto ya ofrecido. Mochila llena: el trato ya no se cancela; lo que no cabe espera en una cola de recepción (máx. 12, se guarda) y entra solo al liberar peso/casillas. Ficha `docs/sistemas/trade.md`.
 

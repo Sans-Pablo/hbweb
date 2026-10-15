@@ -278,7 +278,7 @@ function pickTarget(w, p, owner) {
   if (rv && !rv.dead && dist(p, rv) <= 12 && canFight(w, p, rv)) return rv;
   for (const e of w.ents.values()) {
     if (e.kind === "player") {                                                                            // enemigos de otro bando en Promise Land
-      if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e)) continue;
+      if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e) || owner && p.bot.only && p.bot.only !== "@ek") continue;
       const d = dist(p, e);
       if (d <= 12 && (!owner || dist(owner, e) <= 14) && d - 2 < bs) { best = e; bs = d - 2; }
       continue;
@@ -289,6 +289,7 @@ function pickTarget(w, p, owner) {
       continue;
     }
     if (!hostile(e)) continue;
+    if (owner && p.bot.only && e.name !== p.bot.only) continue;                                          // orden «vamos a matar X» (orders.js): solo esa criatura; «@ek» = solo jugadores
     if (p.bot.ignore?.has(e.id) && e.target !== p.id) continue;                                         // inalcanzable hace un momento
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;

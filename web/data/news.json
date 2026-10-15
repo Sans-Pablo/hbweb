@@ -1,10 +1,18 @@
 {
- "build": "0.83.8",
+ "build": "0.83.9",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-15",
+   "title": {"es": "Órdenes a los bots (v0.83.9)", "en": "Orders to bots (v0.83.9)"},
+   "items": [
+    {"es": "Dile a un bot «vamos a matar slimes» (o orcos, esqueletos…): te sigue y ataca solo a esa criatura. «Vamos a hacer EK»: te sigue y ataca solo a enemigos. Prueba: pedirlo y ver que ignora otros monstruos.", "en": "Tell a bot «let's kill slimes» (or orcs, skeletons…): it follows you and attacks only that creature. «Let's do EK»: it follows and attacks only enemies. Test: ask it and check it ignores other monsters."},
+    {"es": "Si no entiende la criatura, pregunta cómo se llama; si sigue sin entenderlo, lo anota como ticket para los desarrolladores (menu.html, tipo order).", "en": "If it doesn't know the creature it asks its name; if still not understood it files a ticket for the devs (menu.html, kind order)."}
+   ]
+  },
   {
    "date": "2026-10-15",
    "title": {"es": "Trade estilo Olympia (v0.83.8)", "en": "Olympia-style trade (v0.83.8)"},

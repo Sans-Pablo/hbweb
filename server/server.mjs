@@ -128,6 +128,7 @@ function resetResidents() {
 const informe = openReport(STORE, { version: VERSION.version, log });
 const bugs = openBugs(STORE);
 const botStats = openBotStats(adventure, log);
+adventure.order = o => bugs.add({ kind: "order", user: o.user, map: o.map, x: o.x, y: o.y, text: "el bot " + o.bot + " no entendió esto del player " + o.user + ": «" + o.text + "»" }, "bot-orders");   // ticket con el texto que hay que enseñarle (orders.js)
 adventure.report = r => { informe.add(r); botStats.idea(r); };               // los habitantes avisan de fallos, incomodidades, balance e ideas (server/report.mjs)
 importGuilds(adventure.guildReg, saves["sys:guilds"]?.list);
 if (Array.isArray(saves["sys:stalls"]?.list)) adventure.stallDb.push(...saves["sys:stalls"].list);
