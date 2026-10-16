@@ -305,7 +305,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && target.side === p.side && !w.fightZone) {      // HG.cpp:10933-10958: el objetivo debe ser un jugador del mismo bando
-        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.freeFor(p), !!p.gm);   // con bola elegida: siempre esa especie
+        const n = activeBall(p) ? spawnCompanion(w, p, null, true) : summonFor(w, p, 0, M.freeFor(p), !!p.gm);   // con bola elegida: siempre esa especie
         if (!n) w.emit({ t: "nomagic", id: p.id });
       }
       break;

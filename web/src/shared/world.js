@@ -164,7 +164,7 @@ const FOR_DEAD = new Set(["respawn", "say", "resurrect"]);
 // _iGetAttackType / OBJECTATTACKMOVE del cliente original: el crítico y el dash exigen maestría 100 en la habilidad del arma.
 const mastered = p => (p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= CRIT.mastery;
 const COMMANDS = {
-  respawn(w, p) { const ok = Player.respawn(w, p); if (ok && Companion.activeBall(p) && !w.fightZone) Npc.spawnCompanion(w, p); return ok; },          // al reaparecer vuelve el summon elegido (al morir el dueño desaparecía y la bola seguía «fuera»)
+  respawn(w, p) { const ok = Player.respawn(w, p); if (ok && Companion.activeBall(p) && !w.fightZone) Npc.spawnCompanion(w, p, null, true); return ok; },          // al reaparecer vuelve el summon elegido (al morir el dueño desaparecía y la bola seguía «fuera»)
   say(w, p, cmd) {
     let text = String(cmd.text || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
     // Canales de chat del original (HGServer/Game.cpp, ChatMsgHandler): sin prefijo = lo oyen los de alrededor; «!» grito a todo el mapa

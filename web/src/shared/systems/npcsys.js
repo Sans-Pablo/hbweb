@@ -450,7 +450,7 @@ export function spawnCompanion(w, p, only = null, quiet = false) {
   if (!only) {
     let first = null;
     dismissCompanion(w, p);
-    for (const b of Comp.activeBalls(p)) { if (b.comp.down) continue; const n = spawnCompanion(w, p, b); first = first || n; }
+    for (const b of Comp.activeBalls(p)) { if (b.comp.down) continue; const n = spawnCompanion(w, p, b, quiet); first = first || n; }
     return first;
   }
   const inst = only;

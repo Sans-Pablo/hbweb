@@ -289,7 +289,7 @@ export class Adventure {
       const home = this.homeOf(p);
       if (!this.transfer(p, w, home, home.home)) return false;
       const ok = respawn(home, p);
-      if (ok && activeBall(p)) spawnCompanion(home, p);
+      if (ok && activeBall(p)) spawnCompanion(home, p, null, true);
       return ok;
     }
     return w.command(id, cmd);
@@ -453,7 +453,7 @@ export class Adventure {
     this.locations.set(p.id, to);
     partyRefresh(to, p);
     to.emit({ t: "mapchange", id: p.id, name: to.map.name, seed: to.map.seed });
-    if (activeBall(p) && to.map.kind !== "arena") spawnCompanion(to, p);                      // el compañero elegido te sigue al nuevo mapa
+    if (activeBall(p) && to.map.kind !== "arena") spawnCompanion(to, p, null, true);                      // el compañero elegido te sigue al nuevo mapa
     return true;
   }
 

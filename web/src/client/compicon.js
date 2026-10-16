@@ -32,12 +32,13 @@ const ballCache = new Map();
 const BALL_SPRITE = 23;                               // sprite de Item.cfg que no existe: la hoja ip20 la hornea tools/ballitems.mjs
 // bola de la mochila: tamaño de un objeto normal (el sprite horneado mide 48 px con margen; a 0,85 la bola ocupa ~34 px), con el color de su especie
 // y la criatura DENTRO de la esfera (46 % del ancho), suavizada en alta calidad (se reduce desde el sprite original, sin pixelar)
-export const BALL_SCALE = 0.85, BALL_INNER = 0.46;
+export const BALL_SCALE = 0.62, BALL_INNER = 0.46;
 export function drawBall(g, it, d, key, x, y, alpha = 1, scale = BALL_SCALE) {
   const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;
   const [sx, sy, w, h, px, py] = fr, sp = it.comp.sp;
   const mk = sp + ":" + (it.comp.cls || ""); let m = cache.get(mk); if (!m) { m = miniOf(sp, k => g.spr.frames(k), it.comp.cls); cache.set(mk, m); }
-  const tint = it.comp.cls ? BALL_COLORS[it.comp.cls] : m && tintOf(g, sp, m);          // Dummy: la bola toma el color de su clase
+  const baked = d.sprite === BALL_SPRITE;                                // la hoja ip20 ya trae esfera + criatura: se dibuja sola, sin teñir ni repintar la criatura (si no sale doble y de otro tamaño)
+  const tint = baked ? null : it.comp.cls ? BALL_COLORS[it.comp.cls] : m && tintOf(g, sp, m);          // Dummy: la bola toma el color de su clase
   let src = g.spr.img[key], ox = sx, oy = sy;
   if (tint) {
     const ck = key + ":" + d.spriteFrame + ":" + sp + ":" + (it.comp.cls || "");

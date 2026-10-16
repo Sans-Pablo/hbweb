@@ -1,10 +1,27 @@
 {
- "build": "0.85.31",
+ "build": "0.85.32",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Bolas de bolsa (v0.85.32)",
+    "en": "Bag balls (v0.85.32)"
+   },
+   "items": [
+    {
+     "es": "Las bolas de compañero en la mochila ya no salen dobles ni grandes: se dibuja solo la bola horneada, a tamaño de objeto normal.",
+     "en": "Companion balls in the bag are no longer doubled or oversized: only the baked ball is drawn, at normal item size."
+    },
+    {
+     "es": "El brillo de Recall al aparecer el compañero solo sale al invocarlo desde la mochila con doble clic (no al cambiar de mapa ni al reaparecer).",
+     "en": "The Recall glow when the companion appears only shows when summoning it from the bag by double-click (not on map change or respawn)."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

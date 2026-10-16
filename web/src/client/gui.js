@@ -273,7 +273,7 @@ export class Gui {
     return false;
   }
   // Bolas de cerrar (derecha) y minimizar (izquierda) para los cuadros con marco propio (no Win): mecanismo común de window.js
-  legacyFrame(d) { return !("canMin" in d) && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
+  legacyFrame(d) { return !d.ball && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
   ballHit(d, lx, ly) {
     if (Math.hypot(lx - (d.w - 9), ly - 9) <= 8) return "x";
     if (!d.lmin && !d.nomin && Math.hypot(lx - 9, ly - 9) <= 8) return "-";
