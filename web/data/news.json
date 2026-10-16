@@ -1,10 +1,31 @@
 {
- "build": "0.85.19",
+ "build": "0.85.20",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Misiones desplegables, almacén y fuera el turquesa (v0.85.20)",
+    "en": "Expandable quests, storage and no more turquoise (v0.85.20)"
+   },
+   "items": [
+    {
+     "es": "Almacén: el buscador está arriba, bajo el título y centrado.",
+     "en": "Storage: the search box is at the top under the title, centered."
+    },
+    {
+     "es": "Misiones: icono nuevo (pergamino) y cada misión se despliega/pliega con un clic en su título.",
+     "en": "Quests: new scroll icon; click a quest title to expand/collapse it."
+    },
+    {
+     "es": "Sin turquesa: pata de la barra en verde, barra de vida del compañero en verde, puntos del minimapa y rótulos en dorado.",
+     "en": "No turquoise: bar paw is green, pet HP bar green, minimap dots and labels gold."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

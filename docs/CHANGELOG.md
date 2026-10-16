@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.20 · Ventanas y misiones (2026-10-16)
+- Almacén: buscador arriba y centrado. Misiones: icono de pergamino y entradas desplegables (`questwin.js`). Turquesa eliminado de gui.js/renderer.js (guardia en tests/ui-guard.test.mjs).
+
 ## 0.85.19 · Autohunt y ventanas (2026-10-16)
 - Autohunt (autoplay.js, autowin.js): exp ganada (evento `exp` → `auto.exp`), reglas por rareza `a.rules` (ignorar/vender/guardar; por defecto vender normal+mágico, guardar raro+único), vender con la bolsa llena (viaja a la tienda, `selllist`, retoma), guardar (`deposit`; almacén lleno termina), pociones de vida (`a.potions`, ON), F5 reabre la mini ventana. Controller reenvía `d.send`.
 - Ventanas (window.js): bola derecha cierra, bola izquierda minimiza (`minimize/restore/toggleMin`, opciones `nox`/`nomin`); se quita el cuadrado de cierre.

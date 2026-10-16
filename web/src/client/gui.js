@@ -21,6 +21,8 @@ const DIGIT_SPACE = [6, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6];   // __cSpace2
 const NO_OBSTACLE = new Set([10, 17, 20]);                       // pequeños: no cuentan como obstáculo para colocar los demás
 const NO_AVOID = new Set([10, 17, 20, 46, 47]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
 
+// Títulos de la barra minimizada de los cuadros con marco de sprite (el título del original está en el dibujo)
+const LEGACY_TITLES = { 1: "Character", 2: "Inventory", 3: "Magic", 11: "Shop", 12: "Level Up", 14: "Storage", 15: "Skill", 16: "Magic Shop", 19: "System", 23: "Confirm", 31: "Sell list" };
 export class Gui {
   constructor(canvas) {
     this.cv = canvas;
@@ -259,7 +261,7 @@ export class Gui {
     }
     if (best) { d.x = best[0]; d.y = best[1]; }
   }
-  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); if (!quiet) this.dialogs.get(id).onClose?.(this); if (this.mobile && !quiet && this.rect) this.place(this.rect, this.dpr); } }
+  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); { const d0 = this.dialogs.get(id); if (d0.lmin) this.legacyMin(d0); } if (!quiet) this.dialogs.get(id).onClose?.(this); if (this.mobile && !quiet && this.rect) this.place(this.rect, this.dpr); } }
   toggle(id) { if (this.isOpen(id)) this.close(id); else this.open(id); }
   closeAll() { for (const id of [...this.order]) this.close(id); }
   front(id) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); this.order.push(id); } }
@@ -269,6 +271,34 @@ export class Gui {
   key(e) {
     for (let i = this.order.length - 1; i >= 0; i--) { const d = this.dialogs.get(this.order[i]); if (d.key && !d.hidden && d.key(e, this)) return true; if (d.modal) return true; }
     return false;
+  }
+  // Bolas de cerrar (derecha) y minimizar (izquierda) para los cuadros con marco propio (no Win): mecanismo común de window.js
+  legacyFrame(d) { return !d.ball && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
+  ballHit(d, lx, ly) {
+    if (Math.hypot(lx - (d.w - 9), ly - 9) <= 8) return "x";
+    if (!d.lmin && !d.nomin && Math.hypot(lx - 9, ly - 9) <= 8) return "-";
+    if (d.lmin && Math.hypot(lx - 13, ly - d.h / 2) <= 8) return "o";
+    return null;
+  }
+  legacyMin(d) {
+    if (d.lmin) { d.w = d.lmin.w; d.h = d.lmin.h; d.lmin = null; return; }
+    d.lmin = { w: d.w, h: d.h }; d.w = 170; d.h = 26;
+  }
+  drawBall(cx, cy, glyph) {
+    const c = this.ctx, over = Math.hypot(this.mouse.x - this.cur.x - cx, this.mouse.y - this.cur.y - cy) <= 8, bad = glyph === "x";
+    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
+    c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
+    if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
+    else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
+    else c.rect(cx - 3, cy - 3, 6, 6);
+    c.stroke(); c.lineWidth = 1;
+  }
+  frameBalls(d) { this.cur = d; this.drawBall(d.w - 9, 9, "x"); if (!d.nomin) this.drawBall(9, 9, "-"); }
+  minBar(d) {
+    const c = this.ctx; this.cur = d;
+    c.fillStyle = "#2a2118"; c.fillRect(0, 0, d.w, d.h); c.strokeStyle = "#c9a95c"; c.strokeRect(.5, .5, d.w - 1, d.h - 1);
+    this.drawBall(13, d.h / 2, "o"); this.drawBall(d.w - 13, d.h / 2, "x");
+    this.aligned(24, d.w - 24, 7, d.title || LEGACY_TITLES[d.id] || "", "#f0e2bd", { bold: true, size: 11 });
   }
   dialogAt(x, y) {
     const m = this.modal();
@@ -313,7 +343,8 @@ export class Gui {
       this.lastClick = { id: d.id, t: now, x, y };
       if (dbl && d.dbl?.(this, x - d.x, y - d.y, me)) { this.lastClick = null; return true; }
       if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
-      const used = button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
+      if (button === 0 && this.legacyFrame(d)) { const r = this.ballHit(d, x - d.x, y - d.y); if (r) { this.onSound?.(14); if (r === "x") this.close(d.id); else this.legacyMin(d); return true; } }
+      const used = (button === 0 && d.lmin) ? false : button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
       if (used) this.onSound?.(14);
       if (!used && button === 0 && !d.fixed && !this.mobile) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
@@ -376,7 +407,7 @@ export class Gui {
       if (d.modal) { c.fillStyle = "rgba(0,0,0,.45)"; const f = this.full || this.rect, o = this.scale; c.fillRect((f.x - this.rect.x) / o, (f.y - this.rect.y) / o, f.w / o, f.h / o); }
       c.save(); c.translate(d.x, d.y);
       c.beginPath(); c.rect(0, 0, d.w, d.h); c.clip();
-      d.draw(this, me, world);
+      if (d.lmin) this.minBar(d); else { d.draw(this, me, world); if (this.legacyFrame(d)) this.frameBalls(d); }
       c.restore();
     }
     if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
@@ -454,7 +485,7 @@ export class Gui {
     // barra de vida del compañero, sobre la del personaje
     const x0 = 23 + RESX, y0 = 531, wd = 101;
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 - 1, wd + 2, 8);
-    cx.fillStyle = k > .5 ? "#2fd0b0" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
+    cx.fillStyle = k > .5 ? "#4caf3a" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
     // experiencia del compañero (para tentar al jugador a subirlo): barra fina bajo la de vida y números en el aviso
     const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
@@ -474,18 +505,23 @@ export class Gui {
 
   // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
   summonsIcon(f, x) {
-    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se vuelve azul
+    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se tiñe de verde (nunca turquesa)
     const c = this.ctx; this.put("summons_icon", f, x, 554);
     c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
-    c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+    c.filter = "hue-rotate(95deg) saturate(1.5) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
   }
 
   // Botón de Misiones (ticket 6): mismo marco que «Summons», teñido de dorado y con un «!» encima
   questIcon(f, x) {
+    // icono propio: pergamino con renglones y sello (ya no es la huella teñida)
     const c = this.ctx; this.put("summons_icon", f, x, 554);
-    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
-    c.filter = "hue-rotate(-20deg) saturate(1.2) brightness(1.05)"; this.put("summons_icon", f, x, 554); c.restore();
-    this.text(x + 19, 554 + 21, "!", "#fff0b0", { align: "center", bold: true, shadow: true, size: 16 });
+    c.save(); c.fillStyle = "#1d1608"; c.fillRect(x + 8, 554 + 8, 22, 24);
+    c.fillStyle = "#e8d9a8"; c.fillRect(x + 11, 554 + 11, 16, 18);
+    c.fillStyle = "#b8975a"; c.fillRect(x + 9, 554 + 9, 20, 3); c.fillRect(x + 9, 554 + 27, 20, 3);
+    c.fillStyle = "#7a5a2a";
+    for (let i = 0; i < 3; i++) c.fillRect(x + 13, 554 + 15 + i * 4, 12 - (i === 2 ? 4 : 0), 1);
+    c.fillStyle = "#c2452d"; c.fillRect(x + 22, 554 + 22, 4, 4);
+    c.restore();
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)

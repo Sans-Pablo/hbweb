@@ -13,7 +13,7 @@ export const GOAL = {
 };
 
 export class QuestWin extends Win {
-  constructor() { super({ id: QUEST_ID, title: "Diario de misiones", w: 420, h: 400, x: 190, y: 60, esc: true }); }
+  constructor() { super({ id: QUEST_ID, title: "Diario de misiones", w: 420, h: 400, x: 190, y: 60, esc: true }); this.ex = {}; }
   body(ui, me) {
     const I = this.inner;
     if (!me?.quests) { ui.text(I.x, I.y, t("No hay misiones en esta versión."), THEME.dim); return; }
@@ -26,11 +26,20 @@ export class QuestWin extends Win {
         if (!done && !now && i > q.n + 1) return;
         if (m.ch !== ch) { ch = m.ch; y += y ? 6 : 0; u.head(0, y, CHAPTERS[ch]?.[getLang() === "en" ? 1 : 0] || ""); y += 18; }
         const mins = done && q.t[i] != null ? "  · " + Math.floor(q.t[i] / 60) + " min" : "";
-        const col = done ? THEME.good : now ? THEME.head : THEME.dim;
-        u.text(0, y, done ? "✔" : now ? "▶" : "·", col, { bold: true });
-        u.text(16, y, (done || now ? loc(m.title) : "???") + mins, col, { bold: now });
+        const col = done ? THEME.good : now ? THEME.head : THEME.dim, known = done || now;
+        // cada misión se despliega con un clic en su título; la actual viene abierta, las demás plegadas
+        const open = known && (this.ex[i] ?? now);
+        if (known) u.hit(0, y - 1, cw, 16, { fn: () => { this.ex[i] = !open; } });
+        const over = known && u.hov(0, y - 1, cw, 16);
+        if (over) { u.c.fillStyle = "rgba(255,225,170,.10)"; u.c.fillRect(-2, y - 1, cw + 2, 16); }
+        u.text(0, y, known ? (open ? "▾" : "▸") : "·", col, { bold: true });
+        u.text(14, y, (known ? loc(m.title) : "???") + mins, col, { bold: now });
+        u.text(cw - 4, y, done ? "✔" : now ? "▶" : "", col, { bold: true, align: "right" });
         y += 16;
-        if (now) { y += u.para(16, y, cw - 16, loc(m.text), THEME.txt) + 2; u.text(16, y, GOAL[m.goal.k]?.(m.goal, pr) || "", THEME.good, { bold: true }); y += 18; }
+        if (open) {
+          y += u.para(16, y, cw - 20, loc(m.text), THEME.txt) + 2;
+          if (now) { u.text(16, y, GOAL[m.goal.k]?.(m.goal, pr) || "", THEME.good, { bold: true }); y += 18; }
+        }
         y += 4;
       });
       if (!cur) { u.text(0, y, t("Línea de misiones completada"), THEME.good, { bold: true }); y += 20; }

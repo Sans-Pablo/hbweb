@@ -408,7 +408,7 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 14: almacén
   const bank = {
-    id: 14, x: 140, y: 110, w: 258, h: 339, view: 0, drag: false, s: new DlgSearch(24, 314, 190),
+    id: 14, x: 140, y: 110, w: 258, h: 339, view: 0, drag: false, s: new DlgSearch(34, 33, 190),
     list() { return api.me()?.bank || []; },
     vis() { return this.list().map((it, idx) => ({ it, idx })).filter(e => this.s.match(itemName(e.it.id, e.it.attr, e.it.comp))); },      // buscador: índice real para retirar
     key(e) { return this.s.key(e); },
@@ -419,7 +419,7 @@ export function registerNpcDialogs(gui, api) {
       const [lx, ly] = rel(g, this), list = this.vis().map(e => e.it), n = list.length;
       g.put("gamedialog_1", 2, 0, 0); g.put("dialogtext_0", 21, 0, 0); this.s.draw(g);
       this.view = clamp(this.view, 0, Math.max(0, n - BANK_ROWS));
-      let hovered = false, y = 45;
+      let hovered = false, y = 58;
       for (let i = 0; i < BANK_ROWS; i++) {
         const it = list[i + this.view]; if (!it) break;
         const d = itemDef(it.id), nm = itemName(it.id, it.attr, it.comp) + (it.count > 1 ? " x" + it.count : "");
@@ -439,9 +439,9 @@ export function registerNpcDialogs(gui, api) {
         if (this.drag && g.mouse.down) this.scrollTo(ly, n); else this.drag = false;
       }
       if (!hovered) {
-        g.aligned(0, 253, 45, "Either drag an item to restore from bag", INK);
-        g.aligned(0, 253, 60, "or click an item to take out on the list.", INK);
-        g.aligned(0, 253, 75, "item to take out on the list.", INK);
+        g.aligned(0, 253, 60, "Either drag an item to restore from bag", INK);
+        g.aligned(0, 253, 75, "or click an item to take out on the list.", INK);
+        g.aligned(0, 253, 90, "item to take out on the list.", INK);
       }
     },
     click(g, lx, ly) {
