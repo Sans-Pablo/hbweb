@@ -46,3 +46,7 @@ Invocar (usar la bola) cuesta maná del dueño igual al nivel del summon (`toggl
 ## Mago de rango y apoyo (v0.78.0)
 - **Mago de apoyo**: saca un summon de apoyo (Healer/Buffer/Aura) y lo alterna con el de la misión (4 min fuera, 8 min de ciclo); antes la bola de misión o la de escuela lo impedían y nunca se veía invocar apoyo. Test `support-summon.test.mjs`.
 - **Mago de rango (INVENTO, no verificable)**: el original no estaba en la máquina, así que no se comprobó cómo juega un mago/invocador del juego original. Un estudioso que no es de apoyo, con summon de escuela vivo y maná en él (≥ 20 %), mantiene 6–8 casillas del monstruo y retrocede si se acerca a ≤ 3 mientras el summon lanza los hechizos; sin maná pelea cuerpo a cuerpo (con báculo si lo lleva). `bot.js#rangedMage`, test `mage-kite.test.mjs`.
+
+## Brillos al aparecer y cursor de magia (v0.85.26)
+- `spawnCompanion` emite el evento público `companion-spawn` (id, nid, x, y); fx.js dibuja el hechizo 12 (Recall, efecto 112 = Summon Creature 131, mismo código del original). La evolución usa solo `companion-resummon`. Test `summon-spawn-fx.test.mjs`.
+- Cursor de apuntar hechizo: 4/5 amigo/enemigo, 8 mientras corre la animación de lanzar (`m_bCommandAvailable`); la regla CSS `.pointing #game` ya no pisa el cursor clásico.

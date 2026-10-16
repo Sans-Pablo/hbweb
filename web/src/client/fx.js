@@ -136,6 +136,7 @@ export class Fx {
         this.burst(ev.id, 40, "rgba(255,214,90,", 2.5);
         break;
       }
+      case "companion-spawn": this.sp.spell(12, ev.x, ev.y, ev.x, ev.y); break;       // brillos del Recall (Magic.cfg 12, efecto 112) sobre el summon que aparece
       case "companion-resummon": {                            // cambio de tamaño del compañero: sale con un destello y vuelve más grande
         const ox = ev.fx * TILE + 16, oy = ev.fy * TILE + 16, nx = ev.x * TILE + 16, ny = ev.y * TILE + 16, now = performance.now();
         this.rings.push({ x: ox, y: oy, born: now }, { x: nx, y: ny, born: now + 120 });

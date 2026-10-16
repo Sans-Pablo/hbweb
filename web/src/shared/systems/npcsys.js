@@ -433,7 +433,7 @@ export const EVOLVE_MS = 2500;
 export function evolveCompanion(w, n, m, tc) {
   const from = { x: n.x, y: n.y }, nm = tc.nm, sp = tc.sp, lvl = tc.lvl;
   delete tc.evolve; delete tc.evoFrom;
-  const nn = spawnCompanion(w, m, Inv.instOf(m, n.ball));
+  const nn = spawnCompanion(w, m, Inv.instOf(m, n.ball), true);
   if (nn) w.emit({ t: "companion-resummon", id: m.id, sp, lvl, nm, fx: from.x, fy: from.y, x: nn.x, y: nn.y, nid: nn.id });
 }
 export function dismissCompanion(w, p, uid = null) {
@@ -445,7 +445,7 @@ export function dismissCompanion(w, p, uid = null) {
   }
 }
 // Sin `only`: reinvoca todas las bolas activas (cambio de mapa, reaparición); devuelve la primera entidad creada.
-export function spawnCompanion(w, p, only = null) {
+export function spawnCompanion(w, p, only = null, quiet = false) {
   if (p.dead) return null;
   if (!only) {
     let first = null;
@@ -466,6 +466,7 @@ export function spawnCompanion(w, p, only = null) {
   Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side, comp: true, dcls: inst.comp.cls || null, ball: inst.uid, exp: 0, noDieRemainExp: 0 });
   refreshCompanion(w, n, p);
   if (Tal.isSchool(inst.comp)) n.mp = Math.min(Tal.maxMp(inst.comp), inst.comp.mp ?? Tal.maxMp(inst.comp));      // el maná de escuela viaja con la bola
+  if (!quiet) w.emit({ t: "companion-spawn", id: p.id, nid: n.id, x: n.x, y: n.y });      // Game.cpp bAddNewEffect 112 (Recall) y 131 (Summon Creature) se dibujan igual: el brillo sale sobre el summon al aparecer
   return n;
 }
 // Usar una bola: la elige y la invoca (la que estaba elegida se guarda); usar la elegida la guarda. Sin invocación si ya no hay compañero.
