@@ -450,3 +450,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Cartel "Critical": cuando aparece segun archivos originales.
 - Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
 - Dash: animacion y movimiento originales (no esta implementado).
+
+## Diseno de ventanas (pedido 2026-10-16, v0.85.22 sin cambio de version)
+- [x] 3 direcciones de diseno unificado de ventanas (prototipos HTML en `docs/diseno/`, comparativa en `docs/diseno/README.md`). Pendiente: que el usuario elija direccion y aplicarla (frame, cabecera, bolas, pestanas, botones, listas, buscador, mini ventanas).
