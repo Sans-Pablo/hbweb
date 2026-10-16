@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.44) Dash y críticos descifrados contra el original: dash también con modo correr; resto ya idéntico.
 
 **Hecho:** granja de Aresden jugable; combate con fórmulas del servidor original; ítems originales (568 de Item.cfg), mochila de 50 casillas, peso, equipar con requisitos, absorción por parte del cuerpo, durabilidad (solo con bando), botín con las tasas originales (1/1), habilidades con maestría, resistencia, hambre; opciones (Esc), mapa tipo Diablo II, correr con R, guardado en el navegador.
 

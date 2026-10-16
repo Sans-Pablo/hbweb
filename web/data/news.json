@@ -1,10 +1,11 @@
 {
- "build": "0.85.43",
+ "build": "0.85.44",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date":"2026-10-16","title":{"es":"Dash corriendo (v0.85.44)","en":"Run dash (v0.85.44)"},"items":[{"es":"El dash se activa corriendo (Shift o modo correr) con SP>0, como el original (Game.cpp 30934).","en":"Dash triggers while running (Shift or run mode) with SP>0, as in the original."}]},
   {"date":"2026-10-16","title":{"es":"Monitor económico (v0.85.43)","en":"Economy monitor (v0.85.43)"},"items":[{"es":"El panel /admin tiene una pestaña Economía: resumen, flujo en vivo, alertas, riqueza, simulación y auditoría del oro.","en":"The /admin panel has an Economy tab: overview, live flow, alerts, wealth, simulation and gold audit."}]},
   {"date":"2026-10-16","title":{"es":"Combate como el original (v0.85.42)","en":"Original combat (v0.85.42)"},"items":[{"es":"Acierto físico con HITRATIOFACTOR 80 y orden de cálculo de daño de combat.cpp (furia, VIT, críticos, zona de lucha).","en":"Physical hit rate with HITRATIOFACTOR 80 and the damage order of combat.cpp."},{"es":"Anillos 335/337 con desgaste, inmunidad por habilidad especial y estado de guerra opcional (Apocalypse, Crusade, banderas).","en":"Rings 335/337 with wear, special-ability immunity and optional war state."},{"es":"Solo sprites de IA en el juego; arreglo del suelo cuando falla una hoja IA.","en":"AI sprites only; ground fix when an AI sheet fails."}]},
   {"date":"2026-10-16","title":{"es":"Caja del admin (v0.85.41)","en":"Admin ledger (v0.85.41)"},"items":[{"es":"El panel /admin muestra la economía: oro creado y destruido por motivo y los últimos movimientos.","en":"The /admin panel shows the economy: gold created and destroyed by reason and the latest movements."}]},

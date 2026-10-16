@@ -267,7 +267,7 @@ export class Controller {
         return;
       }
       const lineUp = (me.x === t.x || me.y === t.y || Math.abs(me.x - t.x) === Math.abs(me.y - t.y));      // dash: solo en línea recta o diagonal (OBJECTATTACKMOVE)
-      if (this.shift && me.sp >= 1 && !critOn && gap === 2 && reach === 1 && lineUp && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackGapMs) {   // dash: SOLO con Shift mantenido (ni el modo correr ni el joystick lo activan): avanza y golpea con bonus
+      if (run && !critOn && gap === 2 && reach === 1 && lineUp && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackGapMs) {   // dash: (m_bShiftPressed || m_bRunningMode) && SP>0, Game.cpp 30934: avanza y golpea con bonus
         this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);

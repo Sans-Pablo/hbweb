@@ -25,7 +25,7 @@ Antes de inventar una fórmula, un texto, una posición de interfaz o un número
 6. Textos de interfaz y mensajes de tienda: los del original (en inglés) tal cual. El resto va en español y se traduce con `client/i18n.js` (toda cadena nueva en español lleva su entrada en inglés).
 7. Interfaz en coordenadas GUI 800x600 (`gui.mouse`). El mundo en píxeles de mundo (`renderer.toWorld`).
 8. Cada sistema nuevo trae su test en `tests/` y su ficha en `docs/sistemas/`.
-9. Sin credenciales en el repo. Controles: se anda por defecto como en el original (Ctrl+R alterna correr; Shift mantenido también corre). Alt+clic sobre un monstruo = ataque crítico; atacar con Shift mantenido a 2 casillas en línea (alcance 1) = dash (el modo correr no lo hace).
+9. Sin credenciales en el repo. Controles: se anda por defecto como en el original (Ctrl+R alterna correr; Shift mantenido también corre). Alt+clic sobre un monstruo = ataque crítico; atacar corriendo (Shift mantenido o modo correr) a 2 casillas en línea (alcance 1) = dash.
 
 ## Comandos
 - Servir: `cd web && python3 -m http.server 8123` (o `Abrir prueba web.bat`). Servidor online: `node server/server.mjs 8088` (`HB_NO_LIMITS=1 HB_DEBUG=1 HB_DATA=/tmp/x` para pruebas) y `tools/e2e.py --query "server=http://localhost:8088"` (`players(n)` para varios jugadores).
