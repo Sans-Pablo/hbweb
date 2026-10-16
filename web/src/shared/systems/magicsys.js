@@ -76,7 +76,12 @@ export function cast(w, p, cmd) {
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 11) return w.reject(p, cmd, "demasiado lejos");   // alcance 11 (HG.cpp:10241)
   const cost = M.manaCost(p, sp, cmd.spell, !!w.fightZone);
-  if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
+  if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");
+  // HG.cpp:10255-10260: mapa con ataque desactivado (noAttack -10 = todo el mapa) solo admite Create (10) y Teleport (8); magicLimited[hechizo] lo veta. Los GM quedan exentos.
+  if (!p.gm) {
+    if ((w.meta?.noAttack || []).some(r => r[1] === -10) && sp.type !== 8 && sp.type !== 10) return w.reject(p, cmd, "hechizo no permitido en este mapa");
+    if ((w.meta?.magicLimited || []).includes(cmd.spell)) return w.reject(p, cmd, "hechizo limitado en este mapa");
+  }   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
 
   p.lastCast = w.time;
   p.lastCombat = w.time;

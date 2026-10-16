@@ -29,7 +29,9 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Ice: excluir neutrales | HG.cpp | magicsys.js | CORREGIDO |
 | Rotura de armadura (ArmorLifeDecrement) | HG.cpp | — | FALTA |
 | Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32, tickResurrection | IGUAL (tests/magic-resurrection) |
-| Polymorph; tipos 4, 6, 20, 24, 27; reliquias Astoria; magicLimited por mapa | HG.cpp | — | FALTA / sin mapear |
+| Tipos 4, 6, 20 (Polymorph), 24, 27: sin hechizos en Magic.cfg | Magic.h | — | N/A (no hay datos) |
+| Mapa sin ataque (solo Create/Teleport) y magicLimited por mapa | HG.cpp:10255-10260 | magicsys.js cast | IGUAL (tests/magic-types) |
+| Reliquias Astoria (evento completo) | Astoria.cpp | — | FALTA (sin mapa ni bandos de evento) |
 | Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | sin verificar |
 
 ## Habilidades
