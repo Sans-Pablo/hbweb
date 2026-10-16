@@ -66,6 +66,7 @@ export class Fx {
     this.me = me;
     this.texts = [];
     this.critT = new Map();
+    this.dashes = new Map();         // id -> {at, dir, ms}: dash en curso (fantasma del ataque con desplazamiento)
     this.parts = [];
     this.flash = new Map();          // id -> hora del último golpe (destello)
     this.rings = [];
@@ -100,6 +101,7 @@ export class Fx {
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
+      case "dash": this.dashes.set(ev.id, { at: performance.now(), dir: ev.dir, ms: ev.ms || 300 }); break;
       case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
       case "miss": break;   // un golpe normal que falla no muestra texto (ticket 7); «Failed» queda solo para la resistencia a hechizos
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)

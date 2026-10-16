@@ -42,3 +42,8 @@ La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~l
 
 ## Caché de personajes compuestos (v0.82.6)
 `client/composed.js` (`PersonCache`): `drawPerson` se ejecuta sobre un grabador (`Object.create(spr)` que mide la caja de cada pieza) y el resultado recortado va a páginas de atlas 2048² (8 máx., reciclaje de la más antigua). Clave = género+aspecto+acción/dirección/fotograma+equipo+tintes. No aplica con `spr.recolor`/`spr.modelFx` (bestiario) ni si falta alguna hoja (reintento cada 8 fotogramas). Escala de caché = min(2, ceil(scale*2)/2). Contadores en el texto de fps (`caché acierto/compuestos/directos`). `warm(3)` (0.82.7): precompone los 2 fotogramas siguientes de los personajes vistos, máx. 3 ms/fotograma.
+
+## Crítico, dash y berserk (cliente)
+- Chispas del crítico: efectos 20-27 (vuelan 50 px/tick, sueltan el efecto 8 «Burst» x5; Game.cpp:5360, 14296, 6350) en `client/spellfx.js`.
+- Dash: fantasma 26/16 px detrás (Game.cpp:8616-8654, 8917-8921), `renderer.js` DASH_BACK + evento `dash`.
+- Berserk: tinte (0,-5,-5) sobre el cuerpo (Game.cpp:8911).

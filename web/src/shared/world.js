@@ -226,6 +226,7 @@ const COMMANDS = {
     let lead = 0;
     if (dash) {
       if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
+      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: PLAYER.runMs });   // el cliente dibuja el fantasma del dash (Game.cpp DrawObject_OnAttackMove, 8616-8654 y 8917-8921)
       p.lastMove = w.time; lead = PLAYER.runMs;   // OBJECTATTACKMOVE llama a iClientMotion_Move_Handler(..., bIsRun=FALSE) (HG.cpp 820): el paso no gasta SP
     }
     const crit = critOk && !dash;

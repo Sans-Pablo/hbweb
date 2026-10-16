@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.17 · Dash y crítico (2026-10-16)
+- Tarea 5 cliente: evento `dash` (world.js) y fantasma del dash en el renderer (Game.cpp:8616-8654 desplazamientos 26/16/0; 8917-8921 fantasma con tinte). Ya estaban portados: chispas del crítico (Game.cpp:5360-5374, 14296-14318, 6350-6361; spellfx.js) y tinte berserk (0,-5,-5). El original no tiene sonido propio del crítico (solo el del golpe). No hay animación completa de OBJECTATTACKMOVE de 12 fotogramas: el web usa paso de carrera + ataque.
+
 ## 0.85.16 · Mobs aleatorios (2026-10-16)
 - Sistema 28: `randomMobGenerator` (npcsys.js) desde el MobGenerator aleatorio (HG.cpp:15993-16780): en mapas con random-mob y si maxObjects−30 > npcs activos crea un maestro por la tabla de nivel (`randommob.gen.js`, generado por `tools/convert_randommob.py`) con habilidad especial (_cGetSpecialAbility, HG.cpp:28959) o berserk fijo (exp ×2) y 0..N esclavos con los filtros de grupo del original. Desvíos: el esclavo nace junto al maestro en vez de seguirlo; sin eventos especiales ni cruzada. Test `random-mob`.
 

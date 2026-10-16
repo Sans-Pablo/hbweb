@@ -661,7 +661,7 @@ function itemsList(world) {
 
 // Eventos visibles para quien está cerca (efectos, sonidos, números de daño). Todo lo demás con `id` es privado de su dueño: tienda, tutorial,
 // talentos, arena, avisos, depuración... (un evento nuevo es privado por defecto: no se filtra nada por olvido, y no se gasta ancho de banda).
-const PUBLIC = new Set(["botsay", "crit", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
+const PUBLIC = new Set(["botsay", "dash", "crit", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
   "bossfx", "bossmsg", "pickup", "teleport", "respawn", "recalled", "immune", "resist", "levelup", "weather", "time"]);
 
 let last = Date.now();
