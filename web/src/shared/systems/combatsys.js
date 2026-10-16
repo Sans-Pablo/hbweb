@@ -56,7 +56,7 @@ export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, strikeCtx(w, p, t, fx));
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
@@ -86,6 +86,39 @@ export const PVP_DMG = 1;
 // Lucky (combat.cpp:1015, HG.cpp:18250/18744): con un objeto de suerte puesto, un golpe que mataría se queda en 1 con probabilidad 4/10 (dice(1,10) < 5).
 export function luckySave(w, t, dmg) {
   return t.eff?.lucky && R.dice(w.rng, 1, 10) < 5 && t.hp <= dmg ? 1 : dmg;
+}
+// Habilidad especial activa del objetivo (m_bIsSpecialAbilityEnabled, m_iSpecialAbilityType): el port aún no la activa (t.saActive nunca se pone por sí solo),
+// pero si un estado la fija (t.saActive, t.saType, t.saEquipPos) se aplica igual que combat.cpp:995-1011, solo si el atacante es jugador:
+// 50 deja a 0 la vida del arma del atacante (dos manos si la lleva, si no mano derecha); 51 anula el golpe si la pieza alcanzada es la de la habilidad; 52 lo anula siempre.
+// Devuelve true si el daño del golpe queda a 0.
+export function specialAbilityHit(w, att, t, parts = []) {
+  if (!att || att.kind !== "player" || !t.saActive) return false;
+  if (t.saType === 50) {
+    const uid = att.equip[EQUIP.TWOHAND] !== undefined ? att.equip[EQUIP.TWOHAND] : att.equip[EQUIP.RHAND];
+    const inst = uid !== undefined && Inv.instOf(att, uid);
+    if (inst) { inst.life = 0; Inv.unequip(att, w.data, uid); w.recalc(att); w.emit({ t: "broken", id: att.id, uid }); }
+    return false;
+  }
+  if (t.saType === 51) return parts.includes(t.saEquipPos);
+  return t.saType === 52;
+}
+// Anillos 335/337 (HG.cpp:18211 y 18702, Effect_Damage_Spot): con un objeto equipado de efecto MAGICDAMAGESAVE (15), el daño mágico recibido baja un 20 % (335)
+// o un 10 % (337), redondeado (int)(d - d*k + 0.5); el daño <= 0 queda en 0; y la vida del anillo baja en ese daño (si su vida <= daño, se agota: ItemDepleteHandler).
+// Es válido para jugadores y también para el NPC objetivo del original solo si lleva anillo (los monstruos no equipan, así que solo jugadores).
+export function magicDamageSave(w, t, dmg) {
+  if (t.kind !== "player") return dmg;
+  let uid, inst, d;
+  for (const u of Object.values(t.equip)) {
+    const i = Inv.instOf(t, u), dd = i && w.data.item(i.id);
+    if (dd && dd.effectType === 15) { uid = u; inst = i; d = dd; }                          // el original se queda con el último índice (Client.cpp: bucle sin break)
+  }
+  if (!inst) return dmg;
+  if (inst.id === 335) dmg = Math.floor(dmg - dmg * 0.2 + 0.5);
+  else if (inst.id === 337) dmg = Math.floor(dmg - dmg * 0.1 + 0.5);
+  if (dmg <= 0) dmg = 0;
+  if (inst.life <= dmg) { inst.life = 0; Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "broken", id: t.id, uid }); }
+  else { inst.life -= dmg; w.emit({ t: "life", id: t.id, uid, life: inst.life }); }
+  return dmg;
 }
 // EnduStrippingDamage (combat.cpp:1593): cada golpe a una pieza de armadura de un jugador la desgasta y, con martillo, puede soltarla.
 // Solo si el atacante es un jugador de otro bando (o hay zona de lucha) cuenta su habilidad: martillo 10 (daño según martillo: 760 0.25/10, 761 0.35/15, 843 0.45/20, 762 0.6/25),
@@ -141,16 +174,17 @@ export function hitPlayer(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
-  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
+  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, strikeCtx(w, p, t, fx));
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
   wearWeapon(w, p);
-  const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
+  const ap = r.damage;                                                                         // la VIT (combat.cpp:711) ya se restó dentro de strikeNpc, antes de la tirada de acierto
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
   if (a.shielded) gainSSN(t, 11, 1);                                                          // combat.cpp:912: SkillUp(SKILL_SHIELD) al parar el golpe también contra jugadores
-  a.damage = luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
+  if (specialAbilityHit(w, p, t, a.parts)) a.damage = 0;                                      // combat.cpp:995-1011 (antes de Lucky, :1015)
+  a.damage = a.damage === 0 ? 0 : luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
   stripParts(w, p, t, a.parts);
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
 }
@@ -213,16 +247,38 @@ function weaponBonus(w, p) {
   const right = id(p.equip[EQUIP.RHAND]), two = id(p.equip[EQUIP.TWOHAND]);
   let b = 0;
   if (right === 732 || right === 738) b += 1;
-  if (two === 847 && w.dayOrNight === 2) b += 10;                  // DarkExecutor de noche / LightingBlade de día: +10 (combat.cpp:847-848)
-  if (two === 848 && w.dayOrNight === 1) b += 10;
   return b;
+}
+// DarkExecutor (847) de noche / LightingBlade (848) de día: +10 tras la VIT del objetivo (combat.cpp:721-728; m_cDayOrNight 1 día, 2 noche).
+function dayNight10(w, p) {
+  const uid = p.equip[EQUIP.TWOHAND], i = uid !== undefined && Inv.instOf(p, uid), two = i ? i.id : 0;
+  return (two === 847 && w.dayOrNight === 2) || (two === 848 && w.dayOrNight === 1);
+}
+// FLAGRANGE_X/Y (Client.h:39): CheckNearbyFlags (Client.cpp:1371): solo Heldenian tipo 1; una bandera del propio bando a menos de 20 x 16 casillas.
+const FLAGRANGE_X = 20, FLAGRANGE_Y = 16;
+export function nearFlag(w, p) {
+  const h = w.heldenian;
+  if (!h || h.type !== 1) return false;
+  return (h.flags || []).some(f => f.side === p.side && Math.abs(f.x - p.x) < FLAGRANGE_X && Math.abs(f.y - p.y) < FLAGRANGE_Y);
+}
+// Contexto de calculateAttackEffect para strikeNpc: estado del atacante, del objetivo y del mundo (cruzada, Apocalypse, banderas).
+export function strikeCtx(w, p, t, fx = {}) {
+  const ctx = { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), dayNight10: dayNight10(w, p),
+    weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone };
+  if (t.kind === "player") ctx.targetVit = t.stats.vit;                                   // combat.cpp:711 (antes de la tirada de acierto)
+  if (w.apocalypse) ctx.apocalypse = true;                                                  // combat.cpp:787
+  if (nearFlag(w, p)) ctx.flags = true;                                                     // combat.cpp:792
+  if (w.crusade && t.kind === "player" && p.crusadeDuty === 1) ctx.crusadeLevel = p.level | 0;   // combat.cpp:797
+  return ctx;
 }
 
 function wearWeapon(w, p) {
   if (p.side === 0) return;
   const uid = p.equip[EQUIP.TWOHAND] ?? p.equip[EQUIP.RHAND];
   const melee = p.eff.wtype >= 1 && p.eff.wtype < 40;
-  wear(w, p, uid, 1 + (melee ? extraWeaponWear(w) : 0));          // con lluvia las armas cuerpo a cuerpo se gastan más
+  // combat.cpp:1553-1572: iWepLifeOff = 1 y, solo con tipo de arma 1..39, el clima suma (1: dice(1,3)==1 +1; 2: dice(1,2)==1 +dice(1,2); 3: dice(1,2)==1 +dice(1,3));
+  // el neutral (IsNeutral) no la gasta (aquí side 0). extraWeaponWear (weather.js) es idéntico.
+  wear(w, p, uid, 1 + (melee ? extraWeaponWear(w) : 0));
 }
 
 // resta durabilidad; a 0 se desequipa (sigue en la mochila)

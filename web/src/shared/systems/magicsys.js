@@ -6,7 +6,7 @@ import { gainSSN } from "../skills.js";
 import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
-import { damageNpc, damagePlayer, canFight, luckySave, armorLifeDecrement } from "./combatsys.js";
+import { damageNpc, damagePlayer, canFight, luckySave, armorLifeDecrement, magicDamageSave } from "./combatsys.js";
 import { summonFor, spawnCompanion } from "./npcsys.js";
 import { activeBall } from "./companion.js";
 import { sget, sset, sclear } from "./status.js";
@@ -164,11 +164,13 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
     if (!canFight(w, p, tgt)) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
+    dmg = magicDamageSave(w, tgt, dmg);                                              // anillos 335/337 (HG.cpp:18211 y 18702): -20 % / -10 % y desgaste del anillo
     if (tgt.eff && tgt.eff.addAbsMD) dmg -= Math.trunc(dmg * tgt.eff.addAbsMD / 100);                    // AddAbsMD (HG.cpp:18237)
-    if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
+    dmg -= dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1;                       // HG.cpp:18245: con vit < 10 dice() da 0 y el daño sube 1, igual que el original
     if (dmg < 0) dmg = 0;
     dmg = luckySave(w, tgt, dmg);                                                    // solo con objeto Lucky (HG.cpp:18250)
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
+    if (tgt.saActive && (tgt.saType === 51 || tgt.saType === 52)) return tgt;        // HG.cpp:18262-18268: habilidad especial 51/52 anula el daño mágico de un jugador
     damagePlayer(w, tgt, dmg, p, sp.attr === 3 ? "fire" : sp.attr === 4 ? "ice" : "mag");
     return tgt;
   };

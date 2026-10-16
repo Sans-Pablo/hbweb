@@ -90,18 +90,31 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   let defense = n.cfg.defenseRatio;
   if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
   if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
+  // Orden de calculateAttackEffect (char/combat.cpp): furia x2 (697, solo attackMode<20) -> +AddPhysicalDamage (700) -> ataque cercano /2 (705) ->
+  // VIT del objetivo jugador (711: -(dice(1,vit/10)-1), una tirada por cada AP) -> DarkExecutor/LightingBlade +10 (721) -> minimo 1 (734) -> tirada de acierto (742).
+  let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0);                  // ctx.bonus: anillos 732/738 +1 (propio del port)
+  if (ctx.berserk && !ctx.crit) { sm *= 2; l *= 2; }
+  sm += p.eff.addPhys; l += p.eff.addPhys;
+  if (ctx.near) { sm = Math.trunc(sm / 2); l = Math.trunc(l / 2); }
+  if (ctx.targetVit !== undefined) { sm -= dice(rng, 1, Math.floor(ctx.targetVit / 10)) - 1; l -= dice(rng, 1, Math.floor(ctx.targetVit / 10)) - 1; }
+  if (ctx.dayNight10) { sm += 10; l += 10; }
+  sm = Math.max(1, sm); l = Math.max(1, l);
   if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
-  if ((p.hunger <= 10 || p.sp <= 0) && dice(rng, 1, 10) === 5) return miss();   // hambre o sin aliento
-  let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0);
-  if (ctx.berserk && !ctx.crit) { sm *= 2; l *= 2; }                              // furia: el doble solo con attackMode<20 (combat.cpp 695)
-  if (ctx.crit && p.eff.critBonus) { sm += p.eff.critBonus; l += p.eff.critBonus; } // ITEMSTAT_CRITICAL (combat.cpp 765)
-  sm = Math.max(1, sm + p.eff.addPhys); l = Math.max(1, l + p.eff.addPhys);
+  if ((p.hunger <= 10 || p.sp <= 0) && dice(rng, 1, 10) === 5) return miss();   // hambre o sin aliento (combat.cpp:748)
   p.combo = (p.combo || 0) + 1;
   if (p.combo > 4) p.combo = 1;
   const cb = comboBonus(p.eff.wtype === 0 ? 5 : p.eff.skill, p.combo);
   sm += cb; l += cb;
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
-  if (ctx.fightZone) { sm += Math.trunc(sm / 3); l += Math.trunc(l / 3); }        // m_bIsFightZone: +1/3 (combat.cpp:781), tras combo y crítico
+  if (ctx.crit && p.eff.critBonus) { sm += p.eff.critBonus; l += p.eff.critBonus; } // ITEMSTAT_CRITICAL con carga y attackMode>=20, tras el combo (combat.cpp:765)
+  if (ctx.fightZone) { sm += Math.trunc(sm / 3); l += Math.trunc(l / 3); }        // m_bIsFightZone: +1/3 (combat.cpp:781)
+  if (ctx.apocalypse) { sm = Math.trunc(sm * 1.2); l = Math.trunc(l * 1.2); }      // m_bIsApocalypseMap: x1.2 (combat.cpp:787), entero como "*= 1.2" sobre int
+  if (ctx.flags) { sm = Math.trunc(sm * 1.3); l = Math.trunc(l * 1.3); }           // CheckNearbyFlags: x1.3 (combat.cpp:792; Client.cpp:1371)
+  if (ctx.crusadeLevel !== undefined) {                                            // atacante con crusadeDuty 1 contra jugador en cruzada (combat.cpp:797-815)
+    const lv = ctx.crusadeLevel;
+    const f = v => lv <= 80 ? v + v : lv <= 100 ? v + Math.trunc(v * 7 / 10) : v + Math.trunc(v / 3);
+    sm = f(sm); l = f(l);
+  }
   if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 6) return { hit: true, damage: 0 };   // combat.cpp:1253-1258: actionLimit 1, 2 y 6 -> return 0 (el 5 SI recibe daño, combat.cpp:1295)
   let dmg = n.cfg.size === 0 ? sm : l;
   if (n.absDamage < 0) {

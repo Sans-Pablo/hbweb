@@ -49,8 +49,8 @@ export function npcMelee(rng, npc) {
 
 // Daño que recibe un jugador: se resta 1d(vitalidad/10) - 1.
 export function absorbOnPlayer(rng, dmg, c) {
-  const v = Math.floor(c.vit / 10);
-  if (v > 0) dmg -= dice(rng, 1, v) - 1;
+  // combat.cpp:711: iAP -= dice(1, vit/10) - 1; con vit < 10 dice() devuelve 0 (Math.h ndice) y el daño sube 1, igual que el original.
+  dmg -= dice(rng, 1, Math.floor(c.vit / 10)) - 1;
   return Math.max(0, dmg);
 }
 

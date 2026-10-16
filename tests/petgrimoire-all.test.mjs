@@ -37,7 +37,7 @@ for (const [school, sp] of [["fire", "Orc"], ["ice", "Tutelary-Angel"], ["lightn
       A.lastCast = -1e9; pet.mp = 9999; w.tick(50); const mp0 = pet.mp;
       const ok = w.command(A.id, { t: "pgcast", spell: id, x: tgt.x, y: tgt.y });
       assert.ok(ok, sp + " lanza " + magic[id].name + " " + JSON.stringify(w.events.slice(-1)));
-      tick(2500); paid = mp0 - pet.mp; dmg = tgt.hp < hp0;
+      tick(2500); paid = mp0 - pet.mp; dmg = tgt.hp < hp0; if (!dmg) tick(3000);     // si resistió, se espera a que acabe la espera entre lanzamientos (COOLDOWN_MS)
     }
     if (paid < PG.manaCost(magic, school, id) - 1) console.log("DBG", magic[id].name, paid, pet.mp, PG.manaCost(magic, school, id), pet.name);
     assert.ok(paid >= PG.manaCost(magic, school, id) - 1, "paga el maná de nivel de " + magic[id].name);
