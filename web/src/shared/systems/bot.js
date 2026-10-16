@@ -23,7 +23,8 @@ import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
 import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
-import { allocate } from "./builds.js";
+import { allocate, isCaster, isMage } from "./builds.js";
+import * as BM from "./botmagic.js";
 import * as Comp from "./companion.js";
 import { feedSummons } from "./summonfood.js";
 import * as Sch from "./schools.js";
@@ -51,6 +52,8 @@ export function pickName(taken) {
   for (let i = 2; ; i++) { const n = NAMES[i % NAMES.length] + i; if (!taken.has(n.toLowerCase())) return n; }
 }
 export const BOT_STATS = { str: 14, vit: 12, dex: 12, int: 10, mag: 10, chr: 10 };
+// Mago (INVENTO): mismos 68 puntos que BOT_STATS pero con Int y Mag (Magic.cfg: Magic Missile pide Int 18, Heal Int 20)
+export const BOT_MAGE_STATS = { str: 8, vit: 12, dex: 10, int: 18, mag: 12, chr: 8 };
 // Prepara a un jugador recién creado: nivel, oro y cerebro
 export function init(w, p, opts = {}) {
   const lvl = Math.max(1, Math.min(opts.level | 0 || 1, MAX_LEVEL));
@@ -59,7 +62,7 @@ export function init(w, p, opts = {}) {
   if (!opts.keep) p.gold += 400 + lvl * 250;
   Tut.init(p, false);                                                    // un bot no hace el tutorial (el observador no debe verlo)
   w.recalc(p);
-  p.bot = { farmer: !opts.keep && !opts.owner && w.rng() < 0.3, owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0 };
+  p.bot = { farmer: !opts.keep && !opts.owner && w.rng() < 0.3, owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0, mage: !!opts.mage };
   if (!opts.keep) errands(w, p, p.bot, true);
   p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp;
 }
@@ -93,7 +96,7 @@ function spendPoints(w, p) {
   if (p.pool <= 0) return;
   if (p.res && p.level >= 15 && p.stats.chr < 20) w.command(p.id, { t: "stat", stat: "chr", n: Math.min(p.pool, 20 - p.stats.chr) });        // carisma 20: requisito para fundar un guild (systems/guild.js)
   if (p.pool <= 0) return;
-  if (p.res) { for (const [stat, n] of Object.entries(allocate(p, p.pool))) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }                  // reparto según su build (builds.js)
+  if (p.res || p.bot?.mage) { for (const [stat, n] of Object.entries(allocate(p, p.pool))) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }                  // reparto según su build (builds.js)
   else { const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
     for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }
   if (p.pool > 0) w.command(p.id, { t: "stat", stat: "str", n: p.pool });
@@ -145,10 +148,10 @@ export function errands(w, p, b, first = false) {
   feedSummons(w, p, t => blog(w, p, t), !p.res);                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
-  const ilv = i => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
-  if (isSupport(p) && p.level >= 30 && !hasStaff(p) && !p.bag.some(i => isStaff(w.data.item(i.id)))) {          // sin báculo: compra el más barato que exige su nivel
+  const ilv = i => (i ? (itemLevel(w.data.item(i.id), i.attr, i.id) + (isCaster(p) ? BM.casterBonus(w.data.item(i.id)) : 0)) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
+  if (((isSupport(p) && p.level >= 30) || isMage(p)) && !hasStaff(p) && !p.bag.some(i => isStaff(w.data.item(i.id)))) {          // sin báculo: compra el más barato que exige su nivel
     const st = [...w.data.items.values()].filter(d => d && isStaff(d) && d.family !== "psychic" && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
-    if (st && buy(w, p, st)) blog(w, p, `Compro ${st.name} (${st.price} de oro): para mantener a un summon de apoyo hace falta un báculo en la mano.`);
+    if (st && buy(w, p, st)) blog(w, p, `Compro ${st.name} (${st.price} de oro): una varita en la mano mantiene a un summon de apoyo y deja lanzar hechizos.`);
   }
   if (isArcher(p) && !p.bag.some(i => isBow(w.data.item(i.id))) && !p.eff?.bow) {          // sin arco: compra el mejor que pueda usar y pagar
     const bow = [...w.data.items.values()].filter(d => d && isBow(d) && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
@@ -157,8 +160,9 @@ export function errands(w, p, b, first = false) {
   const worn = slot => { const uid = p.equip[slot]; return uid !== undefined ? Inv.instOf(p, uid) : null; };
   const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
   const usable = d => d && d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
-    d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && (SKIP_WEAPON.test(d.name) && !(isStaff(d) && isSupport(p)))) && (!isBow(d) || isArcher(p)) && (!isStaff(d) || isSupport(p)) && !(isSupport(p) && hasStaff(p) && !isStaff(d) && (d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND));          // con la varita en la mano no vuelve al sable
+    d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && (SKIP_WEAPON.test(d.name) && !(isStaff(d) && (isSupport(p) || isMage(p))))) && (!isBow(d) || isArcher(p)) && (!isStaff(d) || isSupport(p) || isMage(p)) && !(isMage(p) && (d.equipPos === EQUIP.LHAND || d.equipPos === EQUIP.TWOHAND || (d.equipPos === EQUIP.RHAND && !isStaff(d)))) && !(isSupport(p) && hasStaff(p) && !isStaff(d) && (d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND));          // con la varita en la mano no vuelve al sable
   studyManuals(w, p, b);
+  if (isCaster(p)) { BM.study(w, p, b, t => blog(w, p, t)); }
   let best = null;
   for (const i of p.bag) {
     const d = w.data.item(i.id);
@@ -438,6 +442,8 @@ function run(adv, w, p, b) {
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp, fear = Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
+  if (BM.ensureHands(adv, w, p, b, t => blog(w, p, t))) return;
+  if (isCaster(p) && BM.support(adv, w, p, b, t => blog(w, p, t))) return;
   if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
     if (pot) { b.potionAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}%: bebo una poción roja.`); think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
@@ -498,6 +504,7 @@ function run(adv, w, p, b) {
         } else if (d <= MAGE_RANGE.max) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }       // a distancia: espera a que el summon lance
       } else if (p.res?.arch === "scholar" && !isSupport(p) && Comp.activeBall(p)) wieldStaff(adv, w, p, b);
     }
+    if (isCaster(p) && t.kind === "npc" && !b.travel && BM.fight(adv, w, p, b, t, x => blog(w, p, x))) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }
     // Crítico (Alt + clic) y dash, como un jugador con maestría 100 en el arma (Game.cpp, _iGetAttackType / OBJECTATTACKMOVE)
     const master = ((p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= 100), crit = master && (p.superAttack | 0) > 0;
     const gap = dist(p, t), reach = reachOf(w, p, t, crit);

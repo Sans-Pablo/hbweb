@@ -193,9 +193,9 @@ export class Adventure {
   // ---- bots (herramienta de admin: dbg bot / botclear)
   spawnBot(owner, opts = {}) {
     const taken = new Set([...this.locations.keys()].map(id => this.worldFor(id).ents.get(id)?.name?.toLowerCase()).filter(Boolean));
-    const id = this.addPlayer(opts.name || Bot.pickName(taken), null, { gender: opts.gender || (this.farm.rng() < 0.5 ? 1 : 2), stats: { ...Bot.BOT_STATS } });
+    const id = this.addPlayer(opts.name || Bot.pickName(taken), null, { gender: opts.gender || (this.farm.rng() < 0.5 ? 1 : 2), stats: { ...(opts.mage ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) } });
     const p = this.farm.ents.get(id);
-    Bot.init(this.farm, p, { level: opts.level, owner: owner ? owner.id : null });
+    Bot.init(this.farm, p, { level: opts.level, owner: owner ? owner.id : null, mage: opts.mage });
     this.bots.set(id, p);
     if (owner) {
       const ow = this.worldFor(owner.id);
@@ -208,7 +208,7 @@ export class Adventure {
   spawnResident(name, save = null) {
     const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
     const idx = Residents.RESIDENT_NAMES.indexOf(name), side = idx >= 20 ? 2 : 1;           // 20 de Aresden y 20 de Elvine
-    const id = this.addPlayer(name, save, save ? null : { gender: h % 2 ? 1 : 2, stats: { ...Bot.BOT_STATS }, cls: ["warrior", "mage", "summoner"][(idx < 0 ? h : idx) % 3] });
+    const id = this.addPlayer(name, save, save ? null : (cls => ({ gender: h % 2 ? 1 : 2, stats: { ...(cls === "mage" ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) }, cls }))(["warrior", "mage", "summoner"][(idx < 0 ? h : idx) % 3]));
     const at = this.locations.get(id);                                                          // la partida guardada puede dejarlo en el puesto (gshop_1f): se le vuelve a traer a la granja
     const p = (at || this.farm).ents.get(id);
     if (p && at && at !== this.farm) this.transfer(p, at, this.farm, this.farm.freeSpotNear(...(this.farm.home || this.farm.start)));
@@ -228,7 +228,7 @@ export class Adventure {
     let n = 0;
     for (const [id] of this.locations) {
       const w = this.worldFor(id), p = w?.ents.get(id); if (!p || p.kind !== "player") continue;
-      resetCharacter(w, p, p.bot ? Bot.BOT_STATS : null);
+      resetCharacter(w, p, p.bot ? (p.bot.mage ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) : null);
       if (p.bot) { Bot.init(w, p, { level: 1, owner: p.bot.owner }); if (p.res) { p.res = null; Residents.attach(w, p, null); } }
       n++;
     }
@@ -255,7 +255,7 @@ export class Adventure {
     if (c.op === "botclear") { let n = 0; for (const [id, b] of [...this.bots]) if (!b.res) { this.removePlayer(id); n++; } return n; }
     const n = Math.max(1, Math.min(10, c.n | 0 || 1)), solo = !!c.solo, out = [];
     let have = 0; for (const b of this.bots.values()) if (!b.res) have++;            // el tope de 40 cuenta solo los invocados, no los 40 habitantes
-    for (let i = 0; i < n && have + i < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level }));
+    for (let i = 0; i < n && have + i < 40; i++) out.push(this.spawnBot(solo ? null : p, { level: c.level, mage: !!c.mage }));
     return out;
   }
   removePlayer(id) {

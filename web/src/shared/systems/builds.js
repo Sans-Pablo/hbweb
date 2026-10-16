@@ -10,11 +10,16 @@ export const BUILDS = {
   agile:    { es: "ágil", w: { dex: 0.5, str: 0.25, vit: 0.25 } },
   summoner: { es: "invocador", w: { int: 0.3, mag: 0.15, vit: 0.35, str: 0.2 } },
   vanguard: { es: "vanguardia", w: { vit: 0.45, str: 0.4, dex: 0.15 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
+  mage:     { es: "mago", w: { int: 0.45, mag: 0.2, vit: 0.35 } },                                // v0.85.26: lanzador puro. INT para aprender y lanzar (Magic Missile pide 18, Fire Ball 26, Fire Strike 34), MAG para el maná
   arcane:   { es: "arcano", w: { vit: 0.4, int: 0.3, mag: 0.15, str: 0.15 } },                      // Mago e Invocador de misiones: vida y mente
 };
 const QUEST_BUILD = { warrior: "vanguard", mage: "arcane", summoner: "arcane" };
 export const DEFAULT_BUILD = { warrior: "glass", hunter: "agile", trader: "balanced", wanderer: "balanced", scholar: "summoner" };
-export const buildOf = p => (p.res && BUILDS[p.res.build]) ? p.res.build : QUEST_BUILD[p.quests?.cls] || DEFAULT_BUILD[p.res?.arch] || "balanced";
+export const buildOf = p => (p.res && BUILDS[p.res.build]) ? p.res.build : p.bot?.mage ? "mage" : QUEST_BUILD[p.quests?.cls] || DEFAULT_BUILD[p.res?.arch] || "balanced";
+// ¿Gasta puntos en INT/MAG y lanza hechizos con las manos libres o una varita? (botmagic.js)
+export const isCaster = p => { const b = buildOf(p); return b === "mage" || b === "arcane" || b === "summoner"; };
+// Mago puro: sin arma cuerpo a cuerpo (solo se lanza con las manos libres o con varita, magicsys.js usable())
+export const isMage = p => buildOf(p) === "mage";
 
 // Reparte `total` puntos según el build respetando el tope de cada estadística
 export function allocate(p, total) {
