@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.85.40 · Puerta del admin (2026-10-16)
-- [admin] Botón «Admin» en el login (cuenta de ADMINS + clave, sin token en la URL; solo desde el PC del servidor) y el observador de pantalla dividida pasa a ser una sección del panel /admin.
+- [admin] Botón «Admin» siempre visible en el login que abre el panel /admin, ahora público (sin clave, a petición del propietario); el observador dividido es una sección del panel.
 
 ## 0.85.39 · Daños originales (2026-10-16)
 - Auditoría de daños contra HGServerConsole: Demonslayer (616) +5 al daño grande contra Demon (combat.cpp:566); anillos 335/337 -20%/-10% al daño mágico (HG.cpp:18211); VIT<10 suma 1 (dice(1,0)=0).

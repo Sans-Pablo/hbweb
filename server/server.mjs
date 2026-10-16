@@ -165,7 +165,7 @@ const json = (req, res, code, obj) => { res.writeHead(code, { "Content-Type": "a
 // Sesiones de admin: se piden con cuenta (de ADMINS) + clave en el botón «Admin» del login; el token de sesión sustituye al de la URL. Siguen limitadas a este PC.
 const adminSessions = new Map(), adminFails = new Limiter(env.HB_NO_LIMITS === "1" ? 1e9 : 8, 10 * 60000);
 const sessionOk = t => { const e = adminSessions.get(t); if (!e) return false; if (e < Date.now()) { adminSessions.delete(t); return false; } return true; };
-const adminAllowed = (req, url) => { const t = url.searchParams.get("token"); return isLoopback(req.socket.remoteAddress) && !viaTunnel(req) && !!t && (t === ADMIN_TOKEN || sessionOk(t)); };   // el panel solo desde este PC
+const adminAllowed = () => true;   // panel público, sin clave (decisión del propietario)
 
 const server = http.createServer((req, res) => {
   let url; try { url = new URL(req.url, "http://x"); } catch { res.writeHead(400); res.end(); return; }
