@@ -385,6 +385,8 @@ export function blog(w, p, text) {
   w.hooks?.logSink?.(p, text);
   if (w.hooks?.watched?.has(p.id)) w.emit({ t: "botlog", id: p.id, text });
 }
+// Pensamiento de PvP (v0.85.51, INVENTO): líneas con '⚔' que el admin recoge en la pestaña PvP del bot (botstats.mjs)
+export const plog = (w, p, text) => blog(w, p, "⚔ " + text);
 function think_(w, p, b, key, vars = {}, gap = 9000) {
   const now = w.time;
   if (now - (b.thAt || -1e9) < gap || now - ((b.thKey ||= {})[key] || -1e9) < 25000) return false;
@@ -461,7 +463,7 @@ function run(adv, w, p, b) {
   }
   if (w.pvp && hpf < 0.25 && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
     const foe = [...w.ents.values()].find(e => e.kind === "player" && canFight(w, p, e) && dist(p, e) <= 9);
-    if (foe) { b.recallAt = w.time; blog(w, p, `Poca vida y ${foe.name} (bando enemigo) cerca: intento Recall para huir.`); adv.command(p.id, { t: "recall" }); }
+    if (foe) { b.recallAt = w.time; plog(w, p, `Huir: vida ${Math.round(hpf * 100)}% y ${foe.name} (nv ${foe.level}, ${Math.round(foe.hp / foe.maxHp * 100)}% vida) a ${dist(p, foe)} casillas: Recall.`); adv.command(p.id, { t: "recall" }); }
   }
   // INSTINTO DE SUPERVIVENCIA: con poca vida y un enemigo encima no se queda quieto: sale con Recall (cripta/Promise Land) o corre alejándose de él
   if (hpf < 0.32 + fear && w.time - (b.fleeAt || 0) > 700) {
@@ -469,12 +471,12 @@ function run(adv, w, p, b) {
     for (const e of w.ents.values()) { if (e.dead || e.master === p.id || e.aux || w.safeAt(e.x, e.y) || e.comp) continue; if (!(e.kind === "npc" || (e.kind === "player" && canFight(w, p, e)))) continue; const d = dist(p, e); if (d <= 7 && d < fd && (e.target === p.id || d <= 3)) { fd = d; foe = e; } }
     if (foe) {
       b.fleeAt = w.time; b.target = null; b.path = null;
-      if ((w.map.kind === "dungeon" || w.pvp || (b.rest && !owner && !restSafe(w, p))) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
+      if ((w.map.kind === "dungeon" || w.pvp || (b.rest && !owner && !restSafe(w, p))) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; (foe.kind === "player" ? plog : blog)(w, p, `${foe.kind === "player" ? "Huir: " : ""}vida ${Math.round(hpf * 100)}% con ${foe.name} encima: Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
       else if (p.recallTok && fd >= 3 && w.time - (p.lastCombat || -1e9) > 1200) { b.hold = w.time + 800; return; }          // el Recall canaliza y el enemigo aún no le alcanza: quieto (correr lo cancelaría)
       else {
         let best = null, bs = dist(p, foe);
         for (let d = 0; d < 8; d++) { const x = p.x + DX[d] * 2, y = p.y + DY[d] * 2, sx = p.x + DX[d], sy = p.y + DY[d]; if (w.grid.blocked(sx, sy) || !w.grid.inside?.(sx, sy) && false) continue; const sc = Math.max(Math.abs(x - foe.x), Math.abs(y - foe.y)); if (sc > bs && !w.teleports.has(w.grid.idx(sx, sy))) { bs = sc; best = [x, y]; } }
-        if (best) { if (!b.fled || w.time - b.fled > 8000) blog(w, p, `Vida ${Math.round(hpf * 100)}%: huyo de ${foe.name}.`); b.fled = w.time; step(adv, w, p, b, best[0], best[1], true); return; }
+        if (best) { if (!b.fled || w.time - b.fled > 8000) (foe.kind === "player" ? plog : blog)(w, p, `${foe.kind === "player" ? "Huir: " : ""}vida ${Math.round(hpf * 100)}%: huyo de ${foe.name}.`); b.fled = w.time; step(adv, w, p, b, best[0], best[1], true); return; }
       }
     }
   }
@@ -495,7 +497,8 @@ function run(adv, w, p, b) {
   if ((!b.rest || defend) && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = (b.rest && !defend) || b.noFight > w.time || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
-    if (b.seen !== t.id) { b.seen = t.id; b.foeKind = t.kind === "player" ? ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp ? "magic" : "phys") : (t.magic ? "magic" : "phys"); blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
+    if (t.kind === "player" && w.time - (b.pvpAt || 0) > 3000) { b.pvpAt = w.time; plog(w, p, `Combate vs ${t.name}: yo ${p.hp}/${p.maxHp} PV ${p.mp}/${p.maxMp} PM, él ${t.hp}/${t.maxHp} PV ${t.mp ?? "?"} PM, dist ${dist(p, t)}, modo ${isCaster(p) ? "lanzador" : "cuerpo a cuerpo"}${p.recallTok ? ", Recall en curso" : ""}.`); }
+    if (b.seen !== t.id) { b.seen = t.id; b.foeKind = t.kind === "player" ? ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp ? "magic" : "phys") : (t.magic ? "magic" : "phys"); blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind === "player") plog(w, p, `Elijo pelear con ${t.name}: nv ${t.level} (yo ${p.level}), ${b.foeKind === "magic" ? "mago" : "físico"}, vida ${t.hp}/${t.maxHp} (yo ${p.hp}/${p.maxHp}), a ${dist(p, t)} casillas${p.bot.revenge?.id === t.id ? ", venganza" : ""}.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (p.eff?.bow && !arrowOf(w, p)) {                                                              // sin flechas: no sigue disparando al aire (eso cancela el Recall); compra o sale
       stuck(w, p, b, "sin flechas"); b.target = null; b.path = null;
       if (p.gold < 4) { const bw = p.bag.find(i => isBow(w.data.item(i.id)) && Object.values(p.equip).includes(i.uid)); if (bw) { blog(w, p, "Sin flechas ni oro: me quito el arco."); adv.command(p.id, { t: "unequip", uid: bw.uid }); return; } }          // quien no es arquero y no puede pagar flechas no se queda bloqueado con un arco que no dispara

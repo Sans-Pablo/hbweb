@@ -68,12 +68,12 @@ export function fight(adv, w, p, b, t, log) {
   if (!t || !ready(w, p, b) || w.safeAt(p.x, p.y) || dist(p, t) > CAST_RANGE) return false;
   if (t.kind === "player") {                                                    // PvP: paraliza primero (si no lo está ya) y luego remata con el mejor ataque
     const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40);
-    if (par !== undefined && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500) { log(`Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y); }
+    if (par !== undefined && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500) { log(`⚔ Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y); }
   }
   const healKeep = HEALS.some(h => known(p, h)) ? costOf(w, p, HEALS.find(h => known(p, h))) : 0;
   const id = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) + healKeep && M.castChance(p, a) >= 40);
   if (id === undefined) return false;
-  if (b.spellLog !== id) { b.spellLog = id; log(`Lanzo ${w.magic[id].name || "hechizo " + id} a ${t.name} (maná ${p.mp}/${p.maxMp}).`); }
+  if (b.spellLog !== id) { b.spellLog = id; log(`${t.kind === "player" ? "⚔ " : ""}Lanzo ${w.magic[id].name || "hechizo " + id} a ${t.name} (maná ${p.mp}/${p.maxMp}).`); }
   return cast(adv, w, p, b, id, t.x, t.y);
 }
 
@@ -95,9 +95,9 @@ export function support(adv, w, p, b, log) {
   }
   if (inFight && w.time - (b.shieldAt || -1e9) > 45000 && !sget(w, p, "protect")) {
     const foe = b.target?.kind === "player" ? b.target : null, mageFoe = foe && (foe.eff?.wtype >= 34 && foe.eff?.wtype <= 39 || foe.mp > foe.hp);      // contra otro mago, PFM; contra el resto, escudo físico
-    if (mageFoe && known(p, PFM) && w.magic[PFM] && p.mp >= costOf(w, p, PFM) + 20) { b.shieldAt = w.time; log("Me protejo con Protection From Magic."); return cast(adv, w, p, b, PFM, p.x, p.y); }
+    if (mageFoe && known(p, PFM) && w.magic[PFM] && p.mp >= costOf(w, p, PFM) + 20) { b.shieldAt = w.time; log("⚔ Me protejo con Protection From Magic (enemigo mago)."); return cast(adv, w, p, b, PFM, p.x, p.y); }
     const sh = SHIELDS.find(s => known(p, s) && w.magic[s] && p.mp >= costOf(w, p, s) + 20);
-    if (sh !== undefined) { b.shieldAt = w.time; log(`Me protejo con ${w.magic[sh].name || "un escudo"}.`); return cast(adv, w, p, b, sh, p.x, p.y); }
+    if (sh !== undefined) { b.shieldAt = w.time; log(`${mageFoe ? "⚔ " : ""}Me protejo con ${w.magic[sh].name || "un escudo"}.`); return cast(adv, w, p, b, sh, p.x, p.y); }
   }
   return false;
 }

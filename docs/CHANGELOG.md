@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.51 · Pensamiento PvP en el admin (2026-10-16)
+- [invento] `bot.js plog` (líneas «⚔»): elección de rival, resumen cada 3 s, huidas; `botmagic.js` marca paralizar/lanzar/PFM contra jugadores. `botstats.mjs` guarda `h.pvp` y `sheet()`; `admin-bots.html` pestaña PvP con ficha. Test `bot-pvplog.test.mjs`.
+
 ## 0.85.50 · Reinicio de bots: más magos (2026-10-16)
 - [invento] `respec.freeReset` + migración `RESET_V` en `residents.js rebuild`: cada habitante devuelve sus puntos y elige build de nuevo (35 % mago, 15 % arcano, 8 % invocador). Test `bot-reset.test.mjs`.
 

@@ -12,8 +12,8 @@ const top = (o, n = 3) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).sl
 
 export function openBotStats(adv, log = () => {}) {
   const H = new Map();                                                    // nombre -> { log, ideas, states, pos, since, samples }
-  const hist = name => { let h = H.get(name); if (!h) H.set(name, (h = { log: [], ideas: [], states: {}, pos: null, still: 0, samples: 0, born: Date.now() })); return h; };
-  adv.logSink = (p, text, time) => { const h = hist(p.name), l = h.log; l.push({ t: Math.round(time / 1000), m: String(text).slice(0, 220) }); if (l.length > 400) l.splice(0, l.length - 400); };
+  const hist = name => { let h = H.get(name); if (!h) H.set(name, (h = { log: [], ideas: [], states: {}, pvp: [], pos: null, still: 0, samples: 0, born: Date.now() })); return h; };
+  adv.logSink = (p, text, time) => { const h = hist(p.name), l = h.log; l.push({ t: Math.round(time / 1000), m: String(text).slice(0, 220) }); if (l.length > 400) l.splice(0, l.length - 400); if (String(text).startsWith("⚔")) { const v = h.pvp; v.push({ t: Math.round(time / 1000), m: String(text).slice(2, 240) }); if (v.length > 300) v.splice(0, v.length - 300); } };
   const stateOf = b => { const br = b.bot || {}, t = br.target; return b.dead ? "muerto" : b.trade ? "comercia" : br.travel ? "viaja" : t ? "lucha" : br.rest ? "descansa" : br.owner != null ? "sigue al líder" : b.res?._delve ? "cripta" : b.res?._gather ? "charla en la tienda" : "pasea"; };
   const sample = () => {
     for (const b of adv.residents()) {
@@ -48,10 +48,17 @@ export function openBotStats(adv, log = () => {}) {
     };
   }
   const summaries = () => adv.residents().map(summary);
+  // Ficha de combate del bot (v0.85.51): estadísticas, bonos del equipo, hechizos y lo que lleva puesto (para ajustar su PvP)
+  const sheet = b => {
+    const w = adv.worldFor(b.id), e = b.eff || {}, eq = [];
+    for (const [slot, uid] of Object.entries(b.equip || {})) { const i = b.bag.find(x => x.uid === uid), d = i && w.data.item(i.id); if (d) eq.push(d.name); }
+    const sp = Object.keys(b.magic || {}).filter(k => b.magic[k]).map(k => w.magic[k]?.name || "#" + k);
+    return { stats: { ...b.stats }, pool: b.pool | 0, hp: b.hp, maxHp: b.maxHp, mp: b.mp, maxMp: b.maxMp, defense: e.defense | 0, addDR: e.addDR | 0, addHP: e.addHP | 0, addMP: e.addMP | 0, addMR: e.addMR | 0, addPR: e.addPR | 0, addAbsMD: e.addAbsMD | 0, resistMagic: e.resistMagic | 0, hit: e.hit | 0, wtype: e.wtype | 0, bow: !!e.bow, equip: eq, spells: sp, build: b.res?.build || "", level: b.level };
+  };
   const detail = name => {
     const b = adv.residents().find(x => x.name.toLowerCase() === String(name).toLowerCase()); if (!b) return null;
     const h = hist(b.name), r = b.res;
-    return { ...summary(b), log: h.log.slice(-200).reverse(), ideas: h.ideas.slice().reverse(), mem: (r.mem || []).map(m => m.es), rel: Object.entries(r.rel || {}).sort((a, c) => c[1] - a[1]),
+    return { ...summary(b), log: h.log.slice(-200).reverse(), pvp: h.pvp.slice().reverse(), sheet: sheet(b), ideas: h.ideas.slice().reverse(), mem: (r.mem || []).map(m => m.es), rel: Object.entries(r.rel || {}).sort((a, c) => c[1] - a[1]),
       dlv: r.dlv || {}, dd: r.dd || {}, insights: (r.insights || []).slice().reverse(), qa: { kills: top(r.qa?.kills, 8), deaths: top(r.qa?.deaths, 8), rej: top(r.qa?.rej, 6), pvp: r.qa?.pvp } };
   };
 
