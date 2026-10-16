@@ -24,9 +24,9 @@ textarea{width:100%;height:110px;background:#0d0b07;color:var(--txt);border:1px 
 .win{position:relative;font:11px Tahoma,Verdana,sans-serif}.win *{position:absolute}.win .sp{background-repeat:no-repeat}
 .frm{left:0;top:0;width:258px;height:339px;background:var(--g1) -287px -2px}.strip{left:235px;top:0;width:23px;height:339px;background:var(--g1) -547px -2px}
 .mt,.mm,.mb{left:0;width:215px}.mt{height:30px;background:var(--g1) -366px -343px}.mm{background:var(--g1) -366px -373px}.mb{height:43px;background:var(--g1) -366px -387px}
-.ban{left:0;top:0;width:258px;height:31px;background:var(--d0) var(--bp)}
+.ban{left:0;top:0;width:258px;height:31px;background:url(sprites/banner-blank.png)}.ban.m{width:215px;background-image:url(sprites/banner-blank-215.png)}
 .ball{top:4px;width:16px;height:16px;display:grid;place-items:center;font:700 11px Tahoma;color:#e8d4a0;text-shadow:1px 1px #20160a}.ball.min{left:5px}.ball.cls{right:5px}
-.ttl{left:0;right:0;top:9px;text-align:center;font-weight:700;color:#3a2810}
+.ttl{left:0;right:0;top:7px;text-align:center;font:700 13px Georgia,'Times New Roman',serif;color:#e8c06a;text-shadow:1px 1px #2a0a05,-1px 0 #2a0a05,0 -1px #2a0a05,0 1px #2a0a05;letter-spacing:.3px}.ttl span{position:static}.ttl span:before,.ttl span:after{content:'½6';color:#c9a24a;font-size:9px;margin:0 7px;text-shadow:1px 1px #1c0d06;vertical-align:1px}
 .txt{white-space:nowrap}.sec{font-weight:700}.line{height:1px;background:var(--dim);opacity:.6}
 .slot{border:1px solid #5a431f;background:rgba(60,40,15,.3);display:grid;place-items:center;font-weight:700}
 .rw{padding:0 3px;white-space:nowrap}
@@ -92,8 +92,8 @@ function win(s){
   const W=s.w,H=s.h;let html="";
   if(s.mini){html+=`<div class="sp mt"></div>`;for(let y=30;y<H-43;y+=14)html+=`<div class="sp mm" style="top:${y}px;height:${Math.min(14,H-43-y)}px"></div>`;html+=`<div class="sp mb" style="top:${H-43}px"></div>`}
   else html+=`<div class="sp frm"></div><div class="sp strip"></div>`;
-  if(s.banner)html+=`<div class="ban" style="--bp:${BAN[s.banner]}"></div>`;
-  if(s.title)html+=`<div class="ttl" style="font-size:${T.fs}px">${s.title}</div>`;
+  html+=`<div class="ban${s.mini?" m":""}"></div>`;
+  if(s.title)html+=`<div class="ttl"><span>${s.title}</span></div>`;
   const c={x0:T.padx,x1:W-T.padx,y:s.mini?T.padtop-14:T.padtop};
   for(const [k,a] of s.body){const r=C[k](c,{...a});html+=r.html;c.y+=r.h+T.gap}
   const by=H-T.padbottom-T.btnh,n=(s.buttons||[]).length;
@@ -103,10 +103,10 @@ function win(s){
   return `<div class="win" style="width:${W}px;height:${H}px;font-size:${T.fs}px">${html}</div>`;
 }
 const WINDOWS=[
- ["1 · Inventory",{w:258,h:339,body:[["slots",{rows:5,items:["⚔","🛡"]}],["space",{h:2}],["kv",{k:"Weight",v:"42 / 120"}]],buttons:["Manufacture","Close"]}],
- ["2 · Warehouse",{w:258,h:339,banner:"storage",body:[["space",{h:34}],["text",{t:"Select the item.",dim:1}],["row",{t:"Long Sword",sel:1}],["row",{t:"Red Potion (25)"}],["row",{t:"Ruby (3)"}],["row",{t:"Gold (12400)"}]],buttons:["Cancel"]}],
- ["3 · Quests",{w:258,h:339,banner:"quest",body:[["space",{h:34}],["row",{t:"Slime Hunt  3/10",sel:1}],["row",{t:"Amphis Ridge  0/5"}],["space",{h:8}],["para",{lines:3,t:"Kill 10 slimes in the Aresden fields and return to the guard."}],["bar",{pct:30}]],buttons:["Accept","Cancel"]}],
- ["4 · Character",{w:258,h:339,banner:"skills",body:[["space",{h:34}],["section",{t:"Atributos"}],["kv",{k:"Str",v:"25"}],["kv",{k:"Dex",v:"18"}],["kv",{k:"Hp",v:"412 / 480"}],["kv",{k:"Weight",v:"Overload",hot:1}],["bar",{pct:62}],["section",{t:"Level"}],["kv",{k:"Level",v:"87"}]],buttons:["Level Up","Party"]}],
+ ["1 · Inventory",{w:258,h:339,title:"Inventory",body:[["slots",{rows:5,items:["⚔","🛡"]}],["space",{h:2}],["kv",{k:"Weight",v:"42 / 120"}]],buttons:["Manufacture","Close"]}],
+ ["2 · Warehouse",{w:258,h:339,title:"Items In Storage",body:[["space",{h:34}],["text",{t:"Select the item.",dim:1}],["row",{t:"Long Sword",sel:1}],["row",{t:"Red Potion (25)"}],["row",{t:"Ruby (3)"}],["row",{t:"Gold (12400)"}]],buttons:["Cancel"]}],
+ ["3 · Quests",{w:258,h:339,title:"Quest",body:[["space",{h:34}],["row",{t:"Slime Hunt  3/10",sel:1}],["row",{t:"Amphis Ridge  0/5"}],["space",{h:8}],["para",{lines:3,t:"Kill 10 slimes in the Aresden fields and return to the guard."}],["bar",{pct:30}]],buttons:["Accept","Cancel"]}],
+ ["4 · Character",{w:258,h:339,title:"Skills",body:[["space",{h:34}],["section",{t:"Atributos"}],["kv",{k:"Str",v:"25"}],["kv",{k:"Dex",v:"18"}],["kv",{k:"Hp",v:"412 / 480"}],["kv",{k:"Weight",v:"Overload",hot:1}],["bar",{pct:62}],["section",{t:"Level"}],["kv",{k:"Level",v:"87"}]],buttons:["Level Up","Party"]}],
  ["5 · Auto Menu",{w:258,h:339,title:"Auto Menu",body:[["space",{h:8}],["tabs",{items:["Cazar","Ir a…"],on:0}],["check",{t:"Auto Pots",on:1}],["check",{t:"Botín posible",on:1}],["check",{t:"Auto Attack"}],["section",{t:"Hotkeys"}],["kv",{k:"F5",v:"Auto Menu"}],["kv",{k:"F6",v:"Auto Hunt"}]],buttons:["Ir a Farm","Cerrar"]}],
  ["6 · Auto Hunt (mini)",{w:215,h:150,mini:1,title:"Slime (Pozo 3)",body:[["kv",{k:"Muertes",v:"38"}],["kv",{k:"Tiempo",v:"12:40"}],["kv",{k:"Experiencia",v:"+4210",hot:1}]],buttons:["Parar"]}],
 ];
