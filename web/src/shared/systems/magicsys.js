@@ -136,7 +136,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
-    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
+    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 6) return null;     // invulnerables (HG.cpp:18800: límites 1, 2, 4 y 6)
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
@@ -150,6 +150,7 @@ function resolve(w, p, id, sp, x, y, cost) {
     if (!canFight(w, p, tgt)) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
+    if (tgt.eff && tgt.eff.addAbsMD) dmg -= Math.trunc(dmg * tgt.eff.addAbsMD / 100);                    // AddAbsMD (HG.cpp:18237)
     if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
     if (dmg < 0) dmg = 0;
     dmg = luckySave(w, tgt, dmg);                                                    // solo con objeto Lucky (HG.cpp:18250)
