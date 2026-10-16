@@ -212,7 +212,7 @@ export function registerNpcDialogs(gui, api) {
 
   // ------------------------------------------------------------ 11: tienda
   const shop = {
-    id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false, s: new DlgSearch(24, 314, 190),
+    id: 11, x: 150, y: 110, w: 258, h: 339, type: 1, view: 0, mode: 0, qty: 1, rows: [], drag: false, s: new DlgSearch(34, 33, 190),
     vis() { return this.rows.map((row, idx) => ({ row, idx })).filter(e => this.s.match(e.row.display)); },      // buscador: filtra por nombre y conserva el índice real (el detalle usa this.mode - 1)
     key(e) { return this.s.key(e); },
     get focus() { return this.s.on; },                   // el tutorial cede el teclado mientras se escribe en el buscador
@@ -233,13 +233,13 @@ export function registerNpcDialogs(gui, api) {
           if (this.drag && g.mouse.down) this.scrollTo(ly, n); else this.drag = false;
         }
         this.view = clamp(this.view, 0, Math.max(0, n - SHOP_ROWS));
-        shadowed(g, 23, 45, "ITEM", INK); shadowed(g, 191, 45, "PRICE", INK);
+        shadowed(g, 23, 55, "ITEM", INK); shadowed(g, 191, 55, "PRICE", INK);
         for (let i = 0; i < SHOP_ROWS; i++) {
           const row = L[i + this.view]?.row; if (!row) break;
-          const over = within(lx, ly, 20, 220, i * SHOP_ROW_H + 65, i * SHOP_ROW_H + 79), col = over ? WHITE : DARK;
+          const over = within(lx, ly, 20, 220, i * SHOP_ROW_H + 73, i * SHOP_ROW_H + 87), col = over ? WHITE : DARK;
           if (over) { const real = api.itemByName(row.name.replace(/^(10|100)Arrows$/, "Arrow")); if (real) g.hoverDef = real.id; }      // BUG-009: ficha al pasar el cursor
-          g.aligned(10, 190, i * SHOP_ROW_H + 65, row.display, col);
-          g.aligned(148, 260, i * SHOP_ROW_H + 65, String(this.price(me, row)).padStart(6, " "), col);
+          g.aligned(10, 190, i * SHOP_ROW_H + 73, row.display, col);
+          g.aligned(148, 260, i * SHOP_ROW_H + 73, String(this.price(me, row)).padStart(6, " "), col);
         }
         return;
       }
@@ -305,7 +305,7 @@ export function registerNpcDialogs(gui, api) {
         const L = this.vis();
         if (L.length > SHOP_ROWS && within(lx, ly, 235, 260, 10, 330)) { this.drag = true; this.scrollTo(ly, L.length); return true; }
         for (let i = 0; i < SHOP_ROWS; i++) {
-          if (!within(lx, ly, 20, 220, i * SHOP_ROW_H + 65, i * SHOP_ROW_H + 79)) continue;
+          if (!within(lx, ly, 20, 220, i * SHOP_ROW_H + 73, i * SHOP_ROW_H + 87)) continue;
           if (bagCount(me) >= MAX_ITEMS) { api.log("You cannot buy anything because your bag is full."); return true; }
           if (L[this.view + i]) { this.mode = L[this.view + i].idx + 1; this.qty = 1; }
           return true;

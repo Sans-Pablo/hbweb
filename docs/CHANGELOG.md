@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.23 · Botones de ventana (2026-10-16)
+- Bolas cerrar/minimizar con el diseño de las bolas del marco (`drawFrameBall` en uistyle.js, usada por `Win.ball` y gui.js); petdialog (43) incluido. Icono de Misiones rehecho (gui.js `questIcon`). Tienda (id 11): buscador arriba.
+
 ## 0.85.20 · Ventanas y misiones (2026-10-16)
 - Almacén: buscador arriba y centrado. Misiones: icono de pergamino y entradas desplegables (`questwin.js`). Turquesa eliminado de gui.js/renderer.js (guardia en tests/ui-guard.test.mjs).
 

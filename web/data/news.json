@@ -1,10 +1,31 @@
 {
- "build": "0.85.20",
+ "build": "0.85.23",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Botones de ventana como las bolas del marco (v0.85.23)",
+    "en": "Window buttons like the frame balls (v0.85.23)"
+   },
+   "items": [
+    {
+     "es": "Cerrar y minimizar son ahora esferas de plata con el mismo diseño que las bolas del marco, en todas las ventanas con marco (también Mascotas).",
+     "en": "Close and minimize are now silver spheres with the same design as the frame balls, on every framed window (pets included)."
+    },
+    {
+     "es": "Icono de Misiones rehecho: pergamino con rollos de plata, igual en reposo y al pasar el ratón.",
+     "en": "Quests icon redone: a scroll with silver rolls, same at rest and on hover."
+    },
+    {
+     "es": "Tienda: el buscador está arriba, como en el almacén.",
+     "en": "Shop: the search bar is on top, like in storage."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

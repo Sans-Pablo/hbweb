@@ -9,7 +9,7 @@
 // Widgets: text, para, head, rule, btn, check, slider, input (texto o número), combo (lista con filtro), scroll (zona con barra) y `Flow`
 // para colocar filas que saltan de línea. Ver docs/sistemas/ventanas.md.
 import { t } from "./i18n.js";
-import { font, LAYOUT } from "./uistyle.js";
+import { font, LAYOUT, drawFrameBall } from "./uistyle.js";
 
 export const THEME = {
   txt: "#f0e2bd", dim: "#a89a78", hi: "#ffe9a0", head: "#f2c14e", good: "#9fe07f", bad: "#ff8a6a", link: "#8fc7ff",
@@ -291,16 +291,9 @@ export class Win {
   minimize() { if (!this.canMin || this.minimized) return; this.full = { w: this.w, h: this.h }; this.minimized = true; this.w = MIN_W; this.h = MIN_H; this.focus = null; this.popRect = null; }
   restore() { if (!this.minimized) return; this.minimized = false; this.w = this.full.w; this.h = this.full.h; }
   toggleMin() { this.minimized ? this.restore() : this.minimize(); }
-  // bola de botón: cúpula oscura con filete dorado y un glifo; se pinta encima de la bola plateada del marco
+  // bola de botón (diseño de las bolas plateadas del marco, ver drawFrameBall), se pinta encima de la del marco
   ball(ui, cx, cy, glyph, tip, fn) {
-    const c = ui.c, over = ui.hov(cx - 8, cy - 8, 16, 16);
-    const bad = glyph === "x";
-    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
-    c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
-    if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
-    else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
-    else { c.rect(cx - 3, cy - 3, 6, 6); }                                   // restaurar
-    c.stroke(); c.lineWidth = 1;
+    const over = ui.hov(cx - 8, cy - 8, 16, 16); drawFrameBall(ui.c, cx, cy, glyph, over);
     ui.hit(cx - 8, cy - 8, 16, 16, { fn });
     if (over) this.g.tip(t(tip), this.g.mouse.x + 12, this.g.mouse.y + 14);
   }

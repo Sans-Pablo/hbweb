@@ -450,3 +450,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Cartel "Critical": cuando aparece segun archivos originales.
 - Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
 - Dash: animacion y movimiento originales (no esta implementado).
+
+## 0.85.23 (hb-ui)
+- Hecho: bolas cerrar/minimizar unificadas con el diseño del marco en todas las ventanas con marco; icono de Misiones rehecho; buscador de la tienda arriba. Pendiente: herreria/hospital (marco clásico) aún con buscador abajo.
