@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.14 · Cárcel (2026-10-16)
+- Cárcel fiel: Client.cpp:1184 (solo en la propia ciudad, 180 s), HG.cpp 11661-11810 (destinos redirigidos), 2323 (cuenta atrás). Test `jail.test.mjs`.
+
 ## 0.85.10 · Sin rombos celestes (2026-10-16)
 - Quitados los rombos azules translúcidos que se dibujaban sobre el suelo en las casillas de salida (`drawTeleportMarks`); el original no los tiene. Se conserva solo el rótulo del destino. Test en `ui-guard`.
 

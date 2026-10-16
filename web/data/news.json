@@ -1,10 +1,17 @@
 {
- "build": "0.85.13",
+ "build": "0.85.14",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": { "es": "Cárcel (v0.85.14)", "en": "Jail (v0.85.14)" },
+   "items": [
+    { "es": "Matar a un inocente de tu bando dentro de tu ciudad te lleva 3 minutos a la cárcel (arejail/elvjail); no puedes teletransportarte hasta cumplir la condena.", "en": "Killing an innocent of your own side inside your city sends you to jail (arejail/elvjail) for 3 minutes; you cannot teleport out until the sentence ends." }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

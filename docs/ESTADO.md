@@ -401,6 +401,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - Magia contra jugadores/monstruos (Effect_Damage_Spot_DamageMove, HG.cpp:18534-18930): añadida la absorción mágica `AddAbsMD` (HG.cpp:18237) antes de la reducción por VIT; los monstruos con límite de acción 1, 2, 4 y 6 son inmunes (antes 5 en lugar de 6). Orden Lucky→PFM ya igual al original. Sin test propio: la ruta exige un mundo completo (cubierto por magic-*.test.mjs).
 
-- 0.85.12: muerte fiel (exp, objetos, PK; Client.cpp:1035/1094/930-1000). PENDIENTE: cárcel 180 s (teletransporte a arejail/elvjail y bloqueo `jailUntil`), no implementada.
+- 0.85.12: muerte fiel (exp, objetos, PK; Client.cpp:1035/1094/930-1000). 0.85.14: cárcel 180 s hecha (Client.cpp:1184, HG.cpp 11661-11810/2323): teletransporte a arejail/elvjail y bloqueo de destinos. La granja del bando hace de `sideMap`; el caso «reiniciar en ciudad enemiga» no existe en el port (no hay mapas enemigos).
 
 - 0.85.13: +50 oro por nivel (HG.cpp:15052) y SkillUp de escudo en PvP (combat.cpp:912). PENDIENTE: cárcel (22), alquimia/minería/manufactura (14: el port no tiene esos sistemas; SkillUp en HG.cpp:23682/24029/28214), revisión del servidor de crítico/dash (5).
