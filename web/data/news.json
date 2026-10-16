@@ -1,10 +1,23 @@
 {
- "build": "0.85.12",
+ "build": "0.85.13",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Nivel y escudo (v0.85.13)",
+    "en": "Level and shield (v0.85.13)"
+   },
+   "items": [
+    {
+     "es": "Cada nivel (1-50) da 50 de oro; el escudo también sube al parar golpes de jugadores.",
+     "en": "Each level (1-50) gives 50 gold; shield skill also rises when blocking player hits."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

@@ -1,7 +1,7 @@
 // Combate contra el original: zona de lucha +1/3 (combat.cpp:781), Lucky (combat.cpp:1015, HG.cpp:18250/21078), alcance 845 (HG.cpp ~6200), bonus 847/848 (+10).
 import assert from "node:assert/strict";
 import { strikeNpc } from "../web/src/shared/combat.js";
-import { luckySave, reachOf, enduStrip, armorLifeDecrement, killedPenalty, penaltyDrop } from "../web/src/shared/systems/combatsys.js";
+import { giveExp, luckySave, reachOf, enduStrip, armorLifeDecrement, killedPenalty, penaltyDrop } from "../web/src/shared/systems/combatsys.js";
 
 // rng fijo: dice(1,100) devuelve 1 (acierta siempre)
 const rng = () => 0;
@@ -82,4 +82,8 @@ v = mkV({ bag: [{ uid: 3, id: 7 }] }); penaltyDrop(mkD(0.5), v, 1, { all: true, 
 v = mkV({ level: 80 }); killedPenalty(mkD(0), v, { kind: "npc" }); assert.equal(v.bag.length, 3, "pen 1 igual; con PK 1 serían 3 objetos");
 v = mkV({ level: 80, pkCount: 1 }); killedPenalty(mkD(0), v, { kind: "npc" }); assert.equal(v.bag.length, 2, "pen 3 a nivel 80: 3 tiradas, la del objeto especial se salta");
 v = mkV({ pkCount: 1 }); killedPenalty(mkD(0), v, { kind: "npc" }); assert.equal(v.bag.length, 2, "pen 3 a nivel<80: 2 objetos");
+// bCheckLevelUp (HG.cpp:15052): +50 de oro por nivel 1..50
+{ const pl = { id: 1, level: 5, exp: 0, nextExp: 1, gold: 10, pool: 0 }; let n = 0;
+  const wl = { rng: () => 0, time: 0, emit() {}, recalc() { pl.nextExp = pl.level < 7 ? pl.exp + 1 : 1e12; } };
+  pl.nextExp = 1; giveExp(wl, pl, 1000); assert.ok(pl.level >= 6 && pl.gold === 10 + 50 * (pl.level - 5), "50 de oro por nivel"); }
 console.log("OK combat-original");

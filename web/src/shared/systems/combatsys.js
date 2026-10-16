@@ -148,6 +148,7 @@ export function hitPlayer(w, p, t, fx = {}) {
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
+  if (a.shielded) gainSSN(t, 11, 1);                                                          // combat.cpp:912: SkillUp(SKILL_SHIELD) al parar el golpe también contra jugadores
   a.damage = luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
   stripParts(w, p, t, a.parts);
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
@@ -249,6 +250,7 @@ export function giveExp(w, p, amount) {
   w.emit({ t: "exp", id: p.id, amount });
   while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
     p.level++;
+    if (p.level <= 50) p.gold += 50;                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
     const pay = Math.min(p.lvDebt | 0, R.LEVELUP_POINTS); p.lvDebt = (p.lvDebt | 0) - pay;
     p.pool += R.LEVELUP_POINTS - pay;
     w.recalc(p);
