@@ -453,3 +453,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 ## Diseno de ventanas (pedido 2026-10-16, v0.85.22 sin cambio de version)
 - [x] 3 direcciones de diseno unificado de ventanas (prototipos HTML en `docs/diseno/`, comparativa en `docs/diseno/README.md`). Pendiente: que el usuario elija direccion y aplicarla (frame, cabecera, bolas, pestanas, botones, listas, buscador, mini ventanas).
+
+- Nueva base de diseño con sprites reales (pedido 2026-10-16, v0.85.22 sin cambio de versión): `docs/diseno/base-original.html` (generado por `build-base.mjs`) usa gamedialog_1, dialogtext_0 y dialogtext_1 del juego; sustituye a la imitación CSS como base. Sin tocar producción.
