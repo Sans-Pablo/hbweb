@@ -315,18 +315,33 @@ export class Sprites {
     const fr = this.frame(key, f);
     if (!fr || !this.ready(key)) return;
     const [sx, sy, w, h, pvx, pvy] = fr, [img, k] = this.src(key), W = w * k, H = h * k;
-    const t = this.tmp, g = this.tctx;
-    if (t.width < W || t.height < H) { t.width = Math.max(t.width, W); t.height = Math.max(t.height, H); }
-    g.globalCompositeOperation = "source-over";
-    g.clearRect(0, 0, W, H);
-    g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
-    g.globalCompositeOperation = "source-in";
-    g.fillStyle = color;
-    g.fillRect(0, 0, W, H);
+    // El fotograma teñido es el mismo en cada llamada (el resplandor del Demon/Frost Lv >= 30 pide 12 por fotograma y dibujo, y el coste es de relleno:
+    // 12 mezclas de la hoja HD a 4x). Se prepara una vez por fotograma y color a tamaño completo (mismos píxeles que antes) y se reutiliza; sin caché: camino antiguo.
+    if (this.noTintCache) {
+      const t = this.tmp, g = this.tctx;
+      if (t.width < W || t.height < H) { t.width = Math.max(t.width, W); t.height = Math.max(t.height, H); }
+      g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, W, H);
+      g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+      g.globalCompositeOperation = "source-in"; g.fillStyle = color; g.fillRect(0, 0, W, H);
+      ctx.save(); ctx.globalAlpha *= alpha; ctx.globalCompositeOperation = op;
+      ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
+      ctx.restore();
+      return;
+    }
+    const ck = key + ":" + f + ":" + color + ":" + k + ":" + sx + "," + sy + ":" + W + "x" + H, tc = this.tintC ||= new Map();
+    let t = tc.get(ck);
+    if (!t) {
+      t = document.createElement("canvas"); t.width = W; t.height = H;
+      const g = t.getContext("2d");
+      g.drawImage(img, sx * k, sy * k, W, H, 0, 0, W, H);
+      g.globalCompositeOperation = "source-in"; g.fillStyle = color; g.fillRect(0, 0, W, H);
+      if ((this.tintPx = (this.tintPx || 0) + W * H) > 16e6) { tc.clear(); this.tintPx = W * H; }     // tope ~64 MB: los colores animados no dejan crecer la caché sin límite
+      tc.set(ck, t);
+    }
     ctx.save();
     ctx.globalAlpha *= alpha;
     ctx.globalCompositeOperation = op;
-    ctx.drawImage(t, 0, 0, W, H, x + pvx, y + pvy, w, h);
+    ctx.drawImage(t, 0, 0, t.width, t.height, x + pvx, y + pvy, w, h);
     ctx.restore();
   }
 

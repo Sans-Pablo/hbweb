@@ -2,6 +2,8 @@
 
 **Hecho:** granja de Aresden jugable; combate con fórmulas del servidor original; ítems originales (568 de Item.cfg), mochila de 50 casillas, peso, equipar con requisitos, absorción por parte del cuerpo, durabilidad (solo con bando), botín con las tasas originales (1/1), habilidades con maestría, resistencia, hambre; opciones (Esc), mapa tipo Diablo II, correr con R, guardado en el navegador.
 
+**v0.85.26 · Demon Lv 50 sin tirón de FPS:** causa = 12 recomposiciones por fotograma del sprite HD (4x) en `spr.tinted` para el resplandor de borde. Ahora caché por fotograma/color: 7,7-9,2 → 0,6-0,9 ms (Chromium software), píxeles idénticos. Medido solo por software (sin GPU real): verificar en el PC del usuario. Ficha: docs/sistemas/tintcache.md. Rama `Pablo-Claude/demon-fps`, sin push.
+
 **Pendiente:** ver el Backlog más abajo (el listado antiguo estaba desfasado).
 
 ## Hilo MOTOR/COMBATE (pedido 2026-10-15)
