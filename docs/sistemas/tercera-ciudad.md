@@ -93,3 +93,30 @@ Estimación: **B ≈ 1,5-2 semanas · D ≈ 1-1,5 semanas · A ≈ 1-2 semanas �
 3. ¿Habrá guerra futura (Crusade/Heldenian)? ¿Cómo se reparte en 3?
 4. ¿Se aceptan mapas reutilizados/reetiquetados en el primer release?
 5. ¿Cuántos bots por ciudad?
+
+## 9. Revisión con las condiciones de nuestro servidor (2026-10-16)
+Condiciones dadas por el usuario: (1) el servidor solo tiene mapas de **farm y Promise Land**; (2) el arte de las armaduras se puede **recolorear** para diferenciar el bando; (3) la tercera ciudad **la habitan solo bots**.
+
+Efecto sobre el análisis (estimaciones recalculadas, sin haber tocado código):
+- **Mapas:** no hacen falta los ~20 mapas de ciudad. Basta **una ciudad/granja de bando 3** (reetiquetando un mapa de farm existente, como `arefarm`/`elvfarm`) y su acceso a Promise Land. Coste de mapas: de 6-12 d a ≈ 1-2 d. Se elimina casi todo lo de `bsmith_*`, `cityhall_*`, `cath_*`, cárcel, uni, mazmorra, etc.
+- **Sin jugadores en el bando 3:** el selector de `create.js` se queda en 1↔2 y no hay migración de saves, guild ni UI de creación. El clamp de `player.js:44,107` se puede dejar para jugadores; solo los bots llevan `side 3`. Desaparecen: selector, i18n del selector, comando de cambio de bando y gran parte de los tests de creación.
+- **Qué sí hay que tocar:** `adventure.js` (`homeOf`, reparto de residentes: hoy 20+20 → p. ej. 20+20+N), `systems/residents.js` (21 refs), `bot.js`, `autoplay.js`, `citizens.js`; `pk.js`/`teleport.js` solo en lo que los bots de bando 3 usen (cárcel y crímenes: decidir si los bots de bando 3 delinquen o no); cartel de nombre en `renderer.js:670` y `dialogs.js:36` («… Combatant»), color de bando en observador y paneles; informe de bots de `server.mjs`.
+- **Reglas de PvP:** por igualdad, el bando 3 sería hostil a 1 y 2 y los de 1 y 2 hostiles a él. Hay que decidir si los bots de 3 atacan a jugadores (invasión) o solo se defienden (decorado vivo). Es la decisión que más cambia el coste.
+- **Armaduras:** recolorear sin arte nuevo (tinte sobre los sprites existentes, con su versión HD visible en localhost). Hay que **verificar qué mecanismo de color admiten los sprites de armadura** antes de comprometer fechas; si hace falta hoja nueva por pieza, sube el coste. Las piezas se diferencian solo por color, no por forma; no sería una armadura distinta del original (INVENTO a marcar).
+- **NPC y tiendas:** si la ciudad solo tiene bots, **no hacen falta tiendas ni NPC de ciudad** ni misiones, salvo que los bots deban comprar en ella (los bots abren y compran en puestos: ver `Hecho recientemente` en ESTADO.md).
+- **Fidelidad:** sigue siendo invento (el original no tiene tercer bando), pero encapsulado: se puede apagar con un flag en `balance.json` y los jugadores nunca lo ven como opción.
+
+Estimación revisada de la opción «tercera ciudad solo con bots» (variante de C acotada, con bots hostiles o neutrales según se decida):
+
+| Fase | Trabajo | Días |
+|---|---|---|
+| F0 | Decisión (hostilidad de los bots, flag, nombre) y marca INVENTO | 0,5 |
+| F1 | `side 3` en residentes/bots, `homeOf`, reparto de bots, cartel y color de bando | 2-3 |
+| F2 | Mapa(s): reetiquetar una farm como ciudad 3 + acceso desde Promise Land, spawns | 1-2 |
+| F3 | Recolor de armaduras del bando (con HD) | 1-3 |
+| F4 | Comportamiento de los bots en Promise Land (PvP o no), crímenes y cárcel | 1-3 |
+| F5 | Tests (residents-*, pvp, maps, net-*, online) y verificación en navegador, docs | 2-3 |
+| **Total** | | **≈ 8-14 días (1,5-3 semanas)** frente a 5-9 semanas de la C completa |
+
+Conclusión: con estas condiciones la tercera ciudad es **viable y razonable**: sigue siendo invento, pero aislado y barato porque no hay jugadores, ciudades interiores ni equipo nuevo con forma propia. Riesgos nuevos: 40+ bots más en el servidor (coste de CPU, ver `hb-rendimiento`) y que dos bandos de bots se maten entre sí dejando Promise Land vacía.
+Preguntas que quedan: ¿bots del bando 3 hostiles a jugadores o solo a bots? ¿cuántos? ¿viven en una farm propia o en un rincón de Promise Land?
