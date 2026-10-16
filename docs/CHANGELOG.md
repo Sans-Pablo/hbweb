@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.29 · Combate fiel (2026-10-16)
+- Andar por defecto (Game.cpp: m_bRunningMode=FALSE); antes el personaje corría siempre. Ctrl+R alterna; Shift mantenido = correr (OBJECTRUN si SP>0).
+- Dash (OBJECTATTACKMOVE) solo con el objetivo a 2 casillas en línea y arma de alcance 1, corriendo/Shift, SP>0 y maestría 100 (cliente, servidor y bots).
+- Ataque: 8 fotogramas × 78 ms (antes 37 ms), +12 ms por fotograma y punto de velocidad (MapData.cpp).
+
 ## 0.85.26 · Demon fluido (2026-10-16)
 - Rendimiento: el resplandor del Demon/Frost Lv >= 30 (12 `spr.tinted` por fotograma) usa una caché del fotograma teñido; 7,7-9,2 ms → 0,6-0,9 ms por fotograma de ese bloque, salida idéntica bit a bit (assets.js `tinted`; tests/tintcache.test.mjs; docs/sistemas/tintcache.md).
 

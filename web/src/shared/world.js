@@ -220,7 +220,7 @@ const COMMANDS = {
     // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
     // el original (OBJECTATTACKMOVE) exige SP, maestría 100 y el objetivo a 2 casillas EN LÍNEA (recta o diagonal); no hace falta haber corrido antes
     const dx = Math.abs(p.x - t.x), dy = Math.abs(p.y - t.y);
-    const dash = !!cmd.dash && gap === reach + 1 && reach < 4 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 1 && mastered(p);
+    const dash = !!cmd.dash && gap === 2 && reach === 1 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 1 && mastered(p);
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     if (dash && sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");   // un paralizado no se mueve NUNCA (tampoco con el dash)
     p.dir = dirTo(p.x, p.y, t.x, t.y);

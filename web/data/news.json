@@ -1,10 +1,19 @@
 {
- "build": "0.85.26",
+ "build": "0.85.29",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {"es": "Combate fiel (v0.85.29)", "en": "Faithful combat (v0.85.29)"},
+   "items": [
+    {"es": "El personaje anda por defecto; Ctrl+R alterna correr y Shift mantenido corre.", "en": "The character walks by default; Ctrl+R toggles run and holding Shift runs."},
+    {"es": "El dash solo ocurre a 2 casillas en línea, corriendo, con SP y maestría 100 del arma.", "en": "Dash only happens at 2 tiles in line, while running, with SP and weapon mastery 100."},
+    {"es": "Los ataques duran lo mismo que en el original (8 fotogramas de 78 ms): más lentos que antes.", "en": "Attacks last as in the original (8 frames of 78 ms): slower than before."}
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

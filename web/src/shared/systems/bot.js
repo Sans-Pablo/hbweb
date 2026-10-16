@@ -509,7 +509,7 @@ function run(adv, w, p, b) {
     const master = ((p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= 100), crit = master && (p.superAttack | 0) > 0;
     const gap = dist(p, t), reach = reachOf(w, p, t, crit);
     const ddx = Math.abs(p.x - t.x), ddy = Math.abs(p.y - t.y);
-    const canDash = master && !p.eff.bow && gap === reachOf(w, p, t) + 1 && reachOf(w, p, t) < 4 && (ddx === 0 || ddy === 0 || ddx === ddy) && p.sp >= 2;
+    const canDash = master && !p.eff.bow && gap === 2 && reachOf(w, p, t) === 1 && (ddx === 0 || ddy === 0 || ddx === ddy) && p.sp >= 2;
     if (gap <= reach || canDash) {
       b.stuck = null;
       if (w.time - p.lastAttack >= PLAYER.attackCooldownMs && !w.busy(p)) {

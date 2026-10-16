@@ -16,7 +16,7 @@ Cifras **del original** (verificadas contra `HelbreathOriginal`): servidor `char
 - Bono: +20 de puntería; espada larga +10 % de daño, hacha y martillo +20 %. Servidor: `world.js` comando `attack` (`cmd.dash`, `sp >= 1`).
 
 ## Controles
-Ctrl+clic = atacar; con el objetivo a 2 casillas en línea y corriendo (modo correr o Shift) = dash; Alt+clic = crítico (`controller.js`, `atk()`). Los controles Shift del summon se quitaron (v0.84.18): Shift es la tecla de correr del original.
+Ctrl+clic = atacar; con el objetivo a 2 casillas en línea, arma de alcance 1, corriendo (modo correr o Shift), SP>0 y maestría 100 = dash (v0.85.29); Alt+clic = crítico (`controller.js`, `atk()`). Los controles Shift del summon se quitaron (v0.84.18): Shift es la tecla de correr del original.
 
 ## Protocolo y pruebas
 `NET_PROTO` = 8 (el comando `attack` lleva `crit`/`dash`; no cambia). Tests: `tests/crit-dash.test.mjs`, `tests/bot-crit.test.mjs` (los bots maestros usan crítico y dash: `systems/bot.js`, bloque melee).

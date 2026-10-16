@@ -32,7 +32,7 @@ export const PLAYER = {
   walkMs: 370,
   runMs: 230,
   idleFrameMs: 64,            // 32 ms, pero el cliente avanza medio fotograma (cFrame/2)
-  attackMs: 8 * 37,           // 8 fotogramas x 41/1.1 ms
+  attackMs: 8 * 78,           // MapData.cpp: ATTACK 8 fotogramas x 78 ms (+ (status&0xF)*12 ms por fotograma, ver attackMs())
   dashMs: 12 * 78,            // OBJECTATTACKMOVE: 12 fotogramas x 78 ms (MapData.cpp:33-34)
   dashHitMs: 4 * 78,          // el golpe cae al acabar la carrera (fotograma 4)
   attackHitAt: 0.5,           // el golpe "conecta" a mitad de la animación

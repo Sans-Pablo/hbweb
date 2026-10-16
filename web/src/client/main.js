@@ -344,7 +344,7 @@ async function main() {
     hud.place(renderer.viewRect); gui.place(renderer.viewRect, renderer.dpr);
   }
   // opciones del jugador (se recuerdan en el navegador)
-  const defaults = { run: true, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true, questTrack: true, dirArrows: false };
+  const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true, questTrack: true, dirArrows: false };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
   opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)

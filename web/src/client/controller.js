@@ -246,7 +246,7 @@ export class Controller {
       if (d.open) this.ui.npcClick(d.open);
       if (d.intent) this.intent = d.intent;
     }
-    const run = (this.ui.run || this.forceRun) && me.sp >= 1;
+    const run = (this.ui.run || this.forceRun || this.shift) && me.sp >= 1;   // Game.cpp: (m_bShiftPressed || m_bRunningMode) && m_iSP > 0 -> OBJECTRUN
     const it = this.intent;
     if (!it) { this.path = []; return; }
 
@@ -260,7 +260,7 @@ export class Controller {
         return;
       }
       const lineUp = (me.x === t.x || me.y === t.y || Math.abs(me.x - t.x) === Math.abs(me.y - t.y));      // dash: solo en línea recta o diagonal (OBJECTATTACKMOVE)
-      if ((run || (this.shift && me.sp >= 1)) && gap === reach + 1 && reach < 4 && lineUp && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
+      if (run && !critOn && gap === 2 && reach === 1 && lineUp && (me.skills?.[me.eff?.wtype === 0 ? 5 : me.eff?.skill] || 0) >= 100 && world.time - me.lastAttack >= PLAYER.attackCooldownMs) {   // dash: atacar corriendo avanza y golpea con bonus
         this.path = []; this.conn.send(this.atk(t, true)); return;
       }
       const p = findPath(this.grid, me.x, me.y, t.x, t.y, me.id, 6000);
