@@ -184,7 +184,8 @@ export class Sound {
     const d = Math.max(Math.abs(tx - me.x), Math.abs(ty - me.y));
     if (d > 14) return;
     // varias magias casi a la vez (buffs a un grupo) suenan como una sola: mismo sonido, como mucho cada 250 ms
-    const now = performance.now(), k = "at:" + name; if (now - (this.last.get(k) || 0) < 250) return; this.last.set(k, now);
+    // Blizzard/Meteoros (Game.cpp bAddNewEffect 41-50, 72): cada efecto hace su propio PlaySound E46/E47 sin límite; el original no recorta
+    const now = performance.now(), k = "at:" + name; if (name !== "E46" && name !== "E47") { if (now - (this.last.get(k) || 0) < 250) return; this.last.set(k, now); }
     this.playRaw(name, Math.max(0, 1 - d / 14), Math.max(-1, Math.min(1, (tx - me.x) / 12)));
   }
   async playRaw(name, gain, pan) {

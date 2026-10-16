@@ -204,6 +204,15 @@ export class NetConnection {
     this.status = "conectado";
     return m.id;
   }
+  // cambiar de habitante sin recargar la página: mismo socket, mismo mapa y hojas ya cargados (el servidor reinicia lo enviado y manda el estado completo)
+  async switchWatch(id) {
+    const m = await this.request({ t: "watch", id }, "watching");
+    this.pid = m.id; this.watchName = m.name; this.brain = null; this.stateQ = null; this.stateWait = false;
+    this.world.ents.clear(); this.world.items.clear(); this.resync = true;
+    this.serverTime = this.world.time = m.time; this.recvAt = performance.now();
+    this.onSwitch?.(m.id, m.name);
+    return m.id;
+  }
   onMessage(m) {
     if (this.waiting && (m.t === this.waiting.okType || m.t === "error")) {
       const w = this.waiting; this.waiting = null;

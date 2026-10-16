@@ -4,7 +4,7 @@
 import { getLang } from "./i18n.js";
 import { L, esc, SIDE, ARCH, MODES, act } from "./observer.js";
 
-export const watchTo = id => { location.hash = "#observar=" + id; location.reload(); };
+export const watchTo = (id, conn) => { const hard = () => { location.hash = "#observar=" + id; location.reload(); }; if (conn?.switchWatch) { history.replaceState(null, "", "#observar=" + id); conn.switchWatch(id).catch(hard); } else hard(); };
 let roster = [];                                                                  // última lista del servidor (la comparten barra y plantel)
 export const modeName = b => MODES[b.mode]?.[getLang() === "en" ? 1 : 0] || b.mode;
 export const dot = m => ({ dead: "💀", fight: "⚔", rest: "💤", follow: "🐾", delve: "⛏", "delve-go": "⛏", trip: "🧭", pit: "🏴", travel: "🚶", flee: "💨", pet: "🩹" }[m] || "·");
@@ -27,7 +27,7 @@ export function observerBar(conn) {
   bar.style.cssText = "position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:55;background:rgba(20,15,6,.92);color:#f0e2b8;border:1px solid #6b5a33;border-top:0;border-radius:0 0 8px 8px;padding:4px 12px;font:13px system-ui;display:flex;gap:8px;align-items:center";
   bar.innerHTML = `<button data-a="prev" title="[">◀</button><span>👁 ${L("Observando a", "Watching")} <b style="color:#ffd76a">${esc(conn.watchName)}</b></span><button data-a="next" title="]">▶</button><button data-a="split">${L("Panel dividido", "Split view")}</button><button data-a="list">${L("Tabla completa", "Full table")}</button><button data-a="exit">${L("Salir", "Exit")}</button>`;
   for (const b of bar.querySelectorAll("button")) b.style.cssText = "background:#2c2417;color:#f0e2b8;border:1px solid #6b5a33;border-radius:6px;padding:2px 8px;cursor:pointer";
-  const step = d => { const l = ordered(roster); if (l.length < 2) return; const i = l.findIndex(b => b.id === conn.pid); watchTo(l[(i + d + l.length) % l.length].id); };
+  const step = d => { const l = ordered(roster); if (l.length < 2) return; const i = l.findIndex(b => b.id === conn.pid); watchTo(l[(i + d + l.length) % l.length].id, conn); };
   bar.onclick = e => { const a = e.target.dataset?.a; if (a === "split") location.href = "observador.html#" + conn.pid; else if (a === "list") { location.hash = "#observar"; location.reload(); } else if (a === "exit") { location.hash = ""; location.reload(); } else if (a === "prev") step(-1); else if (a === "next") step(1); };
   addEventListener("keydown", e => { if (/^F([2-9]|1[01])$/.test(e.key) && e.target.tagName !== "CANVAS") { e.preventDefault(); return; }      // observador: una F pulsada fuera de la pantalla del juego no hace nada (F5 refrescaba la web sin querer)
     if (e.target.closest?.("input,textarea,select")) return; if (e.key === "[") step(-1); else if (e.key === "]") step(1); });
@@ -62,7 +62,7 @@ export function rosterPanel(conn) {
   const load = async () => { try { roster = await conn.listBots(); render(); } catch { /* sin red un momento: se reintenta */ } };
   el.onclick = e => {
     if (e.target.dataset?.a === "tog") { open = !open; el.style.transform = open ? "" : "translateX(-232px)"; e.target.textContent = open ? "◀" : "▶"; return; }
-    const r = e.target.closest(".r"); if (r && +r.dataset.id !== conn.pid) watchTo(+r.dataset.id);
+    const r = e.target.closest(".r"); if (r && +r.dataset.id !== conn.pid) watchTo(+r.dataset.id, conn);
   };
   $(".q").oninput = $(".s").onchange = () => { key = ""; render(); };
   load(); setInterval(load, 2000);
@@ -84,7 +84,7 @@ export function brainPanel(conn) {
       const a = e.target.dataset?.a;
       if (a === "tog") { el.dataset.open = el.dataset.open === "1" ? "0" : "1"; el._k = ""; }
       else if (a === "tab") { tab = e.target.dataset.t; el._k = ""; brainPanel(conn); }
-      else if (a === "go" && +e.target.dataset.id !== conn.pid) watchTo(+e.target.dataset.id);
+      else if (a === "go" && +e.target.dataset.id !== conn.pid) watchTo(+e.target.dataset.id, conn);
     };
     document.body.appendChild(el);
   }

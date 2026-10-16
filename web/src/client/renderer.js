@@ -1506,17 +1506,21 @@ export class Renderer {
       ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
       ctx.fillRect(x0 + e.x * sc - 1, y0 + e.y * sc - 1, 2, 2);
     }
+    // Mapas PvP (hay jugadores de la otra ciudad): círculos con el color de la ciudad (1 Aresden, 2 Elvine), algo más pequeños.
+    const SIDE_COL = { 1: "#e0503a", 2: "#4a8fe0" };
+    let pvp = false;
+    if (s.me?.side > 0) for (const e of s.world.ents.values()) if (e.kind === "player" && e.side > 0 && e.side !== s.me.side) { pvp = true; break; }
     for (const e of s.world.ents.values()) {
       if (e.kind !== "player" || e === s.me || e.dead) continue;
-      ctx.fillStyle = "#e8d27a";
-      ctx.beginPath(); ctx.arc(x0 + (e.x * T + 16) / T * sc, y0 + (e.y * T + 16) / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = pvp && SIDE_COL[e.side] || "#e8d27a";
+      ctx.beginPath(); ctx.arc(x0 + (e.x * T + 16) / T * sc, y0 + (e.y * T + 16) / T * sc, pvp ? 1.8 : 2.5, 0, Math.PI * 2); ctx.fill();
     }
     for (const gate of s.world.map?.portals || []) {
       ctx.fillStyle = "#f2e3a0"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
     }
     if (s.world.teleports?.size) for (const g of this.teleportGroups(s.world.teleports)) { ctx.fillStyle = g.open ? "#5aaaff" : "#a06a5a"; ctx.fillRect(x0 + g.x * sc - 2, y0 + g.y * sc - 2, 4, 4); }   // salidas del mapa (ticket 6)
-    ctx.fillStyle = "#9fe07f";
-    ctx.beginPath(); ctx.arc(x0 + ppx / T * sc, y0 + ppy / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = pvp && SIDE_COL[s.me.side] || "#9fe07f";
+    ctx.beginPath(); ctx.arc(x0 + ppx / T * sc, y0 + ppy / T * sc, pvp ? 1.8 : 2.5, 0, Math.PI * 2); ctx.fill();
   }
 }
 

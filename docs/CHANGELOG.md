@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.85.34 · Cursor y observador (2026-10-16)
+- Observador: cambiar de bot es inmediato y reutiliza el mapa ya cargado (connection.js switchWatch).
+- Minimapa en mapas PvP: puntos con el color de la ciudad y algo más pequeños.
+- Cursor mágico rojo al lanzar (cursor 5 de interface_0, como Game.cpp); con el cursor fuera de pantalla no se lanza y avisa.
+- Sonidos: Blizzard/meteoros ya no se recortan (E46/E47 por cada efecto, como bAddNewEffect 41-50/72).
+
 ## 0.85.31 · Dash con Shift (2026-10-16)
 - El dash (OBJECTATTACKMOVE) solo se hace con Shift mantenido; el modo correr (Ctrl+R) ya no lo dispara. Diferencia deliberada con el `||m_bRunningMode` literal del original (Game.cpp 30934-30960). Sin Shift, a 2 casillas se anda hasta quedar adyacente.
 - Fallo corregido: la predicción del cliente trataba el dash como un golpe parado (ATTACK, 624 ms); ahora avanza 1 casilla con OBJECTATTACKMOVE (12 × 78 ms) al instante (connection.js; tests/crit-dash.test.mjs).

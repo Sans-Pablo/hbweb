@@ -147,6 +147,12 @@ export class Controller {
     return best;
   }
 
+  // ¿el objetivo del hechizo cae fuera del mapa visible? (sin cursor o casilla fuera de la rejilla)
+  castOffMap(x, y) {
+    const g = this.grid;
+    return !this.pointer || x < 0 || y < 0 || (g && (x >= g.w || y >= g.h));
+  }
+
   // posición del cursor -> {ent, x, y}
   target() {
     const [wx, wy] = this.r.toWorld(this.pointer[0], this.pointer[1]);
@@ -205,6 +211,7 @@ export class Controller {
       return;
     }
     if (this.ui.pointing != null) {                       // hechizo preparado: este clic elige el objetivo
+      if (first && this.castOffMap(tx, ty)) { this.ui.say?.("Objetivo fuera de pantalla."); return; }      // cursor fuera de pantalla: no se lanza (el hechizo sigue preparado)
       if (first) { this.conn.send({ t: "cast", spell: this.ui.pointing, x: tx, y: ty, pre: true }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
       return;
     }

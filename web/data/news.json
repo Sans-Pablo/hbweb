@@ -1,10 +1,35 @@
 {
- "build": "0.85.32",
+ "build": "0.85.34",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Cursor y observador (v0.85.34)",
+    "en": "Cursor and spectator (v0.85.34)"
+   },
+   "items": [
+    {
+     "es": "Observador: cambiar de bot es rápido y no recarga el mapa.",
+     "en": "Spectator: switching bots is quick and does not reload the map."
+    },
+    {
+     "es": "Minimapa PvP: puntos con el color de la ciudad, más pequeños.",
+     "en": "PvP minimap: dots use the city colour and are smaller."
+    },
+    {
+     "es": "Cursor mágico rojo al lanzar; fuera de pantalla no se lanza.",
+     "en": "Magic cursor turns red when casting; off-screen casts are refused."
+    },
+    {
+     "es": "Blizzard suena como el original (sin recortes).",
+     "en": "Blizzard sounds like the original (no throttling)."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

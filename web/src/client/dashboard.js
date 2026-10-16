@@ -19,7 +19,9 @@ function game() {
 function show(id) {
   sel = id; brain = null; history.replaceState(null, "", "#" + id);
   const g = $("game"); let f = g.querySelector("iframe");
-  if (!f) { g.querySelector(".empty")?.remove(); f = document.createElement("iframe"); f.allow = "autoplay"; g.appendChild(f); }
+  if (f && f.dataset.ready) { f.contentWindow.postMessage({ hbWatch: id }, location.origin); paintRoster(true); paintInfo(true); paintStats(); return; }   // marco ya cargado: cambia de habitante sin recargar
+  if (!f) { g.querySelector(".empty")?.remove(); f = document.createElement("iframe"); f.allow = "autoplay"; g.appendChild(f); f.addEventListener("load", () => { f.dataset.ready = "1"; }); }
+  else delete f.dataset.ready;
   f.src = "index.html?embed=1&o=" + id + (new URLSearchParams(location.search).get("server") ? "&server=" + encodeURIComponent(new URLSearchParams(location.search).get("server")) : "") + "#observar=" + id;                         // la consulta distinta fuerza recargar solo el marco
   paintRoster(true); paintInfo(true); paintStats();
 }

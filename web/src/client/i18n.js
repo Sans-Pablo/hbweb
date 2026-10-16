@@ -108,7 +108,7 @@ const EN = {
   "Vuelves a la granja con el HP lleno.": "You return to the farm with full HP.", "Se ha perdido la conexión con el servidor.": "The connection to the server was lost.",
   "No tienes ese objeto.": "You do not have that item.", "¡Cripta completada! Recoge el botín y regresa por un portal (E).": "Crypt completed! Collect the loot and return through a portal (E).",
   "¡Cripta completada!": "Crypt completed!", "Minimapa oculto (se vuelve a activar en Opciones).": "Minimap hidden (turn it back on in Options).", "No tienes MP suficiente.": "Not enough MP.",
-  "Hechizo cancelado.": "Spell cancelled.", "Modo de ataque automático activado.": "Auto attack mode on.", "Modo de ataque automático desactivado.": "Auto attack mode off.",
+  "Hechizo cancelado.": "Spell cancelled.", "Objetivo fuera de pantalla.": "Target is off screen.", "Modo de ataque automático activado.": "Auto attack mode on.", "Modo de ataque automático desactivado.": "Auto attack mode off.",
   "Ataque automático activado.": "Auto attack on.", "Ataque automático desactivado.": "Auto attack off.", "Nivel de detalle: bajo": "Detail level: low", "Nivel de detalle: medio": "Detail level: medium",
   "Nivel de detalle: alto": "Detail level: high", "Cambiado a modo correr.": "Switched to run mode.", "Cambiado a modo andar.": "Switched to walk mode.", "Sonido activado.": "Sound on.", "Sonido desactivado.": "Sound off.",
   "Modo de ataque seguro activado.": "Safe attack mode on.", "Modo de ataque seguro desactivado.": "Safe attack mode off.", "Modo de combate.": "Combat mode.", "Modo de paz.": "Peace mode.",

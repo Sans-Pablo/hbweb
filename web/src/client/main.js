@@ -10,6 +10,7 @@ import { initDomDrag } from "./domdrag.js";
 import { loadAssets } from "./assets.js";
 import { LocalConnection, NetConnection } from "./connection.js";
 import { NET_PROTO, dirTo } from "../shared/const.js";
+import { isFoe } from "../shared/systems/combatsys.js";
 import { Renderer } from "./renderer.js";
 import { Controller } from "./controller.js";
 import { Fx } from "./fx.js";
@@ -89,7 +90,7 @@ async function main() {
   if (online) for (const m of Object.values(assets.maps)) m.ensure?.().catch(() => {});
   status.style.display = "none";
   { const sendLang = () => { try { conn.send({ t: "lang", lang: getLang() }); } catch {} }; onLang(sendLang); setTimeout(sendLang, 1500); setInterval(sendLang, 30000); }   // los bots hablan el idioma del cliente
-  const pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
+  let pid = await askNameAndJoin(conn, online, info, assets.sprites, { lost, protoClash });
   const perf = new PerfLog(); let perfStarted = false;
   const prof = new URLSearchParams(location.search).get("prof") === "1" ? new Profiler() : null;      // ?prof=1: perfilador A/B (profiler.js)      // registro de rendimiento del jugador (login -> logout), ver perflog.js
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { perf.version = v.version; }).catch(() => {});
@@ -326,6 +327,8 @@ async function main() {
   setTimeout(() => { mapStream(world); fx.sp.warmAll?.(); }, 1500);
   setTimeout(() => stream.wantAll([...stream.spr.m ? DUNGEON_ASSETS.filter(k => stream.spr.has(k)) : []], 0), 20000);   // la cripta de esqueletos, cuando la cola lleva un rato vacía
   const sound = new Sound(world, pid);
+  conn.onSwitch = id => { pid = id; fx.me = id; sound.me = id; if (voice) voice.pid = id; };   // observar: cambio de habitante en caliente (sin recargar)
+  addEventListener("message", e => { if (e.origin === location.origin && e.data?.hbWatch && conn.observing) conn.switchWatch(+e.data.hbWatch).catch(() => {}); });
   stream.audio = sound; sound.prefetch(stream.bundle(world, assets.npcDb).sounds);
   sound.setTrack(trackFor(world));
   const sky = new Sky();
@@ -804,10 +807,13 @@ async function main() {
     let cur;
     if (opts.classicCursor) {
       const ov = gui.dialogAt(gui.mouse.x, gui.mouse.y) || gui.mouse.y >= 548;
-      const he = ctl.hoverEnt, foe = he && he.kind !== "player";
+      const he = ctl.hoverEnt, m0 = world.ents.get(pid);
+      // _iGetFOE: soy criminal (PKCount != 0) -> todo es enemigo; si no, un monstruo o un jugador de otro bando (o criminal)
+      const foe = he ? (he.kind !== "player" || isFoe({ pkCount: m0?.pkCount || m0?.pk || 0, side: m0?.side }, { pkCount: he.pkCount || he.pk || 0, side: he.side })) : (m0?.pkCount || m0?.pk || 0) > 0;
+      const tg = ctl.pointer && ctl.target(), off = tg && ctl.castOffMap(tg.x, tg.y);      // cursor fuera del mapa: rojo, y no se lanza
       cur = 0;
-      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = world.busy(world.ents.get(pid)) ? 8 : foe ? 5 : 4;      // Game.cpp: m_bCommandAvailable falso (animacion en curso) = sprite 8; 4/5 solo con el comando disponible
-      else if (!ov && he) cur = foe ? 3 : 6;
+      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = world.busy(world.ents.get(pid)) ? 8 : foe || off ? 5 : 4;      // Game.cpp: m_bCommandAvailable falso (animacion en curso) = sprite 8; 4/5 solo con el comando disponible
+      else if (!ov && he) cur = he.kind !== "player" ? 3 : 6;
       if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }
     gui.draw(world.ents.get(pid), world, { ctrl: ctl.keys.has("control"), cursor: cur, statusPanel: opts.statusPanel === true });
