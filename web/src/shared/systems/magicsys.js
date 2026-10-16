@@ -6,7 +6,7 @@ import { gainSSN } from "../skills.js";
 import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
-import { damageNpc, damagePlayer, canFight } from "./combatsys.js";
+import { damageNpc, damagePlayer, canFight, luckySave, armorLifeDecrement } from "./combatsys.js";
 import { summonFor, spawnCompanion } from "./npcsys.js";
 import { activeBall } from "./companion.js";
 import { sget, sset, sclear } from "./status.js";
@@ -149,7 +149,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
     if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
-    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 5) return null;     // invulnerables
+    if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 6) return null;     // invulnerables (HG.cpp:18800: límites 1, 2, 4 y 6)
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
     if (tgt.absDamage > 0) { dmg = Math.floor(dmg - dmg * (tgt.absDamage / 100)); if (dmg < 0) dmg = 1; }
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
@@ -163,9 +163,10 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
     if (!canFight(w, p, tgt)) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
+    if (tgt.eff && tgt.eff.addAbsMD) dmg -= Math.trunc(dmg * tgt.eff.addAbsMD / 100);                    // AddAbsMD (HG.cpp:18237)
     if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
     if (dmg < 0) dmg = 0;
-    if (dice(w.rng, 1, 10) < 5 && tgt.hp <= dmg) dmg = 1;
+    dmg = luckySave(w, tgt, dmg);                                                    // solo con objeto Lucky (HG.cpp:18250)
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
     damagePlayer(w, tgt, dmg, p, sp.attr === 3 ? "fire" : sp.attr === 4 ? "ice" : "mag");
     return tgt;
@@ -299,7 +300,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       if (iceHurt(target, sp.v4, sp.v5, sp.v6)) freeze(target, sp.v10);
       break;
     case 28:                                                           // rompe-armaduras: daño de zona (el desgaste solo afecta a jugadores)
-      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true) && t.kind === "player") armorLifeDecrement(w, p, t, sp.v10); });   // HG.cpp:11502
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && target.side === p.side && !w.fightZone) {      // HG.cpp:10933-10958: el objetivo debe ser un jugador del mismo bando

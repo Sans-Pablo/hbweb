@@ -17,6 +17,11 @@
 
 ## 0.85.12 · Botín fiel (2026-10-16)
 - Sistema 24: `shared/drops.js` reescrito desde `NpcDeadItemGenerator` (HG.cpp:29315-29990): 55 % base (+15 % grupo) con bonus 0,8, oro 60 %, estándar 5000 − reputación (±3000), tablas de armas/varitas/armaduras por nivel de generación, banda 8 y diciembre. Quitado el corte «débil» del 30 % y las tablas inventadas. Test `drops-original`.
+## 0.85.15 · Alquimia (2026-10-16)
+- Alquimia fiel: HG.cpp ReqCreatePortionHandler 23503-23700 (orden por id descendente, última receta coincidente, límite, dificultad, +5 a maestría 100, SkillUp, consumo, GetExp dice(2,dif/3)). Recetas en `web/data/potion.json` (`tools/convert_potion.mjs`). Test `alchemy.test.mjs`.
+
+## 0.85.14 · Cárcel (2026-10-16)
+- Cárcel fiel: Client.cpp:1184 (solo en la propia ciudad, 180 s), HG.cpp 11661-11810 (destinos redirigidos), 2323 (cuenta atrás). Test `jail.test.mjs`.
 
 ## 0.85.10 · Sin rombos celestes (2026-10-16)
 - Quitados los rombos azules translúcidos que se dibujaban sobre el suelo en las casillas de salida (`drawTeleportMarks`); el original no los tiene. Se conserva solo el rótulo del destino. Test en `ui-guard`.

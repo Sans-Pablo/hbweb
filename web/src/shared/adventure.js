@@ -1,3 +1,4 @@
+import { JAIL_MAP } from "./systems/pk.js";
 import { spawnCompanion } from "./systems/npcsys.js";
 import { activeBall } from "./systems/companion.js";
 // Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
@@ -23,7 +24,7 @@ export const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "
 
 // Punto de retorno de Aresfarm (Recall, muerte, salidas de cripta/arena/tienda): lo pidió el diseño; el original usa el punto de reaparición de cada mapa (Map.cfg initial)
 export const FARM_HOME = [65, 75];
-export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
+export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f", "arejail", "elvjail"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
 
 // HG.cpp iGetMapLocationSide: arefarm/elvfarm (y sus almacenes) pertenecen a un bando; el teletransporte (HG.cpp ~11714) se deniega a quien no es de ese bando salvo GM o neutral
 export const FARM_SIDE = { arefarm: 1, elvfarm: 2 };
@@ -466,11 +467,25 @@ export class Adventure {
     }
   }
 
+  // HG.cpp RequestTeleportHandler (~11661-11810) y countdown de HG.cpp:2323: mientras m_iLockedMapTime > 0 todo destino se cambia por el mapa de la cárcel de su bando.
+  enforceJail() {
+    for (const [id, w] of this.locations) {
+      const p = w.ents.get(id);
+      if (!p || p.kind !== "player" || p.gm || !(p.jailUntil > this.time)) continue;
+      const jid = JAIL_MAP[p.side];
+      if (!jid || w.map.id === jid) continue;
+      const to = this.staticWorld(jid);
+      if (!to) continue;
+      const init = this.maps[jid]?.meta.initial, spot = (init && Object.values(init)[0]) || to.start;
+      if (this.transfer(p, w, to, spot)) w.emit({ t: "reject", id: p.id, cmd: "teleport", why: "cumples condena en la cárcel" });
+    }
+  }
+
   tick(dt) {
     Human.tick(this);                                                                        // horarios de los habitantes (human.js; apagado salvo en el servidor)
     for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
     if (this.time - (this._guardAt || 0) >= 1000) { this._guardAt = this.time; for (const w of [...this.instances.values()]) this.guardPrivate(w); }
-    if (this.time - (this._sideAt || 0) >= 1000) { this._sideAt = this.time; this.recallEnemies(); }
+    if (this.time - (this._sideAt || 0) >= 1000) { this._sideAt = this.time; this.recallEnemies(); this.enforceJail(); }
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

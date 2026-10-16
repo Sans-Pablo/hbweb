@@ -76,7 +76,7 @@ export async function loadAssets(onProgress) {
     m.ensure = () => m.loading || (m.loading = response("data/maps/" + id + ".bin").then(r => r.arrayBuffer()).then(bytes => { m.grid = new Grid(mapMeta.w, mapMeta.h, new Uint8Array(bytes)); return m; }).catch(err => { m.loading = null; throw err; }));
   }));
   setBalance(await json("data/balance.json").catch(() => ({})));                  // multiplicadores de balance (balance.js); el servidor online manda los suyos
-  const data = new GameData({ items, magic, npcs: npcDb });
+  const data = new GameData({ items, magic, npcs: npcDb, potions: await json("data/potion.json").catch(() => []) });
   setData(data);
   const pcRow = data.items?.get?.(PSYCHIC_ITEM.id);                                                     // Psychic Controller en el herrero (classgear.js)
   if (pcRow && shops[2] && !shops[2].some(r => r.name === pcRow.name)) shops[2].push(pcRow);

@@ -26,6 +26,9 @@ export function decPK(w, p) {
 }
 
 // CClient::ApplyPKPenalty: el asesino pierde dados de experiencia y reputación; en su ciudad va a la cárcel (3 min).
+export const JAIL_MS = 3 * 60 * 1000;                                   // m_iLockedMapTime = 60*3 (s)
+export const JAIL_MAP = { 1: "arejail", 2: "elvjail" };                // sideMapJail[side]
+const OWN_CITY = { 1: ["arefarm", "aresden"], 2: ["elvfarm", "elvine"] };
 export function applyPKPenalty(w, k, v) {
   ensure(k); ensure(v);
   if (k.safeAttack && k.pkCount === 0) return;
@@ -35,7 +38,8 @@ export function applyPKPenalty(w, k, v) {
   w.crimes = w.crimes || { 1: 0, 2: 0 };
   if (k.side) w.crimes[k.side] = (w.crimes[k.side] | 0) + 1;                   // m_stCityStatus[side].iCrimes++
   k.reputation -= 5;
-  if (k.side !== NEUTRAL) { k.jailUntil = w.time + 3 * 60 * 1000; w.emit({ t: "jail", id: k.id, side: k.side }); }   // sideMapJail, m_iLockedMapTime = 60*3
+  // Client.cpp:1184 ApplyPKPenalty: solo se encarcela si el asesino está en la ciudad de su propio bando (sideMap[side]); en el port la «ciudad» de cada bando es su granja.
+  if (k.side !== NEUTRAL && (!w.map || OWN_CITY[k.side]?.includes(w.map.id))) { k.jailUntil = w.time + JAIL_MS; w.emit({ t: "jail", id: k.id, side: k.side }); }   // sideMapJail, m_iLockedMapTime = 60*3
 }
 
 // PK_KillRewardHandler: matar a un criminal paga oro de recompensa si el que mata no lo es.

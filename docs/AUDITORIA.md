@@ -42,7 +42,8 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Multiplicador de uso ×8 / ×2 / ×1 | Skilltypes.h:30, Client.cpp:806 | skills.js `skillMultiplier` | CORREGIDO |
 | Maestría total máxima (900) | combat.h MAXSKILLPOINTS, Client.cpp:460 | skills.js | CORREGIDO (700→900) |
 | Pesca: sube solo al capturar, cantidad = dificultad del pez | HG.cpp:28214 | systems/fishing.js (+1 por lanzamiento) | DIFERENTE (sistema inventado) |
-| Alquimia, minería, fabricación suben por uso | HG.cpp:23682, 24029, 28214 | — | FALTA (sistemas ausentes) |
+| Alquimia: receta, límite, dificultad, consumo, exp | HG.cpp:23503-23700 | systems/alchemy.js, potion.json | HECHO (0.85.15; sin diálogo de cliente aún; falta DemonPotion en items) |
+| Minería, fabricación suben por uso | HG.cpp:24029, 28214 | — | FALTA (minería: sin datos de generadores por mapa; fabricación: BuildItem.cfg/CraftItem.cfg sin portar) |
 | Escudo: tirada contra maestría al subir | combat.cpp | combatsys.js | DIFERENTE (parcial) |
 
 ## Estadísticas, nivel, regeneración
@@ -59,10 +60,10 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 ## Muerte, PK, objetos, drops, spawns (informe de auditoría, sin corregir)
 | sistema | original | nuestro | estado |
 |---|---|---|---|
-| Pérdida de exp al morir `dice(1, 5·pen·nivel)`, pen 1/3/6/12 según PK; /3 neutral | char/Client.cpp ~840-1391 | combatsys.js `deathPenalty` (25% fijo) | DIFERENTE |
-| Pérdida de objetos al morir contra monstruo | PenaltyItemDrop | no existe | FALTA |
-| Muerte por jugador (pen 2 al inocente, sin penalidad si neutral/mismo bando) | Client.cpp | combatsys.js:113 | DIFERENTE |
-| Cárcel: 180 s bloqueado en mapa de bando | Client.cpp | solo `jailUntil` | FALTA |
+| Pérdida de exp al morir `dice(1, 5·pen·nivel)`, pen 1/3/6/12 según PK; /3 neutral | char/Client.cpp:1035 | combatsys.js `killedPenalty` | OK |
+| Pérdida de objetos al morir (PenaltyItemDrop) | Client.cpp:1094 | combatsys.js `penaltyDrop` | OK |
+| Muerte por jugador (pen 2 al inocente, sin penalidad si neutral/mismo bando) | Client.cpp:930-1000 | combatsys.js `penaltyLevelOf` | OK |
+| Cárcel: 180 s bloqueado en mapa de bando | Client.cpp | `pk.js` applyPKPenalty (solo en la propia ciudad), `adventure.js` enforceJail; test `jail.test.mjs` | HECHO (0.85.14) |
 | ApplyPKPenalty, exp/oro por matar enemigo | Client.cpp | pk.js | OK |
 | Pociones HP/MP/SP, HPSTOCK | HG.cpp:17551-17900 | itemsys.js | OK |
 | SpecEffectValue, WARM/FIRMSTAMINAR, SLATES, pergaminos, CHANGEATTR, STUDYMAGIC; SP cura veneno | HG.cpp:17660+ | — | FALTA |
