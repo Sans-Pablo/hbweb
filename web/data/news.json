@@ -1,10 +1,23 @@
 {
- "build": "0.85.12",
+ "build": "0.85.13",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+   {
+    "date": "2026-10-16",
+    "title": {
+     "es": "Experiencia fiel (v0.85.13)",
+     "en": "Faithful experience (v0.85.13)"
+    },
+    "items": [
+     {
+      "es": "La experiencia por monstruo ya no lleva el bonus de variedad: es la del original.",
+      "en": "Experience per monster no longer has the variety bonus: it matches the original."
+     }
+    ]
+   },
    {
     "date": "2026-10-16",
     "title": {

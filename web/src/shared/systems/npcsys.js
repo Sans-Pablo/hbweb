@@ -81,10 +81,8 @@ export function killNpc(w, n, p) {
   if (n.special === 7 || n.special === 8) explode(w, n, n.special === 7 ? 30 : 61);
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
-    let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
-    // VARIEDAD (INVENTO del port): los primeros de cada especie valen más (×1,8 el primero, ×1,4 tras 12, ×1,1 tras 100) para premiar cazar de todo
-    const seen = (p.kinds ||= {}), prev = seen[n.name] || 0; seen[n.name] = prev + 1;
-    xp = Math.round(xp * (1 + 0.8 / (1 + prev / 12)));
+    const seen = (p.kinds ||= {}); seen[n.name] = (seen[n.name] || 0) + 1;   // contador por especie (misiones y piloto automático); ya no altera la experiencia
+    let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler (HG.cpp:6538): exp/3 + resto de no-muertos, sin multiplicador por especie
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
     Comp.onKill(w, p, n, xp);

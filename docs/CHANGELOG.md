@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.13 · Exp fiel (2026-10-16)
+- Sistema 25: la experiencia por baja es exp/3 + resto de no-muertos (+ AddExp %), HG.cpp:6538; quitado el multiplicador por variedad de especie. Test `exp-original`.
+
 ## 0.85.12 · Botín fiel (2026-10-16)
 - Sistema 24: `shared/drops.js` reescrito desde `NpcDeadItemGenerator` (HG.cpp:29315-29990): 55 % base (+15 % grupo) con bonus 0,8, oro 60 %, estándar 5000 − reputación (±3000), tablas de armas/varitas/armaduras por nivel de generación, banda 8 y diciembre. Quitado el corte «débil» del 30 % y las tablas inventadas. Test `drops-original`.
 
