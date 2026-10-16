@@ -461,3 +461,9 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - El cartel `"<Magia>!"` nace al EMPEZAR el casting (evento `prepare`; `cast` solo si arranca animación: flag `anim` en magicsys.js), como Game.cpp:31935 y 40047, y sustituye al anterior del dueño. Dura 2000 ms; iLoc con su rareza (>352 ms: 9; >320: 10; si no ms>>5, Game.cpp:19040); x = centro − 4 px/carácter (5 si ≥128), y = sY − 65 − iLoc; doble a +1 px en RGB(180,30,30); fuente GDI `m_hFontInUse` = Trebuchet MS 16 sin suavizar (DXC_ddraw.cpp:168). Test: `tests/cast-text.test.mjs`. Sin comprobación visual en el navegador; no existe CHANGELOG.md en esta rama.
 ## 0.85.23 (hb-ui)
 - Hecho: bolas cerrar/minimizar unificadas con el diseño del marco en todas las ventanas con marco; icono de Misiones rehecho; buscador de la tienda arriba. Pendiente: herreria/hospital (marco clásico) aún con buscador abajo.
+
+## Backlog 2026-10-16 (tras 0.85.25)
+- Al castear sale el cursor de cruz: incorrecto (como original).
+- Summon: al aparecer, mismo efecto de brillos del recall sobre el summon.
+- Demon summon nivel 50: su sprite baja mucho los FPS; analizar y arreglar.
+- Bots: stats INT/MAG, existir bots magos; resetear atributos para probar builds; usar magias; aprender que equipo es mejor (no quedarse con items de blacksmith) y progresar.
