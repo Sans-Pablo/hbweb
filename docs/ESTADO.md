@@ -456,3 +456,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - Nueva base de diseño con sprites reales (pedido 2026-10-16, v0.85.22 sin cambio de versión): `docs/diseno/base-original.html` (generado por `build-base.mjs`) usa gamedialog_1, dialogtext_0 y dialogtext_1 del juego; sustituye a la imitación CSS como base. Sin tocar producción.
 - Base de diseño v2 (pedido 2026-10-16, v0.85.22): bolas solo icono sin fondo, márgenes útiles x22..226/y44..294, ventanas numeradas 1-5 y ventana grande (doble marco).
+- Base de diseño v3 (pedido 2026-10-16, v0.85.22): mini Auto Hunt y menú automático grande usan el contenido real de autowin.js/miniwin.js.
