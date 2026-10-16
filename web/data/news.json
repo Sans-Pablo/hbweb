@@ -1,10 +1,23 @@
 {
- "build": "0.85.24",
+ "build": "0.85.26",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Demon fluido (v0.85.26)",
+    "en": "Smoother Demon (v0.85.26)"
+   },
+   "items": [
+    {
+     "es": "El Demon (y el Frost) invocado de nivel 50 ya no baja los FPS: el resplandor de su contorno se prepara una vez en vez de 12 veces por fotograma. El aspecto es idéntico.",
+     "en": "The level 50 Demon (and Frost) summon no longer drops the FPS: its edge glow is prepared once instead of 12 times per frame. The look is unchanged."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

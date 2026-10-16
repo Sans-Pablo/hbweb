@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.26 · Demon fluido (2026-10-16)
+- Rendimiento: el resplandor del Demon/Frost Lv >= 30 (12 `spr.tinted` por fotograma) usa una caché del fotograma teñido; 7,7-9,2 ms → 0,6-0,9 ms por fotograma de ese bloque, salida idéntica bit a bit (assets.js `tinted`; tests/tintcache.test.mjs; docs/sistemas/tintcache.md).
+
 ## 0.85.24 · Motor y combate (2026-10-16)
 - Kills indirectos (firefield, magia de área, DoT) acreditan kill y exp al autor (fields.js `authorOf`; tests/indirect-kills.test.mjs).
 - Cartel "Critical" según el original: el daño es un byte sin signo leído como char con signo (128-255 = Critical, 0 = " * Failed! *"); fx.js.

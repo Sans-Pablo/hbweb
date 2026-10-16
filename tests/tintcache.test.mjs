@@ -1,0 +1,21 @@
+// Resplandor del Demon/Frost Lv >= 30: 12 tintados por fotograma. El fotograma teñido se prepara una vez por (hoja, fotograma, color) y se reutiliza
+import assert from "node:assert/strict";
+let canvases = 0, fills = 0;
+globalThis.Image = class {};
+globalThis.document = { createElement: () => { canvases++; return { width: 0, height: 0, getContext: () => ({ drawImage() {}, fillRect() { fills++; }, clearRect() {} }) }; } };
+globalThis.window = globalThis.window || { location: { search: "", hostname: "x" } };
+const { Sprites } = await import("../web/src/client/assets.js");
+const s = new Sprites({}, {});
+const img = {};
+s.ready = () => true; s.src = () => [img, 4]; s.frame = () => [0, 0, 93, 121, -47, -115];
+const draws = []; const ctx = { globalAlpha: 1, save() {}, restore() {}, drawImage: (...a) => draws.push(a) };
+const base = canvases;
+for (let n = 0; n < 12; n++) s.tinted(ctx, "demon0", 0, 100 + n, 100, n % 2 ? "#ffb030" : "#ff4a08", 0.05, "lighter");
+assert.equal(canvases - base, 2, "una capa por color, no una por llamada");
+assert.equal(fills, 2);
+assert.equal(draws.length, 12);
+assert.equal(draws[0][1] + draws[0][2], 0); assert.equal(draws[0][3], 372, "mismos píxeles de origen que antes (hoja HD a 4x)");
+for (let n = 0; n < 12; n++) s.tinted(ctx, "demon0", 0, 100, 100, "#ffb030", 0.05, "lighter");
+assert.equal(canvases - base, 2, "segunda pasada: todo de la caché");
+s.tinted(ctx, "demon0", 1, 100, 100, "#ffb030", 0.05); assert.equal(canvases - base, 3, "otro fotograma, otra capa");
+console.log("OK tintcache");
