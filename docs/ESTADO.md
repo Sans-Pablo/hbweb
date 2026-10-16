@@ -396,3 +396,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - 0.85.10 (hb-ui): quitados los rombos celestes de las casillas de salida (renderer.drawTeleportMarks); sin velo DOM/CSS detectado en vivo.
 - 0.85.9 (hb-ui): auditoría UI vs original, ver docs/AUDITORIA_UI.md (corregido y pendiente).
+
+- Rotura de armadura fiel al original (EnduStrippingDamage combat.cpp:1593, ArmorLifeDecrement HG.cpp:36384): desgaste por habilidad (martillo 10-25, hacha 3, resto 1), arrancado con martillo, Merien y "Legion" inmunes, hechizo 28 resta ARMORDEC. Nota: `w.fightZone` no se asigna nunca en el port, las rutas de zona de lucha estan inertes.

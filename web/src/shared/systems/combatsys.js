@@ -86,6 +86,56 @@ export const PVP_DMG = 1;
 export function luckySave(w, t, dmg) {
   return t.eff?.lucky && R.dice(w.rng, 1, 10) < 5 && t.hp <= dmg ? 1 : dmg;
 }
+// EnduStrippingDamage (combat.cpp:1593): cada golpe a una pieza de armadura de un jugador la desgasta y, con martillo, puede soltarla.
+// Solo si el atacante es un jugador de otro bando (o hay zona de lucha) cuenta su habilidad: martillo 10 (daño según martillo: 760 0.25/10, 761 0.35/15, 843 0.45/20, 762 0.6/25),
+// hacha 3, el resto 1. El objetivo neutral (side 0) y los objetos «Legion» no se desgastan. A vida 0 se suelta; con probabilidad de arrancado, el martillo
+// suelta la pieza si prob * dice(6|4, vidaMax-vida) > vida (6 dados si vidaMax < tope: 2000 cuerpo/piernas/brazos, 3000 casco). La Merien Plate (621/622) es inmune.
+const STRIP_HAMMER = { 760: [0.25, 10], 761: [0.35, 15], 843: [0.45, 20], 762: [0.6, 25] };
+export function enduStrip(w, att, t, pos, higher) {
+  const uid = t.equip[pos], inst = uid !== undefined && Inv.instOf(t, uid);
+  if (!inst) return;
+  const d = w.data.item(inst.id);
+  let strip = 0, endu = 1;
+  if (att && att.kind === "player" && (att.side !== t.side || w.fightZone)) {
+    const sk = att.eff?.wtype === 0 ? 5 : att.eff?.skill;
+    if (sk === 14) {
+      [strip, endu] = [0.25, 10];
+      const two = att.equip[EQUIP.TWOHAND], ti = two !== undefined && Inv.instOf(att, two);
+      if (ti && STRIP_HAMMER[ti.id]) [strip, endu] = STRIP_HAMMER[ti.id];
+    } else if (sk === 10) endu = 3;
+  }
+  if (t.side !== 0 && inst.life > 0 && !String(d.name || "").startsWith("Legion")) {
+    inst.life = Math.max(0, inst.life - endu);
+    w.emit({ t: "life", id: t.id, uid, life: inst.life });
+  }
+  if (inst.life <= 0) { inst.life = 0; Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "broken", id: t.id, uid }); }
+  else if (strip > 0) {
+    if (inst.id === 621 || inst.id === 622) return;
+    strip *= R.dice(w.rng, d.maxLife < higher ? 6 : 4, d.maxLife - inst.life);
+    if (strip > inst.life) { Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "released", id: t.id, uid }); }
+  }
+}
+// Las piezas que alcanza un golpe (case 1..4 de combat.cpp:1020-1046); el cuerpo cae en el cuerpo entero si no lleva armadura.
+function stripParts(w, att, t, parts) {
+  for (const pos of parts) {
+    const at = pos === EQUIP.BODY && t.equip[pos] === undefined ? EQUIP.FULLBODY : pos;
+    enduStrip(w, att, t, at, pos === EQUIP.HEAD ? 3000 : 2000);
+  }
+}
+// ArmorLifeDecrement (HG.cpp:36384): el rompe-armaduras resta `value` (MAGICV_ARMORDEC = v10) de vida a cuerpo, pantalón, calzas, brazos y casco de un jugador;
+// no vale entre aliados fuera de zona de lucha ni contra neutrales. A 0 se suelta la pieza.
+export function armorLifeDecrement(w, att, t, value) {
+  if (!att || att.kind !== "player" || t.kind !== "player") return;
+  if (att.side === t.side && !w.fightZone) return;
+  if (t.side === 0) return;
+  for (const pos of [EQUIP.BODY, EQUIP.PANTS, EQUIP.LEGGINGS, EQUIP.ARMS, EQUIP.HEAD]) {
+    const uid = t.equip[pos], inst = uid !== undefined && Inv.instOf(t, uid);
+    if (!inst) continue;
+    if (inst.life > 0) inst.life -= value;
+    w.emit({ t: "life", id: t.id, uid, life: Math.max(0, inst.life) });
+    if (inst.life <= 0) { inst.life = 0; Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "broken", id: t.id, uid }); }
+  }
+}
 export function hitPlayer(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
@@ -99,7 +149,7 @@ export function hitPlayer(w, p, t, fx = {}) {
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
   a.damage = luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
-  for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
+  stripParts(w, p, t, a.parts);
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
 }
 
@@ -250,7 +300,7 @@ export function npcStrikes(w, n, t) {
   const a = absorbOnHit(w.rng, t, ap, n.dir === t.dir);
   if (t.side !== 0) {
     if (a.shielded) wear(w, t, t.equip[EQUIP.LHAND], 1);
-    for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
+    stripParts(w, null, t, a.parts);
   }
   if (a.shielded) gainSSN(t, 11, 1);
   damagePlayer(w, t, luckySave(w, t, a.damage), n);

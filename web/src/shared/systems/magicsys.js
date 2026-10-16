@@ -6,7 +6,7 @@ import { gainSSN } from "../skills.js";
 import * as Feign from "./feign.js";
 import { EQUIP } from "../items.js";
 import * as M from "../magic.js";
-import { damageNpc, damagePlayer, canFight, luckySave } from "./combatsys.js";
+import { damageNpc, damagePlayer, canFight, luckySave, armorLifeDecrement } from "./combatsys.js";
 import { summonFor, spawnCompanion } from "./npcsys.js";
 import { activeBall } from "./companion.js";
 import { sget, sset, sclear } from "./status.js";
@@ -278,7 +278,7 @@ function resolve(w, p, id, sp, x, y, cost) {
       if (hurt(target, sp.v4, sp.v5, sp.v6)) freeze(target, sp.v10);
       break;
     case 28:                                                           // rompe-armaduras: daño de zona (el desgaste solo afecta a jugadores)
-      area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
+      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true) && t.kind === "player") armorLifeDecrement(w, p, t, sp.v10); });   // HG.cpp:11502
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && !w.fightZone) {
