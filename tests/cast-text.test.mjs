@@ -10,3 +10,7 @@ assert(s <= 0.9 && inner < 0.6, "las bolas no son gigantes");
 const mg = JSON.parse(readFileSync(new URL("../web/data/magic.json", import.meta.url)));
 assert(Object.values(mg).filter(m => m && m.name).length > 50, "magic.json tiene nombres");
 console.log("OK cast-text");
+import { castMs, CAST_MS } from "../web/src/shared/magic.js";
+// MapData.cpp:35-36 (16 fotogramas x 88 ms) y 1994-1998 (retardo -(maestría*0.13) entero)
+assert(castMs(0) === 16 * 88 && castMs(100) === 16 * 75 && CAST_MS === 1200 && castMs(50) === 16 * (88 - 6), "tiempos de cast del original");
+console.log("OK cast-ms");

@@ -1,10 +1,23 @@
 {
- "build": "0.85.19",
+ "build": "0.85.20",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Cast fiel (v0.85.20)",
+    "en": "Faithful cast (v0.85.20)"
+   },
+   "items": [
+    {
+     "es": "La animación de lanzar dura 16 fotogramas de 88 ms menos 0,13 ms por punto de maestría (1408 ms sin maestría, 1200 ms con 100), como el original. Antes duraba 640 ms.",
+     "en": "The cast animation lasts 16 frames of 88 ms minus 0.13 ms per mastery point (1408 ms with none, 1200 ms at 100), as in the original. It used to last 640 ms."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

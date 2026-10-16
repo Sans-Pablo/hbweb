@@ -32,7 +32,11 @@ export function linePoint(x0, y0, x1, y1, count) {
   }
   return [rx, ry];
 }
-export const CAST_MS = 16 * 40;                                         // animación de lanzar: 16 fotogramas x 40 ms
+// Animación de lanzar: 16 fotogramas (MapData.cpp:35-36, OBJECTMAGIC MaxFrame 15, FrameTime 88) y retardo por maestría
+// iDelay = -(maestría de Magic * 0.13) entero (MapData.cpp:1994-1998): 88 ms a maestría 0, 75 ms a 100.
+export const CAST_FRAMES = 16, CAST_FRAME_MS = 88;
+export const castMs = skill => CAST_FRAMES * (CAST_FRAME_MS + Math.trunc(-(Math.max(0, Math.min(100, skill || 0)) * 0.13)));
+export const CAST_MS = castMs(100);
 export const CAST_COOLDOWN_MS = 1000;                                   // el servidor expulsa si se lanza más rápido
 export const circleOf = id => Math.floor(id / 10) + 1;
 
