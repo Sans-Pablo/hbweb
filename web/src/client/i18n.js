@@ -9,6 +9,10 @@ if (lang !== "en" && lang !== "es") lang = "es";
 const listeners = new Set();
 
 const EN = {
+  "🛡 Admin": "🛡 Admin", "Cuenta de administrador": "Administrator account", "Clave": "Password", "No se pudo entrar": "Could not sign in",
+  "No se pudo contactar con el servidor": "Could not reach the server",
+  "Cuenta o clave incorrectas, o la cuenta no es de administrador.": "Wrong account or password, or the account is not an administrator.",
+  "El panel solo se abre desde el PC del servidor.": "The panel only opens from the server PC.", "Demasiados intentos; espera unos minutos.": "Too many attempts; wait a few minutes.",
   // ---- menú automático (autowin.js, autoplay.js)
   "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
   "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Cerrar": "Close", "Minimizar": "Minimize", "Restaurar": "Restore", "Objetos del suelo según su rareza": "Ground items by rarity", "Normal": "Normal", "Mágico": "Magic", "Raro": "Rare", "Único": "Unique", "ignorar": "ignore", "vender": "sell", "guardar": "store", "Tomar pociones con poca vida": "Drink potions when health is low", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",

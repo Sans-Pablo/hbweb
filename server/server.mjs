@@ -162,7 +162,10 @@ function originOk(req) {
 }
 const cors = req => originOk(req) && req.headers.origin ? { "Access-Control-Allow-Origin": req.headers.origin, "Vary": "Origin", "Access-Control-Allow-Headers": "content-type, ngrok-skip-browser-warning" } : {};
 const json = (req, res, code, obj) => { res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-cache", ...cors(req) }); res.end(JSON.stringify(obj)); };
-const adminAllowed = (req, url) => isLoopback(req.socket.remoteAddress) && !viaTunnel(req) && url.searchParams.get("token") === ADMIN_TOKEN;   // el panel solo desde este PC
+// Sesiones de admin: se piden con cuenta (de ADMINS) + clave en el botón «Admin» del login; el token de sesión sustituye al de la URL. Siguen limitadas a este PC.
+const adminSessions = new Map(), adminFails = new Limiter(env.HB_NO_LIMITS === "1" ? 1e9 : 8, 10 * 60000);
+const sessionOk = t => { const e = adminSessions.get(t); if (!e) return false; if (e < Date.now()) { adminSessions.delete(t); return false; } return true; };
+const adminAllowed = (req, url) => { const t = url.searchParams.get("token"); return isLoopback(req.socket.remoteAddress) && !viaTunnel(req) && !!t && (t === ADMIN_TOKEN || sessionOk(t)); };   // el panel solo desde este PC
 
 const server = http.createServer((req, res) => {
   let url; try { url = new URL(req.url, "http://x"); } catch { res.writeHead(400); res.end(); return; }
@@ -178,6 +181,19 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/api/stats") {            // estadísticas globales, peticiones de los bots-testers y top de summons (panel del observador)
     if (!OBSERVE) { json(req, res, 403, { error: "observar desactivado" }); return; }
     json(req, res, 200, { global: ObsStats.globals(adventure), requests: ObsStats.requests(adventure), summons: ObsStats.summons(adventure), time: Date.now() }); return;
+  }
+  if (url.pathname === "/api/admin/login" && req.method === "POST") {
+    if (!isLoopback(req.socket.remoteAddress) || viaTunnel(req)) { json(req, res, 403, { error: "El panel solo se abre desde el PC del servidor." }); return; }
+    const ip = req.socket.remoteAddress; let body = ""; req.on("data", d => { body += d; if (body.length > 400) req.destroy(); });
+    req.on("end", async () => {
+      if (adminFails.blocked(ip)) { json(req, res, 429, { error: "Demasiados intentos; espera unos minutos." }); return; }
+      let b = {}; try { b = JSON.parse(body); } catch {}
+      const acc = ADMINS.has(String(b.name || "").trim().toLowerCase()) ? await accounts.verify(b.name, b.pass) : (await accounts.verify("", ""), null);
+      if (!acc) { adminFails.hit(ip); json(req, res, 401, { error: "Cuenta o clave incorrectas, o la cuenta no es de administrador." }); return; }
+      const token = crypto.randomBytes(18).toString("hex"); adminSessions.set(token, Date.now() + 12 * 3600000);
+      json(req, res, 200, { token, name: acc.name });
+    });
+    return;
   }
   if (url.pathname === "/admin") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end("Solo desde el PC del servidor y con el token correcto."); return; }

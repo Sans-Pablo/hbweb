@@ -885,6 +885,21 @@ function askNameAndJoin(conn, online, info, spr, flags = {}) {
     watchBtn.style.cssText = "margin-top:8px;width:100%;padding:7px;background:#1b1810;color:#ffd76a;border:1px solid #6b5a33;border-radius:6px;cursor:pointer";
     box.querySelector(".go").insertAdjacentElement("afterend", watchBtn);
   }
+  // botón «Admin»: cuenta de administrador + clave -> panel (/admin). Solo se abre desde el PC del servidor.
+  let adminBtn = box.querySelector(".adminbtn");
+  if (online && !adminBtn) {
+    adminBtn = document.createElement("button"); adminBtn.type = "button"; adminBtn.className = "adminbtn"; adminBtn.textContent = tr("🛡 Admin");
+    adminBtn.style.cssText = watchBtn.style.cssText; watchBtn.insertAdjacentElement("afterend", adminBtn);
+    adminBtn.onclick = async () => {
+      const name = (user.value || "").trim() || (prompt(tr("Cuenta de administrador")) || "").trim(), pw = pass.value || prompt(tr("Clave")) || "";
+      if (!name || !pw) return;
+      try {
+        const r = await fetch((conn.base || "") + "/api/admin/login", { method: "POST", body: JSON.stringify({ name, pass: pw }) }), j = await r.json();
+        if (!r.ok) { alert(tr(j.error || "No se pudo entrar")); return; }
+        location.href = (conn.base || "") + "/admin?token=" + j.token;
+      } catch { alert(tr("No se pudo contactar con el servidor")); }
+    };
+  }
   const known = Accounts.listAccounts();
   if (!online && !known.length && !user.value) setTab(true);
   if (online && !user.value) setTab(true);

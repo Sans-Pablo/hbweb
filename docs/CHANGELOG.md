@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.85.40 · Puerta del admin (2026-10-16)
+- [admin] Botón «Admin» en el login (cuenta de ADMINS + clave, sin token en la URL; solo desde el PC del servidor) y el observador de pantalla dividida pasa a ser una sección del panel /admin.
+
+## 0.85.39 · Daños originales (2026-10-16)
+- Auditoría de daños contra HGServerConsole: Demonslayer (616) +5 al daño grande contra Demon (combat.cpp:566); anillos 335/337 -20%/-10% al daño mágico (HG.cpp:18211); VIT<10 suma 1 (dice(1,0)=0).
+- Pendiente (no portado, sin mecánica): bonos de cruzada/Apocalypse/banderas, inmunidad skill 51/52, HITRATIOFACTOR 80 vs 50 del port, desgaste del anillo.
+
 ## 0.85.38 · Libro de oro (2026-10-16)
 - [admin] Fase 1 del monitor económico: `systems/ledger.js` registra cada movimiento de oro (faucet/sink/transfer, bots y debug marcados) y el servidor lo guarda en `econ_events` (SQLite). Sin cambio de juego ni interfaz. Ficha: docs/sistemas/economia.md; test `tests/ledger.test.mjs`.
 - Pendiente: panel /admin/economy (fase 2), oro de bots sin registrar.

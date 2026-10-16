@@ -17,7 +17,8 @@ button,input{font:inherit;color:var(--txt);background:#2c2418;border:1px solid v
 button.bad{border-color:#8a3b2b}.row{display:flex;gap:8px;flex-wrap:wrap}.row input{flex:1;min-width:180px}pre{margin:8px 0 0;white-space:pre-wrap;color:#b9d6a5}
 </style></head><body>
 <h1>Helbreath Web · Administración</h1><div class="sub" id="sub">…</div>
-<div class="row" style="margin-bottom:14px"><a id="lbal" href="/admin/balance.html"><button>Balance del juego</button></a></div>
+<div class="row" style="margin-bottom:14px"><a id="lbal" href="/admin/balance.html"><button>Balance del juego</button></a><button id="bobs">👁 Observador (pantalla dividida)</button></div>
+<div class="card" id="obs" style="display:none;padding:0;height:80vh"><iframe id="obsf" style="width:100%;height:100%;border:0;border-radius:10px"></iframe></div>
 <div class="card"><table id="pl"><thead><tr><th>Jugador</th><th>Cuenta</th><th>Nv</th><th>Mapa</th><th>IP</th><th>Ping</th><th>Tiempo</th><th></th></tr></thead><tbody></tbody></table><div id="none" style="opacity:.6;padding:8px">Nadie conectado.</div></div>
 <div class="card"><div class="row"><input id="say" placeholder="Anuncio para todos los jugadores"><button id="bsay">Anunciar</button></div>
 <div class="row" style="margin-top:8px"><input id="cmd" placeholder="Comando (help para ver la lista)"><button id="bcmd">Ejecutar</button><button id="bsave">Guardar</button><button id="brest" class="bad">Reiniciar</button></div><pre id="out"></pre></div>
@@ -35,6 +36,7 @@ $("#bans").textContent="Cuentas bloqueadas: "+(s.bans.accounts.join(", ")||"ning
 document.addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(b&&(!/^ban /.test(b.dataset.c)||confirm("¿Bloquear esta cuenta?")))run(b.dataset.c)});
 $("#bsay").onclick=()=>{const v=$("#say").value.trim();if(v){run("say "+v);$("#say").value=""}};$("#bcmd").onclick=()=>run($("#cmd").value);
 $("#cmd").onkeydown=e=>{if(e.key==="Enter")run($("#cmd").value)};$("#bsave").onclick=()=>run("save");$("#brest").onclick=()=>{if(confirm("¿Reiniciar el servidor? Los jugadores serán desconectados."))run("restart")};
+$("#bobs").onclick=()=>{const c=$("#obs"),f=$("#obsf"),on=c.style.display==="none";c.style.display=on?"":"none";if(on&&!f.src){f.src="/observador.html";}if(on)c.scrollIntoView()};
 refresh();setInterval(refresh,4000);
 </script></body></html>`;
 

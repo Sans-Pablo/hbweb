@@ -497,3 +497,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] Fase 1 (v0.85.38): libro de oro + `econ_events` en SQLite (docs/sistemas/economia.md). Sin verificar en servidor real con jugadores.
 - [ ] Fase 2: panel /admin/economy (SVG, token loopback), series y alertas. Fase 3+: según manual `HBWeb_Admin_Economy_Monitor_Technical_Manual.docx`.
 - [ ] Oro de bots (`bot.js`, `botitems.js`) sin pasar por el libro.
+
+### Admin: login y observador (pedido 2026-10-16, v0.85.40)
+- [x] Botón Admin en el login (cuenta ADMINS + clave, sesión 12 h) y observador como sección de /admin. Ficha: docs/sistemas/admin-login.md.
