@@ -1,10 +1,35 @@
 {
- "build": "0.85.24",
+ "build": "0.85.26",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Bots magos (v0.85.26)",
+    "en": "Mage bots (v0.85.26)"
+   },
+   "items": [
+    {
+     "es": "Existen bots magos: nacen con Int y Mag, reparten puntos como mago, llevan las manos libres o una varita y aprenden hechizos (Heal, Magic Missile, escudos, Fire Ball…) pagando el coste y cumpliendo la Int que pide Magic.cfg.",
+     "en": "Mage bots now exist: they start with Int and Mag, spend points as a mage, keep their hands free or hold a wand, and learn spells (Heal, Magic Missile, shields, Fire Ball…) by paying the cost and meeting the Int that Magic.cfg requires."
+    },
+    {
+     "es": "Los bots lanzan hechizos de ataque a los monstruos, se curan y curan a su dueño o grupo, y se ponen escudo en pelea; reservan maná para curarse.",
+     "en": "Bots cast attack spells at monsters, heal themselves and their owner or party, and shield themselves in fights; they keep mana in reserve for healing."
+    },
+    {
+     "es": "Los residentes pueden probar la build «mago» al reiniciar atributos (mismo coste, tope diario y mago NPC cercano que el jugador).",
+     "en": "Residents can try the 'mage' build when resetting attributes (same cost, daily cap and nearby mage NPC as the player)."
+    },
+    {
+     "es": "Los bots lanzadores valoran el equipo por su efecto mágico (ahorro de maná, daño mágico, resistencia), no solo por daño y defensa.",
+     "en": "Caster bots rate gear by magical effect (mana saving, magic damage, resistance), not just damage and defense."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {
