@@ -27,7 +27,7 @@ const assert = (c, m) => { if (!c) { console.error("FALLO:", m); process.exit(1)
 // fórmulas
 assert(R.expForLevel(1) === 50 && R.expForLevel(2) === 150, "tabla de experiencia");
 assert(R.hitChance(70, 10, false) === 99 && R.hitChance(10, 200, false) === 15, "límites de acierto");
-assert(R.hitChance(50, 100, true) === 50, "por la espalda: defensa a la mitad");
+assert(R.hitChance(50, 100, true) === 80 && R.hitChance(50, 100, false) === 40, "por la espalda: defensa a la mitad (HITRATIOFACTOR 80)");
 const c = { str: 14, vit: 12, dex: 14, int: 10, mag: 10, level: 1 };
 assert(R.maxHP(c) === 12 * 3 + 2 + 7, "vida máxima");
 

@@ -4,6 +4,7 @@ import { ELEM, PROT_CAP, PROT_OVERRIDE } from "./rarity.js";
 import { EQUIP, ITYPE, EFFECT, GOLD, MAX_ITEMS, isStack, itemWeight } from "./items.js";
 import { realStats, applyEquipAttr } from "./attributes.js";
 import { classOk, classLabel } from "./classgear.js";
+import { gold as ledger } from "./systems/ledger.js";
 
 // definición del objeto con el peso real de esta unidad (los atributos "Light" lo reducen)
 const real = (d, inst) => inst && inst.comp ? { ...d, weight: 100 } : (inst && inst.attr ? { ...d, weight: realStats(d, inst).weight } : d);
@@ -24,7 +25,7 @@ export function canCarry(p, data, def, count = 1, inst = null) {
 // Mete un objeto en la mochila (los apilables se juntan por id). Devuelve false si no cabe.
 export function addToBag(p, data, inst) {
   const d = data.item(inst.id);
-  if (inst.id === GOLD) { p.gold += inst.count; return true; }
+  if (inst.id === GOLD) { ledger({}, p, inst.count, "gold_item"); return true; }
   if (isStack(d)) {
     const same = p.bag.find(i => i.id === inst.id);
     if (same) { same.count += inst.count; return true; }

@@ -7,6 +7,7 @@ import * as Inv from "../inventory.js";
 import * as Shop from "./shopsys.js";
 import { itemLevel } from "../itemlevel.js";
 import { ROD } from "./fishing.js";
+import { gold as ledger } from "./ledger.js";
 
 export const canWear = (q, d) => !!d && d.type === ITYPE.EQUIP && !(d.levelLimit > q.level) && !(d.gender === 1 && q.gender !== 1) && !(d.gender === 2 && q.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY;
 export const slotOf = d => (d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos);
@@ -66,7 +67,7 @@ export function manage(w, p, { force = false, friends = [], log = () => {}, stal
       if (kept < stallKeep && stallable(v)) { kept++; continue; }                  // se queda en la mochila para el puesto (residents.js stallAI)
       if (v.act === "store" && (p.bank?.length || 0) < 120 && Shop.deposit(w, p, { uid: i.uid, count: i.count })) { stored++; moved++; log(`Guardo ${d.name} en el almacén: ${v.why}.`); continue; }
       const price = Shop.sellPriceOf(d, i, i.count || 1) || 0;
-      p.gold += price; Inv.removeFromBag(p, i.uid); sold++; gold += price; moved++;
+      ledger(w, p, price, "bot_sell", { artificial: "bot" }); Inv.removeFromBag(p, i.uid); sold++; gold += price; moved++;
     }
     if (sold) log(`Vendo ${sold} objeto(s) que no uso por ${gold} de oro${stored ? " y guardo " + stored : ""}.`);
   }

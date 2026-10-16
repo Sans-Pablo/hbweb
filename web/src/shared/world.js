@@ -51,6 +51,9 @@ export class World {
     this.ids = ids || { ent: 1, item: 1 };
     this.teleports = new Map(teleports.map(t => [grid.idx(t.x, t.y), t]));    // casillas de teletransporte (teleport-loc del mapa)
     this.dayOrNight = 1;             // 1 día, 2 noche (m_cDayOrNight)
+    this.crusade = false;            // m_bIsCrusadeMode (apagado por defecto): bonos de combate de combat.cpp:797; p.crusadeDuty === 1 = soldado
+    this.apocalypse = false;         // mapa de Apocalypse (m_bIsApocalypseMap): daño x1.2 (combat.cpp:787)
+    this.heldenian = null;           // { type: 1, flags: [{x, y, side}] } (Heldenian, apagado): bandera cercana de su bando = daño x1.3 (Client.cpp:1371)
     this.weather = 0;                // 0 despejado, 1..3 lluvia ligera/media/fuerte
     this.weatherUntil = 0;
     this.fixedDay = false;           // mapas de "fixed-day-mode": siempre de día y sin clima

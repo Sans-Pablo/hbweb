@@ -30,6 +30,7 @@ import { feedSummons } from "./summonfood.js";
 import * as Sch from "./schools.js";
 import { hasStaff } from "./dummy.js";
 import * as Tal from "./talents.js";
+import { gold as ledger } from "./ledger.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia", "Ulric", "Vesna", "Wynn", "Yara", "Zeke"];
 const GOLD = 90;                                                       // Item.cfg: Gold
@@ -59,7 +60,7 @@ export function init(w, p, opts = {}) {
   const lvl = Math.max(1, Math.min(opts.level | 0 || 1, MAX_LEVEL));
   if (opts.keep) {}                                                      // habitante cargado de su partida: conserva nivel y oro
   else if (lvl > 1) { p.level = lvl; p.exp = R.expForLevel(lvl); p.pool += (lvl - 1) * R.LEVELUP_POINTS; }
-  if (!opts.keep) p.gold += 400 + lvl * 250;
+  if (!opts.keep) ledger(w, p, 400 + lvl * 250, "bot_grant", { artificial: "bot" });
   Tut.init(p, false);                                                    // un bot no hace el tutorial (el observador no debe verlo)
   w.recalc(p);
   p.bot = { farmer: !opts.keep && !opts.owner && w.rng() < 0.3, owner: opts.owner ?? null, next: 0, errand: 0, tgtAt: 0, target: null, path: null, goal: null, bad: new Set(), home: { x: p.x, y: p.y }, lvl: p.level, said: 0, fails: 0, mage: !!opts.mage };
@@ -106,7 +107,7 @@ function buy(w, p, d, n = 1) {
   if (p.gold < cost) return null;
   const inst = newInst(w, d.id, n);
   if (!Inv.canCarry(p, w.data, d, n, inst) || (p.bag.length >= MAX_ITEMS && !p.bag.some(i => i.id === d.id))) return null;
-  p.gold -= cost;
+  ledger(w, p, -cost, "bot_buy", { artificial: "bot" });
   Inv.addToBag(p, w.data, inst);
   return inst;
 }
@@ -183,7 +184,7 @@ export function errands(w, p, b, first = false) {
     const spare = want.price + 60;
     if (p.gold >= spare) {
       const inst = buy(w, p, want.d);
-      if (inst) { if (tryEquip(w, p, b, inst)) { b.bought = 1; blog(w, p, `Compro ${want.d.name} (${want.price} de oro): era la mejora que más deseaba (+${want.gain} de item level).`); } else { p.gold += want.d.price; Inv.removeFromBag(p, inst.uid); } }
+      if (inst) { if (tryEquip(w, p, b, inst)) { b.bought = 1; blog(w, p, `Compro ${want.d.name} (${want.price} de oro): era la mejora que más deseaba (+${want.gain} de item level).`); } else { ledger(w, p, want.d.price, "bot_refund", { artificial: "bot" }); Inv.removeFromBag(p, inst.uid); } }
     } else if (want.gain >= 8) { b.saving = true; if (w.time - (b.saveLog || -1e9) > 300000) { b.saveLog = w.time; blog(w, p, `Ahorro para ${want.d.name} (${want.price} de oro, +${want.gain} de item level): me faltan ${spare - p.gold}.`); } }
   }
   // AMIGOS: si le sobra mucho oro y un amigo conectado anda mal de equipo, le compra la pieza (la entrega el bucle de ayuda de residents.js)
@@ -206,7 +207,7 @@ export function errands(w, p, b, first = false) {
     for (const d of list.filter(x => x.price <= budget && itemLevel(x) > have * 1.15 + 1 && !b.bad.has(x.id) && usable(x)).slice(0, 6)) {      // prueba el siguiente si no puede cargarlo o no se lo puede poner (antes se atascaba para siempre con el más caro y peleaba sin arma)
       const inst = buy(w, p, d);
       if (!inst) { if (p.gold >= d.price) b.bad.add(d.id); continue; }
-      if (!tryEquip(w, p, b, inst)) { p.gold += d.price; Inv.removeFromBag(p, inst.uid); continue; }
+      if (!tryEquip(w, p, b, inst)) { ledger(w, p, d.price, "bot_refund", { artificial: "bot" }); Inv.removeFromBag(p, inst.uid); continue; }
       got = true; break;
     }
     if (!got) continue;
