@@ -512,7 +512,7 @@ function run(adv, w, p, b) {
     const canDash = master && !p.eff.bow && gap === 2 && reachOf(w, p, t) === 1 && (ddx === 0 || ddy === 0 || ddx === ddy) && p.sp >= 2;
     if (gap <= reach || canDash) {
       b.stuck = null;
-      if (w.time - p.lastAttack >= PLAYER.attackCooldownMs && !w.busy(p)) {
+      if (w.time - p.lastAttack >= PLAYER.attackGapMs && !w.busy(p)) {
         const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d;
         adv.command(p.id, gap <= reachOf(w, p, t) ? { t: "attack", target: t.id, ...(crit ? { crit: true } : {}) } : gap <= reach ? { t: "attack", target: t.id, crit: true } : { t: "attack", target: t.id, dash: true });
       }
@@ -594,7 +594,7 @@ function farm(adv, w, p, b) {
   if (crop && hoe) {
     if (!near(crop.x, crop.y)) { think_(w, p, b, "farm"); return step(adv, w, p, b, crop.x, crop.y, false) || true; }
     if (p.eff.wtype !== 27) { tryEquip(w, p, b, hoe); return true; }
-    if (w.time - p.lastAttack >= PLAYER.attackCooldownMs) { const d = dirTo(p.x, p.y, crop.x, crop.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: crop.id }); }
+    if (w.time - p.lastAttack >= PLAYER.attackGapMs) { const d = dirTo(p.x, p.y, crop.x, crop.y); if (d) p.dir = d; adv.command(p.id, { t: "attack", target: crop.id }); }
     return true;
   }
   if (seeds) {

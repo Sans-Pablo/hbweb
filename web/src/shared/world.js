@@ -214,7 +214,7 @@ const COMMANDS = {
     const t = w.ents.get(cmd.target);
     if (!t || t.dead || Feign.feigning(t) || (t.kind !== "npc" ? !Combat.canFight(w, p, t) : t.master && !Npc.foeOf(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
-    if (w.time - p.lastAttack < PLAYER.attackCooldownMs) return w.reject(p, cmd, "demasiado rápido");
+    if (w.time - p.lastAttack < PLAYER.attackGapMs) return w.reject(p, cmd, "demasiado rápido");
     const critOk = !!cmd.crit && (p.superAttack | 0) > 0 && mastered(p);       // CRÍTICO (Alt + clic): gasta una carga de super ataque
     const reach = Combat.reachOf(w, p, t, critOk), gap = dist(p, t);
     // DASH (bIsDash): atacando mientras corre desde una casilla más allá del alcance, avanza y golpea al llegar con bono de daño
@@ -230,14 +230,14 @@ const COMMANDS = {
       // OBJECTATTACKMOVE (HG.cpp 820): UN solo movimiento de 12 x 78 ms. Mueve una casilla (iClientMotion_Move_Handler con bIsRun=FALSE: sin gasto de SP),
       // avisa con OBJECTATTACKMOVE (sin evento de ataque aparte) y resuelve un golpe wType 1 con los bonos de dash (iClientMotion_Attack_Handler(..., bIsDash=TRUE)).
       // El cliente dibuja la carrera y el fantasma (Game.cpp DrawObject_OnAttackMove); el golpe cae en el fotograma 4, al llegar.
-      if (!w.tryStep(p, p.dir, PLAYER.dashMs, ACT.ATTACKMOVE)) return w.reject(p, cmd, "bloqueado");
+      if (!w.tryStep(p, p.dir, dashMs(p), ACT.ATTACKMOVE)) return w.reject(p, cmd, "bloqueado");
       p.lastMove = p.lastAttack = p.lastCombat = w.time;
-      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: PLAYER.dashMs, target: t.id, wt: p.eff.wtype | 0 });
-      w.after(PLAYER.dashHitMs, () => {
+      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: dashMs(p), target: t.id, wt: p.eff.wtype | 0 });
+      {   // el golpe se resuelve al recibir el mensaje (HG.cpp OBJECTATTACKMOVE), igual que el normal
         if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t, false)) return;
         p.dir = dirTo(p.x, p.y, t.x, t.y) || p.dir;
         (t.kind === "player" ? Combat.hitPlayer : Combat.playerHit)(w, p, t, { crit: false, dash: true });
-      });
+      }
       return true;
     }
     const crit = critOk;
@@ -248,7 +248,7 @@ const COMMANDS = {
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
     w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, at: attackType(p.eff.wtype, crit), tx: t.x, ty: t.y });
-    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit }) : Combat.playerHit(w, p, t, { crit })));
+    (t.kind === "player" ? Combat.hitPlayer : Combat.playerHit)(w, p, t, { crit });   // el original (HG.cpp iClientMotion_Attack_Handler) aplica el golpe al recibir el mensaje, no a mitad de animación
     return true;
   },
   prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),
@@ -350,5 +350,6 @@ const COMMANDS = {
 };
 
 // Duración de la animación de ataque: el arma lenta alarga cada fotograma 12 ms por punto (Client/MapData.cpp).
+export function dashMs(p) { return PLAYER.dashMs + p.eff.speedNib * 12 * 13; }   // ATTACKMOVE: 13 fotogramas con el mismo retardo por fotograma que ATTACK
 export function attackMs(p) { return PLAYER.attackMs + p.eff.speedNib * 12 * 8; }
 

@@ -349,16 +349,17 @@ export class NetConnection {
     } else if (cmd.t === "turn" && !me.dead) {
       if (!w.busy(me) && cmd.dir >= 1 && cmd.dir <= 8) me.dir = cmd.dir;      // girar sin andar (clic derecho): se predice, el servidor no manda `dir` de mi personaje si no cambia nada más
     } else if (cmd.t === "attack" && !me.dead) {
-      if (w.busy(me) || w.time - me.lastAttack < PLAYER.attackCooldownMs) return false;
+      if (w.busy(me) || w.time - me.lastAttack < PLAYER.attackGapMs) return false;
       const t = w.ents.get(cmd.target);
       if (t) me.dir = dirToward(me, t);
-      if (cmd.dash && t) {      // dash (OBJECTATTACKMOVE): UN movimiento de una casilla de 12 x 78 ms (world.js, attack), sin gasto de SP; antes se predecía como golpe normal y el personaje atacaba parado
+      if (cmd.dash && t) {
+        const dm = PLAYER.dashMs + (me.eff?.speedNib | 0) * 12 * 13;      // dash (OBJECTATTACKMOVE): UN movimiento de una casilla de 12 x 78 ms (world.js, attack), sin gasto de SP; antes se predecía como golpe normal y el personaje atacaba parado
         const nx = me.x + DX[me.dir], ny = me.y + DY[me.dir];
         if (!w.grid.free(nx, ny, me.id) || sget(w, me, "hold")) return false;
         w.grid.release(me.x, me.y, me.id); w.grid.occupy(nx, ny, me.id);
         me.fx = me.x; me.fy = me.y; me.x = nx; me.y = ny;
-        me.act = ACT.ATTACKMOVE; me.actStart = w.time; me.actDur = PLAYER.dashMs;
-        me.busyUntil = w.time + PLAYER.dashMs; me.lastMove = me.lastAttack = me.lastCombat = w.time;
+        me.act = ACT.ATTACKMOVE; me.actStart = w.time; me.actDur = dm;
+        me.busyUntil = w.time + dm; me.lastMove = me.lastAttack = me.lastCombat = w.time;
         this.events.push({ t: "step", id: me.id });
         this.ws.send(JSON.stringify({ t: "cmd", seq: ++this.seq, cmd }));
         return true;

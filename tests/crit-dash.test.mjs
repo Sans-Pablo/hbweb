@@ -73,8 +73,8 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   p.busyUntil = 0;                                   // el original no exige haber corrido antes
   const sp0 = p.sp, evs = w.events.length;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "corriendo sí");
-  assert.equal(p.act, ACT.ATTACKMOVE, "un solo movimiento OBJECTATTACKMOVE"); assert.equal(p.actDur, 12 * 78, "12 fotogramas x 78 ms");
-  assert.ok(w.events.slice(evs).some(e => e.t === "dash" && e.id === id && e.ms === 12 * 78), "evento dash");
+  assert.equal(p.act, ACT.ATTACKMOVE, "un solo movimiento OBJECTATTACKMOVE"); assert.equal(p.actDur, 13 * 78, "13 fotogramas x 78 ms");
+  assert.ok(w.events.slice(evs).some(e => e.t === "dash" && e.id === id && e.ms === 13 * 78), "evento dash");
   assert.ok(!w.events.slice(evs).some(e => e.t === "attack" && e.id === id), "sin evento de ataque aparte");
   tick(1500);
   assert.equal(p.x, 29, "avanza una casilla"); assert.ok(p.sp <= sp0, "el paso del dash no gasta SP (bIsRun=FALSE)");
@@ -94,7 +94,7 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   const sent = [], conn = { world: w, pid: id, ws: { readyState: 1, send: s => sent.push(JSON.parse(s)) }, observing: false, events: [], seq: 0 };
   const n = spawn(40, 30); put(p, 38, 30); p.busyUntil = 0; p.lastAttack = -1e9; p.act = 0;
   assert.ok(NetConnection.prototype.send.call(conn, { t: "attack", target: n.id, dash: true }), "dash predicho");
-  assert.equal(p.act, ACT.ATTACKMOVE, "el cliente predice OBJECTATTACKMOVE, no ATTACK parado"); assert.equal(p.actDur, 12 * 78);
+  assert.equal(p.act, ACT.ATTACKMOVE, "el cliente predice OBJECTATTACKMOVE, no ATTACK parado"); assert.equal(p.actDur, 13 * 78);
   assert.equal(p.x, 39, "el cliente avanza una casilla al instante"); assert.equal(sent.at(-1).cmd.dash, true);
   put(p, 38, 30); p.busyUntil = 0; p.lastAttack = -1e9; p.act = 0;
   assert.ok(NetConnection.prototype.send.call(conn, { t: "attack", target: n.id }), "golpe normal");

@@ -583,7 +583,7 @@ function processQueue(c) {
     if (p && !p.dead && TIMED.has(q.cmd.t)) {
       // instante en que la orden ya es legal: fin de la acción actual y del límite de ritmo
       const readyAt = Math.max(p.busyUntil,
-        q.cmd.t === "move" ? p.lastMove + LIMITS.moveMs : q.cmd.t === "attack" ? p.lastAttack + PLAYER.attackCooldownMs : 0);
+        q.cmd.t === "move" ? p.lastMove + LIMITS.moveMs : q.cmd.t === "attack" ? p.lastAttack + PLAYER.attackGapMs : 0);
       if (world.time < readyAt) {
         q.held = true;
         if (Date.now() - q.at < 700) return;

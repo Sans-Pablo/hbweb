@@ -144,7 +144,7 @@ for (let step = 0; step < 20 * 60 * 20; step++) {          // 20 minutos de jueg
   }
   if (!target) continue;
   if (dist(me, target) <= 1) {
-    if (world.time - me.lastAttack >= PLAYER.attackCooldownMs) world.command(pid, { t: "attack", target: target.id });
+    if (world.time - me.lastAttack >= PLAYER.attackGapMs) world.command(pid, { t: "attack", target: target.id });
     continue;
   }
   const p = findPath(grid, me.x, me.y, target.x, target.y, me.id);

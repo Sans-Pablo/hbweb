@@ -1,10 +1,31 @@
 {
- "build": "0.85.34",
+ "build": "0.85.35",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Ataque como el original (v0.85.35)",
+    "en": "Attack like the original (v0.85.35)"
+   },
+   "items": [
+    {
+     "es": "Ataque: el golpe se aplica al instante y el siguiente espera al fin de la animación (mín. 350 ms entre golpes, como el servidor original).",
+     "en": "Attack: the hit lands instantly and the next waits for the animation end (min. 350 ms between hits, like the original server)."
+    },
+    {
+     "es": "Dash: 13 fotogramas (incluye el fotograma 7 que faltaba) y la duración depende de la velocidad de ataque; debería verse más fluido.",
+     "en": "Dash: 13 frames (including the missing frame 7) and duration depends on attack speed; it should look smoother."
+    },
+    {
+     "es": "Incluye marco HD de sistema.html (0.85.28).",
+     "en": "Includes the HD frame of sistema.html (0.85.28)."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

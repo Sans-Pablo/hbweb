@@ -22,7 +22,7 @@ export const ACT = {
 };
 
 // Límites del servidor contra trampas: más de 200 ms entre pasos, más de 450 ms entre golpes.
-export const LIMITS = { moveMs: 200, attackMs: 450 };
+export const LIMITS = { moveMs: 200 };
 
 // Duraciones del jugador (Client/MapData.cpp, m_stFrame[1..6]): fotogramas x tiempo por fotograma.
 // Andar y correr son algo más lentos que la animación pura porque el cliente espera la
@@ -33,10 +33,8 @@ export const PLAYER = {
   runMs: 230,
   idleFrameMs: 64,            // 32 ms, pero el cliente avanza medio fotograma (cFrame/2)
   attackMs: 8 * 78,           // MapData.cpp: ATTACK 8 fotogramas x 78 ms (+ (status&0xF)*12 ms por fotograma, ver attackMs())
-  dashMs: 12 * 78,            // OBJECTATTACKMOVE: 12 fotogramas x 78 ms (MapData.cpp:33-34)
-  dashHitMs: 4 * 78,          // el golpe cae al acabar la carrera (fotograma 4)
-  attackHitAt: 0.5,           // el golpe "conecta" a mitad de la animación
-  attackCooldownMs: 500,      // por encima del límite de 450 ms del servidor
+  dashMs: 13 * 78,            // OBJECTATTACKMOVE: maxFrame 12 = 13 fotogramas (0..12) x 78 ms (MapData.cpp:33-34), + (status&0xF)*12 ms por fotograma
+  attackGapMs: 350,           // HG.cpp bCheckClientAttackFrequency: menos de 350 ms entre ataques se rechaza (la animación, 8 x 78 ms o más, ya lo supera)
   getItemMs: 4 * 50,
   damageMs: 8 * 32,
   dyingMs: 13 * 40,
