@@ -158,9 +158,11 @@ function resolve(w, p, id, sp, x, y, cost) {
     return tgt;
   };
   const freeze = (tgt, s) => {
-    if (!tgt || tgt.dead || tgt.kind !== "npc" || sget(w, tgt, "ice")) return;
+    if (!tgt || tgt.dead || (tgt.kind !== "npc" && tgt.kind !== "player") || sget(w, tgt, "ice")) return;
     if (!iceResisted(w, tgt)) sset(w, tgt, "ice", 1, s * 1000);
   };
+  // ICE (HG.cpp:11517): a un jugador neutral (IsNeutral, :11531) no le afecta ni el daño ni el hielo; el resto como un monstruo.
+  const iceHurt = (t, n, d, k, half) => (t && t.kind === "player" && !t.side) ? null : hurt(t, n, d, k, half);
   const area = (rx, ry, fn) => { for (let iy = y - ry; iy <= y + ry; iy++) for (let ix = x - rx; ix <= x + rx; ix++) fn(occ(w, ix, iy), ix, iy); };
   // línea del lanzador al objetivo: cada paso golpea la casilla y sus cuatro vecinas
   const line = fn => {
@@ -216,7 +218,10 @@ function resolve(w, p, id, sp, x, y, cost) {
     case 12:                                                           // Hold Person / Paralyze
       if (target && !target.dead && !resist(w, target, power)) {
         if (target.kind === "npc" && (target.cfg.magicLevel >= 6 || sget(w, target, "hold"))) break;
-        if (target.kind === "player" && ((target.eff.addPR || 0) >= 500 || sget(w, target, "hold"))) break;
+        // HOLDOBJECT (HG.cpp:11102) contra jugador: nada si ya está inmovilizado, si lanzador u objetivo están en casilla segura/sin ataque (iGetAttribute 0x6),
+        // si son del mismo grupo (m_iPartyID) o si m_iAddPR >= 500.
+        if (target.kind === "player" && ((target.eff.addPR || 0) >= 500 || sget(w, target, "hold") || w.safeAt(p.x, p.y) || w.safeAt(target.x, target.y)
+          || (p.party && target.party && p.party.id === target.party.id))) break;
         sset(w, target, "hold", sp.v4, secs);
       } else if (target) w.emit({ t: "resist", id: target.id });
       break;
@@ -267,15 +272,15 @@ function resolve(w, p, id, sp, x, y, cost) {
       area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
       break;
     case 23:                                                           // hielo en área
-      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v4, sp.v5, sp.v6, true)) freeze(t, sp.v10); });
+      area(sp.v2, sp.v3, t => { if (iceHurt(t, sp.v4, sp.v5, sp.v6, true)) freeze(t, sp.v10); });
       break;
     case 25:                                                           // área sin centro, con daño v4..v6
       area(sp.v2, sp.v3, t => hurt(t, sp.v4, sp.v5, sp.v6, true));
       break;
     case 26:                                                           // Blizzard: línea de hielo
-      line(t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
-      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
-      if (hurt(target, sp.v4, sp.v5, sp.v6)) freeze(target, sp.v10);
+      line(t => { if (iceHurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
+      area(sp.v2, sp.v3, t => { if (iceHurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
+      if (iceHurt(target, sp.v4, sp.v5, sp.v6)) freeze(target, sp.v10);
       break;
     case 28:                                                           // rompe-armaduras: daño de zona (el desgaste solo afecta a jugadores)
       area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
@@ -295,8 +300,12 @@ function resolve(w, p, id, sp, x, y, cost) {
         w.emit({ t: "scan", id: p.id, text: target.kind === "player" ? ` Player: ${target.name} HP:${target.hp} MP:${target.mp}.` : ` NPC: ${target.name} HP:${target.hp} MP:0` });
       break;
     case 16:                                                           // Confusion / Illusion: el jugador se mueve al azar (la mitad de los pasos); no sobre uno mismo
-      if (target && target !== p && target.kind === "player" && !target.dead && !resist(w, target, power)) sset(w, target, "confuse", sp.v4, secs);
-      else if (target && target !== p) w.emit({ t: "resist", id: target.id });
+      // CONFUSE (HG.cpp:11337): efecto de área (v2 x v3), solo jugadores; salta a los del propio bando (m_side == caster->m_side) y a los ya confundidos.
+      area(sp.v2, sp.v3, t => {
+        if (!t || t === p || t.kind !== "player" || t.dead || t.side === p.side || sget(w, t, "confuse")) return;
+        if (resist(w, t, power)) w.emit({ t: "resist", id: t.id });
+        else sset(w, t, "confuse", sp.v4, secs);
+      });
       break;
     case 31:                                                           // Inhibition Casting (HG.cpp:10608): sin tirada de resistencia; solo la anula Protect AMP (5)
       if (target && target !== p && target.kind === "player" && !target.dead && sget(w, target, "protect") !== 5) sset(w, target, "inhibit", 1, (sp.last || sp.v4) * 1000);
