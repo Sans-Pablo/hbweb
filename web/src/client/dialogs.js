@@ -57,7 +57,7 @@ export function registerDialogs(gui, api) {
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
       { const o = on(16), cv = buttonCanvas(g, 74, o);          // AUTO (INVENTO del port): menú automático, autowin.js; mismo botón de piedra que el resto
         if (cv) g.ctx.drawImage(cv, 0, 0, cv.width, cv.height, 16, 340, 74, 20);
-        g.aligned(16, 90, 344, "AUTO", o ? "#ffe08a" : "#fff", { size: 11, shadow: true }); }
+        g.aligned(16, 90, 344, "AUTO", o ? "#ffe08a" : "#fff", { size: 10, shadow: true }); }
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;

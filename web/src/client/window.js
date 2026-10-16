@@ -121,8 +121,7 @@ export class Ui {
     if (this.vis(y, h)) {
       const cv = buttonCanvas(this.g, w, on), dn = over && this.g.mouse.down ? 1 : 0;
       if (cv) this.c.drawImage(cv, 0, 0, cv.width, cv.height, x + dn, y + dn, w, h); else { this.c.fillStyle = on ? "#8a5a2a" : "#5a5248"; this.c.fillRect(x, y, w, h); }
-      if (o.primary && !o.disabled) { this.c.strokeStyle = over ? "#fff0b0" : THEME.lineOn; this.c.strokeRect(x + dn + 1.5, y + dn + 1.5, w - 3, h - 3); }   // botón principal (Ok): filete dorado
-      this.g.text(x + w / 2 + dn, y + 4 + dn, label, o.disabled ? "#8a8272" : o.color || (o.primary ? "#ffe9a0" : on ? "#ffe08a" : "#fff"), { align: "center", shadow: true, bold: !!o.primary });
+      this.g.text(x + w / 2 + dn, y + 4 + dn, String(label).replace(/(^|[\s(])(\p{Ll}+)/gu, (m, a, b) => a + (a && /^(a|de|del|el|la|los|las|y|en|con|of|the|to|and)$/.test(b) ? b : b[0].toUpperCase() + b.slice(1))), o.disabled ? "#8a8272" : o.color || (on ? "#ffe08a" : "#fff"), { align: "center", shadow: true, size: 10 });   // mismo botón que AUTO/Party/Level Set de F5: piedra, 10 px, sin filete ni negrita
     }
     if (!o.disabled) this.hit(x, y, w, h, { fn, tip: o.tip });
     if (over && o.tip) this.g.tip(o.tip, this.g.mouse.x + 12, this.g.mouse.y + 14);
