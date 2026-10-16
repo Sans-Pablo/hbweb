@@ -129,3 +129,16 @@ Preguntas que quedan: ¿bots del bando 3 hostiles a jugadores o solo a bots? ¿c
 Efecto en la estimación: F3 baja (1-2 d); F2 sube (granja nueva + 4 entradas en Promise Land: ≈ 3-5 d); F4 cubre la IA de objetivos a 3 bandos (≈ 2-4 d). Total revisado: **≈ 9-15 días (2-3 semanas)**.
 
 Queda abierto: número de bots del bando 3, qué hace la cuarta entrada, y el tono exacto del amarillo (se decide con las pruebas de color).
+
+## 11. Más decisiones y medición del color (2026-10-16)
+- **Bots:** los mismos que hay hoy por ciudad (20 por bando en `adventure.js`/`residents.js`): el bando 3 tendría otros 20, total 60.
+- **Entradas a Promise Land:** una por lado del mapa (cuatro). La **cuarta queda deshabilitada por ahora** (se deja el hueco, simétrico, sin teleport activo).
+- **Tono del tercer hero set:** medido sobre las hojas equipadas de la coraza de héroe (`web/data/equip/a0_9_*` Aresden y `a0_8_*` Elvine, píxeles opacos con saturación ≥0,3 y valor ≥0,2; media circular del tono):
+
+| Bando | Hoja | Tono | Saturación media | Valor (mediana) | Contraste (p90−p10 del valor) |
+|---|---|---|---|---|---|
+| Aresden (rojo) | `a0_9` | ≈ 12° | 0,80 | 0,64 | 0,65 |
+| Elvine (azul) | `a0_8` | ≈ 215° | 0,60 | 0,53 | 0,57 |
+
+  Propuesta de amarillo/dorado acorde: **tono ≈ 48-52°, saturación ≈ 0,70, valor ≈ 0,60, contraste similar (~0,6)**, es decir un dorado mate, `#9e872c` como punto de partida (RGB 158,135,44). Un amarillo puro (tono 60°, valor 1,0) se vería mucho más claro y chillón que el rojo y el azul medidos; se evita. El tinte real se afina con pruebas en el visor comparando los tres sets lado a lado (misma luz, mismo fondo), y se aplica solo a los hero set (ids 401-426 de `items.h`, mismos sprites con tinte, como los báculos de `classgear.js`/`DYE_RGB`). Nota: la medición es sobre la hoja entera, no ponderada por área visible en juego; sirve de referencia, no de valor final.
+- Pendiente de las pruebas: si el tinte multiplicativo (`DYE_RGB`, como los báculos) basta sobre sets rojo/azul, o hay que recolorear desde un set de grises/neutro (el multiply sobre rojo o azul ensucia el dorado).
