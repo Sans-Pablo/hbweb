@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.47 · Magias a nivel 50 (2026-10-16)
+- [invento] `shared/magicbal.js`: Int mínima y oro de las magias reescalados para tope nivel 50 (Magic.cfg y magic.json intactos; se aplica en `GameData`). Hasta Int 30 / 2000 oro igual; por encima, 50 % del exceso de Int y 35 % del de oro. Blizzard 195→113 Int, 43000→16400 oro.
+- Build mago: int 0.65, mag 0.2, vit 0.15. Test `magicbal.test.mjs`.
+
 ## 0.85.43 · Monitor económico (2026-10-16)
 - [admin] Pestaña «Economía» en /admin con el manual HBWeb Admin Economy Monitor: resumen con KPIs y comparación con el periodo anterior, flujo en vivo (SSE con reanudación), gráficas de flujo con detalle por tramo, fuentes y sumideros, alertas (5 reglas versionadas, enfriamiento, estados y nota obligatoria al descartar), riqueza (percentiles, Gini, histograma), mercado/ítems (muestra «No disponible» y qué instrumentación falta), simulación de balance, auditoría y CSV, salud de fuentes.
 - [admin] Umbrales de alertas versionados: borrador, publicar y volver atrás; los cambios de alto impacto piden aprobación. Toda mutación queda en `econ_audit`.
