@@ -16,3 +16,10 @@ Efecto de área (v2 x v3 alrededor del objetivo), solo jugadores; salta a los de
 
 ## 9. Ice (HG.cpp:11517)
 Un jugador neutral (IsNeutral, side 0) no recibe daño ni hielo. Los demás jugadores (con canFight) se congelan además de los monstruos.
+
+## 10. Resurrection (HG.cpp:10416, 38015, 2290)
+- Lanzar (magicsys.js caso 32): el objetivo es el jugador caído de la casilla. Si el lanzador no es GM: bando distinto o `specialAbilityTime != 0` → sin efecto; si no, `specialAbilityTime = 1200` (SPECABLTYTIMESEC, Client.h:34) y `magic[94] = 0` (el hechizo se gasta). El objetivo queda `beingResurrected` y recibe `resurrectask`.
+- El cliente muestra el cuadro del original (dialog 50, Game.cpp:42315): «Someone intends to resurrect you. Will you revive here?»; manda `{t:"resurrect", accept}`.
+- `answerResurrect`: rechazar limpia la petición; aceptar sin petición se rechaza (el original expulsa); aceptar revive en el mismo sitio con HP = maxHp/2.
+- `tickResurrection` (cada segundo): baja la espera (el original resta 3 cada 3 s); con varita ResurWand (865/866) en la mano derecha, Int>=100 y Mag>=100 y espera 0 devuelve el hechizo; sin varita (si venía de ella) lo quita (HG.cpp:2290, 7973, 9502).
+- `specialAbilityTime` se guarda con el personaje (HG.cpp:4147). Protocolo: NET_PROTO 12.

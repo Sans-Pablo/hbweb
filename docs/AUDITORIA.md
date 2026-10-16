@@ -28,7 +28,7 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 | CORREGIDO |
 | Ice: excluir neutrales | HG.cpp | magicsys.js | CORREGIDO |
 | Rotura de armadura (ArmorLifeDecrement) | HG.cpp | — | FALTA |
-| Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32 | DIFERENTE |
+| Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32, tickResurrection | IGUAL (tests/magic-resurrection) |
 | Polymorph; tipos 4, 6, 20, 24, 27; reliquias Astoria; magicLimited por mapa | HG.cpp | — | FALTA / sin mapear |
 | Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | sin verificar |
 

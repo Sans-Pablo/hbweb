@@ -310,18 +310,15 @@ function resolve(w, p, id, sp, x, y, cost) {
     case 31:                                                           // Inhibition Casting (HG.cpp:10608): sin tirada de resistencia; solo la anula Protect AMP (5)
       if (target && target !== p && target.kind === "player" && !target.dead && sget(w, target, "protect") !== 5) sset(w, target, "inhibit", 1, (sp.last || sp.v4) * 1000);
       break;
-    case 32: {                                                         // Resurrection: levanta a un jugador caído de la casilla (el original lo pide con un cuadro; aquí es directo)
+    case 32: {                                                         // Resurrection (HG.cpp:10416): el objetivo debe ser un jugador caído; pide confirmación (RequestResurrectPlayer, HG.cpp:38015)
       const down = [...w.ents.values()].find(e => e.kind === "player" && e.dead && e.x === x && e.y === y && e !== p);
       if (!down) break;
-      const spot = w.grid.free(x, y, down.id) ? [x, y] : w.freeSpotNear(x, y);
-      if (!spot) break;
-      down.x = down.fx = spot[0]; down.y = down.fy = spot[1];
-      w.grid.occupy(down.x, down.y, down.id);
-      down.dead = false; down.st = {};
-      down.hp = Math.max(1, Math.round(down.maxHp * Math.min(1, 0.2 + 0.1 * sp.v4)));
-      w.setAct(down, 0, 0); down.busyUntil = 0;
-      w.emit({ t: "respawn", id: down.id, by: p.id });
-      w.emit({ t: "resurrected", id: down.id, by: p.id });
+      if (!p.gm) {
+        if (down.side !== p.side || p.specialAbilityTime) break;   // otro bando o habilidad especial en espera: MAGIC_NOEFFECT (HG.cpp:10419-10423)
+        p.specialAbilityTime = SPECABLTYTIMESEC; p.magic[94] = 0;   // el hechizo se gasta hasta que pase la espera (HG.cpp:10425-10428)
+      }
+      down.beingResurrected = true;
+      w.emit({ t: "resurrectask", id: down.id, by: p.id });         // NOTIFY_RESURRECTPLAYER: "Someone intends to resurrect you. Will you revive here?"
       break;
     }
     default: break;
@@ -341,4 +338,30 @@ function field(w, p, sp, x, y, secs) {
   } else if (sp.v11 === 2) {                                           // campo cuadrado de radio v12
     for (let ix = x - sp.v12; ix <= x + sp.v12; ix++) for (let iy = y - sp.v12; iy <= y + sp.v12; iy++) addField(w, dyn, ix, iy, secs, sp.v5, p.id);
   }
+}
+
+// Espera de la habilidad especial (m_iSpecialAbilityTime, Client.h:34 SPECABLTYTIMESEC): HG.cpp:2290 la baja 3 cada 3 s; aquí 1 por segundo.
+export const SPECABLTYTIMESEC = 1200;
+const WANDS = new Set([865, 866]);                                   // ResurWand MS.20 / MS.10
+export function tickResurrection(w, p) {
+  if (p.specialAbilityTime > 0) p.specialAbilityTime = Math.max(0, p.specialAbilityTime - 1);
+  const it = p.equip[EQUIP.RHAND] !== undefined && Inv.instOf(p, p.equip[EQUIP.RHAND]);
+  const wand = it && WANDS.has(it.id) && p.stats.int >= 100 && p.stats.mag >= 100;     // HG.cpp:7973 / 2300
+  if (wand && !p.specialAbilityTime) { p.magic[94] = 1; p.wandRes = true; }
+  else if (!it || !WANDS.has(it.id)) { if (p.wandRes) { p.magic[94] = 0; p.wandRes = false; } }  // HG.cpp:9502: al quitar la varita se pierde
+}
+
+// RequestResurrectPlayer (HG.cpp:38015): acepta o rechaza; sin petición previa no hace nada (el original expulsa)
+export function answerResurrect(w, p, cmd) {
+  if (!p.beingResurrected) return w.reject(p, cmd, "nadie te resucita");
+  p.beingResurrected = false;
+  if (!cmd.accept || !p.dead) return true;
+  p.dead = false; p.st = {};
+  p.hp = Math.floor(p.maxHp / 2);                                    // GetMaxHP() / 2
+  if (!w.grid.free(p.x, p.y, p.id)) { const spot = w.freeSpotNear(p.x, p.y); if (spot) { p.x = p.fx = spot[0]; p.y = p.fy = spot[1]; } }
+  w.grid.occupy(p.x, p.y, p.id);                                     // revive en el mismo sitio (RequestTeleportHandler a la misma casilla)
+  w.setAct(p, 0, 0); p.busyUntil = 0;
+  w.emit({ t: "respawn", id: p.id });
+  w.emit({ t: "resurrected", id: p.id });
+  return true;
 }
