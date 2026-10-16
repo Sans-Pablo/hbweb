@@ -22,6 +22,9 @@ button.bad{border-color:#8a3b2b}.row{display:flex;gap:8px;flex-wrap:wrap}.row in
 <div class="card"><table id="pl"><thead><tr><th>Jugador</th><th>Cuenta</th><th>Nv</th><th>Mapa</th><th>IP</th><th>Ping</th><th>Tiempo</th><th></th></tr></thead><tbody></tbody></table><div id="none" style="opacity:.6;padding:8px">Nadie conectado.</div></div>
 <div class="card"><div class="row"><input id="say" placeholder="Anuncio para todos los jugadores"><button id="bsay">Anunciar</button></div>
 <div class="row" style="margin-top:8px"><input id="cmd" placeholder="Comando (help para ver la lista)"><button id="bcmd">Ejecutar</button><button id="bsave">Guardar</button><button id="brest" class="bad">Reiniciar</button></div><pre id="out"></pre></div>
+<div class="card" id="eco"><div class="row" style="margin-bottom:8px"><b style="color:var(--gold)">💰 Economía (oro)</b><select id="eh"><option value="1">1 h</option><option value="24" selected>24 h</option><option value="168">7 días</option><option value="0">Todo</option></select><label><input type="checkbox" id="ea"> con bots/debug</label><button id="ere">Actualizar</button></div>
+<div id="etot" style="margin-bottom:8px"></div><table id="es"><thead><tr><th>Motivo</th><th>Tipo</th><th>Eventos</th><th>Entra</th><th>Sale</th><th>Neto</th></tr></thead><tbody></tbody></table>
+<div style="margin:10px 0 4px;color:var(--gold)">Últimos movimientos</div><table id="ee"><thead><tr><th>Hora</th><th>Jugador</th><th>Motivo</th><th>Oro</th><th>Saldo</th></tr></thead><tbody></tbody></table></div>
 <div class="card" id="bans" style="opacity:.8"></div>
 <script>
 const tok=new URLSearchParams(location.search).get("token");document.getElementById("lbal").href="/admin/balance.html?token="+tok;
@@ -37,6 +40,12 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(b&
 $("#bsay").onclick=()=>{const v=$("#say").value.trim();if(v){run("say "+v);$("#say").value=""}};$("#bcmd").onclick=()=>run($("#cmd").value);
 $("#cmd").onkeydown=e=>{if(e.key==="Enter")run($("#cmd").value)};$("#bsave").onclick=()=>run("save");$("#brest").onclick=()=>{if(confirm("¿Reiniciar el servidor? Los jugadores serán desconectados."))run("restart")};
 $("#bobs").onclick=()=>{const c=$("#obs"),f=$("#obsf"),on=c.style.display==="none";c.style.display=on?"":"none";if(on&&!f.src){f.src="/observador.html";}if(on)c.scrollIntoView()};
+async function eco(){const h=+$("#eh").value,r=await fetch("/api/admin/economy?token="+tok+(h?"&hours="+h:"")+($("#ea").checked?"&artificial=all":"")).then(r=>r.json());
+let ci=0,co=0;for(const s of r.summary){if(s.cls==="faucet"||s.cls==="sink"){ci+=s.inflow;co+=s.outflow}}
+$("#etot").textContent="Oro creado: "+ci.toLocaleString()+" · destruido: "+co.toLocaleString()+" · neto: "+(ci-co).toLocaleString()+" (los intercambios entre jugadores no cuentan)";
+$("#es tbody").innerHTML=r.summary.map(s=>"<tr><td>"+esc(s.reason)+"</td><td>"+s.cls+"</td><td>"+s.n+"</td><td>"+s.inflow.toLocaleString()+"</td><td>"+s.outflow.toLocaleString()+"</td><td>"+s.net.toLocaleString()+"</td></tr>").join("")||"<tr><td colspan=6 style='opacity:.6'>Sin movimientos todavía.</td></tr>";
+$("#ee tbody").innerHTML=r.events.map(e=>"<tr><td>"+new Date(e.ts).toLocaleTimeString()+"</td><td>"+esc(e.actor||"")+(e.artificial?" 🤖":"")+"</td><td>"+esc(e.reason)+"</td><td>"+(e.delta>0?"+":"")+e.delta.toLocaleString()+"</td><td>"+(e.bal??"")+"</td></tr>").join("")}
+$("#ere").onclick=eco;$("#eh").onchange=eco;$("#ea").onchange=eco;eco();setInterval(eco,10000);
 refresh();setInterval(refresh,4000);
 </script></body></html>`;
 

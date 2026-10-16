@@ -5,4 +5,5 @@ const S = readFileSync(new URL("../server/server.mjs", import.meta.url), "utf8")
 assert.match(S, /adminAllowed = \(\) => true/);
 assert.match(A, /id="bobs"/); assert.match(A, /observador\.html/);
 assert.match(M, /adminbtn/); assert.match(M, /"\/admin"/);
+assert.ok(S.includes("/api/admin/economy")); assert.match(A, /id="eco"/);
 console.log("OK adminlogin");

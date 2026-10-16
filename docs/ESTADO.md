@@ -500,3 +500,7 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 ### Admin: login y observador (pedido 2026-10-16, v0.85.40)
 - [x] Botón Admin en el login (cuenta ADMINS + clave, sesión 12 h) y observador como sección de /admin. Ficha: docs/sistemas/admin-login.md.
+
+- [x] 0.85.39: auditoría de daños (VIT PvP/mágico, ítems 335/337, Demonslayer). Pendiente: bonos cruzada/Apocalypse/banderas, inmunidad skill 51/52, HITRATIOFACTOR 80 vs 50, desgaste anillo.
+- [x] 0.85.39: solo sprites IA (sprites_hd descartado en assets.js).
+- [x] (v0.85.41) Sección Economía (oro) dentro de /admin (pedido 2026-10-16: «no veo la parte de gold»).

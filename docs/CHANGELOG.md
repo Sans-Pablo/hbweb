@@ -1,9 +1,14 @@
 # Changelog
 
+## 0.85.41 · Caja del admin (2026-10-16)
+- [admin] Sección «💰 Economía (oro)» en /admin: oro creado/destruido por motivo, últimos movimientos, filtro de horas y bots. Endpoint /api/admin/economy. Arreglado un error de sintaxis en la sección de discusiones de bots.
+- Pendiente: gráfica de la serie, oro de bots sin registrar.
+
 ## 0.85.40 · Puerta del admin (2026-10-16)
 - [admin] Botón «Admin» siempre visible en el login que abre el panel /admin, ahora público (sin clave, a petición del propietario); el observador dividido es una sección del panel.
 
 ## 0.85.39 · Daños originales (2026-10-16)
+- Solo sprites de IA: se descartan las hojas HD antiguas (`sprites_hd`) del render; lo que no tiene hoja IA usa el original.
 - Auditoría de daños contra HGServerConsole: Demonslayer (616) +5 al daño grande contra Demon (combat.cpp:566); anillos 335/337 -20%/-10% al daño mágico (HG.cpp:18211); VIT<10 suma 1 (dice(1,0)=0).
 - Pendiente (no portado, sin mecánica): bonos de cruzada/Apocalypse/banderas, inmunidad skill 51/52, HITRATIOFACTOR 80 vs 50 del port, desgaste del anillo.
 

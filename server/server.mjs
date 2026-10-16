@@ -195,6 +195,11 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (url.pathname === "/api/admin/economy") {                      // monitor económico: resumen por motivo, últimos eventos y serie (docs/sistemas/economia.md)
+    const q = Object.fromEntries(url.searchParams), from = q.hours ? Date.now() - (+q.hours) * 3600000 : undefined;
+    const f = { from, artificial: q.artificial === "all" ? "all" : undefined, reason: q.reason || undefined, actor: q.actor || undefined };
+    json(req, res, 200, { summary: store.econSummary(f), events: store.econEvents({ ...f, limit: +q.limit || 100 }), series: store.econSeries({ ...f, bucket: +q.bucket || 3600000 }) }); return;
+  }
   if (url.pathname === "/admin") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end("Solo desde el PC del servidor y con el token correcto."); return; }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" }); res.end(ADMIN_PAGE); return;
