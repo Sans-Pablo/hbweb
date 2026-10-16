@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.54 · Fórmulas para los bots (2026-10-17)
+- [invento] `systems/botformulas.js` (acierto, daño medio, MR efectiva, prob. de que un hechizo entre), usado en `botmagic.js` (Paralyze solo si `landChance` ≥ 25-30), `bot.js` `pickTarget` (guerrero: más daño esperado; mago: menos MR) y `builds.js allocate` (mago con Int ≥ 50 prioriza Mag). Test `bot-formulas`.
+
 ## 0.85.53 · Táctica PvP y dos clases (2026-10-17)
 - [invento] `builds.js` (dos clases, `WAR_INT` 36), `botmagic.js` (`fight` PvP, `plan`, `utility`), `bot.js` (fuego concentrado), `residents.js` (`RESET_V` 2, 50/50). Test `bot-pvptactics`. Pendiente: fórmulas de daño/MR para los bots.
 

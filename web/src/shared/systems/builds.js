@@ -56,7 +56,9 @@ export function bonusScore(p, d, attr, foe) {
 
 // Reparte `total` puntos según el build respetando el tope de cada estadística. `need` = Str que pide su arma: se cubre primero (hasta el 70% de los puntos).
 export function allocate(p, total, need = 0) {
-  const w = BUILDS[buildOf(p)].w, out = {}, ks = Object.keys(w);
+  const w = { ...BUILDS[buildOf(p)].w }, out = {}, ks = Object.keys(w);
+  // v0.85.54 (fórmulas, botformulas.js): con Int >= 50 un punto de Mag rinde más que uno de Int (poder +1, MR +1, daño +0.3 %; la Int solo +0.5 de probabilidad de lanzar)
+  if (buildOf(p) === "mage" && p.stats.int >= 50 && w.int && w.mag) { const m = Math.min(0.2, w.int - 0.3); w.int -= m; w.mag += m; }
   let left = total;
   const first = Math.max(0, Math.min(need - p.stats.str, Math.floor(total * 0.7), R.STAT_LIMIT - p.stats.str));
   if (first > 0) { out.str = first; left -= first; total -= first; }

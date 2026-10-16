@@ -16,4 +16,7 @@ El original no tiene bots: todo esto usa las mismas órdenes y reglas que un jug
 - **Mago contra jugador** (`botmagic.js fight`): siempre intenta Paralyze; 2 fallos seguidos → sospecha de PFM y prueba un ataque; si el ataque tampoco quita vida, hay protección mágica: espera 6 s y repite (`b.pv`). Paralizado: Spike Field en su casilla (anula el Fire Field rival) y remata. El grupo concentra el fuego en el paralizado (`bot.js pickTarget`).
 - **Apoyo de equipo** (`botmagic.js plan`): Fire Field libera al amigo paralizado, Invisibility salva al amigo con <35 % de vida o prepara una emboscada, Detect Invisibility ante rivales invisibles, AMP / PFM / Berserk a los guerreros.
 - **Guerrero con 36 de Int** (`builds.js WAR_INT`, `botmagic.js utility`): se quita arma y escudo, lanza Invis/PFM/Detect/Paralyze (PFM contra magos) y se reequipa.
-- Tests: `tests/bot-pvptactics.test.mjs`. Pendiente: dar a los bots las fórmulas de daño/ataque/MR para repartir stats y elegir equipo.
+- Tests: `tests/bot-pvptactics.test.mjs`.
+
+## Fórmulas para los bots (v0.85.54)
+`systems/botformulas.js` predice sin tirar dados: acierto `floor(ataque/defensa*80)` 15..99 (`rules.js hitChance`), daño medio (`combat.js damageRange`), MR efectiva `skill + addMR + (Mag-50)` y probabilidad de que un hechizo pase `floor(poder/MR*50)` 15..99 (`magic.js resists`, `magicsys.js`). Uso: Paralyze solo si `landChance` ≥ 25 (30 en mago); `pickTarget` pondera daño esperado (guerrero) o MR (mago); `allocate` manda más puntos a Mag al llegar a Int 50. Test: `tests/bot-formulas.test.mjs`. Pendiente: sets de equipo situacionales.

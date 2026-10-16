@@ -6,6 +6,7 @@
 //  - Cada pocos segundos hace «recados» (sin ir a la tienda: compra por catálogo con su oro, ver `errands`): reparte puntos, compra y
 //    se equipa lo mejor que le llega, repone pociones y comida, vende lo que sobra y recoge botín.
 //  - Sube de nivel matando (giveExp normal). Evita monstruos que lo matarían en 3 golpes y descansa con poca vida.
+import { resistRatio, meleeExpected } from "./botformulas.js";
 import { hazardAt, safeSpot } from "./hazards.js";
 import { sget } from "./status.js";
 import { dist, dirTo, DX, DY, LIMITS, PLAYER } from "../const.js";
@@ -290,7 +291,8 @@ function pickTarget(w, p, owner) {
       if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e) || owner && p.bot.only && p.bot.only !== "@ek") continue;
       const d = dist(p, e);
       const fo = d - 2 - (sget(w, e, "hold") ? 8 : 0) - ([...w.ents.values()].some(a => a !== p && a.kind === "player" && (a.id === p.bot.owner || (p.party?.id && a.party?.id === p.party.id)) && a.bot?.target?.id === e.id) ? 3 : 0);       // FOCUS FIRE (v0.85.53): primero al paralizado y al que ya golpean los míos
-      if (d <= 12 && (!owner || dist(owner, e) <= 14) && fo < bs) { best = e; bs = fo; }
+      const fm = isCaster(p) ? Math.min(4, resistRatio(e) / 50) : -Math.min(4, meleeExpected(p, e) / 8);   // fórmulas (botformulas.js)
+      if (d <= 12 && (!owner || dist(owner, e) <= 14) && fo + fm < bs) { best = e; bs = fo + fm; }
       continue;
     }
     if (w.pvp && e.kind === "npc" && e.comp && e.master && !e.dead) {                                     // summon enemigo: se ataca si me ataca a mí o a los míos, o si está encima

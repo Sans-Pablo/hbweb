@@ -9,6 +9,7 @@ import { dist } from "../const.js";
 import * as M from "../magic.js";
 import { SKILL } from "../skills.js";
 import { isCaster, isMage, WAR_INT } from "./builds.js";
+import { landChance } from "./botformulas.js";
 import { sget } from "./status.js";
 
 // Orden de estudio: primero curar y el misil, luego escudo y ataques fuertes, al final los de apoyo caros (ids de Magic.cfg).
@@ -80,7 +81,7 @@ export function fight(adv, w, p, b, t, log) {
       pv.probeAt = 0;
     }
     if (w.time < pv.waitUntil) return pv.waits < 3;                              // espera sin gastar maná; tras 3 esperas (protección absoluta) se defiende con la vara
-    const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40), held = sget(w, t, "hold");
+    const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40 && landChance(p, h, t) >= 30), held = sget(w, t, "hold");
     if (par !== undefined && !held && (t.eff?.addPR || 0) < 500) {
       const atk = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) && M.castChance(p, a) >= 40);
       if (pv.fails >= 2 && atk !== undefined) { pv.probeAt = w.time; pv.probeHp = t.hp; log(`⚔ ${pv.fails} Paralyze seguidos no entran a ${t.name}: ¿PFM? Pruebo con ${w.magic[atk].name || "un ataque"} para comprobarlo.`); return cast(adv, w, p, b, atk, t.x, t.y); }
@@ -165,7 +166,7 @@ export function utility(adv, w, p, b, log) {
   if (w.time - (p.lastCast || -1e9) >= M.CAST_COOLDOWN_MS && w.time - (b.castAt || -1e9) >= 1100) {
     pl = plan(w, p, b);
     if (!pl && t && dist(p, t) <= CAST_RANGE && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500 && cool(b, "wpar", 4000, w)) {
-      const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) + 10 && M.castChance(p, h) >= 25);
+      const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) + 10 && M.castChance(p, h) >= 25 && landChance(p, h, t) >= 25);
       if (par !== undefined) { stamp(b, "wpar", w); pl = { id: par, x: t.x, y: t.y, msg: `⚔ Paralizo a ${t.name} (guerrero con Int ${p.stats.int}).` }; }
     }
     if (!pl && t && w.time - (p.lastCombat || -1e9) < 6000 && !sget(w, p, "protect") && known(p, PFM) && w.magic[PFM] && p.mp >= costOf(w, p, PFM) + 10 && cool(b, "wpfm", 40000, w) && ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp)) { stamp(b, "wpfm", w); pl = { id: PFM, x: p.x, y: p.y, msg: `⚔ Me pongo PFM contra el mago ${t.name}.` }; }
