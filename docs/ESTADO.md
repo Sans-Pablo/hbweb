@@ -117,6 +117,7 @@
 - [ ] Fuera del primer release: arena, mapas de Elvine/nieve, rediseño de sonido, LFS, actos 2+ y final.
 
 ## Backlog (actualizado en v0.70.0)
+- [x] (pedido 2026-10-16, v0.85.25) análisis de una tercera ciudad/bando (solo análisis, sin código): [docs/sistemas/tercera-ciudad.md](sistemas/tercera-ciudad.md). El original solo tiene Aresden/Elvine/neutral; recomendado ciudad neutral (≈1,5-2 sem); tercer bando completo ≈5-9 sem (INVENTO). Pendiente decisión del usuario.
 - [ ] (pedido 2026-10-13) portar TODO lo faltante de docs/DESVIOS.md con la lógica original como regla (autónomo). Hecho: 80 ítems (tools/add_missing_items.mjs), magia 75 Ice Whirlwind, texto de lanzamiento, 49 mapas, 59 NPC (tools/add_missing_npcs.mjs), bonos de conjunto de héroe y zona de lucha. En curso: facciones, PK, cruzada, etc.
 - [x] (pedido 2026-10-13, v0.80.2) pets inmunes en Promise Land · color de armas del servidor original · drop al morir (PvP) · sprite TAB paz/ataque · textos de combate del original · F1 «Full mage». Falta verificación visual por el usuario.
 - [x] (pedido 2026-10-13) documento de desvíos original vs port: `docs/DESVIOS.md` (primera pasada; falta la verificación de las filas «a verificar»). Siguiente derivado: texto de conjuro sobre la cabeza («Nombre!», tipo 41 del cliente original).
