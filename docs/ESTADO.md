@@ -400,3 +400,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Rotura de armadura fiel al original (EnduStrippingDamage combat.cpp:1593, ArmorLifeDecrement HG.cpp:36384): desgaste por habilidad (martillo 10-25, hacha 3, resto 1), arrancado con martillo, Merien y "Legion" inmunes, hechizo 28 resta ARMORDEC. Nota: `w.fightZone` no se asigna nunca en el port, las rutas de zona de lucha estan inertes.
 
 - Magia contra jugadores/monstruos (Effect_Damage_Spot_DamageMove, HG.cpp:18534-18930): añadida la absorción mágica `AddAbsMD` (HG.cpp:18237) antes de la reducción por VIT; los monstruos con límite de acción 1, 2, 4 y 6 son inmunes (antes 5 en lugar de 6). Orden Lucky→PFM ya igual al original. Sin test propio: la ruta exige un mundo completo (cubierto por magic-*.test.mjs).
+
+- 0.85.12: muerte fiel (exp, objetos, PK; Client.cpp:1035/1094/930-1000). PENDIENTE: cárcel 180 s (teletransporte a arejail/elvjail y bloqueo `jailUntil`), no implementada.

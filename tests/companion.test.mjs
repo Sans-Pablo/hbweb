@@ -74,12 +74,11 @@ assert.equal(followersOf(w, p).filter(e => e.comp).length, 0);
   assert.ok(lost, "el compañero cae y se penaliza"); assert.ok(lost.lvl <= 5);
   assert.ok(!ball2.comp.on, "vuelve a la bola");
 }
-// muerte del jugador: pierde experiencia y, si no alcanza, un nivel
+// muerte del jugador: pierde experiencia (Client.cpp:1035), el nivel no baja
 {
-  const before = { lvl: p.level, exp: p.exp };
   p.exp = p.prevExp + 1; w.recalc(p);
-  const L = p.level, orc = spawnFrom(w, { name: "Orc", rect: [p.x + 1, p.y, p.x + 1, p.y], alive: 0, max: 0, respawn: false });
+  const L = p.level, E = p.exp, orc = spawnFrom(w, { name: "Orc", rect: [p.x + 1, p.y, p.x + 1, p.y], alive: 0, max: 0, respawn: false });
   damagePlayer(w, p, 10 ** 6, orc);
-  assert.ok(p.dead && p.level === L - 1, "baja un nivel");
+  assert.ok(p.dead && p.level === L && p.exp <= E && p.exp >= 0, "el nivel se mantiene");
 }
 console.log("OK");

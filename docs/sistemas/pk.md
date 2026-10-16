@@ -11,3 +11,6 @@ Estado del jugador: `pkCount`, `reputation`, `enemyKillCount`, `rewardGold`, `el
 - Un criminal del propio bando es atacable (`canFight`). El nombre rojo "Criminal" usa `pk` público.
 
 Pendiente: teletransporte real a la cárcel, `DecPKCount` por tiempo, pantalla de contribución de cruzada.
+
+## Muerte (0.85.12)
+`killedPenalty`/`penaltyDrop` en combatsys.js: pérdida de exp `dice(1,5·pen·nivel)` (/3 neutral, sin bajar de nivel), pen según PK (1/3/6/12) o 2 si un jugador mata a un inocente de otro bando; objetos perdidos con PenaltyItemDrop (AlterItemDrop, Lucky, SA). Test: combat-original.test.mjs.

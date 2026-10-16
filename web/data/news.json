@@ -1,10 +1,23 @@
 {
- "build": "0.85.11",
+ "build": "0.85.12",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Muerte como en el original (v0.85.12)",
+    "en": "Death as in the original (v0.85.12)"
+   },
+   "items": [
+    {
+     "es": "Al morir pierdes experiencia y objetos según tu PK, pero ya no bajas de nivel.",
+     "en": "On death you lose experience and items by PK count, but no longer lose a level."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

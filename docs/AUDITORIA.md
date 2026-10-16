@@ -56,9 +56,9 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 ## Muerte, PK, objetos, drops, spawns (informe de auditoría, sin corregir)
 | sistema | original | nuestro | estado |
 |---|---|---|---|
-| Pérdida de exp al morir `dice(1, 5·pen·nivel)`, pen 1/3/6/12 según PK; /3 neutral | char/Client.cpp ~840-1391 | combatsys.js `deathPenalty` (25% fijo) | DIFERENTE |
-| Pérdida de objetos al morir contra monstruo | PenaltyItemDrop | no existe | FALTA |
-| Muerte por jugador (pen 2 al inocente, sin penalidad si neutral/mismo bando) | Client.cpp | combatsys.js:113 | DIFERENTE |
+| Pérdida de exp al morir `dice(1, 5·pen·nivel)`, pen 1/3/6/12 según PK; /3 neutral | char/Client.cpp:1035 | combatsys.js `killedPenalty` | OK |
+| Pérdida de objetos al morir (PenaltyItemDrop) | Client.cpp:1094 | combatsys.js `penaltyDrop` | OK |
+| Muerte por jugador (pen 2 al inocente, sin penalidad si neutral/mismo bando) | Client.cpp:930-1000 | combatsys.js `penaltyLevelOf` | OK |
 | Cárcel: 180 s bloqueado en mapa de bando | Client.cpp | solo `jailUntil` | FALTA |
 | ApplyPKPenalty, exp/oro por matar enemigo | Client.cpp | pk.js | OK |
 | Pociones HP/MP/SP, HPSTOCK | HG.cpp:17551-17900 | itemsys.js | OK |

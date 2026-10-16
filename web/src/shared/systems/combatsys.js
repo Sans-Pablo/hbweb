@@ -5,7 +5,7 @@ import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
 import * as PK from "./pk.js";
 import * as Inv from "../inventory.js";
-import { EQUIP, ITYPE } from "../items.js";
+import { EQUIP, ITYPE, EFFECT } from "../items.js";
 import { strikeNpc, absorbOnHit, CRIT } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
@@ -164,15 +164,30 @@ function pvpCredit(w, v, from) {
   if (!ok) return;
   k.ek = (k.ek || 0) + 1; k.kills = (k.kills || 0) + 1; k.streak = (k.streak || 0) + 1;
   w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was);
-  const lost = PK.onPlayerKilled(w, k, v, giveExp); penaltyDrop(w, v, Math.max(1, lost));
+  PK.onPlayerKilled(w, k, v, giveExp);                                       // la penalización del caído va en killedPenalty (Client.cpp CClient::Killed)
 }
-// ApplyCombatKilledPenalty / PenaltyItemDrop (Client.cpp): el caído suelta al azar objetos de la mochila, puestos o no (DropItemHandler los desequipa).
-// El original suelta cPenaltyLevel objetos (2 al morir a manos del bando enemigo, -1 si es menor de nivel 80); aquí 1 como mínimo, sin oro ni bolas de compañero.
-export function penaltyDrop(w, v, n = 1) {
+// PenaltyItemDrop (Client.cpp:1094): iTotal veces suelta un objeto al azar de la mochila (puesto o no; DropItemHandler lo desequipa).
+// all (bItemDrop): true = cualquier objeto; false = solo CONSUME/EAT. Se salta (no cuenta como soltado) un objeto de habilidad especial si
+// el atacante no usaba una (sa=false) y, con Lucky, 1 de cada 10 tiradas (dice(1,10)==5). Aquí además se respeta el oro y la bola de compañero.
+export function penaltyDrop(w, v, n = 1, { all = true, sa = false } = {}) {
+  const alter = v.bag.find(it => w.data?.item(it.id)?.effectType === EFFECT.ALTERITEMDROP);      // objeto de sustitución: gasta 1 de vida y cae él solo
+  if (alter) {
+    if (alter.life > 0) alter.life--;
+    const out = Inv.removeFromBag(v, alter.uid);
+    groundPush(w, v.x, v.y, out, true); w.emit({ t: "penaltydrop", id: v.id, item: out.id, worn: false }); w.recalc(v);
+    return;
+  }
   for (let i = 0; i < n; i++) {
-    const list = v.bag.filter(it => !it.comp && it.id !== 90);
-    if (!list.length) return;
-    const it = list[Math.floor(w.rng() * list.length)], worn = Object.values(v.equip).includes(it.uid);
+    const list = v.bag.filter(it => {
+      if (it.comp || it.id === 90) return false;
+      if (all) return true;
+      const t = w.data?.item(it.id)?.type; return t === ITYPE.CONSUME || t === ITYPE.EAT;
+    });
+    if (!list.length) break;
+    const it = list[R.dice(w.rng, 1, list.length) - 1], et = w.data?.item(it.id)?.effectType;
+    if ((et === EFFECT.ATTACK_SPECABLTY || et === EFFECT.DEFENSE_SPECABLTY) && !sa) continue;
+    if (v.eff?.lucky && R.dice(w.rng, 1, 10) === 5) continue;
+    const worn = Object.values(v.equip).includes(it.uid);
     const out = Inv.removeFromBag(v, it.uid);
     groundPush(w, v.x, v.y, out, true);
     w.emit({ t: "penaltydrop", id: v.id, item: out.id, worn });
@@ -271,8 +286,8 @@ export function damagePlayer(w, p, dmg, from, elem) {
     w.setAct(p, ACT.DYING, PLAYER.dyingMs);
     w.grid.release(p.x, p.y, p.id);
     w.emit({ t: "death", id: p.id, by: from.id });
-    deathPenalty(w, p);
     pvpCredit(w, p, from);
+    killedPenalty(w, p, from);
     return;
   }
   if (!w.busy(p) || p.act === ACT.DAMAGE) {
@@ -354,18 +369,33 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   }
 }
 
-// Penalización por morir (invento del port para dificultar): pierdes el 25 % de la experiencia que cuesta tu nivel y,
-// si no te alcanza, bajas de nivel (con sus puntos sin repartir). Sin penalización en zonas de lucha.
-export function deathPenalty(w, p) {
-  if (w.fightZone) return;
-  const loss = Math.floor((R.expForLevel(p.level + 1) - R.expForLevel(p.level)) * 0.25);
-  const before = p.level;
-  p.exp = Math.max(R.expForLevel(1), p.exp - loss);
-  while (p.level > 1 && p.exp < R.expForLevel(p.level)) {
-    p.level--;
-    const take = Math.min(p.pool, R.LEVELUP_POINTS); p.pool -= take;
-    p.lvDebt = (p.lvDebt | 0) + R.LEVELUP_POINTS - take;                 // puntos ya repartidos: no se quitan, pero los próximos niveles los pagan primero (si no, subir y bajar regalaba stats)
+// CClient::Killed + ApplyCombatKilledPenalty (Client.cpp:930-1090). Nivel de penalización según quién mata y el PK del caído:
+// jugador: inocente → nada si el atacante es neutral o del mismo bando, si no 2 (sin objetos que no sean consumibles); PK 1-3 → 3, 4-11 → 6, 12+ → 12 (suelta cualquiera);
+// monstruo: inocente → 1 y los mismos tramos. Pierde dice(1, 5·pen·nivel) de experiencia (un tercio si es neutral, sin bajar de 0: el nivel NO baja),
+// baja 1 su PK y, si no es neutral, suelta pen objetos (pen-1 si nivel<80, mínimo 1). Mapas sin penalización (zonas de lucha): nada.
+export function penaltyLevelOf(w, v, from) {
+  const pk = v.pkCount | 0, byPlayer = from?.kind === "player";
+  if (byPlayer && from === v) return null;
+  if (pk === 0) {
+    if (!byPlayer) return { pen: 1, all: true };
+    return from.side === 0 || from.side === v.side ? null : { pen: 2, all: false };
   }
-  w.recalc(p);
-  w.emit({ t: "penalty", id: p.id, loss, level: p.level, lost: before - p.level });
+  return { pen: PK.penaltyLevel(pk), all: true };
+}
+export function killedPenalty(w, v, from) {
+  if (w.fightZone) return;
+  const r = penaltyLevelOf(w, v, from);
+  if (!r) return;
+  let pen = r.pen;
+  const neutral = v.side === 0, sa = from?.kind === "player" && !!from.saActive;   // m_iSpecialAbilityType 1-5 activo (el port aún no activa habilidades especiales: siempre false)
+  PK.decPK(w, v);
+  let loss = R.dice(w.rng, 1, 5 * pen * v.level);
+  if (neutral) loss = Math.trunc(loss / 3);
+  v.exp = Math.max(0, v.exp - loss);
+  w.emit({ t: "penalty", id: v.id, loss });
+  if (!neutral) {
+    if (v.level < 80) pen = Math.max(1, pen - 1);
+    penaltyDrop(w, v, pen, { all: r.all, sa });
+  }
+  w.recalc(v);
 }
