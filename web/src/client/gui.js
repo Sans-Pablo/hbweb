@@ -8,7 +8,7 @@ import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
-import { font, MIN_SIZE } from "./uistyle.js";
+import { font, MIN_SIZE, drawFrameBall } from "./uistyle.js";
 import { DYE_RGB } from "./look.js";
 import { WEAPON_RGB } from "./assets.js";
 import { imgUrl } from "./imgurl.js";
@@ -273,7 +273,7 @@ export class Gui {
     return false;
   }
   // Bolas de cerrar (derecha) y minimizar (izquierda) para los cuadros con marco propio (no Win): mecanismo común de window.js
-  legacyFrame(d) { return !d.ball && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
+  legacyFrame(d) { return !("canMin" in d) && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
   ballHit(d, lx, ly) {
     if (Math.hypot(lx - (d.w - 9), ly - 9) <= 8) return "x";
     if (!d.lmin && !d.nomin && Math.hypot(lx - 9, ly - 9) <= 8) return "-";
@@ -284,15 +284,7 @@ export class Gui {
     if (d.lmin) { d.w = d.lmin.w; d.h = d.lmin.h; d.lmin = null; return; }
     d.lmin = { w: d.w, h: d.h }; d.w = 170; d.h = 26;
   }
-  drawBall(cx, cy, glyph) {
-    const c = this.ctx, over = Math.hypot(this.mouse.x - this.cur.x - cx, this.mouse.y - this.cur.y - cy) <= 8, bad = glyph === "x";
-    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
-    c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
-    if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
-    else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
-    else c.rect(cx - 3, cy - 3, 6, 6);
-    c.stroke(); c.lineWidth = 1;
-  }
+  drawBall(cx, cy, glyph) { drawFrameBall(this.ctx, cx, cy, glyph, Math.hypot(this.mouse.x - this.cur.x - cx, this.mouse.y - this.cur.y - cy) <= 8); }
   frameBalls(d) { this.cur = d; this.drawBall(d.w - 9, 9, "x"); if (!d.nomin) this.drawBall(9, 9, "-"); }
   minBar(d) {
     const c = this.ctx; this.cur = d;
@@ -513,14 +505,19 @@ export class Gui {
 
   // Botón de Misiones (ticket 6): mismo marco que «Summons», teñido de dorado y con un «!» encima
   questIcon(f, x) {
-    // icono propio: pergamino con renglones y sello (ya no es la huella teñida)
+    // pergamino enrollado con degradados y contorno oscuro, la misma paleta que las bolas del marco y el resto de la barra (plata/marrón/oro)
     const c = this.ctx; this.put("summons_icon", f, x, 554);
-    c.save(); c.fillStyle = "#1d1608"; c.fillRect(x + 8, 554 + 8, 22, 24);
-    c.fillStyle = "#e8d9a8"; c.fillRect(x + 11, 554 + 11, 16, 18);
-    c.fillStyle = "#b8975a"; c.fillRect(x + 9, 554 + 9, 20, 3); c.fillRect(x + 9, 554 + 27, 20, 3);
-    c.fillStyle = "#7a5a2a";
-    for (let i = 0; i < 3; i++) c.fillRect(x + 13, 554 + 15 + i * 4, 12 - (i === 2 ? 4 : 0), 1);
-    c.fillStyle = "#c2452d"; c.fillRect(x + 22, 554 + 22, 4, 4);
+    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
+    const g = c.createLinearGradient(x + 8, 0, x + 30, 0); g.addColorStop(0, "#8c7440"); g.addColorStop(0.5, "#f1e6c2"); g.addColorStop(1, "#8c7440");
+    c.fillStyle = "#1d1608"; c.fillRect(x + 8, 554 + 8, 22, 24);
+    c.fillStyle = g; c.fillRect(x + 11, 554 + 12, 16, 16);
+    c.strokeStyle = "#2a2014"; c.lineWidth = 1; c.strokeRect(x + 11.5, 554 + 12.5, 15, 15);
+    for (const yy of [554 + 11, 554 + 28]) { // rollos superior e inferior
+      const r = c.createLinearGradient(0, yy - 2, 0, yy + 2); r.addColorStop(0, "#f4f2ee"); r.addColorStop(0.5, "#b9b4aa"); r.addColorStop(1, "#4d463c");
+      c.fillStyle = r; c.fillRect(x + 9, yy - 2, 20, 4); c.strokeRect(x + 9.5, yy - 1.5, 19, 3);
+    }
+    c.fillStyle = "#3a2c14"; for (let i = 0; i < 3; i++) c.fillRect(x + 14, 554 + 16 + i * 3, 10 - (i === 2 ? 4 : 0), 1);
+    c.fillStyle = "#6a1a10"; c.beginPath(); c.arc(x + 24, 554 + 24, 2.2, 0, 7); c.fill();
     c.restore();
   }
 

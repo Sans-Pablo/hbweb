@@ -20,3 +20,18 @@ export const LAYOUT = {
 // Tinta sobre el fondo claro (madera) de los cuadros clásicos, con contraste suficiente.
 export const INK = "#2d1919", DARK = "#040032", WHITE = "#fff", RED = "#c31919";
 export const GOOD = "#1a6b1a", DIM = "#5a4636", BLUE = "#2a4ea8";
+
+// Bola de botón (cerrar / minimizar / restaurar) con el mismo diseño que las bolas plateadas del marco de las ventanas: esfera de plata
+// con brillo arriba a la izquierda y filete oscuro; el glifo va grabado en marrón (rojizo para cerrar). Común a `Win` y a los cuadros heredados (gui.js).
+export function drawFrameBall(c, cx, cy, glyph, over) {
+  const bad = glyph === "x", r = 7;
+  const g = c.createRadialGradient(cx - 2.2, cy - 2.6, 0.5, cx, cy, r + 1);
+  if (over) { g.addColorStop(0, "#ffffff"); g.addColorStop(0.45, bad ? "#f0b8a8" : "#f3e6c0"); g.addColorStop(1, bad ? "#a8452f" : "#8e7440"); }
+  else { g.addColorStop(0, "#f4f2ee"); g.addColorStop(0.4, "#b9b4aa"); g.addColorStop(1, "#4d463c"); }
+  c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fillStyle = g; c.fill(); c.strokeStyle = "#2a2014"; c.lineWidth = 1; c.stroke();
+  c.strokeStyle = bad ? "#6a1a10" : "#3a2c14"; c.lineWidth = 1.7; c.lineCap = "round"; c.beginPath();
+  if (glyph === "x") { c.moveTo(cx - 2.6, cy - 2.6); c.lineTo(cx + 2.6, cy + 2.6); c.moveTo(cx + 2.6, cy - 2.6); c.lineTo(cx - 2.6, cy + 2.6); }
+  else if (glyph === "-") { c.moveTo(cx - 3, cy + 0.5); c.lineTo(cx + 3, cy + 0.5); }
+  else c.rect(cx - 2.5, cy - 2.5, 5, 5);
+  c.stroke(); c.lineWidth = 1; c.lineCap = "butt";
+}

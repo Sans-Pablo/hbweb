@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 globalThis.document = { documentElement: {}, body: null, createElement: () => ({ getContext: () => ctx }) };
 globalThis.navigator ??= {};
-const ctx = new Proxy({ measureText: s => ({ width: String(s).length * 6 }) }, { get: (o, k) => k in o ? o[k] : () => {}, set: () => true });
+const ctx = new Proxy({ measureText: s => ({ width: String(s).length * 6 }), createRadialGradient: () => ({ addColorStop() {} }) }, { get: (o, k) => k in o ? o[k] : () => {}, set: () => true });
 const { Gui } = await import("../web/src/client/gui.js");
 const { registerPrompts, Win } = await import("../web/src/client/window.js");
 const g = new Gui({ getContext: () => ctx });
