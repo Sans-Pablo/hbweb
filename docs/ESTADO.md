@@ -485,3 +485,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - [diseño] Botones de piedra unificados (Win.btn, AUTO, pantalla Crear personaje): 10 px, Capital Case, sin borde dorado. Captura: docs/diseno/ingame/crear-personaje.png. Pendiente: HTML editable con todas las ventanas.
 - [diseño] docs/diseno/editor.html (node docs/diseno/build-base.mjs): ventanas con sprites reales editables sin abrir el juego (arrastrar, doble clic texto, exportar JSON).
+- [diseño] tools/capturar_ventanas.py: captura real de las 35 ventanas de hb.gui.dialogs y genera docs/diseno/ventanas.html. Reejecutar tras cada cambio de interfaz. Revisar: 'NE' junto a 'Botín posible' en el menú auto.
