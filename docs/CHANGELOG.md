@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.35 · Ataque original (2026-10-16)
+- Golpe aplicado al instante; cadencia = fin de animación + mínimo 350 ms entre golpes (HG.cpp bCheckClientAttackFrequency), sin cooldown inventado.
+- Dash de 13 fotogramas (sprite 7 incluido) y duración con el nibble de velocidad (Game.cpp DrawObject_OnAttackMove).
+- Reúne 0.85.28 (marco HD de sistema.html) y 0.85.34.
+
 ## 0.85.34 · Cursor y observador (2026-10-16)
 - Observador: cambiar de bot es inmediato y reutiliza el mapa ya cargado (connection.js switchWatch).
 - Minimapa en mapas PvP: puntos con el color de la ciudad y algo más pequeños.
