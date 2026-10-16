@@ -21,6 +21,8 @@ import * as PetSkill from "./petskill.js";
 import * as Inv from "../inventory.js";
 import * as Boss from "./bosses.js";
 import * as Quests from "./quests.js";
+import { pickMob, MOB_TABLE, MOB_DEFAULT, MOB_COUNT, GROUP_KEEP_1_IN_5, GROUP_DROP_1_IN_5 } from "../randommob.gen.js";
+import { sset } from "./status.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -60,6 +62,41 @@ export function spotGenerator(w) {
     if (g.respawn === false || g.alive >= g.max || R.dice(w.rng, 1, 3) !== 2) continue;
     if (spawnFrom(w, g)) total++;
   }
+}
+
+// _cGetSpecialAbility (HG.cpp:28959): tipo de habilidad especial (kindSA) -> cSA.
+const SA_OF = { 1: [3, 4], 2: [3, 4, 5], 3: [3, 4, 5, 6], 4: [3, 4, 7], 5: [3, 4, 7, 8], 6: [3, 4, 5], 7: [1, 2, 4], 8: [1, 2, 4, 3, 8] };
+export function getSpecialAbility(rng, kind) {
+  if (kind === 9) return R.dice(rng, 1, 8);
+  if (kind === 10) return 1;
+  const a = SA_OF[kind]; return a ? a[R.dice(rng, 1, a.length) - 1] : 0;
+}
+
+// MobGenerator aleatorio (HG.cpp:15993-16780). Mapas con randomMob.kind: si maxObjects-30 > npcs activos crea un maestro (id por tabla de nivel
+// randomMob.count) y 0..N esclavos. Desviaciones: el esclavo nace junto al maestro en vez de seguirlo (bSetNpcFollowMode no existe entre NPC);
+// sin eventos especiales ni cruzada (no existen en el port).
+export function randomMobGenerator(w) {
+  const rm = w.randomMob; if (!rm || !rm.kind || !isFinite(w.maxObjects)) return;
+  let total = 0; for (const e of w.ents.values()) if (e.kind === "npc") total++;
+  if (!(w.maxObjects - 30 > total)) return;
+  const d = n => R.dice(w.rng, 1, n);
+  const o = pickMob(rm.count, d), [name, , probSA, kindSA] = MOB_TABLE[o.id] || MOB_DEFAULT;
+  const make = at => {
+    const g = { name, rect: at ? [at.x - 2, at.y - 2, at.x + 2, at.y + 2] : [20, 20, w.grid.w - 21, w.grid.h - 21], max: Infinity, alive: 0, respawn: false, specialProb: 0, rm: true };
+    const n = spawnFrom(w, g); if (!n) return null;
+    const sa = o.firmSA || (d(100) <= probSA ? getSpecialAbility(w.rng, kindSA) : 0);
+    if (sa) n.special = R.applySpecial(w.rng, n, sa);
+    if (o.berserk) { n.exp *= 2; n.noDieRemainExp = n.exp - Math.floor(n.exp / 3); sset(w, n, "berserk", 1, Infinity); }
+    return n;
+  };
+  const master = make(null);
+  const c = MOB_COUNT[o.id];
+  let k = !master || !c ? 0 : c[0] === "n" ? c[1] : d(c[1]) - 1;
+  if (k >= 2) {
+    if (GROUP_KEEP_1_IN_5.includes(o.id) && d(5) !== 1) k = 0;
+    else if (GROUP_DROP_1_IN_5.includes(o.id) && d(5) === 1) k = 0;
+  }
+  for (let j = 0; j < k; j++) make(master);
 }
 
 // Explosivos (Game.cpp ~10919, NpcMagicHandler): al morir lanzan Fire Strike (30) o Mass Fire Strike (61) sobre su casilla, con acierto 100.

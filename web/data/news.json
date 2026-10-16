@@ -1,10 +1,10 @@
 {
- "build": "0.85.15",
+ "build": "0.85.16",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
- "news": [{"date":"2026-10-16","title":{"es":"Generador de spawns (v0.85.15)","en":"Spawn generator (v0.85.15)"},"items":[{"es":"Los monstruos reaparecen como en el original: cada 600 ms, cada generador con hueco crea uno con 1/3 de probabilidad, hasta el máximo de objetos del mapa; el cadáver dura lo que su tiempo de regeneración.","en":"Monsters respawn as in the original: every 600 ms each generator with a free slot creates one with a 1/3 chance, up to the map object cap; the corpse lasts its regen time."}]},{"date":"2026-10-16","title":{"es":"Monstruos fieles (v0.85.14)","en":"Faithful monsters (v0.85.14)"},"items":[{"es":"Estadísticas, experiencia, regeneración y generadores de monstruos tomados del servidor original.","en":"Monster stats, experience, respawn and generators now come from the original server."}]},
+ "news": [{"date":"2026-10-16","title":{"es":"Mobs aleatorios (v0.85.16)","en":"Random mobs (v0.85.16)"},"items":[{"es":"Los mapas con generador aleatorio crean monstruos y grupos por nivel de mapa como en el original (con habilidades especiales y berserk).","en":"Maps with a random generator create monsters and groups by map level as in the original (with special abilities and berserk)."}]},{"date":"2026-10-16","title":{"es":"Generador de spawns (v0.85.15)","en":"Spawn generator (v0.85.15)"},"items":[{"es":"Los monstruos reaparecen como en el original: cada 600 ms, cada generador con hueco crea uno con 1/3 de probabilidad, hasta el máximo de objetos del mapa; el cadáver dura lo que su tiempo de regeneración.","en":"Monsters respawn as in the original: every 600 ms each generator with a free slot creates one with a 1/3 chance, up to the map object cap; the corpse lasts its regen time."}]},{"date":"2026-10-16","title":{"es":"Monstruos fieles (v0.85.14)","en":"Faithful monsters (v0.85.14)"},"items":[{"es":"Estadísticas, experiencia, regeneración y generadores de monstruos tomados del servidor original.","en":"Monster stats, experience, respawn and generators now come from the original server."}]},
    {
     "date": "2026-10-16",
     "title": {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.16 · Mobs aleatorios (2026-10-16)
+- Sistema 28: `randomMobGenerator` (npcsys.js) desde el MobGenerator aleatorio (HG.cpp:15993-16780): en mapas con random-mob y si maxObjects−30 > npcs activos crea un maestro por la tabla de nivel (`randommob.gen.js`, generado por `tools/convert_randommob.py`) con habilidad especial (_cGetSpecialAbility, HG.cpp:28959) o berserk fijo (exp ×2) y 0..N esclavos con los filtros de grupo del original. Desvíos: el esclavo nace junto al maestro en vez de seguirlo; sin eventos especiales ni cruzada. Test `random-mob`.
+
 ## 0.85.15 · Generador de spawns (2026-10-16)
 - Sistema 27: `spotGenerator` (npcsys.js) cada >600 ms (HG.cpp:2093): por spot con hueco, dice(1,3)==2 crea un monstruo (MobGenerator, HG.cpp:16841) hasta `maxObjects` del mapa; el hueco se libera al borrar el cadáver (ahora−deadTime > regenTime, HG.cpp:6806; DeleteNpc ~16992). Quitado el respawn por temporizador. Desvío: el relleno inicial del mapa se mantiene (el original arranca vacío). Test `spot-generator`.
 
