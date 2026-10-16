@@ -421,3 +421,13 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
 - [ ] Quitar el turquesa que queda en la UI — ui
 - [ ] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui
+
+## 0.85.19 Magia visible (sistemas)
+- Texto de cast sobre el lanzador (Game.cpp:40047-40062: tipo 41, "<Hechizo>!", 2 s, sube 9 px, RGB 180,30,30). Causa del fallo: `world.magic` no existe, es `world.data.magic`. Test `tests/cast-text.test.mjs`.
+- Summon balls: `BALL_SCALE 0.85`, criatura contenida (`BALL_INNER 0.46`) y suavizada (compicon.js).
+- Pendiente (no portado): animación de cast del original (16 fotogramas × 88 ms con retardo por maestría, MapData.cpp ~1994) frente a CAST_MS = 640 ms; cambiarlo afecta a jugabilidad y tests. Sonidos de cast: los de efectos ya salen por spellfx.js; no hay sonido de "preparar".
+- Sin comprobación visual en el navegador. No existe CHANGELOG.md en esta rama.
+
+## 0.85.20 Cast fiel (sistemas)
+- `castMs(maestría)` en `shared/magic.js`: 16 fotogramas × (88 − trunc(maestría×0.13)) ms (MapData.cpp:35-36, 1994-1998): 1408 ms sin maestría, 1200 ms a 100 (antes `CAST_MS` = 640). Lo usan `prepare` y `cast` (magicsys.js) y el cliente anima con la duración de `setAct`. `CAST_COOLDOWN_MS` no cambia. Test en `tests/cast-text.test.mjs`.
+- Los otros jugadores se animan con la maestría del lanzador (el original usa 100 para los ajenos en el cliente).

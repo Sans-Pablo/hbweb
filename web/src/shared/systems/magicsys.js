@@ -60,8 +60,9 @@ export function prepare(w, p, cmd) {
   const sp = usable(w, p, cmd); if (!sp) return false;
   p.prep = { spell: cmd.spell, at: w.time };
   p.lastCombat = w.time;
-  w.setAct(p, ACT.MAGIC, M.CAST_MS);
-  p.busyUntil = w.time + M.CAST_MS;
+  const cms = M.castMs(p.skills?.[4]);
+  w.setAct(p, ACT.MAGIC, cms);
+  p.busyUntil = w.time + cms;
   w.emit({ t: "prepare", id: p.id, spell: cmd.spell });
   return true;
 }
@@ -95,7 +96,7 @@ export function cast(w, p, cmd) {
   p.lastCombat = w.time;
   if (x !== p.x || y !== p.y) p.dir = dirTo(p.x, p.y, x, y) || p.dir;
   // con el hechizo ya preparado, la animación de lanzar ya se hizo al elegirlo: solo queda soltarlo
-  const wait = pre ? Math.max(0, p.busyUntil - w.time) : 0, ms = pre ? (wait || 160) : M.CAST_MS;
+  const wait = pre ? Math.max(0, p.busyUntil - w.time) : 0, ms = pre ? (wait || 160) : M.castMs(p.skills?.[4]);
   p.prep = null;
   if (!pre || !wait) { w.setAct(p, ACT.MAGIC, ms); p.busyUntil = w.time + ms; }
   w.emit({ t: "cast", id: p.id, spell: cmd.spell, x, y, attr: sp.attr, type: sp.type });
