@@ -10,3 +10,10 @@ El original no tiene bots: todo esto usa las mismas órdenes y reglas que un jug
 - **Reinicio de atributos**: los residentes usan `rebuild()` de residents.js; el pool de builds incluye «mago». Respeta `respecCost` (300+60·nivel), mago NPC cercano y tope diario 2.
 - **Equipo**: `casterBonus(d)` se suma al item level para lanzadores (ahorro de maná, +% daño mágico, resistencia mágica). El mago acepta varitas y bastones.
 - Test: `tests/bot-mage.test.mjs`. Pendiente: `botitems.js judge` no conoce el bonus mágico.
+
+## Táctica de PvP y dos clases (v0.85.53)
+- **Solo dos clases**: guerrero (`vanguard`) y mago (`mage`), 50/50 (`residents.js rebuild`, `RESET_V = 2`; `adventure.js spawnResident`). Cualquier build antiguo cuenta como una de las dos (`builds.js buildOf`).
+- **Mago contra jugador** (`botmagic.js fight`): siempre intenta Paralyze; 2 fallos seguidos → sospecha de PFM y prueba un ataque; si el ataque tampoco quita vida, hay protección mágica: espera 6 s y repite (`b.pv`). Paralizado: Spike Field en su casilla (anula el Fire Field rival) y remata. El grupo concentra el fuego en el paralizado (`bot.js pickTarget`).
+- **Apoyo de equipo** (`botmagic.js plan`): Fire Field libera al amigo paralizado, Invisibility salva al amigo con <35 % de vida o prepara una emboscada, Detect Invisibility ante rivales invisibles, AMP / PFM / Berserk a los guerreros.
+- **Guerrero con 36 de Int** (`builds.js WAR_INT`, `botmagic.js utility`): se quita arma y escudo, lanza Invis/PFM/Detect/Paralyze (PFM contra magos) y se reequipa.
+- Tests: `tests/bot-pvptactics.test.mjs`. Pendiente: dar a los bots las fórmulas de daño/ataque/MR para repartir stats y elegir equipo.

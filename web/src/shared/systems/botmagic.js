@@ -8,12 +8,14 @@ import { EQUIP, EFFECT } from "../items.js";
 import { dist } from "../const.js";
 import * as M from "../magic.js";
 import { SKILL } from "../skills.js";
-import { isCaster, isMage } from "./builds.js";
+import { isCaster, isMage, WAR_INT } from "./builds.js";
 import { sget } from "./status.js";
 
 // Orden de estudio: primero curar y el misil, luego escudo y ataques fuertes, al final los de apoyo caros (ids de Magic.cfg).
 // v0.85.46: compran TODO lo que sirve para pelear (ataque, paralizar, PFM) en cuanto tienen Int y oro; lo caro (Energy Strike, Lightning Strike, Meteor, Blizzard) al final.
-export const STUDY_ORDER = [1, 0, 13, 33, 10, 20, 35, 21, 30, 25, 47, 43, 44, 45, 57, 60, 74, 81, 91, 24];   // ids de Magic.cfg (claves de magic.json)
+export const STUDY_ORDER = [1, 0, 33, 25, 35, 13, 32, 34, 10, 20, 21, 30, 24, 41, 47, 43, 44, 50, 54, 45, 57, 60, 65, 74, 81, 91];
+export const WAR_STUDY = [33, 32, 34, 35, 25, 13, 24];          // guerrero con Int 36: PFM, Invisibility, Detect, Paralyze (Magic.cfg reqInt 32/30/30/36)
+const INVIS = 32, DETECT = 34, FIREFIELD = 41, SPIKE = 54, BERSERK = 50, AMP = 65, PFA = 24;   // ids de Magic.cfg (claves de magic.json)
 export const ATTACK = [91, 81, 74, 60, 57, 47, 43, 45, 30, 20, 10, 0];   // Blizzard, Meteor Strike, Lightning Strike, Energy Strike, Ice Strike, Triple Energy Bolt, Lightning, Chill Wind, Fire Strike, Fire Ball, Energy Bolt, Magic Missile
 export const HEALS = [21, 1];                            // Great Heal, Heal
 export const SHIELDS = [44, 13];                         // Great Defense Shield, Defense Shield
@@ -30,8 +32,8 @@ const costOf = (w, p, id) => M.manaCost(p, w.magic[id], id, !!w.fightZone);
 
 // Aprende lo que pueda (Int y oro). Un recado, una magia como mucho.
 export function study(w, p, b, log) {
-  if (!isCaster(p) || !w.magic) return false;
-  for (const id of STUDY_ORDER) {
+  if (!w.magic || (!isCaster(p) && p.stats.int < 26)) return false;
+  for (const id of isCaster(p) ? STUDY_ORDER : WAR_STUDY) {
     const sp = w.magic[id];
     if (!sp || known(p, id) || sp.cost < 0 || p.stats.int < sp.reqInt || p.gold < sp.cost + GOLD_RESERVE) continue;
     const before = p.gold;
@@ -66,9 +68,26 @@ function cast(adv, w, p, b, id, x, y) {
 // Ataque: lanza el mejor hechizo que pueda pagar al monstruo `t`. Devuelve true si lanzó (el bot no pega en ese turno).
 export function fight(adv, w, p, b, t, log) {
   if (!t || !ready(w, p, b) || w.safeAt(p.x, p.y) || dist(p, t) > CAST_RANGE) return false;
-  if (t.kind === "player") {                                                    // PvP: paraliza primero (si no lo está ya) y luego remata con el mejor ataque
-    const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40);
-    if (par !== undefined && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500) { log(`⚔ Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y); }
+  if (t.kind === "player") {
+    // TÁCTICA DE PVP (v0.85.53): 1) siempre intenta paralizar; 2) si no "entra", sospecha de Protection From Magic y prueba con un ataque;
+    // 3) si el ataque tampoco hace daño, hay protección: espera a que se le vaya y repite Paralyze; 4) paralizado: Spike Field encima (le quita el sitio
+    // al Fire Field rival) y remata con magia. Lo deduce lanzando magias, como un jugador (no lee el estado del rival).
+    const pv = (b.pv = b.pv?.id === t.id ? b.pv : { id: t.id, fails: 0, waits: 0, waitUntil: 0 });
+    if (pv.parAt && w.time - pv.parAt > 1600) { if (!sget(w, t, "hold")) pv.fails++; else pv.fails = 0; pv.parAt = 0; }
+    if (pv.probeAt && w.time - pv.probeAt > 1600) {
+      if (t.hp < pv.probeHp) { pv.fails = 0; log(`⚔ Mi ataque le entra a ${t.name}: no tiene PFM, el Paralyze falló por suerte; lo reintento.`); }
+      else { pv.waits++; pv.waitUntil = w.time + 6000; pv.fails = 0; log(`⚔ Mi ataque no le hace nada a ${t.name}: tiene protección mágica. Espero 6 s a que se le vaya y repito Paralyze (espera ${pv.waits}).`); }
+      pv.probeAt = 0;
+    }
+    if (w.time < pv.waitUntil) return pv.waits < 3;                              // espera sin gastar maná; tras 3 esperas (protección absoluta) se defiende con la vara
+    const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40), held = sget(w, t, "hold");
+    if (par !== undefined && !held && (t.eff?.addPR || 0) < 500) {
+      const atk = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) && M.castChance(p, a) >= 40);
+      if (pv.fails >= 2 && atk !== undefined) { pv.probeAt = w.time; pv.probeHp = t.hp; log(`⚔ ${pv.fails} Paralyze seguidos no entran a ${t.name}: ¿PFM? Pruebo con ${w.magic[atk].name || "un ataque"} para comprobarlo.`); return cast(adv, w, p, b, atk, t.x, t.y); }
+      pv.parAt = w.time; log(`⚔ Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y);
+    }
+    if (held && known(p, SPIKE) && w.magic[SPIKE] && w.time - (pv.spikeAt || -1e9) > 9000 && p.mp >= costOf(w, p, SPIKE) + 30) { pv.spikeAt = w.time; log(`⚔ ${t.name} está paralizado: Spike Field en su casilla para que no puedan quitárselo con Fire Field.`); return cast(adv, w, p, b, SPIKE, t.x, t.y); }
+    if (held && b.spellLog !== "held" + t.id) { b.spellLog = "held" + t.id; log(`⚔ Remato con magia a ${t.name} (paralizado).`); }
   }
   const healKeep = HEALS.some(h => known(p, h)) ? costOf(w, p, HEALS.find(h => known(p, h))) : 0;
   const id = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) + healKeep && M.castChance(p, a) >= 40);
@@ -81,6 +100,7 @@ export function fight(adv, w, p, b, t, log) {
 export function support(adv, w, p, b, log) {
   if (!ready(w, p, b)) return false;
   const inFight = w.time - (p.lastCombat || -1e9) < 6000;
+  { const pl = plan(w, p, b); if (pl) { log(pl.msg); return cast(adv, w, p, b, pl.id, pl.x, pl.y); } }
   const heal = HEALS.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h));
   if (heal !== undefined) {
     const hpf = p.hp / p.maxHp;
@@ -110,4 +130,58 @@ export function casterBonus(d) {
   if (d.effectType === EFFECT.ATTACK_MANASAVE) return (d.v4 || 0) * 0.5 + (d.v5 === 1 ? (d.v6 || 0) * 0.6 : 0);
   if (d.effectType === EFFECT.ADDEFFECT) return d.v1 === 1 ? (d.v2 || 0) * 0.4 : d.v1 === 2 && d.id !== 648 ? (d.v2 || 0) * 0.6 : 0;
   return 0;
+}
+
+// ---- APOYO DE EQUIPO (v0.85.53) ----
+const friend = (p, b, q) => q !== p && q.kind === "player" && !q.dead && (q.id === b.owner || (p.party?.id && q.party?.id === p.party.id) || (p.guild && q.guild === p.guild));
+const cool = (b, key, ms, w) => w.time - ((b.cd ||= {})[key] || -1e9) >= ms;
+const stamp = (b, key, w) => { (b.cd ||= {})[key] = w.time; };
+// Qué lanzar para el equipo, o null: Fire Field para liberar a un amigo paralizado (el fuego quita el efecto), Invisibility para salvar a un amigo con poca vida
+// o para emboscar, AMP / PFM / Berserk a los amigos en pelea, Detect Invisibility si hay un rival invisible.
+export function plan(w, p, b) {
+  if (!w.magic) return null;
+  const inFight = w.time - (p.lastCombat || -1e9) < 6000, cost = id => (known(p, id) && w.magic[id] && M.castChance(p, id) >= 15 ? costOf(w, p, id) : 1e9);
+  const spare = 25, foe = b.target?.kind === "player" ? b.target : null;
+  const allies = []; for (const q of w.ents.values()) if (friend(p, b, q) && dist(p, q) <= HEAL_RANGE) allies.push(q);
+  for (const q of allies) if (sget(w, q, "hold") && cost(FIREFIELD) + spare <= p.mp && cool(b, "fire" + q.id, 2500, w)) { stamp(b, "fire" + q.id, w); return { id: FIREFIELD, x: q.x, y: q.y, msg: `⚔ ${q.name} está paralizado: Fire Field en su casilla para quitarle el efecto.` }; }
+  for (const q of allies) if (inFight && q.hp / q.maxHp < 0.35 && !sget(w, q, "invis") && cost(INVIS) + spare <= p.mp && cool(b, "inv" + q.id, 15000, w)) { stamp(b, "inv" + q.id, w); return { id: INVIS, x: q.x, y: q.y, msg: `⚔ ${q.name} está al ${Math.round(q.hp / q.maxHp * 100)}%: lo hago Invisible para salvarlo.` }; }
+  if (foe && !inFight && dist(p, foe) >= 6 && !sget(w, p, "invis") && cost(INVIS) + spare <= p.mp && cool(b, "amb", 20000, w)) { stamp(b, "amb", w); return { id: INVIS, x: p.x, y: p.y, msg: `⚔ Me hago Invisible para emboscar a ${foe.name}.` }; }
+  if (foe && cost(DETECT) + spare <= p.mp && cool(b, "det", 12000, w) && [...w.ents.values()].some(e => e.kind === "player" && e !== p && !friend(p, b, e) && sget(w, e, "invis") && dist(p, e) <= 9)) { stamp(b, "det", w); return { id: DETECT, x: p.x, y: p.y, msg: "⚔ Hay un rival invisible cerca: lanzo Detect Invisibility." }; }
+  if (inFight || foe) for (const q of allies) {
+    for (const id of [AMP, PFM, BERSERK]) {
+      const have = id === BERSERK ? sget(w, q, "berserk") : sget(w, q, "protect");
+      if (!have && cost(id) + spare <= p.mp && cool(b, id + ":" + q.id, 40000, w)) { stamp(b, id + ":" + q.id, w); return { id, x: q.x, y: q.y, msg: `⚔ Apoyo a ${q.name} con ${w.magic[id].name || "un hechizo"}.` }; }
+    }
+  }
+  return null;
+}
+
+// GUERRERO CON 36 DE INT (v0.85.53): no pelea con magia pero apoya y paraliza. Para lanzar tiene que quitarse arma y escudo (usable de magicsys.js) y se los
+// vuelve a poner enseguida. Devuelve true si gastó el turno.
+export function utility(adv, w, p, b, log) {
+  if (isCaster(p) || !w.magic || p.dead || p.stats.int < 30 || w.safeAt(p.x, p.y) || w.busy(p)) return false;
+  const t = b.target?.kind === "player" ? b.target : null;
+  let pl = null;
+  if (w.time - (p.lastCast || -1e9) >= M.CAST_COOLDOWN_MS && w.time - (b.castAt || -1e9) >= 1100) {
+    pl = plan(w, p, b);
+    if (!pl && t && dist(p, t) <= CAST_RANGE && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500 && cool(b, "wpar", 4000, w)) {
+      const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) + 10 && M.castChance(p, h) >= 25);
+      if (par !== undefined) { stamp(b, "wpar", w); pl = { id: par, x: t.x, y: t.y, msg: `⚔ Paralizo a ${t.name} (guerrero con Int ${p.stats.int}).` }; }
+    }
+    if (!pl && t && w.time - (p.lastCombat || -1e9) < 6000 && !sget(w, p, "protect") && known(p, PFM) && w.magic[PFM] && p.mp >= costOf(w, p, PFM) + 10 && cool(b, "wpfm", 40000, w) && ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp)) { stamp(b, "wpfm", w); pl = { id: PFM, x: p.x, y: p.y, msg: `⚔ Me pongo PFM contra el mago ${t.name}.` }; }
+  }
+  const sw = b.swap;
+  if (!pl) {                                                                      // nada que lanzar: vuelve a equiparse (una pieza por turno)
+    if (sw && w.time - sw.at > 2500) { const uid = sw.uids.shift(); if (uid === undefined) b.swap = null; else { adv.command(p.id, { t: "equip", uid }); return true; } }
+    return false;
+  }
+  if (!handsOk(p)) {                                                              // se desarma para lanzar (como mucho cada 5 s)
+    if (!cool(b, "unarm", 5000, w)) return false;
+    const uids = [EQUIP.LHAND, EQUIP.TWOHAND, EQUIP.RHAND].map(s => p.equip[s]).filter(u => u !== undefined);
+    for (const uid of uids) adv.command(p.id, { t: "unequip", uid });
+    b.swap = { at: w.time, uids: [...(sw?.uids || []), ...uids.reverse()].filter((u, i, a) => a.indexOf(u) === i) };
+    stamp(b, "unarm", w); log("⚔ Me quito arma y escudo para lanzar un hechizo."); return true;
+  }
+  if (b.swap) b.swap.at = w.time;
+  log(pl.msg); return cast(adv, w, p, b, pl.id, pl.x, pl.y);
 }

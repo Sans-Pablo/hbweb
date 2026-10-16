@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.53 · Táctica PvP y dos clases (2026-10-17)
+- [invento] `builds.js` (dos clases, `WAR_INT` 36), `botmagic.js` (`fight` PvP, `plan`, `utility`), `bot.js` (fuego concentrado), `residents.js` (`RESET_V` 2, 50/50). Test `bot-pvptactics`. Pendiente: fórmulas de daño/MR para los bots.
+
 ## 0.85.52 · PvP en la pantalla dividida (2026-10-17)
 - [invento] `dashboard.js` panel `pvp` (select de cada hueco): ficha + log «⚔» desde `/api/admin/botdetail`, refresco cada 3 s; sección en `observador.html`.
 

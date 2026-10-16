@@ -208,7 +208,7 @@ export class Adventure {
   spawnResident(name, save = null) {
     const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
     const idx = Residents.RESIDENT_NAMES.indexOf(name), side = idx >= 20 ? 2 : 1;           // 20 de Aresden y 20 de Elvine
-    const id = this.addPlayer(name, save, save ? null : (cls => ({ gender: h % 2 ? 1 : 2, stats: { ...(cls === "mage" ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) }, cls }))(["warrior", "mage", "summoner"][(idx < 0 ? h : idx) % 3]));
+    const id = this.addPlayer(name, save, save ? null : (cls => ({ gender: h % 2 ? 1 : 2, stats: { ...(cls === "mage" ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) }, cls }))(["warrior", "mage"][(idx < 0 ? h : idx) % 2]));
     const at = this.locations.get(id);                                                          // la partida guardada puede dejarlo en el puesto (gshop_1f): se le vuelve a traer a la granja
     const p = (at || this.farm).ents.get(id);
     if (p && at && at !== this.farm) this.transfer(p, at, this.farm, this.farm.freeSpotNear(...(this.farm.home || this.farm.start)));

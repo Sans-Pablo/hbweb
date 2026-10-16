@@ -30,7 +30,7 @@ for (const side of [1, 2]) {
   const a = mk(5 + side), n = side === 1 ? "Aldric" : "Dain";
   a.spawnResident(n);
   const b = a.residents().find(x => x.name === n), w = a.worldFor(b.id);
-  b.level = 12; b.exp = 1e7; b.stats.str = 60; b.stats.vit = 70; b.stats.dex = 40; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.res.goal = { k: "crypt", n: 3 }; b.res._tripAt = 1;
+  b.res.build = "vanguard"; b.res.arch = "warrior"; b.res.resetV = 99; if (b.bot) b.bot.mage = false; b.level = 12; b.exp = 1e7; b.stats.str = 60; b.stats.vit = 70; b.stats.dex = 40; a.homeOf(b).recalc(b); b.hp = b.maxHp; b.res.goal = { k: "crypt", n: 3 }; b.res._tripAt = 1;
   let inCrypt = false, kills0 = Object.values(b.res.qa.kills).reduce((x, y) => x + y, 0), deepest = 1;
   for (let i = 0; i < 20 * 60 * 6; i++) { a.tick(50); const ww = a.worldFor(b.id); if (ww.map.kind === "dungeon") { inCrypt = true; deepest = Math.max(deepest, ww.map.level); } if (inCrypt && deepest >= 2) break; }
   assert.ok(inCrypt, "el habitante de bando " + side + " baja a la cripta; registro: " + (b.bot.log || []).slice(-6).join(" | "));

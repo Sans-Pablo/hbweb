@@ -289,7 +289,8 @@ function pickTarget(w, p, owner) {
     if (e.kind === "player") {                                                                            // enemigos de otro bando en Promise Land
       if (!w.pvp || !canFight(w, p, e) || tooStrong(w, p, e) || owner && p.bot.only && p.bot.only !== "@ek") continue;
       const d = dist(p, e);
-      if (d <= 12 && (!owner || dist(owner, e) <= 14) && d - 2 < bs) { best = e; bs = d - 2; }
+      const fo = d - 2 - (sget(w, e, "hold") ? 8 : 0) - ([...w.ents.values()].some(a => a !== p && a.kind === "player" && (a.id === p.bot.owner || (p.party?.id && a.party?.id === p.party.id)) && a.bot?.target?.id === e.id) ? 3 : 0);       // FOCUS FIRE (v0.85.53): primero al paralizado y al que ya golpean los míos
+      if (d <= 12 && (!owner || dist(owner, e) <= 14) && fo < bs) { best = e; bs = fo; }
       continue;
     }
     if (w.pvp && e.kind === "npc" && e.comp && e.master && !e.dead) {                                     // summon enemigo: se ataca si me ataca a mí o a los míos, o si está encima
@@ -455,6 +456,7 @@ function run(adv, w, p, b) {
     if (mp) { b.manaAt = w.time; blog(w, p, `Maná ${p.mp}/${p.maxMp}: bebo una poción de maná.`); adv.command(p.id, { t: "use", uid: mp.uid }); return; }
   }
   if (isCaster(p) && BM.support(adv, w, p, b, t => blog(w, p, t))) return;
+  if (!isCaster(p) && BM.utility(adv, w, p, b, t => blog(w, p, t))) return;
   if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
     if (pot) { b.potionAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}%: bebo una poción roja.`); think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }

@@ -11,15 +11,19 @@ export const BUILDS = {
   glass:    { es: "cañón de cristal", w: { str: 0.55, dex: 0.3, vit: 0.15 } },
   agile:    { es: "ágil", w: { dex: 0.5, str: 0.25, vit: 0.25 } },
   summoner: { es: "invocador", w: { int: 0.3, mag: 0.15, vit: 0.35, str: 0.2 } },
-  vanguard: { es: "vanguardia", w: { vit: 0.45, str: 0.4, dex: 0.15 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
+  vanguard: { es: "guerrero", w: { vit: 0.4, str: 0.4, dex: 0.2 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
   mage:     { es: "mago", w: { int: 0.65, mag: 0.2, vit: 0.15 } },                                // v0.85.47: Blizzard pide Int 113 (magicbal.js); v0.85.46: más Int y Mag. v0.85.26: lanzador puro. INT para aprender y lanzar (Magic Missile pide 18, Fire Ball 26, Fire Strike 34), MAG para el maná
   arcane:   { es: "arcano", w: { vit: 0.4, int: 0.3, mag: 0.15, str: 0.15 } },                      // Mago e Invocador de misiones: vida y mente
 };
 const QUEST_BUILD = { warrior: "vanguard", mage: "arcane", summoner: "arcane" };
 export const DEFAULT_BUILD = { warrior: "glass", hunter: "agile", trader: "balanced", wanderer: "balanced", scholar: "summoner" };
-export const buildOf = p => (p.res && BUILDS[p.res.build]) ? p.res.build : p.bot?.mage ? "mage" : QUEST_BUILD[p.quests?.cls] || DEFAULT_BUILD[p.res?.arch] || "balanced";
+// v0.85.53: SOLO DOS CLASES, guerrero ("vanguard") y mago ("mage"). Cualquier build antiguo (invocador, arcano, cañón de cristal…) se reduce a una de las dos.
+const MAGE_LIKE = new Set(["mage", "arcane", "summoner"]);
+export const buildOf = p => (MAGE_LIKE.has(p.res?.build) || p.bot?.mage || (!p.res?.build && (p.quests?.cls === "mage" || p.quests?.cls === "summoner" || p.res?.arch === "scholar"))) ? "mage" : "vanguard";
+// Int mínima del guerrero: 36 (Invisibility 30, Detect 30, PFM 32, Paralyze 36 de Magic.cfg) para apoyar y paralizar sin dejar la espada
+export const WAR_INT = 36;
 // ¿Gasta puntos en INT/MAG y lanza hechizos con las manos libres o una varita? (botmagic.js)
-export const isCaster = p => { const b = buildOf(p); return b === "mage" || b === "arcane" || b === "summoner"; };
+export const isCaster = p => buildOf(p) === "mage";
 // Mago puro: sin arma cuerpo a cuerpo (solo se lanza con las manos libres o con varita, magicsys.js usable())
 export const isMage = p => buildOf(p) === "mage";
 
@@ -56,6 +60,7 @@ export function allocate(p, total, need = 0) {
   let left = total;
   const first = Math.max(0, Math.min(need - p.stats.str, Math.floor(total * 0.7), R.STAT_LIMIT - p.stats.str));
   if (first > 0) { out.str = first; left -= first; total -= first; }
+  if (buildOf(p) !== "mage") { const iq = Math.max(0, Math.min(WAR_INT - p.stats.int, left, R.STAT_LIMIT - p.stats.int)); if (iq > 0) { out.int = iq; left -= iq; total -= iq; } }
   for (const k of ks) { const n = Math.min(Math.round(total * w[k]), R.STAT_LIMIT - p.stats[k] - (out[k] || 0), left); if (n > 0) { out[k] = (out[k] || 0) + n; left -= n; } }
   for (const k of ks) { if (left <= 0) break; const n = Math.min(left, R.STAT_LIMIT - p.stats[k] - (out[k] || 0)); if (n > 0) { out[k] = (out[k] || 0) + n; left -= n; } }
   return out;

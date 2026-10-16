@@ -31,9 +31,10 @@ const arm = data.named("Hauberk(M)"), pa = itemLevel(arm, 0, arm.id);
 assert.ok(itemLevel(arm, pk(8, 3, 8, 6), arm.id) > pa + 15, "armadura Strong con absorción física");
 assert.ok(Number.isFinite(itemLevel(arm, pk(0, 0, 0, 0), arm.id)) && Number.isFinite(itemLevel(arm, pk(12, 4, 3, 5), arm.id)), "sin NaN");
 // 2. con un equipo bueno, la basura del suelo no se recoge y lo bueno sí
-A2.level = 60; A2.gender = 1;
+A2.level = 60; A2.gender = 1; A2.res.build = "vanguard"; A2.res.arch = "warrior"; if (A2.bot) A2.bot.mage = false;      // v0.85.53: solo hay guerrero y mago
 for (const [k, n] of [[2, "Excaliber"]]) { try { const d = data.named(n); const inst = { uid: w.nextItem++, id: d.id, count: 1, life: d.maxLife }; A2.bag.push(inst); A2.equip[d.equipPos === 8 ? 8 : d.equipPos] = inst.uid; } catch {} }
 w.recalc(A2);
+{ const hf = w.hooks?.friends; if (w.hooks) w.hooks.friends = () => []; var restoreFriends = () => { if (w.hooks) w.hooks.friends = hf; }; }      // sin amigos que se beneficien del puñal (la clase de los vecinos cambió en v0.85.53)
 assert.equal(lootValue(w, A2, ground("Dagger")), 0, "un puñal básico es basura");
 assert.ok(lootValue(w, A2, ground("RedPotion")) > 0, "las pociones sí");
 delete A2.equip[3]; delete A2.equip[4];
