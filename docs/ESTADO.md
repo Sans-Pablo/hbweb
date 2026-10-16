@@ -117,6 +117,10 @@
 - [ ] Fuera del primer release: arena, mapas de Elvine/nieve, rediseño de sonido, LFS, actos 2+ y final.
 
 ## Backlog (actualizado en v0.70.0)
+- [x] (pedido 2026-10-16, v0.85.25) análisis de una tercera ciudad/bando (solo análisis, sin código): [docs/sistemas/tercera-ciudad.md](sistemas/tercera-ciudad.md). El original solo tiene Aresden/Elvine/neutral; recomendado ciudad neutral (≈1,5-2 sem); tercer bando completo ≈5-9 sem (INVENTO). Pendiente decisión del usuario.
+  - Revisado con las condiciones del usuario (solo farm y Promise Land, armaduras recoloreadas, ciudad solo de bots): ≈ 8-14 días. Ver §9 de la ficha.
+  - Decisiones 2026-10-16: armaduras normales, solo hero set coloreados (¿amarillo?); 3 bandos se atacan; granja propia + 4 entradas en Promise Land. ≈ 9-15 días. §10 de la ficha.
+  - 2026-10-16 (b): mismos bots por ciudad (20); 4.ª entrada deshabilitada; amarillo medido (tono ≈50°, S 0,70, V 0,60). §11 de la ficha.
 - [ ] (pedido 2026-10-13) portar TODO lo faltante de docs/DESVIOS.md con la lógica original como regla (autónomo). Hecho: 80 ítems (tools/add_missing_items.mjs), magia 75 Ice Whirlwind, texto de lanzamiento, 49 mapas, 59 NPC (tools/add_missing_npcs.mjs), bonos de conjunto de héroe y zona de lucha. En curso: facciones, PK, cruzada, etc.
 - [x] (pedido 2026-10-13, v0.80.2) pets inmunes en Promise Land · color de armas del servidor original · drop al morir (PvP) · sprite TAB paz/ataque · textos de combate del original · F1 «Full mage». Falta verificación visual por el usuario.
 - [x] (pedido 2026-10-13) documento de desvíos original vs port: `docs/DESVIOS.md` (primera pasada; falta la verificación de las filas «a verificar»). Siguiente derivado: texto de conjuro sobre la cabeza («Nombre!», tipo 41 del cliente original).
@@ -469,3 +473,8 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Bots: stats INT/MAG, existir bots magos; resetear atributos para probar builds; usar magias; aprender que equipo es mejor (no quedarse con items de blacksmith) y progresar.
 
 - Capturas reales de las ventanas (docs/diseno/ingame/*.png, pedido 2026-10-16, sin cambio de versión; repo 0.85.24): el juego real NO usa el marco gamedialog de base-original; es pergamino oscuro con bolas propias. Hay que diseñar sobre estas capturas.
+- docs/diseno/ventanas-reales.html: galeria numerada de las capturas reales (pedido 2026-10-16, v0.85.24 sin cambio). Las bolas reales se dibujan en gui.js drawBall (9,9 r8); centrar glifos = ajuste de drawFrameBall, pendiente de elegir direccion.
+
+- Diseño ventanas: inventario (2) sobre captura real con márgenes y centrado de bolas medido (docs/diseno/inventario.html). v0.85.24, sin cambio de versión.
+
+- Capturas reales recapturadas con el "−" ya centrado (inventario, almacén, diario, menú auto, auto mini, misión mini, personaje). hbweb v0.85.25, diseño sin cambio de versión.

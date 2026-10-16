@@ -31,7 +31,7 @@ export function drawFrameBall(c, cx, cy, glyph, over) {
   c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fillStyle = g; c.fill(); c.strokeStyle = "#2a2014"; c.lineWidth = 1; c.stroke();
   c.strokeStyle = bad ? "#6a1a10" : "#3a2c14"; c.lineWidth = 1.7; c.lineCap = "round"; c.beginPath();
   if (glyph === "x") { c.moveTo(cx - 2.6, cy - 2.6); c.lineTo(cx + 2.6, cy + 2.6); c.moveTo(cx + 2.6, cy - 2.6); c.lineTo(cx - 2.6, cy + 2.6); }
-  else if (glyph === "-") { c.moveTo(cx - 3, cy + 0.5); c.lineTo(cx + 3, cy + 0.5); }
+  else if (glyph === "-") { c.moveTo(cx - 3, cy - 0.5); c.lineTo(cx + 3, cy - 0.5); }
   else c.rect(cx - 2.5, cy - 2.5, 5, 5);
   c.stroke(); c.lineWidth = 1; c.lineCap = "butt";
 }

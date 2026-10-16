@@ -13,3 +13,4 @@ Cada ficha: qué hace, de dónde se porta (función del original), reglas, prueb
 - [quests.md](quests.md) — misiones por clase (acto 1).
 - [online.md](online.md) — modo online: servidor en el PC, cuentas, protocolo, privacidad, administración.
 - [balance.md](balance.md) — balance del juego: multiplicadores editables por los administradores (página web).
+- [tercera-ciudad.md](tercera-ciudad.md) — análisis de viabilidad de una tercera ciudad/bando: coste, riesgos, alternativas y fases (solo análisis).
