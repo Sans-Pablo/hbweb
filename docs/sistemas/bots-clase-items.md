@@ -8,3 +8,6 @@
 ## Botín del suelo y peso de los atributos
 - `lootValue` (bot.js) decide qué recoge un bot: usa `judge` (botitems.js). Equipar (500+) > guardar/comerciar (50+) > basura solo si se vende por ≥120 de oro (≥400 con la mochila al 60 %). Elige el botín por valor/(distancia+2).
 - `itemlevel.js`: tablas `W1` (armas), `D1` (armaduras) y `SUB` (secundarios) dan el peso de cada atributo por lo que hace en `applyEquipAttr`; afilado/ágil/antiguo no dependen de v1. Test: `tests/bot-loot.test.mjs`.
+
+## Lanzadores (0.85.26)
+`ilv` en bot.js suma `casterBonus` (botmagic.js) para bots lanzadores: bastones con ahorro de maná o daño mágico y amuletos de resistencia se equipan antes que armas planas. Ver `bots-magia.md`.

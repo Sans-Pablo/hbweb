@@ -470,7 +470,7 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - ~~Al castear sale el cursor de cruz~~ HECHO 0.85.26 (CSS + fotograma 8).
 - ~~Summon: brillos del recall al aparecer~~ HECHO 0.85.26 (evento companion-spawn).
 - Demon summon nivel 50: su sprite baja mucho los FPS; analizar y arreglar.
-- Bots: stats INT/MAG, existir bots magos; resetear atributos para probar builds; usar magias; aprender que equipo es mejor (no quedarse con items de blacksmith) y progresar.
+- HECHO 0.85.26 (docs/sistemas/bots-magia.md): bots magos (stats INT/MAG, build «mago»), respec vía rebuild de residentes, magias de combate y apoyo, equipo comparado con valor mágico. Pendiente: botitems.js judge/wornLevel no es consciente de lanzadores (vender/guardar puede discrepar de ilv); residentes cls mage siguen con build arcane y no usan Bot.init({mage}); net-dungeon.test.mjs falla en este PC Windows también sin estos cambios.
 
 - Capturas reales de las ventanas (docs/diseno/ingame/*.png, pedido 2026-10-16, sin cambio de versión; repo 0.85.24): el juego real NO usa el marco gamedialog de base-original; es pergamino oscuro con bolas propias. Hay que diseñar sobre estas capturas.
 - docs/diseno/ventanas-reales.html: galeria numerada de las capturas reales (pedido 2026-10-16, v0.85.24 sin cambio). Las bolas reales se dibujan en gui.js drawBall (9,9 r8); centrar glifos = ajuste de drawFrameBall, pendiente de elegir direccion.

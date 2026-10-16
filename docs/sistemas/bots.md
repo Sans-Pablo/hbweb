@@ -38,3 +38,6 @@ Pociones hasta 40 (con oro), sin cambios escudo/dos manos, lecciones de muerte (
 - **0.79.5**: sin flechas con oro: `noFight` 5 s mientras va a comprar.
 
 Órdenes por chat («vamos a matar slimes», «vamos a hacer EK»): ver `ordenes.md`.
+
+## Magia y bots magos (0.85.26)
+Ver `bots-magia.md`: bots magos, estudio de hechizos, combate y apoyo con magia, respec y valor mágico del equipo.
