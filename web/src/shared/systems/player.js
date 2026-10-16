@@ -114,6 +114,7 @@ function loadSave(w, p, s) {
   if (s.kinds && typeof s.kinds === "object") p.kinds = { ...s.kinds };
   if (s.guild && typeof s.guild.name === "string") Guild.restore(w, p, s.guild);
   if (s.ssn) p.ssn = { ...s.ssn };
+  if (s.specialAbilityTime > 0) p.specialAbilityTime = s.specialAbilityTime | 0;          // m_iSpecialAbilityTime se guarda con el personaje (HG.cpp:4147)
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
   if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
   if (Array.isArray(s.pending) && s.pending.length) p.pending = s.pending.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
@@ -144,7 +145,7 @@ export function saveOf(w, id) {
   if (!p || p.kind !== "player") return null;
   return {
     level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
-    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
+    stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, specialAbilityTime: p.specialAbilityTime || 0, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     ...(p.pending?.length ? { pending: p.pending.map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })) } : {}),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.cleared ? { cleared: p.delve.cleared } : {}), ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p), quests: Quests.toSave(p),

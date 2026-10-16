@@ -23,14 +23,17 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Inhibition: sin tirada de resistencia; solo la anula Protect AMP | HG.cpp:10608-10613 | magicsys.js caso 31 | CORREGIDO |
 | Resistencia mágica sube al resistir | combat.cpp:54 | magicsys.js `resist()` | CORREGIDO |
 | Resistencia al veneno sube al resistir | combat.cpp:69 | magicsys.js caso 17 | CORREGIDO |
-| Modo ataque seguro (maná ×1.1) | HG.cpp | — | FALTA (sin modo en el port) |
-| Hold: chequeos de grupo / zona segura | HG.cpp | magicsys.js | DIFERENTE |
-| Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 (un objetivo) | DIFERENTE |
-| Ice: excluir neutrales | HG.cpp | magicsys.js | DIFERENTE |
+| Modo ataque seguro (maná ×1.1) | HG.cpp | — | CORREGIDO (flag `safeAttack` por jugador, comando `safemode`; ver docs/sistemas/magia-original.md) |
+| Hold: chequeos de grupo / zona segura | HG.cpp | magicsys.js | CORREGIDO |
+| Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 | CORREGIDO |
+| Ice: excluir neutrales | HG.cpp | magicsys.js | CORREGIDO |
 | Rotura de armadura (ArmorLifeDecrement) | HG.cpp | — | FALTA |
-| Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32 | DIFERENTE |
-| Polymorph; tipos 4, 6, 20, 24, 27; reliquias Astoria; magicLimited por mapa | HG.cpp | — | FALTA / sin mapear |
-| Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | sin verificar |
+| Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32, tickResurrection | IGUAL (tests/magic-resurrection) |
+| Tipos 4, 6, 20 (Polymorph), 24, 27: sin hechizos en Magic.cfg | Magic.h | — | N/A (no hay datos) |
+| Mapa sin ataque (solo Create/Teleport) y magicLimited por mapa | HG.cpp:10255-10260 | magicsys.js cast | IGUAL (tests/magic-types) |
+| Reliquias Astoria (evento completo) | Astoria.cpp | — | FALTA (sin mapa ni bandos de evento) |
+| Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | verificado (sistema 12; ver ficha) |
+| Efectos de objetos: SP cura veneno, WARM, MAGIC (invisibilidad/detectar), CHANGEATTR | HG.cpp:17551-17919 | itemsys.js `useItem`, magicsys.js `castItem` | verificado (sistema 23; pendientes en la ficha) |
 
 ## Habilidades
 | sistema | original | nuestro | estado |

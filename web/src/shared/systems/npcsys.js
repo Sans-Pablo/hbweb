@@ -178,9 +178,9 @@ const SUMMON_BY_MAGERY = ["", "Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton",
 const SUMMON_BY_V1 = ["", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Hellbound", "Cyclops", "Troll", "Orge"];
 export const SUMMON_MS = 300000;
 export const followersOf = (w, p) => [...w.ents.values()].filter(e => e.master === p.id && !e.dead);
-export function summonFor(w, p, v1, free) {
+export function summonFor(w, p, v1, free, nolimit) {
   const mag = p.skills[4] || 0, limit = Math.max(free ? 1 : 0, Math.floor(mag / 20));
-  if (followersOf(w, p).filter(e => !e.comp).length >= limit) return null;
+  if (!nolimit && followersOf(w, p).filter(e => !e.comp).length >= limit) return null;      // tope magery/20 (HG.cpp:10958); el GM no lo tiene
   let name;
   if (v1 > 0) name = SUMMON_BY_V1[v1];
   else {

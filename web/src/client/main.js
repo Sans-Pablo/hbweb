@@ -520,7 +520,7 @@ async function main() {
       switch (k) {
         case "Insert": e.preventDefault(); hud.quickUse("hp"); return;
         case "Delete": e.preventDefault(); hud.quickUse("mp"); return;
-        case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); return;
+        case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); conn.send({ t: "safemode", on: flags.safe }); return;
         case "Tab": e.preventDefault(); flag("combat", "Converted to attack mode.", "Converted to peace mode."); conn.send({ t: "combatmode", on: flags.combat }); return;
         case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
         case "ArrowUp": case "ArrowDown": e.preventDefault(); whisperCycle(k === "ArrowUp" ? 1 : -1); return;      // Game.cpp VK_UP/VK_DOWN: recorre los últimos susurros
@@ -758,6 +758,7 @@ async function main() {
     for (const ev of events) {
       if (ev.t === "death" && ev.by === pid && !ev.pet && ctl.auto?.kind === "hunt") ctl.auto.kills = (ctl.auto.kills || 0) + 1;      // contador de la mini ventana del auto hunt (autowin.js)
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
+      if (ev.t === "resurrectask" && ev.id === pid) gui.confirm("Someone intends to resurrect you. Will you revive here?").then(ok => conn.send({ t: "resurrect", accept: ok }));      // dialog 50 (Game.cpp:42315)
       if (ev.id === pid) gui.recallEvent(ev);
       tutorial.onEvent(ev); questUi.onEvent(ev, world.ents.get(pid), hud);
       fx.onEvent(ev); sound.onEvent(ev); hud.onEvent(ev, world); npcUi.onEvent(ev, world); partyUi.onEvent(ev, world.ents.get(pid)); tradeUi.onEvent(ev, world.ents.get(pid)); stallUi.onEvent(ev, world.ents.get(pid)); guildUi.onEvent(ev, world.ents.get(pid));

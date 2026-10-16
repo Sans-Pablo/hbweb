@@ -146,7 +146,7 @@ export class World {
       }
       for (const e of this.ents.values()) {
         if (e.kind === "npc") { if (!(this.dbgFreeze && !e.master)) Npc.npcThink(this, e); }
-        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); Combat.chargeCritTick(this, e); }
+        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); MagicSys.tickResurrection(this, e); Combat.chargeCritTick(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); Stall.tick(this); }
       if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); groundSweep(this); }
@@ -158,7 +158,7 @@ export class World {
 }
 
 const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode", "petgo"]);
-const FOR_DEAD = new Set(["respawn", "say"]);
+const FOR_DEAD = new Set(["respawn", "say", "resurrect"]);
 
 // _iGetAttackType / OBJECTATTACKMOVE del cliente original: el crítico y el dash exigen maestría 100 en la habilidad del arma.
 const mastered = p => (p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= CRIT.mastery;
@@ -201,6 +201,8 @@ const COMMANDS = {
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
+  resurrect(w, p, cmd) { return MagicSys.answerResurrect(w, p, cmd); },        // respuesta al cuadro "Will you revive here?" (HG.cpp:38015)
+  safemode(w, p, cmd) { p.safeAttack = !!cmd.on; return true; },        // Home: ToggleSafeAttackModeHandler (HG.cpp); el cliente manda el estado resultante
   combatmode(w, p, cmd) { p.combatMode = !!cmd.on; return true; },      // Tab: postura de combate (Game.cpp: appr2 & 0xF000); la ven los demás
   lang(w, p, cmd) { if (cmd.lang === "en" || cmd.lang === "es") p.uiLang = cmd.lang; return true; },      // idioma del cliente: los habitantes le hablan en él
   turn(w, p, cmd) {

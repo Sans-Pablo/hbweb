@@ -208,7 +208,7 @@ export function damagePlayer(w, p, dmg, from, elem) {
   const ad = auraDefense(w, p); if (ad) dmg = Math.max(0, Math.round(dmg * (100 - ad) / 100));              // aura de defensa del Dummy
   { const ab = sget(w, p, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico
   p.hp -= dmg;
-  p.lastCombat = w.time;
+  p.lastCombat = p.lastDamage = w.time;                                 // m_lastDamageTime (combat.cpp:1090): el Recall lo exige 10 s en calma
   releaseHold(w, p, !!elem && elem !== "ice");
   if (dmg > 0 && !p.dead) chargeCritHit(p);
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp, wt: elem ? 0 : attackerWeapon(from) });
