@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.31 · Dash con Shift (2026-10-16)
+- El dash (OBJECTATTACKMOVE) solo se hace con Shift mantenido; el modo correr (Ctrl+R) ya no lo dispara. Diferencia deliberada con el `||m_bRunningMode` literal del original (Game.cpp 30934-30960). Sin Shift, a 2 casillas se anda hasta quedar adyacente.
+- Fallo corregido: la predicción del cliente trataba el dash como un golpe parado (ATTACK, 624 ms); ahora avanza 1 casilla con OBJECTATTACKMOVE (12 × 78 ms) al instante (connection.js; tests/crit-dash.test.mjs).
+
 ## 0.85.29 · Combate fiel (2026-10-16)
 - Andar por defecto (Game.cpp: m_bRunningMode=FALSE); antes el personaje corría siempre. Ctrl+R alterna; Shift mantenido = correr (OBJECTRUN si SP>0).
 - Dash (OBJECTATTACKMOVE) solo con el objetivo a 2 casillas en línea y arma de alcance 1, corriendo/Shift, SP>0 y maestría 100 (cliente, servidor y bots).

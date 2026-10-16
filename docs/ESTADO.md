@@ -198,6 +198,7 @@
 - [x] (hecho en v0.78.0) **Controles, Shift para el compañero:** Shift+clic izquierdo = atacar con el compañero y Shift+clic derecho = ir a esa casilla (hoy es Alt).
 - [x] (hecho en v0.78.0) **Críticos con Alt:** Alt+clic = ataque crítico (super ataque del original, con barra que se carga al golpear); citar la fórmula de HGServer/Game.cpp. → cifras del original verificadas (local, sin publicar). Ficha `critico-dash.md`, test `crit-dash`.
 - [x] (hecho en v0.78.0) **Dash:** atacar mientras se corre: avanza y golpea con bono, como en el original. → ídem.
+- [x] (v0.85.31) **Dash solo con Shift** (deliberado; el original también lo permite con el modo correr) y predicción del cliente corregida; verificado en navegador (Shift a 2 casillas avanza 1 con act 7/936 ms; sin Shift anda hasta adyacente; a 1 casilla golpe normal).
 - [x] (v0.85.29, sustituye a v0.78.0) **Andar por defecto** como el original (m_bRunningMode=FALSE); Ctrl+R alterna, Shift corre. Dash más estricto (2 casillas en línea, alcance 1, maestría 100). Ataque 8×78 ms. Sin verificar visualmente en navegador: capas de sprite/postura de combate (combatStanceMs 4 s sigue siendo modernizado), andar/correr 370/230 ms frente a 560/336 puros del original.
 - [x] (hecho en v0.78.0) **CI sin gh:** release.sh consulta por curl a la API de GitHub el estado del último workflow.
 - [x] (hecho en v0.78.0) **Fichas de 0.76.0:** escribir fichas de summonfood, sprite-retry y audio. → `summonfood.md`, `sprite-retry.md`, `audio.md`.
