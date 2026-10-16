@@ -1,5 +1,5 @@
 {
- "build": "0.85.29",
+ "build": "0.85.31",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -7,11 +7,40 @@
  "news": [
   {
    "date": "2026-10-16",
-   "title": {"es": "Combate fiel (v0.85.29)", "en": "Faithful combat (v0.85.29)"},
+   "title": {
+    "es": "Dash con Shift (v0.85.31)",
+    "en": "Shift dash (v0.85.31)"
+   },
    "items": [
-    {"es": "El personaje anda por defecto; Ctrl+R alterna correr y Shift mantenido corre.", "en": "The character walks by default; Ctrl+R toggles run and holding Shift runs."},
-    {"es": "El dash solo ocurre a 2 casillas en línea, corriendo, con SP y maestría 100 del arma.", "en": "Dash only happens at 2 tiles in line, while running, with SP and weapon mastery 100."},
-    {"es": "Los ataques duran lo mismo que en el original (8 fotogramas de 78 ms): más lentos que antes.", "en": "Attacks last as in the original (8 frames of 78 ms): slower than before."}
+    {
+     "es": "El dash (el guerrero avanza una casilla golpeando) solo ocurre con Shift mantenido, a 2 casillas en línea, con SP y maestría 100.",
+     "en": "The dash (the warrior steps one tile while striking) only happens while holding Shift, at 2 tiles in line, with SP and mastery 100."
+    },
+    {
+     "es": "Sin Shift, el personaje anda hasta quedar a 1 casilla y luego ataca; ya no ataca desde 2 casillas sin moverse.",
+     "en": "Without Shift the character walks until adjacent and then attacks; it no longer attacks from 2 tiles without moving."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Combate fiel (v0.85.29)",
+    "en": "Faithful combat (v0.85.29)"
+   },
+   "items": [
+    {
+     "es": "El personaje anda por defecto; Ctrl+R alterna correr y Shift mantenido corre.",
+     "en": "The character walks by default; Ctrl+R toggles run and holding Shift runs."
+    },
+    {
+     "es": "El dash solo ocurre a 2 casillas en línea, corriendo, con SP y maestría 100 del arma.",
+     "en": "Dash only happens at 2 tiles in line, while running, with SP and weapon mastery 100."
+    },
+    {
+     "es": "Los ataques duran lo mismo que en el original (8 fotogramas de 78 ms): más lentos que antes.",
+     "en": "Attacks last as in the original (8 frames of 78 ms): slower than before."
+    }
    ]
   },
   {

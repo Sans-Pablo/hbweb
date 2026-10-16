@@ -88,6 +88,18 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   p.sp = 1; p.busyUntil = 0;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "con SP > 0 basta (Game.cpp: m_iSP > 0)");
 }
+// predicción del cliente (connection.js send): el dash se predice como OBJECTATTACKMOVE (avanza una casilla), no como golpe parado
+{
+  const { NetConnection } = await import("../web/src/client/connection.js");
+  const sent = [], conn = { world: w, pid: id, ws: { readyState: 1, send: s => sent.push(JSON.parse(s)) }, observing: false, events: [], seq: 0 };
+  const n = spawn(40, 30); put(p, 38, 30); p.busyUntil = 0; p.lastAttack = -1e9; p.act = 0;
+  assert.ok(NetConnection.prototype.send.call(conn, { t: "attack", target: n.id, dash: true }), "dash predicho");
+  assert.equal(p.act, ACT.ATTACKMOVE, "el cliente predice OBJECTATTACKMOVE, no ATTACK parado"); assert.equal(p.actDur, 12 * 78);
+  assert.equal(p.x, 39, "el cliente avanza una casilla al instante"); assert.equal(sent.at(-1).cmd.dash, true);
+  put(p, 38, 30); p.busyUntil = 0; p.lastAttack = -1e9; p.act = 0;
+  assert.ok(NetConnection.prototype.send.call(conn, { t: "attack", target: n.id }), "golpe normal");
+  assert.equal(p.act, ACT.ATTACK); assert.equal(p.x, 38, "sin dash no se mueve");
+}
 // furia solo duplica golpes normales; el crítico suma critBonus (combat.cpp 695/765)
 {
   const nn = spawn(40, 40), mk = () => nn;
