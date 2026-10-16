@@ -467,8 +467,8 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Hecho: bolas cerrar/minimizar unificadas con el diseño del marco en todas las ventanas con marco; icono de Misiones rehecho; buscador de la tienda arriba. Pendiente: herreria/hospital (marco clásico) aún con buscador abajo.
 
 ## Backlog 2026-10-16 (tras 0.85.25)
-- Al castear sale el cursor de cruz: incorrecto (como original).
-- Summon: al aparecer, mismo efecto de brillos del recall sobre el summon.
+- ~~Al castear sale el cursor de cruz~~ HECHO 0.85.26 (CSS + fotograma 8).
+- ~~Summon: brillos del recall al aparecer~~ HECHO 0.85.26 (evento companion-spawn).
 - Demon summon nivel 50: su sprite baja mucho los FPS; analizar y arreglar.
 - Bots: stats INT/MAG, existir bots magos; resetear atributos para probar builds; usar magias; aprender que equipo es mejor (no quedarse con items de blacksmith) y progresar.
 

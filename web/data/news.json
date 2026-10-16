@@ -1,10 +1,27 @@
 {
- "build": "0.85.24",
+ "build": "0.85.26",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Cursor de magia y brillos de summon (v0.85.26)",
+    "en": "Spell cursor and summon sparkles (v0.85.26)"
+   },
+   "items": [
+    {
+     "es": "Al apuntar un hechizo ya no sale la cruz del navegador: se ve el cursor del juego (hechizo amigo/enemigo; sin disponible mientras lanzas).",
+     "en": "Aiming a spell no longer shows the browser crosshair: the game cursor is shown (friend/enemy spell; unavailable while casting)."
+    },
+    {
+     "es": "Al aparecer un summon se ven los brillos del Recall sobre él.",
+     "en": "When a summon appears, the Recall sparkles are shown on it."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

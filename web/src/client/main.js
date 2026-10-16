@@ -806,7 +806,7 @@ async function main() {
       const ov = gui.dialogAt(gui.mouse.x, gui.mouse.y) || gui.mouse.y >= 548;
       const he = ctl.hoverEnt, foe = he && he.kind !== "player";
       cur = 0;
-      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = foe ? 5 : 4;
+      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = world.busy(world.ents.get(pid)) ? 8 : foe ? 5 : 4;      // Game.cpp: m_bCommandAvailable falso (animacion en curso) = sprite 8; 4/5 solo con el comando disponible
       else if (!ov && he) cur = foe ? 3 : 6;
       if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }
