@@ -33,6 +33,7 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Mapa sin ataque (solo Create/Teleport) y magicLimited por mapa | HG.cpp:10255-10260 | magicsys.js cast | IGUAL (tests/magic-types) |
 | Reliquias Astoria (evento completo) | Astoria.cpp | — | FALTA (sin mapa ni bandos de evento) |
 | Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | verificado (sistema 12; ver ficha) |
+| Efectos de objetos: SP cura veneno, WARM, MAGIC (invisibilidad/detectar), CHANGEATTR | HG.cpp:17551-17919 | itemsys.js `useItem`, magicsys.js `castItem` | verificado (sistema 23; pendientes en la ficha) |
 
 ## Habilidades
 | sistema | original | nuestro | estado |

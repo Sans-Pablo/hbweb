@@ -35,3 +35,11 @@ Test: `tests/magic-summon-recall.test.mjs`.
 - **Recall**: exige más de 10 s sin recibir daño (`m_lastDamageTime`, `p.lastDamage`, que `damagePlayer` actualiza) salvo GM; si no, `nomagic` (NOTIFY_CANNOTRECALL).
 - **Summon Creature**: el objetivo debe ser un jugador del mismo bando; no en zona de lucha; tope magia/20 seguidores salvo GM (`summonFor(..., nolimit)`).
 - **Diferencias documentadas**: el original invoca en la casilla del objetivo (el port, en un rectángulo 5x5 alrededor del lanzador); el radio de Create-dynamic usa el mapeo propio del port (la variante cfg tiene una columna v12 extra y H/2 dejaría Fire-Wall en una casilla); no existe restricción de mapas laterales/cruzada (no hay sideMap); el botón propio de Recall del port (canal 3 s, enfriamiento 60 s) sigue vigente.
+
+## 23. Efectos de objetos (UseItemHandler, HG.cpp:17551-17919)
+Test: `tests/item-effects.test.mjs`. Código: `itemsys.js` `useItem`, `magicsys.js` `castItem` (hechizo de objeto: sin fallo, sin maná, `bItemEffect`).
+- **SP**: la poción de resistencia también cura el veneno (17686).
+- **WARM** (Unfreeze/Ginseng): si hay hielo, se deshace tras 1 s (17580).
+- **MAGIC**: antes de nada quita la invisibilidad (17752). v1=2 lanza Invisibility sobre uno mismo gratis; v1=3 Detect Invisibility salvo en zona de lucha (el objeto se gasta igual).
+- **CHANGEATTR**: v1=1 color de pelo (0..15 con vuelta), 2 peinado (0..7), 3 piel (1..3), 5 ropa interior (0..7).
+- **Pendientes / no aplicables**: v1=1 teletransporte, 4 bisle/fightzone, 5 Heldenian (sin objetos en el port); cambio de sexo (CHANGEATTR 4); FIRMSTAMINAR (`m_iTimeLeft_FirmStamina`, tope 600) sin consumidor en el port; pizarras antiguas (SLATES); STUDYMAGIC; `SpecEffectValue` por instancia; `case 20` (magia de resistencia). Reliquias de Astoria: pendientes.

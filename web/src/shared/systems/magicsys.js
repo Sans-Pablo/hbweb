@@ -66,6 +66,14 @@ export function prepare(w, p, cmd) {
   return true;
 }
 
+// Hechizo lanzado por un objeto sobre uno mismo (UseItemHandler ITEMEFFECTTYPE_MAGIC, HG.cpp:17761-17766)
+export function castItem(w, p, id) {
+  const sp = w.magic[id];
+  if (!sp) return false;
+  resolve(w, p, id, sp, p.x, p.y, 0, true);
+  return true;
+}
+
 export function cast(w, p, cmd) {
   const pre = !!(cmd.pre && p.prep && p.prep.spell === cmd.spell && w.time - p.prep.at < 120000);
   if (!pre && !p.dead && afterStep(w, p, cmd, cast)) return true;
@@ -121,15 +129,15 @@ function resist(w, tgt, power) {
   return r;
 }
 
-function resolve(w, p, id, sp, x, y, cost) {
+// item = true: lo dispara un objeto (PlayerMagicHandler con bItemEffect, HG.cpp:10248): sin probabilidad de fallo, sin maná y sin pérdida de hambre/SP
+function resolve(w, p, id, sp, x, y, cost, item = false) {
   if (p.dead) return;
   // ¿sale el hechizo?
   const chance = M.castChance(p, id, w.weather | 0);
   const wb = M.weatherBonus(id, w.weather | 0);
-  if (!M.freeFor(p) && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
-  if (!M.freeFor(p) && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
-  p.mp = Math.max(0, p.mp - cost);
-  gainSSN(p, 4, 1);
+  if (!item && !M.freeFor(p) && chance < 100 && dice(w.rng, 1, 100) > chance) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!item && !M.freeFor(p) && (p.hunger <= 10 || p.sp <= 0) && dice(w.rng, 1, 1000) <= 100) { w.emit({ t: "castfail", id: p.id }); return; }
+  if (!item) { p.mp = Math.max(0, p.mp - cost); gainSSN(p, 4, 1); }
   sclear(w, p, "invis");                                              // lanzar un hechizo rompe la invisibilidad
   let power = M.castPower(p, id);
   if (id >= 80 || sp.type === 28) power += 10000;                     // los hechizos de 9º círculo y rompe-armaduras no se resisten
