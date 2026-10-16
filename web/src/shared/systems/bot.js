@@ -74,7 +74,7 @@ const catalogs = new WeakMap();
 function catalog(data) {
   let c = catalogs.get(data);
   if (c) return c;
-  c = { gear: new Map(), potion: null, foods: [] };
+  c = { gear: new Map(), potion: null, mana: null, foods: [] };
   for (const d of data.items.values()) {
     if (!d || !(d.price > 0) || !d.name || d.family === "psychic") continue;                       // el Psychic Controller no es un arma de combate para los bots
     if (d.type === ITYPE.EQUIP && d.equipPos > 0 && d.equipPos <= EQUIP.FULLBODY && d.equipPos !== EQUIP.NECK && d.equipPos !== EQUIP.RFINGER && d.equipPos !== EQUIP.LFINGER && d.equipPos !== EQUIP.BACK && d.equipPos !== EQUIP.FULLBODY) {
@@ -86,7 +86,7 @@ function catalog(data) {
     }
   }
   for (const l of c.gear.values()) l.sort((a, b) => b.price - a.price);
-  c.potion = data.named("RedPotion");
+  c.potion = data.named("RedPotion"); c.mana = data.named("BluePotion");
   c.foods = ["Meat", "Baguette"].map(n => data.named(n)).filter(Boolean);
   catalogs.set(data, c);
   return c;
@@ -146,6 +146,7 @@ export function errands(w, p, b, first = false) {
   // comida y pociones
   const potCap = p.res && p.level >= 15 ? Math.max(6, Math.min(40, Math.floor(p.gold / 60))) : 6;               // con oro de sobra lleva más pociones (aguantan más los jefes)
   if (cat.potion && countOf(p, cat.potion.id) < potCap) buy(w, p, cat.potion, potCap - countOf(p, cat.potion.id));
+  if (isCaster(p) && cat.mana && countOf(p, cat.mana.id) < potCap) buy(w, p, cat.mana, potCap - countOf(p, cat.mana.id));      // v0.85.48: el lanzador lleva pociones de maná para seguir tirando magias
   if (cat.foods[0] && cat.foods.reduce((a, d) => a + countOf(p, d.id), 0) < 4) buy(w, p, cat.foods[0], 4);
   feedSummons(w, p, t => blog(w, p, t), !p.res);                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
@@ -447,6 +448,10 @@ function run(adv, w, p, b) {
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp, fear = w.pvp ? 0 : Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
   if (BM.ensureHands(adv, w, p, b, t => blog(w, p, t))) return;
+  if (isCaster(p) && p.mp < Math.max(15, p.maxMp * 0.25) && w.time - (b.manaAt || 0) > 1500 && w.time - (p.lastCombat || -1e9) < 8000) {          // sin maná en pelea: bebe una poción de maná y sigue lanzando
+    const bl = catalog(w.data).mana, mp = bl && p.bag.find(i => i.id === bl.id);
+    if (mp) { b.manaAt = w.time; blog(w, p, `Maná ${p.mp}/${p.maxMp}: bebo una poción de maná.`); adv.command(p.id, { t: "use", uid: mp.uid }); return; }
+  }
   if (isCaster(p) && BM.support(adv, w, p, b, t => blog(w, p, t))) return;
   if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);

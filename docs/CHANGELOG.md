@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.49 · Magos con pociones de maná (2026-10-16)
+- [invento] bot.js: catálogo `mana` (BluePotion), compra en errands y bebe con maná < 25 % en pelea.
+
 ## 0.85.48 · Bots: equipo y recall (2026-10-16)
 - [invento] Bots: Str de arma (`builds.js swingStr/allocate`), bonos por clase (`bonusScore`), requisitos de armadura, Recall sin pociones, mago sin vara salvo vs magos/AMP. Fire Ball impacto (spellfx), icono guerrero/mago en observador. Test `bot-gear.test.mjs`, ficha `docs/sistemas/bot-equipo.md`.
 - Pendiente: sets por situación con intercambio en combate y respec por arma nueva; disconnects por doble servidor (EADDRINUSE, iniciar.ps1) sin confirmar.
