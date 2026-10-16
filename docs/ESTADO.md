@@ -504,3 +504,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] 0.85.39: auditoría de daños (VIT PvP/mágico, ítems 335/337, Demonslayer). Pendiente: bonos cruzada/Apocalypse/banderas, inmunidad skill 51/52, HITRATIOFACTOR 80 vs 50, desgaste anillo.
 - [x] 0.85.39: solo sprites IA (sprites_hd descartado en assets.js).
 - [x] (v0.85.41) Sección Economía (oro) dentro de /admin (pedido 2026-10-16: «no veo la parte de gold»).
+
+- [x] 0.85.42: combate original (ver CHANGELOG); pendiente near, saActive, orden absorción elemental/anillo; 1817 claves sin IA (docs/SPRITES.md).

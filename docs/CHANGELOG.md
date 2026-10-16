@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.42 — Combate original
+- HITRATIOFACTOR 80, orden de daño de combat.cpp, anillos 335/337 con desgaste, inmunidad de habilidad especial, Apocalypse/Crusade/banderas (apagados por defecto).
+- Solo sprites IA; arreglo del suelo con hoja IA fallida.
+- Pendiente: ataque cercano (`near`) y activación de habilidades especiales sin origen en el port; absorción elemental antes del anillo.
+
 ## 0.85.41 · Caja del admin (2026-10-16)
 - [admin] Sección «💰 Economía (oro)» en /admin: oro creado/destruido por motivo, últimos movimientos, filtro de horas y bots. Endpoint /api/admin/economy. Arreglado un error de sintaxis en la sección de discusiones de bots.
 - Pendiente: gráfica de la serie, oro de bots sin registrar.
