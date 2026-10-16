@@ -65,6 +65,7 @@ export class Fx {
     this.world = world;
     this.me = me;
     this.texts = [];
+    this.castMsgs = new Map();   // id -> {text, born}: «<Hechizo>!» sobre el lanzador
     this.critT = new Map();
     this.dashes = new Map();         // id -> {at, dir, ms}: dash en curso (fantasma del ataque con desplazamiento)
     this.parts = [];
@@ -115,7 +116,8 @@ export class Fx {
         break;
       }
       // Game.cpp OBJECTMAGIC: sobre el lanzador aparece «<Nombre del hechizo>!» (CMsg tipo 41, rojo 255,80,80)
-      case "cast": { const m = this.world.magic?.[ev.spell]; if (m?.name) this.text(ev.id, m.name + "!", "#ff5050", false, 0, 14, 22); break; }
+      // (Game.cpp:40047-40062: _RemoveChatMsgListByObjectID + nuevo mensaje; CHATTIMEOUT_C 2000 ms, DrawChatMsgBox tipo 41). Tabla de magias: world.data.magic
+      case "cast": { const m = this.world.data?.magic?.[ev.spell]; if (m?.name) this.castMsgs.set(ev.id, { text: m.name + "!", born: performance.now() }); break; }
       case "spell": {
         const c = this.world.ents.get(ev.id);
         this.sp.spell(ev.spell, c ? c.x : ev.x, c ? c.y : ev.y, ev.x, ev.y);
@@ -250,6 +252,15 @@ export class Fx {
       ctx.globalAlpha = 1;
     }
     this.texts = this.texts.filter(t => now - t.born < 1100);
+    // mensaje de lanzamiento (DrawChatMsgBox tipo 41, Game.cpp:18943-19066): rojo (180,30,30) doble a 1 px, sube iLoc=ms>>5 hasta 9 px, dura 2000 ms (CHATTIMEOUT_C)
+    ctx.textAlign = "left"; ctx.font = "12px 'Courier New', monospace";
+    for (const [id, m] of this.castMsgs) {
+      const age = now - m.born, p = this.at(id);
+      if (age >= 2000 || !p) { this.castMsgs.delete(id); continue; }
+      const x = Math.round(p[0] - camX - 4 * m.text.length), y = Math.round(p[1] - camY - 65 - Math.min(9, age >> 5));
+      ctx.fillStyle = "rgb(180,30,30)";
+      ctx.fillText(m.text, x, y); ctx.fillText(m.text, x + 1, y);
+    }
   }
 }
 

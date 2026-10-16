@@ -748,7 +748,7 @@ async function main() {
       renderer.setMap(world.grid, world.map.name);
       ctl.grid = world.grid; ctl.intent = null; ctl.path = []; ctl.down = false;
       ctl.hover = ctl.hoverEnt = ctl.hoverPlayer = ctl.clickFx = null;
-      fx.texts = []; fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
+      fx.texts = []; fx.castMsgs.clear(); fx.parts = []; fx.rings = []; fx.bolts = []; fx.flash.clear(); bubbles.clear();
       sound.setTrack(trackFor(world));
       mapStream(world);
     }

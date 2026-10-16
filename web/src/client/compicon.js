@@ -30,8 +30,10 @@ function tintOf(g, sp, m) {
 }
 const ballCache = new Map();
 const BALL_SPRITE = 23;                               // sprite de Item.cfg que no existe: la hoja ip20 la hornea tools/ballitems.mjs
-// bola de la mochila: un 15 % más grande, con el color de su especie y el sprite pequeño justo en el centro
-export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
+// bola de la mochila: tamaño de un objeto normal (el sprite horneado mide 48 px con margen; a 0,85 la bola ocupa ~34 px), con el color de su especie
+// y la criatura DENTRO de la esfera (46 % del ancho), suavizada en alta calidad (se reduce desde el sprite original, sin pixelar)
+export const BALL_SCALE = 0.85, BALL_INNER = 0.46;
+export function drawBall(g, it, d, key, x, y, alpha = 1, scale = BALL_SCALE) {
   const fr = g.spr.frame(key, d.spriteFrame); if (!fr || !g.spr.ready(key)) return;
   const [sx, sy, w, h, px, py] = fr, sp = it.comp.sp;
   const mk = sp + ":" + (it.comp.cls || ""); let m = cache.get(mk); if (!m) { m = miniOf(sp, k => g.spr.frames(k), it.comp.cls); cache.set(mk, m); }
@@ -58,7 +60,8 @@ export function drawBall(g, it, d, key, x, y, alpha = 1, scale = 1.15) {
     const f = g.spr.frame(m.key, m.f);
     if (!f) { if (gray) g.ctx.filter = "none"; return; }
     if (!g.spr.ready(m.key)) { g.spr.img[m.key]; if (gray) g.ctx.filter = "none"; return; }
-    const [mx, my, mw, mh] = f, k = Math.min(1, 24 / Math.max(mw, mh)) * scale / 1.15;
+    const [mx, my, mw, mh] = f, k = Math.min(1, BALL_INNER * w * scale / Math.max(mw, mh));
+    g.ctx.imageSmoothingEnabled = true; g.ctx.imageSmoothingQuality = "high";
     g.ctx.drawImage(g.spr.img[m.key], mx, my, mw, mh, cx - mw * k / 2, cy - mh * k / 2, mw * k, mh * k);
   }
   if (gray) g.ctx.filter = "none";
