@@ -408,3 +408,16 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.12: muerte fiel (exp, objetos, PK; Client.cpp:1035/1094/930-1000). 0.85.14: cárcel 180 s hecha (Client.cpp:1184, HG.cpp 11661-11810/2323): teletransporte a arejail/elvjail y bloqueo de destinos. La granja del bando hace de `sideMap`; el caso «reiniciar en ciudad enemiga» no existe en el port (no hay mapas enemigos).
 
 - 0.85.13: +50 oro por nivel (HG.cpp:15052) y SkillUp de escudo en PvP (combat.cpp:912). PENDIENTE: cárcel (22), alquimia/minería/manufactura (14: el port no tiene esos sistemas; SkillUp en HG.cpp:23682/24029/28214), revisión del servidor de crítico/dash (5).
+
+## Backlog 2026-10-16 (tras 0.85.18)
+- [ ] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
+- [ ] Magias: nombre del hechizo sobre la cabeza al castear, mecánica y visual originales — sistemas
+- [ ] Autohunt: exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
+- [ ] Mini ventanas como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
+- [ ] Kills de pets cuentan como del dueño (npc y jugadores) — motor
+- [ ] Summon balls demasiado grandes: rediseñar — sistemas
+- [ ] Tirones al correr estando freezado — motor
+- [ ] Barra de búsqueda en el recuadro rojo (alargar cabecera o rediseñar), centrada — ui
+- [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
+- [ ] Quitar el turquesa que queda en la UI — ui
+- [ ] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui
