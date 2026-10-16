@@ -17,12 +17,13 @@ const ban = k => { sprite("ban-" + k, "dialogtext_0", BAN[k]); return `<div clas
 const btn = (k, x, y) => { sprite("bn-" + k, "dialogtext_1", BTN[k]); sprite("bh-" + k, "dialogtext_1", BTN[k] + 1); return `<div class="sp bt bn-${k}" data-h="bh-${k}" style="left:${x}px;top:${y}px"></div>`; };
 const frame = (extra = "") => `<div class="sp frm"></div><div class="sp strip"></div>${extra}`;
 const slots = (cols, rows, x0, y0, items) => { let s = ""; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const it = items[r * cols + c]; s += `<div class="slot" style="left:${x0 + c * 40}px;top:${y0 + r * 40}px">${it ? `<span>${it}</span>` : ""}</div>`; } return s; };
-const win = (w, h, inner, o = {}) => `<div class="win" style="width:${w}px;height:${h}px">${o.mini ? `<div class="sp mfrm"></div>` : frame()}${inner}<div class="ball min">–</div><div class="ball cls">✕</div></div>`;
+const win = (w, h, inner, o = {}) => `<div class="win" style="width:${w}px;height:${h}px">${o.mini ? `<div class="sp mfrm"></div>` : frame()}${inner}<div class="ball min">&#8211;</div><div class="ball cls">&#10005;</div></div>`;
 const BODY = `
-${win(258, 339, slots(6, 5, 8, 50, ["⚔", "🛡", "", "", "", "", "", "", "R", "B"]) + `<div class="mut" style="left:30px;top:268px">Weight 42/120</div>` + btn("ok", 30, 300) + btn("change", 154, 300))}
-${win(258, 339, ban("storage") + `<div class="row" style="top:110px">Select the item.</div><div class="row sel" style="top:130px">Long Sword</div><div class="row" style="top:145px">Red Potion (25)</div><div class="row" style="top:160px">Ruby (3)</div><div class="row" style="top:175px">Gold (12400)</div>` + btn("cancel", 154, 300))}
-${win(258, 339, ban("quest") + `<div class="row sel" style="top:50px">Slime Hunt  3/10</div><div class="row" style="top:65px">Amphis Ridge  0/5</div><div style="left:30px;top:110px;width:196px;line-height:1.4">Kill 10 slimes in the Aresden fields and return to the guard.</div><div class="bar" style="left:30px;top:220px;width:196px"><i style="width:30%"></i></div>` + btn("accept", 30, 300) + btn("cancel", 154, 300))}
-${win(215, 87, `<div style="left:0;right:0;top:8px;text-align:center;font-weight:700;color:#3a2810">Auto Hunt</div><div style="left:24px;top:30px">Status: <b>ACTIVE</b></div><div class="bar" style="left:24px;top:50px;width:165px"><i style="width:64%"></i></div>`, { mini: 1 })}
+<div class="cell"><div class="lbl">1 · Inventario</div>${win(258, 339, slots(5, 5, 22, 44, ["⚔", "🛡", "", "", "", "", "", "", "R", "B"]) + `<div class="mut" style="left:22px;top:252px">Weight 42/120</div>` + btn("ok", 22, 300) + btn("change", 152, 300))}</div>
+<div class="cell"><div class="lbl">2 · Almacén</div>${win(258, 339, ban("storage") + `<div class="row" style="top:110px">Select the item.</div><div class="row sel" style="top:130px">Long Sword</div><div class="row" style="top:145px">Red Potion (25)</div><div class="row" style="top:160px">Ruby (3)</div><div class="row" style="top:175px">Gold (12400)</div>` + btn("cancel", 152, 300))}</div>
+<div class="cell"><div class="lbl">3 · Quests</div>${win(258, 339, ban("quest") + `<div class="row sel" style="top:50px">Slime Hunt  3/10</div><div class="row" style="top:65px">Amphis Ridge  0/5</div><div style="left:22px;top:110px;width:204px;line-height:1.4">Kill 10 slimes in the Aresden fields and return to the guard.</div><div class="bar" style="left:22px;top:220px;width:204px"><i style="width:30%"></i></div>` + btn("accept", 22, 300) + btn("cancel", 152, 300))}</div>
+<div class="cell"><div class="lbl">4 · Auto Hunt (mini)</div>${win(215, 87, `<div style="left:0;right:0;top:8px;text-align:center;font-weight:700;color:#3a2810">Auto Hunt</div><div style="left:24px;top:30px">Status: <b>ACTIVE</b></div><div class="bar" style="left:24px;top:50px;width:165px"><i style="width:64%"></i></div>`, { mini: 1 })}</div>
+<div class="cell"><div class="lbl">5 · Auto Hunt (grande)</div><div style="position:relative;display:flex">${win(258, 339, ban("system") + `<div class="row sel" style="top:50px">Hunt zone: Aresden Farm</div><div class="row" style="top:70px">Target: Slime</div><div class="row" style="top:90px">Use potion at HP 40%</div><div class="row" style="top:110px">Loot: all</div><div class="row" style="top:130px">Return to town when full</div>` + btn("ok", 22, 300))}${win(258, 339, `<div class="row" style="top:50px">Status: <b>ACTIVE</b></div><div class="row" style="top:70px">Time: 00:12:40</div><div class="row" style="top:90px">Kills: 38 · Exp: +4,210</div><div class="bar" style="left:22px;top:130px;width:204px"><i style="width:64%"></i></div>` + btn("cancel", 152, 300))}</div></div>
 `;
 const html = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Base original · ventanas</title>
 <style>
@@ -37,10 +38,13 @@ h1{font:600 16px Tahoma;margin:0 0 4px;color:#f2c14e}p{margin:0 0 20px;color:#b9
 .mfrm{left:0;top:0;width:215px;height:87px;background:var(--gamedialog_1) -366px -343px}
 .bt{cursor:pointer}${css}
 .slot{width:38px;height:38px;border:1px solid #5a431f;background:rgba(60,40,15,.3);display:grid;place-items:center;font-weight:700;color:#3a2810}
-.row{left:30px;width:196px;height:15px;line-height:15px;padding:0 3px}.sel{background:rgba(90,67,31,.45);color:#fff}
+.row{left:22px;width:204px;height:15px;line-height:15px;padding:0 3px}.sel{background:rgba(90,67,31,.45);color:#fff}
 .mut{color:#4a3a1c}.bar{height:8px;background:#5a431f;border:1px solid #20160a}.bar i{display:block;height:100%;background:#e0b84a;position:static}
-.ball{top:3px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9px;color:#f0e2bd;background:#3a2c14;border:1px solid #c9a95c;cursor:pointer}
-.ball.min{left:3px}.ball.cls{right:3px;background:#6a2218}
+.ball{top:4px;width:16px;height:16px;display:grid;place-items:center;font:700 11px Tahoma;color:#e8d4a0;text-shadow:1px 1px #20160a;cursor:pointer}
+.ball:hover{color:#fff;text-shadow:0 0 4px #f2c14e}
+.ball.min{left:5px}.ball.cls{right:5px}
+.lbl{position:static;color:#f2c14e;font:600 12px Tahoma;margin:0 0 6px}.cell{display:flex;flex-direction:column}
+/* margenes utiles del marco: x 22..226 (204 px), y 44..294 */
 </style><body>
 <h1>Nueva base: sprites reales del juego</h1>
 <p>Marco gamedialog_1 (frame 2), cabeceras de dialogtext_0, botones de piedra de dialogtext_1 (pasa el ratón: se iluminan como en el juego) y texto negro sobre pergamino, como en el cliente original. Contenido simulado; es el kit sobre el que se unificarán las ventanas.</p>
