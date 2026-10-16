@@ -120,6 +120,7 @@
 
 ## Backlog (actualizado en v0.70.0)
 - [x] (pedido 2026-10-16, v0.85.25) análisis de una tercera ciudad/bando (solo análisis, sin código): [docs/sistemas/tercera-ciudad.md](sistemas/tercera-ciudad.md). El original solo tiene Aresden/Elvine/neutral; recomendado ciudad neutral (≈1,5-2 sem); tercer bando completo ≈5-9 sem (INVENTO). Pendiente decisión del usuario.
+  - Maqueta (mapa Promise Land con 4 entradas + warrior hero amarillo caminando): docs/sistemas/tercera-ciudad.md §12, imágenes en docs/sistemas/img/.
   - Revisado con las condiciones del usuario (solo farm y Promise Land, armaduras recoloreadas, ciudad solo de bots): ≈ 8-14 días. Ver §9 de la ficha.
   - Decisiones 2026-10-16: armaduras normales, solo hero set coloreados (¿amarillo?); 3 bandos se atacan; granja propia + 4 entradas en Promise Land. ≈ 9-15 días. §10 de la ficha.
   - 2026-10-16 (b): mismos bots por ciudad (20); 4.ª entrada deshabilitada; amarillo medido (tono ≈50°, S 0,70, V 0,60). §11 de la ficha.
