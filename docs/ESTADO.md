@@ -1,4 +1,6 @@
 # Estado del proyecto
+- [x] (v0.85.46) Bots magos y PvP: compran/usan paralyze, PFM, Energy Strike, Lightning Strike, Meteor, Blizzard; menos miedo en PvP. Descubierto: los IDs de magia de botmagic eran erróneos.
+- [x] (v0.85.45) Caza automática vende/guarda el botín aunque empiece con la mochila casi llena.
 - [x] (v0.85.44) Dash y críticos descifrados contra el original: dash también con modo correr; resto ya idéntico.
 
 **Hecho:** granja de Aresden jugable; combate con fórmulas del servidor original; ítems originales (568 de Item.cfg), mochila de 50 casillas, peso, equipar con requisitos, absorción por parte del cuerpo, durabilidad (solo con bando), botín con las tasas originales (1/1), habilidades con maestría, resistencia, hambre; opciones (Esc), mapa tipo Diablo II, correr con R, guardado en el navegador.

@@ -12,10 +12,13 @@ import { isCaster, isMage } from "./builds.js";
 import { sget } from "./status.js";
 
 // Orden de estudio: primero curar y el misil, luego escudo y ataques fuertes, al final los de apoyo caros (ids de Magic.cfg).
-export const STUDY_ORDER = [1, 0, 6, 3, 8, 9, 16, 32, 28, 29, 19, 11];
-export const ATTACK = [32, 28, 16, 8, 3, 0];            // Triple Energy Bolt, Lightning, Fire Strike, Fire Ball, Energy Bolt, Magic Missile
-export const HEALS = [9, 1];                            // Great Heal, Heal
-export const SHIELDS = [29, 6];                         // Great Defense Shield, Defense Shield
+// v0.85.46: compran TODO lo que sirve para pelear (ataque, paralizar, PFM) en cuanto tienen Int y oro; lo caro (Energy Strike, Lightning Strike, Meteor, Blizzard) al final.
+export const STUDY_ORDER = [1, 0, 13, 33, 10, 20, 35, 21, 30, 25, 47, 43, 44, 45, 57, 60, 74, 81, 91, 24];   // ids de Magic.cfg (claves de magic.json)
+export const ATTACK = [91, 81, 74, 60, 57, 47, 43, 45, 30, 20, 10, 0];   // Blizzard, Meteor Strike, Lightning Strike, Energy Strike, Ice Strike, Triple Energy Bolt, Lightning, Chill Wind, Fire Strike, Fire Ball, Energy Bolt, Magic Missile
+export const HEALS = [21, 1];                            // Great Heal, Heal
+export const SHIELDS = [44, 13];                         // Great Defense Shield, Defense Shield
+export const PARALYZE = [35, 25];                       // Paralyze, Hold Person (contra jugadores: el combo del mago es paralizar y rematar)
+const PFM = 33;                                         // Protection From Magic (contra otro lanzador)
 const GOLD_RESERVE = 150;                               // oro que no gasta en hechizos (pociones y comida)
 const CAST_RANGE = 9, HEAL_RANGE = 8;                   // la orden admite 11 (magicsys.js); se queda corto para no fallar por el movimiento del objetivo
 
@@ -63,6 +66,10 @@ function cast(adv, w, p, b, id, x, y) {
 // Ataque: lanza el mejor hechizo que pueda pagar al monstruo `t`. Devuelve true si lanzó (el bot no pega en ese turno).
 export function fight(adv, w, p, b, t, log) {
   if (!t || !ready(w, p, b) || w.safeAt(p.x, p.y) || dist(p, t) > CAST_RANGE) return false;
+  if (t.kind === "player") {                                                    // PvP: paraliza primero (si no lo está ya) y luego remata con el mejor ataque
+    const par = PARALYZE.find(h => known(p, h) && w.magic[h] && p.mp >= costOf(w, p, h) && M.castChance(p, h) >= 40);
+    if (par !== undefined && !sget(w, t, "hold") && (t.eff?.addPR || 0) < 500) { log(`Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y); }
+  }
   const healKeep = HEALS.some(h => known(p, h)) ? costOf(w, p, HEALS.find(h => known(p, h))) : 0;
   const id = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) + healKeep && M.castChance(p, a) >= 40);
   if (id === undefined) return false;
@@ -87,6 +94,8 @@ export function support(adv, w, p, b, log) {
     if (ally) { log(`Curo a ${ally.name} (${Math.round(low * 100)}% de vida).`); return cast(adv, w, p, b, heal, ally.x, ally.y); }
   }
   if (inFight && w.time - (b.shieldAt || -1e9) > 45000 && !sget(w, p, "protect")) {
+    const foe = b.target?.kind === "player" ? b.target : null, mageFoe = foe && (foe.eff?.wtype >= 34 && foe.eff?.wtype <= 39 || foe.mp > foe.hp);      // contra otro mago, PFM; contra el resto, escudo físico
+    if (mageFoe && known(p, PFM) && w.magic[PFM] && p.mp >= costOf(w, p, PFM) + 20) { b.shieldAt = w.time; log("Me protejo con Protection From Magic."); return cast(adv, w, p, b, PFM, p.x, p.y); }
     const sh = SHIELDS.find(s => known(p, s) && w.magic[s] && p.mp >= costOf(w, p, s) + 20);
     if (sh !== undefined) { b.shieldAt = w.time; log(`Me protejo con ${w.magic[sh].name || "un escudo"}.`); return cast(adv, w, p, b, sh, p.x, p.y); }
   }

@@ -248,7 +248,7 @@ export function bossPreview(w, level) {
 }
 export const fightOk = (w, p, e) => fightEstimate(w, p, e).ratio >= 1.3;
 export const tooStrong = (w, p, e) => {
-  if (e.kind === "player") return e.level > p.level + 6 || e.hp > p.hp * 2.2;                        // contra un jugador enemigo: solo si no es mucho más fuerte
+  if (e.kind === "player") return e.level > p.level + 12 || e.hp > p.hp * 3.5;                        // contra un jugador enemigo: solo si no es mucho más fuerte
   if (e.boss && !e.aux) return !fightOk(w, p, e);                                                       // jefe de cripta: solo si el cálculo de la pelea sale a favor (con los compañeros que lo ayuden)
   const dl = p.res?.dlv?.[(e.boss ? e.name + "*" + e.boss : e.name) + (w.map.kind === "dungeon" ? "@" + w.map.level : "")];       // en la cripta la lección es por piso (los esqueletos escalan con el piso: un piso que lo mató no veta toda la especie)                                                                    // APRENDIZAJE: el bot recuerda el nivel al que lo mató esta especie y no vuelve a pelearla hasta llevar 3 niveles más
   if (dl !== undefined && p.level < dl + 3 && w.time - (p.res.dlt?.[(e.boss ? e.name + "*" + e.boss : e.name) + (w.map.kind === "dungeon" ? "@" + w.map.level : "")] || 0) < 20 * 60000) return true;       // la lección caduca a los 20 min: sin presa no hay experiencia y el bot quedaba atascado
@@ -442,7 +442,7 @@ function run(adv, w, p, b) {
   if (w.time >= b.errand && (unarmed || w.time - p.lastCombat > 3500 || (p.eff?.bow && !arrowOf(w, p)))) { b.errand = w.time + ERRAND_MS; errands(w, p, b); if (b.bought) { b.bought = 0; blog(w, p, `Compro equipo (oro ${p.gold}).`); think_(w, p, b, "shop"); } }
   // comer y curarse
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
-  const hpf = p.hp / p.maxHp, fear = Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
+  const hpf = p.hp / p.maxHp, fear = w.pvp ? 0 : Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
   if (BM.ensureHands(adv, w, p, b, t => blog(w, p, t))) return;
   if (isCaster(p) && BM.support(adv, w, p, b, t => blog(w, p, t))) return;
   if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
@@ -451,7 +451,7 @@ function run(adv, w, p, b) {
     if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: descanso.`); }
     b.rest = true;
   }
-  if (w.pvp && hpf < 0.35 && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
+  if (w.pvp && hpf < 0.25 && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
     const foe = [...w.ents.values()].find(e => e.kind === "player" && canFight(w, p, e) && dist(p, e) <= 9);
     if (foe) { b.recallAt = w.time; blog(w, p, `Poca vida y ${foe.name} (bando enemigo) cerca: intento Recall para huir.`); adv.command(p.id, { t: "recall" }); }
   }
@@ -505,7 +505,7 @@ function run(adv, w, p, b) {
         } else if (d <= MAGE_RANGE.max) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }       // a distancia: espera a que el summon lance
       } else if (p.res?.arch === "scholar" && !isSupport(p) && Comp.activeBall(p)) wieldStaff(adv, w, p, b);
     }
-    if (isCaster(p) && t.kind === "npc" && !b.travel && BM.fight(adv, w, p, b, t, x => blog(w, p, x))) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }
+    if (isCaster(p) && (t.kind === "npc" || t.kind === "player") && !b.travel && BM.fight(adv, w, p, b, t, x => blog(w, p, x))) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }
     // Crítico (Alt + clic) y dash, como un jugador con maestría 100 en el arma (Game.cpp, _iGetAttackType / OBJECTATTACKMOVE)
     const master = ((p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= 100), crit = master && (p.superAttack | 0) > 0;
     const gap = dist(p, t), reach = reachOf(w, p, t, crit);

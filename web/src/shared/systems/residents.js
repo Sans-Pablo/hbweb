@@ -738,10 +738,10 @@ function expedition(adv, w, p, r, home) {
       }
       const pit = r._trip.pit, pc = pit && pitCenter(pit);
       // en Promise Land va a buscar al enemigo más cercano (cualquier distancia; con foso asignado, solo los que estén cerca de él) si está sano; el combate lo resuelve el cerebro del bot (pickTarget)
-      if (w.time > (r._seekAt || 0) && !p.dead && b.target?.kind !== "player" && !b.rest && p.hp > p.maxHp * 0.6) {
+      if (w.time > (r._seekAt || 0) && !p.dead && b.target?.kind !== "player" && !b.rest && p.hp > p.maxHp * 0.5) {
         r._seekAt = w.time + 8000;
         let foe = null, fd = pit ? 40 : 320;
-        for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 6 && e.hp <= p.hp * 2.2) { const d = pit ? dist(pc, e) : dist(p, e); if (d < fd) { foe = e; fd = d; } }
+        for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 12 && e.hp <= p.hp * 3.5) { const d = pit ? dist(pc, e) : dist(p, e); if (d < fd) { foe = e; fd = d; } }
         if (foe && dist(p, foe) > 10) { b.travel = { x: foe.x, y: foe.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${foe.name} (${foe.side === 1 ? "Aresden" : foe.side === 2 ? "Elvine" : "viajero"}, nv ${foe.level}) a ${dist(p, foe)} casillas.`); }
         else if (pit && !foe && dist(p, pc) > 14) { b.travel = { x: pc.x, y: pc.y, w, until: w.time + 40000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Voy al foso ${pit.id} (${pit.name}) en (${pc.x},${pc.y}) para dominarlo.`); }
         else if (pit && dist(p, pc) <= 14) b.home = { x: pc.x, y: pc.y };       // en el foso: pasea por él esperando enemigos

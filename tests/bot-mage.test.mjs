@@ -49,4 +49,12 @@ if (!w.safeAt(P.x, P.y)) { const mp1 = P.mp; assert.ok(BM.fight(a, w, P, b, tgt,
 // equipo mágico: un bastón con ahorro de maná vale más para un lanzador
 const eff = { effectType: 14, v1: 2, v2: 20, id: 1 };
 assert.ok(BM.casterBonus(eff) > 0 && BM.casterBonus({ effectType: 1 }) === 0, "bonus de equipo mágico");
+// v0.85.46: compra paralizar, PFM y los ataques fuertes cuando tiene Int y oro; contra un jugador paraliza primero
+P.stats.int = 200; P.gold = 500000; w.recalc(P); n = 0; while (BM.study(w, P, b, () => {}) && n++ < 40);
+for (const id of [35, 25, 33, 60, 74, 81, 91]) assert.ok(P.magic[id], "aprende la magia " + id);
+if (!w.safeAt(P.x, P.y)) {
+  P.hp = P.maxHp; P.mp = P.maxMp; P.lastCast = -1e9; b.castAt = -1e9; w.time += 5000;
+  const foe = a.spawnBot(null, { level: 20 }); foe.x = spot[0] ?? spot.x ?? P.x + 3; foe.y = spot[1] ?? spot.y ?? P.y;
+  const mp2 = P.mp; assert.ok(BM.fight(a, w, P, b, foe, () => {}), "lanza contra un jugador"); tick(2000); assert.ok(P.mp < mp2 || P.lastCast > -1e9, "lanza (paralizar o atacar)");
+}
 console.log("OK bot-mage");
