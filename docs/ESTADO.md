@@ -410,14 +410,16 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.13: +50 oro por nivel (HG.cpp:15052) y SkillUp de escudo en PvP (combat.cpp:912). PENDIENTE: cárcel (22), alquimia/minería/manufactura (14: el port no tiene esos sistemas; SkillUp en HG.cpp:23682/24029/28214), revisión del servidor de crítico/dash (5).
 
 ## Backlog 2026-10-16 (tras 0.85.18)
-- [ ] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
+- [x] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
 - [ ] Magias: nombre del hechizo sobre la cabeza al castear, mecánica y visual originales — sistemas
 - [ ] Autohunt: exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
 - [ ] Mini ventanas como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
-- [ ] Kills de pets cuentan como del dueño (npc y jugadores) — motor
+- [x] Kills de pets cuentan como del dueño (npc y jugadores) — motor
 - [ ] Summon balls demasiado grandes: rediseñar — sistemas
-- [ ] Tirones al correr estando freezado — motor
+- [x] Tirones al correr estando freezado — motor
 - [ ] Barra de búsqueda en el recuadro rojo (alargar cabecera o rediseñar), centrada — ui
 - [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
 - [ ] Quitar el turquesa que queda en la UI — ui
 - [ ] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui
+
+- 0.85.19: críticos (visual/sonido cliente; cálculo ya portado en 0.85.17), kills de pets al dueño y predicción congelado/hold hechos. Sin test dedicado de movimiento congelado.

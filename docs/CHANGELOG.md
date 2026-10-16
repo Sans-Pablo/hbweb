@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.19 · Críticos y mascotas (2026-10-16)
+- Crítico cliente (Game.cpp ~14296, MapData.cpp OBJECTATTACK 2541-2640): efectos 20-27 viajan de origen a destino (paso 50, 5 chispas efecto 8 ±10 px por paso, fin a ≤2 px); sonido del arma en su fotograma (tipos 1-2 f5, 3-19 f5, 20-39 f2, 41-59 f3); efecto de ataque para todo V3≠1 (StormBlade 5/30).
+- Kills de mascotas/invocaciones acreditados al dueño (npcsys.js killNpc/petHurt; tests/pet-kills.test.mjs).
+- Predicción de movimiento del cliente igual que el servidor: hielo/chill ×1,5 y hold bloquea (connection.js).
+
 ## 0.85.17 · Dash y crítico (2026-10-16)
 - Tarea 5 cliente: evento `dash` (world.js) y fantasma del dash en el renderer (Game.cpp:8616-8654 desplazamientos 26/16/0; 8917-8921 fantasma con tinte). Ya estaban portados: chispas del crítico (Game.cpp:5360-5374, 14296-14318, 6350-6361; spellfx.js) y tinte berserk (0,-5,-5). El original no tiene sonido propio del crítico (solo el del golpe). No hay animación completa de OBJECTATTACKMOVE de 12 fotogramas: el web usa paso de carrera + ataque.
 

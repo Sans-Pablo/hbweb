@@ -151,7 +151,14 @@ export class SpellFx {
         if (f === 1) for (let i = 0; i < 5; i++) at(12, e.mx + 5 - rnd(10), e.my + 5 - rnd(10), -rnd(2));
         if (f === 7) for (let i = 0; i < 3; i++) at(15, e.mx + 5 - rnd(10), e.my + 5 - rnd(10));
         done(); break;
-      case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 250: case 81: done(); break;
+      case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: {                   // destello de crítico (bEffectFrameCounter, Game.cpp ~14296): avanza 50 px por paso hacia el blanco, 5 chispas fx8 por paso (±10 px), muere a ≤2 px
+        const tx = e.dx * T, ty = e.dy * T - 40;
+        fly(50, tx, ty);
+        for (let i = 0; i < 5; i++) at(8, e.mx + 10 - rnd(20), e.my + 10 - rnd(20), 0);
+        if (Math.abs(e.mx - tx) <= 2 && Math.abs(e.my - ty) <= 2) end();
+        break;
+      }
+      case 250: case 81: done(); break;
       case 6: case 10: if (f === 1) burst9(e.type === 10 ? 11 : 5, e.type === 10 ? 40 : 10); if (f >= e.max) end(); break;
       case 7: if (f === 1) burst9(3, 10); if (f >= e.max) end(); break;
       case 9: case 11: e.mx += e.rx; e.my += e.ry; e.ry++; done(); break;

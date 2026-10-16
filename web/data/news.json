@@ -1,36 +1,109 @@
 {
- "build": "0.85.18",
+ "build": "0.85.19",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
- "news": [{"date":"2026-10-16","title":{"es":"Dash y crítico (v0.85.17)","en":"Dash and critical (v0.85.17)"},"items":[{"es":"Al atacar corriendo (dash) el personaje deja un fantasma que se acerca 26 y 16 px, como el original. Las chispas del crítico (efectos 20-27 y 8) y el tinte de berserk ya estaban.","en":"Dashing leaves a ghost trailing 26 then 16 px behind, as in the original. Critical sparks (effects 20-27 and 8) and the berserk tint were already there."}]},{"date":"2026-10-16","title":{"es":"Mobs aleatorios (v0.85.16)","en":"Random mobs (v0.85.16)"},"items":[{"es":"Los mapas con generador aleatorio crean monstruos y grupos por nivel de mapa como en el original (con habilidades especiales y berserk).","en":"Maps with a random generator create monsters and groups by map level as in the original (with special abilities and berserk)."}]},{"date":"2026-10-16","title":{"es":"Generador de spawns (v0.85.15)","en":"Spawn generator (v0.85.15)"},"items":[{"es":"Los monstruos reaparecen como en el original: cada 600 ms, cada generador con hueco crea uno con 1/3 de probabilidad, hasta el máximo de objetos del mapa; el cadáver dura lo que su tiempo de regeneración.","en":"Monsters respawn as in the original: every 600 ms each generator with a free slot creates one with a 1/3 chance, up to the map object cap; the corpse lasts its regen time."}]},{"date":"2026-10-16","title":{"es":"Monstruos fieles (v0.85.14)","en":"Faithful monsters (v0.85.14)"},"items":[{"es":"Estadísticas, experiencia, regeneración y generadores de monstruos tomados del servidor original.","en":"Monster stats, experience, respawn and generators now come from the original server."}]},
-   {
-    "date": "2026-10-16",
-    "title": {
-     "es": "Experiencia fiel (v0.85.13)",
-     "en": "Faithful experience (v0.85.13)"
-    },
-    "items": [
-     {
-      "es": "La experiencia por monstruo ya no lleva el bonus de variedad: es la del original.",
-      "en": "Experience per monster no longer has the variety bonus: it matches the original."
-     }
-    ]
+ "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Críticos y mascotas (v0.85.19)",
+    "en": "Criticals and pets (v0.85.19)"
    },
-   {
-    "date": "2026-10-16",
-    "title": {
-     "es": "Botín fiel al original (v0.85.12)",
-     "en": "Faithful loot (v0.85.12)"
+   "items": [
+    {
+     "es": "Crítico: el destello viaja del atacante al objetivo dejando 5 chispas por paso (Game.cpp ~14296); el sonido del arma suena en el fotograma del original y los ataques StormBlade (tipos 5/30) muestran su efecto.",
+     "en": "Critical: the flash travels from attacker to target leaving 5 sparks per step; weapon sound plays on the original frame and StormBlade attacks (types 5/30) show their effect."
     },
-    "items": [
-     {
-      "es": "El botín de los monstruos usa las tablas y probabilidades de NpcDeadItemGenerator: ya no hay corte del 30 % en monstruos débiles.",
-      "en": "Monster loot uses the NpcDeadItemGenerator tables and odds: the 30% cut on weak monsters is gone."
-     }
-    ]
+    {
+     "es": "Los kills de mascotas y invocaciones cuentan como del dueño (contadores, exp, misiones).",
+     "en": "Pet and summon kills count as the owner's (counters, exp, quests)."
+    },
+    {
+     "es": "Correr estando congelado o inmovilizado ya no da tirones: la predicción del cliente usa la misma lentitud que el servidor.",
+     "en": "Running while frozen or held no longer stutters: client prediction uses the server's slowdown."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Dash y crítico (v0.85.17)",
+    "en": "Dash and critical (v0.85.17)"
    },
+   "items": [
+    {
+     "es": "Al atacar corriendo (dash) el personaje deja un fantasma que se acerca 26 y 16 px, como el original. Las chispas del crítico (efectos 20-27 y 8) y el tinte de berserk ya estaban.",
+     "en": "Dashing leaves a ghost trailing 26 then 16 px behind, as in the original. Critical sparks (effects 20-27 and 8) and the berserk tint were already there."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Mobs aleatorios (v0.85.16)",
+    "en": "Random mobs (v0.85.16)"
+   },
+   "items": [
+    {
+     "es": "Los mapas con generador aleatorio crean monstruos y grupos por nivel de mapa como en el original (con habilidades especiales y berserk).",
+     "en": "Maps with a random generator create monsters and groups by map level as in the original (with special abilities and berserk)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Generador de spawns (v0.85.15)",
+    "en": "Spawn generator (v0.85.15)"
+   },
+   "items": [
+    {
+     "es": "Los monstruos reaparecen como en el original: cada 600 ms, cada generador con hueco crea uno con 1/3 de probabilidad, hasta el máximo de objetos del mapa; el cadáver dura lo que su tiempo de regeneración.",
+     "en": "Monsters respawn as in the original: every 600 ms each generator with a free slot creates one with a 1/3 chance, up to the map object cap; the corpse lasts its regen time."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Monstruos fieles (v0.85.14)",
+    "en": "Faithful monsters (v0.85.14)"
+   },
+   "items": [
+    {
+     "es": "Estadísticas, experiencia, regeneración y generadores de monstruos tomados del servidor original.",
+     "en": "Monster stats, experience, respawn and generators now come from the original server."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Experiencia fiel (v0.85.13)",
+    "en": "Faithful experience (v0.85.13)"
+   },
+   "items": [
+    {
+     "es": "La experiencia por monstruo ya no lleva el bonus de variedad: es la del original.",
+     "en": "Experience per monster no longer has the variety bonus: it matches the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Botín fiel al original (v0.85.12)",
+    "en": "Faithful loot (v0.85.12)"
+   },
+   "items": [
+    {
+     "es": "El botín de los monstruos usa las tablas y probabilidades de NpcDeadItemGenerator: ya no hay corte del 30 % en monstruos débiles.",
+     "en": "Monster loot uses the NpcDeadItemGenerator tables and odds: the 30% cut on weak monsters is gone."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

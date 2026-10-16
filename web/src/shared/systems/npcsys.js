@@ -129,10 +129,13 @@ export function killNpc(w, n, p) {
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
     const seen = (p.kinds ||= {}); seen[n.name] = (seen[n.name] || 0) + 1;   // contador por especie (misiones y piloto automático); ya no altera la experiencia
+    if (n.expPaid) { n.expPaid = false; }                         // compañero: su mitad y la del dueño ya se pagaron en petHurt (solo falta contar la baja)
+    else {
     let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler (HG.cpp:6538): exp/3 + resto de no-muertos, sin multiplicador por especie
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
     Comp.onKill(w, p, n, xp);
+    }
     Quests.onKill(w, p, n);                                      // misiones: contador y reyes derrotados                                    // contador de bolas y experiencia del compañero
   }
   n.noDieRemainExp = 0;
@@ -309,11 +312,14 @@ function petHurt(w, n, t, dmg, kind = "hit") {
   t.hp -= dmg;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp <= 0) {
-    t.noDrop = !n.comp; t.noDieRemainExp = 0;
-    const m = w.ents.get(n.master), inst = n.comp && m && Inv.instOf(m, n.ball);
-    if (inst) { const xp = Math.floor(t.exp / 3 / 2); Comp.addExp(w, m, inst, xp); giveExp(w, m, xp); }
-    if (n.comp && m) t.petOwner = m.id;                         // la baja es del summon: el evento «death» lo dice (métrica de los habitantes)
-    return killNpc(w, t, null);
+    t.noDrop = !n.comp;
+    const m = w.ents.get(n.master);
+    if (!n.comp) return killNpc(w, t, m || null);                // invocación (Summon): la baja es del dueño (iAttackerH = m_iFollowOwnerIndex en NpcKilledHandler/combat.cpp): experiencia, PK, contadores y misiones
+    t.noDieRemainExp = 0;
+    const inst = m && Inv.instOf(m, n.ball);
+    if (inst) { const xp = Math.floor(t.exp / 3 / 2); Comp.addExp(w, m, inst, xp); giveExp(w, m, xp); t.expPaid = true; }
+    if (m) t.petOwner = m.id;                                   // la baja es del summon: el evento «death» lo dice (métrica de los habitantes)
+    return killNpc(w, t, m || null);
   }
   const m = w.ents.get(n.master);
   if (n.comp ? (!t.target || R.dice(w.rng, 1, 3) === 1) : (m && !t.target)) t.target = n.comp ? n.id : m.id;   // el monstruo herido por el compañero se vuelve contra él

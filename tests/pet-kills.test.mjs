@@ -1,0 +1,30 @@
+// Las bajas de compañeros e invocaciones cuentan como del dueño (NpcKilledHandler: iAttackerH = dueño): kills, especie, experiencia.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { World } from "../web/src/shared/world.js";
+import { GameData } from "../web/src/shared/data.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { spawnFrom, followersOf } from "../web/src/shared/systems/npcsys.js";
+import * as C from "../web/src/shared/systems/companion.js";
+import { spawnCitizen } from "../web/src/shared/systems/citizens.js";
+const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
+const npcDb = J("npc.json");
+const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
+let seed = 5; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const w = new World({ grid, npcDb, data: new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb }), spawns: [], rng, start: [10, 10] });
+const id = w.addPlayer("Dueño", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } });
+const p = w.ents.get(id); p.level = 30; w.recalc(p);
+const nurse = spawnCitizen(w, C.HOSPITAL.npc, p.x + 2, p.y, C.HOSPITAL.role);
+p.gold = 100; w.command(id, { t: "petbuy", npc: nurse.id, sp: "Giant-Ant" });
+const ball = p.bag.find(i => i.comp); w.command(id, { t: "use", uid: ball.uid });
+const pet = followersOf(w, p).find(e => e.comp);
+const prey = () => { const n = spawnFrom(w, { name: "Orc", rect: [pet.x + 1, pet.y, pet.x + 1, pet.y], alive: 0, max: 0, respawn: false }); n.hp = 1; return n; };
+const k0 = p.kills, o0 = p.kinds?.Orc || 0;
+const n = prey(); pet.dmgNow = 50;
+// el golpe del compañero remata al monstruo
+n.target = null; w.ents.get(pet.id).cTarget = n.id;
+for (let i = 0; i < 60 && !n.dead; i++) w.tick(100);
+assert.ok(n.dead, "el compañero mata");
+assert.equal(p.kills, k0 + 1, "la baja cuenta al dueño");
+assert.equal(p.kinds.Orc, o0 + 1, "contador por especie del dueño");
+console.log("OK");
