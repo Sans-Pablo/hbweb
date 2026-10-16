@@ -42,7 +42,7 @@ function usable(w, p, cmd) {
   if (M.freeFor(p)) return sp;
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
-  if (p.mp < M.manaCost(p, sp, cmd.spell)) return w.reject(p, cmd, "maná insuficiente");
+  if (p.mp < M.manaCost(p, sp, cmd.spell, !!w.fightZone)) return w.reject(p, cmd, "maná insuficiente");
   return sp;
 }
 
@@ -75,7 +75,7 @@ export function cast(w, p, cmd) {
   if (sget(w, p, "inhibit")) return w.reject(p, cmd, "inhibido");
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 11) return w.reject(p, cmd, "demasiado lejos");   // alcance 11 (HG.cpp:10241)
-  const cost = M.manaCost(p, sp, cmd.spell);
+  const cost = M.manaCost(p, sp, cmd.spell, !!w.fightZone);
   if (sp.category === 1 && w.safeAt(p.x, p.y)) return w.reject(p, cmd, "zona segura");   // _PlayerMagicHandler: no se lanzan hechizos de ataque desde una zona sin ataque
 
   p.lastCast = w.time;

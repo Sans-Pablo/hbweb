@@ -520,7 +520,7 @@ async function main() {
       switch (k) {
         case "Insert": e.preventDefault(); hud.quickUse("hp"); return;
         case "Delete": e.preventDefault(); hud.quickUse("mp"); return;
-        case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); return;
+        case "Home": e.preventDefault(); flag("safe", "Safe attack mode activated.", "Safe attack mode inactivated."); conn.send({ t: "safemode", on: flags.safe }); return;
         case "Tab": e.preventDefault(); flag("combat", "Converted to attack mode.", "Converted to peace mode."); conn.send({ t: "combatmode", on: flags.combat }); return;
         case "End": e.preventDefault(); if (flags.lastChat) openChat(flags.lastChat); return;
         case "ArrowUp": case "ArrowDown": e.preventDefault(); whisperCycle(k === "ArrowUp" ? 1 : -1); return;      // Game.cpp VK_UP/VK_DOWN: recorre los últimos susurros

@@ -197,6 +197,7 @@ const COMMANDS = {
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
+  safemode(w, p, cmd) { p.safeAttack = !!cmd.on; return true; },        // Home: ToggleSafeAttackModeHandler (HG.cpp); el cliente manda el estado resultante
   combatmode(w, p, cmd) { p.combatMode = !!cmd.on; return true; },      // Tab: postura de combate (Game.cpp: appr2 & 0xF000); la ven los demás
   lang(w, p, cmd) { if (cmd.lang === "en" || cmd.lang === "es") p.uiLang = cmd.lang; return true; },      // idioma del cliente: los habitantes le hablan en él
   turn(w, p, cmd) {

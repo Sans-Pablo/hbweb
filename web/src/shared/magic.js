@@ -72,9 +72,10 @@ export const MAGIC_MODE = { free: false, player: true };
 // modo «Full mage» (F1 → Herramientas): por jugador, equivale a MAGIC_MODE.free solo para él (todo aprendido, sin maná)
 export const freeFor = p => MAGIC_MODE.free || !!(p && p.fullMage);
 export const NO_PLAYER_MAGIC = "los hechizos están cerrados";
-export function manaCost(p, spell, id) {
+export function manaCost(p, spell, id, fightZone = false) {
   if (freeFor(p)) return 0;
   let c = Bal.scale(spell.mana, Bal.spellManaMul(id));
+  if (p.safeAttack && !fightZone) c = Math.trunc(c * 1.1);          // PlayerMagicHandler (HG.cpp:10337): modo ataque seguro fuera de zona de lucha -> iManaCost *= 1.1 (entero), antes del ahorro de maná
   if (p.eff.manaSave > 0) { c = Math.floor(c - (p.eff.manaSave / 100) * c); if (c <= 0) c = 1; }
   if (p.eff.wtype === 34) c += 20;
   return c;

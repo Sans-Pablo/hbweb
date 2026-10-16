@@ -23,7 +23,7 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Inhibition: sin tirada de resistencia; solo la anula Protect AMP | HG.cpp:10608-10613 | magicsys.js caso 31 | CORREGIDO |
 | Resistencia mágica sube al resistir | combat.cpp:54 | magicsys.js `resist()` | CORREGIDO |
 | Resistencia al veneno sube al resistir | combat.cpp:69 | magicsys.js caso 17 | CORREGIDO |
-| Modo ataque seguro (maná ×1.1) | HG.cpp | — | FALTA (sin modo en el port) |
+| Modo ataque seguro (maná ×1.1) | HG.cpp | — | CORREGIDO (flag `safeAttack` por jugador, comando `safemode`; ver docs/sistemas/magia-original.md) |
 | Hold: chequeos de grupo / zona segura | HG.cpp | magicsys.js | DIFERENTE |
 | Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 (un objetivo) | DIFERENTE |
 | Ice: excluir neutrales | HG.cpp | magicsys.js | DIFERENTE |
