@@ -482,3 +482,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Capturas reales recapturadas con el "−" ya centrado (inventario, almacén, diario, menú auto, auto mini, misión mini, personaje). hbweb v0.85.25, diseño sin cambio de versión.
 
 - AUTO de la ventana de personaje (F5) usa el mismo boton de piedra que Party/Level Set (dialogs.js). Auditoria en docs/diseno/auditoria.md. Version v0.85.25 (sin cambio). Pendiente: unificar botones del menu auto y "Diario" del mini de misiones.
+
+- [diseño] Botones de piedra unificados (Win.btn, AUTO, pantalla Crear personaje): 10 px, Capital Case, sin borde dorado. Captura: docs/diseno/ingame/crear-personaje.png. Pendiente: HTML editable con todas las ventanas.
