@@ -7,19 +7,20 @@ import { Win, THEME } from "./window.js";
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
-import { PLACES, FARM } from "../shared/systems/autoplay.js";
+import { PLACES, FARM, DEFAULT_RULES } from "../shared/systems/autoplay.js";
 import { dropInfo } from "../shared/drops.js";
 
 export const AUTO_ID = 74, AUTO_MINI_ID = 75;
 const GO = ["farm", "warehouse", "shop", "smith", "mage", "farmer", "hospital", "petmage"];
+const RARITY = ["Normal", "Mágico", "Raro", "Único"], ACTIONS = { ignore: "ignorar", sell: "vender", store: "guardar" }, NEXT = { ignore: "sell", sell: "store", store: "ignore" };
 const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const CHANGE_MS = 1800;                                   // cada cuánto gira el modelo a la siguiente dirección
 
 export class AutoWin extends Win {
-  constructor(api) { super({ id: AUTO_ID, title: "Menú automático", w: 460, h: 420, x: 170, y: 50 }); this.api = api; this.tab = "hunt"; this.zi = 0; this.mi = 0; this.nopick = false; }
+  constructor(api) { super({ id: AUTO_ID, title: "Menú automático", w: 460, h: 470, x: 170, y: 40 }); this.api = api; this.tab = "hunt"; this.zi = 0; this.mi = 0; this.nopick = false; this.potions = true; this.rules = [...DEFAULT_RULES]; }
   // arranca la caza; la mini ventana (contador) se abre sola y sigue la misma orden aunque termine
   startHunt(z) {
-    const a = { kind: "hunt", mob: z.name, zone: { map: FARM, rect: z.rect }, nopick: this.nopick, kills: 0, t0: performance.now(), pit: z.id };
+    const a = { kind: "hunt", mob: z.name, zone: { map: FARM, rect: z.rect }, nopick: this.nopick, potions: this.potions, rules: [...this.rules], kills: 0, exp: 0, t0: performance.now(), pit: z.id };
     this.api.start(a); this.g?.open(AUTO_MINI_ID);
     if (this.mini) this.mini.run = a;
   }
@@ -64,8 +65,11 @@ export class AutoWin extends Win {
     row("Oro", cfg.goldMin + "–" + cfg.goldMax); row("Apariciones", String(z.max));
     ui.head(I.x, by + bh + 8, "Botín posible");
     ui.para(I.x, by + bh + 26, I.w, d.items.length ? names + (d.weak ? " (" + "suelta poco" + ")" : "") : "Casi nada", THEME.txt, { size: 11 });
-    ui.para(I.x, I.y + I.h - 70, I.w, "Corre a la zona, caza, recoge el botín y, con la mochila llena, vuelve a la granja y termina.", THEME.txt, { size: 11 });
-    ui.check(I.x, I.y + I.h - 44, "No recoger objetos", this.nopick, v => { this.nopick = v; });
+    // qué hacer con cada objeto del suelo según su rareza: ignorar (se queda), vender (tienda al llenarse la mochila) o guardar (almacén)
+    ui.text(I.x, I.y + I.h - 94, "Objetos del suelo según su rareza", THEME.head);
+    RARITY.forEach((r, i) => ui.btn(I.x + i * 109, I.y + I.h - 76, 103, t(r) + ": " + t(ACTIONS[this.rules[i]]), () => { this.rules[i] = NEXT[this.rules[i]]; }));
+    ui.check(I.x, I.y + I.h - 48, "No recoger objetos", this.nopick, v => { this.nopick = v; });
+    ui.check(I.x + 200, I.y + I.h - 48, "Tomar pociones con poca vida", this.potions, v => { this.potions = v; });
     ui.btn(I.x, I.h - 22 + I.y, 150, on ? "Reiniciar caza" : "Empezar", () => this.startHunt(z), { primary: true });
   }
   // criatura atacando, girando por las 8 direcciones (misma ruta de dibujo que summonpreview.js)
@@ -86,7 +90,7 @@ const pitName = z => t("Pozo") + " " + z.id + " · " + z.name;
 
 // Mini ventana del auto hunt: criatura, pozo, muertes, tiempo y ritmo. Sigue la orden `run` (la de la caza actual o la última).
 export class AutoMini extends Win {
-  constructor(api) { super({ id: AUTO_MINI_ID, title: "Auto hunt", w: 230, h: 150, x: 560, y: 60 }); this.api = api; this.run = null; }
+  constructor(api) { super({ id: AUTO_MINI_ID, title: "Auto hunt", w: 230, h: 170, x: 560, y: 60 }); this.api = api; this.run = null; }
   body(ui) {
     const I = this.inner, ctl = this.api.ctl(), a = ctl.auto?.kind === "hunt" ? ctl.auto : this.run;
     if (ctl.auto?.kind === "hunt") this.run = a;
@@ -97,7 +101,8 @@ export class AutoMini extends Win {
     ui.text(I.x, I.y + 20, "Muertes", THEME.txt); ui.text(I.x + 90, I.y + 20, String(k), THEME.head, { bold: true });
     ui.text(I.x, I.y + 38, "Tiempo", THEME.txt); ui.text(I.x + 90, I.y + 38, mm + ":" + ss, THEME.txt);
     ui.text(I.x, I.y + 56, "Ritmo", THEME.txt); ui.text(I.x + 90, I.y + 56, (k * 3600 / secs).toFixed(0) + " /h", THEME.txt);
-    ui.text(I.x, I.y + 74, on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", on ? THEME.txt : THEME.bad);
+    ui.text(I.x, I.y + 74, "Experiencia", THEME.txt); ui.text(I.x + 90, I.y + 74, "+" + (a.exp || 0), THEME.head, { bold: true });
+    ui.text(I.x, I.y + 92, on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", on ? THEME.txt : THEME.bad);
   }
 }
 export function registerAutoWin(gui, api) { const w = new AutoWin(api), m = new AutoMini(api); w.mini = m; gui.register(w); gui.register(m); return w; }

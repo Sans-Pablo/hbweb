@@ -138,7 +138,7 @@ async function main() {
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
   
-  registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
+  const autoWin = registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
   registerNews(gui); registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
   registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
@@ -478,7 +478,7 @@ async function main() {
           case "F2": ui.useShortcut(0, e.ctrlKey); break;
           case "F3": ui.useShortcut(1, e.ctrlKey); break;
           case "F4": if (hud.spell != null) ui.useMagic(hud.spell); break;
-          case "F5": ui.key("char"); break;
+          case "F5": ui.key("char"); if (gui.isOpen(1) && (ctl.auto?.kind === "hunt" || autoWin.mini.run) && !gui.isOpen(75)) gui.open(75); break;   // la mini ventana del auto hunt vuelve con el menú
           case "F6": ui.key("inv"); break;
           case "F7": ui.key("book"); break;
           case "F8": ui.key("skill"); break;
@@ -757,6 +757,7 @@ async function main() {
     if (rainNow !== raining) { raining = rainNow; sound.rain(raining); }
     for (const ev of events) {
       if (ev.t === "death" && ev.by === pid && !ev.pet && ctl.auto?.kind === "hunt") ctl.auto.kills = (ctl.auto.kills || 0) + 1;      // contador de la mini ventana del auto hunt (autowin.js)
+      if (ev.t === "exp" && ev.id === pid && ctl.auto?.kind === "hunt") ctl.auto.exp = (ctl.auto.exp || 0) + ev.amount;      // exp ganada desde el inicio del hunt
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.t === "resurrectask" && ev.id === pid) gui.confirm("Someone intends to resurrect you. Will you revive here?").then(ok => conn.send({ t: "resurrect", accept: ok }));      // dialog 50 (Game.cpp:42315)
       if (ev.id === pid) gui.recallEvent(ev);

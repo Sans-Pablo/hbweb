@@ -11,7 +11,7 @@ const listeners = new Set();
 const EN = {
   // ---- menú automático (autowin.js, autoplay.js)
   "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
-  "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",
+  "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Cerrar": "Close", "Minimizar": "Minimize", "Restaurar": "Restore", "Objetos del suelo según su rareza": "Ground items by rarity", "Normal": "Normal", "Mágico": "Magic", "Raro": "Rare", "Único": "Unique", "ignorar": "ignore", "vender": "sell", "guardar": "store", "Tomar pociones con poca vida": "Drink potions when health is low", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",
   "Cazando": "Hunting", "Cazando (sin recoger)": "Hunting (no pickup)", "Detenido": "Stopped",
   "Sin caza activa. Empieza una desde el menú AUTO.": "No active hunt. Start one from the AUTO menu.",
   "Modo automático detenido.": "Auto mode stopped.", "Mapa: Granja de Aresden": "Map: Aresden Farm", "Zona": "Zone",

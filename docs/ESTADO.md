@@ -412,8 +412,8 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 ## Backlog 2026-10-16 (tras 0.85.18)
 - [ ] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
 - [ ] Magias: nombre del hechizo sobre la cabeza al castear, mecánica y visual originales — sistemas
-- [ ] Autohunt: exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
-- [ ] Mini ventanas como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
+- [x] Autohunt (v0.85.19): exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
+- [x] Mini ventanas (v0.85.19, mecanismo común hecho; hb-ui-wt lo aplica al rediseñar) como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
 - [ ] Kills de pets cuentan como del dueño (npc y jugadores) — motor
 - [ ] Summon balls demasiado grandes: rediseñar — sistemas
 - [ ] Tirones al correr estando freezado — motor

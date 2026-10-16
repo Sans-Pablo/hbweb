@@ -5,6 +5,8 @@ import { Adventure } from "../web/src/shared/adventure.js";
 import { Grid } from "../web/src/shared/grid.js";
 import { GameData } from "../web/src/shared/data.js";
 import { seededRandom, setDungeonPalette } from "../web/src/shared/dungeon.js";
+import { NPC } from "../web/src/shared/systems/shopsys.js";
+import { MAX_BANK } from "../web/src/shared/systems/shopsys.js";
 import { decide, parseAuto, placeOf, placeEnt, approach, viaTeleport, PLACES, IDLE_STOP_MS, FARM_HOME, BAG_MAX } from "../web/src/shared/systems/autoplay.js";
 import { groundPush } from "../web/src/shared/systems/ground.js";
 import { newInst } from "../web/src/shared/systems/itemsys.js";
@@ -47,7 +49,7 @@ assert.ok(au.skip.has(lx + "," + ly), "no insiste con lo que no puede recoger");
 w.items.clear(); d = decide(w, me, au); assert.ok(!d.stop && !d.intent);
 w.time += IDLE_STOP_MS + 1000; d = decide(w, me, au); assert.ok(d.stop, "sin presas se detiene");
 // ---- vida baja y muerte
-me.hp = 1; assert.ok(decide(w, me, { kind: "hunt", mob: "Slime" }).stop, "vida baja: para");
+me.hp = 1; assert.ok(decide(w, me, { kind: "hunt", mob: "Slime", potions: false }).stop, "vida baja: para");
 me.hp = me.maxHp; me.dead = true; assert.ok(decide(w, me, { kind: "hunt", mob: "Slime" }).stop); me.dead = false;
 // ---- ruta: habitante más cercano, intención de andar junto a él, y al llegar abre su diálogo
 const e = placeEnt(w, me, "farmer"); assert.ok(e && e.role === "farmer", "el granjero existe en Aresfarm");
@@ -69,9 +71,25 @@ const zau = { kind: "hunt", mob: "Slime", zone };
 w.items.clear(); const [zx, zy] = spot(1, 1); const zs = w.makeEnt("npc", zx, zy); zs.name = "Slime";
 d = decide(w, me, zau); assert.deepEqual(d.intent, { t: "attack", id: zs.id }, "caza dentro de la zona");
 zs.x = me.x + 30; zs.y = me.y; d = decide(w, me, zau); assert.ok(!d.intent || d.intent.t !== "attack", "ignora presas fuera de la zona");
-me.bag = new Array(BAG_MAX).fill(1); me.x = fx + 20; zau.full = false;
-d = decide(w, me, zau); assert.ok(zau.full, "mochila llena: marca el ciclo de vuelta"); assert.equal(d.intent?.t, "move", "y vuelve a la granja");
-me.x = fx; me.y = fy; d = decide(w, me, zau); assert.ok(d.stop, "en la granja con la mochila llena termina el ciclo");
+// ---- pociones con poca vida (por defecto sí), exp desde el inicio, reglas por rareza
+{ const potId = [...Array(2000).keys()].find(i => { const it = data.item(i); return it && it.type === 7 && it.effectType === 4; });
+  me.bag = [newInst(w, potId, 1)]; me.hp = 1; const pa = { kind: "hunt", mob: "Slime" };
+  d = decide(w, me, pa); assert.deepEqual(d.send, { t: "use", uid: me.bag[0].uid }, "vida baja: bebe la poción");
+  assert.ok(decide(w, me, { kind: "hunt", mob: "Slime", potions: false }).stop, "sin la opción: para"); me.hp = me.maxHp; }
+// mochila llena: vende lo recogido (regla sell) en la tienda y retoma; con todo en ignore para
+me.x = fx + 20; me.y = fy; me.bag = []; for (let i = 0; i < BAG_MAX; i++) me.bag.push(newInst(w, 1, 1)); zau.full = false; zau.bag0 = new Set();
+const [tpx, tpy] = spot(4, 4), tpKey = w.grid.idx(tpx, tpy); w.teleports ||= new Map(); w.teleports.set(tpKey, { map: "gshop_1f", x: tpx, y: tpy });
+d = decide(w, me, zau); assert.ok(zau.full, "mochila llena: marca el ciclo"); assert.equal(d.intent?.t, "move", "y va a vender a la tienda");
+{ const sh = w.makeEnt("citizen", me.x + 1, me.y); sh.type = NPC.SHOP; sh.role = null;
+  d = decide(w, me, zau); assert.equal(d.send?.t, "selllist", "junto al tendero manda la venta"); assert.equal(d.send.items.length, 12, "hasta 12 por lista");
+  zau.rules = ["store", "store", "store", "store"]; zau.bad = {}; me.bank = new Array(MAX_BANK - 1).fill({ id: 99999 });
+  d = decide(w, me, zau); assert.ok(d.stop && /Almac|Warehouse/.test(d.msg[0] + d.msg[1]), "almacén lleno: termina el hunt");
+  me.bank = []; sh.type = NPC.WAREHOUSE; d = decide(w, me, zau); assert.equal(d.send?.t, "deposit", "junto al almacenero guarda"); w.ents.delete(sh.id); w.teleports.delete(tpKey); }
+zau.rules = ["ignore", "ignore", "ignore", "ignore"]; d = decide(w, me, zau); assert.ok(d.stop, "todo en ignorar y mochila llena: se detiene");
+w.items.clear(); { const [ix, iy] = spot(2, 2); groundPush(w, ix, iy, newInst(w, 1, 1)); me.bag = [];
+  assert.ok(!decide(w, me, { kind: "hunt", mob: "Zzz", rules: ["ignore", "ignore", "ignore", "ignore"] }).intent, "regla ignorar: no recoge");
+  assert.equal(decide(w, me, { kind: "hunt", mob: "Zzz", rules: ["sell", "sell", "sell", "sell"] }).intent?.t, "pickup", "regla vender: recoge"); w.items.clear(); }
+me.bag = new Array(BAG_MAX).fill(1); me.x = fx; me.y = fy;
 // ---- «No recoger objetos»: con botín a la vista y sin presas, no lo pisa
 zs.dead = true; me.x = fx; me.y = fy; w.items.clear(); { const [bx, by] = spot(2, 2); groundPush(w, bx, by, newInst(w, 1, 1));
   assert.equal(decide(w, me, { kind: "hunt", mob: "Slime" }).intent?.t, "pickup", "sin nopick recoge");
