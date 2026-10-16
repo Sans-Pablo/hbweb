@@ -56,7 +56,7 @@ export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), bonusL: demonslayer(w, p, t), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
@@ -216,6 +216,12 @@ function weaponBonus(w, p) {
   if (two === 847 && w.dayOrNight === 2) b += 10;                  // DarkExecutor de noche / LightingBlade de día: +10 (combat.cpp:847-848)
   if (two === 848 && w.dayOrNight === 1) b += 10;
   return b;
+}
+
+// Demonslayer (616) a dos manos contra un Demon (tipo 31): +5 solo al daño grande (combat.cpp:566-570)
+function demonslayer(w, p, t) {
+  const u = p.equip[EQUIP.TWOHAND], i = u !== undefined && Inv.instOf(p, u);
+  return i && i.id === 616 && t.type === 31 ? 5 : 0;
 }
 
 function wearWeapon(w, p) {

@@ -11,7 +11,7 @@ import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, setDungeonPalette } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v3";
-const IA_VERSION = "ia-0.80.34";                // subir al regenerar hojas de sprites_ia (la caché del navegador las conservaba)
+const IA_VERSION = "ia-0.85.39";                // subir al regenerar hojas de sprites_ia (la caché del navegador las conservaba)
 const spriteUrl = png => imgUrl("data/sprites/" + png) + "?v=" + ASSET_VERSION;
 
 // Reintenta una descarga fallida; nunca da por cargada una imagen rota.
@@ -101,6 +101,7 @@ export async function loadAssets(onProgress) {
   const hd = await json("data/sprites_hd.json").catch(() => ({}));
   const iaT = await json("data/sprites_ia.json").catch(() => ({}));          // terreno con IA (tools/remaster_ia.py --map); sustituye a la HD
   for (const k of Object.keys(iaT)) if (/^((t|scp|slm|amp|gol|ske|cla|cyc|orc|troll|zom|ig|ip|ant|beholder|bunny|cat|centaurus|clawturtle|darkelf|demon|direboar|ettin|firewyvern|frost|gagoyle|giantcrayfish|giantfrog|giantlizard|giantplant|helb|hellclaw|icegolem|liche|mastermageorc|minotaurs|mtgiant|nizie|orge|rudolph|stalker|tentocle|tigerworm|unicorn|werewolf|wyvern|shk|gnd|how|tom|william|kennedy|mcgaffin|perry|devlin|gail)\d+|pb\d+_\d+|(pu|ph)\d+_\d+_\d+|[ahlmsbow][01]_\d+_\d+)$/.test(k)) hd[k] = iaT[k];
+  for (const k of Object.keys(hd)) if (hd[k].dir !== "sprites_ia") delete hd[k];   // solo sprites de IA: las hojas HD antiguas no se usan (cae al original)
   const sprites = new Sprites(manifest, images, hd);
   sprites.anchors = await json("data/anchors.json").catch(() => ({}));          // anclajes por fotograma (ojos, orbe…) generados por tools/spritelab/anchors.py
   if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) devReload();

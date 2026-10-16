@@ -92,7 +92,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
   if (dice(rng, 1, 100) > hitChance(a.hit, defense, sameDir)) return miss();
   if ((p.hunger <= 10 || p.sp <= 0) && dice(rng, 1, 10) === 5) return miss();   // hambre o sin aliento
-  let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0);
+  let sm = a.sm + (ctx.bonus || 0), l = a.l + (ctx.bonus || 0) + (ctx.bonusL || 0);   // bonusL: solo daño grande (Demonslayer, combat.cpp:566-570)
   if (ctx.berserk && !ctx.crit) { sm *= 2; l *= 2; }                              // furia: el doble solo con attackMode<20 (combat.cpp 695)
   if (ctx.crit && p.eff.critBonus) { sm += p.eff.critBonus; l += p.eff.critBonus; } // ITEMSTAT_CRITICAL (combat.cpp 765)
   sm = Math.max(1, sm + p.eff.addPhys); l = Math.max(1, l + p.eff.addPhys);

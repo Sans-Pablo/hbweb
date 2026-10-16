@@ -164,8 +164,12 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
     if (!canFight(w, p, tgt)) return null;
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     let dmg = Math.floor(M.spellDamage(w.rng, p, n, d, k + wb, !!w.fightZone) * Bal.spellDmgMul(id));
+    for (const u of Object.values(tgt.equip || {})) {                                                    // Emerald/Ruby Ring (335/337): -20% / -10% (HG.cpp:18211-18222)
+      const it = Inv.instOf(tgt, u), f = it && (it.id === 335 ? 0.2 : it.id === 337 ? 0.1 : 0);
+      if (f) { dmg = Math.floor(dmg - dmg * f + 0.5); break; }
+    }
     if (tgt.eff && tgt.eff.addAbsMD) dmg -= Math.trunc(dmg * tgt.eff.addAbsMD / 100);                    // AddAbsMD (HG.cpp:18237)
-    if (tgt.stats.vit >= 10) dmg -= Math.max(0, dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1);
+    dmg -= dice(w.rng, 1, Math.floor(tgt.stats.vit / 10)) - 1;                                       // vit<10: dice(1,0)=0 y suma 1 (HG.cpp:18246, Math.h dice)
     if (dmg < 0) dmg = 0;
     dmg = luckySave(w, tgt, dmg);                                                    // solo con objeto Lucky (HG.cpp:18250)
     if (sget(w, tgt, "protect") === 2) dmg = Math.floor(dmg / 2);
