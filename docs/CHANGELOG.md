@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.52 · PvP en la pantalla dividida (2026-10-17)
+- [invento] `dashboard.js` panel `pvp` (select de cada hueco): ficha + log «⚔» desde `/api/admin/botdetail`, refresco cada 3 s; sección en `observador.html`.
+
 ## 0.85.51 · Pensamiento PvP en el admin (2026-10-16)
 - [invento] `bot.js plog` (líneas «⚔»): elección de rival, resumen cada 3 s, huidas; `botmagic.js` marca paralizar/lanzar/PFM contra jugadores. `botstats.mjs` guarda `h.pvp` y `sheet()`; `admin-bots.html` pestaña PvP con ficha. Test `bot-pvplog.test.mjs`.
 

@@ -191,7 +191,7 @@ function paintSumm() {
 }
 
 // ---- disposición de paneles: cada hueco elige su panel (se puede dejar vacío); se guarda en este navegador ----
-const PANELS = { game: ["🎮 En vivo", "🎮 Live"], roster: ["👥 Habitantes", "👥 Residents"], info: ["🧠 Personaje", "🧠 Character"], stats: ["📈 Estadísticas", "📈 Statistics"], glob: ["🌐 Global y peticiones", "🌐 Global & requests"], summ: ["🐾 Top summons", "🐾 Top summons"], chars: ["🧑‍🌾 Personajes", "🧑‍🌾 Characters"] };
+const PANELS = { game: ["🎮 En vivo", "🎮 Live"], roster: ["👥 Habitantes", "👥 Residents"], info: ["🧠 Personaje", "🧠 Character"], stats: ["📈 Estadísticas", "📈 Statistics"], glob: ["🌐 Global y peticiones", "🌐 Global & requests"], summ: ["🐾 Top summons", "🐾 Top summons"], chars: ["🧑‍🌾 Personajes", "🧑‍🌾 Characters"], pvp: ["⚔ PvP", "⚔ PvP"] };
 const DEF = ["game", "roster", "info", "stats"], KP = "hb.obs.panels";
 let slots = DEF.slice(); try { const v = JSON.parse(localStorage.getItem(KP) || "null"); if (Array.isArray(v) && v.length === 4 && v.every(x => PANELS[x]) && new Set(v).size === 4) slots = v; } catch {}   // siempre 4 paneles distintos
 // Los paneles nunca cambian de padre (mover un iframe en el DOM lo recarga): viven en #stage y se colocan encima de su hueco con coordenadas.
@@ -229,7 +229,29 @@ function paintChars() {
   body.innerHTML = ROLES.filter(([k]) => !roleF || roleF === k).map(([k, es, en]) => { const l = roster.filter(b => roleOf(b) === k); return l.length ? `<div class="g"><span>${L(es, en)}</span><span>${l.length}</span></div>` + l.map(row).join("") : ""; }).join("") || `<span style="color:#998;padding:6px 8px;display:block">${L("Nadie con este oficio", "Nobody with this job")}</span>`;
   body.scrollTop = top;
 }
-function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); paintChars(); }
+// ---- PvP del personaje (v0.85.52): ficha + pensamiento de combate contra jugadores, de /api/admin/botdetail (server/botstats.mjs detail) ----
+let pvpAt = 0, pvpName = "", pvpData = null;
+function pvpInit() { $("pvp").innerHTML = `<h3><b>⚔ PvP</b><span class="who"></span></h3><div class="body"></div>`; }
+async function paintPvp() {
+  const el = $("pvp"); if (!el || el.style.display === "none") return;
+  const r = roster.find(x => x.id === sel), body = el.querySelector(".body"); el.querySelector(".who").textContent = r ? r.name : "";
+  if (!r) { body.textContent = L("Elige un habitante", "Pick a resident"); return; }
+  if (r.name !== pvpName || Date.now() - pvpAt > 3000) {
+    const nm = r.name; pvpName = nm; pvpAt = Date.now();
+    try { pvpData = await (await api("/api/admin/botdetail?name=" + encodeURIComponent(nm))).json(); } catch { return; }
+    if (pvpName !== nm) return;
+  }
+  const d = pvpData, s = d?.sheet; if (!d || d.error || !s) { body.textContent = L("Sin datos de este personaje", "No data for this character"); return; }
+  const st = s.stats || {}, ul = a => (a && a.length ? a.map(esc).join(", ") : "—");
+  body.innerHTML = `<div class="sec">${L("Ficha", "Sheet")}</div>
+    <div>${esc(String(s.build))} · Lv ${s.level} · Str ${st.str} Vit ${st.vit} Dex ${st.dex} Int ${st.int} Mag ${st.mag} (${L("libres", "free")} ${s.pool})</div>
+    <div>HP ${s.hp}/${s.maxHp} · MP ${s.mp}/${s.maxMp} · ${L("Defensa", "Defense")} ${s.defense} · ${L("Impacto", "Hit")} ${s.hit}</div>
+    <div>DR ${s.addDR} · HP+ ${s.addHP} · MP+ ${s.addMP} · MR ${s.addMR} · PA ${s.addPR} · MA ${s.addAbsMD} · ${L("Res. magia", "Magic res.")} ${s.resistMagic}</div>
+    <div>${L("Equipo", "Gear")}: ${ul(s.equip)}</div><div>${L("Magias", "Spells")}: ${ul(s.spells)}</div>
+    <div class="sec">${L("Pensamiento PvP", "PvP thinking")} (${(d.pvp || []).length})</div>
+    ${(d.pvp || []).slice(0, 80).map(x => `<div>${esc(typeof x === "string" ? x : x.text || JSON.stringify(x))}</div>`).join("") || `<div style="color:#998">${L("Aún no ha peleado contra jugadores", "No player fights yet")}</div>`}`;
+}
+function paintAll() { paintRoster(true); paintInfo(true); paintStats(); paintGlob(); paintSumm(); paintChars(); paintPvp(); }
 
 // ---- arranque ----
 // Dirección del servidor como en main.js#findServer: ?server=URL > data/server.json (GitHub Pages -> PC que aloja) > mismo origen.
@@ -243,13 +265,13 @@ const apiBase = () => baseP ||= (async () => {
 const api = async p => fetch((await apiBase()) + p, { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } });
 
 async function poll() {
-  try { roster = (await (await api("/api/bots")).json()).list || []; sample(); paintRoster(); paintStats(); paintChars(); } catch { /* servidor un momento fuera: se reintenta */ }
+  try { roster = (await (await api("/api/bots")).json()).list || []; sample(); paintRoster(); paintStats(); paintChars(); paintPvp(); } catch { /* servidor un momento fuera: se reintenta */ }
   try { st = await (await api("/api/stats")).json(); paintGlob(); paintSumm(); } catch { /* idem */ }
 }
 addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !("hbBrain" in e.data) || e.data.id !== sel) return;
   brain = e.data.hbBrain; if (brain) { paintInfo(); $("game").querySelector(".who").textContent = brain.name + " · " + (MODES[brain.mode]?.[getLang() === "en" ? 1 : 0] || brain.mode) + " · " + brain.map; }
 });
-splitters(); game(); rosterInit(); infoInit(); statsInit(); globInit(); summInit(); charsInit(); place(); addEventListener("resize", layout); new ResizeObserver(layout).observe($("app"));
+splitters(); game(); rosterInit(); infoInit(); statsInit(); globInit(); summInit(); charsInit(); pvpInit(); place(); addEventListener("resize", layout); new ResizeObserver(layout).observe($("app"));
 poll().then(() => { if (sel) show(sel); else if (roster.length) show(order()[0].id); });
 setInterval(poll, POLL);

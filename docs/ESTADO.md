@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.52) Panel PvP del personaje en el select del observador dividido.
 - [x] (v0.85.51) Log del pensamiento PvP de los bots y ficha de stats en el admin (pestaña PvP).
 - [x] (v0.85.50) Reinicio general de stats de bots y nueva elección de rol, más magos.
 - [x] (v0.85.49) Magos llevan y beben pociones de maná en pelea.

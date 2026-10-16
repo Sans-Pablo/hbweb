@@ -1,10 +1,11 @@
 {
- "build": "0.85.51",
+ "build": "0.85.52",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {"date":"2026-10-17","title":{"es":"PvP en la pantalla dividida (v0.85.52)","en":"PvP in split screen (v0.85.52)"},"items":[{"es":"El observador dividido tiene un panel más en el select: «⚔ PvP», con la ficha del personaje (build, stats, bonos, equipo, magias) y su pensamiento de combate contra jugadores.","en":"The split observer has one more select option: «⚔ PvP», with the character sheet (build, stats, bonuses, gear, spells) and its PvP combat thinking."}]},
   {"date":"2026-10-16","title":{"es":"Pensamiento PvP en el admin (v0.85.51)","en":"PvP thinking in admin (v0.85.51)"},"items":[{"es":"El panel de bots tiene una pestaña PvP: ficha del personaje (stats, bonos, equipo, hechizos) y el registro de cómo elige, lanza, se protege y huye en combate contra jugadores.","en":"The bots panel has a PvP tab: character sheet (stats, bonuses, gear, spells) and a log of how they choose, cast, shield and flee against players."}]},
   {"date":"2026-10-16","title":{"es":"Reinicio de estadísticas de los bots (v0.85.50)","en":"Bot stat reset (v0.85.50)"},"items":[{"es":"Todos los bots recuperan sus puntos y eligen rol de nuevo, con más magos (≈58 % lanzadores). Se verán más peleas de magos.","en":"All bots get their points back and pick a role again, with more mages (~58% casters). Expect more mage fights."}]},
   {"date":"2026-10-16","title":{"es":"Magos con pociones de maná (v0.85.49)","en":"Mages carry mana potions (v0.85.49)"},"items":[{"es":"Los bots lanzadores compran pociones de maná y las beben cuando se quedan sin maná en pelea, para seguir lanzando magias.","en":"Caster bots buy mana potions and drink them when they run out of mana in a fight, so they keep casting."}]},
