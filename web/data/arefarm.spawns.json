@@ -1,6 +1,7 @@
 [
  {
   "id": 1,
+  "kind": 1,
   "rect": [
    116,
    80,
@@ -9,12 +10,13 @@
   ],
   "mob": 10,
   "max": 15,
+  "name": "Slime",
   "specialProb": 5,
-  "specialKind": 1,
-  "name": "Slime"
+  "specialKind": 1
  },
  {
   "id": 2,
+  "kind": 1,
   "rect": [
    193,
    102,
@@ -23,12 +25,13 @@
   ],
   "mob": 10,
   "max": 15,
+  "name": "Slime",
   "specialProb": 5,
-  "specialKind": 1,
-  "name": "Slime"
+  "specialKind": 1
  },
  {
   "id": 3,
+  "kind": 1,
   "rect": [
    68,
    22,
@@ -37,12 +40,13 @@
   ],
   "mob": 10,
   "max": 15,
+  "name": "Slime",
   "specialProb": 5,
-  "specialKind": 1,
-  "name": "Slime"
+  "specialKind": 1
  },
  {
   "id": 4,
+  "kind": 1,
   "rect": [
    65,
    173,
@@ -51,12 +55,13 @@
   ],
   "mob": 17,
   "max": 15,
+  "name": "Scorpion",
   "specialProb": 15,
-  "specialKind": 3,
-  "name": "Scorpion"
+  "specialKind": 3
  },
  {
   "id": 5,
+  "kind": 1,
   "rect": [
    137,
    203,
@@ -65,12 +70,13 @@
   ],
   "mob": 17,
   "max": 15,
+  "name": "Scorpion",
   "specialProb": 15,
-  "specialKind": 3,
-  "name": "Scorpion"
+  "specialKind": 3
  },
  {
   "id": 6,
+  "kind": 1,
   "rect": [
    146,
    88,
@@ -79,12 +85,13 @@
   ],
   "mob": 16,
   "max": 15,
+  "name": "Giant-Ant",
   "specialProb": 10,
-  "specialKind": 2,
-  "name": "Giant-Ant"
+  "specialKind": 2
  },
  {
   "id": 7,
+  "kind": 1,
   "rect": [
    84,
    149,
@@ -93,12 +100,13 @@
   ],
   "mob": 16,
   "max": 15,
+  "name": "Giant-Ant",
   "specialProb": 10,
-  "specialKind": 2,
-  "name": "Giant-Ant"
+  "specialKind": 2
  },
  {
   "id": 8,
+  "kind": 1,
   "rect": [
    146,
    26,
@@ -107,12 +115,13 @@
   ],
   "mob": 16,
   "max": 15,
+  "name": "Giant-Ant",
   "specialProb": 10,
-  "specialKind": 2,
-  "name": "Giant-Ant"
+  "specialKind": 2
  },
  {
   "id": 9,
+  "kind": 1,
   "rect": [
    206,
    56,
@@ -121,12 +130,13 @@
   ],
   "mob": 22,
   "max": 10,
+  "name": "Amphis",
   "specialProb": 20,
-  "specialKind": 3,
-  "name": "Amphis"
+  "specialKind": 3
  },
  {
   "id": 10,
+  "kind": 1,
   "rect": [
    173,
    199,
@@ -135,12 +145,13 @@
   ],
   "mob": 22,
   "max": 10,
+  "name": "Amphis",
   "specialProb": 20,
-  "specialKind": 3,
-  "name": "Amphis"
+  "specialKind": 3
  },
  {
   "id": 11,
+  "kind": 1,
   "rect": [
    185,
    80,
@@ -149,8 +160,8 @@
   ],
   "mob": 12,
   "max": 10,
+  "name": "Stone-Golem",
   "specialProb": 25,
-  "specialKind": 5,
-  "name": "Stone-Golem"
+  "specialKind": 5
  }
 ]

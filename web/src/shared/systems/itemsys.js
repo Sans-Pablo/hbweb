@@ -8,6 +8,8 @@ import { toggleCompanion, dismissCompanion } from "./npcsys.js";
 import { isCandy, candy, isFeed, feed, activeBall } from "./companion.js";
 import * as Farming from "./farming.js";
 import * as Fishing from "./fishing.js";
+import { sget, sclear } from "./status.js";
+import { castItem } from "./magicsys.js";
 
 export const newInst = (w, id, count = 1, extra = null) => {
   const d = w.data.item(id);
@@ -122,7 +124,28 @@ export function useItem(w, p, uid, destUid) {
   switch (d.effectType) {
     case EFFECT.HP: amount = roll(); stat = "hp"; if (p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + amount); break;
     case EFFECT.MP: amount = roll(); stat = "mp"; p.mp = Math.min(p.maxMp, p.mp + amount); break;
-    case EFFECT.SP: amount = roll(); stat = "sp"; p.sp = Math.min(p.maxSp, p.sp + amount); break;
+    case EFFECT.SP:
+      amount = roll(); stat = "sp"; p.sp = Math.min(p.maxSp, p.sp + amount);
+      sclear(w, p, "poison");                                            // UseItemHandler ITEMEFFECTTYPE_SP (HG.cpp:17686): la poción de resistencia también cura el veneno
+      break;
+    case EFFECT.WARM:                                                    // ITEMEFFECTTYPE_WARM (HG.cpp:17580): el hielo se deshace al cabo de 1 s
+      if (sget(w, p, "ice")) w.after(1000, () => { if (!p.dead) sclear(w, p, "ice"); });
+      break;
+    case EFFECT.MAGIC:                                                   // ITEMEFFECTTYPE_MAGIC (HG.cpp:17752): primero se quita la invisibilidad
+      sclear(w, p, "invis");
+      if (d.v1 === 2) castItem(w, p, 32);                                // Invisibility sobre uno mismo, gratis
+      else if (d.v1 === 3) { if (!w.fightZone) castItem(w, p, 34); }   // Detect Invisibility, salvo en zona de lucha (el objeto se gasta igual)
+      else return w.reject(p, { t: "use" }, "no implementado");          // 1 teletransporte, 4 bisle/fightzone y 5 Heldenian: sin objetos en el port
+      break;
+    case EFFECT.CHANGEATTR: {                                            // ITEMEFFECTTYPE_CHANGEATTR (HG.cpp:17867): cada poción avanza un atributo
+      const L = p.look;
+      if (d.v1 === 1) L.hairCol = (L.hairCol + 1) > 15 ? 0 : L.hairCol + 1;
+      else if (d.v1 === 2) L.hair = (L.hair + 1) > 7 ? 0 : L.hair + 1;
+      else if (d.v1 === 3) L.skin = (L.skin + 1) > 3 ? 1 : L.skin + 1;
+      else if (d.v1 === 5) L.under = (L.under + 1) > 7 ? 0 : L.under + 1;
+      else return w.reject(p, { t: "use" }, "no implementado");          // 4 cambio de sexo: pendiente
+      break;
+    }
     case EFFECT.HPSTOCK:
       amount = roll(); stat = "food";
       p.hpStock = Math.min(500, p.hpStock + amount);

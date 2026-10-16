@@ -21,6 +21,8 @@ import * as PetSkill from "./petskill.js";
 import * as Inv from "../inventory.js";
 import * as Boss from "./bosses.js";
 import * as Quests from "./quests.js";
+import { pickMob, MOB_TABLE, MOB_DEFAULT, MOB_COUNT, GROUP_KEEP_1_IN_5, GROUP_DROP_1_IN_5 } from "../randommob.gen.js";
+import { sset } from "./status.js";
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -52,6 +54,51 @@ export function spawnFrom(w, g) {
   return null;
 }
 
+// MobGenerator de spots (HG.cpp:16841): cada spot con hueco (iCurMobs < iMaxMobs) crea un monstruo con dice(1,3)==2; el mapa no pasa de maxObjects.
+export function spotGenerator(w) {
+  let total = 0; for (const e of w.ents.values()) if (e.kind === "npc") total++;
+  if (!(w.maxObjects > total)) return;
+  for (const g of w.generators) {
+    if (g.respawn === false || g.alive >= g.max || R.dice(w.rng, 1, 3) !== 2) continue;
+    if (spawnFrom(w, g)) total++;
+  }
+}
+
+// _cGetSpecialAbility (HG.cpp:28959): tipo de habilidad especial (kindSA) -> cSA.
+const SA_OF = { 1: [3, 4], 2: [3, 4, 5], 3: [3, 4, 5, 6], 4: [3, 4, 7], 5: [3, 4, 7, 8], 6: [3, 4, 5], 7: [1, 2, 4], 8: [1, 2, 4, 3, 8] };
+export function getSpecialAbility(rng, kind) {
+  if (kind === 9) return R.dice(rng, 1, 8);
+  if (kind === 10) return 1;
+  const a = SA_OF[kind]; return a ? a[R.dice(rng, 1, a.length) - 1] : 0;
+}
+
+// MobGenerator aleatorio (HG.cpp:15993-16780). Mapas con randomMob.kind: si maxObjects-30 > npcs activos crea un maestro (id por tabla de nivel
+// randomMob.count) y 0..N esclavos. Desviaciones: el esclavo nace junto al maestro en vez de seguirlo (bSetNpcFollowMode no existe entre NPC);
+// sin eventos especiales ni cruzada (no existen en el port).
+export function randomMobGenerator(w) {
+  const rm = w.randomMob; if (!rm || !rm.kind || !isFinite(w.maxObjects)) return;
+  let total = 0; for (const e of w.ents.values()) if (e.kind === "npc") total++;
+  if (!(w.maxObjects - 30 > total)) return;
+  const d = n => R.dice(w.rng, 1, n);
+  const o = pickMob(rm.count, d), [name, , probSA, kindSA] = MOB_TABLE[o.id] || MOB_DEFAULT;
+  const make = at => {
+    const g = { name, rect: at ? [at.x - 2, at.y - 2, at.x + 2, at.y + 2] : [20, 20, w.grid.w - 21, w.grid.h - 21], max: Infinity, alive: 0, respawn: false, specialProb: 0, rm: true };
+    const n = spawnFrom(w, g); if (!n) return null;
+    const sa = o.firmSA || (d(100) <= probSA ? getSpecialAbility(w.rng, kindSA) : 0);
+    if (sa) n.special = R.applySpecial(w.rng, n, sa);
+    if (o.berserk) { n.exp *= 2; n.noDieRemainExp = n.exp - Math.floor(n.exp / 3); sset(w, n, "berserk", 1, Infinity); }
+    return n;
+  };
+  const master = make(null);
+  const c = MOB_COUNT[o.id];
+  let k = !master || !c ? 0 : c[0] === "n" ? c[1] : d(c[1]) - 1;
+  if (k >= 2) {
+    if (GROUP_KEEP_1_IN_5.includes(o.id) && d(5) !== 1) k = 0;
+    else if (GROUP_DROP_1_IN_5.includes(o.id) && d(5) === 1) k = 0;
+  }
+  for (let j = 0; j < k; j++) make(master);
+}
+
 // Explosivos (Game.cpp ~10919, NpcMagicHandler): al morir lanzan Fire Strike (30) o Mass Fire Strike (61) sobre su casilla, con acierto 100.
 function explode(w, n, spell, cx = n.x, cy = n.y) {
   const sp = w.magic?.[spell]; if (!sp) return;
@@ -81,10 +128,8 @@ export function killNpc(w, n, p) {
   if (n.special === 7 || n.special === 8) explode(w, n, n.special === 7 ? 30 : 61);
   if (p) {                                                       // sin jugador (fuego, nube...) no hay experiencia
     p.kills++;
-    let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler
-    // VARIEDAD (INVENTO del port): los primeros de cada especie valen más (×1,8 el primero, ×1,4 tras 12, ×1,1 tras 100) para premiar cazar de todo
-    const seen = (p.kinds ||= {}), prev = seen[n.name] || 0; seen[n.name] = prev + 1;
-    xp = Math.round(xp * (1 + 0.8 / (1 + prev / 12)));
+    const seen = (p.kinds ||= {}); seen[n.name] = (seen[n.name] || 0) + 1;   // contador por especie (misiones y piloto automático); ya no altera la experiencia
+    let xp = Math.floor(n.exp / 3) + n.noDieRemainExp;           // NpcKilledHandler (HG.cpp:6538): exp/3 + resto de no-muertos, sin multiplicador por especie
     if (p.eff && p.eff.addExp) xp += Math.floor((p.eff.addExp / 100) * xp);
     Party.shareExp(w, p, xp);                                    // con grupo se reparte (GetExp)
     Comp.onKill(w, p, n, xp);
@@ -102,13 +147,16 @@ export function killNpc(w, n, p) {
   }
   const staff = Quests.bossStaff(w, p, n);                      // el Rey dorado suelta el báculo maestro de la clase (misión «El Rey dorado»)
   if (staff) w.after(n.dur.dying * 0.6 + 400, () => { const [ux, uy] = uniqueSpot(w, n); groundPush(w, ux, uy, newInst(w, staff, 1), true); });
-  n.gen.alive--;
-  if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
+  // El hueco del generador se libera al borrar el cadáver: ahora - deadTime > regenTime (HG.cpp:6806; DeleteNpc resta iCurMobs, ~16992-17013).
+  // Después el generador de spots (spotGenerator) lo rellena con 1/3 de probabilidad cada 600 ms. Cripta/jefes/invocados (respawn:false) no regeneran.
+  const regen = n.gen.respawn !== false && !n.master;
+  if (regen) w.after(Math.max(n.dur.dying, n.cfg.regenTime), () => { n.gen.alive--; });
+  else n.gen.alive--;
   // Esqueleto común (no jefe, ni auxiliar, ni fantasma): con GHOST_CHANCE se levanta como fantasma cuando desaparece su cadáver. Se decide al
   // morir (w.ghostsPending retiene la limpieza del nivel de la cripta hasta que el fantasma salga). Invento del port.
   const rise = n.name === "Skeleton" && !n.boss && !n.aux && !n.ghost && !n.master && !n.comp && !n.noDrop && !w.cleared && w.rng() < GHOST_CHANCE;
   if (rise) w.ghostsPending = (w.ghostsPending || 0) + 1;
-  w.after(n.dur.dying + CORPSE_MS, () => {
+  w.after(regen ? Math.max(n.dur.dying, n.cfg.regenTime) : n.dur.dying + CORPSE_MS, () => {
     w.ents.delete(n.id); w.emit({ t: "remove", id: n.id });
     if (!rise) return;
     w.ghostsPending--;
@@ -130,9 +178,9 @@ const SUMMON_BY_MAGERY = ["", "Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton",
 const SUMMON_BY_V1 = ["", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Hellbound", "Cyclops", "Troll", "Orge"];
 export const SUMMON_MS = 300000;
 export const followersOf = (w, p) => [...w.ents.values()].filter(e => e.master === p.id && !e.dead);
-export function summonFor(w, p, v1, free) {
+export function summonFor(w, p, v1, free, nolimit) {
   const mag = p.skills[4] || 0, limit = Math.max(free ? 1 : 0, Math.floor(mag / 20));
-  if (followersOf(w, p).filter(e => !e.comp).length >= limit) return null;
+  if (!nolimit && followersOf(w, p).filter(e => !e.comp).length >= limit) return null;      // tope magery/20 (HG.cpp:10958); el GM no lo tiene
   let name;
   if (v1 > 0) name = SUMMON_BY_V1[v1];
   else {

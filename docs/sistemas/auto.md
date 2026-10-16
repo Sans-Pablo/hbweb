@@ -18,3 +18,10 @@ INVENTO del port (Olympia tenía auto-caza; el original no). Lógica pura en `sh
 - `auto.nopick` (casilla del menú, no en `/auto`): `decide` se salta el bucle de botín. `auto.kills` lo suma main.js con `death` (`by` = pid, sin mascotas); la mini ventana id 75 (`AutoMini`) lo muestra con tiempo y ritmo.
 - Zona = spawn de arefarm.spawns.json: se muestra «Pozo id · criatura (rect)».
 - Almacén: `viaTeleport` ordena entradas por longitud de `findPath`; controller.js pasa `avoid` (casillas de `w.teleports`) al andar en auto (reintenta sin él); `approach` descarta casillas de teletransporte.
+
+## Reglas por rareza, pociones y exp (0.85.19)
+- `a.rules[rareza]` ∈ ignore|sell|store (rareza 0 normal, 1 mágico, 2 raro, 3 único; por defecto sell, sell, store, store). «Ignorar» deja el objeto en el suelo; «vender»/«guardar» lo recogen.
+- Mochila llena: si hay algo que vender va a la tienda y manda `selllist` (≤12 por tanda), luego retoma la caza; si no, guarda con `deposit` en el almacén; almacén lleno (MAX_BANK) o nada que vender/guardar → termina con aviso.
+- `a.potions` (ON por defecto): con poca vida bebe una poción de vida de la mochila; si no tiene, para.
+- `ctl.auto.exp` suma los eventos `exp` propios desde el inicio; la mini ventana lo muestra. F5 reabre la mini ventana si hay una caza (o la última) y estaba cerrada.
+- Test: `tests/autoplay.test.mjs`.

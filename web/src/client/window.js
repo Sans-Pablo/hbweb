@@ -22,6 +22,7 @@ export function drawSlot(c, x, y, s, on = false, sel = false) {
   c.strokeStyle = on || sel ? (sel ? THEME.lineOn : "rgba(225,225,225,.85)") : "rgba(20,20,20,.55)"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, s - 1, s - 1);
   c.strokeStyle = on ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(x + 1.5, y + s - 1.5); c.lineTo(x + 1.5, y + 1.5); c.lineTo(x + s - 1.5, y + 1.5); c.stroke(); c.restore();
 }
+const MIN_W = 170, MIN_H = 26;
 const KEY = "gamedialog_1", FRAME = 2, BTN = "dialogtext_1";
 const cache = new Map();
 
@@ -283,19 +284,43 @@ export class Win {
   pick(id, val) { this.vals[id] = String(val); this.lastOk[id] = this.vals[id]; this.focus = null; this.fields[id]?.enter?.(); this.onPick?.(id, val); }
 
   // ---- fotograma
+  // Cerrar y minimizar (mecanismo común, modelo: la mini ventana del auto hunt). La bola plateada de arriba a la derecha cierra y la de
+  // arriba a la izquierda minimiza la ventana a una barrita con el título (otro clic en su bola izquierda la restaura). Opciones del
+  // constructor: nox (sin cerrar), nomin (sin minimizar; las modales y las que no se pueden cerrar tampoco minimizan).
+  get canMin() { return !this.nomin && !this.nox && !this.modal; }
+  minimize() { if (!this.canMin || this.minimized) return; this.full = { w: this.w, h: this.h }; this.minimized = true; this.w = MIN_W; this.h = MIN_H; this.focus = null; this.popRect = null; }
+  restore() { if (!this.minimized) return; this.minimized = false; this.w = this.full.w; this.h = this.full.h; }
+  toggleMin() { this.minimized ? this.restore() : this.minimize(); }
+  // bola de botón: cúpula oscura con filete dorado y un glifo; se pinta encima de la bola plateada del marco
+  ball(ui, cx, cy, glyph, tip, fn) {
+    const c = ui.c, over = ui.hov(cx - 8, cy - 8, 16, 16);
+    const bad = glyph === "x";
+    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
+    c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
+    if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
+    else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
+    else { c.rect(cx - 3, cy - 3, 6, 6); }                                   // restaurar
+    c.stroke(); c.lineWidth = 1;
+    ui.hit(cx - 8, cy - 8, 16, 16, { fn });
+    if (over) this.g.tip(t(tip), this.g.mouse.x + 12, this.g.mouse.y + 14);
+  }
   draw(g, me, world) {
     const c = g.ctx, ui = this.ui = new Ui(this, g); this.g = g;
+    if (this.minimized) {
+      c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#a88a48"; c.strokeRect(.5, .5, this.w - 1, this.h - 1);
+      c.strokeStyle = "rgba(255,225,170,.25)"; c.strokeRect(1.5, 1.5, this.w - 3, this.h - 3);
+      if (this.title) g.text(this.w / 2, 7, this.title, THEME.hi, { align: "center", bold: true });
+      this.ball(ui, 13, this.h / 2, "o", "Restaurar", () => { this.restore(); return true; });
+      this.ball(ui, this.w - 13, this.h / 2, "x", "Cerrar", () => { g.close(this.id); return true; });
+      ui.finish(); return;
+    }
     const fr = frameCanvas(g, this.w, this.h);
     if (fr) c.drawImage(fr, 0, 0, fr.width, fr.height, 0, 0, this.w, this.h); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); c.fillStyle = "#2a2014"; c.fillRect(17, 31, this.w - 34, this.h - 53); }
     if (this.title) g.text(this.w / 2, LAYOUT.titleY, this.title, THEME.title, { align: "center", bold: true });
     this.body(ui, me, world);
     ui.finish();
-    if (!this.nox) {                                                   // aspa de cierre
-      const x = this.w - 44, y = 12, over = ui.hov(x, y, 16, 16);
-      c.fillStyle = over ? "#8a1c14" : "#3a2a1a"; c.fillRect(x, y, 16, 16); c.strokeStyle = over ? "#ffb08a" : "#a88a48"; c.strokeRect(x + .5, y + .5, 15, 15);
-      c.strokeStyle = over ? "#fff" : "#e8d9b0"; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 4, y + 4); c.lineTo(x + 12, y + 12); c.moveTo(x + 12, y + 4); c.lineTo(x + 4, y + 12); c.stroke(); c.lineWidth = 1;
-      ui.hit(x, y, 16, 16, { fn: () => { g.close(this.id); return true; } });
-    }
+    if (!this.nox) this.ball(ui, this.w - 9, 9, "x", "Cerrar", () => { g.close(this.id); return true; });
+    if (this.canMin) this.ball(ui, 9, 9, "-", "Minimizar", () => { this.minimize(); return true; });
   }
   body() {}
 

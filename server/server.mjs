@@ -73,7 +73,7 @@ const bytes = new Uint8Array(fs.readFileSync(path.join(DATA, meta.map + ".bin"))
 const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
-const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
+const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb, potions: JSON.parse(fs.readFileSync(path.join(DATA, "potion.json"))) });
 setDungeonPalette(JSON.parse(fs.readFileSync(path.join(DATA, "dungeon_palette.json"))));
 const maps = {};
 try {
@@ -661,7 +661,7 @@ function itemsList(world) {
 
 // Eventos visibles para quien está cerca (efectos, sonidos, números de daño). Todo lo demás con `id` es privado de su dueño: tienda, tutorial,
 // talentos, arena, avisos, depuración... (un evento nuevo es privado por defecto: no se filtra nada por olvido, y no se gasta ancho de banda).
-const PUBLIC = new Set(["botsay", "crit", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
+const PUBLIC = new Set(["botsay", "dash", "crit", "attack", "companion-resummon", "damage", "miss", "spell", "cast", "prepare", "heal", "auramp", "death", "spawn", "dummy-cast", "remove", "step", "status", "knock", "explode", "field", "fieldend", "ghost",
   "bossfx", "bossmsg", "pickup", "teleport", "respawn", "recalled", "immune", "resist", "levelup", "weather", "time"]);
 
 let last = Date.now();

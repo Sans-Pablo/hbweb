@@ -25,7 +25,7 @@ assert.ok(core.length < total / 5, "el núcleo debe ser una fracción pequeña: 
 // ciudad: losetas propias, sin dragones
 const ares = bundleOfWorld(fake("aresden"), manifest, npcDb);
 assert.ok(ares.tiles.length > 5 && ares.tiles.every(isTileKey));
-assert.ok(ares.mobs.length < 200, "ciudad: " + ares.mobs.length);
+assert.ok(ares.mobs.length < 300, "ciudad: " + ares.mobs.length);
 assert.ok(!ares.mobs.some(k => /^(wyvern|firewyvern|demon)\d+$/.test(k)));
 
 // campo de nivel alto: sí lleva sus monstruos y sonidos; la ciudad no

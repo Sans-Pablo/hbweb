@@ -242,6 +242,7 @@ export class Controller {
       const d = autoDecide(world, me, this.auto);
       if (d.msg) this.ui.autoLog?.(d.msg);
       if (d.stop) this.auto = null;
+      if (d.send) this.conn.send(d.send);
       if (d.open) this.ui.npcClick(d.open);
       if (d.intent) this.intent = d.intent;
     }

@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.85.20 · Ventanas y misiones (2026-10-16)
+- Almacén: buscador arriba y centrado. Misiones: icono de pergamino y entradas desplegables (`questwin.js`). Turquesa eliminado de gui.js/renderer.js (guardia en tests/ui-guard.test.mjs).
+
+## 0.85.19 · Autohunt y ventanas (2026-10-16)
+- Autohunt (autoplay.js, autowin.js): exp ganada (evento `exp` → `auto.exp`), reglas por rareza `a.rules` (ignorar/vender/guardar; por defecto vender normal+mágico, guardar raro+único), vender con la bolsa llena (viaja a la tienda, `selllist`, retoma), guardar (`deposit`; almacén lleno termina), pociones de vida (`a.potions`, ON), F5 reabre la mini ventana. Controller reenvía `d.send`.
+- Ventanas (window.js): bola derecha cierra, bola izquierda minimiza (`minimize/restore/toggleMin`, opciones `nox`/`nomin`); se quita el cuadrado de cierre.
+
+## 0.85.17 · Dash y crítico (2026-10-16)
+- Tarea 5 cliente: evento `dash` (world.js) y fantasma del dash en el renderer (Game.cpp:8616-8654 desplazamientos 26/16/0; 8917-8921 fantasma con tinte). Ya estaban portados: chispas del crítico (Game.cpp:5360-5374, 14296-14318, 6350-6361; spellfx.js) y tinte berserk (0,-5,-5). El original no tiene sonido propio del crítico (solo el del golpe). No hay animación completa de OBJECTATTACKMOVE de 12 fotogramas: el web usa paso de carrera + ataque.
+
+## 0.85.16 · Mobs aleatorios (2026-10-16)
+- Sistema 28: `randomMobGenerator` (npcsys.js) desde el MobGenerator aleatorio (HG.cpp:15993-16780): en mapas con random-mob y si maxObjects−30 > npcs activos crea un maestro por la tabla de nivel (`randommob.gen.js`, generado por `tools/convert_randommob.py`) con habilidad especial (_cGetSpecialAbility, HG.cpp:28959) o berserk fijo (exp ×2) y 0..N esclavos con los filtros de grupo del original. Desvíos: el esclavo nace junto al maestro en vez de seguirlo; sin eventos especiales ni cruzada. Test `random-mob`.
+
+## 0.85.15 · Generador de spawns (2026-10-16)
+- Sistema 27: `spotGenerator` (npcsys.js) cada >600 ms (HG.cpp:2093): por spot con hueco, dice(1,3)==2 crea un monstruo (MobGenerator, HG.cpp:16841) hasta `maxObjects` del mapa; el hueco se libera al borrar el cadáver (ahora−deadTime > regenTime, HG.cpp:6806; DeleteNpc ~16992). Quitado el respawn por temporizador. Desvío: el relleno inicial del mapa se mantiene (el original arranca vacío). Test `spot-generator`.
+
+## 0.85.14 · Monstruos fieles (2026-10-16)
+- Sistema 26: `npc.json` y generadores regenerados desde `Config/Npc.cfg` y `HGServer/MAPDATA` (`tools/convert_original.py`): exp = dice(ExpDice×150,4)+ExpDice (Npc.cpp:109; normal aproximada si n>64), regen 3500, actionTime 2300, oro ×100; 2ndmiddle con 11 generadores y random-mob 1 16; nombres de generador por tipo de mob (Aresden golems, etc.). Test `original-npcs`.
+
+## 0.85.13 · Exp fiel (2026-10-16)
+- Sistema 25: la experiencia por baja es exp/3 + resto de no-muertos (+ AddExp %), HG.cpp:6538; quitado el multiplicador por variedad de especie. Test `exp-original`.
+
+## 0.85.12 · Botín fiel (2026-10-16)
+- Sistema 24: `shared/drops.js` reescrito desde `NpcDeadItemGenerator` (HG.cpp:29315-29990): 55 % base (+15 % grupo) con bonus 0,8, oro 60 %, estándar 5000 − reputación (±3000), tablas de armas/varitas/armaduras por nivel de generación, banda 8 y diciembre. Quitado el corte «débil» del 30 % y las tablas inventadas. Test `drops-original`.
+## 0.85.15 · Alquimia (2026-10-16)
+- Alquimia fiel: HG.cpp ReqCreatePortionHandler 23503-23700 (orden por id descendente, última receta coincidente, límite, dificultad, +5 a maestría 100, SkillUp, consumo, GetExp dice(2,dif/3)). Recetas en `web/data/potion.json` (`tools/convert_potion.mjs`). Test `alchemy.test.mjs`.
+
+## 0.85.14 · Cárcel (2026-10-16)
+- Cárcel fiel: Client.cpp:1184 (solo en la propia ciudad, 180 s), HG.cpp 11661-11810 (destinos redirigidos), 2323 (cuenta atrás). Test `jail.test.mjs`.
+
 ## 0.85.10 · Sin rombos celestes (2026-10-16)
 - Quitados los rombos azules translúcidos que se dibujaban sobre el suelo en las casillas de salida (`drawTeleportMarks`); el original no los tiene. Se conserva solo el rótulo del destino. Test en `ui-guard`.
 

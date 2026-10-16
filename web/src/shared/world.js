@@ -18,6 +18,7 @@ import * as MagicSys from "./systems/magicsys.js";
 import * as PetGrimoire from "./systems/petgrimoire.js";
 import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
+import * as Alchemy from "./systems/alchemy.js";
 import * as Debug from "./systems/debug.js";
 import * as Arena from "./systems/arena.js";
 import * as Tutorial from "./systems/tutorial.js";
@@ -32,9 +33,10 @@ import * as Stall from "./systems/stall.js";
 import * as Guild from "./systems/guild.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
+export const MOBGEN_MS = 600;
 export const RECALL_CHANNEL_MS = 3000, RECALL_COOLDOWN_MS = 60000;
 export class World {
-  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [] }) {
+  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [], maxObjects = Infinity, randomMob = null }) {
     this.grid = grid;
     this.npcDb = npcDb;
     this.data = data;                // GameData: objetos, hechizos y monstruos
@@ -53,8 +55,10 @@ export class World {
     this.weatherUntil = 0;
     this.fixedDay = false;           // mapas de "fixed-day-mode": siempre de día y sin clima
     this.clock = null;               // () => minuto de la hora; sin reloj siempre es de día
+    this.randomMob = randomMob;      // {kind, count}: generador aleatorio de la ficha del mapa (m_bRandomMobGenerator, nivel)
+    this.maxObjects = maxObjects;    // tope de objetos activos del mapa (m_iMaximumObject, MAPDATA maximum-object)
     this.generators = spawns.map(s => ({ ...s, alive: 0 }));
-    for (const g of this.generators) for (let i = 0; i < g.max; i++) Npc.spawnFrom(this, g);
+    for (const g of this.generators) for (let i = 0; i < g.max && this.ents.size < this.maxObjects; i++) Npc.spawnFrom(this, g);
   }
 
   get nextId() { return this.ids.ent; }
@@ -143,10 +147,11 @@ export class World {
       }
       for (const e of this.ents.values()) {
         if (e.kind === "npc") { if (!(this.dbgFreeze && !e.master)) Npc.npcThink(this, e); }
-        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); Combat.chargeCritTick(this, e); }
+        else if (e.kind === "player" && !e.dead && this.time - e.lastVitals >= 1000) { e.lastVitals = this.time; tickVitals(this, e); tickPoison(this, e); MagicSys.tickResurrection(this, e); Combat.chargeCritTick(this, e); }
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); Stall.tick(this); }
       if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); groundSweep(this); }
+      if (this.time - (this.tMobGen ?? 0) > MOBGEN_MS) { this.tMobGen = this.time; Npc.randomMobGenerator(this); Npc.spotGenerator(this); }   // HG.cpp:2093 (cada >600 ms)
       Arena.tickArena(this);
       tickSky(this);
     }
@@ -154,7 +159,7 @@ export class World {
 }
 
 const ARENA_BLOCKED = new Set(["attack", "prepare", "cast", "pickup", "petorder", "pettarget", "petmode", "petgo"]);
-const FOR_DEAD = new Set(["respawn", "say"]);
+const FOR_DEAD = new Set(["respawn", "say", "resurrect"]);
 
 // _iGetAttackType / OBJECTATTACKMOVE del cliente original: el crítico y el dash exigen maestría 100 en la habilidad del arma.
 const mastered = p => (p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= CRIT.mastery;
@@ -197,6 +202,8 @@ const COMMANDS = {
     if (tp) { const x = p.x, y = p.y; w.after((run ? PLAYER.runMs : PLAYER.walkMs) * slow, () => { if (!p.dead && w.ents.get(p.id) === p && p.x === x && p.y === y) w.hooks?.teleport?.(p, tp); }); }
     return true;
   },
+  resurrect(w, p, cmd) { return MagicSys.answerResurrect(w, p, cmd); },        // respuesta al cuadro "Will you revive here?" (HG.cpp:38015)
+  safemode(w, p, cmd) { p.safeAttack = !!cmd.on; return true; },        // Home: ToggleSafeAttackModeHandler (HG.cpp); el cliente manda el estado resultante
   combatmode(w, p, cmd) { p.combatMode = !!cmd.on; return true; },      // Tab: postura de combate (Game.cpp: appr2 & 0xF000); la ven los demás
   lang(w, p, cmd) { if (cmd.lang === "en" || cmd.lang === "es") p.uiLang = cmd.lang; return true; },      // idioma del cliente: los habitantes le hablan en él
   turn(w, p, cmd) {
@@ -222,6 +229,7 @@ const COMMANDS = {
     let lead = 0;
     if (dash) {
       if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
+      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: PLAYER.runMs });   // el cliente dibuja el fantasma del dash (Game.cpp DrawObject_OnAttackMove, 8616-8654 y 8917-8921)
       p.lastMove = w.time; lead = PLAYER.runMs;   // OBJECTATTACKMOVE llama a iClientMotion_Move_Handler(..., bIsRun=FALSE) (HG.cpp 820): el paso no gasta SP
     }
     const crit = critOk && !dash;
@@ -282,6 +290,7 @@ const COMMANDS = {
   repairconfirm: (w, p, cmd) => Shop.repairConfirm(w, p, cmd),
   deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
+  alchemy: (w, p, cmd) => Alchemy.craft(w, p, cmd),                                              // ReqCreatePortionHandler (HG.cpp:23503)
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   statreset: (w, p, cmd) => Respec.respec(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),

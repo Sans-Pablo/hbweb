@@ -1,5 +1,5 @@
 {
- "build": "0.85.12",
+ "build": "0.85.20",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -8,8 +8,8 @@
   {
    "date": "2026-10-16",
    "title": {
-    "es": "Misiones desplegables, almacén y fuera el turquesa (v0.85.12)",
-    "en": "Expandable quests, storage and no more turquoise (v0.85.12)"
+    "es": "Misiones desplegables, almacén y fuera el turquesa (v0.85.20)",
+    "en": "Expandable quests, storage and no more turquoise (v0.85.20)"
    },
    "items": [
     {
@@ -23,6 +23,109 @@
     {
      "es": "Sin turquesa: pata de la barra en verde, barra de vida del compañero en verde, puntos del minimapa y rótulos en dorado.",
      "en": "No turquoise: bar paw is green, pet HP bar green, minimap dots and labels gold."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Autohunt y ventanas (v0.85.19)",
+    "en": "Autohunt and windows (v0.85.19)"
+   },
+   "items": [
+    {
+     "es": "Auto hunt: la mini ventana muestra la experiencia ganada desde que empezó la caza.",
+     "en": "Auto hunt: the mini window shows the experience gained since the hunt began."
+    },
+    {
+     "es": "Auto hunt: acción por rareza (ignorar, vender o guardar). Vender: con la bolsa llena va a la tienda, vende y sigue. Guardar: deposita en el almacén; si está lleno, la caza termina.",
+     "en": "Auto hunt: action per rarity (ignore, sell or store). Sell: with a full bag it goes to the shop, sells and resumes. Store: deposits in the warehouse; if full, the hunt ends."
+    },
+    {
+     "es": "Auto hunt: «Tomar pociones con poca vida» (activado por defecto). F5 vuelve a abrir la mini ventana si la cerraste.",
+     "en": "Auto hunt: «Drink potions when health is low» (on by default). F5 reopens the mini window if you closed it."
+    },
+    {
+     "es": "Ventanas: la bola plateada de arriba a la derecha cierra y la de arriba a la izquierda minimiza a una barrita.",
+     "en": "Windows: the top-right silver ball closes and the top-left one minimizes to a small bar."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Dash y crítico (v0.85.17)",
+    "en": "Dash and critical (v0.85.17)"
+   },
+   "items": [
+    {
+     "es": "Al atacar corriendo (dash) el personaje deja un fantasma que se acerca 26 y 16 px, como el original. Las chispas del crítico (efectos 20-27 y 8) y el tinte de berserk ya estaban.",
+     "en": "Dashing leaves a ghost trailing 26 then 16 px behind, as in the original. Critical sparks (effects 20-27 and 8) and the berserk tint were already there."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Mobs aleatorios (v0.85.16)",
+    "en": "Random mobs (v0.85.16)"
+   },
+   "items": [
+    {
+     "es": "Los mapas con generador aleatorio crean monstruos y grupos por nivel de mapa como en el original (con habilidades especiales y berserk).",
+     "en": "Maps with a random generator create monsters and groups by map level as in the original (with special abilities and berserk)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Generador de spawns (v0.85.15)",
+    "en": "Spawn generator (v0.85.15)"
+   },
+   "items": [
+    {
+     "es": "Los monstruos reaparecen como en el original: cada 600 ms, cada generador con hueco crea uno con 1/3 de probabilidad, hasta el máximo de objetos del mapa; el cadáver dura lo que su tiempo de regeneración.",
+     "en": "Monsters respawn as in the original: every 600 ms each generator with a free slot creates one with a 1/3 chance, up to the map object cap; the corpse lasts its regen time."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Monstruos fieles (v0.85.14)",
+    "en": "Faithful monsters (v0.85.14)"
+   },
+   "items": [
+    {
+     "es": "Estadísticas, experiencia, regeneración y generadores de monstruos tomados del servidor original.",
+     "en": "Monster stats, experience, respawn and generators now come from the original server."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Experiencia fiel (v0.85.13)",
+    "en": "Faithful experience (v0.85.13)"
+   },
+   "items": [
+    {
+     "es": "La experiencia por monstruo ya no lleva el bonus de variedad: es la del original.",
+     "en": "Experience per monster no longer has the variety bonus: it matches the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Botín fiel al original (v0.85.12)",
+    "en": "Faithful loot (v0.85.12)"
+   },
+   "items": [
+    {
+     "es": "El botín de los monstruos usa las tablas y probabilidades de NpcDeadItemGenerator: ya no hay corte del 30 % en monstruos débiles.",
+     "en": "Monster loot uses the NpcDeadItemGenerator tables and odds: the 30% cut on weak monsters is gone."
     }
    ]
   },

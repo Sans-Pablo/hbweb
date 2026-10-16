@@ -2,8 +2,9 @@ import { applyGear } from "./classgear.js";
 import { applyQuestItems } from "./systems/quests.js";
 // Datos del juego (generados por tools/convert.py a partir de los .cfg del servidor).
 export class GameData {
-  constructor({ items = {}, npcs = {}, magic = {} }) {
+  constructor({ items = {}, npcs = {}, magic = {}, potions = [] }) {
     this.magic = magic;
+    this.potions = potions;
     this.items = new Map();
     this.byName = new Map();
     applyGear(items); applyQuestItems(items);

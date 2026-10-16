@@ -10,8 +10,21 @@ import { NPC } from "./shopsys.js";
 import { groundTop } from "./ground.js";
 import { mobOf } from "./orders.js";
 import { findPath } from "../path.js";
+import { rarityOf } from "../rarity.js";
+import { EFFECT, ITYPE, isStack } from "../items.js";
+import { isEquipped } from "../inventory.js";
+import { MAX_BANK, MAX_SELL_LIST } from "./shopsys.js";
 
 export const HP_STOP = 0.35, IDLE_STOP_MS = 20000, SIGHT = 40, LOOT_RANGE = 7, BAG_MAX = 50, ZONE_PAD = 8;
+// Acción por rareza (0 normal, 1 mágico, 2 raro, 3 único): ignore = lo deja en el suelo; sell = lo recoge y, con la mochila llena, lo vende en la tienda;
+// store = lo recoge y, con la mochila llena, lo guarda en el almacén (si el almacén se llena, termina el hunt).
+export const DEFAULT_RULES = ["sell", "sell", "store", "store"];
+export const ruleOf = (a, inst) => (a.rules || DEFAULT_RULES)[rarityOf(inst.id, inst.attr)] || "ignore";
+// Objetos de la mochila que la caza ha recogido (no estaban al empezar ni están puestos) y que su regla manda vender / guardar
+export function disposable(w, me, a, act) {
+  a.bag0 ||= new Set((me.bag || []).map(i => i.uid));
+  return (me.bag || []).filter(i => !a.bag0.has(i.uid) && !isEquipped(me, i.uid) && ruleOf(a, i) === act && (a.bad?.[i.uid] || 0) < 3);
+}
 export const FARM = "arefarm", FARM_HOME = [65, 75];               // adventure.js FARM_HOME
 export const BUILDINGS = { warehouse: "wrhus_1f", shop: "gshop_1f", smith: "bsmith_1f" };   // mapa interior de cada destino de ciudad
 // destino -> filtro de habitante (los de rol propio llevan e.role; el resto, e.type de shopsys.js NPC)
@@ -100,16 +113,39 @@ export function decide(w, me, a) {
     if (!spot) return { stop: true, msg: ["No encuentro cómo llegar a " + PLACES[a.place].es + ".", "I can't find a way to reach " + PLACES[a.place].en + "."] };
     return { intent: { t: "move", x: spot[0], y: spot[1] } };
   }
-  if (me.hp < me.maxHp * HP_STOP) return { stop: true, msg: ["Vida baja: caza automática detenida.", "Low health: auto hunt stopped."] };
+  if (me.hp < me.maxHp * HP_STOP) {
+    if (a.potions !== false) {                                                       // «tomar pociones con poca vida» (por defecto activo)
+      const pot = (me.bag || []).find(i => { const d = w.data.item(i.id); return d && d.type === ITYPE.EAT && d.effectType === EFFECT.HP; });
+      if (pot) return { send: { t: "use", uid: pot.uid } };
+    }
+    return { stop: true, msg: ["Vida baja: caza automática detenida.", "Low health: auto hunt stopped."] };
+  }
   const z = a.zone;
   if (z) {                                                                           // caza con zona: ir, cazar dentro y volver a la granja con la mochila llena
     if ((me.bag?.length || 0) >= BAG_MAX) a.full = true;
-    if (a.full) {
-      const v = viaTeleport(w, me, FARM);
-      if (v) { const first = !a.said; a.said = true; return first && !v.stop ? { ...v, msg: ["Mochila llena: vuelvo a la granja.", "Bag full: heading back to the farm."] } : v; }
-      if (dist(me, { x: FARM_HOME[0], y: FARM_HOME[1] }) <= 3) return { stop: true, msg: ["Mochila llena: ciclo terminado en la granja.", "Bag full: cycle finished at the farm."] };
-      const sp = w.freeSpotNear?.(...FARM_HOME) || FARM_HOME;
-      return { intent: { t: "move", x: sp[0], y: sp[1] } };
+    if (a.full) {                                                                      // mochila llena: vender y guardar lo recogido según su rareza y retomar la caza
+      const sell = disposable(w, me, a, "sell"), store = disposable(w, me, a, "store");
+      if (!sell.length && !store.length) {
+        if (me.bag.length >= BAG_MAX) return { stop: true, msg: ["Mochila llena sin nada que vender ni guardar: caza detenida.", "Bag full with nothing to sell or store: hunt stopped."] };
+        a.full = false; a.said = false;
+      } else {
+        const place = sell.length ? "shop" : "warehouse";
+        if (place === "warehouse" && (me.bank?.length || 0) >= MAX_BANK - 1 && !store.some(i => me.bank.some(b => b.id === i.id && isStack(w.data.item(i.id)))))
+          return { stop: true, msg: ["Almacén lleno: caza detenida.", "Warehouse full: hunt stopped."] };
+        const r = decide(w, me, { kind: "run", place });
+        if (r.open) {
+          if (place === "shop") {
+            const items = sell.slice(0, MAX_SELL_LIST);
+            for (const i of items) (a.bad ||= {})[i.uid] = (a.bad[i.uid] || 0) + 1;     // si la tienda no lo compra, a la tercera lo deja
+            return { send: { t: "selllist", items: items.map(i => ({ uid: i.uid, count: i.count || 1 })) } };
+          }
+          const i = store[0]; (a.bad ||= {})[i.uid] = (a.bad[i.uid] || 0) + 1;
+          return { send: { t: "deposit", uid: i.uid, count: i.count || 1 } };
+        }
+        if (r.stop) return r;
+        if (!a.said) { a.said = true; return { ...r, msg: place === "shop" ? ["Mochila llena: voy a vender.", "Bag full: going to sell."] : ["Mochila llena: voy a guardar.", "Bag full: going to store."] }; }
+        return r;
+      }
     }
     if ((w.map?.id || FARM) !== z.map) { const v = viaTeleport(w, me, z.map); if (v) return v; }
   }
@@ -123,7 +159,7 @@ export function decide(w, me, a) {
   // a.nopick (opción «No recoger objetos»): no pisa el botín; a.kills lo cuenta main.js con el evento "death" y lo muestra la mini ventana (autowin.js)
   if (!a.nopick) for (let dx = -LOOT_RANGE; dx <= LOOT_RANGE; dx++) for (let dy = -LOOT_RANGE; dy <= LOOT_RANGE; dy++) {       // sin presas a la vista: botín cercano
     const x = me.x + dx, y = me.y + dy;
-    if (!w.grid.inside(x, y) || !groundTop(w, x, y) || a.skip?.has(x + "," + y) || (z && !inRect(z.rect, x, y, ZONE_PAD))) continue;
+    if (!w.grid.inside(x, y) || !groundTop(w, x, y) || ruleOf(a, groundTop(w, x, y)) === "ignore" || a.skip?.has(x + "," + y) || (z && !inRect(z.rect, x, y, ZONE_PAD))) continue;
     const d = Math.max(Math.abs(dx), Math.abs(dy)); if (d < bd) { bd = d; t = { x, y }; }
   }
   if (t) {

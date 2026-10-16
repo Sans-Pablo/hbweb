@@ -27,6 +27,7 @@ import { GLCompose } from "./glcompose.js";
 
 const CHUNK = 16;                       // casillas por bloque de suelo pregenerado
 const CLASSIC_W = 800, CLASSIC_H = 600;
+const DASH_BACK = [0, [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1]];   // dirección 1-8 -> vector hacia atrás del dash (Game.cpp 8616-8654: dir1 dy+, dir2 dy+/dx-, dir3 dx-, ...)
 const AURA = { 1: "255,210,80", 2: "120,220,255", 3: "200,120,255", 4: "120,160,255", 5: "255,120,80", 6: "120,255,140", 7: "255,150,40", 8: "255,60,60" };
 
 // Client/Game.cpp, DrawObject_On*: monstruos sin sombra (Slime, Tigerworm, Plant, Ice-Golem, esfera, Abaddon, puerta...)
@@ -647,6 +648,11 @@ export class Renderer {
       if (this.crowd < (this.crowdMax || 70) || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
       if (!this.pcache.draw(ctx, gender, look, group, d, f, x, y, ap, Math.min(2, Math.ceil(this.scale * 2) / 2))) { const T = performance.now(); drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap); this.pcache.st.msDirect += performance.now() - T; this.pcache.st.nDirect = (this.pcache.st.nDirect || 0) + 1; }
       ctx.globalAlpha = 1;
+      { const ds = s.fx.dashes.get(e.id), k = ds ? (performance.now() - ds.at) / ds.ms : 2;
+        if (k < 1) {                                       // Game.cpp 8616-8654: el cuerpo avanza 26/16/0 px y deja un fantasma (bDashDraw) 26 -> 16 px detrás, con el tinte de 8917-8921
+          const v = DASH_BACK[ds.dir] || [0, 0], dist = k < 0.34 ? 26 : k < 0.67 ? 16 : 0;
+          if (dist) { ctx.globalAlpha = 0.5; this.pcache.draw(ctx, gender, look, group, d, f, x + v[0] * dist, y + v[1] * dist, ap, Math.min(2, Math.ceil(this.scale * 2) / 2)); ctx.globalAlpha = 1; }
+        } else if (ds) s.fx.dashes.delete(e.id); }
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
       if (zerk) spr.transRGB(ctx, body, f, x, y, 0, -5, -5);     // Game.cpp: PutTransSpriteRGB(…, 0, -5, -5)
       this.auras(e, x, y, w, false);

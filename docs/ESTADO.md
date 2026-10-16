@@ -7,6 +7,7 @@
 ## Hilo MOTOR/COMBATE (pedido 2026-10-15)
 - [x] 1 Críticos: contador en HUD (v0.84.11); la lógica ya coincidía con el original. [x] 2 Pretend Corpse (v0.84.12, docs/sistemas/pretend-corpse.md). [x] 3 Paralyze (v0.84.13, docs/sistemas/paralyze.md). [x] 6 Efecto de protección (v0.84.16), [x] 7 Sin indicador de tiempo sobre la cabeza (v0.84.17) [x] 5 Granjas enemigas (v0.84.15 farm-side) [x] 8 Dash arreglado (SP > 0, Shift cuenta como correr) y [x] 9 sin controles Shift del summon (v0.84.18) [x] 4 Magia sin daño (v0.84.14, objetivo en movimiento; fórmulas de acierto/resistencia ya coincidían con el original).
 - [ ] Pendiente (pedido 2026-10-15): reimplementar el control de pet/summon (ir a casilla / atacar) con otra tecla; Shift queda libre para la mecánica original (v0.84.18). Cierre 2026-10-15 (v0.84.19): Alt-resaltado del crítico, recall forzado fuera de granja enemiga, Paralyze por daño mágico, Pretend Corpse con cadáver; verificado en localhost.
+- [x] (pedido 2026-10-16, v0.85.12) Fidelidad 24 botín: drops.js desde HG.cpp:29315 (sin corte débil). 25 exp fiel (v0.85.13). 26 npc.json/spawns (v0.85.14). 27 generador de spawns (v0.85.15, docs/sistemas/spawns.md). 28 mobs aleatorios (v0.85.16). Tarea 5 cliente (v0.85.17): fantasma del dash; chispas del crítico y berserk ya portados.
 - [x] Backlog motor (v0.85.5): sonidos de arma por tipo; combate revisado contra el original (furia no duplica crítico, critBonus, dash sin gasto de SP); "Connection lost" en segundo plano arreglado (reconexión automática y resync). Sin verificar en navegador real con pestaña dormida.
 
 ## Hilo UI (pedido 2026-10-15, v0.83.7)
@@ -45,6 +46,9 @@
 - [x] (pedido 2026-10-15, v0.82.3) **Tirones al correr:** precalentado del suelo dirigido por la marcha y tono HD en fotograma aparte (`renderer.js`). Pendiente de confirmar por Pablo; medición headless muy ruidosa (rasterizado por software), `tools/perf.py correr`.
 - [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
+
+## Hilo SISTEMAS (v0.85.12) — sistemas 6-12 y 23 de magia/objetos fieles
+- Hecho: sistemas 6-12 y 23 (`docs/sistemas/magia-original.md`, `docs/AUDITORIA.md`). Pendiente: reliquias de Astoria; teletransporte/bisle/Heldenian por objeto, cambio de sexo, FIRMSTAMINAR, pizarras, STUDYMAGIC y `SpecEffectValue` por instancia (sin objetos o consumidor en el port).
 
 ## Hilo SISTEMAS (v0.85.7) — reconexión y carga de mapas
 - «El juego se reinicia como si refrescara»: causa = reinicio del servidor (nuevo id de jugador) o cierre por señal (`kicked` apagaba la reconexión). Arreglado: reintento 120 s y recarga con re-login automático (`hb.resume`). En crash.log hay un fallo real (JSON circular) y ~1215 líneas EADDRINUSE (segunda instancia del servidor en bucle de reinicio): vigilar que no haya dos servidores. En localhost, `devReload()` (assets.js) también recarga si cambian los sprites.
@@ -395,5 +399,26 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.7 (hb-ui): el cartel era el aviso de filtración de Google Password Manager; el login ya no usa input type=password (texto con -webkit-text-security, name no estandar, autocomplete off). Login offline verificado.
 
 - 0.85.10 (hb-ui): quitados los rombos celestes de las casillas de salida (renderer.drawTeleportMarks); sin velo DOM/CSS detectado en vivo.
-- 0.85.12 (hb-ui): buscador del almacén arriba y centrado; misiones con icono nuevo y desplegables; turquesa eliminado (summonsIcon, barra HP compañero, minimapa, rótulos). PENDIENTE: reimaginar el resto de ventanas con el mecanismo común X/minimizar de hb-auto-menu (mensaje enviado, esperando su API); tienda (id 11) aún con buscador abajo.
+- 0.85.20 (hb-ui): buscador del almacén arriba y centrado; misiones con icono nuevo y desplegables; turquesa eliminado (summonsIcon, barra HP compañero, minimapa, rótulos). PENDIENTE: reimaginar el resto de ventanas con el mecanismo común X/minimizar de hb-auto-menu (mensaje enviado, esperando su API); tienda (id 11) aún con buscador abajo.
 - 0.85.9 (hb-ui): auditoría UI vs original, ver docs/AUDITORIA_UI.md (corregido y pendiente).
+
+- Rotura de armadura fiel al original (EnduStrippingDamage combat.cpp:1593, ArmorLifeDecrement HG.cpp:36384): desgaste por habilidad (martillo 10-25, hacha 3, resto 1), arrancado con martillo, Merien y "Legion" inmunes, hechizo 28 resta ARMORDEC. Nota: `w.fightZone` no se asigna nunca en el port, las rutas de zona de lucha estan inertes.
+
+- Magia contra jugadores/monstruos (Effect_Damage_Spot_DamageMove, HG.cpp:18534-18930): añadida la absorción mágica `AddAbsMD` (HG.cpp:18237) antes de la reducción por VIT; los monstruos con límite de acción 1, 2, 4 y 6 son inmunes (antes 5 en lugar de 6). Orden Lucky→PFM ya igual al original. Sin test propio: la ruta exige un mundo completo (cubierto por magic-*.test.mjs).
+
+- 0.85.12: muerte fiel (exp, objetos, PK; Client.cpp:1035/1094/930-1000). 0.85.14: cárcel 180 s hecha (Client.cpp:1184, HG.cpp 11661-11810/2323): teletransporte a arejail/elvjail y bloqueo de destinos. La granja del bando hace de `sideMap`; el caso «reiniciar en ciudad enemiga» no existe en el port (no hay mapas enemigos).
+
+- 0.85.13: +50 oro por nivel (HG.cpp:15052) y SkillUp de escudo en PvP (combat.cpp:912). PENDIENTE: cárcel (22), alquimia/minería/manufactura (14: el port no tiene esos sistemas; SkillUp en HG.cpp:23682/24029/28214), revisión del servidor de crítico/dash (5).
+
+## Backlog 2026-10-16 (tras 0.85.18)
+- [ ] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
+- [ ] Magias: nombre del hechizo sobre la cabeza al castear, mecánica y visual originales — sistemas
+- [x] Autohunt (v0.85.19): exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
+- [x] Mini ventanas (v0.85.19, mecanismo común hecho; hb-ui-wt lo aplica al rediseñar) como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
+- [ ] Kills de pets cuentan como del dueño (npc y jugadores) — motor
+- [ ] Summon balls demasiado grandes: rediseñar — sistemas
+- [ ] Tirones al correr estando freezado — motor
+- [ ] Barra de búsqueda en el recuadro rojo (alargar cabecera o rediseñar), centrada — ui
+- [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
+- [ ] Quitar el turquesa que queda en la UI — ui
+- [ ] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui

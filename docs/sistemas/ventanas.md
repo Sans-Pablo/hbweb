@@ -53,3 +53,7 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 
 - 0.85.10: sin rombos celestes de salida sobre el suelo (test en ui-guard).
 - 0.85.9: ver docs/AUDITORIA_UI.md (tabla por ventana).
+
+## Cerrar y minimizar (0.85.19)
+- `Win.draw` pinta dos botones-bola sobre las bolas plateadas del marco: derecha = cerrar (`g.close`), izquierda = minimizar. Minimizada, la ventana pasa a una barra de 170x26 con el título (bola izquierda restaura, derecha cierra); `this.w/h` cambian y se restauran desde `this.full`.
+- API: `win.minimize()`, `win.restore()`, `win.toggleMin()`, `win.minimized`, `canMin`. Opciones: `nox` (sin cerrar ni minimizar), `nomin`; las `modal` no minimizan. Las ventanas que dibujan su propio marco (ClassicDialog, dialogbox) deben llamar a `this.ball(ui, x, y, glyph, tip, fn)` o heredar de `Win`.

@@ -5,7 +5,7 @@ import { ACT, PLAYER, dist, dirTo } from "../const.js";
 import * as R from "../rules.js";
 import * as PK from "./pk.js";
 import * as Inv from "../inventory.js";
-import { EQUIP, ITYPE } from "../items.js";
+import { EQUIP, ITYPE, EFFECT } from "../items.js";
 import { strikeNpc, absorbOnHit, CRIT } from "../combat.js";
 import { gainSSN } from "../skills.js";
 import { sget, sclear } from "./status.js";
@@ -37,7 +37,7 @@ export const BIG_MOBS = new Set([66, 73, 81, 91]);
 export function reachOf(w, p, t, crit) {
   if (p.eff?.bow) return Infinity;                                  // arco: el cliente manda el disparo a la casilla elegida
   const two = p.equip[EQUIP.TWOHAND], inst = two !== undefined && Inv.instOf(p, two);
-  if (inst && inst.id === 845) return crit ? 5 : 4;
+  if (inst && inst.id === 845) return 3 + (t.cfg?.size < 2 || t.cfg?.size === undefined ? 1 : t.cfg.size) + (crit ? 1 : 0);   // HG.cpp ~6200: 3 + distancia del objetivo (size<2 ? 1 : size)
   if (crit && p.eff?.wtype > 0) { if (p.eff.skill === 8) return 3; if (p.eff.skill === 9) return 4; if (p.eff.skill === 10 || p.eff.skill === 14 || p.eff.skill === 21) return 2; }   // hacha, martillo, vara: absX<=2 (Game.cpp ~31018, 31052, 31090)
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
@@ -55,7 +55,7 @@ export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
@@ -82,11 +82,65 @@ export function canFight(w, p, t) {
 }
 // El original no multiplica el daño entre jugadores (combat.cpp): 1. Bal.pvpMul() queda como mando de balance (por defecto 1).
 export const PVP_DMG = 1;
+// Lucky (combat.cpp:1015, HG.cpp:18250/18744): con un objeto de suerte puesto, un golpe que mataría se queda en 1 con probabilidad 4/10 (dice(1,10) < 5).
+export function luckySave(w, t, dmg) {
+  return t.eff?.lucky && R.dice(w.rng, 1, 10) < 5 && t.hp <= dmg ? 1 : dmg;
+}
+// EnduStrippingDamage (combat.cpp:1593): cada golpe a una pieza de armadura de un jugador la desgasta y, con martillo, puede soltarla.
+// Solo si el atacante es un jugador de otro bando (o hay zona de lucha) cuenta su habilidad: martillo 10 (daño según martillo: 760 0.25/10, 761 0.35/15, 843 0.45/20, 762 0.6/25),
+// hacha 3, el resto 1. El objetivo neutral (side 0) y los objetos «Legion» no se desgastan. A vida 0 se suelta; con probabilidad de arrancado, el martillo
+// suelta la pieza si prob * dice(6|4, vidaMax-vida) > vida (6 dados si vidaMax < tope: 2000 cuerpo/piernas/brazos, 3000 casco). La Merien Plate (621/622) es inmune.
+const STRIP_HAMMER = { 760: [0.25, 10], 761: [0.35, 15], 843: [0.45, 20], 762: [0.6, 25] };
+export function enduStrip(w, att, t, pos, higher) {
+  const uid = t.equip[pos], inst = uid !== undefined && Inv.instOf(t, uid);
+  if (!inst) return;
+  const d = w.data.item(inst.id);
+  let strip = 0, endu = 1;
+  if (att && att.kind === "player" && (att.side !== t.side || w.fightZone)) {
+    const sk = att.eff?.wtype === 0 ? 5 : att.eff?.skill;
+    if (sk === 14) {
+      [strip, endu] = [0.25, 10];
+      const two = att.equip[EQUIP.TWOHAND], ti = two !== undefined && Inv.instOf(att, two);
+      if (ti && STRIP_HAMMER[ti.id]) [strip, endu] = STRIP_HAMMER[ti.id];
+    } else if (sk === 10) endu = 3;
+  }
+  if (t.side !== 0 && inst.life > 0 && !String(d.name || "").startsWith("Legion")) {
+    inst.life = Math.max(0, inst.life - endu);
+    w.emit({ t: "life", id: t.id, uid, life: inst.life });
+  }
+  if (inst.life <= 0) { inst.life = 0; Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "broken", id: t.id, uid }); }
+  else if (strip > 0) {
+    if (inst.id === 621 || inst.id === 622) return;
+    strip *= R.dice(w.rng, d.maxLife < higher ? 6 : 4, d.maxLife - inst.life);
+    if (strip > inst.life) { Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "released", id: t.id, uid }); }
+  }
+}
+// Las piezas que alcanza un golpe (case 1..4 de combat.cpp:1020-1046); el cuerpo cae en el cuerpo entero si no lleva armadura.
+function stripParts(w, att, t, parts) {
+  for (const pos of parts) {
+    const at = pos === EQUIP.BODY && t.equip[pos] === undefined ? EQUIP.FULLBODY : pos;
+    enduStrip(w, att, t, at, pos === EQUIP.HEAD ? 3000 : 2000);
+  }
+}
+// ArmorLifeDecrement (HG.cpp:36384): el rompe-armaduras resta `value` (MAGICV_ARMORDEC = v10) de vida a cuerpo, pantalón, calzas, brazos y casco de un jugador;
+// no vale entre aliados fuera de zona de lucha ni contra neutrales. A 0 se suelta la pieza.
+export function armorLifeDecrement(w, att, t, value) {
+  if (!att || att.kind !== "player" || t.kind !== "player") return;
+  if (att.side === t.side && !w.fightZone) return;
+  if (t.side === 0) return;
+  for (const pos of [EQUIP.BODY, EQUIP.PANTS, EQUIP.LEGGINGS, EQUIP.ARMS, EQUIP.HEAD]) {
+    const uid = t.equip[pos], inst = uid !== undefined && Inv.instOf(t, uid);
+    if (!inst) continue;
+    if (inst.life > 0) inst.life -= value;
+    w.emit({ t: "life", id: t.id, uid, life: Math.max(0, inst.life) });
+    if (inst.life <= 0) { inst.life = 0; Inv.unequip(t, w.data, uid); w.recalc(t); w.emit({ t: "broken", id: t.id, uid }); }
+  }
+}
 export function hitPlayer(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
-  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
+  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
@@ -94,8 +148,9 @@ export function hitPlayer(w, p, t, fx = {}) {
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
-  a.damage = Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul()));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
-  for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
+  if (a.shielded) gainSSN(t, 11, 1);                                                          // combat.cpp:912: SkillUp(SKILL_SHIELD) al parar el golpe también contra jugadores
+  a.damage = luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
+  stripParts(w, p, t, a.parts);
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
 }
 
@@ -110,15 +165,30 @@ function pvpCredit(w, v, from) {
   if (!ok) return;
   k.ek = (k.ek || 0) + 1; k.kills = (k.kills || 0) + 1; k.streak = (k.streak || 0) + 1;
   w.emit({ t: "pvpkill", id: k.id, victim: v.id, name: v.name }); pvpBounty(w, k, v, was);
-  const lost = PK.onPlayerKilled(w, k, v, giveExp); penaltyDrop(w, v, Math.max(1, lost));
+  PK.onPlayerKilled(w, k, v, giveExp);                                       // la penalización del caído va en killedPenalty (Client.cpp CClient::Killed)
 }
-// ApplyCombatKilledPenalty / PenaltyItemDrop (Client.cpp): el caído suelta al azar objetos de la mochila, puestos o no (DropItemHandler los desequipa).
-// El original suelta cPenaltyLevel objetos (2 al morir a manos del bando enemigo, -1 si es menor de nivel 80); aquí 1 como mínimo, sin oro ni bolas de compañero.
-export function penaltyDrop(w, v, n = 1) {
+// PenaltyItemDrop (Client.cpp:1094): iTotal veces suelta un objeto al azar de la mochila (puesto o no; DropItemHandler lo desequipa).
+// all (bItemDrop): true = cualquier objeto; false = solo CONSUME/EAT. Se salta (no cuenta como soltado) un objeto de habilidad especial si
+// el atacante no usaba una (sa=false) y, con Lucky, 1 de cada 10 tiradas (dice(1,10)==5). Aquí además se respeta el oro y la bola de compañero.
+export function penaltyDrop(w, v, n = 1, { all = true, sa = false } = {}) {
+  const alter = v.bag.find(it => w.data?.item(it.id)?.effectType === EFFECT.ALTERITEMDROP);      // objeto de sustitución: gasta 1 de vida y cae él solo
+  if (alter) {
+    if (alter.life > 0) alter.life--;
+    const out = Inv.removeFromBag(v, alter.uid);
+    groundPush(w, v.x, v.y, out, true); w.emit({ t: "penaltydrop", id: v.id, item: out.id, worn: false }); w.recalc(v);
+    return;
+  }
   for (let i = 0; i < n; i++) {
-    const list = v.bag.filter(it => !it.comp && it.id !== 90);
-    if (!list.length) return;
-    const it = list[Math.floor(w.rng() * list.length)], worn = Object.values(v.equip).includes(it.uid);
+    const list = v.bag.filter(it => {
+      if (it.comp || it.id === 90) return false;
+      if (all) return true;
+      const t = w.data?.item(it.id)?.type; return t === ITYPE.CONSUME || t === ITYPE.EAT;
+    });
+    if (!list.length) break;
+    const it = list[R.dice(w.rng, 1, list.length) - 1], et = w.data?.item(it.id)?.effectType;
+    if ((et === EFFECT.ATTACK_SPECABLTY || et === EFFECT.DEFENSE_SPECABLTY) && !sa) continue;
+    if (v.eff?.lucky && R.dice(w.rng, 1, 10) === 5) continue;
+    const worn = Object.values(v.equip).includes(it.uid);
     const out = Inv.removeFromBag(v, it.uid);
     groundPush(w, v.x, v.y, out, true);
     w.emit({ t: "penaltydrop", id: v.id, item: out.id, worn });
@@ -142,8 +212,8 @@ function weaponBonus(w, p) {
   const right = id(p.equip[EQUIP.RHAND]), two = id(p.equip[EQUIP.TWOHAND]);
   let b = 0;
   if (right === 732 || right === 738) b += 1;
-  if (two === 847 && w.dayOrNight === 2) b += 4;
-  if (two === 848 && w.dayOrNight === 1) b += 4;
+  if (two === 847 && w.dayOrNight === 2) b += 10;                  // DarkExecutor de noche / LightingBlade de día: +10 (combat.cpp:847-848)
+  if (two === 848 && w.dayOrNight === 1) b += 10;
   return b;
 }
 
@@ -180,6 +250,7 @@ export function giveExp(w, p, amount) {
   w.emit({ t: "exp", id: p.id, amount });
   while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
     p.level++;
+    if (p.level <= 50) p.gold += 50;                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
     const pay = Math.min(p.lvDebt | 0, R.LEVELUP_POINTS); p.lvDebt = (p.lvDebt | 0) - pay;
     p.pool += R.LEVELUP_POINTS - pay;
     w.recalc(p);
@@ -208,7 +279,7 @@ export function damagePlayer(w, p, dmg, from, elem) {
   const ad = auraDefense(w, p); if (ad) dmg = Math.max(0, Math.round(dmg * (100 - ad) / 100));              // aura de defensa del Dummy
   { const ab = sget(w, p, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico
   p.hp -= dmg;
-  p.lastCombat = w.time;
+  p.lastCombat = p.lastDamage = w.time;                                 // m_lastDamageTime (combat.cpp:1090): el Recall lo exige 10 s en calma
   releaseHold(w, p, !!elem && elem !== "ice");
   if (dmg > 0 && !p.dead) chargeCritHit(p);
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp, wt: elem ? 0 : attackerWeapon(from) });
@@ -217,8 +288,8 @@ export function damagePlayer(w, p, dmg, from, elem) {
     w.setAct(p, ACT.DYING, PLAYER.dyingMs);
     w.grid.release(p.x, p.y, p.id);
     w.emit({ t: "death", id: p.id, by: from.id });
-    deathPenalty(w, p);
     pvpCredit(w, p, from);
+    killedPenalty(w, p, from);
     return;
   }
   if (!w.busy(p) || p.act === ACT.DAMAGE) {
@@ -246,10 +317,10 @@ export function npcStrikes(w, n, t) {
   const a = absorbOnHit(w.rng, t, ap, n.dir === t.dir);
   if (t.side !== 0) {
     if (a.shielded) wear(w, t, t.equip[EQUIP.LHAND], 1);
-    for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
+    stripParts(w, null, t, a.parts);
   }
   if (a.shielded) gainSSN(t, 11, 1);
-  damagePlayer(w, t, a.damage, n);
+  damagePlayer(w, t, luckySave(w, t, a.damage), n);
   if (a.damage > 0) Boss.onBossHit(w, n);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));
@@ -300,18 +371,33 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   }
 }
 
-// Penalización por morir (invento del port para dificultar): pierdes el 25 % de la experiencia que cuesta tu nivel y,
-// si no te alcanza, bajas de nivel (con sus puntos sin repartir). Sin penalización en zonas de lucha.
-export function deathPenalty(w, p) {
-  if (w.fightZone) return;
-  const loss = Math.floor((R.expForLevel(p.level + 1) - R.expForLevel(p.level)) * 0.25);
-  const before = p.level;
-  p.exp = Math.max(R.expForLevel(1), p.exp - loss);
-  while (p.level > 1 && p.exp < R.expForLevel(p.level)) {
-    p.level--;
-    const take = Math.min(p.pool, R.LEVELUP_POINTS); p.pool -= take;
-    p.lvDebt = (p.lvDebt | 0) + R.LEVELUP_POINTS - take;                 // puntos ya repartidos: no se quitan, pero los próximos niveles los pagan primero (si no, subir y bajar regalaba stats)
+// CClient::Killed + ApplyCombatKilledPenalty (Client.cpp:930-1090). Nivel de penalización según quién mata y el PK del caído:
+// jugador: inocente → nada si el atacante es neutral o del mismo bando, si no 2 (sin objetos que no sean consumibles); PK 1-3 → 3, 4-11 → 6, 12+ → 12 (suelta cualquiera);
+// monstruo: inocente → 1 y los mismos tramos. Pierde dice(1, 5·pen·nivel) de experiencia (un tercio si es neutral, sin bajar de 0: el nivel NO baja),
+// baja 1 su PK y, si no es neutral, suelta pen objetos (pen-1 si nivel<80, mínimo 1). Mapas sin penalización (zonas de lucha): nada.
+export function penaltyLevelOf(w, v, from) {
+  const pk = v.pkCount | 0, byPlayer = from?.kind === "player";
+  if (byPlayer && from === v) return null;
+  if (pk === 0) {
+    if (!byPlayer) return { pen: 1, all: true };
+    return from.side === 0 || from.side === v.side ? null : { pen: 2, all: false };
   }
-  w.recalc(p);
-  w.emit({ t: "penalty", id: p.id, loss, level: p.level, lost: before - p.level });
+  return { pen: PK.penaltyLevel(pk), all: true };
+}
+export function killedPenalty(w, v, from) {
+  if (w.fightZone) return;
+  const r = penaltyLevelOf(w, v, from);
+  if (!r) return;
+  let pen = r.pen;
+  const neutral = v.side === 0, sa = from?.kind === "player" && !!from.saActive;   // m_iSpecialAbilityType 1-5 activo (el port aún no activa habilidades especiales: siempre false)
+  PK.decPK(w, v);
+  let loss = R.dice(w.rng, 1, 5 * pen * v.level);
+  if (neutral) loss = Math.trunc(loss / 3);
+  v.exp = Math.max(0, v.exp - loss);
+  w.emit({ t: "penalty", id: v.id, loss });
+  if (!neutral) {
+    if (v.level < 80) pen = Math.max(1, pen - 1);
+    penaltyDrop(w, v, pen, { all: r.all, sa });
+  }
+  w.recalc(v);
 }

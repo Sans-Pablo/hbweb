@@ -53,7 +53,8 @@ Inv.removeFromBag(me, 9001); world.recalc(me);
 // botín: con las tasas del servidor original (1 / 1) cae algo en cada muerte
 let nDrops = 0, golds = 0;
 for (let i = 0; i < 2000; i++) { const d = rollKillDrop(rng, npcs[0]); if (d) { nDrops++; if (d.id === 90) golds++; } }
-assert(nDrops > 150 && nDrops < 300, "slime (monstruo débil): suelta objetos en ~10 % de las bajas (el oro ya no cae)");
+// HG.cpp:29354-29480: 0,91 (9100/10000) x 0,4 (sin oro) x [0,5 estándar (5/6 con objeto fuera de dic.) + 0,5 valiosa (gen 1: arma cuerpo a cuerpo 0,6x0,8 + armadura 0,4)] = ~31 % (menos las pociones de BANNED_ITEMS, que el port no suelta: ~26 %)
+assert(nDrops > 440 && nDrops < 600, "slime: ~26 % de las bajas sueltan objeto (HG.cpp:29315, sin corte débil; el oro ya no cae)");
 assert(golds === 0, "el oro no cae de los monstruos");
 
 // --- magia: aprender Magic-Missile, quitarse el escudo y matar un slime a hechizos
