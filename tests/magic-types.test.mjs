@@ -19,7 +19,7 @@ a.fullMage = true; a.skills[4] = 100; a.stats.int = a.stats.mag = 200; a.level =
 const idOf = n => Number(Object.entries(data.magic).find(([, s]) => s.name === n)[0]);
 const FB = idOf("Fire Ball"), FOOD = idOf("Create Food");
 const evs = []; const _e = w.emit.bind(w); w.emit = e => { evs.push(e); return _e(e); };
-const attempt = id => { a.lastCast = -1e9; a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: id, x: b.x, y: b.y }); return a.lastCast > 0; };
+const attempt = id => { a.lastCast = a.castTry = -1e9; a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = a.castTry = -1e9; a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: id, x: b.x, y: b.y }); return a.lastCast > 0; };
 const tryOk = id => { for (let i = 0; i < 15; i++) if (attempt(id)) return true; return false; };
 assert(tryOk(FB), "mapa normal: Fire Ball sale " + JSON.stringify(evs.filter(e => e.t === "reject").slice(-2)));
 w.meta = { ...w.meta, noAttack: [[0, -10, 0, 0]] };

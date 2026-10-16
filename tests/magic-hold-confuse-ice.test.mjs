@@ -21,7 +21,7 @@ b.stats.mag = 1; b.skills[3] = 0; w.recalc(b); b.hp = b.maxHp = 5000;
 const [x, y] = w.freeSpotNear(a.x + 3, a.y);
 w.grid.release(b.x, b.y, b.id); b.x = b.fx = x; b.y = b.fy = y; w.grid.occupy(x, y, b.id);
 w.pvp = true; w.safeAt = () => false;
-const cast = spell => { a.lastCast = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell, x: b.x, y: b.y }); w.tick(200); };
+const cast = spell => { a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell, x: b.x, y: b.y }); w.tick(200); };
 const until = (spell, key) => { for (let i = 0; i < 12 && !sget(w, b, key); i++) cast(spell); return !!sget(w, b, key); };
 const HOLD = 25, CONFUSION = 62, CHILL = 45;
 

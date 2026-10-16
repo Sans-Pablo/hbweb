@@ -1,10 +1,23 @@
 {
- "build": "0.85.36",
+ "build": "0.85.37",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Autohunt en segundo plano y ajustes (v0.85.37)",
+    "en": "Background auto hunt and fixes (v0.85.37)"
+   },
+   "items": [
+    { "es": "La caza automática sigue matando con la ventana en segundo plano.", "en": "Auto hunt keeps killing while the window is in the background." },
+    { "es": "Autohunt recoge el botín cercano aunque haya monstruos a la vista (respeta «No recoger objetos»).", "en": "Auto hunt picks up nearby loot even with monsters in sight (respects 'Don't pick up')." },
+    { "es": "Sin sonido aleatorio al cambiar de mapa (era el aviso de día/noche).", "en": "No random sound on map change (it was the day/night notice)." },
+    { "es": "Siempre sprites nuevos (IA/HD); Earth Shock Wave suena como el original.", "en": "Always new (AI/HD) sprites; Earth Shock Wave sounds like the original." }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

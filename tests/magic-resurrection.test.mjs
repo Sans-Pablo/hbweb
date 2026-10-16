@@ -24,7 +24,7 @@ w.pvp = true; w.safeAt = () => false;
 w.pvp = true; w.safeAt = () => false;
 const RES = 94;
 const kill = () => { b.hp = 0; b.dead = true; b.deadAt = w.time; w.grid.release(b.x, b.y, b.id); b.beingResurrected = false; };
-const cast = () => { a.lastCast = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: RES, x: b.x, y: b.y }); w.tick(200); };
+const cast = () => { a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: RES, x: b.x, y: b.y }); w.tick(200); };
 const tryCast = () => { for (let i = 0; i < 12 && !b.beingResurrected && !a.specialAbilityTime; i++) cast(); };
 const evs = []; w.on?.("event", e => evs.push(e));
 a.side = 1; b.side = 2; kill();

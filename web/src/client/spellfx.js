@@ -215,6 +215,7 @@ export class SpellFx {
         if (e.type === 196) {
           fly(40, e.dx * T + 16, e.dy * T + 16);
           at(80, e.mx + rnd(30) - 15, e.my + rnd(30) - 15, 0, 1); at(80, e.mx + rnd(20) - 10, e.my + rnd(20) - 10, 0, 0);
+          this.snd(1, e.dx, e.dy);                                  // original: PlaySound('E', 1) en cada paso
           if (f >= e.max) end();
         } else done();
         break;

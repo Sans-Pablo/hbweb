@@ -104,7 +104,7 @@ async function main() {
   stream.onChange = bar; bar();
   // antes de pedir las hojas: así el streaming baja también las HD/IA del suelo (antes se pedían tarde, al dibujar: cuadrados negros)
   const o0 = (() => { try { return JSON.parse(store.get("opts", "{}")); } catch { return {}; } })();
-  assets.sprites.hd = (o0.mode || "remastered") === "remastered" && o0.hdSprites !== false;
+  assets.sprites.hd = true;
   await stream.enter(world, assets.npcDb);
   // el personaje con su equipo y los jugadores ya a la vista, antes de quitar el diálogo de carga (si no, salían fotogramas negros/a trozos al entrar)
   {
@@ -350,6 +350,7 @@ async function main() {
   const defaults = { run: false, music: true, soundVol: 100, musicVol: 100, map: true, mapStyle: "corner", grid: false, sound: true, mode: "remastered", autoAttack: false, classicCursor: true, hdSprites: true, lighting: true, lightFx: true, groundInfo: true, groundCost: true, spellFx: true, hpBars: true, questTrack: true, dirArrows: false };
   const opts = { ...defaults };
   try { Object.assign(opts, JSON.parse(store.get("opts", "{}"))); } catch {}
+  opts.mode = "remastered"; opts.hdSprites = true;     // siempre sprites nuevos (IA); lo guardado de antes no cuenta
   opts.run = true;                                   // correr siempre activo al entrar (Ctrl+R alterna)
   opts.autoAttack = true;                            // al entrar siempre con el ataque automático activado
   if (mobile) initMobileOpts(opts, store);          // en el móvil se empieza con el ataque automático activado
@@ -821,6 +822,12 @@ async function main() {
     { const e = performance.now(); perf.mark("post", e - h0); perf.mark("tot", e - f0); }      // fuera del mundo: HUD + gui; tot = todo el JS del fotograma
   }
   requestAnimationFrame(loop);
+  // En segundo plano requestAnimationFrame se detiene y la caza automática se quedaba parada: un temporizador (el navegador lo frena a ~1 s) avanza la simulación en pasos de 100 ms
+  setInterval(() => {
+    if (!document.hidden) return;
+    const now = performance.now(); let t = last;
+    for (let n = 0; n < 30 && t + 100 <= now; n++) { t += 100; try { frame(t); } catch (e) { console.error("[frame-bg]", e); break; } }
+  }, 250);
 
   // para pruebas automáticas
   window.hbDev = { send: c => conn.send(c), data: assets.data, npcDb: assets.npcDb, mapIds: Object.keys(assets.maps || {}) };

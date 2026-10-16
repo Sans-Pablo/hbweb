@@ -20,7 +20,7 @@ w.pvp = false; w.safeAt = () => false;
 let recalls = 0; w.hooks = { recall: () => { recalls++; } };
 const evs = []; const emit = w.emit.bind(w); w.emit = e => { evs.push(e); return emit(e); };
 const RECALL = 12, SUMMON = 31;
-const cast = (spell, t) => { a.lastCast = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell, x: (t || a).x, y: (t || a).y }); w.tick(200); };
+const cast = (spell, t) => { a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell, x: (t || a).x, y: (t || a).y }); w.tick(200); };
 const retry = (spell, ok) => { for (let i = 0; i < 30 && !ok(); i++) cast(spell); return ok(); };
 
 // Recall: tras recibir daño, 10 s de espera (GM exento)

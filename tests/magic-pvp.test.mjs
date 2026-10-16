@@ -21,7 +21,7 @@ a.magic = { 0: 1 }; a.skills[4] = 100; a.stats.int = a.stats.mag = 200; a.level 
 b.stats.mag = 1; b.skills[3] = 0; w.recalc(b); b.hp = b.maxHp = 5000;
 const [x, y] = w.freeSpotNear(a.x + 3, a.y);
 w.grid.release(b.x, b.y, b.id); b.x = b.fx = x; b.y = b.fy = y; w.grid.occupy(x, y, b.id);
-const shoot = () => { a.lastCast = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: 0, x: b.x, y: b.y }); w.tick(1500); };
+const shoot = () => { a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.tick(1200); a.lastCast = a.castTry = -1e9; a.busyUntil = 0; w.command(aid, { t: "cast", spell: 0, x: b.x, y: b.y }); w.tick(1500); };
 w.pvp = false; b.hp = 5000; shoot();
 assert(b.hp === 5000, "sin PvP la magia no daña a un jugador");
 a.side = 1; b.side = 2; w.pvp = true; w.safeAt = () => false; b.hp = 5000;

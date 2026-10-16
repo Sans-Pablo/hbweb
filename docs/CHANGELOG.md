@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.37 · Segundo plano (2026-10-16)
+- Autohunt sigue en segundo plano (temporizador en main.js); recoge botín con presas a la vista.
+- Sin sonido E31/E32 al crear mapa de noche (weather.js); sprites HD siempre; Earth Shock Wave: E1 por paso (Game.cpp 14775).
+- Pendiente: vídeos de referencia no revisados; auditoría de daños.
+
 ## 0.85.36 · Magia original (2026-10-16)
 - Invisibilidad: aliados del mismo bando la ven translúcida; summons admitidos (HG.cpp 11154, Game.cpp status 0x10).
 - Sin lanzar con arma (solo varitas 34..39); mínimo 1750 ms entre lanzamientos (bCheckClientMagicFrequency).

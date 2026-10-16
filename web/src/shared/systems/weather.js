@@ -13,6 +13,7 @@ export function tickSky(w) {
   if (w.fixedDay) { setSky(w, 1, 0); return; }
   if (!w.clock) return;
   if (w.time - (w.tSky ?? -1e9) >= SKY_EVERY_MS) {
+    if (w.tSky === undefined) w.dayOrNight = w.clock() >= NIGHT_MINUTE ? 2 : 1;   // mapa nuevo: el estado inicial no es un cambio de hora (sonaba E31/E32 al entrar)
     w.tSky = w.time;
     setSky(w, w.clock() >= NIGHT_MINUTE ? 2 : 1, w.weather);
   }

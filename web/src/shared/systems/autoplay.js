@@ -155,19 +155,21 @@ export function decide(w, me, a) {
     if (z && !inRect(z.rect, e.x, e.y, ZONE_PAD)) continue;
     const d = dist(me, e); if (d <= SIGHT && d < bd) { bd = d; t = e; }
   }
-  if (t) { a.idle = null; return { intent: { t: "attack", id: t.id } }; }
   // a.nopick (opción «No recoger objetos»): no pisa el botín; a.kills lo cuenta main.js con el evento "death" y lo muestra la mini ventana (autowin.js)
+  let lt = null, ld = 1e9;
   if (!a.nopick) for (let dx = -LOOT_RANGE; dx <= LOOT_RANGE; dx++) for (let dy = -LOOT_RANGE; dy <= LOOT_RANGE; dy++) {       // sin presas a la vista: botín cercano
     const x = me.x + dx, y = me.y + dy;
     if (!w.grid.inside(x, y) || !groundTop(w, x, y) || ruleOf(a, groundTop(w, x, y)) === "ignore" || a.skip?.has(x + "," + y) || (z && !inRect(z.rect, x, y, ZONE_PAD))) continue;
-    const d = Math.max(Math.abs(dx), Math.abs(dy)); if (d < bd) { bd = d; t = { x, y }; }
+    const d = Math.max(Math.abs(dx), Math.abs(dy)); if (d < ld) { ld = d; lt = { x, y }; }
   }
-  if (t) {
+  if (lt && (!t || bd > 1)) {                                    // el botín se recoge aunque haya presas a la vista (antes solo sin ninguna: nunca)
+    t = lt;
     const k = t.x + "," + t.y; a.tries ||= {}; a.skip ||= new Set();
     a.tries[k] ||= 0;
     if (t.x === me.x && t.y === me.y && ++a.tries[k] > 2) a.skip.add(k);       // no cabe en la mochila: no insiste
     return { intent: { t: "pickup", x: t.x, y: t.y } };
   }
+  if (t) { a.idle = null; return { intent: { t: "attack", id: t.id } }; }
   if (z && !inRect(z.rect, me.x, me.y)) {                                         // sin presas a la vista: al centro de la zona
     const cx = (z.rect[0] + z.rect[2]) >> 1, cy = (z.rect[1] + z.rect[3]) >> 1, sp = w.freeSpotNear?.(cx, cy) || [cx, cy];
     return { intent: { t: "move", x: sp[0], y: sp[1] } };
