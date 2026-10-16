@@ -24,9 +24,9 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Resistencia mágica sube al resistir | combat.cpp:54 | magicsys.js `resist()` | CORREGIDO |
 | Resistencia al veneno sube al resistir | combat.cpp:69 | magicsys.js caso 17 | CORREGIDO |
 | Modo ataque seguro (maná ×1.1) | HG.cpp | — | CORREGIDO (flag `safeAttack` por jugador, comando `safemode`; ver docs/sistemas/magia-original.md) |
-| Hold: chequeos de grupo / zona segura | HG.cpp | magicsys.js | DIFERENTE |
-| Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 (un objetivo) | DIFERENTE |
-| Ice: excluir neutrales | HG.cpp | magicsys.js | DIFERENTE |
+| Hold: chequeos de grupo / zona segura | HG.cpp | magicsys.js | CORREGIDO |
+| Confuse: área, solo bando contrario | HG.cpp | magicsys.js caso 16 | CORREGIDO |
+| Ice: excluir neutrales | HG.cpp | magicsys.js | CORREGIDO |
 | Rotura de armadura (ArmorLifeDecrement) | HG.cpp | — | FALTA |
 | Resurrection: mismo bando, enfriamiento, consume hechizo | HG.cpp | magicsys.js caso 32 | DIFERENTE |
 | Polymorph; tipos 4, 6, 20, 24, 27; reliquias Astoria; magicLimited por mapa | HG.cpp | — | FALTA / sin mapear |
