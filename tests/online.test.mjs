@@ -125,12 +125,12 @@ try {
   { const c = await mk(); assert.match((await c.auth("login", "bruno", "secret1")).msg, /bloqueada/); c.close(); }
   boss.cmd({ t: "say", text: "/unban bruno" }); await sleep(300);
   { const c = await mk(); assert.equal((await c.auth("login", "bruno", "secret1")).t, "authok", "desbloqueado"); c.close(); }
-  // panel solo desde este PC y con token
-  assert.equal((await get("/admin?token=mal")).status, 403);
-  assert.equal((await get("/admin?token=tok123", { "x-forwarded-for": "8.8.8.8" })).status, 403, "por el túnel nunca");
+  // panel público por decisión del dueño (v0.85.40, sin token ni restricción de origen)
+  assert.equal((await get("/admin?token=mal")).status, 200);
+  assert.equal((await get("/admin?token=tok123", { "x-forwarded-for": "8.8.8.8" })).status, 200, "panel público");
   const page = await get("/admin?token=tok123"); assert.equal(page.status, 200); assert.match(page.body, /Administración/);
   const st = JSON.parse((await get("/api/admin/state?token=tok123")).body); assert.ok(st.players.some(p => p.account === "boss"));
-  assert.equal((await get("/api/admin/state?token=tok123", { "x-forwarded-for": "8.8.8.8" })).status, 403);
+  assert.equal((await get("/api/admin/state?token=tok123", { "x-forwarded-for": "8.8.8.8" })).status, 200);
 
   // ---- inundación: demasiados mensajes por segundo cortan la conexión
   { const c = await (await mk()).enter("flood", { name: "Flood" }); for (let i = 0; i < 400; i++) c.send({ t: "ping", c: i });

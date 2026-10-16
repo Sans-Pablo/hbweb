@@ -30,6 +30,7 @@ import { LIMITS, PLAYER, NET_PROTO } from "../web/src/shared/const.js";
 import { apparelOf } from "../web/src/shared/appearance.js";
 import { validCharName } from "../web/src/shared/systems/player.js";
 import { openStore } from "./store.mjs";
+import { createEconomy } from "./economy.mjs";
 import { setEconSink } from "../web/src/shared/systems/ledger.js";
 import { openLlm } from "./llm.mjs";
 import { openReport } from "./report.mjs";
@@ -55,8 +56,10 @@ const ADMINS = new Set((env.HB_ADMINS ? env.HB_ADMINS.split(",") : CFG.admins).m
 const STORE = env.HB_DATA || path.join(HERE, "data");                  // cuentas, partidas, bloqueos (no se versionan)
 const store = await openStore(STORE, { accountsFile: env.ACCOUNTS_FILE, savesFile: env.SAVE_FILE, log: (...a) => console.log(...a) });    // SQLite (store.mjs)
 const accounts = new Accounts("", store);
+const economy = createEconomy({ store });
+setInterval(() => { try { economy.evaluate(); } catch (e) { console.log("alertas:", e.message); } }, 60000).unref();
 { const boot = Date.now().toString(36); let n = 0;      // monitor económico (docs/sistemas/economia.md): cada movimiento de oro va a econ_events; event_id único = arranque + contador
-  setEconSink((w, ev) => { try { store.econAdd({ eventId: boot + ":" + (++n), ts: Date.now(), gt: ev.time, reason: ev.reason, cls: ev.cls, delta: ev.delta, actor: ev.actor, peer: ev.peer, artificial: ev.artificial, bal: ev.bal, map: w.map?.id ?? null }); } catch {} }); }
+  setEconSink((w, ev) => { try { economy.noteIngest(true); store.econAdd({ eventId: boot + ":" + (++n), ts: Date.now(), gt: ev.time, reason: ev.reason, cls: ev.cls, delta: ev.delta, actor: ev.actor, peer: ev.peer, artificial: ev.artificial, bal: ev.bal, map: w.map?.id ?? null }); } catch { economy.noteIngest(false); } }); }
 const BANS = path.join(STORE, "bans.json");
 const bans = readJson(BANS, { accounts: {}, ips: {} });
 const TOKEN_FILE = path.join(STORE, "admin-token.txt");
@@ -194,6 +197,10 @@ const server = http.createServer((req, res) => {
       json(req, res, 200, { token, name: acc.name });
     });
     return;
+  }
+  if (url.pathname.startsWith("/api/admin/economy/")) {
+    const readBody = r => new Promise((ok, no) => { let b = ""; r.on("data", d => { b += d; if (b.length > 20000) { r.destroy(); no(new Error("cuerpo demasiado grande")); } }); r.on("end", () => ok(b)); r.on("error", no); });
+    economy.handle(req, res, url, { json, cors: cors(req), ip: req.socket.remoteAddress, readBody }); return;
   }
   if (url.pathname === "/api/admin/economy") {                      // monitor económico: resumen por motivo, últimos eventos y serie (docs/sistemas/economia.md)
     const q = Object.fromEntries(url.searchParams), from = q.hours ? Date.now() - (+q.hours) * 3600000 : undefined;

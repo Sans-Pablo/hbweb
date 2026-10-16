@@ -506,3 +506,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [x] (v0.85.41) Sección Economía (oro) dentro de /admin (pedido 2026-10-16: «no veo la parte de gold»).
 
 - [x] 0.85.42: combate original (ver CHANGELOG); pendiente near, saActive, orden absorción elemental/anillo; 1817 claves sin IA (docs/SPRITES.md).
+- [x] (v0.85.43) Monitor económico completo según el manual (pedido 2026-10-16: «implementa todos los puntos del documento»). Sin auth por decisión del dueño; SVG en vez de MUI/visx; precios/ítems sin instrumentación (ver MISSING).

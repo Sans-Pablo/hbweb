@@ -52,4 +52,5 @@ refresh();setInterval(refresh,4000);
 // Sección «Bots» (lista con personalidad y guild, log de acciones, propuestas, análisis de comportamiento y afinidades): server/admin-bots.html
 import { readFileSync } from "node:fs";
 let BOTS = ""; try { BOTS = readFileSync(new URL("./admin-bots.html", import.meta.url), "utf8"); } catch {}
-export const ADMIN_PAGE = BASE_PAGE.replace("</body>", BOTS + "</body>");
+let ECON = ""; try { ECON = readFileSync(new URL("./admin-economy.html", import.meta.url), "utf8"); } catch {}
+export const ADMIN_PAGE = BASE_PAGE.replace("</body>", () => BOTS + ECON + "</body>");

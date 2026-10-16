@@ -19,3 +19,12 @@ Manual de origen: `HBWeb_Admin_Economy_Monitor_Technical_Manual.docx`. Fase 1 = 
 
 ## Test
 `tests/ledger.test.mjs`: clases, transferencia sin cambio de total, artificial, idempotencia, consultas y reinicio.
+
+## Monitor (`server/economy.mjs`, v0.85.43)
+- Rutas `/api/admin/economy/{overview,flow,wealth,sources,prices,items,stream,events,alerts,audit,config,simulations,config/drafts,config/publish,config/rollback}`; interfaz en `server/admin-economy.html` (pestaña Economía de /admin).
+- Alertas (versión de regla 1): `net_growth`, `source_dev`, `duplicate`, `ledger_gap`, `concentration`; enfriamiento por clave; estados open/acknowledged/investigating/resolved/dismissed (descartar exige nota). Evaluación cada 60 s y a petición.
+- Configuración versionada en `econ_config` (borrador → publicar → volver atrás); alto impacto (×2/÷2 o desactivar `duplicate`) exige `approve:true`. Toda mutación escribe `econ_audit` (actor, origen IP).
+- Riqueza: snapshot de partidas guardadas, Gini y percentiles; con menos de 10 jugadores avisa «datos insuficientes». Simulación: reescala histórica por motivo, sin elasticidad.
+- Mercado/ítems: «No disponible»; `MISSING` lista qué instrumentación falta (precio por objeto, mercado J2J).
+- **Desviaciones del manual:** §19 (auth/roles) omitido por decisión del dueño, el panel es público; MUI/visx sustituidos por SVG propio. Límite 240 peticiones/min por IP, SSE máx. 20 conexiones.
+- Test: `tests/economy.test.mjs`.

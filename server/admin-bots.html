@@ -7,7 +7,7 @@ nav.tabs{display:flex;gap:8px;margin:0 0 14px}nav.tabs button.on{border-color:va
 .log{font:12px ui-monospace,monospace;max-height:340px;overflow:auto;white-space:pre-wrap}.log div{border-bottom:1px solid #2c2418;padding:2px 0}.dim{opacity:.65}h3{color:var(--gold);margin:6px 0}
 .sub2 button{margin-right:6px}.sub2 button.on{border-color:var(--gold)}
 </style>
-<nav class="tabs"><button id="tsrv" class="on">Servidor</button><button id="tbots">Bots</button></nav>
+<nav class="tabs"><button id="tsrv" class="on">Servidor</button><button id="tbots">Bots</button><button id="teco">Economía</button></nav>
 <div id="botsv">
   <div class="card"><div class="row"><b style="color:var(--gold)">Conexiones (humanización)</b><span class="dim" id="hsum"></span><label><input type="checkbox" id="hon"> activa</label> mín. conectados <input id="hmin" type="number" min="0" max="40" style="width:56px"><button id="hset">Aplicar</button><button id="hall1">Todos conectados</button><button id="hall0">Todos auto</button></div><div class="dim" style="margin:4px 0">Cada bot tiene su hora punta y se conecta/desconecta solo (sesiones, descansos, vacaciones, pausas AFK). Aquí eliges quién fuerza conexión («on»), quién se queda fuera («off») o sigue su horario («auto»).</div><div id="hum" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
   <div class="card"><div class="row"><b style="color:var(--gold)">Parties</b><span class="dim" id="psum"></span><button id="pref">Actualizar</button></div><div id="pty"></div></div>
@@ -22,8 +22,8 @@ const $=s=>document.querySelector(s), tok=new URLSearchParams(location.search).g
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ARCH={warrior:"Guerrero",hunter:"Cazador",trader:"Comerciante",wanderer:"Viajero",scholar:"Mago"};
 document.querySelectorAll(".card").forEach(c=>{if(!c.closest("#botsv"))c.classList.add("srv")});
-const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");if(v==="bots"){loadBots();loadParties();loadAn();loadHum()}};
-$("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");
+const show=v=>{document.querySelectorAll(".srv").forEach(c=>c.style.display=v==="srv"?"":"none");$("#botsv").style.display=v==="bots"?"block":"none";$("#tsrv").classList.toggle("on",v==="srv");$("#tbots").classList.toggle("on",v==="bots");$("#econv").style.display=v==="eco"?"block":"none";$("#teco").classList.toggle("on",v==="eco");if(v==="eco")window.ecoOpen&&ecoOpen();if(v==="bots"){loadBots();loadParties();loadAn();loadHum()}};
+$("#tsrv").onclick=()=>show("srv");$("#tbots").onclick=()=>show("bots");$("#teco").onclick=()=>show("eco");
 const COLS=[["name","Nombre"],["lv","Nv"],["arch","Personalidad"],["guild","Guild"],["goal","Meta"],["act","Haciendo"],["gold","Oro"],["kills","Bajas"],["deaths","Muertes"],["scare","Miedo"],["build","Build"],["trades","Tratos"],["expMin","XP/min"],["still","Quieto"],["ideasN","Ideas"]];
 let bots=[],sort="lv",dir=-1,cur=null,sub="log";
 $("#bth").innerHTML=COLS.map(([k,t])=>'<th data-k="'+k+'">'+t+'</th>').join("");

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.85.43 · Monitor económico (2026-10-16)
+- [admin] Pestaña «Economía» en /admin con el manual HBWeb Admin Economy Monitor: resumen con KPIs y comparación con el periodo anterior, flujo en vivo (SSE con reanudación), gráficas de flujo con detalle por tramo, fuentes y sumideros, alertas (5 reglas versionadas, enfriamiento, estados y nota obligatoria al descartar), riqueza (percentiles, Gini, histograma), mercado/ítems (muestra «No disponible» y qué instrumentación falta), simulación de balance, auditoría y CSV, salud de fuentes.
+- [admin] Umbrales de alertas versionados: borrador, publicar y volver atrás; los cambios de alto impacto piden aprobación. Toda mutación queda en `econ_audit`.
+- [economía] Oro de bots, objetos, teletransporte y venta a bots pasa por el libro (`ledger.js`).
+- Desviaciones del manual (decididas por el dueño): sin autenticación ni roles (§19: el panel es público); gráficas en SVG a mano en lugar de MUI/visx (el cliente es JS puro).
+- Pendiente: precios y mercado jugador-jugador (no existe la instrumentación); ver `MISSING` en `server/economy.mjs`.
+
 ## 0.85.42 — Combate original
 - HITRATIOFACTOR 80, orden de daño de combat.cpp, anillos 335/337 con desgaste, inmunidad de habilidad especial, Apocalypse/Crusade/banderas (apagados por defecto).
 - Solo sprites IA; arreglo del suelo con hoja IA fallida.

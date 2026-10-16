@@ -6,4 +6,6 @@ assert.match(S, /adminAllowed = \(\) => true/);
 assert.match(A, /id="bobs"/); assert.match(A, /observador\.html/);
 assert.match(M, /adminbtn/); assert.match(M, /"\/admin"/);
 assert.ok(S.includes("/api/admin/economy")); assert.match(A, /id="eco"/);
+const E = readFileSync(new URL("../server/admin-economy.html", import.meta.url), "utf8");
+assert.ok(A.includes("admin-economy.html")); assert.match(E, /id="econv"/); assert.match(E, /EventSource/); assert.ok(S.includes("/api/admin/economy/"));
 console.log("OK adminlogin");
