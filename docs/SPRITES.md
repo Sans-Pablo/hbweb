@@ -1,7 +1,7 @@
 # Sprites clave (dónde está cada cosa)
 
 Consultar antes de buscar. Originales: `web/data/sprites.json` + `sprites/<clave>.png`; IA (x4): `sprites_ia.json` + `sprites_ia/<clave>.webp`.
-La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~línea 101); al cambiar hojas o regex hay que subir `IA_VERSION` (ahora `ia-0.80.12`).
+La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~línea 101); al cambiar hojas o regex hay que subir `IA_VERSION` (ahora `ia-0.85.42`).
 
 ## Terreno y escenario
 | Qué | Clave | Notas |
@@ -47,3 +47,10 @@ La lista blanca de prefijos con IA está en `web/src/client/assets.js` (regex ~l
 - Chispas del crítico: efectos 20-27 (vuelan 50 px/tick, sueltan el efecto 8 «Burst» x5; Game.cpp:5360, 14296, 6350) en `client/spellfx.js`.
 - Dash: fantasma 26/16 px detrás (Game.cpp:8616-8654, 8917-8921), `renderer.js` DASH_BACK + evento `dash`.
 - Berserk: tinte (0,-5,-5) sobre el cuerpo (Game.cpp:8911).
+
+## Cobertura IA y pendientes de remasterizar (auditoría 0.85.42)
+- `sprites_ia.json` (no versionado, ver `.gitignore`) tiene 8734 hojas, todas k=4, sin atlas propio (usan los fotogramas del original) y **todas pasan la regex** de `assets.js`: no hay hojas excluidas, la regex no se amplía. `players.json` 100 % con IA; `equip.json` solo sin IA `id3` y `cryptpit` (esa última la genera `make_crypt_assets.py`).
+- Las hojas de `anchors.json` (120) tienen todas IA.
+- Sin IA y visibles con el original (de `sprites.json`, 1817 claves): **201 losetas `t*`** usadas por los mapas, más unidades de cliente de guerra (`u*`, ~1200 fotogramas, no salen en la ciudad) y `lgol/znz/eid` (no referenciados por ningún NPC de `npc.json`).
+- Prioridad para `tools/remaster_ia.py --map` (losetas por nº de mapas que las usan): 1) `t217 t347 t346 t344 t218 t345 t209` (11-17 mapas); 2) `t17 t27 t28 t31 t12 t15 t29 t213 t320 t51 t16 t312 t225 t55 t229 t21 t231 t224 t226 t208 t310 t311 t313 t22 t220 t205 t23` (4-10 mapas); 3) ciudad Aresden/Elvine `t364-t427` (~40, 2 mapas); 4) interiores `t70-t96 t527-t529 t414-t417` (ayuntamiento, gremio, torre); 5) mapas sueltos (icebound `t123-t204 t445-t461`, maze `t474-t478`, toh `t430-t440`). Recordar `fill_tile_holes.py` y no aplicar `fix_tile_seams.py` global.
+- Código: `ready()` ya garantiza que una hoja con IA no se dibuja hasta que llega (o falla). El suelo (`renderer.js` ~150/169) además trataba «IA fallida» como «pendiente» (k===1) y reconstruía el trozo para siempre; corregido en 0.85.42.

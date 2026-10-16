@@ -11,7 +11,7 @@ import { coreKeys } from "./bundles.js";
 import { DUNGEON_ASSETS, setDungeonPalette } from "../shared/dungeon.js";
 
 const ASSET_VERSION = "crypt-v3";
-const IA_VERSION = "ia-0.85.39";                // subir al regenerar hojas de sprites_ia (la caché del navegador las conservaba)
+const IA_VERSION = "ia-0.85.42";                // subir al regenerar hojas de sprites_ia (la caché del navegador las conservaba)
 const spriteUrl = png => imgUrl("data/sprites/" + png) + "?v=" + ASSET_VERSION;
 
 // Reintenta una descarga fallida; nunca da por cargada una imagen rota.
