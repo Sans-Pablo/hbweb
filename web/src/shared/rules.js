@@ -29,15 +29,16 @@ export const LEVELUP_POINTS = 3;           // bCheckLevelUp: m_iLU_Pool += 3
 export const STAT_LIMIT = 200;             // DEF_CHARPOINTLIMIT (habitual en 3.51)
 
 // --- combate --------------------------------------------------------------------
+export const HITRATIOFACTOR = 80;          // combat.h:1 (#define HITRATIOFACTOR 80.0f)
 export const MIN_HIT = 15, MAX_HIT = 99;   // DEF_MINIMUMHITRATIO / DEF_MAXIMUMHITRATIO
 
-// Probabilidad de acierto: (ataque / defensa) * 50, entre 15 y 99.
+// Probabilidad de acierto: (ataque / defensa) * HITRATIOFACTOR (80), entre 15 y 99 (combat.cpp:688, combat.h:1; el 50 es solo de CheckResistingMagicSuccess, combat.cpp:42).
 // Si el atacante mira en la misma dirección que el objetivo (le ataca por la espalda),
 // la defensa se reduce a la mitad.
 export function hitChance(attackRatio, defense, fromBehind) {
   let dr = fromBehind ? Math.floor(defense / 2) : defense;
   if (dr < 1) dr = 1;
-  const p = Math.floor((attackRatio / dr) * 50);
+  const p = Math.floor((attackRatio / dr) * HITRATIOFACTOR);
   return Math.max(MIN_HIT, Math.min(MAX_HIT, p));
 }
 

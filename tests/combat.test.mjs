@@ -11,9 +11,10 @@ const player = (over = {}) => ({
 });
 const npc = (over = {}) => ({ cfg: { defenseRatio: 1, size: 1, actionLimit: 0 }, absDamage: 0, ...over });
 
-// hitChance: (ataque / defensa) * 50 entre 15 y 99; por la espalda la defensa se reduce a la mitad
-assert.equal(hitChance(100, 100, false), 50);
+// hitChance: (ataque / defensa) * 80 (HITRATIOFACTOR, combat.cpp:688) entre 15 y 99; por la espalda la defensa se reduce a la mitad
+assert.equal(hitChance(100, 100, false), 80);
 assert.equal(hitChance(100, 100, true), 99);
+assert.equal(hitChance(50, 100, false), 40);
 assert.equal(hitChance(1, 1000, false), 15);
 assert.equal(hitChance(500, 1, false), 99);
 
@@ -50,10 +51,10 @@ assert.equal(dice(seq(0), 3, 6), 3);
   const base = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0), player(), npc(), false).damage;
   const rage = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0), player(), npc(), false, { berserk: true }).damage;
   assert.ok(rage >= base * 2 - 1 && rage <= base * 2 + 1, `furia ${rage} vs ${base}`);
-  // defensa 1 + 100 con ataque 90 -> (90/101)*50 = 44 %: un d100 de 60 falla, sin escudo (99 %) acierta
-  const rng = () => seq(0.5, 0.5, 0.5, 0.5, 0.59)();
-  const free = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.59), player(), npc(), false);
-  const shield = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.59), player(), npc(), false, { protect: 4 });
+  // defensa 1 + 100 con ataque 90 -> (90/101)*80 = 71 %: un d100 de 81 falla, sin escudo (99 %) acierta
+  const rng = () => seq(0.5, 0.5, 0.5, 0.5, 0.8)();
+  const free = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), player(), npc(), false);
+  const shield = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), player(), npc(), false, { protect: 4 });
   assert.equal(free.hit, true);
   assert.equal(shield.hit, false);
   void rng;

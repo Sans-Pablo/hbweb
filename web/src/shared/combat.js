@@ -102,7 +102,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   sm += cb; l += cb;
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
   if (ctx.fightZone) { sm += Math.trunc(sm / 3); l += Math.trunc(l / 3); }        // m_bIsFightZone: +1/3 (combat.cpp:781), tras combo y crítico
-  if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 5) return { hit: true, damage: 0 };   // invulnerables
+  if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 6) return { hit: true, damage: 0 };   // combat.cpp:1253-1258: actionLimit 1, 2 y 6 -> return 0 (el 5 SI recibe daño, combat.cpp:1295)
   let dmg = n.cfg.size === 0 ? sm : l;
   if (n.absDamage < 0) {
     dmg = Math.floor(dmg - dmg * (Math.abs(n.absDamage) / 100));
