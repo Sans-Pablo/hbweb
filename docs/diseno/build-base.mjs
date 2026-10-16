@@ -26,7 +26,7 @@ const BODY = `
 <div class="cell"><div class="lbl">4 · Auto Hunt (mini)</div>${mwin(215, 150, `<div style="left:22px;top:26px;font-weight:700;color:#3a2810">Slime  (Pozo 3)</div>` + [["Muertes","38","b"],["Tiempo","12:40",""],["Ritmo","180 /h",""],["Experiencia","+4210","b"],["Cazando","",""]].map(([k,v,b],n)=>`<div style="left:22px;top:${46+n*16}px">${k}</div><div style="left:112px;top:${46+n*16}px;${b?"font-weight:700;color:#7a4a00":""}">${v}</div>`).join(""))}
 <div class="cell"><div class="lbl">5 · Menú automático (grande, 2 marcos, contenido real de autowin.js)</div><div style="position:relative;display:flex">${win(258, 339, `<div class="tab on" style="left:22px;top:30px;width:98px">Cazar</div><div class="tab" style="left:124px;top:30px;width:98px">Ir a…</div><div style="left:22px;top:56px;font-weight:700;color:#3a2810">Mapa: Granja de Aresden</div><div style="left:22px;top:74px">Zona  &lt; 1/6 Pozo 3 · Slime (40,52,60,70) &gt;</div><div class="mbox" style="left:22px;top:96px;width:86px;height:100px">SPRITE<br>N</div>` + ["Criatura|Slime","Vida (aprox.)|10–30","Daño|1d6","Experiencia|8–20","Nivel de botín|1","Oro|0–12","Apariciones|8"].map((r,n)=>{const [a,b]=r.split("|");return `<div style="left:116px;top:${96+n*14}px;font-weight:700;color:#3a2810;font-size:10px">${a}</div><div style="left:186px;top:${96+n*14}px;font-size:10px">${b}</div>`}).join("") + `<div style="left:22px;top:210px;font-weight:700;color:#3a2810">Botín posible</div><div style="left:22px;top:226px;width:204px;font-size:10px">Red Potion, Short Sword, Leather Armor, Gold…</div>` + btn("ok", 22, 300))}${win(258, 339, `<div style="left:22px;top:44px;font-weight:700;color:#3a2810">Objetos del suelo según su rareza</div>` + ["Normal: ignorar","Mágico: vender","Raro: guardar","Único: guardar"].map((r,n)=>`<div class="tab" style="left:${22+(n%2)*104}px;top:${64+Math.floor(n/2)*24}px;width:100px">${r}</div>`).join("") + `<div style="left:22px;top:124px"><span class="cb"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No recoger objetos</div><div style="left:22px;top:144px"><span class="cb on"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tomar pociones con poca vida</div>` + btn("accept", 22, 300) + btn("cancel", 152, 300))}</div></div>
 `;
-const html = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Base original · ventanas</title>
+const html = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Editor de ventanas</title>
 <style>
 :root{--gamedialog_1:url(${uri("gamedialog_1")});--dialogtext_0:url(${uri("dialogtext_0")});--dialogtext_1:url(${uri("dialogtext_1")})}
 body{margin:0;padding:24px;font:12px Tahoma,Verdana,sans-serif;background:#12100b;color:#e6d6ac}
@@ -48,12 +48,25 @@ h1{font:600 16px Tahoma;margin:0 0 4px;color:#f2c14e}p{margin:0 0 20px;color:#b9
 .ball.min{left:5px}.ball.cls{right:5px}
 .lbl{position:static;color:#f2c14e;font:600 12px Tahoma;margin:0 0 6px}.cell{display:flex;flex-direction:column}
 /* margenes utiles del marco: x 22..226 (204 px), y 44..294 */
+#bar{margin:0 0 14px}#bar button{background:#3a2e1e;color:#f2c14e;border:1px solid #5a431f;padding:4px 10px;cursor:pointer}.win [data-e]{cursor:move}.win [data-e].sel{outline:1px dashed #f2c14e}.win [data-e]:hover{outline:1px dashed #6fd16f}
 </style><body>
-<h1>Nueva base: sprites reales del juego</h1>
+<h1>Editor de ventanas (sprites reales)</h1>
+<div id="bar"><button onclick="hbExport()">Exportar diseño (JSON)</button> <button onclick="hbReset()">Restablecer</button> <span id="sel">Arrastra cualquier elemento · doble clic edita el texto · flechas = 1 px (Shift = 10)</span></div>
+<textarea id="out" rows="8" style="display:none;width:100%"></textarea>
 <p>Marco gamedialog_1 (frame 2), cabeceras de dialogtext_0, botones de piedra de dialogtext_1 (pasa el ratón: se iluminan como en el juego) y texto negro sobre pergamino, como en el cliente original. Contenido simulado; es el kit sobre el que se unificarán las ventanas.</p>
 <div class="wrap">
 ${BODY}
 </div>
 <script>document.querySelectorAll(".bt").forEach(b=>{const n=b.className.split(" ").pop();const h=b.dataset.h;b.onmouseenter=()=>{b.classList.replace(n,h)};b.onmouseleave=()=>{b.classList.replace(h,n)}})</script>
+<script>
+(()=>{const els=[...document.querySelectorAll('.win')].flatMap((w,wi)=>[...w.children].filter(e=>!/(frm|strip|mfrm|mt|mm|mb|ball)/.test(e.className)).map((e,i)=>{e.dataset.e=wi+'.'+i;e.dataset.x=e.offsetLeft;e.dataset.y=e.offsetTop;e.dataset.t=e.textContent;return e}));
+let cur=null;const sel=e=>{cur&&cur.classList.remove('sel');cur=e;e&&e.classList.add('sel')};
+const mv=(e,x,y)=>{e.style.left=x+'px';e.style.top=y+'px'};
+document.addEventListener('mousedown',ev=>{const e=ev.target.closest('[data-e]');if(!e||e.isContentEditable)return;sel(e);const sx=ev.clientX-e.offsetLeft,sy=ev.clientY-e.offsetTop;const m=a=>mv(e,a.clientX-sx,a.clientY-sy),u=()=>{removeEventListener('mousemove',m);removeEventListener('mouseup',u)};addEventListener('mousemove',m);addEventListener('mouseup',u);ev.preventDefault()});
+document.addEventListener('dblclick',ev=>{const e=ev.target.closest('[data-e]');if(e){e.contentEditable=true;e.focus()}});
+document.addEventListener('keydown',ev=>{if(!cur||cur.isContentEditable)return;const d=ev.shiftKey?10:1,k={ArrowLeft:[-d,0],ArrowRight:[d,0],ArrowUp:[0,-d],ArrowDown:[0,d]}[ev.key];if(k){mv(cur,cur.offsetLeft+k[0],cur.offsetTop+k[1]);ev.preventDefault()}});
+window.hbExport=()=>{const o=els.map(e=>({id:e.dataset.e,x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight,text:e.textContent.trim()}));const t=document.getElementById('out');t.style.display='block';t.value=JSON.stringify(o,null,1);t.select()};
+window.hbReset=()=>location.reload();})();
+</script>
 </body></html>`;
-writeFileSync(new URL("base-original.html", import.meta.url), html);
+writeFileSync(new URL("editor.html", import.meta.url), html);
