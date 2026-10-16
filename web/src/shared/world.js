@@ -18,6 +18,7 @@ import * as MagicSys from "./systems/magicsys.js";
 import * as PetGrimoire from "./systems/petgrimoire.js";
 import * as Shop from "./systems/shopsys.js";
 import * as Companion from "./systems/companion.js";
+import * as Alchemy from "./systems/alchemy.js";
 import * as Debug from "./systems/debug.js";
 import * as Arena from "./systems/arena.js";
 import * as Tutorial from "./systems/tutorial.js";
@@ -282,6 +283,7 @@ const COMMANDS = {
   repairconfirm: (w, p, cmd) => Shop.repairConfirm(w, p, cmd),
   deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
+  alchemy: (w, p, cmd) => Alchemy.craft(w, p, cmd),                                              // ReqCreatePortionHandler (HG.cpp:23503)
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   statreset: (w, p, cmd) => Respec.respec(w, p, cmd),
   petbuy: (w, p, cmd) => Companion.buyBall(w, p, cmd),

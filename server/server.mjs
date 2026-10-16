@@ -73,7 +73,7 @@ const bytes = new Uint8Array(fs.readFileSync(path.join(DATA, meta.map + ".bin"))
 const npcDb = JSON.parse(fs.readFileSync(path.join(DATA, "npc.json")));
 const spawns = JSON.parse(fs.readFileSync(path.join(DATA, meta.map + ".spawns.json")));
 const grid = new Grid(meta.w, meta.h, bytes);
-const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb });
+const data = new GameData({ items: JSON.parse(fs.readFileSync(path.join(DATA, "items.json"))), magic: JSON.parse(fs.readFileSync(path.join(DATA, "magic.json"))), npcs: npcDb, potions: JSON.parse(fs.readFileSync(path.join(DATA, "potion.json"))) });
 setDungeonPalette(JSON.parse(fs.readFileSync(path.join(DATA, "dungeon_palette.json"))));
 const maps = {};
 try {

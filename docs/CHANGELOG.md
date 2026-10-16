@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.15 · Alquimia (2026-10-16)
+- Alquimia fiel: HG.cpp ReqCreatePortionHandler 23503-23700 (orden por id descendente, última receta coincidente, límite, dificultad, +5 a maestría 100, SkillUp, consumo, GetExp dice(2,dif/3)). Recetas en `web/data/potion.json` (`tools/convert_potion.mjs`). Test `alchemy.test.mjs`.
+
 ## 0.85.14 · Cárcel (2026-10-16)
 - Cárcel fiel: Client.cpp:1184 (solo en la propia ciudad, 180 s), HG.cpp 11661-11810 (destinos redirigidos), 2323 (cuenta atrás). Test `jail.test.mjs`.
 

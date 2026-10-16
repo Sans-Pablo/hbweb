@@ -1,10 +1,17 @@
 {
- "build": "0.85.14",
+ "build": "0.85.15",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": { "es": "Alquimia (v0.85.15)", "en": "Alchemy (v0.85.15)" },
+   "items": [
+    { "es": "Motor de alquimia fiel al original (recetas de Potion.cfg, límite de habilidad, dificultad, consumo y experiencia). Aún sin ventana de cliente: se usa por orden alchemy.", "en": "Alchemy engine faithful to the original (Potion.cfg recipes, skill limit, difficulty, consumption and experience). No client dialog yet: driven by the alchemy command." }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": { "es": "Cárcel (v0.85.14)", "en": "Jail (v0.85.14)" },

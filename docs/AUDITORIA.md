@@ -39,7 +39,8 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Multiplicador de uso ×8 / ×2 / ×1 | Skilltypes.h:30, Client.cpp:806 | skills.js `skillMultiplier` | CORREGIDO |
 | Maestría total máxima (900) | combat.h MAXSKILLPOINTS, Client.cpp:460 | skills.js | CORREGIDO (700→900) |
 | Pesca: sube solo al capturar, cantidad = dificultad del pez | HG.cpp:28214 | systems/fishing.js (+1 por lanzamiento) | DIFERENTE (sistema inventado) |
-| Alquimia, minería, fabricación suben por uso | HG.cpp:23682, 24029, 28214 | — | FALTA (sistemas ausentes) |
+| Alquimia: receta, límite, dificultad, consumo, exp | HG.cpp:23503-23700 | systems/alchemy.js, potion.json | HECHO (0.85.15; sin diálogo de cliente aún; falta DemonPotion en items) |
+| Minería, fabricación suben por uso | HG.cpp:24029, 28214 | — | FALTA (minería: sin datos de generadores por mapa; fabricación: BuildItem.cfg/CraftItem.cfg sin portar) |
 | Escudo: tirada contra maestría al subir | combat.cpp | combatsys.js | DIFERENTE (parcial) |
 
 ## Estadísticas, nivel, regeneración
