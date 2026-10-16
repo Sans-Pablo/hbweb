@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.23 · Mini ventanas comunes (2026-10-16)
+- Componente común `client/miniwin.js` (`MiniWin`: filas head/kv/text/btn, altura automática). `AutoMini` y la nueva `QuestMini` (id 76, sustituye al rastreador DOM) lo usan.
+- Autohunt: la exp se mide por fotograma (`trackExp` en autowin.js, desde `me.exp/level/nextExp`); botón «Reiniciar» cuando se detiene.
+
 ## 0.85.20 · Ventanas y misiones (2026-10-16)
 - Almacén: buscador arriba y centrado. Misiones: icono de pergamino y entradas desplegables (`questwin.js`). Turquesa eliminado de gui.js/renderer.js (guardia en tests/ui-guard.test.mjs).
 

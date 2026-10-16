@@ -442,8 +442,8 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Kills indirectos (firefield, magia de area, fuego de fire bow) dan exp/kill al autor.
 - Botones cerrar/minimizar: mismo diseno que las bolas de las otras esquinas, con iconos; iconos de cerrar solo en ventanas con bolas.
 - Icono de quests coherente con la UI.
-- Mini autohunt: mostrar exp; boton restart cuando se frena.
-- Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato.
+- [x] (0.85.23) Mini autohunt: mostrar exp; boton restart cuando se frena.
+- [x] (0.85.23) Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato (`client/miniwin.js`, no verificado visualmente).
 - Hilo de diseno de UI de ventanas (todas se ven distintas).
 - Evolucion de pets: animacion primero, cambio de tamano como parte de la animacion.
 - Sprites negros en personajes (persiste).

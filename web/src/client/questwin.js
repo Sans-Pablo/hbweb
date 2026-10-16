@@ -2,6 +2,7 @@
 import { Win, THEME } from "./window.js";
 import * as Quests from "../shared/systems/quests.js";
 import { getLang, t } from "./i18n.js";
+import { MiniWin } from "./miniwin.js";
 
 export const QUEST_ID = 49;
 const loc = o => (o && (getLang() === "en" ? o.en : o.es)) || "";
@@ -47,4 +48,21 @@ export class QuestWin extends Win {
     });
   }
 }
-export function registerQuests(gui) { gui.register(new QuestWin()); }
+// Mini misión (formato común de miniwin.js; sustituye al rastreador DOM): misión actual, su texto y su progreso. «Diario» abre la ventana grande.
+export const QUEST_MINI_ID = 76;
+export class QuestMini extends MiniWin {
+  constructor(openDiary) { super({ id: QUEST_MINI_ID, title: "Misión", x: 562, y: 270 }); this.openDiary = openDiary; }
+  onClose() { this.dismissed = true; }
+  rows(me) {
+    if (!me?.quests) return [{ k: "text", text: "No hay misiones en esta versión." }];
+    const line = Quests.lineOf(me), q = me.quests, cur = line[q.n] || null, pr = cur ? Quests.progress(me, cur.goal) : [0, 0];
+    if (!cur) return [{ k: "head", text: t("Línea de misiones completada") }, { k: "text", text: t("Eres un maestro de tu camino.") }];
+    return [
+      { k: "head", text: t("Misión") + " " + (q.n + 1) + "/" + line.length + " · " + loc(cur.title) },
+      { k: "text", text: loc(cur.text) },
+      { k: "kv", label: "Objetivo", value: GOAL[cur.goal.k]?.(cur.goal, pr) || "", color: THEME.good, bold: true },
+      { k: "btn", label: "Diario", fn: () => this.openDiary() },
+    ];
+  }
+}
+export function registerQuests(gui) { gui.register(new QuestWin()); const m = new QuestMini(() => gui.toggle(QUEST_ID)); gui.register(m); return m; }

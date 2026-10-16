@@ -23,5 +23,5 @@ INVENTO del port (Olympia tenía auto-caza; el original no). Lógica pura en `sh
 - `a.rules[rareza]` ∈ ignore|sell|store (rareza 0 normal, 1 mágico, 2 raro, 3 único; por defecto sell, sell, store, store). «Ignorar» deja el objeto en el suelo; «vender»/«guardar» lo recogen.
 - Mochila llena: si hay algo que vender va a la tienda y manda `selllist` (≤12 por tanda), luego retoma la caza; si no, guarda con `deposit` en el almacén; almacén lleno (MAX_BANK) o nada que vender/guardar → termina con aviso.
 - `a.potions` (ON por defecto): con poca vida bebe una poción de vida de la mochila; si no tiene, para.
-- `ctl.auto.exp` suma los eventos `exp` propios desde el inicio; la mini ventana lo muestra. F5 reabre la mini ventana si hay una caza (o la última) y estaba cerrada.
+- `ctl.auto.exp` (0.85.23) se mide por fotograma con `trackExp` (delta de `me.exp`, con acarreo al subir de nivel); no depende del evento `exp`. `AutoMini` extiende `MiniWin` (`client/miniwin.js`) y muestra «Reiniciar» al detenerse; la mini ventana lo muestra. F5 reabre la mini ventana si hay una caza (o la última) y estaba cerrada.
 - Test: `tests/autoplay.test.mjs`.
