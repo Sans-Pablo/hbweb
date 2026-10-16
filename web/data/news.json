@@ -1,10 +1,23 @@
 {
- "build": "0.85.11",
+ "build": "0.85.12",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+   {
+    "date": "2026-10-16",
+    "title": {
+     "es": "Botín fiel al original (v0.85.12)",
+     "en": "Faithful loot (v0.85.12)"
+    },
+    "items": [
+     {
+      "es": "El botín de los monstruos usa las tablas y probabilidades de NpcDeadItemGenerator: ya no hay corte del 30 % en monstruos débiles.",
+      "en": "Monster loot uses the NpcDeadItemGenerator tables and odds: the 30% cut on weak monsters is gone."
+     }
+    ]
+   },
   {
    "date": "2026-10-16",
    "title": {
