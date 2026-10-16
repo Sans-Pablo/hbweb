@@ -24,9 +24,18 @@ textarea{width:100%;height:110px;background:#0d0b07;color:var(--txt);border:1px 
 .win{position:relative;font:11px Tahoma,Verdana,sans-serif}.win *{position:absolute}.win .sp{background-repeat:no-repeat}
 .frm{left:0;top:0;width:258px;height:339px;background:var(--g1) -287px -2px}.strip{left:235px;top:0;width:23px;height:339px;background:var(--g1) -547px -2px}
 .mt,.mm,.mb{left:0;width:215px}.mt{height:30px;background:var(--g1) -366px -343px}.mm{background:var(--g1) -366px -373px}.mb{height:43px;background:var(--g1) -366px -387px}
-.ban{left:0;top:0;width:258px;height:31px;background:url(sprites/banner-blank.png)}.ban.o{background:var(--d0) var(--bp)}.ban.m{width:215px;background-image:url(sprites/banner-blank-215.png)}
+.ban{left:0;top:0;width:258px;height:31px;box-sizing:border-box;
+ --stone:#8f7a5c;--stone2:#7d684b;--groove:#3a2312;--rim:#a8895a;--ink:#8a1a12;
+ background:
+  radial-gradient(circle at 10px 12px,#fff 0 1px,#d9d6cf 2px,#8d887d 6px,#3b362e 8px,transparent 8.6px),
+  radial-gradient(circle at calc(100% - 10px) 12px,#fff 0 1px,#d9d6cf 2px,#8d887d 6px,#3b362e 8px,transparent 8.6px),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .13 0 0 0 0 .06 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='80' height='40' filter='url(%23n)'/%3E%3C/svg%3E"),
+  linear-gradient(#5a4128 0 3px,var(--rim) 3px 4px,var(--groove) 4px 9px,#6b5236 9px 10px,var(--stone) 10px,var(--stone2) 27px,#4a3420 27px 28px,var(--groove) 28px);
+ border-radius:3px;box-shadow:inset 0 0 0 1px #20140a}
+.ban.m{width:215px}
+
 .ball{top:4px;width:16px;height:16px;display:grid;place-items:center;font:700 11px Tahoma;color:#e8d4a0;text-shadow:1px 1px #20160a}.ball.min{left:5px}.ball.cls{right:5px}
-.ttl{left:0;right:0;top:11px;text-align:center;font:700 14px Georgia,'Times New Roman',serif;color:#8a1a12;text-shadow:1px 1px rgba(255,225,170,.4),0 0 1px #3a0a05;letter-spacing:.3px}.ttl span{position:static}.ttl span:before,.ttl span:after{content:'';display:inline-block;width:32px;height:16px;margin:0 6px;vertical-align:-3px;background:url(sprites/flourish-l.png)}.ttl span:after{background-image:url(sprites/flourish-r.png)}
+.ttl{left:0;right:0;top:11px;text-align:center;font:700 14px Georgia,'Times New Roman',serif;color:var(--ink,#8a1a12);text-shadow:1px 1px rgba(255,225,170,.4),0 0 1px #3a0a05;letter-spacing:.3px}.ttl span{position:static}.ttl span:before,.ttl span:after{content:'';display:inline-block;width:32px;height:16px;margin:0 6px;vertical-align:-3px;background:url(sprites/flourish-l.png)}.ttl span:after{background-image:url(sprites/flourish-r.png)}
 .txt{white-space:nowrap}.sec{font-weight:700}.line{height:1px;background:var(--dim);opacity:.6}
 .slot{border:1px solid #5a431f;background:rgba(60,40,15,.3);display:grid;place-items:center;font-weight:700}
 .rw{padding:0 3px;white-space:nowrap}
