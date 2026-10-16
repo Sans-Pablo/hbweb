@@ -399,7 +399,7 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.7 (hb-ui): el cartel era el aviso de filtración de Google Password Manager; el login ya no usa input type=password (texto con -webkit-text-security, name no estandar, autocomplete off). Login offline verificado.
 
 - 0.85.10 (hb-ui): quitados los rombos celestes de las casillas de salida (renderer.drawTeleportMarks); sin velo DOM/CSS detectado en vivo.
-- 0.85.20 (hb-ui): buscador del almacén arriba y centrado; misiones con icono nuevo y desplegables; turquesa eliminado (summonsIcon, barra HP compañero, minimapa, rótulos). PENDIENTE: reimaginar el resto de ventanas con el mecanismo común X/minimizar de hb-auto-menu (mensaje enviado, esperando su API); tienda (id 11) aún con buscador abajo.
+- 0.85.20 (hb-ui): buscador del almacén arriba y centrado; misiones con icono nuevo y desplegables; turquesa eliminado (summonsIcon, barra HP compañero, minimapa, rótulos). Bolas X/minimizar también en los cuadros heredados (ClassicDialog, npcdialogs, dialogs.js) de forma central en `gui.js` (legacyFrame/ballHit/minBar). Pendiente menor: buscador de la tienda (id 11) aún abajo.
 - 0.85.9 (hb-ui): auditoría UI vs original, ver docs/AUDITORIA_UI.md (corregido y pendiente).
 
 - Rotura de armadura fiel al original (EnduStrippingDamage combat.cpp:1593, ArmorLifeDecrement HG.cpp:36384): desgaste por habilidad (martillo 10-25, hacha 3, resto 1), arrancado con martillo, Merien y "Legion" inmunes, hechizo 28 resta ARMORDEC. Nota: `w.fightZone` no se asigna nunca en el port, las rutas de zona de lucha estan inertes.
@@ -421,4 +421,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [ ] Barra de búsqueda en el recuadro rojo (alargar cabecera o rediseñar), centrada — ui
 - [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
 - [ ] Quitar el turquesa que queda en la UI — ui
-- [ ] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui
+- [x] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui (0.85.20)

@@ -57,3 +57,7 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 ## Cerrar y minimizar (0.85.19)
 - `Win.draw` pinta dos botones-bola sobre las bolas plateadas del marco: derecha = cerrar (`g.close`), izquierda = minimizar. Minimizada, la ventana pasa a una barra de 170x26 con el título (bola izquierda restaura, derecha cierra); `this.w/h` cambian y se restauran desde `this.full`.
 - API: `win.minimize()`, `win.restore()`, `win.toggleMin()`, `win.minimized`, `canMin`. Opciones: `nox` (sin cerrar ni minimizar), `nomin`; las `modal` no minimizan. Las ventanas que dibujan su propio marco (ClassicDialog, dialogbox) deben llamar a `this.ball(ui, x, y, glyph, tip, fn)` o heredar de `Win`.
+
+## Cuadros heredados (0.85.20)
+- `gui.js` añade las mismas bolas a todo cuadro con marco propio (`legacyFrame`: no Win, no modal/fixed/nox, ancho >= 150, no móvil): X derecha, minimizar izquierda; minimizado = barra 170x26 con título (`LEGACY_TITLES` si el cuadro no trae `title`). `nomin` en el cuadro desactiva minimizar. Sin edición por cuadro.
+- Almacén: buscador arriba y centrado. Misiones: lista desplegable. Guardia anti-turquesa en `tests/ui-guard.test.mjs`.

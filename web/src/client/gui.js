@@ -21,6 +21,8 @@ const DIGIT_SPACE = [6, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6];   // __cSpace2
 const NO_OBSTACLE = new Set([10, 17, 20]);                       // pequeños: no cuentan como obstáculo para colocar los demás
 const NO_AVOID = new Set([10, 17, 20, 46, 47]);                  // chat, cantidad y menú de NPC: pequeños, pegados al cursor / abajo
 
+// Títulos de la barra minimizada de los cuadros con marco de sprite (el título del original está en el dibujo)
+const LEGACY_TITLES = { 1: "Character", 2: "Inventory", 3: "Magic", 11: "Shop", 12: "Level Up", 14: "Storage", 15: "Skill", 16: "Magic Shop", 19: "System", 23: "Confirm", 31: "Sell list" };
 export class Gui {
   constructor(canvas) {
     this.cv = canvas;
@@ -259,7 +261,7 @@ export class Gui {
     }
     if (best) { d.x = best[0]; d.y = best[1]; }
   }
-  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); if (!quiet) this.dialogs.get(id).onClose?.(this); if (this.mobile && !quiet && this.rect) this.place(this.rect, this.dpr); } }
+  close(id, quiet) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); { const d0 = this.dialogs.get(id); if (d0.lmin) this.legacyMin(d0); } if (!quiet) this.dialogs.get(id).onClose?.(this); if (this.mobile && !quiet && this.rect) this.place(this.rect, this.dpr); } }
   toggle(id) { if (this.isOpen(id)) this.close(id); else this.open(id); }
   closeAll() { for (const id of [...this.order]) this.close(id); }
   front(id) { const i = this.order.indexOf(id); if (i >= 0) { this.order.splice(i, 1); this.order.push(id); } }
@@ -269,6 +271,34 @@ export class Gui {
   key(e) {
     for (let i = this.order.length - 1; i >= 0; i--) { const d = this.dialogs.get(this.order[i]); if (d.key && !d.hidden && d.key(e, this)) return true; if (d.modal) return true; }
     return false;
+  }
+  // Bolas de cerrar (derecha) y minimizar (izquierda) para los cuadros con marco propio (no Win): mecanismo común de window.js
+  legacyFrame(d) { return !d.ball && !d.modal && !d.fixed && !d.nox && !this.mobile && (d.lmin || d.w >= 150); }
+  ballHit(d, lx, ly) {
+    if (Math.hypot(lx - (d.w - 9), ly - 9) <= 8) return "x";
+    if (!d.lmin && !d.nomin && Math.hypot(lx - 9, ly - 9) <= 8) return "-";
+    if (d.lmin && Math.hypot(lx - 13, ly - d.h / 2) <= 8) return "o";
+    return null;
+  }
+  legacyMin(d) {
+    if (d.lmin) { d.w = d.lmin.w; d.h = d.lmin.h; d.lmin = null; return; }
+    d.lmin = { w: d.w, h: d.h }; d.w = 170; d.h = 26;
+  }
+  drawBall(cx, cy, glyph) {
+    const c = this.ctx, over = Math.hypot(this.mouse.x - this.cur.x - cx, this.mouse.y - this.cur.y - cy) <= 8, bad = glyph === "x";
+    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
+    c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
+    if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
+    else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
+    else c.rect(cx - 3, cy - 3, 6, 6);
+    c.stroke(); c.lineWidth = 1;
+  }
+  frameBalls(d) { this.cur = d; this.drawBall(d.w - 9, 9, "x"); if (!d.nomin) this.drawBall(9, 9, "-"); }
+  minBar(d) {
+    const c = this.ctx; this.cur = d;
+    c.fillStyle = "#2a2118"; c.fillRect(0, 0, d.w, d.h); c.strokeStyle = "#c9a95c"; c.strokeRect(.5, .5, d.w - 1, d.h - 1);
+    this.drawBall(13, d.h / 2, "o"); this.drawBall(d.w - 13, d.h / 2, "x");
+    this.aligned(24, d.w - 24, 7, d.title || LEGACY_TITLES[d.id] || "", "#f0e2bd", { bold: true, size: 11 });
   }
   dialogAt(x, y) {
     const m = this.modal();
@@ -313,7 +343,8 @@ export class Gui {
       this.lastClick = { id: d.id, t: now, x, y };
       if (dbl && d.dbl?.(this, x - d.x, y - d.y, me)) { this.lastClick = null; return true; }
       if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
-      const used = button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
+      if (button === 0 && this.legacyFrame(d)) { const r = this.ballHit(d, x - d.x, y - d.y); if (r) { this.onSound?.(14); if (r === "x") this.close(d.id); else this.legacyMin(d); return true; } }
+      const used = (button === 0 && d.lmin) ? false : button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
       if (used) this.onSound?.(14);
       if (!used && button === 0 && !d.fixed && !this.mobile) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
@@ -376,7 +407,7 @@ export class Gui {
       if (d.modal) { c.fillStyle = "rgba(0,0,0,.45)"; const f = this.full || this.rect, o = this.scale; c.fillRect((f.x - this.rect.x) / o, (f.y - this.rect.y) / o, f.w / o, f.h / o); }
       c.save(); c.translate(d.x, d.y);
       c.beginPath(); c.rect(0, 0, d.w, d.h); c.clip();
-      d.draw(this, me, world);
+      if (d.lmin) this.minBar(d); else { d.draw(this, me, world); if (this.legacyFrame(d)) this.frameBalls(d); }
       c.restore();
     }
     if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
