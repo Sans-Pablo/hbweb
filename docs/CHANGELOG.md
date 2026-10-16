@@ -1107,3 +1107,6 @@ Registro de cambios del port, del más reciente al más antiguo. Se actualiza en
 - Menú de opciones y mapa superpuesto estilo Diablo II
 - Quitar movimiento por teclado (fiel al original)
 - Primera versión
+
+## 0.85.30 Bolas clásicas
+- Bolas de cerrar/minimizar/restaurar vuelven a la cúpula oscura con filete dorado (antes de 0.85.23).
