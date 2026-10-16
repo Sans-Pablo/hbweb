@@ -475,3 +475,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - docs/diseno/ventanas-reales.html: galeria numerada de las capturas reales (pedido 2026-10-16, v0.85.24 sin cambio). Las bolas reales se dibujan en gui.js drawBall (9,9 r8); centrar glifos = ajuste de drawFrameBall, pendiente de elegir direccion.
 
 - Diseño ventanas: inventario (2) sobre captura real con márgenes y centrado de bolas medido (docs/diseno/inventario.html). v0.85.24, sin cambio de versión.
+
+- Capturas reales recapturadas con el "−" ya centrado (inventario, almacén, diario, menú auto, auto mini, misión mini, personaje). hbweb v0.85.25, diseño sin cambio de versión.
