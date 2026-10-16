@@ -467,3 +467,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Summon: al aparecer, mismo efecto de brillos del recall sobre el summon.
 - Demon summon nivel 50: su sprite baja mucho los FPS; analizar y arreglar.
 - Bots: stats INT/MAG, existir bots magos; resetear atributos para probar builds; usar magias; aprender que equipo es mejor (no quedarse con items de blacksmith) y progresar.
+
+- Capturas reales de las ventanas (docs/diseno/ingame/*.png, pedido 2026-10-16, sin cambio de versión; repo 0.85.24): el juego real NO usa el marco gamedialog de base-original; es pergamino oscuro con bolas propias. Hay que diseñar sobre estas capturas.
