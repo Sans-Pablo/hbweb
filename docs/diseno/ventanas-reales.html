@@ -1,9 +1,19 @@
-<!doctype html><meta charset=utf-8><title>Ventanas reales</title><body style="margin:24px;background:#12100b;color:#f2c14e;font:600 13px Tahoma"><h1>Ventanas reales del juego (0.85.24)</h1><div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
-<div>1 · Inventario<br><img src=ingame/inventory.png></div>
-<div>2 · Almacén<br><img src=ingame/storage.png></div>
-<div>3 · Diario-de-misiones<br><img src=ingame/quest-log.png></div>
-<div>4 · Menú-automático<br><img src=ingame/auto-menu.png></div>
-<div>5 · Auto-mini<br><img src=ingame/auto-mini.png></div>
-<div>6 · Misión-mini<br><img src=ingame/mission-mini.png></div>
-<div>7 · Personaje<br><img src=ingame/char.png></div>
-</div>
+<!doctype html><meta charset=utf-8><title>Ventanas reales</title>
+<style>body{margin:0;padding:20px;background:#12100b;color:#e6d6ac;font:13px Tahoma,sans-serif}
+.g{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.w{position:relative}.w b{display:block;margin-bottom:4px;color:#f2c14e}
+.f{position:relative;display:inline-block}.f img{display:block;image-rendering:pixelated}.f i{position:absolute;box-sizing:border-box;pointer-events:none}
+.m{border:1px dashed #6fd16f;background:rgba(111,209,111,.08)}.h{background:rgba(224,88,74,.14)}
+.c{width:1px;height:1px}.c:before,.c:after{content:"";position:absolute;background:#ff0}.c:before{left:-6px;width:13px;height:1px}.c:after{top:-6px;height:13px;width:1px}
+label{margin-right:14px}</style>
+<p><label><input type=checkbox id=a checked> márgenes (cabecera 20, lados 22)</label><label><input type=checkbox id=b checked> centro de bolas (9,9) y (w−9,9)</label> Captura a 1.1825x + 2 px de borde, ampliada 2x. Los "−" ya van centrados (a060bff8, recaptura pendiente).</p>
+<div class=g id=g></div>
+<script>
+const L=[["1 · Inventario","inventory"],["2 · Almacén","storage"],["3 · Diario de misiones","quest-log"],["4 · Menú automático","auto-menu"],["5 · Auto mini","auto-mini"],["6 · Misión mini","mission-mini"],["7 · Personaje","char"]];
+const S=1.1825,Z=2;
+for(const [t,n] of L){const d=document.createElement("div");d.className="w";d.innerHTML=`<b>${t}</b><div class=f><img src="ingame/${n}.png"></div>`;g.append(d);
+ const im=d.querySelector("img"),f=d.querySelector(".f");im.onload=()=>{im.width=im.naturalWidth*Z;
+  const P=v=>(2+v*S)*Z,w=(im.naturalWidth-4)/S,h=(im.naturalHeight-4)/S,add=(c,x,y,ww,hh)=>f.insertAdjacentHTML("beforeend",`<i class="${c}" style="left:${P(x)}px;top:${P(y)}px;width:${ww*S*Z}px;height:${hh*S*Z}px"></i>`);
+  add("m a",22,20,w-44,h-20-12);add("h a",0,0,w,20);[9,w-9].forEach(x=>add("c b",x,9,0,0));}}
+a.onchange=()=>document.querySelectorAll(".a").forEach(e=>e.style.display=a.checked?"":"none");
+b.onchange=()=>document.querySelectorAll(".b").forEach(e=>e.style.display=b.checked?"":"none");
+</script>
