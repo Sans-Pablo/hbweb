@@ -34,11 +34,11 @@ import { registerPetDialog } from "./petdialog.js";
 import { registerSummonPreview } from "./summonpreview.js";
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
 import { registerNews, NEWS_ID } from "./newswin.js";
-import { registerQuests, QUEST_ID } from "./questwin.js";
+import { registerQuests, QUEST_ID, QUEST_MINI_ID } from "./questwin.js";
 import { registerChat } from "./chatwin.js";
 import { registerBug, BUG_ID } from "./bugwin.js";
 import { registerStatSim, STATSIM_ID } from "./statsim.js";
-import { registerAutoWin } from "./autowin.js";
+import { registerAutoWin, trackExp } from "./autowin.js";
 import { registerPrompts } from "./window.js";
 import { Streamer } from "./streaming.js";
 import { Voice } from "./voice.js";
@@ -139,7 +139,7 @@ async function main() {
   gui.mobile = mobile;
   
   const autoWin = registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
-  registerNews(gui); registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
+  registerNews(gui); const questMini = registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
   registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
   await gui.load();
@@ -360,7 +360,8 @@ async function main() {
     renderer.lighting = false; renderer.lightFx = false;  /* sin luz inventada (ticket 12) */ renderer.crowdMax = q >= 1 ? 25 : 70;
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
-    questUi.setEnabled(opts.questTrack !== false);
+    questUi.setEnabled(false);                                 // el rastreador DOM se sustituyó por la mini ventana del lienzo (questwin.js, miniwin.js)
+    if (opts.questTrack === false) gui.close(QUEST_MINI_ID); else if (!questMini.dismissed && !gui.isOpen(QUEST_MINI_ID) && world.ents.get(pid)?.quests) gui.open(QUEST_MINI_ID);
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
     store.set("opts", JSON.stringify(opts));
@@ -478,7 +479,7 @@ async function main() {
           case "F2": ui.useShortcut(0, e.ctrlKey); break;
           case "F3": ui.useShortcut(1, e.ctrlKey); break;
           case "F4": if (hud.spell != null) ui.useMagic(hud.spell); break;
-          case "F5": ui.key("char"); if (gui.isOpen(1) && (ctl.auto?.kind === "hunt" || autoWin.mini.run) && !gui.isOpen(75)) gui.open(75); break;   // la mini ventana del auto hunt vuelve con el menú
+          case "F5": ui.key("char"); if (gui.isOpen(1) && opts.questTrack !== false && !gui.isOpen(QUEST_MINI_ID)) { questMini.dismissed = false; gui.open(QUEST_MINI_ID); } if (gui.isOpen(1) && (ctl.auto?.kind === "hunt" || autoWin.mini.run) && !gui.isOpen(75)) gui.open(75); break;   // la mini ventana del auto hunt vuelve con el menú
           case "F6": ui.key("inv"); break;
           case "F7": ui.key("book"); break;
           case "F8": ui.key("skill"); break;
@@ -757,7 +758,6 @@ async function main() {
     if (rainNow !== raining) { raining = rainNow; sound.rain(raining); }
     for (const ev of events) {
       if (ev.t === "death" && ev.by === pid && !ev.pet && ctl.auto?.kind === "hunt") ctl.auto.kills = (ctl.auto.kills || 0) + 1;      // contador de la mini ventana del auto hunt (autowin.js)
-      if (ev.t === "exp" && ev.id === pid && ctl.auto?.kind === "hunt") ctl.auto.exp = (ctl.auto.exp || 0) + ev.amount;      // exp ganada desde el inicio del hunt
       if (ev.t === "dungeon-choice" && ev.id === pid) chooseDungeon(conn, ev);
       if (ev.t === "resurrectask" && ev.id === pid) gui.confirm("Someone intends to resurrect you. Will you revive here?").then(ok => conn.send({ t: "resurrect", accept: ok }));      // dialog 50 (Game.cpp:42315)
       if (ev.id === pid) gui.recallEvent(ev);
@@ -793,6 +793,8 @@ async function main() {
     { const now = performance.now(); if (!perfStarted) { perfStarted = true; perf.start(me.name, { map: world.map?.name, online, mode: renderer.mode, hd: !!renderer.spr.hd, auto: opts.autoQuality === true }); }
       perf.frame(dt, now - d0, renderer, { ents: world.ents.size, pl: online ? [...world.ents.values()].filter(e => e.kind === "player").length : 1, ping: online ? conn.ping : 0, map: world.map?.name, x: me.x, y: me.y, act: me.act }); }
     const h0 = performance.now();
+    trackExp(ctl.auto, world.ents.get(pid));      // experiencia ganada desde el inicio del hunt (mini ventana de autohunt)
+    if (!questMini.dismissed && opts.questTrack !== false && !gui.isOpen(QUEST_MINI_ID) && world.ents.get(pid)?.quests) gui.open(QUEST_MINI_ID);
     hud.update(world, ctl.hoverEnt); questUi.render();
     questUi.avoid(miniOn() && view.mapStyle !== "overlay" ? (() => { const r = renderer.miniRect(), b = renderer.canvas.getBoundingClientRect(); return { right: (r.x0 + r.size) * renderer.scale / renderer.dpr + renderer.ox / renderer.dpr + b.left, bottom: (r.y0 + r.size + 6) * renderer.scale / renderer.dpr + renderer.oy / renderer.dpr + b.top }; })() : null);      // el rastreador baja bajo el minimapa si lo tapa (criptas: minimapa grande)
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;

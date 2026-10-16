@@ -4,6 +4,7 @@
 //         con la mochila llena vuelve a la granja y termina el ciclo (vaciar en el almacén y repetir: pendiente).
 //   Ir:   granja, almacén, tienda, herrería, mago, granjero, hospital y hechicero de mascotas: entra al edificio y abre el diálogo.
 import { Win, THEME } from "./window.js";
+import { MiniWin } from "./miniwin.js";
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
@@ -88,21 +89,38 @@ export class AutoWin extends Win {
 // nombre del pozo (zona de aparición): su número del fichero de spawns más la criatura, p. ej. «Pozo 3 · Slime»
 const pitName = z => t("Pozo") + " " + z.id + " · " + z.name;
 
-// Mini ventana del auto hunt: criatura, pozo, muertes, tiempo y ritmo. Sigue la orden `run` (la de la caza actual o la última).
-export class AutoMini extends Win {
-  constructor(api) { super({ id: AUTO_MINI_ID, title: "Auto hunt", w: 230, h: 170, x: 560, y: 60 }); this.api = api; this.run = null; }
-  body(ui) {
-    const I = this.inner, ctl = this.api.ctl(), a = ctl.auto?.kind === "hunt" ? ctl.auto : this.run;
+// Experiencia ganada desde el inicio de la caza: se mide por fotograma con la experiencia del jugador (no depende del evento «exp», que
+// no llega en todos los modos) y suma lo que faltaba del nivel anterior si sube de nivel. Lo llama main.js cada fotograma.
+export function trackExp(a, me) {
+  if (!a || a.kind !== "hunt" || !me) return;
+  const p = a.xp;
+  if (p) a.exp = (a.exp || 0) + (me.level > p.level ? Math.max(0, p.next - p.exp) + me.exp : Math.max(0, me.exp - p.exp));
+  a.xp = { level: me.level, exp: me.exp, next: me.nextExp };
+}
+
+// Mini ventana del auto hunt (formato común de miniwin.js): criatura, pozo, muertes, tiempo, ritmo y experiencia. Sigue la orden `run`
+// (la de la caza actual o la última); parada, ofrece «Reiniciar» para repetir la misma caza.
+export class AutoMini extends MiniWin {
+  constructor(api) { super({ id: AUTO_MINI_ID, title: "Auto hunt", x: 560, y: 60 }); this.api = api; this.run = null; }
+  restart(a) {
+    const b = { ...a, rules: [...(a.rules || DEFAULT_RULES)], kills: 0, exp: 0, xp: null, t0: performance.now(), t1: 0 };
+    this.api.start(b); this.run = b;
+  }
+  rows() {
+    const ctl = this.api.ctl(), a = ctl.auto?.kind === "hunt" ? ctl.auto : this.run;
     if (ctl.auto?.kind === "hunt") this.run = a;
-    if (!a) { ui.para(I.x, I.y, I.w, "Sin caza activa. Empieza una desde el menú AUTO.", THEME.txt, { size: 11 }); return; }
+    if (!a) return [{ k: "text", text: "Sin caza activa. Empieza una desde el menú AUTO." }];
     const on = ctl.auto === a, secs = Math.max(1, Math.round((on ? performance.now() : (a.t1 ||= performance.now())) - a.t0) / 1000), k = a.kills || 0;
     const mm = Math.floor(secs / 60), ss = String(Math.floor(secs % 60)).padStart(2, "0");
-    ui.text(I.x, I.y, a.mob + (a.pit ? "  (" + t("Pozo") + " " + a.pit + ")" : ""), THEME.head);
-    ui.text(I.x, I.y + 20, "Muertes", THEME.txt); ui.text(I.x + 90, I.y + 20, String(k), THEME.head, { bold: true });
-    ui.text(I.x, I.y + 38, "Tiempo", THEME.txt); ui.text(I.x + 90, I.y + 38, mm + ":" + ss, THEME.txt);
-    ui.text(I.x, I.y + 56, "Ritmo", THEME.txt); ui.text(I.x + 90, I.y + 56, (k * 3600 / secs).toFixed(0) + " /h", THEME.txt);
-    ui.text(I.x, I.y + 74, "Experiencia", THEME.txt); ui.text(I.x + 90, I.y + 74, "+" + (a.exp || 0), THEME.head, { bold: true });
-    ui.text(I.x, I.y + 92, on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", on ? THEME.txt : THEME.bad);
+    return [
+      { k: "head", text: a.mob + (a.pit ? "  (" + t("Pozo") + " " + a.pit + ")" : "") },
+      { k: "kv", label: "Muertes", value: String(k), color: THEME.head, bold: true },
+      { k: "kv", label: "Tiempo", value: mm + ":" + ss },
+      { k: "kv", label: "Ritmo", value: (k * 3600 / secs).toFixed(0) + " /h" },
+      { k: "kv", label: "Experiencia", value: "+" + (a.exp || 0), color: THEME.head, bold: true },
+      { k: "kv", label: on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", value: "", color: on ? THEME.txt : THEME.bad },
+      ...(on ? [] : [{ k: "btn", label: "Reiniciar", fn: () => this.restart(a), primary: true }]),
+    ];
   }
 }
 export function registerAutoWin(gui, api) { const w = new AutoWin(api), m = new AutoMini(api); w.mini = m; gui.register(w); gui.register(m); return w; }

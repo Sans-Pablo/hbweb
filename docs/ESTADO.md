@@ -442,11 +442,18 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Kills indirectos (firefield, magia de area, fuego de fire bow) dan exp/kill al autor.
 - Botones cerrar/minimizar: mismo diseno que las bolas de las otras esquinas, con iconos; iconos de cerrar solo en ventanas con bolas.
 - Icono de quests coherente con la UI.
-- Mini autohunt: mostrar exp; boton restart cuando se frena.
-- Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato.
+- [x] (0.85.23) Mini autohunt: mostrar exp; boton restart cuando se frena.
+- [x] (0.85.23) Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato (`client/miniwin.js`, no verificado visualmente).
 - Hilo de diseno de UI de ventanas (todas se ven distintas).
 - Evolucion de pets: animacion primero, cambio de tamano como parte de la animacion.
 - Sprites negros en personajes: ARREGLADO en 0.85.23 (ver docs/sistemas/sprite-retry.md). Kills indirectos, Critical, dash y evolución de pets: hechos en 0.85.23.
 - Cartel "Critical": cuando aparece segun archivos originales.
 - Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
 - Dash: animacion y movimiento originales (no esta implementado).
+
+## Diseno de ventanas (pedido 2026-10-16, v0.85.22 sin cambio de version)
+- [x] 3 direcciones de diseno unificado de ventanas (prototipos HTML en `docs/diseno/`, comparativa en `docs/diseno/README.md`). Pendiente: que el usuario elija direccion y aplicarla (frame, cabecera, bolas, pestanas, botones, listas, buscador, mini ventanas).
+
+- Nueva base de diseño con sprites reales (pedido 2026-10-16, v0.85.22 sin cambio de versión): `docs/diseno/base-original.html` (generado por `build-base.mjs`) usa gamedialog_1, dialogtext_0 y dialogtext_1 del juego; sustituye a la imitación CSS como base. Sin tocar producción.
+- Base de diseño v2 (pedido 2026-10-16, v0.85.22): bolas solo icono sin fondo, márgenes útiles x22..226/y44..294, ventanas numeradas 1-5 y ventana grande (doble marco).
+- Base de diseño v3 (pedido 2026-10-16, v0.85.22): mini Auto Hunt y menú automático grande usan el contenido real de autowin.js/miniwin.js.

@@ -1,5 +1,5 @@
 {
- "build": "0.85.23",
+ "build": "0.85.24",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
@@ -8,8 +8,8 @@
   {
    "date": "2026-10-16",
    "title": {
-    "es": "Motor y combate (v0.85.23)",
-    "en": "Engine and combat (v0.85.23)"
+    "es": "Motor y combate (v0.85.24)",
+    "en": "Engine and combat (v0.85.24)"
    },
    "items": [
     {
@@ -31,6 +31,23 @@
     {
      "es": "Evolución de mascotas: primero la animación, y el cambio de tamaño ocurre dentro de ella.",
      "en": "Pet evolution: animation first, and the size change happens inside it."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Mini ventanas comunes (v0.85.23)",
+    "en": "Common mini windows (v0.85.23)"
+   },
+   "items": [
+    {
+     "es": "La mini de autohunt muestra la experiencia ganada y un botón Reiniciar al detenerse.",
+     "en": "The autohunt mini shows gained experience and a Restart button when stopped."
+    },
+    {
+     "es": "La mini de misión tiene el mismo diseño que la de autohunt (componente común).",
+     "en": "The quest mini uses the same design as the autohunt mini (shared component)."
     }
    ]
   },

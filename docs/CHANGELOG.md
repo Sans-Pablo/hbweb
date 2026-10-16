@@ -1,11 +1,15 @@
 # Changelog
 
-## 0.85.23 · Motor y combate (2026-10-16)
+## 0.85.24 · Motor y combate (2026-10-16)
 - Kills indirectos (firefield, magia de área, DoT) acreditan kill y exp al autor (fields.js `authorOf`; tests/indirect-kills.test.mjs).
 - Cartel "Critical" según el original: el daño es un byte sin signo leído como char con signo (128-255 = Critical, 0 = " * Failed! *"); fx.js.
 - Dash fiel (OBJECTATTACKMOVE): 12 fotogramas × 78 ms, paso de 1 casilla + golpe wType 1 con bonos, fantasma y desplazamiento de cuerpo; `ACT.ATTACKMOVE`, evento `dash`; NET_PROTO 13 (tests/dash-anim.test.mjs, crit-dash.test.mjs).
 - Sprites negros: causa raíz = textura WebGL creada con imagen vacía/incompleta o perdida con el contexto (se muestrea como negro opaco y queda en caché). glcompose.js no sube imágenes sin datos, captura webglcontextlost/restored (`epoch`) y PersonCache vacía sus atlas al restaurarse (tests/sprite-black.test.mjs).
 - Evolución de mascotas: mientras espera sigue con el tamaño/aspecto anterior (`evoFrom`); el cambio de tamaño ocurre dentro de la animación de re-invocación (tests/summon-size.test.mjs).
+
+## 0.85.23 · Mini ventanas comunes (2026-10-16)
+- Componente común `client/miniwin.js` (`MiniWin`: filas head/kv/text/btn, altura automática). `AutoMini` y la nueva `QuestMini` (id 76, sustituye al rastreador DOM) lo usan.
+- Autohunt: la exp se mide por fotograma (`trackExp` en autowin.js, desde `me.exp/level/nextExp`); botón «Reiniciar» cuando se detiene.
 
 ## 0.85.20 · Ventanas y misiones (2026-10-16)
 - Almacén: buscador arriba y centrado. Misiones: icono de pergamino y entradas desplegables (`questwin.js`). Turquesa eliminado de gui.js/renderer.js (guardia en tests/ui-guard.test.mjs).
