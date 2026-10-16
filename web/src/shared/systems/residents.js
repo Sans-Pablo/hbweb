@@ -1052,7 +1052,7 @@ function rebuild(adv, w, p, r, home) {
       d.done = true; p.res.build = d.nb; if (d.forced) { r.forcedDone = true; r.sig = Builds.itemSig(p); r.rsN = (r.rsN | 0) + 1; if (d.arch && d.arch !== p.res.arch) { blog(w, p, `Cambio de clase: de ${p.res.arch} a ${d.arch} según mis ítems.`); p.res.arch = d.arch; } } r.bperf = { name: d.nb, t0: w.time, exp0: p.exp }; b.errand = 0;
       blog(w, p, `Reinicié mis estadísticas y las reparto como «${Builds.BUILDS[d.nb].es}».`);
       remember(p, "Reinicié mis estadísticas para probar un reparto «" + Builds.BUILDS[d.nb].es + "».", "I reset my stats to try a different build: " + d.nb + ".");
-      for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
+      for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool, Builds.weaponStrNeed(p, w.data)))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
       if (p.pool > 0) adv.command(p.id, { t: "stat", stat: "str", n: p.pool });
     } else if (++d.fails > 3) r._reb = null; else d.fails = (d.fails | 0) + 1;
     return;

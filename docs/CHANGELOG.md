@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.48 · Bots: equipo y recall (2026-10-16)
+- [invento] Bots: Str de arma (`builds.js swingStr/allocate`), bonos por clase (`bonusScore`), requisitos de armadura, Recall sin pociones, mago sin vara salvo vs magos/AMP. Fire Ball impacto (spellfx), icono guerrero/mago en observador. Test `bot-gear.test.mjs`, ficha `docs/sistemas/bot-equipo.md`.
+- Pendiente: sets por situación con intercambio en combate y respec por arma nueva; disconnects por doble servidor (EADDRINUSE, iniciar.ps1) sin confirmar.
+
 ## 0.85.47 · Magias a nivel 50 (2026-10-16)
 - [invento] `shared/magicbal.js`: Int mínima y oro de las magias reescalados para tope nivel 50 (Magic.cfg y magic.json intactos; se aplica en `GameData`). Hasta Int 30 / 2000 oro igual; por encima, 50 % del exceso de Int y 35 % del de oro. Blizzard 195→113 Int, 43000→16400 oro.
 - Build mago: int 0.65, mag 0.2, vit 0.15. Test `magicbal.test.mjs`.

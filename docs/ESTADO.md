@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.48) Bots: Str de arma, bonos por clase, Recall sin pociones, mago sin vara, icono observador, Fire Ball. Pendiente: sets en combate, respec por arma, disconnects (EADDRINUSE).
 - [x] (v0.85.47) Balance de Int y oro de magias para nivel máximo 50 (`magicbal.js`).
 - [x] (v0.85.46) Bots magos y PvP: compran/usan paralyze, PFM, Energy Strike, Lightning Strike, Meteor, Blizzard; menos miedo en PvP. Descubierto: los IDs de magia de botmagic eran erróneos.
 - [x] (v0.85.45) Caza automática vende/guarda el botín aunque empiece con la mochila casi llena.

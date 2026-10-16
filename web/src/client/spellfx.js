@@ -230,7 +230,7 @@ export class SpellFx {
           at(35, pX + 22, pY - 15, -7, 1); at(36, pX - 22, pY - 7, -7, 1); at(36, pX + 30, pY - 22, -5, 1); at(36, pX + 12, pY + 22, -3, 1);
         }
         break;
-      case 120: case 143: case 151:
+      case 143: case 151:
         if (f > e.max) { at(10, X, Y); this.snd(2, e.dx, e.dy); end(); }
         else { e.rx = 5 - rnd(10); e.ry = 5 - rnd(10); }
         break;
@@ -265,11 +265,12 @@ export class SpellFx {
         if (f > e.max) end();
         else { this.add(16, e.sx * T + 16, e.sy * T + 16 - 20, X + 50 - rnd(100), Y + 50 - rnd(100)); this.snd(1, e.dx, e.dy); }
         break;
-      case 161: case 130: case 137: case 251: {
+      case 161: case 120: case 130: case 137: case 251: {
         fly(50);
         if (e.type === 137) { spark8(3); e.trail = e.trail || []; e.trail.unshift([e.mx, e.my]); e.trail.length = Math.min(e.trail.length, 6); }
         if (near(X, Y)) {
           if (e.type === 137) { at(10, X, Y); this.snd(47, e.dx, e.dy); }
+          else if (e.type === 120) at(5, X, Y);                      // Fire Ball (Game.cpp:14518): vuela y explota con un solo efecto 5
           else if (e.type === 130) { for (const [ox, oy, s] of [[0, 0, 0], [-30, -15, -7], [35, -30, -5], [20, 30, -3]]) at(5, X + ox, Y + oy, s); }
           else { for (const [t, ox, oy, s] of [[30, 0, 0, 0], [31, -30, -15, -7], [31, 35, -30, -5], [31, 20, 30, -3]]) at(t, X + ox, Y + oy, s); }
           end();

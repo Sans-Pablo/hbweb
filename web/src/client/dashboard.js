@@ -53,7 +53,7 @@ function rosterInit() {
 }
 function row(b) {
   const sc = (SIDE[b.side] || SIDE[0])[1];
-  return `<div class="r${b.id === sel ? " me" : ""}" data-id="${b.id}"><span>${dot(b.mode)}</span><span class="n"><b style="color:${sc}">${esc(b.name)}</b> <span style="color:#998">${L("Nv", "Lv")}${b.lv}</span>${b.grp && b.lead === b.name ? " 👑" : ""}</span><span style="color:#998">${b.guild ? "⚑" + esc(b.guild.slice(0, 6)) : ""}</span>` +
+  return `<div class="r${b.id === sel ? " me" : ""}" data-id="${b.id}"><span>${dot(b.mode)}</span><span class="n"><span title="${b.mage ? L("Mago", "Mage") : L("Guerrero", "Warrior")}">${b.mage ? "🔮" : "⚔️"}</span> <b style="color:${sc}">${esc(b.name)}</b> <span style="color:#998">${L("Nv", "Lv")}${b.lv}</span>${b.grp && b.lead === b.name ? " 👑" : ""}</span><span style="color:#998">${b.guild ? "⚑" + esc(b.guild.slice(0, 6)) : ""}</span>` +
     `<span class="hp"><i style="width:${Math.max(0, Math.round(100 * b.hp / Math.max(1, b.mh)))}%"></i></span><span class="d">${esc(modeName(b))} · ${esc(b.map)}${b.floor ? " " + b.floor : ""}</span></div>`;
 }
 function paintRoster(force) {

@@ -7,6 +7,7 @@
 //    se equipa lo mejor que le llega, repone pociones y comida, vende lo que sobra y recoge botín.
 //  - Sube de nivel matando (giveExp normal). Evita monstruos que lo matarían en 3 golpes y descansa con poca vida.
 import { hazardAt, safeSpot } from "./hazards.js";
+import { sget } from "./status.js";
 import { dist, dirTo, DX, DY, LIMITS, PLAYER } from "../const.js";
 import { findPath, greedyStep } from "../path.js";
 import { EQUIP, ITYPE, EFFECT, MAX_ITEMS } from "../items.js";
@@ -23,7 +24,7 @@ import { canFight } from "./combatsys.js";
 import { itemLevel } from "../itemlevel.js";
 import * as Shop from "./shopsys.js";
 import { judge, manage, wish, canWear, friendWish } from "./botitems.js";
-import { allocate, isCaster, isMage } from "./builds.js";
+import { allocate, bonusScore, isCaster, isMage, swingStr, weaponStrNeed } from "./builds.js";
 import * as BM from "./botmagic.js";
 import * as Comp from "./companion.js";
 import { feedSummons } from "./summonfood.js";
@@ -97,7 +98,7 @@ function spendPoints(w, p) {
   if (p.pool <= 0) return;
   if (p.res && p.level >= 15 && p.stats.chr < 20) w.command(p.id, { t: "stat", stat: "chr", n: Math.min(p.pool, 20 - p.stats.chr) });        // carisma 20: requisito para fundar un guild (systems/guild.js)
   if (p.pool <= 0) return;
-  if (p.res || p.bot?.mage) { for (const [stat, n] of Object.entries(allocate(p, p.pool))) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }                  // reparto según su build (builds.js)
+  if (p.res || p.bot?.mage) { for (const [stat, n] of Object.entries(allocate(p, p.pool, weaponStrNeed(p, w.data)))) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }                  // reparto según su build (builds.js)
   else { const total = p.pool, str = Math.ceil(total * 0.4), vit = Math.ceil(total * 0.4);      // más vida (QA: a nivel 50 los Troll y Cíclopes mataban con ~375 de vida)
     for (const [stat, n] of [["str", str], ["vit", vit], ["dex", total - str - vit]]) if (n > 0) w.command(p.id, { t: "stat", stat, n }); }
   if (p.pool > 0) w.command(p.id, { t: "stat", stat: "str", n: p.pool });
@@ -149,7 +150,8 @@ export function errands(w, p, b, first = false) {
   feedSummons(w, p, t => blog(w, p, t), !p.res);                              // comida preferida del summon (principal primero): sube sus estadísticas
   // Equipo: se compara por ITEM LEVEL (itemlevel.js) casilla a casilla, con lo que lleve puesto, lo que tenga en la mochila (botín incluido)
   // y lo que venda la tienda. Un objeto de dos manos compite con espada + escudo.
-  const ilv = i => (i ? (itemLevel(w.data.item(i.id), i.attr, i.id) + (isCaster(p) ? BM.casterBonus(w.data.item(i.id)) : 0)) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
+  const swing = i => { const d = w.data.item(i.id); return d && d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && !isStaff(d) ? Math.min(1, (p.stats.str + p.pool) / Math.max(1, swingStr(d, i))) : 1; };      // v0.85.48: sin la Str del arma (peso y velocidad, builds.js swingStr) el golpe es lento: vale proporcionalmente menos
+  const ilv = i => (i ? (itemLevel(w.data.item(i.id), i.attr, i.id) + bonusScore(p, w.data.item(i.id), i.attr, b.foeKind) + (isCaster(p) ? BM.casterBonus(w.data.item(i.id)) : 0)) * (isArcher(p) && isBow(w.data.item(i.id)) ? 2 : 1) * swing(i) : 0);      // el cazador prefiere el arco (INVENTO: el item level no mide el alcance)
   if (((isSupport(p) && p.level >= 30) || isMage(p)) && !hasStaff(p) && !p.bag.some(i => isStaff(w.data.item(i.id)))) {          // sin báculo: compra el más barato que exige su nivel
     const st = [...w.data.items.values()].filter(d => d && isStaff(d) && d.family !== "psychic" && d.price > 0 && d.price * 1.5 <= p.gold && !(d.levelLimit > p.level) && !b.bad.has(d.id)).sort((x, y) => y.price - x.price)[0];
     if (st && buy(w, p, st)) blog(w, p, `Compro ${st.name} (${st.price} de oro): una varita en la mano mantiene a un summon de apoyo y deja lanzar hechizos.`);
@@ -160,7 +162,8 @@ export function errands(w, p, b, first = false) {
   }
   const worn = slot => { const uid = p.equip[slot]; return uid !== undefined ? Inv.instOf(p, uid) : null; };
   const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
-  const usable = d => d && d.type === ITYPE.EQUIP && !(d.levelLimit > p.level) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
+  const reqOk = d => { const st = { 10: "str", 11: "dex", 12: "vit", 13: "int", 14: "mag", 15: "chr" }[d.v4]; return ![EQUIP.HEAD, EQUIP.BODY, EQUIP.ARMS, EQUIP.LEGGINGS].includes(d.equipPos) || !st || p.stats[st] + (st === "str" ? p.pool : 0) >= d.v5; };      // v0.85.48: no compra ni se pone armadura cuya Str/Dex/Int exigida no cumple (inventory.js equip): evita comprar y quedarse desnudo
+  const usable = d => d && d.type === ITYPE.EQUIP && reqOk(d) && !(d.levelLimit > p.level) && !(d.weight > (p.stats.str + p.pool) * 100) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
     d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && (SKIP_WEAPON.test(d.name) && !(isStaff(d) && (isSupport(p) || isMage(p))))) && (!isBow(d) || isArcher(p)) && (!isStaff(d) || isSupport(p) || isMage(p)) && !(isMage(p) && (d.equipPos === EQUIP.LHAND || d.equipPos === EQUIP.TWOHAND || (d.equipPos === EQUIP.RHAND && !isStaff(d)))) && !(isSupport(p) && hasStaff(p) && !isStaff(d) && (d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND));          // con la varita en la mano no vuelve al sable
   studyManuals(w, p, b);
   if (isCaster(p)) { BM.study(w, p, b, t => blog(w, p, t)); }
@@ -369,7 +372,7 @@ export function vaiven(adv, w, p, b, tx, ty) {
 // Pensamientos en voz alta (burbuja pública `botsay`): el bot cuenta qué ve y qué va a hacer. Personalidad inventada del port.
 // Situaciones de los pensamientos en voz alta (burbuja pública `botsay`). No hay frases escritas: las dice el modelo de lenguaje (residents.thought); sin modelo no hay burbuja.
 const THOUGHTS = {
-  target: "you spot a {m} and decide to attack it", hurt: "you are hurt and drink a potion", rest: "you have no potions and are resting to recover",
+  target: "you spot a {m} and decide to attack it", hurt: "you are hurt and drink a potion", rest: "you are out of potions: time to recall and buy more",
   rested: "you feel better and go on", farm: "you are tending your crops: sowing seeds and working the hoe to harvest for trade", loot: "you see loot on the ground and go grab it", shop: "you are going shopping for better gear", follow: "you are following your party leader",
   wander: "all is quiet and you look for monsters", danger: "you see a {m} that is too strong for you and avoid it", dead: "you just died", level: "you just reached level {l}", party: "you thank someone for the party invite",
 };
@@ -448,7 +451,7 @@ function run(adv, w, p, b) {
   if (hpf < 0.5 + fear && w.time - (b.potionAt || 0) > 1500) {
     const red = catalog(w.data).potion, pot = red && p.bag.find(i => i.id === red.id);
     if (pot) { b.potionAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}%: bebo una poción roja.`); think_(w, p, b, "hurt"); adv.command(p.id, { t: "use", uid: pot.uid }); return; }
-    if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: descanso.`); }
+    if (!b.rest) { think_(w, p, b, "rest", {}, 0); blog(w, p, `Vida ${Math.round(hpf * 100)}% y sin pociones: vuelvo con Recall a comprar más.`); b.errand = 0; }
     b.rest = true;
   }
   if (w.pvp && hpf < 0.25 && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) {                           // en Promise Land con poca vida y un enemigo cerca: huye con Recall
@@ -461,7 +464,7 @@ function run(adv, w, p, b) {
     for (const e of w.ents.values()) { if (e.dead || e.master === p.id || e.aux || w.safeAt(e.x, e.y) || e.comp) continue; if (!(e.kind === "npc" || (e.kind === "player" && canFight(w, p, e)))) continue; const d = dist(p, e); if (d <= 7 && d < fd && (e.target === p.id || d <= 3)) { fd = d; foe = e; } }
     if (foe) {
       b.fleeAt = w.time; b.target = null; b.path = null;
-      if ((w.map.kind === "dungeon" || w.pvp) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
+      if ((w.map.kind === "dungeon" || w.pvp || (b.rest && !owner && !restSafe(w, p))) && w.time - (b.recallAt || 0) > 6000 && !p.recallTok) { b.recallAt = w.time; blog(w, p, `Vida ${Math.round(hpf * 100)}% con ${foe.name} encima: huyo con Recall.`); adv.command(p.id, { t: "recall" }); }       // el canal de Recall se rompe si algo te golpea: con el enemigo encima corre primero
       else if (p.recallTok && fd >= 3 && w.time - (p.lastCombat || -1e9) > 1200) { b.hold = w.time + 800; return; }          // el Recall canaliza y el enemigo aún no le alcanza: quieto (correr lo cancelaría)
       else {
         let best = null, bs = dist(p, foe);
@@ -478,7 +481,7 @@ function run(adv, w, p, b) {
     const hit = w.time - (p.lastCombat || -1e9) < 2500;
     if (hit) { defend = true; if (!b.restHurt || w.time - b.restHurt > 8000) blog(w, p, "Me atacan mientras descanso fuera de zona segura: me defiendo."); b.restHurt = w.time; }
     else if (p.recallTok) { b.hold = w.time + 1500; return; }
-    else if (w.time - (b.recallAt || 0) > 6000) { b.recallAt = w.time; b.target = null; b.path = null; b.travel = null; blog(w, p, "Descansar aquí no es seguro: vuelvo a la zona segura con Recall."); adv.command(p.id, { t: "recall" }); return; }
+    else if (w.time - (b.recallAt || 0) > 6000) { b.recallAt = w.time; b.target = null; b.path = null; b.travel = null; blog(w, p, "Sin pociones: lanzo Recall para volver a la ciudad y comprar."); adv.command(p.id, { t: "recall" }); return; }
   }
   // objetivo
   if (b.travel && w.time > b.travel.until) { if (!b.travel.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; b.path = null; }       // caduca aunque esté peleando por el camino
@@ -487,7 +490,7 @@ function run(adv, w, p, b) {
   if ((!b.rest || defend) && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = (b.rest && !defend) || b.noFight > w.time || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
-    if (b.seen !== t.id) { b.seen = t.id; blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
+    if (b.seen !== t.id) { b.seen = t.id; b.foeKind = t.kind === "player" ? ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp ? "magic" : "phys") : (t.magic ? "magic" : "phys"); blog(w, p, `Objetivo: ${t.name}${t.kind === "player" ? " (jugador enemigo, nv " + t.level + ")" : ""} a ${dist(p, t)} casillas.`); if (t.kind !== "player") think_(w, p, b, tooStrong(w, p, t) ? "danger" : "target", { m: t.name }); }
     if (p.eff?.bow && !arrowOf(w, p)) {                                                              // sin flechas: no sigue disparando al aire (eso cancela el Recall); compra o sale
       stuck(w, p, b, "sin flechas"); b.target = null; b.path = null;
       if (p.gold < 4) { const bw = p.bag.find(i => isBow(w.data.item(i.id)) && Object.values(p.equip).includes(i.uid)); if (bw) { blog(w, p, "Sin flechas ni oro: me quito el arco."); adv.command(p.id, { t: "unequip", uid: bw.uid }); return; } }          // quien no es arquero y no puede pagar flechas no se queda bloqueado con un arco que no dispara
@@ -506,6 +509,16 @@ function run(adv, w, p, b) {
       } else if (p.res?.arch === "scholar" && !isSupport(p) && Comp.activeBall(p)) wieldStaff(adv, w, p, b);
     }
     if (isCaster(p) && (t.kind === "npc" || t.kind === "player") && !b.travel && BM.fight(adv, w, p, b, t, x => blog(w, p, x))) { b.stuck = null; const dr = dirTo(p.x, p.y, t.x, t.y); if (dr) p.dir = dr; return; }
+    // v0.85.48: el mago puro no pega con la vara (es muy débil): sin maná espera y se aparta; solo la usa contra otro mago o si el objetivo tiene Absolute Magic Protection (magia inútil)
+    if (isMage(p) && w.magic && !w.safeAt(p.x, p.y)) {
+      const foeMage = t.kind === "player" && ((t.eff?.wtype >= 34 && t.eff?.wtype <= 39) || t.mp > t.hp), amp = sget(w, t, "protect") === 5;
+      if (!foeMage && !amp && p.hp / p.maxHp > 0.4 && dist(p, t) <= 2 && w.time - (b.kiteAt || 0) > 900) {
+        b.kiteAt = w.time; let best = null, bs = dist(p, t);
+        for (let d = 0; d < 8; d++) { const x = p.x + DX[d] * 2, y = p.y + DY[d] * 2; if (w.grid.blocked(p.x + DX[d], p.y + DY[d])) continue; const sc = Math.max(Math.abs(x - t.x), Math.abs(y - t.y)); if (sc > bs) { bs = sc; best = [x, y]; } }
+        if (best) { step(adv, w, p, b, best[0], best[1], true); return; }
+      }
+      if (!foeMage && !amp && dist(p, t) > 1 && p.mp < 12) { b.hold = w.time + 600; return; }
+    }
     // Crítico (Alt + clic) y dash, como un jugador con maestría 100 en el arma (Game.cpp, _iGetAttackType / OBJECTATTACKMOVE)
     const master = ((p.skills[p.eff.wtype === 0 ? 5 : p.eff.skill] || 0) >= 100), crit = master && (p.superAttack | 0) > 0;
     const gap = dist(p, t), reach = reachOf(w, p, t, crit);

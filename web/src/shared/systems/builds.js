@@ -2,6 +2,8 @@
 // (reinicio de estadísticas, respec.js), se reparte los puntos de otra forma y mide cuánta experiencia por minuto saca con cada uno. Así descubren qué
 // funciona (más vida, más daño, más inteligencia para los summons…) y se quedan con lo mejor o siguen explorando.
 import * as R from "../rules.js";
+import { realStats, parseAttr } from "../attributes.js";
+import { EQUIP } from "../items.js";
 
 export const BUILDS = {
   balanced: { es: "equilibrado", w: { str: 0.35, vit: 0.35, dex: 0.2, int: 0.05, mag: 0.05 } },
@@ -21,11 +23,40 @@ export const isCaster = p => { const b = buildOf(p); return b === "mage" || b ==
 // Mago puro: sin arma cuerpo a cuerpo (solo se lanza con las manos libres o con varita, magicsys.js usable())
 export const isMage = p => buildOf(p) === "mage";
 
-// Reparte `total` puntos según el build respetando el tope de cada estadística
-export function allocate(p, total) {
+// FUERZA DE UN ARMA (v0.85.48): para ponérsela hace falta Str >= peso/100 (inventory.js equip) y el golpe pierde velocidad mientras
+// speed - floor(Str/13) > 0 (inventory.js calcEff speedNib). "Golpe completo" = las dos cosas cubiertas: Str >= max(peso/100, speed*13).
+export function swingStr(d, inst) {
+  if (!d) return 0;
+  const r = realStats(d, inst);
+  return Math.max(Math.ceil(r.weight / 100), r.speed * 13);
+}
+// Fuerza que pide el arma que lleva en la mano (0 si no lleva o es el mago puro: la varita pesa poco)
+export function weaponStrNeed(p, data) {
+  let need = 0;
+  for (const slot of [EQUIP.RHAND, EQUIP.TWOHAND]) {
+    const uid = p.equip?.[slot], i = uid !== undefined && p.bag.find(x => x.uid === uid);
+    if (i) need = Math.max(need, swingStr(data.item(i.id), i));
+  }
+  return need;
+}
+
+// BONOS QUE BUSCA CADA CLASE (v0.85.48, INVENTO): el mago quiere HP, MP, DR y PA (absorción física); el guerrero HP, DR, PA, MA (absorción mágica) y MR.
+// Tipos de atributo secundario (attributes.js applyEquipAttr): 3 DR, 4 HP, 6 MP, 7 MR, 8 PA, 9 MA. `foe` ('magic'|'phys') sesga el set hacia MA/MR o PA.
+const WANT = { mage: { 4: 1, 6: 1, 3: 0.9, 8: 0.9, 9: 0.3, 7: 0.3 }, war: { 4: 1, 3: 0.9, 8: 1, 9: 0.9, 7: 0.9, 6: 0.1 } };
+export function bonusScore(p, d, attr, foe) {
+  if (!attr || !d) return 0;
+  const { t2, v2 } = parseAttr(attr), wt = { ...WANT[isCaster(p) ? "mage" : "war"] };
+  if (foe === "magic") { wt[9] = (wt[9] || 0) * 1.8 + 0.4; wt[7] = (wt[7] || 0) * 1.8 + 0.4; } else if (foe === "phys") wt[8] = (wt[8] || 0) * 1.8 + 0.4;
+  return (wt[t2] || 0) * v2 * 1.2;
+}
+
+// Reparte `total` puntos según el build respetando el tope de cada estadística. `need` = Str que pide su arma: se cubre primero (hasta el 70% de los puntos).
+export function allocate(p, total, need = 0) {
   const w = BUILDS[buildOf(p)].w, out = {}, ks = Object.keys(w);
   let left = total;
-  for (const k of ks) { const n = Math.min(Math.round(total * w[k]), R.STAT_LIMIT - p.stats[k], left); if (n > 0) { out[k] = n; left -= n; } }
+  const first = Math.max(0, Math.min(need - p.stats.str, Math.floor(total * 0.7), R.STAT_LIMIT - p.stats.str));
+  if (first > 0) { out.str = first; left -= first; total -= first; }
+  for (const k of ks) { const n = Math.min(Math.round(total * w[k]), R.STAT_LIMIT - p.stats[k] - (out[k] || 0), left); if (n > 0) { out[k] = (out[k] || 0) + n; left -= n; } }
   for (const k of ks) { if (left <= 0) break; const n = Math.min(left, R.STAT_LIMIT - p.stats[k] - (out[k] || 0)); if (n > 0) { out[k] = (out[k] || 0) + n; left -= n; } }
   return out;
 }
