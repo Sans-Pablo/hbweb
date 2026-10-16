@@ -1,4 +1,5 @@
 import { drawBall } from "./compicon.js";
+import { buttonCanvas } from "./window.js";
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
 import { getLang, setLang, t } from "./i18n.js";
@@ -54,9 +55,9 @@ export function registerDialogs(gui, api) {
       const on = (a) => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
       g.put("dialogtext_1", on(98) ? 45 : 44, 98, 340);         // Party
       g.put("dialogtext_1", on(180) ? 11 : 10, 180, 340);       // Level Up
-      { const c = g.ctx, o = on(16);                            // AUTO (INVENTO del port): menú automático, autowin.js
-        c.fillStyle = o ? "#7a5a30" : "#5a4020"; c.fillRect(16, 340, 74, 20); c.strokeStyle = "#e8d6a0"; c.strokeRect(16.5, 340.5, 73, 19);
-        g.aligned(16, 90, 344, "AUTO", "#fff", { size: 11, bold: true }); }
+      { const o = on(16), cv = buttonCanvas(g, 74, o);          // AUTO (INVENTO del port): menú automático, autowin.js; mismo botón de piedra que el resto
+        if (cv) g.ctx.drawImage(cv, 0, 0, cv.width, cv.height, 16, 340, 74, 20);
+        g.aligned(16, 90, 344, "AUTO", o ? "#ffe08a" : "#fff", { size: 11, shadow: true }); }
     },
     click(g, lx, ly) {
       const hit = a => lx >= a && lx <= a + 74 && ly >= 340 && ly <= 360;
