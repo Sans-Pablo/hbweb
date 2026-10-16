@@ -52,6 +52,16 @@ export function spawnFrom(w, g) {
   return null;
 }
 
+// MobGenerator de spots (HG.cpp:16841): cada spot con hueco (iCurMobs < iMaxMobs) crea un monstruo con dice(1,3)==2; el mapa no pasa de maxObjects.
+export function spotGenerator(w) {
+  let total = 0; for (const e of w.ents.values()) if (e.kind === "npc") total++;
+  if (!(w.maxObjects > total)) return;
+  for (const g of w.generators) {
+    if (g.respawn === false || g.alive >= g.max || R.dice(w.rng, 1, 3) !== 2) continue;
+    if (spawnFrom(w, g)) total++;
+  }
+}
+
 // Explosivos (Game.cpp ~10919, NpcMagicHandler): al morir lanzan Fire Strike (30) o Mass Fire Strike (61) sobre su casilla, con acierto 100.
 function explode(w, n, spell, cx = n.x, cy = n.y) {
   const sp = w.magic?.[spell]; if (!sp) return;
@@ -100,13 +110,16 @@ export function killNpc(w, n, p) {
   }
   const staff = Quests.bossStaff(w, p, n);                      // el Rey dorado suelta el báculo maestro de la clase (misión «El Rey dorado»)
   if (staff) w.after(n.dur.dying * 0.6 + 400, () => { const [ux, uy] = uniqueSpot(w, n); groundPush(w, ux, uy, newInst(w, staff, 1), true); });
-  n.gen.alive--;
-  if (n.gen.respawn !== false && !n.master) w.after(n.cfg.regenTime, () => { if (n.gen.alive < n.gen.max) spawnFrom(w, n.gen); });
+  // El hueco del generador se libera al borrar el cadáver: ahora - deadTime > regenTime (HG.cpp:6806; DeleteNpc resta iCurMobs, ~16992-17013).
+  // Después el generador de spots (spotGenerator) lo rellena con 1/3 de probabilidad cada 600 ms. Cripta/jefes/invocados (respawn:false) no regeneran.
+  const regen = n.gen.respawn !== false && !n.master;
+  if (regen) w.after(Math.max(n.dur.dying, n.cfg.regenTime), () => { n.gen.alive--; });
+  else n.gen.alive--;
   // Esqueleto común (no jefe, ni auxiliar, ni fantasma): con GHOST_CHANCE se levanta como fantasma cuando desaparece su cadáver. Se decide al
   // morir (w.ghostsPending retiene la limpieza del nivel de la cripta hasta que el fantasma salga). Invento del port.
   const rise = n.name === "Skeleton" && !n.boss && !n.aux && !n.ghost && !n.master && !n.comp && !n.noDrop && !w.cleared && w.rng() < GHOST_CHANCE;
   if (rise) w.ghostsPending = (w.ghostsPending || 0) + 1;
-  w.after(n.dur.dying + CORPSE_MS, () => {
+  w.after(regen ? Math.max(n.dur.dying, n.cfg.regenTime) : n.dur.dying + CORPSE_MS, () => {
     w.ents.delete(n.id); w.emit({ t: "remove", id: n.id });
     if (!rise) return;
     w.ghostsPending--;

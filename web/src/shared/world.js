@@ -32,9 +32,10 @@ import * as Stall from "./systems/stall.js";
 import * as Guild from "./systems/guild.js";
 import { CAST_MS, MAGIC_MODE, NO_PLAYER_MAGIC } from "./magic.js";
 
+export const MOBGEN_MS = 600;
 export const RECALL_CHANNEL_MS = 3000, RECALL_COOLDOWN_MS = 60000;
 export class World {
-  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [] }) {
+  constructor({ grid, npcDb, data, spawns = [], rng = Math.random, start, ids = null, teleports = [], maxObjects = Infinity }) {
     this.grid = grid;
     this.npcDb = npcDb;
     this.data = data;                // GameData: objetos, hechizos y monstruos
@@ -53,8 +54,9 @@ export class World {
     this.weatherUntil = 0;
     this.fixedDay = false;           // mapas de "fixed-day-mode": siempre de día y sin clima
     this.clock = null;               // () => minuto de la hora; sin reloj siempre es de día
+    this.maxObjects = maxObjects;    // tope de objetos activos del mapa (m_iMaximumObject, MAPDATA maximum-object)
     this.generators = spawns.map(s => ({ ...s, alive: 0 }));
-    for (const g of this.generators) for (let i = 0; i < g.max; i++) Npc.spawnFrom(this, g);
+    for (const g of this.generators) for (let i = 0; i < g.max && this.ents.size < this.maxObjects; i++) Npc.spawnFrom(this, g);
   }
 
   get nextId() { return this.ids.ent; }
@@ -147,6 +149,7 @@ export class World {
       }
       if (this.time - (this.tFields ?? 0) >= 1000) { this.tFields = this.time; tickFields(this); Trade.tick(this); Stall.tick(this); }
       if (this.time - (this.tGuild ?? 0) >= 5000) { this.tGuild = this.time; Guild.tick(this); groundSweep(this); }
+      if (this.time - (this.tMobGen ?? 0) > MOBGEN_MS) { this.tMobGen = this.time; Npc.spotGenerator(this); }   // HG.cpp:2093 (cada >600 ms)
       Arena.tickArena(this);
       tickSky(this);
     }

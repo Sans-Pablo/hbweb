@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.15 · Generador de spawns (2026-10-16)
+- Sistema 27: `spotGenerator` (npcsys.js) cada >600 ms (HG.cpp:2093): por spot con hueco, dice(1,3)==2 crea un monstruo (MobGenerator, HG.cpp:16841) hasta `maxObjects` del mapa; el hueco se libera al borrar el cadáver (ahora−deadTime > regenTime, HG.cpp:6806; DeleteNpc ~16992). Quitado el respawn por temporizador. Desvío: el relleno inicial del mapa se mantiene (el original arranca vacío). Test `spot-generator`.
+
 ## 0.85.14 · Monstruos fieles (2026-10-16)
 - Sistema 26: `npc.json` y generadores regenerados desde `Config/Npc.cfg` y `HGServer/MAPDATA` (`tools/convert_original.py`): exp = dice(ExpDice×150,4)+ExpDice (Npc.cpp:109; normal aproximada si n>64), regen 3500, actionTime 2300, oro ×100; 2ndmiddle con 11 generadores y random-mob 1 16; nombres de generador por tipo de mob (Aresden golems, etc.). Test `original-npcs`.
 

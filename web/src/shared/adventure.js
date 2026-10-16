@@ -96,7 +96,7 @@ export class Adventure {
     const { meta } = m, o = this.options;
     const isArena = id === ARENA.map;                              // el mapa de arena no tiene monstruos, teletransportes ni combate
     const spawns = isArena ? [] : (meta.spawns || []).filter(s => s.kind === 1 && o.npcDb[s.name]).map(s => ({ ...s }));
-    const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: isArena ? [] : meta.teleports });
+    const w = new World({ grid: m.grid, npcDb: o.npcDb, data: o.data, spawns, start: m.start, ids: this.ids, rng: o.rng || Math.random, teleports: isArena ? [] : meta.teleports, maxObjects: meta.maxObjects || Infinity });
     w.time = this.time;
     w.hooks = this.hooks(w);
     w.evHook = this.farm.evHook;
