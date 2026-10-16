@@ -410,13 +410,16 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.13: +50 oro por nivel (HG.cpp:15052) y SkillUp de escudo en PvP (combat.cpp:912). PENDIENTE: cárcel (22), alquimia/minería/manufactura (14: el port no tiene esos sistemas; SkillUp en HG.cpp:23682/24029/28214), revisión del servidor de crítico/dash (5).
 
 ## Backlog 2026-10-16 (tras 0.85.18)
-- [ ] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
+- [x] Críticos: review completo servidor+cliente, idéntico al original (visual y mecánica) — motor
 - [ ] Magias: nombre del hechizo sobre la cabeza al castear, mecánica y visual originales — sistemas
 - [x] Autohunt (v0.85.19): exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
 - [x] Mini ventanas (v0.85.19, mecanismo común hecho; hb-ui-wt lo aplica al rediseñar) como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
 - [ ] Kills de pets cuentan como del dueño (npc y jugadores) — motor
+- [ ] Autohunt: exp ganada desde el inicio; acción por rareza de item (ignorar/vender/guardar); pociones con poca vida (toggle ON); vender/guardar al llenar bolsa; warehouse lleno termina el hunt — auto-menu
+- [ ] Mini ventanas como la de autohunt: X en la bola derecha, minimizar en la bola izquierda, rediseñar botón; F5 reabre la ventana cerrada — auto-menu/ui
+- [x] Kills de pets cuentan como del dueño (npc y jugadores) — motor
 - [ ] Summon balls demasiado grandes: rediseñar — sistemas
-- [ ] Tirones al correr estando freezado — motor
+- [x] Tirones al correr estando freezado — motor
 - [ ] Barra de búsqueda en el recuadro rojo (alargar cabecera o rediseñar), centrada — ui
 - [ ] Icono nuevo de quests; texto por quest; cada quest desplegable — ui
 - [ ] Quitar el turquesa que queda en la UI — ui
@@ -431,3 +434,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 ## 0.85.20 Cast fiel (sistemas)
 - `castMs(maestría)` en `shared/magic.js`: 16 fotogramas × (88 − trunc(maestría×0.13)) ms (MapData.cpp:35-36, 1994-1998): 1408 ms sin maestría, 1200 ms a 100 (antes `CAST_MS` = 640). Lo usan `prepare` y `cast` (magicsys.js) y el cliente anima con la duración de `setAct`. `CAST_COOLDOWN_MS` no cambia. Test en `tests/cast-text.test.mjs`.
 - Los otros jugadores se animan con la maestría del lanzador (el original usa 100 para los ajenos en el cliente).
+- 0.85.19: críticos (visual/sonido cliente; cálculo ya portado en 0.85.17), kills de pets al dueño y predicción congelado/hold hechos. Sin test dedicado de movimiento congelado.

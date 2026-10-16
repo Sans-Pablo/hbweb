@@ -3,6 +3,7 @@
 //   LocalConnection: la simulación corre dentro de la página (un jugador).
 //   NetConnection:   la simulación corre en server/server.mjs y llega por WebSocket.
 import { generateLevel } from "../shared/dungeon.js";
+import { sget } from "../shared/systems/status.js";
 import { ACT, DX, DY, PLAYER, LIMITS, NET_PROTO, mobDurations } from "../shared/const.js";
 export const SERVER_DOWN = /^El servidor se (apaga|reinicia)/;      // mensajes de server.mjs (cierre por señal y comando restart/stop)
 
@@ -323,12 +324,13 @@ export class NetConnection {
     if (!me || this.ws.readyState !== 1 || this.observing) return false;                 // observando: solo se mira
     if (w.map?.kind === "arena" && (cmd.t === "attack" || cmd.t === "cast" || cmd.t === "prepare")) return false;       // en la arena solo se mira
     if (cmd.t === "move" && !me.dead) {
-      if (w.busy(me) || w.time - me.lastMove < LIMITS.moveMs) return false;
+      if (w.busy(me) || w.time - me.lastMove < LIMITS.moveMs || sget(w, me, "hold")) return false;      // paralizado: el servidor lo rechaza
       const nx = me.x + DX[cmd.dir], ny = me.y + DY[cmd.dir];
       me.dir = cmd.dir;
       if (!w.grid.free(nx, ny, me.id)) return false;
       const run = cmd.run && me.sp >= 1;
-      const dur = run ? PLAYER.runMs : PLAYER.walkMs;
+      const slow = sget(w, me, "ice") || (me.chillUntil || 0) > w.time ? 1.5 : 1;      // igual que el servidor (world.js move): helado = 50 % más lento; sin esto el paso predicho acaba antes y el servidor lo rechaza (tirones)
+      const dur = (run ? PLAYER.runMs : PLAYER.walkMs) * slow;
       w.grid.release(me.x, me.y, me.id); w.grid.occupy(nx, ny, me.id);
       me.fx = me.x; me.fy = me.y; me.x = nx; me.y = ny;
       if (run) me.sp -= 1;

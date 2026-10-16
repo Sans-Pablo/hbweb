@@ -219,7 +219,8 @@ export class Sound {
       case "attack":
         if (mob) this.play("M" + (mob + 1), ev.id);
         else {
-          this.play(ev.bow || ev.wt >= 40 ? "C3" : ev.wt > 0 ? "C2" : "C1", ev.id, 0.8);   // por arma (MapData.cpp): manos C1, armas cuerpo a cuerpo C2, arco C3 (40..59)
+          // sonido del arma por tipo y fotograma (MapData.cpp OBJECTATTACK ~2610): 1-19 en el fotograma 5; 20-39 (C18) en el 2; 41-59 (C3) en el 3; sin arma, ninguno
+          { const k = attackSfx(ev), wt = ev.wt | 0, fr = wt >= 20 && wt < 40 ? 2 : wt > 40 ? 3 : 5, id = ev.id, dur = e?.actDur || 296; if (k) setTimeout(() => this.play(k, id, 0.8), dur * fr / 8); }
           if (ev.at >= 20) {                                                                // crítico (MapData.cpp OBJECTATTACK): grito en el fotograma 2 (C23 hombre, C24 mujer) y «loup» E43 en el 5
             const dur = e?.actDur || 296, id = ev.id;
             setTimeout(() => this.play(e?.gender === 2 ? "C24" : "C23", id), dur * 2 / 8);

@@ -110,7 +110,7 @@ export class Fx {
         if (!c) break;
         const sx = c.x, sy = c.y, tx = ev.tx, ty = ev.ty, dur = c.actDur || 296;
         // fotograma 5: destello del ataque crítico (V3 ≥ 20 → efecto 20-27) y, con StormBlade, el efecto 81 (MapData.cpp OBJECTATTACK; el 250 usa un sprite ausente)
-        if (ev.at >= 20 || ev.wt === 15) setTimeout(() => { if (ev.at >= 20) this.sp.add(ev.at, sx, sy, tx, ty); if (ev.wt === 15) this.sp.add(81, sx, sy, tx, ty); }, dur * 5 / 8);
+        if ((ev.at !== 1 && ev.at !== 2) || ev.wt === 15) setTimeout(() => { if (ev.at !== 1 && ev.at !== 2) this.sp.add(ev.at, sx, sy, tx, ty); if (ev.wt === 15) this.sp.add(81, sx, sy, tx, ty); }, dur * 5 / 8);
         if (!ev.bow) break;
         setTimeout(() => this.sp.add(2, sx, sy, tx, ty), dur * 5 / 8);
         break;
