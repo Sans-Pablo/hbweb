@@ -582,7 +582,7 @@ export class Renderer {
       if (closed) this.spr.tinted(ctx, key, 0, x, y + oy, "#000000", 0.35);
       else if (near) this.spr.tinted(ctx, key, 0, x, y + oy, "#ffd890", 0.12 + 0.08 * Math.sin(s.world.time / 220), "lighter");
       const over = s.hover && Math.max(Math.abs(gate.x - s.hover[0]), Math.abs(gate.y - s.hover[1])) <= 1;     // el rótulo solo aparece al pasar el ratón o al estar junto a la entrada
-      if (over || near) this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#bde8ff");
+      if (over || near) this.label(x, y - 40, gate.label + (closed ? " (cerrado)" : near ? " · E" : ""), closed ? "#e0a090" : "#f2e3a0");
       ctx.restore();
     }
   }
@@ -1339,7 +1339,7 @@ export class Renderer {
     }
     for (const { g } of near.values()) {
       const x = g.x * T + T / 2 - camX, y = g.y * T + T / 2 - camY, m = 26, out = x < m || y < m || x > this.viewW - m || y > this.viewH - m;
-      const txt = t(g.name || g.map) + (g.open ? "" : " (" + t("cerrado") + ")"), col = g.open ? "#bde8ff" : "#e0a090";
+      const txt = t(g.name || g.map) + (g.open ? "" : " (" + t("cerrado") + ")"), col = g.open ? "#f2e3a0" : "#e0a090";
       if (!out) { this.label(x, y - 26, txt + (g.open ? " ▸" : ""), col); continue; }
       if (!s.dirArrows || !g.open) continue;                                  // flechas de dirección en el borde: opción «Indicadores de dirección» (apagada por defecto)
       const cx = this.viewW / 2, cy = this.viewH / 2, a = Math.atan2(y - cy, x - cx), ex = Math.max(m, Math.min(this.viewW - m, x)), ey = Math.max(m + 40, Math.min(this.viewH - m, y));
@@ -1448,7 +1448,7 @@ export class Renderer {
     }
     for (const e of s.world.ents.values()) {
       if (e.kind !== "player" || e === s.me || e.dead) continue;
-      ctx.fillStyle = "#7fc4ff";
+      ctx.fillStyle = "#e8d27a";
       ctx.fillRect(ox + e.x * sc - 1, oy + e.y * sc - 1, 5, 5);
     }
     ctx.fillStyle = "#9fe07f";
@@ -1506,11 +1506,11 @@ export class Renderer {
     }
     for (const e of s.world.ents.values()) {
       if (e.kind !== "player" || e === s.me || e.dead) continue;
-      ctx.fillStyle = "#7fc4ff";
+      ctx.fillStyle = "#e8d27a";
       ctx.beginPath(); ctx.arc(x0 + (e.x * T + 16) / T * sc, y0 + (e.y * T + 16) / T * sc, 2.5, 0, Math.PI * 2); ctx.fill();
     }
     for (const gate of s.world.map?.portals || []) {
-      ctx.fillStyle = "#8de4ff"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
+      ctx.fillStyle = "#f2e3a0"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
     }
     if (s.world.teleports?.size) for (const g of this.teleportGroups(s.world.teleports)) { ctx.fillStyle = g.open ? "#5aaaff" : "#a06a5a"; ctx.fillRect(x0 + g.x * sc - 2, y0 + g.y * sc - 2, 4, 4); }   // salidas del mapa (ticket 6)
     ctx.fillStyle = "#9fe07f";

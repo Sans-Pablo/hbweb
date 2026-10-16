@@ -454,7 +454,7 @@ export class Gui {
     // barra de vida del compañero, sobre la del personaje
     const x0 = 23 + RESX, y0 = 531, wd = 101;
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 - 1, wd + 2, 8);
-    cx.fillStyle = k > .5 ? "#2fd0b0" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
+    cx.fillStyle = k > .5 ? "#4caf3a" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
     // experiencia del compañero (para tentar al jugador a subirlo): barra fina bajo la de vida y números en el aviso
     const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
@@ -474,18 +474,23 @@ export class Gui {
 
   // huella de garra en azul: el marrón de la hoja se confundía con la mochila (dos «bolsas» en la barra)
   summonsIcon(f, x) {
-    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se vuelve azul
+    // el marco (borde naranja del hover, como el resto de la barra) va sin teñir; solo la huella se tiñe de verde (nunca turquesa)
     const c = this.ctx; this.put("summons_icon", f, x, 554);
     c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
-    c.filter = "hue-rotate(185deg) saturate(1.8) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
+    c.filter = "hue-rotate(95deg) saturate(1.5) brightness(1.1)"; this.put("summons_icon", f, x, 554); c.restore();
   }
 
   // Botón de Misiones (ticket 6): mismo marco que «Summons», teñido de dorado y con un «!» encima
   questIcon(f, x) {
+    // icono propio: pergamino con renglones y sello (ya no es la huella teñida)
     const c = this.ctx; this.put("summons_icon", f, x, 554);
-    c.save(); c.beginPath(); c.rect(x + 8, 554 + 8, 22, 24); c.clip();
-    c.filter = "hue-rotate(-20deg) saturate(1.2) brightness(1.05)"; this.put("summons_icon", f, x, 554); c.restore();
-    this.text(x + 19, 554 + 21, "!", "#fff0b0", { align: "center", bold: true, shadow: true, size: 16 });
+    c.save(); c.fillStyle = "#1d1608"; c.fillRect(x + 8, 554 + 8, 22, 24);
+    c.fillStyle = "#e8d9a8"; c.fillRect(x + 11, 554 + 11, 16, 18);
+    c.fillStyle = "#b8975a"; c.fillRect(x + 9, 554 + 9, 20, 3); c.fillRect(x + 9, 554 + 27, 20, 3);
+    c.fillStyle = "#7a5a2a";
+    for (let i = 0; i < 3; i++) c.fillRect(x + 13, 554 + 15 + i * 4, 12 - (i === 2 ? 4 : 0), 1);
+    c.fillStyle = "#c2452d"; c.fillRect(x + 22, 554 + 22, 4, 4);
+    c.restore();
   }
 
   // Botón «Recall» (invento del port): estado de la canalización y del enfriamiento (relojes del cliente; el servidor manda)

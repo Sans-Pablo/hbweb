@@ -395,4 +395,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - 0.85.7 (hb-ui): el cartel era el aviso de filtración de Google Password Manager; el login ya no usa input type=password (texto con -webkit-text-security, name no estandar, autocomplete off). Login offline verificado.
 
 - 0.85.10 (hb-ui): quitados los rombos celestes de las casillas de salida (renderer.drawTeleportMarks); sin velo DOM/CSS detectado en vivo.
+- 0.85.12 (hb-ui): buscador del almacén arriba y centrado; misiones con icono nuevo y desplegables; turquesa eliminado (summonsIcon, barra HP compañero, minimapa, rótulos). PENDIENTE: reimaginar el resto de ventanas con el mecanismo común X/minimizar de hb-auto-menu (mensaje enviado, esperando su API); tienda (id 11) aún con buscador abajo.
 - 0.85.9 (hb-ui): auditoría UI vs original, ver docs/AUDITORIA_UI.md (corregido y pendiente).
