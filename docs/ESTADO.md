@@ -471,3 +471,5 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - Capturas reales de las ventanas (docs/diseno/ingame/*.png, pedido 2026-10-16, sin cambio de versión; repo 0.85.24): el juego real NO usa el marco gamedialog de base-original; es pergamino oscuro con bolas propias. Hay que diseñar sobre estas capturas.
 - docs/diseno/ventanas-reales.html: galeria numerada de las capturas reales (pedido 2026-10-16, v0.85.24 sin cambio). Las bolas reales se dibujan en gui.js drawBall (9,9 r8); centrar glifos = ajuste de drawFrameBall, pendiente de elegir direccion.
+
+- Diseño ventanas: inventario (2) sobre captura real con márgenes y centrado de bolas medido (docs/diseno/inventario.html). v0.85.24, sin cambio de versión.
