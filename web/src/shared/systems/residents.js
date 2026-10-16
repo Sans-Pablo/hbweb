@@ -1006,9 +1006,22 @@ function pets(adv, w, p, r, home) {
 }
 // ---- REPARTO NUEVO (build): de vez en cuando prueban otro reparto de puntos para descubrir builds mejores (builds.js). Van al mago de la tienda general
 // (Gandlf, reinicio de estadísticas de respec.js), recuperan sus puntos, los reparten según el nuevo build y miden cuánta experiencia por minuto sacan.
+const RESET_V = 1;
 function rebuild(adv, w, p, r, home) {
   const b = p.bot;
   if (p.dead) { r._reb = null; return; }
+  if ((r.resetV | 0) < RESET_V) {                                   // v0.85.50: reinicio general de estadísticas y nueva elección de rol (más magos)
+    r.resetV = RESET_V; r._reb = null;
+    const roll = w.rng(), nb = p.quests ? Builds.buildOf(p) : roll < 0.35 ? "mage" : roll < 0.5 ? "arcane" : roll < 0.58 ? "summoner" : ["glass", "tank", "agile", "vanguard", "balanced"][Math.floor(w.rng() * 5)];
+    Respec.freeReset(w, p);
+    r.builds = []; r.bperf = null; p.res.build = nb;
+    if (!p.quests) p.res.arch = nb === "mage" || nb === "arcane" || nb === "summoner" ? "scholar" : p.res.arch === "scholar" ? "warrior" : p.res.arch;
+    r.forcedDone = false; r.sig = Builds.itemSig(p);
+    for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool, Builds.weaponStrNeed(p, w.data)))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
+    if (p.pool > 0) adv.command(p.id, { t: "stat", stat: nb === "mage" ? "int" : "str", n: p.pool });
+    blog(w, p, `Reinicio general de estadísticas: elijo de nuevo mi rol, ahora «${Builds.BUILDS[nb].es}».`);
+    return;
+  }
   r.bperf ||= { name: Builds.buildOf(p), t0: w.time, exp0: p.exp };
   if (!r._reb) {
     if (w !== home || p.level < 12 || r._trip || r._delve || r._pet || b.owner != null || b.rest || b.travel || p.hp < p.maxHp * 0.7 || w.time < (r._rebAt ||= w.time + 600000 + Math.floor(w.rng() * 600000))) return;

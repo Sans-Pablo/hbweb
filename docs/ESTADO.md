@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.50) Reinicio general de stats de bots y nueva elección de rol, más magos.
 - [x] (v0.85.49) Magos llevan y beben pociones de maná en pelea.
 - [x] (v0.85.48) Bots: Str de arma, bonos por clase, Recall sin pociones, mago sin vara, icono observador, Fire Ball. Pendiente: sets en combate, respec por arma, disconnects (EADDRINUSE).
 - [x] (v0.85.47) Balance de Int y oro de magias para nivel máximo 50 (`magicbal.js`).

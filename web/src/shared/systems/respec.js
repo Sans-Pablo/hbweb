@@ -20,3 +20,14 @@ export function respec(w, p, cmd) {
   w.emit({ t: "statreset", id: p.id, cost, points: back });
   return true;
 }
+
+// REINICIO GRATUITO (INVENTO, v0.85.50): devuelve todos los puntos al fondo sin mago ni oro (migración de los habitantes). Devuelve los puntos devueltos.
+export function freeReset(w, p) {
+  let back = 0;
+  for (const k of Object.keys(p.stats)) { const give = Math.max(0, p.stats[k] - RESPEC.base); back += give; p.stats[k] -= give; }
+  p.pool += back;
+  const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed;
+  w.recalc(p);
+  w.emit({ t: "statreset", id: p.id, cost: 0, points: back });
+  return back;
+}
