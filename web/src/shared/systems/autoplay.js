@@ -120,8 +120,9 @@ export function decide(w, me, a) {
     }
     return { stop: true, msg: ["Vida baja: caza automática detenida.", "Low health: auto hunt stopped."] };
   }
+  a.bag0 ||= new Set((me.bag || []).map(i => i.uid));                                // foto de la mochila al empezar (antes se tomaba al llenarse y todo el botín contaba como tuyo)
   const z = a.zone;
-  if (z) {                                                                           // caza con zona: ir, cazar dentro y volver a la granja con la mochila llena
+  if (z) {                                                                        // caza con zona: ir, cazar dentro y volver a la granja con la mochila llena
     if ((me.bag?.length || 0) >= BAG_MAX) a.full = true;
     if (a.full) {                                                                      // mochila llena: vender y guardar lo recogido según su rareza y retomar la caza
       const sell = disposable(w, me, a, "sell"), store = disposable(w, me, a, "store");
