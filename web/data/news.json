@@ -1,10 +1,23 @@
 {
- "build": "0.85.20",
+ "build": "0.85.23",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "El cartel del hechizo sale al empezar a lanzarlo (v0.85.23)",
+    "en": "The spell banner now appears when casting starts (v0.85.23)"
+   },
+   "items": [
+    {
+     "es": "El nombre del hechizo (rojo, «Nombre!») aparece sobre el personaje en cuanto empieza la animación de lanzar, dura 2 s y sube unos píxeles, con la fuente (Trebuchet MS 16) y la posición del original.",
+     "en": "The spell name (red, \"Name!\") now shows above the character as soon as the cast animation starts, lasts 2 s and rises a few pixels, with the original font (Trebuchet MS 16) and position."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {
@@ -6013,6 +6026,17 @@
    "text": {
     "es": "F1 y F12 se ven con marco clásico y el cursor del juego; las pestañas, listas desplegables, casillas y botones de Herramientas funcionan; Esc o clic derecho los cierran.",
     "en": "F1 and F12 use the classic frame and the game cursor; tabs, dropdowns, checkboxes and Tools buttons work; Esc or right-click closes them."
+   }
+  },
+  {
+   "id": "cast-banner-start",
+   "group": {
+    "es": "Magia",
+    "en": "Magic"
+   },
+   "text": {
+    "es": "Elige un hechizo del libro: el cartel con su nombre debe salir al instante (al empezar a lanzar), no al soltarlo.",
+    "en": "Pick a spell from the book: the banner with its name should appear at once (when casting starts), not on release."
    }
   }
  ],

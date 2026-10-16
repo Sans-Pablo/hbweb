@@ -450,3 +450,6 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Cartel "Critical": cuando aparece segun archivos originales.
 - Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
 - Dash: animacion y movimiento originales (no esta implementado).
+
+## 0.85.23 Cartel de hechizo al iniciar (sistemas)
+- El cartel `"<Magia>!"` nace al EMPEZAR el casting (evento `prepare`; `cast` solo si arranca animación: flag `anim` en magicsys.js), como Game.cpp:31935 y 40047, y sustituye al anterior del dueño. Dura 2000 ms; iLoc con su rareza (>352 ms: 9; >320: 10; si no ms>>5, Game.cpp:19040); x = centro − 4 px/carácter (5 si ≥128), y = sY − 65 − iLoc; doble a +1 px en RGB(180,30,30); fuente GDI `m_hFontInUse` = Trebuchet MS 16 sin suavizar (DXC_ddraw.cpp:168). Test: `tests/cast-text.test.mjs`. Sin comprobación visual en el navegador; no existe CHANGELOG.md en esta rama.
