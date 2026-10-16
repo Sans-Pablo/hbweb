@@ -37,7 +37,7 @@ export const BIG_MOBS = new Set([66, 73, 81, 91]);
 export function reachOf(w, p, t, crit) {
   if (p.eff?.bow) return Infinity;                                  // arco: el cliente manda el disparo a la casilla elegida
   const two = p.equip[EQUIP.TWOHAND], inst = two !== undefined && Inv.instOf(p, two);
-  if (inst && inst.id === 845) return crit ? 5 : 4;
+  if (inst && inst.id === 845) return 3 + (t.cfg?.size < 2 || t.cfg?.size === undefined ? 1 : t.cfg.size) + (crit ? 1 : 0);   // HG.cpp ~6200: 3 + distancia del objetivo (size<2 ? 1 : size)
   if (crit && p.eff?.wtype > 0) { if (p.eff.skill === 8) return 3; if (p.eff.skill === 9) return 4; if (p.eff.skill === 10 || p.eff.skill === 14 || p.eff.skill === 21) return 2; }   // hacha, martillo, vara: absX<=2 (Game.cpp ~31018, 31052, 31090)
   return BIG_MOBS.has(t.type) ? 2 : 1;
 }
@@ -55,7 +55,7 @@ export function playerHit(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (t.crop) { Farming.hoe(w, p, t); return; }                       // cultivos: azada (farming.js)
   if (p.eff?.bow && !useArrow(w, p)) return;                        // sin flechas: la animación se hace pero no hay daño ni mensaje
-  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
+  const r = strikeNpc(w.rng, p, t, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   // desgaste del arma y experiencia de habilidad (solo con bando; los viajeros no gastan equipo)
@@ -82,11 +82,15 @@ export function canFight(w, p, t) {
 }
 // El original no multiplica el daño entre jugadores (combat.cpp): 1. Bal.pvpMul() queda como mando de balance (por defecto 1).
 export const PVP_DMG = 1;
+// Lucky (combat.cpp:1015, HG.cpp:18250/18744): con un objeto de suerte puesto, un golpe que mataría se queda en 1 con probabilidad 4/10 (dice(1,10) < 5).
+export function luckySave(w, t, dmg) {
+  return t.eff?.lucky && R.dice(w.rng, 1, 10) < 5 && t.hp <= dmg ? 1 : dmg;
+}
 export function hitPlayer(w, p, t, fx = {}) {
   if (p.dead || t.dead || dist(p, t) > reachOf(w, p, t, fx.crit) || !canFight(w, p, t)) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (p.eff?.bow && !useArrow(w, p)) return;
   const dummy = { cfg: { defenseRatio: t.defense, size: 0, actionLimit: 0 }, absDamage: 0 };
-  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash });
+  const r = strikeNpc(w.rng, p, dummy, p.dir === t.dir, { berserk: !!sget(w, p, "berserk"), protect: sget(w, t, "protect"), bonus: weaponBonus(w, p), weather: w.weather, crit: fx.crit, dash: fx.dash, fightZone: !!w.fightZone });
   if (!r.hit) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   if (fx.crit || fx.dash) w.emit({ t: "crit", id: p.id, target: t.id, crit: !!fx.crit, dash: !!fx.dash });
   gainSSN(p, p.eff.wtype === 0 ? 5 : p.eff.skill, 1);
@@ -94,7 +98,7 @@ export function hitPlayer(w, p, t, fx = {}) {
   const ap = R.absorbOnPlayer(w.rng, r.damage, t.stats);
   if (ap <= 0) { w.emit({ t: "miss", id: t.id, from: p.id }); return; }
   const a = absorbOnHit(w.rng, t, ap, p.dir === t.dir);
-  a.damage = Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul()));                                      // la armadura aguanta de más: sin esto los duelos duraban minutos
+  a.damage = luckySave(w, t, Math.max(1, Math.round(a.damage * PVP_DMG * Bal.pvpMul())));                                    // la armadura aguanta de más: sin esto los duelos duraban minutos
   for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   damagePlayer(w, t, a.damage, p);                                                             // la baja (ek) se acredita dentro de damagePlayer: vale para golpes, summons, magias y campos
 }
@@ -142,8 +146,8 @@ function weaponBonus(w, p) {
   const right = id(p.equip[EQUIP.RHAND]), two = id(p.equip[EQUIP.TWOHAND]);
   let b = 0;
   if (right === 732 || right === 738) b += 1;
-  if (two === 847 && w.dayOrNight === 2) b += 4;
-  if (two === 848 && w.dayOrNight === 1) b += 4;
+  if (two === 847 && w.dayOrNight === 2) b += 10;                  // DarkExecutor de noche / LightingBlade de día: +10 (combat.cpp:847-848)
+  if (two === 848 && w.dayOrNight === 1) b += 10;
   return b;
 }
 
@@ -249,7 +253,7 @@ export function npcStrikes(w, n, t) {
     for (const pos of a.parts) if (t.equip[pos] !== undefined) { wear(w, t, t.equip[pos], 1); break; }
   }
   if (a.shielded) gainSSN(t, 11, 1);
-  damagePlayer(w, t, a.damage, n);
+  damagePlayer(w, t, luckySave(w, t, a.damage), n);
   if (a.damage > 0) Boss.onBossHit(w, n);
   // atributos de armadura: parte del daño se convierte en maná; probabilidad de cargar un golpe crítico
   if (!t.dead && a.damage > 0 && t.eff.transMana > 0) t.mp = Math.min(t.maxMp, t.mp + Math.floor((t.eff.transMana / 100) * a.damage));

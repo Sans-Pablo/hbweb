@@ -113,7 +113,7 @@ function heroBonus(p, data) {
 export function recalc(p, data) {
   const s = p.stats;
   const fx = {
-    sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
+    lucky: false, sm: [0, 0, 0], l: [0, 0, 0], hit: 0, skill: 5, wtype: 0, speedNib: 0, bow: false,
     defense: s.dex * 2, shield: 0, armor: {}, addPhys: 0, addAR: 0, manaSave: 0, summonSave: 0, resistMagic: 0,
     addDR: 0, addHP: 0, addSP: 0, addMP: 0, addMR: 0, addPR: 0, addAbsMD: 0, addCD: 0, addExp: 0, addGold: 0,
     castBonus: 0, addMagicPct: 0, hero: 0, transMana: 0, chargeCrit: 0, critBonus: 0, poison: 0, prot: { light: 0, fire: 0, ice: 0, poison: 0 },
@@ -146,6 +146,7 @@ export function recalc(p, data) {
         else if (d.v1 === 2) fx.manaSave = Math.min(80, fx.manaSave + d.v2);
         else if (d.v1 === 3) fx.addPhys += d.v2;
         else if (d.v1 === 4) fx.defense += d.v2;
+        else if (d.v1 === 5) fx.lucky = d.v2 !== 0;                                                              // HG.cpp:21078: ADDEFFECT 5 = Lucky (m_bIsLuckyEffect)
         else if (d.v1 === 12) fx.addAR += d.v2;
         else if (ELEM[d.v1]) fx.prot[ELEM[d.v1]] = Math.min(PROT_CAP, fx.prot[ELEM[d.v1]] + (PROT_OVERRIDE[inst.id] ?? d.v2));          // collares/anillos de protección elemental
         break;

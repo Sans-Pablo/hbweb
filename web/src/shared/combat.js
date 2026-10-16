@@ -101,6 +101,7 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   const cb = comboBonus(p.eff.wtype === 0 ? 5 : p.eff.skill, p.combo);
   sm += cb; l += cb;
   if (p.combo > 1 && p.eff.addCD) { sm += p.eff.addCD; l += p.eff.addCD; }
+  if (ctx.fightZone) { sm += Math.trunc(sm / 3); l += Math.trunc(l / 3); }        // m_bIsFightZone: +1/3 (combat.cpp:781), tras combo y crítico
   if (n.cfg.actionLimit === 1 || n.cfg.actionLimit === 2 || n.cfg.actionLimit === 5) return { hit: true, damage: 0 };   // invulnerables
   let dmg = n.cfg.size === 0 ? sm : l;
   if (n.absDamage < 0) {
