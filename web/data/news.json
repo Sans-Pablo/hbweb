@@ -1,10 +1,27 @@
 {
- "build": "0.85.11",
+ "build": "0.85.12",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Magia y objetos fieles al original (v0.85.12)",
+    "en": "Magic and items faithful to the original (v0.85.12)"
+   },
+   "items": [
+    {
+     "es": "Magia: Recall exige 10 s sin daño, Summon solo sobre tu bando, mapas sin ataque, Resurrection y Hold como el servidor original.",
+     "en": "Magic: Recall needs 10 s without damage, Summon only on your own side, no-attack maps, Resurrection and Hold as in the original server."
+    },
+    {
+     "es": "Objetos: la poción de resistencia cura el veneno; Unfreeze deshiela al cabo de 1 s; los pergaminos de invisibilidad y detectar funcionan; las pociones de pelo, piel y ropa interior cambian el aspecto.",
+     "en": "Items: the stamina potion cures poison; Unfreeze thaws after 1 s; invisibility and detect scrolls work; hair, skin and underwear potions change your look."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

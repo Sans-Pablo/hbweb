@@ -46,6 +46,9 @@
 - [x] (pedido 2026-10-15, v0.82.2) **Carga sin cuadrados negros:** al entrar, bloques de suelo negros y tirones al correr; causa: HD activado después de pedir las hojas (se bajaban al dibujar). Arreglo en `main.js` (hd antes de `stream.enter` + precalentado del suelo 5x5). Pendiente de confirmar por Pablo; si siguen tirones al correr, medir con `tools/perf.py` escenario `correr`.
 - [x] (pedido 2026-10-13, v0.80.7) **Rework de ventanas:** todo dentro del juego (F1, Opciones, prompts) con el estilo clásico y un toolkit nuevo `client/window.js` (`docs/sistemas/ventanas.md`). Pendiente de migrar: diario/seguimiento de misiones (`questui.js`), paneles heredados `#charpanel/#inv/#book` (hud.js), observador. Falta verificación visual por el usuario.
 
+## Hilo SISTEMAS (v0.85.12) — sistemas 6-12 y 23 de magia/objetos fieles
+- Hecho: sistemas 6-12 y 23 (`docs/sistemas/magia-original.md`, `docs/AUDITORIA.md`). Pendiente: reliquias de Astoria; teletransporte/bisle/Heldenian por objeto, cambio de sexo, FIRMSTAMINAR, pizarras, STUDYMAGIC y `SpecEffectValue` por instancia (sin objetos o consumidor en el port).
+
 ## Hilo SISTEMAS (v0.85.7) — reconexión y carga de mapas
 - «El juego se reinicia como si refrescara»: causa = reinicio del servidor (nuevo id de jugador) o cierre por señal (`kicked` apagaba la reconexión). Arreglado: reintento 120 s y recarga con re-login automático (`hb.resume`). En crash.log hay un fallo real (JSON circular) y ~1215 líneas EADDRINUSE (segunda instancia del servidor en bucle de reinicio): vigilar que no haya dos servidores. En localhost, `devReload()` (assets.js) también recarga si cambian los sprites.
 - Carga de mapas: login sin esperar rejillas (ver docs/sistemas/carga.md). No se pudo reproducir lentitud local; no hay números «antes/después» en red real. Pendiente: medir en el servidor oficial con caché fría.
