@@ -147,7 +147,7 @@ export class Renderer {
     if (c) return c;
     const late = this.late || (this.late = new Map()), lt = late.get(k), now = performance.now();
     // bloque con hojas aún sin cargar: solo se rehace cuando llega alguna de las que faltaban (o cada 3 s por si una no llega nunca); antes, cada fotograma (40-200 ms c/u)
-    if (lt && now - lt.t < 3000 && !lt.miss.some(m => this.spr.ready(m) && !(hd && this.spr.hdm[m] && this.spr.src(m)[1] === 1))) return lt.c;
+    if (lt && now - lt.t < 3000 && !lt.miss.some(m => this.spr.ready(m))) return lt.c;
     // Al llegar una hoja, los ~9 bloques visibles que la esperaban se rehacían en el mismo fotograma (28-33 ms de suelo durante ~12 s tras entrar, medido con ?prof=1): uno por fotograma, el resto sigue con la versión anterior
     if (lt && !this.wip?.has(k)) { if (this.lateBuilt >= 1) return lt.c; this.lateBuilt = 1; }
     const Q = hd ? 2 : 1;                                   // remastered: el suelo se pregenera al doble de resolución
@@ -166,7 +166,6 @@ export class Renderer {
       const t = this.grid.tile(cx * CHUNK + i, cy * CHUNK + st.j);
       if (t) {
         if (!this.spr.ready("t" + t.spr)) { st.ready = false; st.miss.add("t" + t.spr); }
-        else if (hd && this.spr.hdm["t" + t.spr] && this.spr.src("t" + t.spr)[1] === 1) { st.ready = false; st.miss.add("t" + t.spr); }   // espera a la hoja HD
         this.spr.put(g, "t" + t.spr, t.frame, i * T, st.j * T);
       }
     }
