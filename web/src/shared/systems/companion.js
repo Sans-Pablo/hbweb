@@ -220,7 +220,7 @@ export function addExp(w, p, inst, xp) {
     c.exp -= need(c.lvl); c.lvl++;
     w.emit({ t: "companion-lvl", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm });
     Quests.onPet(w, p);
-    if (!Tal.isDummy(c) && stagesOf(c.sp).includes(c.lvl)) { c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl, c.sp) }); }
+    if (!Tal.isDummy(c) && stagesOf(c.sp).includes(c.lvl)) { if (!c.evolve) c.evoFrom = c.lvl - 1; c.evolve = true; w.emit({ t: "companion-evolve", id: p.id, sp: c.sp, lvl: c.lvl, nm: c.nm, step: sizeStep(c.lvl, c.sp) }); }
   }
   if (c.lvl >= cap) c.exp = Math.min(c.exp, need(c.lvl) - 1);
 }

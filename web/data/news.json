@@ -1,10 +1,39 @@
 {
- "build": "0.85.20",
+ "build": "0.85.23",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Motor y combate (v0.85.23)",
+    "en": "Engine and combat (v0.85.23)"
+   },
+   "items": [
+    {
+     "es": "Las kills por fuego, magia de área y daño en el tiempo cuentan para quien las lanzó (kill y experiencia).",
+     "en": "Kills by fire fields, area magic and damage over time now count for whoever cast them (kill and experience)."
+    },
+    {
+     "es": "El cartel Critical aparece exactamente como en el original.",
+     "en": "The Critical sign appears exactly as in the original."
+    },
+    {
+     "es": "Dash portado completo: animación de 12 fotogramas, movimiento y golpe como en el original.",
+     "en": "Dash fully ported: 12-frame animation, movement and hit as in the original."
+    },
+    {
+     "es": "Corregidos los sprites negros en personajes (imágenes sin cargar o pérdida del contexto WebGL).",
+     "en": "Fixed black character sprites (unloaded images or WebGL context loss)."
+    },
+    {
+     "es": "Evolución de mascotas: primero la animación, y el cambio de tamaño ocurre dentro de ella.",
+     "en": "Pet evolution: animation first, and the size change happens inside it."
+    }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

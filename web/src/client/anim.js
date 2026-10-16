@@ -2,7 +2,7 @@
 // Mismas reglas que el cliente original (Client/Game.cpp, DrawObject_On*).
 import { ACT, TILE, PLAYER, mobFrames } from "../shared/const.js";
 
-const TIMED = new Set([ACT.MOVE, ACT.RUN, ACT.ATTACK, ACT.MAGIC, ACT.GETITEM, ACT.DAMAGE]);
+const TIMED = new Set([ACT.MOVE, ACT.RUN, ACT.ATTACKMOVE, ACT.ATTACK, ACT.MAGIC, ACT.GETITEM, ACT.DAMAGE]);
 
 // Acción efectiva: al acabar un paso o un golpe vuelve a "quieto"
 export function actionAt(e, time) {
@@ -12,8 +12,17 @@ export function actionAt(e, time) {
 }
 const progress = (e, time) => (e.actDur > 0 ? Math.min(1, Math.max(0, (time - e.actStart) / e.actDur)) : 1);
 
+// OBJECTATTACKMOVE (Game.cpp DrawObject_OnAttackMove ~8419+, MapData.cpp:33-34): 12 fotogramas de 78 ms. La posición es la casilla NUEVA y el cuerpo
+// se dibuja detrás de ella: 32 px (fotograma 0, la casilla de origen), 26, 16 y 0 desde el fotograma 3; el fantasma (bDashDraw) 26 px en el 2 y 16 px en el 3.
+// dy extra de +1/+2/+1 px en los fotogramas 1/2/3. Dirección 1-8 -> vector hacia atrás (dir1 dy+, dir2 dy+/dx-, dir3 dx-, dir4 dx-/dy-, ...).
+export const DASH_BACK = [0, [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1]];
+const DASH_PX = [32, 26, 16], DASH_DY = [0, 1, 2, 1], DASH_GHOST = [0, 0, 26 - 16, 16 - 0];
+export const dashFrame = (e, time) => (e.act === ACT.ATTACKMOVE && time < e.actStart + e.actDur ? Math.min(11, Math.floor(progress(e, time) * 12)) : -1);
+export const dashGhost = (e, time) => { const f = dashFrame(e, time); return f >= 0 && f < 4 ? DASH_GHOST[f] : 0; };
 // Centro de la entidad en píxeles del mundo, interpolando el paso
 export function posOf(e, time) {
+  const df = dashFrame(e, time);
+  if (df >= 0) { const v = DASH_BACK[e.dir] || [0, 0], b = DASH_PX[df] || 0; return [e.x * TILE + 16 - v[0] * b, e.y * TILE + 16 - v[1] * b + (DASH_DY[df] || 0)]; }
   let k = 1;
   if ((e.act === ACT.MOVE || e.act === ACT.RUN || (e.act === ACT.DAMAGE && e.knockAt === e.actStart)) && time < e.actStart + e.actDur) k = progress(e, time);
   return [(e.fx + (e.x - e.fx) * k) * TILE + 16, (e.fy + (e.y - e.fy) * k) * TILE + 16];
@@ -29,6 +38,7 @@ export function playerSprite(e, time, bow = false) {
   switch (act) {
     case ACT.MOVE: group = combat ? 3 : 2; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.RUN: group = 4; f = Math.min(7, Math.floor(p * 8)); break;
+    case ACT.ATTACKMOVE: { group = bow ? 7 : 6; const f12 = Math.min(11, Math.floor(p * 12)); f = f12 < 4 ? f12 : f12 < 10 ? 4 : f12 === 10 ? 5 : 6; break; }   // cFrame 4..9 -> 4, 10 -> 5, 11 -> 6 (DrawObject_OnAttackMove)
     case ACT.ATTACK: group = bow ? 7 : 6; f = Math.min(7, Math.floor(p * 8)); break;
     case ACT.MAGIC: group = 8; f = Math.min(15, Math.floor(p * 16)); break;
     case ACT.GETITEM: group = 9; f = Math.min(3, Math.floor(p * 4)); break;

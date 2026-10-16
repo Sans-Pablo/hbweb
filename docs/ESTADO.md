@@ -446,7 +446,7 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato.
 - Hilo de diseno de UI de ventanas (todas se ven distintas).
 - Evolucion de pets: animacion primero, cambio de tamano como parte de la animacion.
-- Sprites negros en personajes (persiste).
+- Sprites negros en personajes: ARREGLADO en 0.85.23 (ver docs/sistemas/sprite-retry.md). Kills indirectos, Critical, dash y evolución de pets: hechos en 0.85.23.
 - Cartel "Critical": cuando aparece segun archivos originales.
 - Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
 - Dash: animacion y movimiento originales (no esta implementado).

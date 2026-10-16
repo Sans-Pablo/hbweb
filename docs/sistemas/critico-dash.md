@@ -26,3 +26,7 @@ Ctrl+clic = atacar; con el objetivo a 2 casillas en línea y corriendo (modo cor
 
 ## v0.85.5
 - Revisado contra combat.cpp/HG.cpp: la furia no duplica un crítico (attackMode>=20); `eff.critBonus` (ITEMSTAT_CRITICAL) se suma a sm y l en el crítico; el paso del dash no gasta SP (iClientMotion_Move_Handler con bIsRun=FALSE).
+
+## 0.85.23
+- Cartel Critical: el original guarda el daño en un byte sin signo leído como char con signo; 128-255 muestran "Critical", 0 muestra " * Failed! *" (fx.js).
+- Dash completo (OBJECTATTACKMOVE): `PLAYER.dashMs = 12*78`, golpe a los 4 fotogramas (`dashHitMs`), evento `dash`, `ACT.ATTACKMOVE = 7`; cliente: anim.js, renderer.js (fantasma), connection.js. NET_PROTO 13.

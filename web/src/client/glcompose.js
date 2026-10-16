@@ -37,6 +37,16 @@ export function hex3(s) { const n = parseInt(s.slice(1), 16); return [(n >> 16 &
 export class GLCompose {
   constructor() {
     this.cv = document.createElement("canvas"); this.cv.width = this.cv.height = 16;
+    this.epoch = 0; this.lost = false; this.st = { up: 0, msUp: 0, draws: 0, quads: 0, defer: 0, lost: 0, bad: 0 };
+    this.S = 1; this.w = this.h = 0;
+    this.init();
+    // Pérdida de contexto (GPU ocupada, cambio de pestaña, driver): todas las texturas mueren y un textura sin datos MUESTREA NEGRO OPACO (0,0,0,1),
+    // lo que pintaba rectángulos negros en los personajes ya compuestos y en los siguientes. Se recrea todo y se invalida lo compuesto (epoch).
+    this.cv.addEventListener("webglcontextlost", e => { e.preventDefault(); this.lost = true; this.st.lost++; this.nq = 0; });
+    this.cv.addEventListener("webglcontextrestored", () => { try { this.init(); this.lost = false; this.epoch++; } catch (err) { console.warn("WebGL2: no se pudo restaurar", err); } });
+  }
+
+  init() {
     const gl = this.gl = this.cv.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" });
     if (!gl) throw new Error("sin WebGL2");
     const sh = (t, s) => { const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
@@ -56,8 +66,6 @@ export class GLCompose {
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     this.tex = new Map(); this.px = 0; this.tick = 0; this.buf = new Float32Array(MAXQ * 6 * FL); this.nq = 0;
     this.slots = new Map(); this.upMs = 0; this.pending = new Set();
-    this.st = { up: 0, msUp: 0, draws: 0, quads: 0, defer: 0 };
-    this.S = 1; this.w = this.h = 0;
   }
 
   newFrame() { this.upMs = 0; }
@@ -66,6 +74,7 @@ export class GLCompose {
   begin(w, h, S, ox, oy) {
     const { gl } = this;
     this.flush(); this.slots.clear();
+    if (this.lost) return;
     if (this.cv.width !== w || this.cv.height !== h) { this.cv.width = w; this.cv.height = h; }
     gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform2f(this.u.uView, w, h);
@@ -77,14 +86,17 @@ export class GLCompose {
   // Sube la hoja si hace falta. force=false respeta el presupuesto de ms por fotograma y devuelve null (la hoja queda en cola para pump()).
   texture(img, force = true) {
     const { gl } = this;
+    if (this.lost) return null;
     let t = this.tex.get(img);
     if (t) { t.n = ++this.tick; return t; }
     if (!force && this.upMs > UPMS) { this.pending.add(img); this.st.defer++; return null; }
-    const T0 = performance.now();
     const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    if (!w || !h || img.complete === false) { this.st.bad++; return null; }       // sin datos aún: NO se sube (una textura vacía se muestrea negra y quedaría cacheada); la composición se reintenta
+    const T0 = performance.now();
     gl.activeTexture(gl.TEXTURE0 + 10);                                         // unidad de subida: no pisa las de la tanda
     const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img); } catch (e) { gl.deleteTexture(tx); this.st.bad++; return null; }
+    if (gl.isContextLost()) return null;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     t = { tx, w, h, n: ++this.tick }; this.tex.set(img, t); this.px += w * h * 4; this.pending.delete(img);

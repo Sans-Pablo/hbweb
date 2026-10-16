@@ -226,31 +226,29 @@ const COMMANDS = {
     p.dir = dirTo(p.x, p.y, t.x, t.y);
     sclear(w, p, "invis");                                    // atacar rompe la invisibilidad
     Feign.stand(w, p);
-    let lead = 0;
     if (dash) {
-      if (!w.tryStep(p, p.dir, PLAYER.runMs, ACT.RUN)) return w.reject(p, cmd, "bloqueado");
-      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: PLAYER.runMs });   // el cliente dibuja el fantasma del dash (Game.cpp DrawObject_OnAttackMove, 8616-8654 y 8917-8921)
-      p.lastMove = w.time; lead = PLAYER.runMs;   // OBJECTATTACKMOVE llama a iClientMotion_Move_Handler(..., bIsRun=FALSE) (HG.cpp 820): el paso no gasta SP
+      // OBJECTATTACKMOVE (HG.cpp 820): UN solo movimiento de 12 x 78 ms. Mueve una casilla (iClientMotion_Move_Handler con bIsRun=FALSE: sin gasto de SP),
+      // avisa con OBJECTATTACKMOVE (sin evento de ataque aparte) y resuelve un golpe wType 1 con los bonos de dash (iClientMotion_Attack_Handler(..., bIsDash=TRUE)).
+      // El cliente dibuja la carrera y el fantasma (Game.cpp DrawObject_OnAttackMove); el golpe cae en el fotograma 4, al llegar.
+      if (!w.tryStep(p, p.dir, PLAYER.dashMs, ACT.ATTACKMOVE)) return w.reject(p, cmd, "bloqueado");
+      p.lastMove = p.lastAttack = p.lastCombat = w.time;
+      w.emit({ t: "dash", id: p.id, dir: p.dir, ms: PLAYER.dashMs, target: t.id, wt: p.eff.wtype | 0 });
+      w.after(PLAYER.dashHitMs, () => {
+        if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t, false)) return;
+        p.dir = dirTo(p.x, p.y, t.x, t.y) || p.dir;
+        (t.kind === "player" ? Combat.hitPlayer : Combat.playerHit)(w, p, t, { crit: false, dash: true });
+      });
+      return true;
     }
-    const crit = critOk && !dash;
+    const crit = critOk;
     if (crit) p.superAttack -= 1;
     const ms = attackMs(p);
-    const go = () => {
-      if (p.dead || t.dead || dist(p, t) > Combat.reachOf(w, p, t, crit)) return;
-      p.dir = dirTo(p.x, p.y, t.x, t.y) || p.dir;
-      w.setAct(p, ACT.ATTACK, ms);
-      p.busyUntil = w.time + ms;
-      p.lastAttack = p.lastCombat = w.time;
-      w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, at: attackType(p.eff.wtype, crit), tx: t.x, ty: t.y });
-      w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
-    };
-    if (lead) { p.busyUntil = w.time + lead + ms; p.lastCombat = w.time; w.after(lead, go); return true; }
     w.setAct(p, ACT.ATTACK, ms);
     p.busyUntil = w.time + ms;
     p.lastAttack = p.lastCombat = w.time;
     // arco (wType 2): el cliente dibuja la flecha hacia (tx, ty); sin flechas se hace el gesto sin disparo (wType 0)
     w.emit({ t: "attack", id: p.id, target: t.id, bow: !!(p.eff.bow && Combat.arrowOf(w, p)), wt: p.eff.wtype | 0, at: attackType(p.eff.wtype, crit), tx: t.x, ty: t.y });
-    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit, dash }) : Combat.playerHit(w, p, t, { crit, dash })));
+    w.after(ms * PLAYER.attackHitAt, () => (t.kind === "player" ? Combat.hitPlayer(w, p, t, { crit }) : Combat.playerHit(w, p, t, { crit })));
     return true;
   },
   prepare: (w, p, cmd) => (MAGIC_MODE.player ? MagicSys.prepare(w, p, cmd) : w.reject(p, cmd, NO_PLAYER_MAGIC)),

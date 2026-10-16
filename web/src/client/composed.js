@@ -14,7 +14,7 @@ export class PersonCache {
   constructor(spr, glc = null) {
     this.spr = spr; this.glc = glc;                 // glc: compositor WebGL2 (?gl=1); sin él, Canvas2D como siempre
     if (!spr.wtCache) spr.wtCache = new Map();    // el grabador hereda la caché de armas teñidas (si no, la crearía por su cuenta)
-    this.pages = []; this.cur = -1; this.map = new Map();
+    this.pages = []; this.cur = -1; this.map = new Map(); this.epoch = glc ? glc.epoch : 0;
     this.S = 0; this.scratch = null; this.budget = 6; this.frame = 0;
     this.st = { hit: 0, comp: 0, direct: 0, recycled: 0, msComp: 0, msDirect: 0, msHit: 0, warm: 0, msWarm: 0, cp: { clear: 0, put: 0, tint: 0, weap: 0, atlas: 0, n: 0 } };
     this.seen = new Map();
@@ -46,7 +46,10 @@ export class PersonCache {
     }
   }
 
-  newFrame() { this.budget = 6; this.frame++; this.seen.clear(); if (this.glc) this.glc.newFrame(); }
+  newFrame() {
+    this.budget = 6; this.frame++; this.seen.clear();
+    if (this.glc) { this.glc.newFrame(); if (this.glc.epoch !== this.epoch) { this.epoch = this.glc.epoch; this.flush(); } }   // contexto WebGL restaurado: lo compuesto antes puede ser negro
+  }
 
   keyOf(gender, look, group, d, f, ap) {
     const c = ap && ap.col;
@@ -135,6 +138,7 @@ export class PersonCache {
     const { spr, rec, sg, S } = this;
     const cp = this.st.cp, T0 = performance.now(); cp.n++;
     rec.bb = null; rec.miss = 0;
+    if (this.glc && this.glc.lost) { this.map.set(key, { t: this.frame }); return null; }          // contexto perdido: no se cachea nada
     if (this.glc) this.glc.begin(Math.ceil(LW * S), Math.ceil(LH * S), S, OX, OY);
     else { sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, this.scratch.width, this.scratch.height); }
     cp.clear += performance.now() - T0;

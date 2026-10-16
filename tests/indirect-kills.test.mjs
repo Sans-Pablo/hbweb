@@ -1,0 +1,24 @@
+// Kills indirectos: el campo de fuego/hielo/nube da baja y experiencia a su autor (OWNERTYPE_PLAYER_INDIRECT, HG.cpp ~11241).
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { World } from "../web/src/shared/world.js";
+import { GameData } from "../web/src/shared/data.js";
+import { Grid } from "../web/src/shared/grid.js";
+import { spawnFrom } from "../web/src/shared/systems/npcsys.js";
+import { addField, DYN } from "../web/src/shared/systems/fields.js";
+const J = f => JSON.parse(readFileSync(new URL("../web/data/" + f, import.meta.url)));
+const npcDb = J("npc.json");
+const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
+let seed = 5; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const data = new GameData({ items: J("items.json"), magic: J("magic.json"), npcs: npcDb });
+const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
+const id = w.addPlayer("Mago", null, { gender: 1, stats: { str: 10, vit: 20, dex: 10, int: 30, mag: 30, chr: 10 } });
+const p = w.ents.get(id);
+const orc = spawnFrom(w, { name: "Orc", rect: [p.x + 3, p.y, p.x + 3, p.y], alive: 0, max: 0, respawn: false }); orc.noDrop = true;
+orc.hp = 3; const k0 = p.kills, e0 = p.exp;
+addField(w, DYN.FIRE, orc.x, orc.y, 20000, 0, p.id);
+for (let i = 0; i < 80 && !orc.dead; i++) w.tick(100);
+assert.ok(orc.dead, "el fuego mata al monstruo");
+assert.equal(p.kills, k0 + 1, "la baja es del autor del campo");
+assert.ok(p.exp > e0, "la experiencia es del autor del campo");
+console.log("OK");

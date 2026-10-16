@@ -4,7 +4,7 @@ import * as Boss from "./bosses.js";
 import * as Bal from "../balance.js";
 import { dice } from "../rules.js";
 import { sget, sset, sclear } from "./status.js";
-import { damagePlayer } from "./combatsys.js";
+import { damagePlayer, giveExp } from "./combatsys.js";
 
 export const DYN = { FIRE: 1, ICESTORM: 8, SPIKE: 9, PCLOUD: 10, FIRE3: 14 };
 
@@ -31,7 +31,13 @@ function iceResisted(w, e) {
 }
 export { iceResisted };
 
-// daño directo de un campo (sin atacante): al morir un monstruo no da experiencia a nadie
+// Autor de un campo (iAddDynamicObjectList(iClientH, OWNERTYPE_PLAYER_INDIRECT...), HG.cpp ~11241): el jugador, o el dueño si lo lanzó su compañero.
+function authorOf(w, f) {
+  let a = f.owner && w.ents.get(f.owner);
+  if (a && a.master) a = w.ents.get(a.master);
+  return a && a.kind === "player" && !a.dead ? a : null;
+}
+// daño de un campo: la baja y la experiencia (por golpe, como damageNpc) son del autor
 function hit(w, e, dmg, f) {
   if (e.dead) return;
   dmg = Bal.scale(dmg, Bal.fieldMul());
@@ -46,7 +52,12 @@ function hit(w, e, dmg, f) {
   dmg = Boss.mitigate(w, e, dmg, null, "field"); if (dmg <= 0) return;
   e.hp -= dmg;
   w.emit({ t: "damage", id: e.id, from: f.owner || 0, amount: dmg, hp: Math.max(0, e.hp), max: e.maxHp });
-  if (e.hp <= 0) return w.killNpc(e, null);
+  const au = authorOf(w, f);
+  if (au && e.noDieRemainExp > 0) {                                  // experiencia por golpe, como damageNpc
+    const gain = Math.min(dmg, e.noDieRemainExp); e.noDieRemainExp -= gain;
+    giveExp(w, au, gain + (au.eff.addExp ? Math.floor((au.eff.addExp / 100) * gain) : 0));
+  }
+  if (e.hp <= 0) return w.killNpc(e, au);
   if (dice(w.rng, 1, 3) === 2) e.nextAct = w.time;
   if (sget(w, e, "hold")) sclear(w, e, "hold");
 }

@@ -2,7 +2,7 @@
 // Todo lo que viene del código original lleva el archivo de origen.
 import { MOB_FRAMES } from "./mobtiming.gen.js";
 
-export const NET_PROTO = 12;           // versión del protocolo cliente-servidor (server/server.mjs): si cambia, los clientes viejos deben recargar
+export const NET_PROTO = 13;           // versión del protocolo cliente-servidor (server/server.mjs): si cambia, los clientes viejos deben recargar
 export const TILE = 32;
 
 // Direcciones 1..8 = N, NE, E, SE, S, SO, O, NO (Client/Game.cpp, HGServer/Map.cpp)
@@ -18,7 +18,7 @@ export const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))
 
 // Acciones de un objeto (Client/ActionID.h)
 export const ACT = {
-  STOP: 0, MOVE: 1, RUN: 2, ATTACK: 3, MAGIC: 4, GETITEM: 5, DAMAGE: 6, DYING: 10, DEAD: 101,
+  STOP: 0, MOVE: 1, RUN: 2, ATTACK: 3, MAGIC: 4, GETITEM: 5, DAMAGE: 6, ATTACKMOVE: 7, DYING: 10, DEAD: 101,
 };
 
 // Límites del servidor contra trampas: más de 200 ms entre pasos, más de 450 ms entre golpes.
@@ -33,6 +33,8 @@ export const PLAYER = {
   runMs: 230,
   idleFrameMs: 64,            // 32 ms, pero el cliente avanza medio fotograma (cFrame/2)
   attackMs: 8 * 37,           // 8 fotogramas x 41/1.1 ms
+  dashMs: 12 * 78,            // OBJECTATTACKMOVE: 12 fotogramas x 78 ms (MapData.cpp:33-34)
+  dashHitMs: 4 * 78,          // el golpe cae al acabar la carrera (fotograma 4)
   attackHitAt: 0.5,           // el golpe "conecta" a mitad de la animación
   attackCooldownMs: 500,      // por encima del límite de 450 ms del servidor
   getItemMs: 4 * 50,

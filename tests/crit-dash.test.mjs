@@ -1,5 +1,6 @@
 // Crítico (Alt + clic) y dash (atacar corriendo). Cifras del original (combat.cpp, HG.cpp, Game.cpp): ver docs/sistemas/critico-dash.md.
 import assert from "node:assert/strict";
+import { ACT } from "../web/src/shared/const.js";
 import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
 import { GameData } from "../web/src/shared/data.js";
@@ -72,6 +73,9 @@ p.level = 25; p.superAttack = 2; p.critCount = 12; p.tCrit -= 3000; chargeCritTi
   p.busyUntil = 0;                                   // el original no exige haber corrido antes
   const sp0 = p.sp, evs = w.events.length;
   assert.ok(w.command(id, { t: "attack", target: n.id, dash: true }), "corriendo sí");
+  assert.equal(p.act, ACT.ATTACKMOVE, "un solo movimiento OBJECTATTACKMOVE"); assert.equal(p.actDur, 12 * 78, "12 fotogramas x 78 ms");
+  assert.ok(w.events.slice(evs).some(e => e.t === "dash" && e.id === id && e.ms === 12 * 78), "evento dash");
+  assert.ok(!w.events.slice(evs).some(e => e.t === "attack" && e.id === id), "sin evento de ataque aparte");
   tick(1500);
   assert.equal(p.x, 29, "avanza una casilla"); assert.ok(p.sp <= sp0, "el paso del dash no gasta SP (bIsRun=FALSE)");
   assert.ok(w.events.slice(evs).some(e => e.t === "crit" && e.dash), "evento dash");

@@ -40,6 +40,8 @@ assert.equal(ball.comp.lvl, 25);
 const evo = ev().find(e => e.t === "companion-evolve");
 assert.ok(evo && evo.step === 1 && evo.lvl === 25 && evo.id === id, "aviso de cambio de tamaño");
 assert.ok(ball.comp.evolve);
+for (let i = 0; i < 5; i++) w.tick(100);
+assert.equal(followersOf(w, p).find(e => e.comp).clvl, 24, "mientras espera sigue con el aspecto/tamaño anterior (el cambio va dentro de la animación)");
 let resummon = null;
 for (let i = 0; i < 80 && !resummon; i++) { w.tick(100); resummon = w.events.find(e => e.t === "companion-resummon"); }
 assert.ok(resummon, "se vuelve a invocar");

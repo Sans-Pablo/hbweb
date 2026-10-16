@@ -66,7 +66,7 @@ class MirrorWorld {
 // con un pequeño retardo fijo (REMOTE_DELAY) y los pasos se encadenan: el siguiente empieza donde acaba el anterior, y un
 // "parado" que llega antes de acabar el paso visible no lo corta (anim.js lo pasa a STOP solo al terminar).
 export const REMOTE_DELAY = 120;
-const isStep = a => a === ACT.MOVE || a === ACT.RUN;
+const isStep = a => a === ACT.MOVE || a === ACT.RUN || a === ACT.ATTACKMOVE;
 // devuelve true si el estado `o` debe dejar intacta la animación actual de `e` (no sobrescribir posición/acto)
 export function smoothRemote(e, o, time) {
   const curEnd = e.actStart + e.actDur;

@@ -66,7 +66,6 @@ export class Fx {
     this.me = me;
     this.texts = [];
     this.castMsgs = new Map();   // id -> {text, born}: «<Hechizo>!» sobre el lanzador
-    this.critT = new Map();
     this.dashes = new Map();         // id -> {at, dir, ms}: dash en curso (fantasma del ataque con desplazamiento)
     this.parts = [];
     this.flash = new Map();          // id -> hora del último golpe (destello)
@@ -97,13 +96,17 @@ export class Fx {
     switch (ev.t) {
       case "damage":
         this.flash.set(ev.id, performance.now());
-        // Game.cpp (OBJECTDAMAGE): "-N" en amarillo (m_wR[13]*2), tamaño por daño (<12 / <40 / más); golpe mortal = «-N!» (OBJECTDYING); crítico = «Critical» (MOTION_EVENT_HANDLER3)
-        this.text(ev.id, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) ? "Critical" : "-" + ev.amount + (ev.hp <= 0 ? "!" : ""), "#e8dc3c", false, 0, ev.amount >= 40 ? 20 : ev.amount >= 12 ? 16 : 13, ev.crit || (this.critT.get(ev.id) > performance.now() - 400) || ev.amount >= 40 ? 23 : ev.amount >= 12 ? 22 : 21);
+        // Game.cpp MotionEventHandler: el servidor manda el daño en un byte (ClientEventSender.cpp, (unsigned char)sV1) y el cliente lo lee como char CON signo
+        // (sV1 = (short)*cp): 1..127 «-N»; 128..255 (negativo) «Critical»; 0 (o múltiplos de 256) « * Failed! *». Golpe mortal (OBJECTDYING): «-N!» o «Critical!».
+        // No existe ninguna otra fuente del cartel «Critical»: el ataque crítico (super ataque) no lo muestra por sí mismo.
+        { const b8 = ev.amount & 255, v = b8 > 127 ? b8 - 256 : b8, dead = ev.hp <= 0;
+          const txt = dead ? (v > 0 ? "-" + v + "!" : "Critical!") : v > 0 ? "-" + v : v < 0 ? "Critical" : " * Failed! *";
+          this.text(ev.id, txt, "#e8dc3c", false, 0, v >= 40 || v < 0 ? 20 : v >= 12 ? 16 : 13, v >= 40 || v < 0 ? 23 : v >= 12 ? 22 : 21); }
         if (!mine) this.burst(ev.id, 6, "rgba(180,20,20,", 1.4);
         break;
       case "dummy-cast": if (ev.max || (ev.lvl >= 30 && ["Demon", "Liche", "Frost"].includes(look(ev.sc)))) this.scast.set(ev.nid, { at: performance.now(), sc: ev.sc }); break;
       case "dash": this.dashes.set(ev.id, { at: performance.now(), dir: ev.dir, ms: ev.ms || 300 }); break;
-      case "crit": if (ev.crit) this.critT.set(ev.target, performance.now()); break;
+      case "crit": break;
       case "miss": break;   // un golpe normal que falla no muestra texto (ticket 7); «Failed» queda solo para la resistencia a hechizos
       case "attack": {                                       // arco: la flecha sale en el fotograma 5 de 8 del gesto (MapData.cpp, OwnerFrame == 5)
         const c = this.world.ents.get(ev.id);

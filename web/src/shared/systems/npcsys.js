@@ -419,7 +419,7 @@ function refreshCompanion(w, n, m) {
   const inst = Inv.instOf(m, n.ball);
   if (!inst) return killNpc(w, n, null);
   const c = inst.comp, st = Comp.statsOf(m, c);
-  n.dmgNow = st.dmg; n.clvl = c.lvl; n.nick = c.nm;
+  n.dmgNow = st.dmg; n.clvl = c.evolve && c.evoFrom ? c.evoFrom : c.lvl; n.nick = c.nm;   // evolución pendiente: sigue con el tamaño y el aspecto anteriores; el cambio ocurre DENTRO de la animación de re-invocación (fx.js companion-resummon)
   { const k = (c.exp || 0) / Comp.need(c.lvl);   // solo el último 10% de la experiencia
       n.evoK = !Tal.isDummy(c) && Comp.stagesOf(c.sp).includes(c.lvl + 1) && k >= 0.9 ? Math.max(0.01, Math.min(1, (k - 0.9) / 0.1)) : 0; }          // último nivel antes de evolucionar: progreso 0..1 (animación cada vez más viva)
   // La vida es del compañero y viaja con la bola (c.hp): al invocarlo vuelve con la que tenía; al subir de nivel conserva la proporción
@@ -432,7 +432,7 @@ export const EVOLVE_MS = 2500;
 // Re-invocación al cambiar de tamaño: el compañero desaparece con un destello y vuelve (más grande) junto al dueño
 export function evolveCompanion(w, n, m, tc) {
   const from = { x: n.x, y: n.y }, nm = tc.nm, sp = tc.sp, lvl = tc.lvl;
-  delete tc.evolve;
+  delete tc.evolve; delete tc.evoFrom;
   const nn = spawnCompanion(w, m, Inv.instOf(m, n.ball));
   if (nn) w.emit({ t: "companion-resummon", id: m.id, sp, lvl, nm, fx: from.x, fy: from.y, x: nn.x, y: nn.y, nid: nn.id });
 }
@@ -455,7 +455,7 @@ export function spawnCompanion(w, p, only = null) {
   }
   const inst = only;
   inst.comp.nm = inst.comp.nm || Comp.randomName(w.rng);          // bolas antiguas sin nombre
-  delete inst.comp.evolve;
+  delete inst.comp.evolve; delete inst.comp.evoFrom;
   dismissCompanion(w, p, inst.uid);
   const gen = { name: inst.comp.sp, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
   if (!w.npcDb[gen.name]) return null;
