@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.14 · Monstruos fieles (2026-10-16)
+- Sistema 26: `npc.json` y generadores regenerados desde `Config/Npc.cfg` y `HGServer/MAPDATA` (`tools/convert_original.py`): exp = dice(ExpDice×150,4)+ExpDice (Npc.cpp:109; normal aproximada si n>64), regen 3500, actionTime 2300, oro ×100; 2ndmiddle con 11 generadores y random-mob 1 16; nombres de generador por tipo de mob (Aresden golems, etc.). Test `original-npcs`.
+
 ## 0.85.13 · Exp fiel (2026-10-16)
 - Sistema 25: la experiencia por baja es exp/3 + resto de no-muertos (+ AddExp %), HG.cpp:6538; quitado el multiplicador por variedad de especie. Test `exp-original`.
 

@@ -65,7 +65,7 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | SpecEffectValue, WARM/FIRMSTAMINAR, SLATES, pergaminos, CHANGEATTR, STUDYMAGIC; SP cura veneno | HG.cpp:17660+ | — | FALTA |
 | Probabilidades de drop, bandas 7-9, tablas por nivel, corte 30% débil | HG.cpp:6538, 29315-29990 | drops.js | DIFERENTE |
 | Exp por matar: multiplicador de variedad (no original) | HG.cpp NpcKilledHandler | npcsys.js:87 | DIFERENTE (invento del port) |
-| `npc.json`: exp, regen 3500, actionTime 2300; spawns 2ndmiddle (11 generadores, máx 15-20) | Config/Npc.cfg, MAPDATA | web/data/npc.json, maps/2ndmiddle.json | DIFERENTE: regenerar datos con `tools/convert_all.py` |
+| `npc.json`: exp, regen 3500, actionTime 2300; spawns 2ndmiddle (11 generadores, máx 15-20) | Config/Npc.cfg, MAPDATA | web/data/npc.json, maps/2ndmiddle.json | OK (v0.85.14, `tools/convert_original.py`, test `original-npcs`) |
 | Generador de spawns: tick 600 ms, 1/3, tope de objetos del mapa; cadáver dura regTime | HG.cpp:2093, 16841 | npcsys.js:106 | DIFERENTE |
 | Generador aleatorio de mobs | HG.cpp:15935 | — | FALTA |
 

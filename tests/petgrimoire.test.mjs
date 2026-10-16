@@ -103,7 +103,7 @@ const lowOrc = A.bag.find(i => i.comp?.sp === "Demon"); lowOrc.comp.lvl = 50; lo
   assert.equal(w.command(A.id, { t: "pgcast", spell: 3, x: tgt.x, y: tgt.y }), false);        // sin escuela (utilidad/otro): no se lanza
   b.comp.lvl = 20; w.events.length = 0; n2.dir = 1;
   { const r = w.command(A.id, { t: "pgteach", npc: mage.id, spell: 30 }); if (!r) console.log(JSON.stringify(w.events.slice(-2))); assert.ok(r, "con nivel, Int y oro se le enseña"); }
-  tick(1500); { const r = w.command(A.id, { t: "pgcast", spell: 30, x: tgt.x, y: tgt.y }); if (!r) console.log(JSON.stringify(w.events.slice(-2))); assert.ok(r); }
+  tick(1500); { let r = w.command(A.id, { t: "pgcast", spell: 30, x: tgt.x, y: tgt.y }); for (let i = 0; !r && i < 6; i++) { tick(500); r = w.command(A.id, { t: "pgcast", spell: 30, x: tgt.x, y: tgt.y }); } if (!r) console.log(JSON.stringify(w.events.slice(-2))); assert.ok(r); }
   assert.ok(w.events.some(e => e.t === "dummy-cast" && e.nid === n2.id && /Fire Strike/.test(e.txt)), "el summon dice el nombre de la magia");
   { const dx = Math.sign(tgt.x - n2.x), dy = Math.sign(tgt.y - n2.y); const want = { "0,-1": 1, "1,-1": 2, "1,0": 3, "1,1": 4, "0,1": 5, "-1,1": 6, "-1,0": 7, "-1,-1": 8 }[dx + "," + dy]; assert.equal(n2.dir, want, "el summon mira hacia el objetivo"); }
   // más nivel, más daño

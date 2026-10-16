@@ -59,8 +59,15 @@ export function npcHP(rng, hd) {
   const hp = hd <= 5 ? dice(rng, hd, 4) + hd : hd * 4 + hd + dice(rng, 1, hd);
   return hp || 1;
 }
+// Npc.cpp:109: m_iExp = dice(m_iExpDice, 4) + m_iExpDice, con ExpDice = Npc.cfg * EXPMULTIPLIER 150 (HG.cpp:9603).
+// Con n grande (hasta 15.000.000 dados) la suma de n d4 (media 2,5n, varianza 1,25n) se aproxima por una normal: decisión del port.
+// Las fichas propias del port sin expDice conservan el rango expMin..expMax.
 export function npcExp(rng, cfg) {
-  return dice(rng, 1, cfg.expMax - cfg.expMin) + cfg.expMin;
+  const n = cfg.expDice;
+  if (!n) return dice(rng, 1, cfg.expMax - cfg.expMin) + cfg.expMin;
+  if (n <= 64) return dice(rng, n, 4) + n;
+  const z = Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
+  return Math.max(n, Math.round(2.5 * n + Math.sqrt(1.25 * n) * z)) + n;
 }
 // Monstruos especiales: tipo 1 = +25 % exp, 2 = +30 % exp, 3 = absorbe daño físico.
 // bCreateNewNpc (Game.cpp ~16418): habilidad especial del monstruo y su bonus de experiencia.

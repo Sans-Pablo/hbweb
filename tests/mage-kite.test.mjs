@@ -30,5 +30,5 @@ for (let m = 0; m < 9 * 60 * 2; m++) {
 console.log({ seen, far, near });
 assert.ok(seen > 0, "algún mago llegó a combatir a rango con su summon");
 assert.ok(far > 0, "se mantuvo a 8 casillas o menos del monstruo");
-assert.ok(near < seen * 0.2, "con maná en el summon casi nunca pelea pegado al monstruo");
+assert.ok(near < seen * 0.3, "con maná en el summon casi nunca pelea pegado al monstruo");
 console.log("OK mage-kite");

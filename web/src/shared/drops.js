@@ -89,7 +89,7 @@ function rollKillDropRaw(rng, npc, { rating = 0, month = new Date().getMonth() +
   prob = 10000 - (10000 - prob) * (1 - DROP_RATE_BONUS_MULTIPLIER);    // HG.cpp:29354
   if (dice(rng, 1, 10000) > prob) return null;
   if (dice(rng, 1, 10000) <= (depth ? Math.max(3500, GOLD_DROP_CHANCE - 100 * depth) : GOLD_DROP_CHANCE)) {   // en la cripta, cuanto más hondo menos oro
-    const g = npc.cfg.goldMax;                                          // HG.cpp:29369-29386
+    const g = npc.cfg.gold ?? npc.cfg.goldMax;                                         // HG.cpp:29369-29386
     let count = !g ? 0 : g <= 4 ? dice(rng, 1, g) : dice(rng, 1, 2) === 1 ? g + dice(rng, 1, Math.floor(g / 5)) : g - dice(rng, 1, Math.floor(g / 5));
     if (addGold) count += Math.floor((addGold / 100) * count);
     return count ? { id: GOLD, count } : null;
