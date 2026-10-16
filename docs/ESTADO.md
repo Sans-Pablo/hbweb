@@ -437,3 +437,16 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - Los otros jugadores se animan con la maestría del lanzador (el original usa 100 para los ajenos en el cliente).
 - 0.85.19: críticos (visual/sonido cliente; cálculo ya portado en 0.85.17), kills de pets al dueño y predicción congelado/hold hechos. Sin test dedicado de movimiento congelado.
 - [x] Reimaginar TODAS las ventanas del juego con el sistema nuevo — ui (0.85.20)
+
+## Backlog 2026-10-16 (tras 0.85.22)
+- Kills indirectos (firefield, magia de area, fuego de fire bow) dan exp/kill al autor.
+- Botones cerrar/minimizar: mismo diseno que las bolas de las otras esquinas, con iconos; iconos de cerrar solo en ventanas con bolas.
+- Icono de quests coherente con la UI.
+- Mini autohunt: mostrar exp; boton restart cuando se frena.
+- Mini quest: mismo formato que mini autohunt; TODAS las ventanas MINI con el mismo formato.
+- Hilo de diseno de UI de ventanas (todas se ven distintas).
+- Evolucion de pets: animacion primero, cambio de tamano como parte de la animacion.
+- Sprites negros en personajes (persiste).
+- Cartel "Critical": cuando aparece segun archivos originales.
+- Nombre de magia: debe salir al iniciar el casting, no al lanzar; fuente original.
+- Dash: animacion y movimiento originales (no esta implementado).
