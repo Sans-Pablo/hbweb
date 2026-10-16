@@ -257,7 +257,9 @@ body.dialogtrans .panel { opacity: .55; }
   #create .cname { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 7px 9px; background: #0d0b08; color: #fff3d0; border: 1px solid #6b5a33; border-radius: 6px; }
   #create .presets { display: flex; gap: 6px; margin-bottom: 10px; }
   #create .presets button { flex: 1; }
-  #create button { padding: 4px 9px; background: #2c2417; color: #f0e2b8; border: 1px solid #6b5a33; border-radius: 6px; cursor: pointer; }
+  /* mismo botón de piedra que las ventanas del juego (dialogtext_1, tapas de 22 px): 10 px, Capital Case, sin filete */
+  #create button { padding: 0 8px; min-height: 20px; min-width: 28px; color: #fff; font: 10px Tahoma, Verdana, sans-serif; text-shadow: 1px 1px 0 #000; text-transform: capitalize; cursor: pointer; border: 0; border-radius: 0; background: none; border-image: url(data/ui/btn-stone.png) 0 22 0 22 fill / 0 11px 0 11px stretch; image-rendering: auto; }
+  #create button:hover:not(:disabled) { color: #ffe08a; border-image-source: url(data/ui/btn-stone-h.png); }
   #create button:disabled { opacity: .35; cursor: default; }
   #create .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
   #create .row span { flex: 1; color: var(--muted); }
@@ -266,7 +268,7 @@ body.dialogtrans .panel { opacity: .55; }
   #create canvas { display: block; margin: 0 auto 8px; background: radial-gradient(#2b2619, #0f0d08); border: 1px solid #3e3526; border-radius: 8px; }
   #create .msg { color: #ff8a7a; font-size: 12px; min-height: 16px; margin: 8px 0 0; text-align: center; }
   #create .btns { text-align: center; margin-top: 6px; }
-  #create .ok { padding: 8px 22px; font-size: 15px; border-color: #ffd76a; color: #ffd76a; }
+  #create .ok { padding: 0 22px; }
 
   /* ---------------- pantallas pequeñas / móvil: entrada y creación con desplazamiento, paneles a todo el ancho */
   #join, #create, #lost { overflow: auto; align-items: safe center; }
