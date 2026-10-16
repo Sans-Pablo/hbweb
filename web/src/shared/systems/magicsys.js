@@ -208,8 +208,11 @@ function resolve(w, p, id, sp, x, y, cost) {
       area(sp.v2, sp.v3, t => up(t, sp.v7, sp.v8, sp.v9));
       break;
     }
-    case 8:                                                            // Recall: solo sobre uno mismo
-      if (sp.v4 === 1 && target === p && w.hooks?.recall) w.hooks.recall(p);
+    case 8:                                                            // Recall: solo sobre uno mismo (HG.cpp:10908-10931); exige 10 s sin recibir daño salvo GM (NOTIFY_CANNOTRECALL)
+      if (sp.v4 === 1 && target === p && w.hooks?.recall) {
+        if (!p.gm && w.time - (p.lastDamage ?? -1e9) <= 10000) { w.emit({ t: "nomagic", id: p.id }); break; }
+        w.hooks.recall(p);
+      }
       break;
     case 10: {                                                         // Create Food
       if (w.grid.blocked(x, y)) break;
@@ -291,8 +294,8 @@ function resolve(w, p, id, sp, x, y, cost) {
       area(sp.v2, sp.v3, t => hurt(t, sp.v7, sp.v8, sp.v9, true));
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
-      if (target && target.kind === "player" && !w.fightZone) {
-        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.freeFor(p));   // con bola elegida: siempre esa especie
+      if (target && target.kind === "player" && target.side === p.side && !w.fightZone) {      // HG.cpp:10933-10958: el objetivo debe ser un jugador del mismo bando
+        const n = activeBall(p) ? spawnCompanion(w, p) : summonFor(w, p, 0, M.freeFor(p), !!p.gm);   // con bola elegida: siempre esa especie
         if (!n) w.emit({ t: "nomagic", id: p.id });
       }
       break;

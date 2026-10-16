@@ -32,7 +32,7 @@ Estado: OK = igual · CORREGIDO = diferente y arreglado en esta versión (test `
 | Tipos 4, 6, 20 (Polymorph), 24, 27: sin hechizos en Magic.cfg | Magic.h | — | N/A (no hay datos) |
 | Mapa sin ataque (solo Create/Teleport) y magicLimited por mapa | HG.cpp:10255-10260 | magicsys.js cast | IGUAL (tests/magic-types) |
 | Reliquias Astoria (evento completo) | Astoria.cpp | — | FALTA (sin mapa ni bandos de evento) |
-| Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | sin verificar |
+| Recall (10 s desde el último daño), Summon (tope y bando), Create dynamic | HG.cpp | magicsys.js | verificado (sistema 12; ver ficha) |
 
 ## Habilidades
 | sistema | original | nuestro | estado |

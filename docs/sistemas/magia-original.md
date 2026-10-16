@@ -29,3 +29,9 @@ Un jugador neutral (IsNeutral, side 0) no recibe daño ni hielo. Los demás juga
 - Tipos 4, 6, 24, 27 (y 34) no tienen ningún hechizo en Magic.cfg ("unused"/"no spells" en Magic.h); **Polymorph (20) tampoco tiene hechizo**: el código del original solo se alcanza con un ítem/hechizo que no existe en los datos, así que no hay nada que portar (si Magic.cfg lo añade, habría que escribir el caso: estado = v[TYPE], `m_sType=18`, fin tras `last` segundos, Cancellation lo quita).
 - Mapa con ataque desactivado (`m_bIsAttackEnabled == FALSE`, aquí noAttack con -10 = todo el mapa): solo se lanzan Create (10) y Teleport (8); los GM quedan exentos. `magicLimited` (meta.magicLimited, lista de ids) veta el hechizo en ese mapa, GM exento. Implementado en `magicsys.cast`. Test: `tests/magic-types.test.mjs`.
 - Reliquias de Astoria (Astoria.cpp): es el evento completo de captura de reliquia (mapa astoria, bandos, altares, victoria a los RELICVICTORYTIME). El port no tiene mapa Astoria ni bandos de evento: **fuera de alcance**, queda en ESTADO como pendiente.
+
+## 12. Recall, Summon y Create dynamic (HG.cpp:10908-11012, 11228-11305)
+Test: `tests/magic-summon-recall.test.mjs`.
+- **Recall**: exige más de 10 s sin recibir daño (`m_lastDamageTime`, `p.lastDamage`, que `damagePlayer` actualiza) salvo GM; si no, `nomagic` (NOTIFY_CANNOTRECALL).
+- **Summon Creature**: el objetivo debe ser un jugador del mismo bando; no en zona de lucha; tope magia/20 seguidores salvo GM (`summonFor(..., nolimit)`).
+- **Diferencias documentadas**: el original invoca en la casilla del objetivo (el port, en un rectángulo 5x5 alrededor del lanzador); el radio de Create-dynamic usa el mapeo propio del port (la variante cfg tiene una columna v12 extra y H/2 dejaría Fire-Wall en una casilla); no existe restricción de mapas laterales/cruzada (no hay sideMap); el botón propio de Recall del port (canal 3 s, enfriamiento 60 s) sigue vigente.
