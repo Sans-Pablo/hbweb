@@ -1,181 +1,142 @@
 <!doctype html><html lang="es"><meta charset="utf-8"><title>Sistema de ventanas · hbweb</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{
-  --bg:#12100b; --panel:#1d1912; --line:#3a2e1e; --txt:#e6d6ac; --dim:#a8966a; --gold:#f2c14e;
-  /* TOKENS (los edita el panel) */
-  --frame:#6b4a24; --frame-dark:#2a1c0c; --paper:#d9c7a0; --ink:#2d1919; --ink-dim:#5a4636; --accent:#c31919; --good:#1a6b1a;
-  --padx:22px; --padtop:38px; --padbottom:26px; --gap:6px; --rowh:18px; --btnh:20px; --fs:12px; --btnfs:10px; --radius:2px;
-  --cap:capitalize;
-}
+:root{--bg:#12100b;--panel:#1d1912;--line:#3a2e1e;--txt:#e6d6ac;--dim:#a8966a;--gold:#f2c14e;
+ --g1:url(sprites/gamedialog_1.webp);--d0:url(sprites/dialogtext_0.webp)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font:13px Tahoma,Verdana,sans-serif;display:grid;grid-template-columns:300px 1fr 330px;height:100vh;overflow:hidden}
-aside{background:var(--panel);overflow:auto;padding:14px;border-right:1px solid var(--line)}
-aside.r{border-right:0;border-left:1px solid var(--line)}
+body{margin:0;background:var(--bg);color:var(--txt);font:13px Tahoma,Verdana,sans-serif;display:grid;grid-template-columns:290px 1fr 320px;height:100vh;overflow:hidden}
+aside{background:var(--panel);overflow:auto;padding:14px;border-right:1px solid var(--line)}aside.r{border-right:0;border-left:1px solid var(--line)}
 main{overflow:auto;padding:18px}
 h1{font:600 15px Tahoma;color:var(--gold);margin:0 0 2px}h2{font:600 12px Tahoma;color:var(--gold);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.06em}
-p.s{color:var(--dim);margin:0 0 8px;font-size:12px;line-height:1.4}
-label.t{display:grid;grid-template-columns:1fr 92px 34px;gap:6px;align-items:center;margin:4px 0;font-size:12px}
-label.t b{font-weight:400;color:var(--dim);text-align:right}
+p.s{color:var(--dim);margin:0 0 8px;font-size:12px;line-height:1.4}code{color:var(--gold)}
+label.t{display:grid;grid-template-columns:1fr 84px 30px;gap:6px;align-items:center;margin:4px 0;font-size:12px}label.t b{font-weight:400;color:var(--dim);text-align:right}
 label.c{display:grid;grid-template-columns:1fr 40px;gap:6px;align-items:center;margin:4px 0;font-size:12px}
-input[type=color]{width:40px;height:22px;border:1px solid var(--line);background:none;padding:0}
-input[type=range]{width:100%}
+input[type=color]{width:40px;height:22px;border:1px solid var(--line);background:none;padding:0}input[type=range]{width:100%}
 .tb{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-.tb button,.pr button{background:#2d2518;color:var(--txt);border:1px solid #5a4630;padding:5px 10px;cursor:pointer;font:12px Tahoma}
-.tb button:hover,.pr button:hover{border-color:var(--gold);color:var(--gold)}
-.pr{border:1px solid var(--line);padding:9px;margin:8px 0;border-radius:3px;background:#17130d}
-.pr h3{font:600 12px Tahoma;margin:0 0 3px;color:var(--txt)}.pr p{margin:0 0 7px;color:var(--dim);font-size:12px;line-height:1.4}
+.tb button,.pr button{background:#2d2518;color:var(--txt);border:1px solid #5a4630;padding:5px 10px;cursor:pointer;font:12px Tahoma}.tb button:hover,.pr button:hover{border-color:var(--gold);color:var(--gold)}
+.pr{border:1px solid var(--line);padding:9px;margin:8px 0;border-radius:3px;background:#17130d}.pr h3{font:600 12px Tahoma;margin:0 0 3px}.pr p{margin:0 0 7px;color:var(--dim);font-size:12px;line-height:1.4}
 .pr.ok{border-color:#3d6b2a}.pr.ok h3:after{content:" ✔";color:#7fd16f}
-.stage{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
-.cap{color:var(--dim);font-size:11px;margin:0 0 5px}
-textarea{width:100%;height:120px;background:#0d0b07;color:var(--txt);border:1px solid var(--line);font:11px Consolas,monospace}
-.guides .win *{outline:1px dashed rgba(255,0,0,.35)}
-.guides .body{background-image:linear-gradient(rgba(0,160,255,.25),rgba(0,160,255,.25));background-size:100% 100%}
+.stage{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start}.cell .cap{color:var(--gold);font:600 12px Tahoma;margin:0 0 6px}
+textarea{width:100%;height:110px;background:#0d0b07;color:var(--txt);border:1px solid var(--line);font:11px Consolas,monospace}
+#note{margin:10px 0;color:var(--dim);font-size:12px}
 
-/* ===== COMPONENTES (lo que se convertirá en web/src/client/ui/) ===== */
-.win{position:relative;background:var(--paper);color:var(--ink);font-size:var(--fs);border:4px solid var(--frame);outline:2px solid var(--frame-dark);border-radius:var(--radius);box-shadow:0 6px 18px #000a;font-family:Tahoma,Verdana,sans-serif}
-.win .head{height:26px;margin:-1px -1px 0;background:linear-gradient(var(--frame),var(--frame-dark));color:#f3e6c0;text-align:center;line-height:26px;font-weight:700;position:relative;margin-bottom:0}
-.win .ball{position:absolute;top:5px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#b9b4aa 40%,#4d463c);border:1px solid #2a2014}
-.win .ball.l{left:5px}.win .ball.r{right:5px}
-.win .body{padding:calc(var(--padtop) - 26px) var(--padx) var(--padbottom)}
-.win .sec{font-weight:700;border-bottom:1px solid var(--ink-dim);margin:var(--gap) 0;padding-bottom:2px;color:var(--ink)}
-.win .kv{display:flex;justify-content:space-between;height:var(--rowh);line-height:var(--rowh)}
-.win .kv i{font-style:normal;color:var(--ink-dim)}
-.win .kv .bad{color:var(--accent)}.win .kv .good{color:var(--good)}
-.win .row{display:flex;gap:var(--gap);flex-wrap:wrap;margin:var(--gap) 0;align-items:center}
-.win .row.c{justify-content:center}
-.win .chk{display:flex;gap:6px;align-items:center;height:var(--rowh)}
-.win .chk:before{content:"";width:11px;height:11px;border:1px solid var(--ink);background:#f6edd4}
-.win .chk.on:before{background:var(--ink);box-shadow:inset 0 0 0 2px #f6edd4}
-.win .tabs{display:flex;gap:2px;margin:var(--gap) 0}
-.win .tab{padding:2px 10px;border:1px solid var(--ink-dim);border-bottom:0;background:#c7b48a;font-size:11px}
-.win .tab.on{background:var(--paper);font-weight:700}
-.win .inp{height:var(--btnh);border:1px solid var(--ink-dim);background:#f6edd4;padding:0 6px;line-height:calc(var(--btnh) - 2px);color:var(--ink-dim);min-width:120px}
-.win .grid{display:grid;grid-template-columns:repeat(auto-fill,34px);gap:var(--gap);margin:var(--gap) 0}
-.win .slot{width:34px;height:34px;background:#8a7650;border:1px solid var(--frame-dark);box-shadow:inset 0 0 0 1px #0004}
-.win .list{border:1px solid var(--ink-dim);background:#f0e5c8}
-.win .list div{height:var(--rowh);line-height:var(--rowh);padding:0 6px}
-.win .list div:nth-child(even){background:#0001}
-.win .list div.sel{background:var(--frame);color:#f3e6c0}
-.win .bar{height:10px;background:#0003;border:1px solid var(--ink-dim);margin:3px 0}.win .bar i{display:block;height:100%;background:var(--accent)}
-/* botón de piedra: sprite real, 22px de tapas + 6px de centro (ver docs/SPRITES.md) */
-.sb{height:var(--btnh);padding:0 22px;border:0;border-style:solid;border-width:0 11px;border-image:url(sprites/btn-stone.png) 0 22 0 22 fill/0 11px 0 11px round;background:none;font:var(--btnfs) Tahoma,Verdana;color:#f3e6c0;text-transform:var(--cap);cursor:pointer;line-height:var(--btnh)}
-.sb:hover{border-image-source:url(sprites/btn-stone-h.png);color:var(--gold)}
-.sb.sm{padding:0 6px}
-.win .note{color:var(--ink-dim);font-size:11px;margin:var(--gap) 0}
+/* ===== VENTANA (clon del original: marco gamedialog_1, cabeceras dialogtext_0, botón de piedra) ===== */
+.win{position:relative;font:11px Tahoma,Verdana,sans-serif}.win *{position:absolute}.win .sp{background-repeat:no-repeat}
+.frm{left:0;top:0;width:258px;height:339px;background:var(--g1) -287px -2px}.strip{left:235px;top:0;width:23px;height:339px;background:var(--g1) -547px -2px}
+.mt,.mm,.mb{left:0;width:215px}.mt{height:30px;background:var(--g1) -366px -343px}.mm{background:var(--g1) -366px -373px}.mb{height:43px;background:var(--g1) -366px -387px}
+.ban{left:0;top:0;width:258px;height:31px;background:var(--d0) var(--bp)}
+.ball{top:4px;width:16px;height:16px;display:grid;place-items:center;font:700 11px Tahoma;color:#e8d4a0;text-shadow:1px 1px #20160a}.ball.min{left:5px}.ball.cls{right:5px}
+.ttl{left:0;right:0;top:9px;text-align:center;font-weight:700;color:#3a2810}
+.txt{white-space:nowrap}.sec{font-weight:700}.line{height:1px;background:var(--dim);opacity:.6}
+.slot{border:1px solid #5a431f;background:rgba(60,40,15,.3);display:grid;place-items:center;font-weight:700}
+.rw{padding:0 3px;white-space:nowrap}
+.tab{text-align:center;border:1px solid #5a431f;background:rgba(60,40,15,.25)}
+.chk{border:1px solid;width:11px;height:11px;background:rgba(255,255,255,.4)}.chk.on{box-shadow:inset 0 0 0 2px #d9c7a0}
+.bar{border:1px solid #20160a;background:#5a431f}.bar i{display:block;position:static;height:100%}
+/* botón de piedra: 22 px de tapas + centro (ver docs/SPRITES.md) */
+.sb{border-style:solid;border-width:0 11px;border-image:url(sprites/btn-stone.png) 0 22 0 22 fill/0 11px 0 11px round;color:#f3e6c0;text-align:center;cursor:pointer;white-space:nowrap}
+.sb:hover{border-image-source:url(sprites/btn-stone-h.png);color:#f2c14e}
+.guides .win .gd{outline:1px dashed rgba(255,60,60,.8)}
 </style>
 <body>
 <aside>
   <h1>Sistema de ventanas</h1>
-  <p class="s">Cambia un valor y se actualizan <b>todas</b> las ventanas a la vez. Lo que dejes bien se exporta como <code>tokens.js</code> y es lo único que tiene que cambiar el juego.</p>
-  <div class="tb"><button id="guides">Ver márgenes</button><button id="reset">Restaurar</button></div>
-
-  <h2>Márgenes y medidas</h2>
-  <div id="nums"></div>
-  <h2>Texto</h2>
-  <div id="nums2"></div>
-  <label class="c">Botones en Capital Case <input type="checkbox" id="cap" checked></label>
-  <h2>Colores</h2>
-  <div id="cols"></div>
-
+  <p class="s">Ventanas <b>clon de las originales</b> (marco, cabeceras y botón reales) pero colocadas por un solo sistema: márgenes, filas, botones y colores salen de los valores de abajo. Cambias uno y cambian todas.</p>
+  <div class="tb"><button id="guides">Ver cajas</button><button id="reset">Restaurar</button></div>
+  <h2>Márgenes y medidas</h2><div id="nums"></div>
+  <h2>Texto</h2><div id="nums2"></div>
+  <label class="c">Botones en Capital Case <input type="checkbox" id="cap"></label>
+  <h2>Colores</h2><div id="cols"></div>
   <h2>Exportar</h2>
-  <p class="s">Copia esto y pégamelo en el chat (o dime «aplica»): yo lo paso a <code>web/src/client/ui/tokens.js</code>.</p>
-  <textarea id="out" readonly></textarea>
-  <div class="tb"><button id="copy">Copiar</button></div>
+  <p class="s">Cuando te guste, pégamelo en el chat o dime «aplica».</p>
+  <textarea id="out" readonly></textarea><div class="tb"><button id="copy">Copiar</button></div>
 </aside>
-
-<main>
-  <div class="stage" id="stage">
-    <div><p class="cap">1 · Estadísticas (clave–valor, secciones)</p>
-      <div class="win" style="width:260px"><div class="head"><span class="ball l"></span>Character<span class="ball r"></span></div><div class="body">
-        <div class="sec">Atributos</div>
-        <div class="kv"><i>Str</i><span>25</span></div><div class="kv"><i>Dex</i><span>18</span></div>
-        <div class="kv"><i>Hp</i><span class="good">412 / 480</span></div><div class="kv"><i>Peso</i><span class="bad">Sobrecarga</span></div>
-        <div class="bar"><i style="width:62%"></i></div>
-        <div class="sec">Nivel</div>
-        <div class="kv"><i>Level</i><span>87</span></div>
-        <div class="row c"><button class="sb">Level Up</button><button class="sb">Party</button></div>
-      </div></div></div>
-
-    <div><p class="cap">2 · Inventario (pestañas, rejilla, buscador)</p>
-      <div class="win" style="width:260px"><div class="head"><span class="ball l"></span>Inventory<span class="ball r"></span></div><div class="body">
-        <div class="tabs"><span class="tab on">Objetos</span><span class="tab">Equipo</span></div>
-        <div class="inp">Buscar…</div>
-        <div class="grid"><span class="slot"></span><span class="slot"></span><span class="slot"></span><span class="slot"></span><span class="slot"></span><span class="slot"></span><span class="slot"></span><span class="slot"></span></div>
-        <div class="row"><button class="sb">Tienda</button><button class="sb">Manufacture</button></div>
-      </div></div></div>
-
-    <div><p class="cap">3 · Auto menu (casillas, filas, botones)</p>
-      <div class="win" style="width:260px"><div class="head"><span class="ball l"></span>Auto Menu<span class="ball r"></span></div><div class="body">
-        <div class="chk on">Auto Pots</div><div class="chk on">Botín posible</div><div class="chk">Auto Attack</div>
-        <div class="sec">Hotkeys</div>
-        <div class="row"><button class="sb sm">F5</button><button class="sb sm">F6</button><button class="sb sm">F7</button></div>
-        <div class="row c"><button class="sb">Ir a Farm</button><button class="sb">Cerrar</button></div>
-      </div></div></div>
-
-    <div><p class="cap">4 · Lista + confirmación (tiendas, gremio)</p>
-      <div class="win" style="width:300px"><div class="head"><span class="ball l"></span>Guild<span class="ball r"></span></div><div class="body">
-        <div class="list"><div class="sel">Guerreros del Alba</div><div>Hijos de Aresden</div><div>Elvine Ranger</div><div>Tercera ciudad</div></div>
-        <p class="note">Elige un gremio para ver sus miembros.</p>
-        <div class="row c"><button class="sb">Unirse</button><button class="sb">Cancelar</button></div>
-      </div></div></div>
-  </div>
-</main>
-
+<main><div id="stage" class="stage"></div></main>
 <aside class="r">
   <h1>Propuestas de Claude</h1>
-  <p class="s">Pulsa «Probar» y mira cómo queda en las 4 ventanas. Si no te gusta, «Restaurar».</p>
+  <p class="s">«Probar» las aplica sobre todas las ventanas. Puedes combinarlas y luego afinar con los deslizadores.</p>
   <div id="props"></div>
   <h2>Cómo seguimos</h2>
-  <p class="s">1) Tú ajustas aquí. 2) Me pasas el export. 3) Lo conecto al juego (<code>ui/tokens.js</code> + componentes) y migro las ventanas heredadas por grupos. 4) Cada cambio se verifica con capturas reales (<code>tools/capturar_ventanas.py</code>).</p>
+  <p class="s">1) Tú ajustas aquí. 2) Me pasas el export. 3) Lo conecto al juego (<code>ui/tokens.js</code> + un motor de maquetación igual al de esta página) y migro las ventanas por grupos. 4) Verifico con capturas reales (<code>tools/capturar_ventanas.py</code>).</p>
 </aside>
-
 <script>
-const DEF={padx:22,padtop:38,padbottom:26,gap:6,rowh:18,btnh:20,fs:12,btnfs:10,radius:2,
-  frame:"#6b4a24",frameDark:"#2a1c0c",paper:"#d9c7a0",ink:"#2d1919",inkDim:"#5a4636",accent:"#c31919",good:"#1a6b1a",cap:true};
-const NUMS=[["padx","Margen lateral",8,40],["padtop","Primera línea (bajo título)",30,60],["padbottom","Margen inferior",8,40],["gap","Separación entre elementos",2,14],["rowh","Alto de fila",14,28],["btnh","Alto de botón/campo",18,30]];
-const NUMS2=[["fs","Tamaño de texto",10,16],["btnfs","Texto de botón",9,14],["radius","Esquinas",0,10]];
-const COLS=[["frame","Marco (madera)"],["frameDark","Marco oscuro"],["paper","Fondo (pergamino)"],["ink","Tinta"],["inkDim","Tinta suave"],["accent","Alerta / barra"],["good","Positivo"]];
-const KEY="hb-sistema-ventanas";
+/* ============ TOKENS ============ */
+const DEF={padx:22,padtop:44,padbottom:19,gap:6,rowh:15,btnh:20,btnw:84,slot:38,slotgap:2,fs:11,btnfs:10,cap:true,
+ ink:"#000000",dim:"#4a3a1c",accent:"#7a4a00",sel:"#5a431f",selInk:"#ffffff"};
+const NUMS=[["padx","Margen lateral",10,40],["padtop","Primera línea (desde arriba)",34,60],["padbottom","Margen botones–borde inferior",10,40],["gap","Separación entre elementos",2,14],["rowh","Alto de fila",12,24],["btnh","Alto de botón",18,28],["btnw","Ancho mínimo de botón",60,110],["slot","Casilla de objeto",30,44],["slotgap","Hueco entre casillas",0,8]];
+const NUMS2=[["fs","Tamaño de texto",10,15],["btnfs","Texto de botón",9,13]];
+const COLS=[["ink","Texto"],["dim","Texto secundario"],["accent","Destacado"],["sel","Fondo selección"],["selInk","Texto selección"]];
+const KEY="hb-sistema-ventanas-2";
 let T;try{T={...DEF,...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){T={...DEF}}
-const root=document.documentElement.style, kebab=s=>s.replace(/[A-Z]/g,m=>"-"+m.toLowerCase());
-function apply(){
-  for(const [k] of [...NUMS,...NUMS2]) root.setProperty("--"+k,T[k]+"px");
-  for(const [k] of COLS) root.setProperty("--"+kebab(k),T[k]);
-  root.setProperty("--cap",T.cap?"capitalize":"none");
-  document.getElementById("cap").checked=T.cap;
+
+/* ============ COMPONENTES (declarativos: ninguno lleva coordenadas) ============ */
+const BAN={storage:"-546px -316px",quest:"-274px -101px",skills:"-274px -2px",system:"-274px -167px"};
+const cap=s=>T.cap?s.replace(/\b([a-záéíóúñ])([a-záéíóúñ]*)/gi,(m,a,b,o)=>/^(a|de|del|la|el|y|en|al)$/i.test(m)&&o>0?m.toLowerCase():a.toUpperCase()+b.toLowerCase()):s;
+const el=(cls,x,y,w,h,inner="",st="")=>`<div class="${cls} gd" style="left:${x}px;top:${y}px;${w!=null?`width:${w}px;`:""}${h!=null?`height:${h}px;`:""}${st}">${inner}</div>`;
+// cada componente: (ctx,args) -> {html,h}. ctx = {x0,x1,y,W}
+const C={
+ text:(c,a)=>({h:T.rowh,html:el("txt",c.x0,c.y,null,T.rowh,a.t,`line-height:${T.rowh}px;color:${a.dim?T.dim:T.ink};${a.b?"font-weight:700;":""}`)}),
+ section:(c,a)=>({h:T.rowh+2,html:el("sec",c.x0,c.y,c.x1-c.x0,T.rowh,a.t,`line-height:${T.rowh}px;color:${T.ink}`)+el("line",c.x0,c.y+T.rowh,c.x1-c.x0,1)}),
+ kv:(c,a)=>({h:T.rowh,html:el("txt",c.x0,c.y,null,T.rowh,a.k,`line-height:${T.rowh}px;color:${T.ink}`)+el("txt",c.x1-100,c.y,100,T.rowh,a.v,`line-height:${T.rowh}px;text-align:right;color:${a.hot?T.accent:T.ink};${a.hot?"font-weight:700":""}`)}),
+ row:(c,a)=>({h:T.rowh,html:el("rw",c.x0,c.y,c.x1-c.x0,T.rowh,a.t,`line-height:${T.rowh}px;${a.sel?`background:${T.sel};color:${T.selInk}`:`color:${T.ink}`}`)}),
+ check:(c,a)=>({h:T.rowh,html:el("chk"+(a.on?" on":""),c.x0,c.y+(T.rowh-11)/2,11,11,"",`color:${T.ink};background:${a.on?T.ink:"rgba(255,255,255,.4)"}`)+el("txt",c.x0+17,c.y,null,T.rowh,a.t,`line-height:${T.rowh}px;color:${T.ink}`)}),
+ tabs:(c,a)=>{const w=(c.x1-c.x0-(a.items.length-1)*3)/a.items.length;return{h:T.rowh+3,html:a.items.map((t,i)=>el("tab",c.x0+i*(w+3),c.y,w,T.rowh+3,t,`line-height:${T.rowh+1}px;font-size:${T.btnfs}px;${i===a.on?`background:${T.sel};color:${T.selInk}`:`color:${T.ink}`}`)).join("")}},
+ bar:(c,a)=>({h:8,html:el("bar",c.x0,c.y,c.x1-c.x0,8,`<i style="width:${a.pct}%;background:${T.accent}"></i>`)}),
+ slots:(c,a)=>{const p=T.slot+T.slotgap;const cols=Math.max(1,Math.floor((c.x1-c.x0+T.slotgap)/p));let h="";for(let r=0;r<a.rows;r++)for(let k=0;k<cols;k++){const it=a.items&&a.items[r*cols+k];h+=el("slot",c.x0+k*p,c.y+r*p,T.slot,T.slot,it||"",`color:${T.ink}`)}return{h:a.rows*p-T.slotgap,html:h}},
+ para:(c,a)=>({h:a.lines*(T.rowh-1),html:el("txt",c.x0,c.y,c.x1-c.x0,a.lines*(T.rowh-1),a.t,`white-space:normal;line-height:${T.rowh-1}px;color:${T.dim}`)}),
+ space:(c,a)=>({h:a.h||0,html:""}),
+};
+const btn=(x,y,label,sm)=>{const w=Math.max(T.btnw,label.length*6+28);return{w,html:`<div class="sb gd" style="left:${x}px;top:${y}px;width:${w}px;height:${T.btnh}px;line-height:${T.btnh}px;font-size:${T.btnfs}px">${cap(label)}</div>`}};
+// ventana: spec = {w,h,mini?,banner?,title?,body:[[tipo,args]...],buttons:[...]}  (los botones se anclan abajo; 1 = izq, 2 = extremos, 3+ = repartidos)
+function win(s){
+  const W=s.w,H=s.h;let html="";
+  if(s.mini){html+=`<div class="sp mt"></div>`;for(let y=30;y<H-43;y+=14)html+=`<div class="sp mm" style="top:${y}px;height:${Math.min(14,H-43-y)}px"></div>`;html+=`<div class="sp mb" style="top:${H-43}px"></div>`}
+  else html+=`<div class="sp frm"></div><div class="sp strip"></div>`;
+  if(s.banner)html+=`<div class="ban" style="--bp:${BAN[s.banner]}"></div>`;
+  if(s.title)html+=`<div class="ttl" style="font-size:${T.fs}px">${s.title}</div>`;
+  const c={x0:T.padx,x1:W-T.padx,y:s.mini?T.padtop-14:T.padtop};
+  for(const [k,a] of s.body){const r=C[k](c,{...a});html+=r.html;c.y+=r.h+T.gap}
+  const by=H-T.padbottom-T.btnh,n=(s.buttons||[]).length;
+  if(n){const bs=s.buttons.map(l=>btn(0,by,l));const tot=bs.reduce((a,b)=>a+b.w,0);const space=n>1?(c.x1-c.x0-tot)/(n-1):0;let x=c.x0;
+    html+=s.buttons.map((l,i)=>{const b=btn(x,by,l);x+=b.w+space;return b.html}).join("")}
+  html+=`<div class="ball min">&#8211;</div><div class="ball cls">&#10005;</div>`;
+  return `<div class="win" style="width:${W}px;height:${H}px;font-size:${T.fs}px">${html}</div>`;
+}
+const WINDOWS=[
+ ["1 · Inventory",{w:258,h:339,body:[["slots",{rows:5,items:["⚔","🛡"]}],["space",{h:2}],["kv",{k:"Weight",v:"42 / 120"}]],buttons:["Manufacture","Close"]}],
+ ["2 · Warehouse",{w:258,h:339,banner:"storage",body:[["space",{h:34}],["text",{t:"Select the item.",dim:1}],["row",{t:"Long Sword",sel:1}],["row",{t:"Red Potion (25)"}],["row",{t:"Ruby (3)"}],["row",{t:"Gold (12400)"}]],buttons:["Cancel"]}],
+ ["3 · Quests",{w:258,h:339,banner:"quest",body:[["space",{h:34}],["row",{t:"Slime Hunt  3/10",sel:1}],["row",{t:"Amphis Ridge  0/5"}],["space",{h:8}],["para",{lines:3,t:"Kill 10 slimes in the Aresden fields and return to the guard."}],["bar",{pct:30}]],buttons:["Accept","Cancel"]}],
+ ["4 · Character",{w:258,h:339,banner:"skills",body:[["space",{h:34}],["section",{t:"Atributos"}],["kv",{k:"Str",v:"25"}],["kv",{k:"Dex",v:"18"}],["kv",{k:"Hp",v:"412 / 480"}],["kv",{k:"Weight",v:"Overload",hot:1}],["bar",{pct:62}],["section",{t:"Level"}],["kv",{k:"Level",v:"87"}]],buttons:["Level Up","Party"]}],
+ ["5 · Auto Menu",{w:258,h:339,title:"Auto Menu",body:[["space",{h:8}],["tabs",{items:["Cazar","Ir a…"],on:0}],["check",{t:"Auto Pots",on:1}],["check",{t:"Botín posible",on:1}],["check",{t:"Auto Attack"}],["section",{t:"Hotkeys"}],["kv",{k:"F5",v:"Auto Menu"}],["kv",{k:"F6",v:"Auto Hunt"}]],buttons:["Ir a Farm","Cerrar"]}],
+ ["6 · Auto Hunt (mini)",{w:215,h:150,mini:1,title:"Slime (Pozo 3)",body:[["kv",{k:"Muertes",v:"38"}],["kv",{k:"Tiempo",v:"12:40"}],["kv",{k:"Experiencia",v:"+4210",hot:1}]],buttons:["Parar"]}],
+];
+function draw(){
+  document.getElementById("stage").innerHTML=WINDOWS.map(([t,s])=>`<div class="cell"><div class="cap">${t}</div>${win(s)}</div>`).join("");
   document.getElementById("out").value="// web/src/client/ui/tokens.js\nexport const TOKENS = "+JSON.stringify(T,null,2)+";";
-  try{localStorage.setItem(KEY,JSON.stringify(T))}catch(e){}
   document.querySelectorAll("[data-n]").forEach(i=>{i.value=T[i.dataset.n];i.nextElementSibling.textContent=T[i.dataset.n]});
   document.querySelectorAll("[data-c]").forEach(i=>i.value=T[i.dataset.c]);
-  checkProps();
+  document.getElementById("cap").checked=T.cap;
+  PROPS.forEach((p,i)=>document.getElementById("p"+i).classList.toggle("ok",Object.entries(p.v).every(([k,v])=>T[k]===v)));
+  try{localStorage.setItem(KEY,JSON.stringify(T))}catch(e){}
 }
-const build=(host,list)=>list.forEach(([k,l,min,max])=>{const e=document.createElement("label");e.className="t";
-  e.innerHTML=`<span>${l}</span><input type=range data-n="${k}" min=${min} max=${max}><b></b>`;host.append(e);
-  e.querySelector("input").oninput=ev=>{T[k]=+ev.target.value;apply()}});
-build(document.getElementById("nums"),NUMS);build(document.getElementById("nums2"),NUMS2);
-COLS.forEach(([k,l])=>{const e=document.createElement("label");e.className="c";e.innerHTML=`<span>${l}</span><input type=color data-c="${k}">`;
-  document.getElementById("cols").append(e);e.querySelector("input").oninput=ev=>{T[k]=ev.target.value;apply()}});
-document.getElementById("cap").onchange=e=>{T.cap=e.target.checked;apply()};
-document.getElementById("reset").onclick=()=>{T={...DEF};apply()};
+/* ============ PANEL ============ */
+const mk=(host,list)=>list.forEach(([k,l,a,b])=>{const e=document.createElement("label");e.className="t";e.innerHTML=`<span>${l}</span><input type=range data-n="${k}" min=${a} max=${b}><b></b>`;host.append(e);e.querySelector("input").oninput=ev=>{T[k]=+ev.target.value;draw()}});
+mk(document.getElementById("nums"),NUMS);mk(document.getElementById("nums2"),NUMS2);
+COLS.forEach(([k,l])=>{const e=document.createElement("label");e.className="c";e.innerHTML=`<span>${l}</span><input type=color data-c="${k}">`;document.getElementById("cols").append(e);e.querySelector("input").oninput=ev=>{T[k]=ev.target.value;draw()}});
+document.getElementById("cap").onchange=e=>{T.cap=e.target.checked;draw()};
+document.getElementById("reset").onclick=()=>{T={...DEF};draw()};
 document.getElementById("guides").onclick=()=>document.body.classList.toggle("guides");
 document.getElementById("copy").onclick=()=>{const o=document.getElementById("out");o.select();document.execCommand("copy")};
-
-// Propuestas: cada una es un conjunto de valores; "Probar" las aplica y se marca ✔ cuando coinciden
 const PROPS=[
- {t:"Márgenes iguales en todo",d:"Lateral 22 y separación 6 en todas las ventanas (hoy cada una usa su número). Es la base del look & feel.",v:{padx:22,gap:6}},
- {t:"Más aire entre filas",d:"Filas de 20 px y separación de 8: las listas respiran y se leen mejor en pantalla pequeña.",v:{rowh:20,gap:8}},
- {t:"Compacto (estilo original)",d:"Más denso, parecido a los cuadros de Helbreath: filas de 16 px, margen 16.",v:{rowh:16,gap:4,padx:16}},
- {t:"Botones algo más altos",d:"Botón de 22 px: más fácil de pulsar en móvil. El sprite de piedra se estira bien.",v:{btnh:22}},
- {t:"Texto 13 px",d:"Un punto más grande en cuerpo y botón 11 px. Mejor lectura; las ventanas crecen ~5%.",v:{fs:13,btnfs:11}},
- {t:"Tinta más oscura",d:"Más contraste del texto sobre el pergamino (accesibilidad).",v:{ink:"#1a0e0e",inkDim:"#43342a"}},
- {t:"Marco más claro",d:"Madera más cálida y menos marrón oscuro; sin tocar los sprites originales.",v:{frame:"#8a6232",frameDark:"#3a2610"}},
+ {t:"Márgenes simétricos",d:"Lateral 22 y botones a 22 del borde inferior en todas: hoy cada ventana original usa números distintos.",v:{padx:22,padbottom:22}},
+ {t:"Más aire entre filas",d:"Filas de 17 px y separación de 8: las listas respiran y se leen mejor.",v:{rowh:17,gap:8}},
+ {t:"Compacto (como el original)",d:"Filas de 15 px y separación de 4, igual que los cuadros de Helbreath.",v:{rowh:15,gap:4}},
+ {t:"Todos los botones del mismo ancho",d:"Ancho mínimo 96: «Level Up», «Party», «Close»… quedan iguales y alineados.",v:{btnw:96}},
+ {t:"Botones algo más altos",d:"22 px: más fáciles de pulsar en móvil; el sprite de piedra se estira bien.",v:{btnh:22}},
+ {t:"Texto 12 px",d:"Un punto más grande en el cuerpo y botón 11 px. Mejor lectura; sin tocar el marco.",v:{fs:12,btnfs:11}},
+ {t:"Resalte dorado en vez de marrón",d:"Selección más visible sobre el pergamino (sigue sin turquesa).",v:{sel:"#8a5a14",accent:"#9a3a00"}},
 ];
-const ph=document.getElementById("props");
-PROPS.forEach((p,i)=>{const e=document.createElement("div");e.className="pr";e.id="p"+i;
-  e.innerHTML=`<h3>${p.t}</h3><p>${p.d}</p><button>Probar</button>`;ph.append(e);
-  e.querySelector("button").onclick=()=>{Object.assign(T,p.v);apply()}});
-function checkProps(){PROPS.forEach((p,i)=>document.getElementById("p"+i).classList.toggle("ok",Object.entries(p.v).every(([k,v])=>T[k]===v)))}
-apply();
+PROPS.forEach((p,i)=>{const e=document.createElement("div");e.className="pr";e.id="p"+i;e.innerHTML=`<h3>${p.t}</h3><p>${p.d}</p><button>Probar</button>`;document.getElementById("props").append(e);e.querySelector("button").onclick=()=>{Object.assign(T,p.v);draw()}});
+draw();
 </script>
 </body></html>

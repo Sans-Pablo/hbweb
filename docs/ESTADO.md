@@ -488,4 +488,4 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 - [diseño] docs/diseno/editor.html (node docs/diseno/build-base.mjs): ventanas con sprites reales editables sin abrir el juego (arrastrar, doble clic texto, exportar JSON).
 - [diseño] tools/capturar_ventanas.py: captura real de las 35 ventanas de hb.gui.dialogs y genera docs/diseno/ventanas.html. Reejecutar tras cada cambio de interfaz. Revisar: 'NE' junto a 'Botín posible' en el menú auto.
 
-- **Sistema de ventanas en HTML** (`docs/diseno/sistema.html`, v0.85.28): tokens editables (márgenes, alturas, texto, colores) + 4 ventanas de ejemplo hechas con los mismos componentes + propuestas con «Probar» + export a `ui/tokens.js`. Siguiente: conectar el export al juego (`web/src/client/ui/tokens.js`) y migrar diálogos heredados por grupos.
+- **Sistema de ventanas en HTML** (`docs/diseno/sistema.html`, v0.85.28): 6 ventanas clon de las originales (marco/cabeceras/botón reales) maquetadas por un motor declarativo con tokens editables; propuestas con «Probar» y export a `ui/tokens.js`. Siguiente: portar el motor al juego (`web/src/client/ui/`) y migrar ventanas heredadas.
