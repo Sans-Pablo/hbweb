@@ -1,10 +1,23 @@
 {
- "build": "0.85.35",
+ "build": "0.85.36",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Magia como el original (v0.85.36)",
+    "en": "Magic like the original (v0.85.36)"
+   },
+   "items": [
+    { "es": "Invisibilidad: el aliado de tu bando te ve translúcido (no desaparece); se puede lanzar sobre summons.", "en": "Invisibility: same-side allies see you translucent (no longer vanish); can be cast on summons." },
+    { "es": "No se puede lanzar con armas en las manos (solo varitas en la derecha); espera mínima entre lanzamientos 1750 ms como el servidor original.", "en": "No casting with weapons in hand (only wands in right hand); 1750 ms minimum between casts like the original server." },
+    { "es": "La mini-ventana de misión se abre con el menú de misiones, no con F5. Cursor de lanzar azul/rojo según objetivo.", "en": "Mini quest window opens with the quests menu, not F5. Cast cursor blue/red by target." },
+    { "es": "Dash: la cámara avanza suave (el cuerpo mantiene los saltos del original).", "en": "Dash: camera advances smoothly (body keeps the original steps)." }
+   ]
+  },
   {
    "date": "2026-10-16",
    "title": {

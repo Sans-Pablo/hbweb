@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.85.36 · Magia original (2026-10-16)
+- Invisibilidad: aliados del mismo bando la ven translúcida; summons admitidos (HG.cpp 11154, Game.cpp status 0x10).
+- Sin lanzar con arma (solo varitas 34..39); mínimo 1750 ms entre lanzamientos (bCheckClientMagicFrequency).
+- Mini-misión con el menú de misiones; cursor mágico como original; cámara del dash suave.
+
 ## 0.85.35 · Ataque original (2026-10-16)
 - Golpe aplicado al instante; cadencia = fin de animación + mínimo 350 ms entre golpes (HG.cpp bCheckClientAttackFrequency), sin cooldown inventado.
 - Dash de 13 fotogramas (sprite 7 incluido) y duración con el nibble de velocidad (Game.cpp DrawObject_OnAttackMove).

@@ -250,7 +250,12 @@ export class Renderer {
     this.fx = s.fx;
     const remaster = this.mode === "remastered";
     const time = s.world.time;
-    const [ppx, ppy] = posOf(s.me, time);
+    let [ppx, ppy] = posOf(s.me, time);
+    // dash: el cuerpo salta 32/26/16/0 px por fotograma (original), pero la cámara avanza lineal durante esos 4 fotogramas: si no, el mapa da tirones y parece un teletransporte
+    if (s.me.act === ACT.ATTACKMOVE && time < s.me.actStart + s.me.actDur) {
+      const v = DASH_BACK[s.me.dir] || [0, 0], k = Math.min(1, (time - s.me.actStart) / (s.me.actDur * 4 / 13)), b = 32 * (1 - k);
+      ppx = s.me.x * 32 + 16 - v[0] * b; ppy = s.me.y * 32 + 16 - v[1] * b;
+    }
 
     // cámara: fija al personaje (clásico) o con un pequeño seguimiento suave (remastered)
     const tx = ppx - this.viewW / 2, ty = ppy - this.viewH / 2 - 4;
@@ -641,7 +646,7 @@ export class Renderer {
       if (group === 7 && !this.spr.has(bodyKey(gender, look, 7, d))) group = 6;
       const body = bodyKey(gender, look, group, d);
       const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice") || (e.chillUntil || 0) > w.time, zerk = sget(w, e, "berserk");
-      if (invis && e.id !== s.pid) return;                                   // los demás no ven a un invisible
+      if (invis && e.id !== s.pid && !(s.me?.side > 0 && e.side === s.me.side && !(s.me.pkCount || s.me.pk) && !(e.pk > 0))) return;   // Game.cpp 7933: solo uno mismo o _iGetFOE()==1 (mismo bando) ve al invisible, semitransparente; el resto no lo dibuja
       this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
       if (this.crowd < (this.crowdMax || 70) || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
@@ -682,6 +687,7 @@ export class Renderer {
     const act = actionAt(e, time);
     const alive = !e.dead && act !== ACT.DYING && act !== ACT.DEAD;                          // al morir se apagan todos los efectos y tintes (auras, escudo, ojos, orbe…)
     let alpha = TRANSLUCENT_MOBS.has(e.type) ? 0.62 : 1;
+    if (sget(s.world, e, "invis")) { const ow = e.comp ? s.world.ents.get(e.master) : null; if (!(ow && (ow.id === s.pid || (s.me?.side > 0 && ow.side === s.me.side)))) return; alpha *= 0.4; }   // Game.cpp 8452: solo el dueño / su bando ve al invisible, translúcido
     if (e.fadeAlpha != null) alpha *= e.fadeAlpha;                                             // compañero guardado: se desvanece
     if (e.ghost) alpha *= 0.3;                                                                 // esqueleto fantasma: 30 % de opacidad
     if (e.clone) alpha *= 0.5 + 0.12 * Math.sin(time / 130 + e.id);                           // clon de sombra del rey umbrío: translúcido y parpadeante

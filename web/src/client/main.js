@@ -364,7 +364,7 @@ async function main() {
     renderer.hdOpt = !!opts.hdSprites; renderer.spr.hd = renderer.mode === "remastered" && renderer.hdOpt;
     if (fx.sp) fx.sp.off = !opts.spellFx;
     questUi.setEnabled(false);                                 // el rastreador DOM se sustituyó por la mini ventana del lienzo (questwin.js, miniwin.js)
-    if (opts.questTrack === false) gui.close(QUEST_MINI_ID); else if (!questMini.dismissed && !gui.isOpen(QUEST_MINI_ID) && world.ents.get(pid)?.quests) gui.open(QUEST_MINI_ID);
+    if (opts.questTrack === false) gui.close(QUEST_MINI_ID); 
     document.body.classList.toggle("classic-cursor", !!opts.classicCursor);
     if (renderer.mode !== opts.mode) setMode(opts.mode);
     store.set("opts", JSON.stringify(opts));
@@ -482,7 +482,7 @@ async function main() {
           case "F2": ui.useShortcut(0, e.ctrlKey); break;
           case "F3": ui.useShortcut(1, e.ctrlKey); break;
           case "F4": if (hud.spell != null) ui.useMagic(hud.spell); break;
-          case "F5": ui.key("char"); if (gui.isOpen(1) && opts.questTrack !== false && !gui.isOpen(QUEST_MINI_ID)) { questMini.dismissed = false; gui.open(QUEST_MINI_ID); } if (gui.isOpen(1) && (ctl.auto?.kind === "hunt" || autoWin.mini.run) && !gui.isOpen(75)) gui.open(75); break;   // la mini ventana del auto hunt vuelve con el menú
+          case "F5": ui.key("char"); if (gui.isOpen(1) && (ctl.auto?.kind === "hunt" || autoWin.mini.run) && !gui.isOpen(75)) gui.open(75); break;   // la mini ventana del auto hunt vuelve con el menú
           case "F6": ui.key("inv"); break;
           case "F7": ui.key("book"); break;
           case "F8": ui.key("skill"); break;
@@ -797,7 +797,7 @@ async function main() {
       perf.frame(dt, now - d0, renderer, { ents: world.ents.size, pl: online ? [...world.ents.values()].filter(e => e.kind === "player").length : 1, ping: online ? conn.ping : 0, map: world.map?.name, x: me.x, y: me.y, act: me.act }); }
     const h0 = performance.now();
     trackExp(ctl.auto, world.ents.get(pid));      // experiencia ganada desde el inicio del hunt (mini ventana de autohunt)
-    if (!questMini.dismissed && opts.questTrack !== false && !gui.isOpen(QUEST_MINI_ID) && world.ents.get(pid)?.quests) gui.open(QUEST_MINI_ID);
+    { const qo = gui.isOpen(QUEST_ID); if (qo && !questMini.wasOpen && opts.questTrack !== false && !gui.isOpen(QUEST_MINI_ID)) { questMini.dismissed = false; gui.open(QUEST_MINI_ID); } questMini.wasOpen = qo; }   // la mini ventana aparece al abrir el menú de misiones (no con F5)
     hud.update(world, ctl.hoverEnt); questUi.render();
     questUi.avoid(miniOn() && view.mapStyle !== "overlay" ? (() => { const r = renderer.miniRect(), b = renderer.canvas.getBoundingClientRect(); return { right: (r.x0 + r.size) * renderer.scale / renderer.dpr + renderer.ox / renderer.dpr + b.left, bottom: (r.y0 + r.size + 6) * renderer.scale / renderer.dpr + renderer.oy / renderer.dpr + b.top }; })() : null);      // el rastreador baja bajo el minimapa si lo tapa (criptas: minimapa grande)
     gui.flags.combat = flags.combat; gui.flags.safe = flags.safe;
@@ -812,7 +812,7 @@ async function main() {
       const foe = he ? (he.kind !== "player" || isFoe({ pkCount: m0?.pkCount || m0?.pk || 0, side: m0?.side }, { pkCount: he.pkCount || he.pk || 0, side: he.side })) : (m0?.pkCount || m0?.pk || 0) > 0;
       const tg = ctl.pointer && ctl.target(), off = tg && ctl.castOffMap(tg.x, tg.y);      // cursor fuera del mapa: rojo, y no se lanza
       cur = 0;
-      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = world.busy(world.ents.get(pid)) ? 8 : foe || off ? 5 : 4;      // Game.cpp: m_bCommandAvailable falso (animacion en curso) = sprite 8; 4/5 solo con el comando disponible
+      if (!ov && (ui.pointing != null || ui.petPointing != null)) cur = world.busy(world.ents.get(pid)) ? 8 : foe ? 5 : 4;      // Game.cpp: m_bCommandAvailable falso (animacion en curso) = sprite 8; 4/5 solo con el comando disponible
       else if (!ov && he) cur = he.kind !== "player" ? 3 : 6;
       if (gui.item) cur = 10;                                       // mano mientras se arrastra un objeto (m_iPointCommandType < 50); sobre un objeto del suelo el original no cambia el cursor
     }

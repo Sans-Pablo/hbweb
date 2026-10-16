@@ -38,8 +38,7 @@ function usable(w, p, cmd) {
   if (!sp || !p.magic[cmd.spell]) return w.reject(p, cmd, "no conoces ese hechizo");
   Feign.stand(w, p);                                     // lanzar también te levanta
   if (!M.SUPPORTED_TYPES.has(sp.type)) return w.reject(p, cmd, "aún no disponible");
-  // sin escudo ni arma a dos manos; en la mano derecha, solo varitas (tipos 34-39)
-  if (M.freeFor(p)) return sp;
+  // _bIsItemOnHand (Game.cpp): LHAND/TWOHAND siempre bloquean; en RHAND solo pasan las varitas (apariencia 34..39 (HG.cpp)); también con «Full mage»
   if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined) return w.reject(p, cmd, "quítate el escudo y las armas a dos manos");
   if (p.equip[EQUIP.RHAND] !== undefined && !(p.eff.wtype >= 34 && p.eff.wtype <= 39)) return w.reject(p, cmd, "solo se lanza con las manos libres o con una varita");
   if (p.mp < M.manaCost(p, sp, cmd.spell, !!w.fightZone)) return w.reject(p, cmd, "maná insuficiente");
@@ -79,9 +78,9 @@ export function cast(w, p, cmd) {
   const pre = !!(cmd.pre && p.prep && p.prep.spell === cmd.spell && w.time - p.prep.at < 120000);
   if (!pre && !p.dead && afterStep(w, p, cmd, cast)) return true;
   if (!pre && w.busy(p)) return w.reject(p, cmd, "ocupado");
-  if (w.time - (p.lastCast ?? -1e9) < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido");
   const sp = usable(w, p, cmd); if (!sp) return false;
   if (sget(w, p, "inhibit")) return w.reject(p, cmd, "inhibido");
+  { const gap = w.time - (p.castTry ?? -1e9); p.castTry = w.time; if (gap < M.CAST_COOLDOWN_MS) return w.reject(p, cmd, "demasiado rápido"); }   // bCheckClientMagicFrequency: cada intento reinicia el reloj
   const x = cmd.x | 0, y = cmd.y | 0;
   if (!w.grid.inside(x, y) || dist(p, { x, y }) > 11) return w.reject(p, cmd, "demasiado lejos");   // alcance 11 (HG.cpp:10241)
   const cost = M.manaCost(p, sp, cmd.spell, !!w.fightZone);
@@ -231,7 +230,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       break;
     }
     case 11:                                                           // escudos y protecciones
-      if (target && !target.dead && !sget(w, target, "protect") && !(target.kind === "npc" && target.cfg.actionLimit)) sset(w, target, "protect", sp.v4, secs);
+      if (target && !target.dead && !sget(w, target, "protect") && !(target.kind === "npc" && target.cfg.actionLimit && !target.comp)) sset(w, target, "protect", sp.v4, secs);
       break;
     case 12:                                                           // Hold Person / Paralyze
       if (target && !target.dead && !resist(w, target, power)) {
@@ -245,7 +244,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       break;
     case 13:                                                           // Invisibility (1) / Detect Invisibility (2)
       if (sp.v4 === 1) {
-        if (target && !target.dead && !sget(w, target, "invis") && !(target.kind === "npc" && target.cfg.actionLimit)) {
+        if (target && !target.dead && !sget(w, target, "invis") && !(target.kind === "npc" && target.cfg.actionLimit && !target.comp)) {
           sset(w, target, "invis", 1, secs);
           for (const n of w.ents.values()) if (n.target === target.id) n.target = null;     // RemoveFromTarget
         }

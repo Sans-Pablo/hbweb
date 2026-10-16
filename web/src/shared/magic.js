@@ -37,7 +37,7 @@ export function linePoint(x0, y0, x1, y1, count) {
 export const CAST_FRAMES = 16, CAST_FRAME_MS = 88;
 export const castMs = skill => CAST_FRAMES * (CAST_FRAME_MS + Math.trunc(-(Math.max(0, Math.min(100, skill || 0)) * 0.13)));
 export const CAST_MS = castMs(100);
-export const CAST_COOLDOWN_MS = 1000;                                   // el servidor expulsa si se lanza más rápido
+export const CAST_COOLDOWN_MS = 1750;                                   // bCheckClientMagicFrequency (HG.cpp:36523): hueco < 1000 ms = hacker, < 1750 ms = sospechoso: el lanzamiento se descarta (y el reloj se reinicia en cada intento)
 export const circleOf = id => Math.floor(id / 10) + 1;
 
 // corrección por nivel respecto al círculo del hechizo (se usa dos veces en el original)
