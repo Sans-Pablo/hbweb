@@ -31,6 +31,7 @@ import * as Quests from "./quests.js";
 import * as Leisure from "./leisure.js";
 import * as SFood from "./summonfood.js";
 import * as Orders from "./orders.js";
+import { gold as ledger } from "./ledger.js";
 
 const NAMES = ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna", "Garrick", "Helga", "Ivo", "Jessa", "Korin", "Lyra", "Marek", "Nessa", "Orin", "Petra", "Quill", "Rhea", "Soren", "Talia",
   "Ulric", "Vesna", "Wynn", "Yara", "Zeke", "Bram", "Cora", "Dain", "Elsa", "Finn", "Greta", "Hugo", "Iris", "Joren", "Kira", "Leif", "Mira", "Nils", "Olga", "Pip"];
@@ -604,7 +605,7 @@ function learnFromDeath(w, p, r) {
   const k0 = r._killer || r._lastHit, k = k0 && r._killBoss ? k0 + "*" + r._killBoss : k0, ks = k && w.map.kind === "dungeon" ? k + "@" + w.map.level : k;          // los jefes de la cripta se aprenden aparte de su especie
   if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[ks] = Math.max(r.dlv[ks] || 0, p.level); (r.dlt ||= {})[ks] = w.time; blog(w, p, `Aprendo: «${k}»${ks !== k ? " en el piso " + w.map.level : ""} me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
   // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
-  const lostGold = Math.floor(p.gold * 0.1); p.gold -= lostGold; r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
+  const lostGold = Math.floor(p.gold * 0.1); ledger(w, p, -lostGold, "resident_death"); r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
   if (r._pvpDeath) { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }          // rencor: el grupo tenderá a volver a Promise Land
   blog(w, p, `Morir me cuesta: pierdo ${lostGold} de oro y experiencia; seré más prudente.`);
   if (w.map.kind === "dungeon") { (r.dd ||= {})[w.map.level] = (r.dd[w.map.level] || 0) + 1; blog(w, p, `Aprendo: morí en la cripta nivel ${w.map.level}; bajaré más fuerte.`); }

@@ -14,6 +14,7 @@ import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
 import * as Quests from "./quests.js";
 import { foeOf } from "./npcsys.js";
+import { gold as ledger } from "./ledger.js";
 
 export const MAX_COMP_LEVEL = 50;
 // Tamaño por etapas: el compañero cambia de tamaño al llegar a estos niveles (10 joven, 25 veterano, 40 élite, 50 tamaño real).
@@ -97,7 +98,7 @@ export function treat(w, p, cmd) {
   const c = inst.comp, cost = treatCost(p, c);
   if (cost <= 0) return w.reject(p, cmd, "no necesita cuidados");
   if (p.gold < cost) { w.emit({ t: "nogold", id: p.id }); return false; }
-  p.gold -= cost;
+  ledger(w, p, -cost, "companion_hospital");
   const revived = !!c.down;
   c.down = false; c.hp = maxOf(p, c);
   for (const e of w.ents.values()) if (e.comp && e.ball === inst.uid) e.hp = e.maxHp;          // si estaba fuera, se cura en el acto
@@ -114,7 +115,7 @@ export function buyCandy(w, p, cmd) {
   const inst = newInst(w, id, n);
   if (!Inv.canCarry(p, w.data, d, n, inst)) { w.emit({ t: "cantcarry", id: p.id, why: "weight" }); return false; }
   if (!p.bag.some(i => i.id === id) && p.bag.length >= MAX_ITEMS) { w.emit({ t: "cantcarry", id: p.id, why: "slots" }); return false; }
-  p.gold -= price * n;
+  ledger(w, p, -price * n, "companion_shop");
   Inv.addToBag(p, w.data, inst);
   w.recalc(p);
   w.emit({ t: "candybought", id: p.id, item: id, count: n, price: price * n, name: d.display || d.name });
@@ -131,7 +132,7 @@ export function buyBall(w, p, cmd) {
   ball.comp = { sp, lvl: 1, exp: 0, on: false, nm: randomName(w.rng), mode: "attack", ...(cls ? { cls, fixed: true } : {}), ...(Sch.SCHOOL_OF[sp] ? { grim: [] } : {}) };          // el summon de apoyo nace con su clase (Healer/Buffer/Aura); un summon de escuela nace sin hechizos: se los enseñas tú
   const d = w.data.item(ball.id);
   if (!d || p.bag.length >= MAX_ITEMS || !Inv.canCarry(p, w.data, { ...d, weight: 100 }, 1, ball)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); return false; }
-  p.gold -= HOSPITAL.ballPrice;
+  ledger(w, p, -HOSPITAL.ballPrice, "companion_ball");
   Inv.addToBag(p, w.data, ball);
   w.recalc(p);
   w.emit({ t: "petbought", id: p.id, sp, cls, nm: ball.comp.nm, uid: ball.uid, price: HOSPITAL.ballPrice });
@@ -207,7 +208,7 @@ export function resetTalents(w, p, cmd) {
   const cost = Tal.resetCost(inst.comp);
   if (!Tal.spentAll(inst.comp)) return w.reject(p, cmd, "no hay talentos que reiniciar");
   if (p.gold < cost) { w.emit({ t: "nogold", id: p.id }); return false; }
-  p.gold -= cost; Tal.reset(inst.comp); w.recalc(p);
+  ledger(w, p, -cost, "companion_retrain"); Tal.reset(inst.comp); w.recalc(p);
   w.emit({ t: "talentreset", id: p.id, uid: inst.uid, cost, nm: inst.comp.nm });
   return true;
 }

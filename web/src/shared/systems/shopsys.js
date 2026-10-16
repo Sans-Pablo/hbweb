@@ -7,6 +7,7 @@ import * as Inv from "../inventory.js";
 import { realStats, parseAttr } from "../attributes.js";
 import { newInst } from "./itemsys.js";
 import { FISH_PRICE } from "./fishing.js";
+import { gold as ledger } from "./ledger.js";
 
 export const NPC = { SHOP: 15, MAGE: 19, WAREHOUSE: 20, BLACKSMITH: 24 };
 export const MAX_BANK = 200;                       // DEF_MAXBANKITEMS
@@ -110,7 +111,7 @@ export function buy(w, p, cmd) {
     const stacked = isStack(d) && p.bag.some(b => b.id === d.id);
     if ((!stacked && p.bag.length >= MAX_ITEMS) || !Inv.canCarry(p, w.data, d, inst.count, inst)) { w.emit({ t: "cantcarry", id: p.id, why: "bag" }); break; }
     Inv.addToBag(p, w.data, inst);
-    p.gold -= cost;
+    ledger(w, p, -cost, "shop_buy");
     bought++;
     w.recalc(p);
     w.emit({ t: "purchased", id: p.id, item: d.id, count: inst.count, price: cost });
@@ -141,7 +142,7 @@ export function sellConfirm(w, p, uid, count) {
   if (r.cannot) return false;
   if (isStack(d)) { inst.count -= count; if (inst.count <= 0) Inv.removeFromBag(p, uid); }
   else Inv.removeFromBag(p, uid);
-  p.gold += r.price;
+  ledger(w, p, r.price, "shop_sell");
   w.recalc(p);
   w.emit({ t: "sold", id: p.id, item: inst.id, count, price: r.price });
   return true;
@@ -175,7 +176,7 @@ export function repairConfirm(w, p, cmd) {
   const price = repairCost(inst, d);
   if (p.gold < price) { w.emit({ t: "nogold", id: p.id, uid: inst.uid }); return false; }
   inst.life = realStats(d, inst).maxLife;
-  p.gold -= price;
+  ledger(w, p, -price, "shop_repair");
   w.recalc(p);
   w.emit({ t: "repaired", id: p.id, uid: inst.uid, item: inst.id, price });
   return true;

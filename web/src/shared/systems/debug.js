@@ -9,6 +9,7 @@ import { SKILL_NAMES, SKILL } from "../skills.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
+import { gold as ledger } from "./ledger.js";
 
 export const DEBUG = { enabled: true };
 
@@ -27,7 +28,7 @@ const OPS = {
     say(w, p, "Level " + n);
   },
   exp(w, p, c) { giveExp(w, p, num(c.n, 1, 1e9)); say(w, p, "+" + num(c.n, 1, 1e9) + " experience"); },
-  gold(w, p, c) { p.gold = Math.max(0, p.gold + num(c.n, -1e9, 1e9, 0)); say(w, p, "Gold: " + p.gold); },
+  gold(w, p, c) { ledger(w, p, Math.max(-p.gold, num(c.n, -1e9, 1e9, 0)), "debug", { debug: true }); say(w, p, "Gold: " + p.gold); },
   points(w, p, c) { p.pool += num(c.n, 0, 1000, 0); say(w, p, "Points to assign: " + p.pool); },
   stat(w, p, c) { if (!(c.key in p.stats)) return; p.stats[c.key] = num(c.n, 1, 500, 10); w.recalc(p); say(w, p, c.key + " = " + p.stats[c.key]); },
   heal(w, p) { p.hp = p.maxHp; p.mp = p.maxMp; p.sp = p.maxSp; p.hunger = 100; say(w, p, "HP, MP, SP and hunger full"); },

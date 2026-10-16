@@ -7,6 +7,13 @@
  "news": [
   {
    "date": "2026-10-16",
+   "title": { "es": "Libro de oro (v0.85.38)", "en": "Gold ledger (v0.85.38)" },
+   "items": [
+    { "es": "Interno: el servidor registra cada movimiento de oro para el futuro monitor de economía. Nada cambia al jugar.", "en": "Internal: the server records every gold movement for the upcoming economy monitor. Gameplay is unchanged." }
+   ]
+  },
+  {
+   "date": "2026-10-16",
    "title": {
     "es": "Autohunt en segundo plano y ajustes (v0.85.37)",
     "en": "Background auto hunt and fixes (v0.85.37)"

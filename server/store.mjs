@@ -21,7 +21,10 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
   const db = new sqlite.DatabaseSync(path.join(dir, "hb.sqlite"));
   db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;");
   db.exec("CREATE TABLE IF NOT EXISTS records(tbl TEXT NOT NULL, k TEXT NOT NULL, v TEXT NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY(tbl,k));" +
-    "CREATE TABLE IF NOT EXISTS history(k TEXT NOT NULL, at INTEGER NOT NULL, v TEXT NOT NULL); CREATE INDEX IF NOT EXISTS history_k ON history(k, at);");
+    "CREATE TABLE IF NOT EXISTS history(k TEXT NOT NULL, at INTEGER NOT NULL, v TEXT NOT NULL); CREATE INDEX IF NOT EXISTS history_k ON history(k, at);" +
+    // Monitor económico (docs/sistemas/economia.md): libro de oro, solo se añade. event_id único = idempotencia.
+    "CREATE TABLE IF NOT EXISTS econ_events(event_id TEXT PRIMARY KEY, ts INTEGER NOT NULL, gt INTEGER, reason TEXT NOT NULL, cls TEXT NOT NULL, delta INTEGER NOT NULL, actor TEXT, peer TEXT, artificial TEXT, bal INTEGER, map TEXT);" +
+    "CREATE INDEX IF NOT EXISTS econ_ts ON econ_events(ts); CREATE INDEX IF NOT EXISTS econ_reason ON econ_events(reason, ts); CREATE INDEX IF NOT EXISTS econ_actor ON econ_events(actor, ts);");
   const load = tbl => { const o = {}; for (const r of db.prepare("SELECT k, v FROM records WHERE tbl=?").all(tbl)) o[r.k] = JSON.parse(r.v); return o; };
   const st = { kind: "sqlite", accounts: load("accounts"), saves: load("saves"), last: new Map(), histAt: new Map() };
   for (const t of ["accounts", "saves"]) for (const k in st[t]) st.last.set(t + "\0" + k, JSON.stringify(st[t][k]));
@@ -29,10 +32,14 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
   const del = db.prepare("DELETE FROM records WHERE tbl=? AND k=?");
   const hist = db.prepare("INSERT INTO history(k,at,v) VALUES(?,?,?)");
   const prune = db.prepare("DELETE FROM history WHERE k=? AND at NOT IN (SELECT at FROM history WHERE k=? ORDER BY at DESC LIMIT ?)");
+  const econIns = db.prepare("INSERT OR IGNORE INTO econ_events(event_id,ts,gt,reason,cls,delta,actor,peer,artificial,bal,map) VALUES(?,?,?,?,?,?,?,?,?,?,?)");
+  const econBuf = [];
+  st.econAdd = ev => { econBuf.push(ev); };                                                  // se vuelca en el siguiente flush (misma transacción que las partidas)
   st.flush = (force = false) => {
     const now = Math.max(Date.now(), (st.lastAt || 0) + 1); st.lastAt = now; let n = 0;       // marca única por volcado: la poda del historial se apoya en `at`
     db.exec("BEGIN");
     try {
+      for (const e of econBuf.splice(0)) econIns.run(e.eventId, e.ts, e.gt ?? null, e.reason, e.cls, e.delta, e.actor ?? null, e.peer ?? null, e.artificial ?? null, e.bal ?? null, e.map ?? null);
       for (const t of ["accounts", "saves"]) {
         for (const k in st[t]) {
           const key = t + "\0" + k, s = JSON.stringify(st[t][k]);
@@ -54,6 +61,24 @@ export async function openStore(dir, { accountsFile, savesFile, log = console.lo
       st.flush(); for (const f of [accountsFile, savesFile]) { try { if (fs.existsSync(f)) fs.renameSync(f, f + ".migrated"); } catch {} }
     }
   }
+  // Consultas del monitor. Filtros: from/to (ms), reason, actor, artificial ("real" = sin bots/debug, "all"), limit. Los tramos se agrupan por `bucket` ms.
+  const econWhere = (q = {}) => {
+    const w = [], a = [];
+    if (q.from != null) { w.push("ts>=?"); a.push(+q.from); } if (q.to != null) { w.push("ts<=?"); a.push(+q.to); }
+    if (q.reason) { w.push("reason=?"); a.push(q.reason); } if (q.actor) { w.push("actor=?"); a.push(q.actor); }
+    if (q.artificial !== "all") w.push("artificial IS NULL");
+    return [w.length ? " WHERE " + w.join(" AND ") : "", a];
+  };
+  st.econFlush = () => { if (econBuf.length) st.flush(); };
+  st.econEvents = (q = {}) => { st.econFlush(); const [w, a] = econWhere(q); return db.prepare("SELECT * FROM econ_events" + w + " ORDER BY ts DESC, rowid DESC LIMIT ?").all(...a, Math.min(1000, +q.limit || 100)); };
+  st.econSummary = (q = {}) => {
+    st.econFlush(); const [w, a] = econWhere(q);
+    return db.prepare("SELECT reason, cls, COUNT(*) n, SUM(delta) net, SUM(CASE WHEN delta>0 THEN delta ELSE 0 END) inflow, SUM(CASE WHEN delta<0 THEN -delta ELSE 0 END) outflow FROM econ_events" + w + " GROUP BY reason, cls ORDER BY ABS(SUM(delta)) DESC").all(...a);
+  };
+  st.econSeries = (q = {}) => {
+    st.econFlush(); const [w, a] = econWhere(q), b = Math.max(1000, +q.bucket || 3600000);
+    return db.prepare("SELECT (ts/?)*? t, cls, SUM(delta) net, COUNT(*) n FROM econ_events" + w + " AND cls!='transfer' GROUP BY t, cls ORDER BY t".replace(" AND cls", w ? " AND cls" : " WHERE cls")).all(b, b, ...a);
+  };
   st.versions = k => db.prepare("SELECT at FROM history WHERE k=? ORDER BY at DESC").all(k).map(r => r.at);
   st.restore = (k, at) => { const r = db.prepare("SELECT v FROM history WHERE k=? AND at=?").get(k, at); if (!r) return false; st.saves[k] = JSON.parse(r.v); st.flush(true); return true; };
   // Copia diaria de hb.sqlite (VACUUM INTO, consistente con WAL) en <dir>/backups/hb-AAAA-MM-DD.sqlite; conserva las últimas `keep`.
@@ -75,6 +100,6 @@ function jsonStore(accountsFile, savesFile, log) {
   log("[bd] node:sqlite no disponible (hace falta Node 22.5 o superior): se usa el modo JSON antiguo");
   const st = { kind: "json", accounts: readJson(accountsFile, {}), saves: readJson(savesFile, {}) };
   st.flush = () => { writeJson(accountsFile, st.accounts); writeJson(savesFile, st.saves); return 0; };
-  st.versions = () => []; st.restore = () => false; st.backup = () => null; st.close = () => { try { st.flush(); } catch {} };
+  st.econAdd = () => {}; st.econEvents = () => []; st.econSummary = () => []; st.econSeries = () => []; st.versions = () => []; st.restore = () => false; st.backup = () => null; st.close = () => { try { st.flush(); } catch {} };
   return st;
 }

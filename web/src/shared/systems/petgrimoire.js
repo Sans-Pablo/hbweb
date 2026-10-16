@@ -15,6 +15,7 @@ import { addField, DYN, iceResisted } from "./fields.js";
 import { activeBall } from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Inv from "../inventory.js";
+import { gold as ledger } from "./ledger.js";
 
 export const PETMAGE = { role: "petmage", name: "Pet Sorcerer", skin: "Gandlf", reach: 8 };
 export const TIER_DMG = 1.25;                                    // especie superior: +25 % de daño mágico
@@ -75,7 +76,7 @@ export function teach(w, p, cmd) {
   if (c.lvl < need) return w.reject(p, cmd, "tu summon necesita nivel " + need);
   if (p.stats.int < int) return w.reject(p, cmd, "Int " + int + " necesaria");
   if (p.gold < gold) { w.emit({ t: "nogold", id: p.id }); return false; }
-  p.gold -= gold;
+  ledger(w, p, -gold, "pet_grimoire");
   grimOf(c).push(id);
   w.recalc(p);
   w.emit({ t: "pglearned", id: p.id, spell: id, nm: c.nm, uid: ball.uid, gold });

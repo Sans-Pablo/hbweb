@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.38 · Libro de oro (2026-10-16)
+- [admin] Fase 1 del monitor económico: `systems/ledger.js` registra cada movimiento de oro (faucet/sink/transfer, bots y debug marcados) y el servidor lo guarda en `econ_events` (SQLite). Sin cambio de juego ni interfaz. Ficha: docs/sistemas/economia.md; test `tests/ledger.test.mjs`.
+- Pendiente: panel /admin/economy (fase 2), oro de bots sin registrar.
+
 ## 0.85.37 · Segundo plano (2026-10-16)
 - Autohunt sigue en segundo plano (temporizador en main.js); recoge botín con presas a la vista.
 - Sin sonido E31/E32 al crear mapa de noche (weather.js); sprites HD siempre; Earth Shock Wave: E1 por paso (Game.cpp 14775).

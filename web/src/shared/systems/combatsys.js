@@ -16,6 +16,7 @@ import { newInst } from "./itemsys.js";
 import * as Quests from "./quests.js";
 import * as Farming from "./farming.js";
 import { auraDefense, auraExp, auraVamp } from "./dummy.js";
+import { gold as ledger } from "./ledger.js";
 
 // El golpe del jugador "conecta" a mitad de la animación.
 // Flechas (iCalculateAttackEffect, HGServer/Game.cpp ~52836): cada disparo con un blanco gasta una flecha del primer montón
@@ -197,7 +198,7 @@ export function penaltyDrop(w, v, n = 1, { all = true, sa = false } = {}) {
 }
 export function pvpBounty(w, k, v, streak = 0) {
   const gold = Math.min(6000, Math.floor((150 + v.level * 45) * (1 + Math.min(5, streak) * 0.25)));
-  k.gold = (k.gold || 0) + gold;
+  ledger(w, k, gold, "pvp_bounty");
   w.emit({ t: "bounty", id: k.id, victim: v.name, gold });
   const base = w.npcDb.Troll;
   if (!base) return;
@@ -250,7 +251,7 @@ export function giveExp(w, p, amount) {
   w.emit({ t: "exp", id: p.id, amount });
   while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
     p.level++;
-    if (p.level <= 50) p.gold += 50;                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
+    if (p.level <= 50) ledger(w, p, 50, "levelup");                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
     const pay = Math.min(p.lvDebt | 0, R.LEVELUP_POINTS); p.lvDebt = (p.lvDebt | 0) - pay;
     p.pool += R.LEVELUP_POINTS - pay;
     w.recalc(p);

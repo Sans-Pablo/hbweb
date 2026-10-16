@@ -3,6 +3,7 @@
 // que sube puntos permanentes hasta FEED_CAP; la que solo cura no se da (no mejora al summon). Ticket 14: la comida de estadística es el PESCADO. Precio fijo por pieza.
 import * as Comp from "./companion.js";
 import * as Inv from "../inventory.js";
+import { gold as ledger } from "./ledger.js";
 
 export const FOOD_PRICE = 60, RESERVE = 250, PER_ERRAND = 4;
 
@@ -28,7 +29,7 @@ export function feedSummons(w, p, log, market = true) {
       const own = p.bag.find(i => i.id === want.id);
       if (!own && (!market || p.gold < FOOD_PRICE + RESERVE)) break;
       if (Comp.feed(w, p, d, inst.uid) !== true) break;                                  // lo rechazó o no puede más: no se gasta nada
-      if (own) { if ((own.count || 1) > 1) own.count--; else Inv.removeFromBag(p, own.uid); } else p.gold -= FOOD_PRICE;
+      if (own) { if ((own.count || 1) > 1) own.count--; else Inv.removeFromBag(p, own.uid); } else ledger(w, p, -FOOD_PRICE, "summon_food");
       n++; given++;
     }
     if (n) log?.(`Le di comida preferida (${n} piezas) a mi summon ${inst.comp.nm || inst.comp.sp}: así mejora.`);

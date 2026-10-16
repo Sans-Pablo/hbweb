@@ -6,6 +6,7 @@
 import * as Inv from "../inventory.js";
 import { GOLD, MAX_ITEMS, isStack, itemWeight } from "../items.js";
 import { spawnCitizen } from "./citizens.js";
+import { gold as ledger } from "./ledger.js";
 
 export const MAPS = new Set(["wrhus_1f"]);          // solo en los warehouses (los más grandes: así los puestos no bloquean las entradas)
 export const TTL = 24 * 3600 * 1000;                // un puesto dura 24 h; al caducar (o al quedar vacío) se cierra y lo suyo vuelve al dueño
@@ -35,7 +36,7 @@ function settle(w, s) {                                            // entrega un
     if (slots > MAX_ITEMS || Inv.totalWeight(p, w.data) + weight > Inv.maxLoad(p)) return;
     for (const { inst } of s.items) Inv.addToBag(p, w.data, inst);
   }
-  p.gold += s.gold; w.recalc(p);
+  ledger(w, p, s.gold, "stall_collect", { cls: "transfer" }); w.recalc(p);
   say(w, p, "expired", { gold: s.gold, items: s.items.length });
   list.splice(list.indexOf(s), 1);
 }
@@ -114,7 +115,7 @@ export function buy(w, p, cmd) {
   if (!(isStack(d) && p.bag.some(i => i.id === row.inst.id)) && p.bag.length >= MAX_ITEMS) return say(w, p, "cantcarry");
   let got;
   if (n < have) { row.inst.count -= n; got = { ...row.inst, uid: w.nextItem++, count: n }; } else { s.items.splice(s.items.indexOf(row), 1); got = row.inst; }
-  p.gold -= cost; s.gold += cost;
+  ledger(w, p, -cost, "stall_buy", { cls: "transfer", peer: s.owner }); s.gold += cost;
   Inv.addToBag(p, w.data, got); w.recalc(p);
   w.emit({ t: "stallsale", id: p.id, item: got.id, count: n, price: cost, owner: s.name, seller: s.owner });
   if (!s.items.length) shut(w, s); else say(w, p, "view", view(w, p, e));
@@ -125,7 +126,7 @@ export function take(w, p) {
   const s = (db(w) || []).find(x => x.owner === p.name.toLowerCase() && x.map === w.map.id && !x.closed);
   if (!s) return w.reject(p, { t: "stalltake" }, "no tienes puesto aquí");
   if (!s.gold) return true;
-  p.gold += s.gold; say(w, p, "took", { gold: s.gold }); s.gold = 0;
+  ledger(w, p, s.gold, "stall_collect", { cls: "transfer" }); say(w, p, "took", { gold: s.gold }); s.gold = 0;
   const e = find(w, s.sid); if (e) say(w, p, "view", view(w, p, e));
   return true;
 }
@@ -138,7 +139,7 @@ export function close(w, p) {
   for (const i of inst) { const d = w.data.item(i.id); weight += itemWeight(d, isStack(d) ? i.count : 1); if (!(isStack(d) && p.bag.some(x => x.id === i.id))) slots++; }
   if (slots > MAX_ITEMS || Inv.totalWeight(p, w.data) + weight > Inv.maxLoad(p)) return say(w, p, "cantcarry");
   for (const i of inst) Inv.addToBag(p, w.data, i);
-  p.gold += s.gold;
+  ledger(w, p, s.gold, "stall_collect", { cls: "transfer" });
   list.splice(list.indexOf(s), 1);
   const e = find(w, s.sid);
   if (e) { e.dead = true; w.grid.release(e.x, e.y, e.id); w.ents.delete(e.id); w.emit({ t: "remove", id: e.id }); }

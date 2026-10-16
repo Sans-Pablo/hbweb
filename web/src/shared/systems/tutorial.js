@@ -16,6 +16,7 @@
 import { groundPush } from "./ground.js";
 import { newInst } from "./itemsys.js";
 import { spawnFrom } from "./npcsys.js";
+import { gold as ledger } from "./ledger.js";
 
 export const SPEAKERS = {
   me: { npc: null },
@@ -157,9 +158,9 @@ function grant(w, p, t, cmd) {
     groundPush(w, spot[0], spot[1], newInst(w, d.id));
     w.emit({ t: "tutloot", id: p.id, x: spot[0], y: spot[1] });
   } else if (what === "gold") {
-    p.gold += GIFT_GOLD; w.recalc(p);
+    ledger(w, p, GIFT_GOLD, "tutorial_gift"); w.recalc(p);
   } else if (what === "reward") {
-    p.gold += REWARD.gold;
+    ledger(w, p, REWARD.gold, "tutorial_reward");
     const d = w.data.named("RedPotion");
     for (let k = 0; d && k < REWARD.potions; k++) { const inst = newInst(w, d.id); if (p.bag.length < 50) p.bag.push(inst); else groundPush(w, p.x, p.y, inst); }
     w.recalc(p);

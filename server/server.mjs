@@ -30,6 +30,7 @@ import { LIMITS, PLAYER, NET_PROTO } from "../web/src/shared/const.js";
 import { apparelOf } from "../web/src/shared/appearance.js";
 import { validCharName } from "../web/src/shared/systems/player.js";
 import { openStore } from "./store.mjs";
+import { setEconSink } from "../web/src/shared/systems/ledger.js";
 import { openLlm } from "./llm.mjs";
 import { openReport } from "./report.mjs";
 import * as Residents from "../web/src/shared/systems/residents.js";
@@ -54,6 +55,8 @@ const ADMINS = new Set((env.HB_ADMINS ? env.HB_ADMINS.split(",") : CFG.admins).m
 const STORE = env.HB_DATA || path.join(HERE, "data");                  // cuentas, partidas, bloqueos (no se versionan)
 const store = await openStore(STORE, { accountsFile: env.ACCOUNTS_FILE, savesFile: env.SAVE_FILE, log: (...a) => console.log(...a) });    // SQLite (store.mjs)
 const accounts = new Accounts("", store);
+{ const boot = Date.now().toString(36); let n = 0;      // monitor económico (docs/sistemas/economia.md): cada movimiento de oro va a econ_events; event_id único = arranque + contador
+  setEconSink((w, ev) => { try { store.econAdd({ eventId: boot + ":" + (++n), ts: Date.now(), gt: ev.time, reason: ev.reason, cls: ev.cls, delta: ev.delta, actor: ev.actor, peer: ev.peer, artificial: ev.artificial, bal: ev.bal, map: w.map?.id ?? null }); } catch {} }); }
 const BANS = path.join(STORE, "bans.json");
 const bans = readJson(BANS, { accounts: {}, ips: {} });
 const TOKEN_FILE = path.join(STORE, "admin-token.txt");

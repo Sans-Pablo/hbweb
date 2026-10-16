@@ -17,6 +17,7 @@ import { spawnFrom } from "./npcsys.js";
 import { greedyStep } from "../path.js";
 import * as Sch from "./schools.js";
 import * as PG from "./petgrimoire.js";
+import { gold as ledger } from "./ledger.js";
 
 export const ARENA = {
   npc: "Kennedy", role: "arena", reach: 10,        // ficha de NPC.cfg sin función en el juego base; vive en la tienda general (gshop_1f)
@@ -209,13 +210,13 @@ export function bet(w, p, cmd) {
   const seed = Math.floor(w.rng() * 2 ** 31);
   const sim = simulate(o.mine, o.foe, lcg(seed));                   // el resultado queda fijado aquí
   const win = sim.winner === side, odds = side === "a" ? o.oa : o.ob;
-  p.gold -= amount;
+  ledger(w, p, -amount, "arena_bet", { cls: "sink" });
   const rw = rewardOf(o, side, win);
   p.bet = { amount, side, win, payout: win ? Math.round(amount * odds) : 0, odds, mine: o.mine.nm, foe: o.foe.nm, ms: sim.ms, xp: rw.xp, bonus: rw.bonus, uid: o.uid };
   p.offer = null;
   w.recalc(p);
   w.emit({ t: "arenastart", id: p.id, side, amount, odds, a: view(o.mine), b: view(o.foe) });
-  if (aw !== w && !w.hooks.arenaGo(p, w, aw)) { p.gold += amount; p.bet = null; w.recalc(p); return w.reject(p, cmd, "no hay sitio en la arena"); }   // el espectador viaja al mapa de arena
+  if (aw !== w && !w.hooks.arenaGo(p, w, aw)) { ledger(w, p, amount, "arena_refund", { cls: "faucet" }); p.bet = null; w.recalc(p); return w.reject(p, cmd, "no hay sitio en la arena"); }   // el espectador viaja al mapa de arena
   startBout(aw, p, o, sim);
   return true;
 }
@@ -232,7 +233,7 @@ function rewardOf(o, side, win) {
 export function settle(w, p, quiet = false) {
   const b = p.bet; if (!b) return;
   p.bet = null;
-  p.gold += b.payout + (b.bonus || 0);
+  ledger(w, p, b.payout + (b.bonus || 0), "arena_payout", { cls: "faucet" });
   const ball = b.xp && b.uid ? Inv.instOf(p, b.uid) : null;
   if (ball?.comp) Comp.addExp(w, p, ball, b.xp);                    // el compañero real entrena (sin heridas: peleó una copia)
   (p.arenaHist = p.arenaHist || []).push({ win: b.win, side: b.side, amount: b.amount, net: b.payout + (b.bonus || 0) - b.amount, a: b.mine, b: b.foe });

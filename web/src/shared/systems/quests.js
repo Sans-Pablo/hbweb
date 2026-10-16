@@ -15,6 +15,7 @@ import * as Inv from "../inventory.js";
 import { giveExp, expRate } from "./combatsys.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
+import { gold as ledger } from "./ledger.js";
 
 export const CLASS_LINE = { warrior: "warrior", mage: "mage", summoner: "summoner" };
 // especie de compañero, báculo y summon final de cada clase
@@ -163,7 +164,7 @@ function grantItem(w, p, id) {
   if (p.bag.length < 50) Inv.addToBag(p, w.data, inst); else groundPush(w, p.x, p.y, inst);
 }
 function reward(w, p, r) {
-  if (r.gold) p.gold += r.gold;
+  if (r.gold) ledger(w, p, r.gold, "quest_reward");
   for (const id of r.items || []) grantItem(w, p, id);
   const red = w.data.named("RedPotion"), blue = w.data.named("BluePotion");
   for (let k = 0; red && k < (r.potions | 0); k++) { grantItem(w, p, red.id); if (blue) grantItem(w, p, blue.id); }

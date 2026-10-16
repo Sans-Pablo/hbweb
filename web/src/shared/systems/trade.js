@@ -8,6 +8,7 @@
 import * as Inv from "../inventory.js";
 import { GOLD, MAX_ITEMS, isStack, itemWeight } from "../items.js";
 import { itemLevelOf } from "../itemlevel.js";
+import { gold as ledger } from "./ledger.js";
 
 export const RANGE = 10, MAX_OFFER = 4;
 const near = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) <= RANGE;
@@ -92,7 +93,7 @@ export function confirm(w, p) {
   for (const i of theirs) Inv.removeFromBag(o, i.uid);
   const take = (to, list) => { for (const i of list) { if (fitsOne(w, to, i)) Inv.addToBag(to, w.data, i); else { (to.pending ||= []).push(i); w.emit({ t: "trade", id: to.id, k: "queued", n: to.pending.length }); } } };
   take(p, theirs); take(o, mine);
-  p.gold += go - gm; o.gold += gm - go;
+  ledger(w, p, go - gm, "trade", { cls: "transfer", peer: o.name }); ledger(w, o, gm - go, "trade", { cls: "transfer", peer: p.name });
   const sum = (a, g) => ({ items: a.map(i => ({ id: i.id, count: i.count || 1 })), gold: g });
   delete p.trade; delete o.trade;
   w.recalc(p); w.recalc(o);

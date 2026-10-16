@@ -1,3 +1,4 @@
+import { gold as ledger } from "./ledger.js";
 // REINICIO DE ESTADÍSTICAS (INVENTO del port: el original no deja repartir de nuevo los puntos). El mago de las tiendas (Gandlf, tipo 19) devuelve
 // todos los puntos gastados al fondo de puntos libres a cambio de oro, para probar otro reparto (build) o un arma nueva. Lo usan jugadores y habitantes.
 export const RESPEC = { base: 10, reach: 8, mageType: 19 };
@@ -12,7 +13,7 @@ export function respec(w, p, cmd) {
   let back = 0;
   for (const k of Object.keys(p.stats)) { const give = Math.max(0, p.stats[k] - RESPEC.base); back += give; p.stats[k] -= give; }
   if (back <= 0) return w.reject(p, cmd, "no hay puntos que recuperar");
-  p.gold -= cost; p.pool += back;
+  ledger(w, p, -cost, "respec"); p.pool += back;
   const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed;       // los puntos de niveles perdidos al morir se saldan aquí
   p.respecs = (p.respecs | 0) + 1;
   w.recalc(p);

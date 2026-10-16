@@ -14,6 +14,7 @@ import { addField, DYN, iceResisted, poison } from "./fields.js";
 import { newInst } from "./itemsys.js";
 import { groundPush, groundTop, groundPop } from "./ground.js";
 import * as Inv from "../inventory.js";
+import { gold as ledger } from "./ledger.js";
 
 // RequestStudyMagicHandler: hace falta Int >= ReqInt y pagar el coste (negativo = no se vende).
 // (Los hechizos de los compañeros son otro sistema, independiente: petgrimoire.js.)
@@ -24,7 +25,7 @@ export function learn(w, p, id) {
   if (sp.cost < 0) return w.reject(p, { t: "learn" }, "no se vende");
   if (!M.freeFor(p) && p.stats.int < sp.reqInt) return w.reject(p, { t: "learn" }, "Int " + sp.reqInt + " necesaria");
   if (p.gold < sp.cost) return w.reject(p, { t: "learn" }, "oro insuficiente");
-  p.gold -= sp.cost;
+  ledger(w, p, -sp.cost, "learn_spell");
   p.magic[id] = 1;
   w.recalc(p);
   w.emit({ t: "learned", id: p.id, spell: id });

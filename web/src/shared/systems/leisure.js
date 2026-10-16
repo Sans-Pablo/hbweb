@@ -12,6 +12,7 @@ import * as Fishing from "./fishing.js";
 import * as Comp from "./companion.js";
 import * as Guild from "./guild.js";
 import { newInst } from "./itemsys.js";
+import { gold as ledger } from "./ledger.js";
 
 export const KINDS = {
   fish: ["Pescando", "Fishing"], farm: ["Cultivando", "Farming"], trade: ["Comerciando", "Trading"], train: ["Entrenando a su summon", "Training its summon"],
@@ -61,7 +62,7 @@ function ensureRod(w, p) {
   const price = Math.max(0, d.price | 0); if (p.gold < price) return null;
   rod = newInst(w, Fishing.ROD, 1);
   if (!Inv.canCarry(p, w.data, d, 1, rod)) return null;
-  p.gold -= price; Inv.addToBag(p, w.data, rod);
+  ledger(w, p, -price, "fishing_rod"); Inv.addToBag(p, w.data, rod);
   return rod;
 }
 // Vende el pescado (se queda con uno si su summon carnívoro tiene hambre)
@@ -78,7 +79,7 @@ function cashIn(adv, w, p, r, H) {
     if (r.job === "fisher" && fishLeft(p) <= FISH_KEEP) continue;                       // 0.78.0: el pescador fijo guarda la pesca para su puesto (vende solo lo que pasa de FISH_KEEP piezas)
     const c = i.count || 1; gold += (Fishing.FISH_PRICE[i.id] ?? 1) * c; n += c; Inv.removeFromBag(p, i.uid);
   }
-  p.gold += gold;
+  ledger(w, p, gold, "fish_sale");
   return { gold, n, fed };
 }
 
