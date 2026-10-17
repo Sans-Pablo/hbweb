@@ -9,3 +9,17 @@ const a = B.allocate(war, 60, 30);
 assert.ok(a.str >= 20, "reserva la Str que pide el arma");
 assert.ok(a.dex > 0 && a.vit > 0, "el resto va a Dex y Vit");
 console.log("ok bot-pvp2");
+// v0.85.56: ranking de items por segundo stat
+const at = (t2, v2) => (t2 << 12) | (v2 << 8);
+const warP = { stats: { str: 100 }, res: { build: "vanguard" }, bot: {}, equip: {}, bag: [], hp: 100, maxHp: 100, mp: 10, maxMp: 10 };
+const mageP = { ...warP, res: { build: "mage" } };
+const armor = { equipPos: 2, v4: 10, v5: 40 };
+assert.ok(B.bonusScore(warP, armor, at(4, 10)) > B.bonusScore(warP, armor, at(7, 10)), "guerrero: HP > MR");
+assert.ok(B.bonusScore(warP, armor, at(7, 10)) > B.bonusScore(warP, armor, at(8, 10)), "guerrero: MR > PA");
+assert.ok(B.bonusScore(mageP, armor, at(6, 10)) > B.bonusScore(mageP, armor, at(4, 10)), "mago: MP > HP");
+assert.ok(B.bonusScore(warP, armor, at(4, 10)) > 2 * B.bonusScore(warP, armor, at(4, 5)), "valor convexo en v2");
+const wep = { equipPos: 8 };
+assert.ok(B.bonusScore(warP, wep, at(2, 5)) > B.bonusScore(warP, wep, at(10, 5)) && B.bonusScore(warP, wep, at(10, 5)) > B.bonusScore(warP, wep, at(12, 5)), "arma: acierto > consecutivo");
+assert.ok(B.bonusScore(mageP, { ...armor, v5: 30 }, at(6, 5)) > B.bonusScore(mageP, { ...armor, v5: 90 }, at(6, 5)), "armadura ligera vale más");
+warP.hp = 20; assert.ok(B.bonusScore(warP, armor, at(4, 5)) > 40, "set HP con poca vida");
+console.log("ok bot-pvp2 items");

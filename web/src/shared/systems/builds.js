@@ -46,12 +46,26 @@ export function weaponStrNeed(p, data) {
 
 // BONOS QUE BUSCA CADA CLASE (v0.85.48, INVENTO): el mago quiere HP, MP, DR y PA (absorción física); el guerrero HP, DR, PA, MA (absorción mágica) y MR.
 // Tipos de atributo secundario (attributes.js applyEquipAttr): 3 DR, 4 HP, 6 MP, 7 MR, 8 PA, 9 MA. `foe` ('magic'|'phys') sesga el set hacia MA/MR o PA.
-const WANT = { mage: { 4: 1, 6: 1, 3: 0.9, 8: 0.9, 9: 0.3, 7: 0.3 }, war: { 4: 1, 3: 0.9, 8: 1, 9: 0.9, 7: 0.9, 6: 0.1 } };
+// v0.85.56 (petición del autor): el SEGUNDO stat pesa mucho y su valor es convexo (+70 vale mucho más que 7×10). Guerrero: HP > MR > MA; mago: MP > HP > DR > PA.
+const WANT = { mage: { 6: 1.6, 4: 1.3, 3: 0.9, 8: 0.7, 9: 0.3, 7: 0.3 }, war: { 4: 1.6, 7: 1.3, 9: 1.1, 3: 0.7, 8: 0.7, 6: 0.1 } };
+// Armas: probabilidad de acierto (tipo 2) muy valiosa, luego ataque consecutivo (10) y reputación/exp (11)
+const WEAPON_WANT = { 2: 1.8, 10: 1.3, 11: 1.0, 12: 0.4 };
+export const convex = v2 => v2 * (1 + v2 / 10);
 export function bonusScore(p, d, attr, foe) {
   if (!attr || !d) return 0;
-  const { t2, v2 } = parseAttr(attr), wt = { ...WANT[isCaster(p) ? "mage" : "war"] };
-  if (foe === "magic") { wt[9] = (wt[9] || 0) * 1.8 + 0.4; wt[7] = (wt[7] || 0) * 1.8 + 0.4; } else if (foe === "phys") wt[8] = (wt[8] || 0) * 1.8 + 0.4;
-  return (wt[t2] || 0) * v2 * 1.2;
+  const { t2, v2 } = parseAttr(attr), weapon = d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND, wt = { ...(weapon ? WEAPON_WANT : WANT[isCaster(p) ? "mage" : "war"]) };
+  if (!weapon) { if (foe === "magic") { wt[9] = (wt[9] || 0) * 1.8 + 0.4; wt[7] = (wt[7] || 0) * 1.8 + 0.4; } else if (foe === "phys") wt[8] = (wt[8] || 0) * 1.8 + 0.4; }
+  let v = (wt[t2] || 0) * convex(v2) * 1.2;
+  if (!weapon && setWanted(p) === t2) v += 40;                                // set de situación: con poca vida/maná lo que lleve ese stat
+  // armadura ligera (pide poca Str): la Str ahorrada va a Mag/Vit; un mago con cota ligera con MP vale muchísimo
+  if (!weapon && d.v4 === 10 && d.v5 > 0 && d.v5 < 100) v += (100 - d.v5) * 0.06 * (isCaster(p) ? 1.5 : 0.5);
+  return v;
+}
+// Set de situación: HP (todo lo que lleve HP) con poca vida; MP (mago) con poco maná. Devuelve el tipo de secundario a priorizar o 0.
+export function setWanted(p) {
+  if (p.hp / p.maxHp < 0.4) return 4;
+  if (isCaster(p) && p.maxMp > 0 && p.mp / p.maxMp < 0.25) return 6;
+  return 0;
 }
 
 // Reparte `total` puntos según el build respetando el tope de cada estadística. `need` = Str que pide su arma: se cubre primero (hasta el 70% de los puntos).

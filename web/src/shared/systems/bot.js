@@ -294,6 +294,23 @@ export function allyBonus(w, p, e) {
   if (!a || a.kind !== "player" || a.dead || dist(p, a) > 10 || canFight(w, p, a)) return 0;
   return 5 + (e.hp < e.maxHp * 0.35 ? 4 : 0);
 }
+// v0.85.56: «box» = rodeado por todos lados sin poder correr. Con <= 1 casilla libre y 2+ enemigos pegados, el bot no se deja encerrar: mata al más débil de los de al lado para abrir una salida.
+function boxBreak(w, p) {
+  let free = 0, foes = [];
+  for (let d = 0; d < 8; d++) { const x = p.x + DX[d], y = p.y + DY[d]; if (!w.grid.blocked(x, y)) free++; }
+  for (const e of w.ents.values()) { if (e.dead || e === p || e.master === p.id || e.aux || e.comp) continue; if (dist(p, e) > 1) continue; if (e.kind === "npc" ? hostile(e) : (e.kind === "player" && canFight(w, p, e))) { foes.push(e); if (!w.grid.blocked(e.x, e.y)) free--; } }
+  if (foes.length < 2 || free > 1) return null;
+  return foes.sort((a, b) => (a.hp || 0) - (b.hp || 0))[0];
+}
+// v0.85.56: PvP, rodear al enemigo para que no pueda correr: de las casillas libres junto a él, va a la más alejada de sus compañeros ya pegados.
+function encircle(w, p, t) {
+  if (t.kind !== "player" || dist(p, t) > 4) return [t.x, t.y];
+  const mates = [...w.ents.values()].filter(a => a !== p && a.kind === "player" && !a.dead && dist(a, t) <= 2 && !canFight(w, p, a));
+  if (!mates.length) return [t.x, t.y];
+  let best = null, bs = -1;
+  for (let d = 0; d < 8; d++) { const x = t.x + DX[d], y = t.y + DY[d]; if (w.grid.blocked(x, y) || [...w.ents.values()].some(e => !e.dead && e.x === x && e.y === y && e !== p)) continue; const sc = Math.min(...mates.map(a => Math.max(Math.abs(a.x - x), Math.abs(a.y - y)))) * 3 - dist(p, { x, y }); if (sc > bs) { bs = sc; best = [x, y]; } }
+  return best || [t.x, t.y];
+}
 function pickTarget(w, p, owner) {
   let best = null, bs = 1e9;
   const rv = p.bot.revenge && p.bot.revenge.until > w.time && w.ents.get(p.bot.revenge.id);            // quien me ha golpeado, primero
@@ -318,7 +335,7 @@ function pickTarget(w, p, owner) {
     const d = dist(p, e);
     if (d > 12 || (owner && dist(owner, e) > 14) || w.safeAt(e.x, e.y) || tooStrong(w, p, e)) continue;
     const shielded = e.crystal && [...w.ents.values()].some(o => o.boss && o.shield && !o.dead && dist(o, e) <= 20);
-    const s = (shielded ? -20 : 0) - allyBonus(w, p, e) - (e.target === p.id || e.kind !== "npc" ? 0 : mobBonus(p, e)) + d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
+    const s = (shielded ? -20 : 0) - allyBonus(w, p, e) - (e.target === p.id || e.kind !== "npc" ? 0 : mobBonus(p, e)) + d - (e.target === p.id || (owner && e.target === owner.id) ? 6 : 0) + Math.min(9, (p.kinds?.[e.name] || 0) / 5) + (owner ? 0 : Math.min(8, (e.hp || 0) / 40)) - (p.res?.focus?.[e.name] > w.time ? 5 : 0);     // VARIEDAD: prefiere especies que ha cazado poco (hasta 5 casillas de ventaja)
     if (s < bs && reachable(w, p, e)) { best = e; bs = s; }
   }
   return best;
@@ -511,6 +528,7 @@ function run(adv, w, p, b) {
   if (b.travel && w.time > b.travel.until) { if (!b.travel.seek) blog(w, p, "Viaje cancelado (no llego)."); b.travel = null; b.path = null; }       // caduca aunque esté peleando por el camino
   if (b.ignore) for (const [id, until] of b.ignore) if (w.time > until) b.ignore.delete(id);
   if (b.target && (b.target.dead || !w.ents.has(b.target.id) || dist(p, b.target) > 16)) b.target = null;
+  { const bx = !w.safeAt(p.x, p.y) && boxBreak(w, p); if (bx && b.target !== bx) { b.target = bx; b.path = null; if (w.time - (b.boxLog || 0) > 8000) { b.boxLog = w.time; blog(w, p, `Rodeado: abro salida contra ${bx.name}, el más débil.`); } } }
   if ((!b.rest || defend) && w.time >= b.tgtAt && (hpf > 0.55 + fear || b.target?.target === p.id)) { b.tgtAt = w.time + TARGET_MS; if (!b.target || dist(p, b.target) > 3) b.target = pickTarget(w, p, owner) || b.target; }
   const t = (b.rest && !defend) || b.noFight > w.time || (b.travel && !(b.target && ((b.target.target === p.id && (!b.travel.seek || dist(p, b.target) <= 2)) || b.target.kind === "player"))) ? null : b.target;      // de viaje solo se pelea con lo que ataca
   if (t) {
@@ -555,7 +573,7 @@ function run(adv, w, p, b) {
         const d = dirTo(p.x, p.y, t.x, t.y); if (d) p.dir = d;
         adv.command(p.id, gap <= reachOf(w, p, t) ? { t: "attack", target: t.id, ...(crit ? { crit: true } : {}) } : gap <= reach ? { t: "attack", target: t.id, crit: true } : { t: "attack", target: t.id, dash: true });
       }
-    } else if (!step(adv, w, p, b, t.x, t.y, dist(p, t) > 5) && b.fails > 8) {          // no hay camino hasta él (vallado, otra zona): lo descarta un rato
+    } else if (!step(adv, w, p, b, ...encircle(w, p, t), dist(p, t) > 5) && b.fails > 8) {          // no hay camino hasta él (vallado, otra zona): lo descarta un rato
       (b.ignore ||= new Map()).set(t.id, w.time + 20000); b.target = null; b.fails = 0; b.path = null;
     }
     return;

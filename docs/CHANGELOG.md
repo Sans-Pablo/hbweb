@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.56 · Anti-box y ranking de items (2026-10-17)
+- [invento] `bot.js`: `boxBreak` (rodeado con <= 1 salida: mata al más débil adyacente), monstruos débiles primero en `pickTarget`, `encircle` en PvP.
+- [invento] `builds.js`: `bonusScore` convexo en el segundo stat (guerrero HP>MR>MA, mago MP>HP>DR>PA), armas (acierto>consecutivo>reputación), armadura ligera, `setWanted` (set HP <40 % vida, set MP <25 % maná); `itemlevel.js` valora HP/MP y acierto de forma convexa (precio de mercado).
+
 ## 0.85.55 · Mejoras PvP y canal de peleas (2026-10-17)
 - [invento] `botmagic.js`: reserva de maná (cura + 2 Paralyze en PvP); con un guerrero junto al paralizado el mago no lanza ataques (rompen la parálisis). `bot.js` `swarmShield`: escudo si ≥3 enemigos le pegan. `builds.js`: guerrero Str del arma > Dex > Vit, mago Int > Mag > Vit; `RESET_V` 3 (reinicio general). Observador: `fightChannel` (canal de TV, teclas , y .) con `pv`/`pvid` en `botList`. Test `bot-pvp2`.
 

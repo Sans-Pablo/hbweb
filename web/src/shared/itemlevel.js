@@ -34,7 +34,7 @@ export function itemLevel(d, attr = 0, id = d?.id) {
   let v = baseLevel(d);
   if (attr) {
     const a = parseAttr(attr), weapon = d.effectType === EFFECT.ATTACK || d.effectType === EFFECT.ATTACK_MANASAVE;
-    v += ((weapon ? W1 : D1)[a.t1] || 0) * (FLAT1.has(weapon ? "w" + a.t1 : "") ? 1 : a.v1) + (SUB[a.t2] || 0) * a.v2;
+    v += ((weapon ? W1 : D1)[a.t1] || 0) * (FLAT1.has(weapon ? "w" + a.t1 : "") ? 1 : a.v1) + (SUB[a.t2] || 0) * a.v2 * (a.t2 === 4 || a.t2 === 6 ? 1 + a.v2 / 10 : 1) * (a.t2 === 2 && weapon ? 1.5 : 1);
   }
   if (UNIQUE.has(id)) v += 25;
   v += (d.levelLimit || 0) * 0.15;

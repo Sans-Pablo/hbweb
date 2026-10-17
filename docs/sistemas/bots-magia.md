@@ -27,3 +27,8 @@ El original no tiene bots: todo esto usa las mismas órdenes y reglas que un jug
 - Escudo: `bot.js swarmShield` equipa escudo con ≥3 atacantes (skill Shield, sin arma a dos manos).
 - Stats: guerrero Str del arma > Dex > Vit; mago Int > Mag > Vit; `RESET_V` 3.
 - Observador: `watchpanel.js fightChannel`, canal de TV con las peleas PvP (`pv`/`pvid` del roster).
+
+## Anti-box y ranking de items (v0.85.56)
+- `boxBreak` (bot.js): con 2+ enemigos adyacentes y <= 1 casilla libre, el objetivo pasa al más débil de los pegados. `pickTarget` suma `hp/40` (máx. 8) a monstruos para matar primero a los débiles. `encircle`: en PvP va a la casilla junto al rival más alejada de sus compañeros.
+- `bonusScore` (builds.js): valor convexo `v2·(1+v2/10)`; pesos guerrero HP>MR>MA, mago MP>HP>DR>PA; armas acierto(2)>consecutivo(10)>reputación(11); armaduras ligeras (poca Str) suman, más para el mago; `setWanted` da +40 a los items con HP (vida <40 %) o MP (mago, maná <25 %) → el bot cambia de set en `errands`.
+- `itemlevel.js`: HP/MP secundarios y acierto de arma valen convexos, lo que sube el precio de mercado (Plate Mail HP+70 muy valiosa).
