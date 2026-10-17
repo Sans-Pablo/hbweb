@@ -8,6 +8,7 @@ import { need } from "../shared/systems/companion.js";
 import { SCHOOL_OF, SCHOOL_NAMES } from "../shared/systems/schools.js";
 import { DUMMY_NAMES, CLS_OF } from "../shared/systems/talents.js";
 import { t } from "./i18n.js";
+import { MAX_LEVEL } from "../shared/levelcap.js";
 import { font, MIN_SIZE, drawFrameBall } from "./uistyle.js";
 import { DYE_RGB } from "./look.js";
 import { WEAPON_RGB } from "./assets.js";
@@ -480,7 +481,7 @@ export class Gui {
     cx.fillStyle = k > .5 ? "#4caf3a" : k > .25 ? "#d8a838" : "#d8503c"; cx.fillRect(x0, y0, Math.round(wd * k), 6);
     this.text(x0, y0 - 14, (c.nm || c.sp) + " nv " + c.lvl + "  " + Math.ceil(hp) + "/" + max, "#e8dcc3", { shadow: true, size: 11 });
     // experiencia del compañero (para tentar al jugador a subirlo): barra fina bajo la de vida y números en el aviso
-    const nd = need(c.lvl || 1), ek = c.lvl >= 50 ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
+    const nd = need(c.lvl || 1), ek = c.lvl >= MAX_LEVEL ? 1 : Math.max(0, Math.min(1, (c.exp || 0) / nd));
     cx.fillStyle = "rgba(10,8,4,.7)"; cx.fillRect(x0 - 1, y0 + 8, wd + 2, 5);
     cx.fillStyle = "#f0c040"; cx.fillRect(x0, y0 + 9, Math.round(wd * ek), 3);
     const mpMax = pet?.maxMp ?? pet?.maxMpC ?? c.mpMax ?? 0, mp = pet ? pet.mp ?? 0 : c.mp ?? 0;
@@ -489,7 +490,7 @@ export class Gui {
       cx.fillStyle = "#b070f0"; cx.fillRect(x0, y0 + 15, Math.round(wd * Math.max(0, Math.min(1, mp / mpMax))), 4);
       if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 13 && m.y < y0 + 21) this.tip((c.nm || c.sp) + " MP " + Math.floor(mp) + "/" + mpMax);
     }
-    const expTxt = c.lvl >= 50 ? "EXP MAX" : "EXP " + (c.exp || 0) + "/" + nd + " (" + Math.floor(ek * 100) + "%)";
+    const expTxt = c.lvl >= MAX_LEVEL ? "EXP MAX" : "EXP " + (c.exp || 0) + "/" + nd + " (" + Math.floor(ek * 100) + "%)";
     if (m.x > x0 && m.x < x0 + wd && m.y > y0 + 6 && m.y < y0 + 14) this.tip((c.nm || c.sp) + " lv " + c.lvl + "  " + expTxt);
     else if (m.x > bx && m.x < bx + 38 && m.y > by && m.y < by + 38) this.tip((c.nm || c.sp) + ": " + (atk ? "Attack" : "Peace") + " (click)");
     else if (m.x > x0 && m.x < x0 + wd && m.y > y0 - 14 && m.y < y0 + 8) this.tip((c.nm || c.sp) + " " + Math.ceil(hp) + "/" + max + " (click: rename)");

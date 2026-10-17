@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.59 · Tope único (2026-10-17)
+- [invento] `shared/levelcap.js` es la única fuente del nivel máximo; exp, oro, equipo, magias (`magicbal`), misión de Maestría, cliente y botstats se derivan. Magias reescaladas a 140. Test `levelcap.test.mjs`, doc en `nivel-140.md`.
+
 ## 0.85.58 · Nivel 140 (2026-10-17)
 - [invento] Tope de nivel 140, curva de experiencia suavizada del 50 al 140, oro por nivel 50+nivel/2, equipo sin compresión de nivel. Ver docs/sistemas/nivel-140.md.
 - [migración] `WIPE_V=1`: reinicio único de estadísticas y borrado de objetos de todos los personajes (backup en hbweb-backup/pre-0.85.58).

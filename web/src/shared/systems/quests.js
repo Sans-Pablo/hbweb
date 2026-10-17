@@ -12,6 +12,7 @@
 // Objetivos (goal.k): lvl{n} · kill{mon,n} (mon "*" = cualquiera) · kinds{n} (especies distintas) · depth{n} (cripta más honda) · boss{tier,n} ·
 //  ek{n} (enemigos del otro reino) · pet{n} (nivel de la bola de la especie de la clase) · staff · trade · final{n} · king{n} (criptas completas) · gold{n}
 import * as Inv from "../inventory.js";
+import { MAX_LEVEL } from "../levelcap.js";
 import { giveExp, expRate } from "./combatsys.js";
 import { newInst } from "./itemsys.js";
 import { groundPush } from "./ground.js";
@@ -92,7 +93,7 @@ function build(cls) {
     Q("king3", 4, T("El Rey glacial", "The Glacial King"), T("Más allá del nivel 15 el frío mata. Derrota al Rey esqueleto glacial dos veces.", "Beyond level 15 the cold kills. Defeat the Glacial skeleton king twice."),
       { k: "boss", tier: 3, n: 2 }, { gold: 7000, exp: 8, items: [9107, 9106] }, { crypt: 20 }),
     Q("lv40", 4, T("Más allá de la leyenda", "Beyond legend"), T("Alcanza el nivel 40.", "Reach level 40."), { k: "lvl", n: 40 }, { gold: 8000, exp: 4 }),
-    Q("lv50", 4, T("Maestría", "Mastery"), T("El nivel máximo del Acto I. Llega al nivel 50.", "The Act I level cap. Reach level 50."), { k: "lvl", n: 50 }, { gold: 15000, potions: 10, items: [9108] }, { staff: 1 }),
+    Q("lv50", 4, T("Maestría", "Mastery"), T("El nivel máximo del servidor. Llega al nivel " + MAX_LEVEL + ".", "The server level cap. Reach level " + MAX_LEVEL + "."), { k: "lvl", n: MAX_LEVEL }, { gold: 15000, potions: 10, items: [9108] }, { staff: 1 }),
     Q("bond50", 4, T("Vínculo supremo", "Supreme bond"), T("Tu " + speciesName.es + " debe llegar al nivel 50 para poder evolucionar.", "Your " + speciesName.en + " must reach level 50 to evolve."),
       { k: "pet", n: 50 }, { gold: 10000 }),
     // Capítulo 5 · Ascensión (71-100)

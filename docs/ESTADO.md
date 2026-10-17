@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.59) Adaptación completa a nivel 140 con tope único derivado (levelcap.js): exp, oro, equipo, magias, misión, cliente. Pendiente: afinar monstruos/jefes/precios y cripta 50–140.
 - [x] (v0.85.58) Nivel máximo 140, reinicio de stats y borrado de items; reajuste de oro/exp/requisitos (monstruos y magias a 140 pendiente de afinar).
 - [x] (v0.85.57) Bots quietos en PvP (espera eterna ante fuego) corregido; guerrero nunca con báculo. Pendiente: reset de stats al cambiar de arma por item level si falta Str (hoy lo cubre `allocate` con la Str del arma).
 - [x] (v0.85.56) Anti-box (matar al débil para abrir salida, rodear en PvP, débiles primero) y ranking de items por segundo stat con sets HP/MP, armas con acierto y armadura ligera. Los mínimos de Str de armadura (plate 100, chain mago <=40) los aplica `reqOk` con los datos de cada item.

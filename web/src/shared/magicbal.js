@@ -3,8 +3,10 @@
 //  - Int: hasta 30 igual que el original; por encima, la mitad del exceso (Energy Strike 67→49, Lightning Strike 123→77, Meteor 169→100, Blizzard 195→113).
 //  - Oro: el oro ya no cae de los monstruos (solo venta de botín, 50 por nivel y misiones; objeto mediano 600, el 10 % más caro 10000): hasta 2000 igual; por encima, 35 % del exceso
 //    (Energy Strike 5000→3100, Lightning Strike 35000→13600, Meteor 40000→15300, Blizzard 43000→16400).
-export const scaleReqInt = r => (r <= 30 ? r : Math.round(30 + (r - 30) * 0.5));
-export const scaleCost = c => (c <= 2000 ? c : Math.round((2000 + (c - 2000) * 0.35) / 100) * 100);
+import { intFactor, costFactor, MAGIC_FREE_INT } from "./levelcap.js";
+// (los factores 0,5 / 0,35 de arriba son los del tope 50; ahora salen de levelcap.js según MAX_LEVEL)
+export const scaleReqInt = r => (r <= MAGIC_FREE_INT ? r : Math.round(MAGIC_FREE_INT + (r - MAGIC_FREE_INT) * intFactor));
+export const scaleCost = c => (c <= 2000 ? c : Math.round((2000 + (c - 2000) * costFactor) / 100) * 100);
 export function balanceMagic(magic) {
   const out = {};
   for (const [id, m] of Object.entries(magic || {})) out[id] = m && m.cost >= 0 ? { ...m, reqInt: scaleReqInt(m.reqInt | 0), cost: scaleCost(m.cost) } : m;

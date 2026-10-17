@@ -3,6 +3,7 @@
 //    (qué hace, dónde está, si se ha movido) para saber cómo reparte el tiempo y detectar atascos.
 //  - `summaries()`: una ficha por bot (personalidad, guild, meta, estado, números, relaciones).
 //  - `analyze()`: patrones, anomalías y afinidades entre bots (matriz, parejas, grupos) a partir de las fichas.
+import { MAX_LEVEL } from "../web/src/shared/levelcap.js";
 import * as Residents from "../web/src/shared/systems/residents.js";
 import * as Council from "../web/src/shared/systems/council.js";
 
@@ -29,7 +30,7 @@ export function openBotStats(adv, log = () => {}) {
   function life(b) {
     const w = adv.worldFor(b.id), bs = b.bag.filter(i => i.comp), maxed = new Set(bs.filter(i => i.comp.lvl >= 50).map(i => i.comp.sp)).size;
     const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
-    return { ek: b.ek || 0, level: clamp(100 * b.level / 50), crypt: clamp(100 * ((b.delve?.deepest || 1) - 1) / 20), pets: clamp(100 * maxed / 6), petsN: bs.length, gear: clamp(100 * Residents.avgIlvl(w, b) / 40), social: clamp(100 * (Object.keys(b.res.rel || {}).length + (b.res.trades | 0) * 2) / 30) };
+    return { ek: b.ek || 0, level: clamp(100 * b.level / MAX_LEVEL), crypt: clamp(100 * ((b.delve?.deepest || 1) - 1) / 20), pets: clamp(100 * maxed / 6), petsN: bs.length, gear: clamp(100 * Residents.avgIlvl(w, b) / 40), social: clamp(100 * (Object.keys(b.res.rel || {}).length + (b.res.trades | 0) * 2) / 30) };
   }
   function summary(b) {
     const r = b.res, h = hist(b.name), w = adv.worldFor(b.id), guild = b.guild ? { name: b.guild.name, rank: b.guild.rank } : null;

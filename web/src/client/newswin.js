@@ -1,6 +1,7 @@
 // F1 dentro del juego: novedades, lista de pruebas, notas y herramientas de prueba (data/news.json + herramientas de prueba). Ventana del lienzo (window.js).
 import { Win, Flow, THEME } from "./window.js";
 import { getLang } from "./i18n.js";
+import { MAX_LEVEL } from "../shared/levelcap.js";
 import { SPECIES as ALL_SPECIES } from "../shared/systems/companion.js";
 import { GOTO_MAPS } from "../shared/adventure.js";
 
@@ -80,7 +81,7 @@ export class NewsWin extends Win {
     const n = id => this.n(id), v = id => this.v(id);
     const num = (f, id, def, min, max, wd = 56) => f.input(id, wd, { num: true, def, min, max });
     sec(es("Personaje", "Character"), f => {
-      f.text("Lv"); num(f, "lvl", 30, 1, 140); f.btn("Set level", () => this.send({ op: "level", n: n("lvl") }));
+      f.text("Lv"); num(f, "lvl", 30, 1, MAX_LEVEL); f.btn("Set level", () => this.send({ op: "level", n: n("lvl") }));
       f.btn("+1000 exp", s({ op: "exp", n: 1000 })); f.btn("+100k gold", s({ op: "gold", n: 100000 })); f.btn("+5 points", s({ op: "points", n: 5 }));
       f.btn("Heal all", s({ op: "heal" })); f.btn(es("Reset all (todos a nivel 1)", "Reset all (everyone to level 1)"), async () => { if (await this.g.confirm("Reset all?")) this.send({ op: "resetall" }); });
       f.btn("Full mage on/off", s({ op: "fullmage" })); f.btn("Invulnerable on/off", s({ op: "god" })); f.btn(es("0 restricciones on/off", "0 restrictions on/off"), s({ op: "free" })); f.btn("Skills 100", s({ op: "skills", n: 100 }));
