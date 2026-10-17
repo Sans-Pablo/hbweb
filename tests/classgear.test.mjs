@@ -28,14 +28,14 @@ for (const d of data.items.values()) if (d.type === 1 && d.equipPos >= 1 && d.eq
 ok("aHeroCap(M)", [G.warrior]); ok("Shirt(M)", [G.warrior, G.mage, G.summoner]);
 
 // 2. niveles: máximo 50, lo bajo no cambia
-assert.equal(remapLevel(20), 20); assert.equal(remapLevel(30), 30); assert.equal(remapLevel(120), MAX_GEAR_LEVEL);
+assert.equal(remapLevel(20), 20); assert.equal(remapLevel(30), 30); assert.equal(remapLevel(200), MAX_GEAR_LEVEL);
 for (const d of data.items.values()) if (d.type === 1 && d.equipPos && !d.master) assert.ok(d.levelLimit <= MAX_GEAR_LEVEL, d.name + " " + d.levelLimit);
 
 // 3. mundo con un mago, un guerrero y un invocador
 const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
 let seed = 7; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const w = new World({ grid, npcDb, data, spawns: [], rng, start: [10, 10] });
-const mk = (nm, cls) => { const p = w.ents.get(w.addPlayer(nm, null, { cls, gender: 1, stats: { str: 200, vit: 200, dex: 200, int: 200, mag: 200, chr: 200 } })); p.level = 60; Object.assign(p.stats, { str: 200, vit: 200, dex: 200, int: 200, mag: 200, chr: 200 }); w.recalc(p); return p; };
+const mk = (nm, cls) => { const p = w.ents.get(w.addPlayer(nm, null, { cls, gender: 1, stats: { str: 200, vit: 200, dex: 200, int: 200, mag: 200, chr: 200 } })); p.level = 140; Object.assign(p.stats, { str: 200, vit: 200, dex: 200, int: 200, mag: 200, chr: 200 }); w.recalc(p); return p; };
 const mage = mk("Mago", "mage"), war = mk("Guerr", "warrior"), sum = mk("Invo", "summoner");
 const give = (p, nm) => { const i = newInst(w, byName(nm).id); Inv.addToBag(p, data, i); return i; };
 assert.ok(!Inv.equip(mage, data, give(mage, "PlateLeggings(M)").uid).ok, "el mago no lleva placas");

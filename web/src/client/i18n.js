@@ -159,7 +159,7 @@ const EN = {
   "Rey esqueleto carmesí": "Crimson Skeleton King", "Rey esqueleto umbrío": "Umbral Skeleton King", "Rey esqueleto glacial": "Glacial Skeleton King", "Rey esqueleto dorado": "Golden Skeleton King",
   "Para asignar un atajo usa primero un objeto o un hechizo, luego pulsa Ctrl+": "To assign a shortcut, first use an item or a spell, then press Ctrl+",
   // ---- equipo de clase y báculos (v0.62.0)
-  "Solo para: ": "Only for: ", "nivel 50 necesario": "level 50 required",
+  "Solo para: ": "Only for: ", "nivel 50 necesario": "level 50 required", "nivel 140 necesario": "level 140 required",
   "solo para Guerrero": "warriors only", "solo para Mago": "mages only", "solo para Invocador": "summoners only",
   "solo para Guerrero / Mago": "warriors and mages only", "solo para Guerrero / Invocador": "warriors and summoners only", "solo para Mago / Invocador": "mages and summoners only",
   "necesitas la Ice Wand en la mano": "you need the Ice Wand in your hand", "necesitas el Darkness Staff en la mano": "you need the Darkness Staff in your hand", "necesitas el Hero Staff en la mano": "you need the Hero Staff in your hand", "necesitas el Psychic Controller en la mano": "you need the Psychic Controller in your hand",

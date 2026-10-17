@@ -15,6 +15,7 @@ import * as Builds from "./builds.js";
 import * as ObsStats from "./obsstats.js";
 import * as Respec from "./respec.js";
 import { canFight } from "./combatsys.js";
+import { MAX_LEVEL } from "../drops.js";
 import * as Comp from "./companion.js";
 import * as Tal from "./talents.js";
 import * as Sch from "./schools.js";
@@ -101,7 +102,7 @@ export const goalText = (g, lang) => !g ? "" : lang === "en"
 // La misión activa convertida en una meta de las de siempre (nivel, caza, cripta, pvp, summons). `q` = nº de misión: la meta se da por buena al pasar a la siguiente.
 // ¿está en condiciones de pelear con el jefe que le pide la misión? Si no, mejor sube de nivel cazando (y gasta el oro en pociones) antes de bajar a morir
 function questReady(w, p) {
-  const q = p.quests, cur = q && Quests.lineOf(p)[q.n], g = cur?.goal; if (!g || p.level >= 50) return true;
+  const q = p.quests, cur = q && Quests.lineOf(p)[q.n], g = cur?.goal; if (!g || p.level >= MAX_LEVEL) return true;
   const tier = g.k === "boss" ? g.tier : g.k === "staff" || g.k === "king" ? 4 : 0; if (!tier) return true;
   const bp = bossPreview(w, Math.min(20, tier * 5)); if (!bp) return true;
   const e = fightEstimate(w, p, bp, true); return e.ratio >= 1.3 || p.level >= 5 * tier * 2 + 20;
@@ -1006,7 +1007,7 @@ function pets(adv, w, p, r, home) {
 }
 // ---- REPARTO NUEVO (build): de vez en cuando prueban otro reparto de puntos para descubrir builds mejores (builds.js). Van al mago de la tienda general
 // (Gandlf, reinicio de estadísticas de respec.js), recuperan sus puntos, los reparten según el nuevo build y miden cuánta experiencia por minuto sacan.
-const RESET_V = 3;
+const RESET_V = 4;
 function rebuild(adv, w, p, r, home) {
   const b = p.bot;
   if (p.dead) { r._reb = null; return; }

@@ -103,6 +103,17 @@ export function addPlayer(w, name, save = null, create = null) {
   return p.id;
 }
 
+// v0.85.58: reinicio general del servidor (tope de nivel 140): una sola vez por personaje devuelve todos los puntos de estadística al fondo y borra
+// mochila, equipo, banco y pendientes. El oro, el nivel y las magias se conservan. Sube WIPE_V para repetirlo.
+export const WIPE_V = 1;
+function wipeOnce(w, p, s) {
+  p.wipeV = WIPE_V;
+  if ((s.wipeV | 0) >= WIPE_V) return;
+  let back = 0; for (const k of Object.keys(p.stats)) { const give = Math.max(0, p.stats[k] - 10); back += give; p.stats[k] -= give; }
+  p.pool += back; const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed;
+  p.bag = []; p.equip = {}; p.bank = []; delete p.pending;
+}
+
 function loadSave(w, p, s) {
   for (const k of ["level", "exp", "pool", "lvDebt", "gold", "kills", "ek", "respecs", "gender", "side", "pkCount", "reputation", "enemyKillCount", "rewardGold", "elo"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
@@ -138,13 +149,14 @@ function loadSave(w, p, s) {
     p.bag = p.bag.filter(i => w.data.item(i.id).type !== 7);
     for (const [k, n] of Object.entries(s.inv)) for (let i = 0; i < n; i++) if (LEGACY[k]) p.bag.push(newInst(w, LEGACY[k]));
   }
+  wipeOnce(w, p, s);
 }
 
 export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
+    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, wipeV: p.wipeV ?? WIPE_V, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, specialAbilityTime: p.specialAbilityTime || 0, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     ...(p.pending?.length ? { pending: p.pending.map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })) } : {}),

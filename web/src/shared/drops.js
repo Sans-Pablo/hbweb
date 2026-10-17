@@ -24,7 +24,7 @@ lv(10, 77, 59, 75);
 
 // Botín de la cripta (propio del port): objetos REALES de Item.cfg que un guerrero de nivel 50 puede usar
 // (nivel exigido <= 50, peso <= 161 de fuerza). Un array [h, m] = variante de hombre / mujer. Ver docs/sistemas/botin.md.
-export const MAX_LEVEL = 50, MAX_STR = 161;
+export const MAX_LEVEL = 140, MAX_STR = 161;   // v0.85.58: tope del servidor 140 (antes 50)
 export const CRYPT_LOOT = [
   { common: [15, 23, 25, 28, 31, 34, 62, 65, [454, 472], [455, 475], [457, 477], [461, 482], 79, 80, 81, 82, 83], uncommon: [16, [456, 476], 632], rare: [32] },             // 1-5
   { common: [18, 26, 35, 66, 39, 46, 71, [456, 476], [462, 483], [600, 602], 84, 85, 451, 402], uncommon: [29, 43, 632, 300, 1098], rare: [[458, 478]] },                   // 6-10

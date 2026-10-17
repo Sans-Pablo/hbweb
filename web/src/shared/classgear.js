@@ -23,8 +23,8 @@ export const classOk = (p, d) => { const c = classesOf(d); return !c || c.includ
 export const CLASS_NAME = { warrior: "Guerrero", mage: "Mago", summoner: "Invocador" };
 export const classLabel = d => { const c = classesOf(d); return c && c.length < 3 ? c.map(x => CLASS_NAME[x]).join(" / ") : ""; };
 
-export const MAX_GEAR_LEVEL = 50;
-export const remapLevel = L => (L <= 30 ? L : Math.min(MAX_GEAR_LEVEL, 30 + Math.round((L - 30) * (MAX_GEAR_LEVEL - 30) / 90)));
+export const MAX_GEAR_LEVEL = 140;
+export const remapLevel = L => Math.min(MAX_GEAR_LEVEL, L);   // v0.85.58: con tope 140 el equipo conserva el nivel original (antes se comprimía a 31..50)
 
 // ---- báculos: familia → ids. Los 9xxx son los maestros (nivel 50, 1 de oro, mismo sprite con tinte más fuerte y efecto)
 export const FAMILIES = { ice: [861, 862, 9001], dark: [865, 866, 9002], fire: [746, 9003], psychic: [9004] };

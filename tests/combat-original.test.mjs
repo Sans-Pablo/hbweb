@@ -85,5 +85,5 @@ v = mkV({ pkCount: 1 }); killedPenalty(mkD(0), v, { kind: "npc" }); assert.equal
 // bCheckLevelUp (HG.cpp:15052): +50 de oro por nivel 1..50
 { const pl = { id: 1, level: 5, exp: 0, nextExp: 1, gold: 10, pool: 0 }; let n = 0;
   const wl = { rng: () => 0, time: 0, emit() {}, recalc() { pl.nextExp = pl.level < 7 ? pl.exp + 1 : 1e12; } };
-  pl.nextExp = 1; giveExp(wl, pl, 1000); assert.ok(pl.level >= 6 && pl.gold === 10 + 50 * (pl.level - 5), "50 de oro por nivel"); }
+  pl.nextExp = 1; giveExp(wl, pl, 1000); assert.ok(pl.level >= 6 && pl.gold === 10 + [6, 7].slice(0, pl.level - 5).reduce((s, l) => s + 50 + (l >> 1), 0), "oro por nivel"); }
 console.log("OK combat-original");

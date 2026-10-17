@@ -17,7 +17,7 @@ const grid = new Grid(60, 60, new Uint8Array(60 * 60 * 10));
 let seed = 9; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const w = new World({ grid, npcDb, data: new GameData({ items: J("items.json"), magic, npcs: npcDb }), spawns: [], rng, start: [10, 10] });
 const A = w.ents.get(w.addPlayer("Mago", null, { gender: 1, stats: { str: 30, vit: 20, dex: 20, int: 10, mag: 10, chr: 10 } }));
-A.level = 50; A.stats.str = 400; A.stats.int = 100; A.stats.mag = 100; w.recalc(A); A.hp = A.maxHp; A.gold = 1e6; A.quests.u.trade = 1;
+A.level = 140; A.stats.str = 400; A.stats.int = 100; A.stats.mag = 100; w.recalc(A); A.hp = A.maxHp; A.gold = 1e6; A.quests.u.trade = 1;
 { const st = newInst(w, 861); Inv.addToBag(A, w.data, st); assert.ok(Inv.equip(A, w.data, st.uid).ok, "Ice Wand en la mano"); w.recalc(A); A.hp = A.maxHp; }
 const nurse = spawnCitizen(w, C.HOSPITAL.npc, A.x, A.y + 3, C.HOSPITAL.role);
 const mage = spawnCitizen(w, PG.PETMAGE.name, A.x + 2, A.y + 3, PG.PETMAGE.role, PG.PETMAGE.skin);

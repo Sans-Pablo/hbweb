@@ -298,12 +298,14 @@ export function wear(w, p, uid, n) {
   if (inst.life === 0) { Inv.unequip(p, w.data, uid); w.recalc(p); w.emit({ t: "broken", id: p.id, uid }); }
 }
 
-export const MAX_LEVEL = 50;
+export { MAX_LEVEL } from "../drops.js";
+import { MAX_LEVEL } from "../drops.js";
 // Ritmo de experiencia (INVENTO del port, a petición del propietario: llegar al nivel máximo debe costar mucho más). La tabla de niveles es la del original;
 // lo que baja es la experiencia que se gana: 70 % hasta el nivel 20 y, desde ahí, un 8 % menos por cada nivel (nivel 30: ~31 %, nivel 49: ~6 %).
 // RITMO DE LAS QUESTS (0.63.0): factor global medido con los habitantes (tools/questsim.mjs) para que el nivel 50 cueste de verdad.
 export const PACE = 0.3;
-export const expRate = level => PACE * 0.7 * Math.pow(0.92, Math.max(0, level - 20));
+// v0.85.58 (tope 140): del 20 al 50 sigue el 8 % menos por nivel; del 50 al 140 el ritmo baja solo 1,2 % por nivel (si no, el 140 sería inalcanzable).
+export const expRate = level => PACE * 0.7 * Math.pow(0.92, Math.max(0, Math.min(level, 50) - 20)) * Math.pow(0.988, Math.max(0, level - 50));
 export function giveExp(w, p, amount) {
   if (amount <= 0) return;
   const ax = auraExp(w, p); if (ax) amount = Math.round(amount * (1 + ax / 100));                // aura de sabiduría del Dummy
@@ -311,9 +313,9 @@ export function giveExp(w, p, amount) {
   amount = Math.max(1, Math.round(amount * expRate(p.level)));
   p.exp += amount;
   w.emit({ t: "exp", id: p.id, amount });
-  while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 50)
+  while (p.exp >= p.nextExp && p.level < MAX_LEVEL) {            // bCheckLevelUp (el original llega a 180; en esta versión el tope es 140)
     p.level++;
-    if (p.level <= 50) ledger(w, p, 50, "levelup");                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
+    if (p.level <= MAX_LEVEL) ledger(w, p, 50 + Math.floor(p.level / 2), "levelup");                               // bCheckLevelUp (HG.cpp:15052): 50 de oro por nivel 1..50
     const pay = Math.min(p.lvDebt | 0, R.LEVELUP_POINTS); p.lvDebt = (p.lvDebt | 0) - pay;
     p.pool += R.LEVELUP_POINTS - pay;
     w.recalc(p);

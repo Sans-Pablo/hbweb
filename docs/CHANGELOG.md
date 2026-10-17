@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.58 · Nivel 140 (2026-10-17)
+- [invento] Tope de nivel 140, curva de experiencia suavizada del 50 al 140, oro por nivel 50+nivel/2, equipo sin compresión de nivel. Ver docs/sistemas/nivel-140.md.
+- [migración] `WIPE_V=1`: reinicio único de estadísticas y borrado de objetos de todos los personajes (backup en hbweb-backup/pre-0.85.58).
+
 ## 0.85.57 · Guerreros que pegan (2026-10-17)
 - [fix] `bot.js` `step`: ante un campo de fuego sin alternativa esperaba para siempre (bots quietos en PvP); ahora 2,5 s y cruza.
 - [invento] `errands`: un báculo en la mano de un guerrero vale 0 → se cambia por la mejor arma por item level.
