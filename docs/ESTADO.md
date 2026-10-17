@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.55) Mejoras PvP de bots (reserva de maná, no romper parálisis, escudo ante varios, stats por arma/hechizo con reinicio general) y canal de TV de peleas en el observador. Pendiente: comprobar en simulación PvP en vivo.
 - [x] (v0.85.54) Fórmulas de acierto/daño/MR para los bots (`botformulas.js`): Paralyze según MR del rival, elección de objetivo y reparto de Mag. Pendiente: sets de equipo situacionales y comprobar PvP en simulación en vivo.
 - [x] (v0.85.53) Reglas de PvP de los bots (paralizar, sospecha de PFM, Spike/Fire Field, Invisibility, apoyo, fuego concentrado), solo guerrero/mago 50/50, guerrero con 36 Int. Pendiente: dar a los bots las fórmulas de daño/ataque/MR.
 - [x] (v0.85.52) Panel PvP del personaje en el select del observador dividido.

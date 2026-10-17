@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.85.55 · Mejoras PvP y canal de peleas (2026-10-17)
+- [invento] `botmagic.js`: reserva de maná (cura + 2 Paralyze en PvP); con un guerrero junto al paralizado el mago no lanza ataques (rompen la parálisis). `bot.js` `swarmShield`: escudo si ≥3 enemigos le pegan. `builds.js`: guerrero Str del arma > Dex > Vit, mago Int > Mag > Vit; `RESET_V` 3 (reinicio general). Observador: `fightChannel` (canal de TV, teclas , y .) con `pv`/`pvid` en `botList`. Test `bot-pvp2`.
+
 ## 0.85.54 · Fórmulas para los bots (2026-10-17)
 - [invento] `systems/botformulas.js` (acierto, daño medio, MR efectiva, prob. de que un hechizo entre), usado en `botmagic.js` (Paralyze solo si `landChance` ≥ 25-30), `bot.js` `pickTarget` (guerrero: más daño esperado; mago: menos MR) y `builds.js allocate` (mago con Int ≥ 50 prioriza Mag). Test `bot-formulas`.
 

@@ -682,7 +682,8 @@ function botList() {
     const lead = br.owner != null ? (w.ents.get(br.owner) || adventure.bots.get(br.owner)) : null, gid = b.party?.id ? "p" + b.party.id : lead ? "l" + br.owner : kids.has(b.id) ? "l" + b.id : "";
     return { id: b.id, name: b.name, side: b.side, lv: b.level, map: w.map.name || w.map.id, x: b.x, y: b.y, hp: b.hp, mh: b.maxHp, mp: b.mp, mm: b.maxMp, st: b.stats, gold: b.gold, kills: b.kills || 0, ek: b.ek || 0,
       lang: b.res?.lang || "", job: b.res?.job || "", arch: b.res?.arch || "", mage: isCaster(b), guild: b.guild?.name || "", grank: b.guild ? b.guild.rank | 0 : -1, goal: b.res ? Residents.goalText(b.res.goal, "es") : "", party: b.party?.names?.length || 0, act: st, exp: Math.round(100 * (b.exp - b.prevExp) / Math.max(1, b.nextExp - b.prevExp)),
-      mode: Residents.modeOf(adventure, b, w), grp: gid, lead: lead ? lead.name : (kids.has(b.id) ? b.name : ""), cls: b.quests?.cls || "", q: b.quests ? b.quests.n | 0 : 0, floor: w.map.kind === "dungeon" ? w.map.level : 0, pids: b.party?.names || null };
+      mode: Residents.modeOf(adventure, b, w), grp: gid, lead: lead ? lead.name : (kids.has(b.id) ? b.name : ""), cls: b.quests?.cls || "", q: b.quests ? b.quests.n | 0 : 0, floor: w.map.kind === "dungeon" ? w.map.level : 0, pids: b.party?.names || null,
+      pv: t && t.kind === "player" && !b.dead && Math.hypot(t.x - b.x, t.y - b.y) <= 12 ? t.name : "", pvid: t && t.kind === "player" ? t.id : 0 };      // v0.85.55: pelea PvP en curso (canal de TV del observador)
   }).sort((a, b) => (a.side - b.side) || (b.lv - a.lv) || a.name.localeCompare(b.name));
 }
 function itemsList(world) {

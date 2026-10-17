@@ -20,3 +20,10 @@ El original no tiene bots: todo esto usa las mismas órdenes y reglas que un jug
 
 ## Fórmulas para los bots (v0.85.54)
 `systems/botformulas.js` predice sin tirar dados: acierto `floor(ataque/defensa*80)` 15..99 (`rules.js hitChance`), daño medio (`combat.js damageRange`), MR efectiva `skill + addMR + (Mag-50)` y probabilidad de que un hechizo pase `floor(poder/MR*50)` 15..99 (`magic.js resists`, `magicsys.js`). Uso: Paralyze solo si `landChance` ≥ 25 (30 en mago); `pickTarget` pondera daño esperado (guerrero) o MR (mago); `allocate` manda más puntos a Mag al llegar a Int 50. Test: `tests/bot-formulas.test.mjs`. Pendiente: sets de equipo situacionales.
+
+## Mejoras PvP (v0.85.55)
+- Maná: `fight` deja siempre reserva para curar y 2 Paralyze (PvP).
+- Parálisis: con un compañero cuerpo a cuerpo a ≤5 casillas del paralizado, el mago no lanza daño.
+- Escudo: `bot.js swarmShield` equipa escudo con ≥3 atacantes (skill Shield, sin arma a dos manos).
+- Stats: guerrero Str del arma > Dex > Vit; mago Int > Mag > Vit; `RESET_V` 3.
+- Observador: `watchpanel.js fightChannel`, canal de TV con las peleas PvP (`pv`/`pvid` del roster).

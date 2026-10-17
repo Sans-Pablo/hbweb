@@ -1006,7 +1006,7 @@ function pets(adv, w, p, r, home) {
 }
 // ---- REPARTO NUEVO (build): de vez en cuando prueban otro reparto de puntos para descubrir builds mejores (builds.js). Van al mago de la tienda general
 // (Gandlf, reinicio de estadísticas de respec.js), recuperan sus puntos, los reparten según el nuevo build y miden cuánta experiencia por minuto sacan.
-const RESET_V = 2;
+const RESET_V = 3;
 function rebuild(adv, w, p, r, home) {
   const b = p.bot;
   if (p.dead) { r._reb = null; return; }

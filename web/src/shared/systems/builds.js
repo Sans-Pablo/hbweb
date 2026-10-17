@@ -11,8 +11,8 @@ export const BUILDS = {
   glass:    { es: "cañón de cristal", w: { str: 0.55, dex: 0.3, vit: 0.15 } },
   agile:    { es: "ágil", w: { dex: 0.5, str: 0.25, vit: 0.25 } },
   summoner: { es: "invocador", w: { int: 0.3, mag: 0.15, vit: 0.35, str: 0.2 } },
-  vanguard: { es: "guerrero", w: { vit: 0.4, str: 0.4, dex: 0.2 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
-  mage:     { es: "mago", w: { int: 0.65, mag: 0.2, vit: 0.15 } },                                // v0.85.47: Blizzard pide Int 113 (magicbal.js); v0.85.46: más Int y Mag. v0.85.26: lanzador puro. INT para aprender y lanzar (Magic Missile pide 18, Fire Ball 26, Fire Strike 34), MAG para el maná
+  vanguard: { es: "guerrero", w: { dex: 0.5, vit: 0.4, str: 0.1 } },                               // Guerrero de misiones: el jefe de cripta se aguanta con vida
+  mage:     { es: "mago", w: { int: 0.6, mag: 0.25, vit: 0.15 } },                                // v0.85.47: Blizzard pide Int 113 (magicbal.js); v0.85.46: más Int y Mag. v0.85.26: lanzador puro. INT para aprender y lanzar (Magic Missile pide 18, Fire Ball 26, Fire Strike 34), MAG para el maná
   arcane:   { es: "arcano", w: { vit: 0.4, int: 0.3, mag: 0.15, str: 0.15 } },                      // Mago e Invocador de misiones: vida y mente
 };
 const QUEST_BUILD = { warrior: "vanguard", mage: "arcane", summoner: "arcane" };

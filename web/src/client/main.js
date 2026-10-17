@@ -47,7 +47,7 @@ import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
 import { pickBot } from "./observer.js";
-import { observerBar, rosterPanel, brainPanel } from "./watchpanel.js";
+import { observerBar, rosterPanel, brainPanel, fightChannel } from "./watchpanel.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
@@ -96,7 +96,7 @@ async function main() {
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { perf.version = v.version; }).catch(() => {});
   let world = conn.state;
   if (conn.observing && EMBED) setInterval(() => parent.postMessage({ hbBrain: conn.brain, id: conn.pid, name: conn.watchName }, location.origin), 500);   // panel dividido: el marco solo muestra el juego; el resto lo pinta la página madre
-  else if (conn.observing) { observerBar(conn); rosterPanel(conn); setInterval(() => brainPanel(conn), 500); }
+  else if (conn.observing) { observerBar(conn); rosterPanel(conn); fightChannel(conn); setInterval(() => brainPanel(conn), 500); }
   // Carga bajo demanda (streaming.js): solo lo del mapa donde se entra; el resto llega al cambiar de mapa
   const stream = new Streamer(assets.sprites);
   status.style.display = "";

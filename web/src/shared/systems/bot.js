@@ -113,6 +113,18 @@ function buy(w, p, d, n = 1) {
   Inv.addToBag(p, w.data, inst);
   return inst;
 }
+// ESCUDO CONTRA VARIOS (v0.85.55): con 3 o más enemigos pegándole, un guerrero con skill de Shield que lleva un escudo en la mochila se lo pone (reduce el daño).
+// Si lleva arma a dos manos no cambia (perdería el arma). INVENTO: el original no tiene bots.
+function swarmShield(w, p, b) {
+  if (p.equip[EQUIP.LHAND] !== undefined || p.equip[EQUIP.TWOHAND] !== undefined || !((p.skills[SKILL.SHIELD] || 0) > 0) || w.time - (b.shAt || -1e9) < 8000) return false;
+  let n = 0; for (const e of w.ents.values()) if (e !== p && !e.dead && e.target === p.id && dist(e, p) <= 3) n++;
+  if (n < 3) return false;
+  const sh = p.bag.find(i => { const d = w.data.item(i.id); return d && d.equipPos === EQUIP.LHAND && i.life !== 0 && !(d.levelLimit > p.level) && !b.bad.has(i.id); });
+  if (!sh) return false;
+  b.shAt = w.time;
+  if (!tryEquip(w, p, b, sh)) return false;
+  blog(w, p, `Me rodean ${n} enemigos: me pongo ${w.data.item(sh.id).name} para recibir menos daño.`); return true;
+}
 function tryEquip(w, p, b, inst) {
   const before = { ...p.equip };
   w.command(p.id, { t: "equip", uid: inst.uid });
@@ -453,6 +465,7 @@ function run(adv, w, p, b) {
   if (p.hunger < 35) { const f = p.bag.find(i => w.data.item(i.id)?.type === ITYPE.EAT && !w.data.item(i.id).name.includes("Candy")); if (f) adv.command(p.id, { t: "use", uid: f.uid }); }
   const hpf = p.hp / p.maxHp, fear = w.pvp ? 0 : Math.min(0.2, (p.res?.scare || 0) * 0.04);                 // MORIR DUELE: cada muerte reciente los vuelve más prudentes (beben antes, huyen antes)
   if (BM.ensureHands(adv, w, p, b, t => blog(w, p, t))) return;
+  if (!isCaster(p) && swarmShield(w, p, b)) return;
   if (isCaster(p) && p.mp < Math.max(15, p.maxMp * 0.25) && w.time - (b.manaAt || 0) > 1500 && w.time - (p.lastCombat || -1e9) < 8000) {          // sin maná en pelea: bebe una poción de maná y sigue lanzando
     const bl = catalog(w.data).mana, mp = bl && p.bag.find(i => i.id === bl.id);
     if (mp) { b.manaAt = w.time; blog(w, p, `Maná ${p.mp}/${p.maxMp}: bebo una poción de maná.`); adv.command(p.id, { t: "use", uid: mp.uid }); return; }

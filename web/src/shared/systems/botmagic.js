@@ -88,9 +88,13 @@ export function fight(adv, w, p, b, t, log) {
       pv.parAt = w.time; log(`⚔ Paralizo a ${t.name} con ${w.magic[par].name || "un hechizo"}.`); return cast(adv, w, p, b, par, t.x, t.y);
     }
     if (held && known(p, SPIKE) && w.magic[SPIKE] && w.time - (pv.spikeAt || -1e9) > 9000 && p.mp >= costOf(w, p, SPIKE) + 30) { pv.spikeAt = w.time; log(`⚔ ${t.name} está paralizado: Spike Field en su casilla para que no puedan quitárselo con Fire Field.`); return cast(adv, w, p, b, SPIKE, t.x, t.y); }
-    if (held && b.spellLog !== "held" + t.id) { b.spellLog = "held" + t.id; log(`⚔ Remato con magia a ${t.name} (paralizado).`); }
+    // v0.85.55: el daño rompe la parálisis: si hay un compañero cuerpo a cuerpo junto al paralizado, el mago NO tira ataques; deja que peguen los guerreros.
+    if (held) { for (const q of w.ents.values()) if (q !== p && q.kind === "player" && friend(p, b, q) && !isCaster(q) && dist(q, t) <= 5) { if (b.spellLog !== "wait" + t.id) { b.spellLog = "wait" + t.id; log(`⚔ ${t.name} está paralizado: no lo toco con magia, que peguen los guerreros (el daño rompe la parálisis).`); } return false; } }
+    if (held && b.spellLog !== "held" + t.id) { b.spellLog = "held" + t.id; log(`⚔ Remato con magia a ${t.name} (paralizado, sin guerreros cerca).`); }
   }
-  const healKeep = HEALS.some(h => known(p, h)) ? costOf(w, p, HEALS.find(h => known(p, h))) : 0;
+  // Reserva de maná (v0.85.55): siempre queda para curarse y para volver a paralizar (x2 contra jugadores), por si llegan enemigos.
+  const parKeep = PARALYZE.some(h => known(p, h) && w.magic[h]) ? costOf(w, p, PARALYZE.find(h => known(p, h) && w.magic[h])) * (t.kind === "player" ? 2 : 1) : 0;
+  const healKeep = (HEALS.some(h => known(p, h)) ? costOf(w, p, HEALS.find(h => known(p, h))) : 0) + parKeep;
   const id = ATTACK.find(a => known(p, a) && w.magic[a] && p.mp >= costOf(w, p, a) + healKeep && M.castChance(p, a) >= 40);
   if (id === undefined) return false;
   if (b.spellLog !== id) { b.spellLog = id; log(`${t.kind === "player" ? "⚔ " : ""}Lanzo ${w.magic[id].name || "hechizo " + id} a ${t.name} (maná ${p.mp}/${p.maxMp}).`); }

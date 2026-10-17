@@ -139,3 +139,40 @@ export function brainHtml(b, tab, open = true) {
   }
   return h;
 }
+
+// CANAL DE PELEAS (v0.85.55, INVENTO): como un televisor. Lista las peleas PvP en curso (un bot con un jugador/bot como objetivo a menos de 12 casillas),
+// avisa cuando empieza una nueva y deja cambiar de «canal» (botones o teclas , y .) sin buscar a mano dónde pelean. "Auto" salta solo a la pelea más reciente.
+export function fightChannel(conn) {
+  const el = document.createElement("div");
+  el.style.cssText = "position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(20,15,6,.92);color:#f0e2b8;border:1px solid #6b5a33;border-radius:8px;padding:4px 10px;font:13px system-ui;display:flex;gap:8px;align-items:center";
+  document.body.appendChild(el);
+  let fights = [], seen = new Set(), auto = false, flash = 0;
+  const calc = list => {
+    const byId = new Map(list.map(b => [b.id, b])), out = [], used = new Set();
+    for (const b of list) {
+      if (!b.pv || used.has(b.id)) continue;
+      const foe = byId.get(b.pvid); used.add(b.id); if (foe) used.add(foe.id);
+      out.push({ key: Math.min(b.id, b.pvid || b.id) + "-" + Math.max(b.id, b.pvid || b.id), a: b, vs: b.pv, map: b.map, ids: [b.id, foe?.id].filter(Boolean) });
+    }
+    return out;
+  };
+  const cur = () => fights.findIndex(f => f.ids.includes(conn.pid));
+  const go = d => { if (!fights.length) return; const i = cur(), k = i < 0 ? (d > 0 ? 0 : fights.length - 1) : (i + d + fights.length) % fights.length; watchTo(fights[k].a.id, conn); };
+  const render = () => {
+    const i = cur(), f = fights[i], btn = "background:#2c2417;color:#f0e2b8;border:1px solid #6b5a33;border-radius:6px;padding:2px 8px;cursor:pointer";
+    el.style.borderColor = flash > Date.now() ? "#e33" : "#6b5a33";
+    el.innerHTML = `<span>📺</span><button data-a="p" style="${btn}">◀</button><span>${fights.length ? L("Canal", "Channel") + " " + (i < 0 ? "–" : i + 1) + "/" + fights.length : L("Sin peleas ahora", "No fights now")}</span><button data-a="n" style="${btn}">▶</button>`
+      + (f ? `<span>⚔ <b style="color:#ffd76a">${esc(f.a.name)}</b> vs <b style="color:#f88">${esc(f.vs)}</b> · ${esc(f.map)}</span>` : "") + `<button data-a="t" style="${btn}">${auto ? "✔ " : ""}${L("Auto", "Auto")}</button>`;
+  };
+  el.onclick = e => { const a = e.target.dataset?.a; if (a === "p") go(-1); else if (a === "n") go(1); else if (a === "t") { auto = !auto; render(); } };
+  addEventListener("keydown", e => { if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return; if (e.key === ",") go(-1); else if (e.key === ".") go(1); });
+  const tick = async () => {
+    try {
+      fights = calc(await conn.listBots());
+      const fresh = fights.filter(f => !seen.has(f.key)); seen = new Set(fights.map(f => f.key));
+      if (fresh.length) { flash = Date.now() + 4000; if (auto && cur() < 0 || auto && !fights[cur()]) watchTo(fresh[0].a.id, conn); }
+      render();
+    } catch { /* sin red un momento */ }
+  };
+  tick(); setInterval(tick, 2000);
+}
