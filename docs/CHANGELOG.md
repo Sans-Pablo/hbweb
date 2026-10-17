@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.57 · Guerreros que pegan (2026-10-17)
+- [fix] `bot.js` `step`: ante un campo de fuego sin alternativa esperaba para siempre (bots quietos en PvP); ahora 2,5 s y cruza.
+- [invento] `errands`: un báculo en la mano de un guerrero vale 0 → se cambia por la mejor arma por item level.
+
 ## 0.85.56 · Anti-box y ranking de items (2026-10-17)
 - [invento] `bot.js`: `boxBreak` (rodeado con <= 1 salida: mata al más débil adyacente), monstruos débiles primero en `pickTarget`, `encircle` en PvP.
 - [invento] `builds.js`: `bonusScore` convexo en el segundo stat (guerrero HP>MR>MA, mago MP>HP>DR>PA), armas (acierto>consecutivo>reputación), armadura ligera, `setWanted` (set HP <40 % vida, set MP <25 % maná); `itemlevel.js` valora HP/MP y acierto de forma convexa (precio de mercado).

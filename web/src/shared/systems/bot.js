@@ -175,7 +175,8 @@ export function errands(w, p, b, first = false) {
     if (bow && buy(w, p, bow)) blog(w, p, `Compro un ${bow.name} (${bow.price} de oro): quiero pelear a distancia.`);
   }
   const worn = slot => { const uid = p.equip[slot]; return uid !== undefined ? Inv.instOf(p, uid) : null; };
-  const value = slot => slot === EQUIP.RHAND ? Math.max(ilv(worn(EQUIP.TWOHAND)), ilv(worn(EQUIP.RHAND))) : ilv(worn(slot));
+  const staffOk = isSupport(p) || isMage(p), wv = slot => { const i = worn(slot); return i && isStaff(w.data.item(i.id)) && !staffOk ? 0 : ilv(i); };      // v0.85.57: el guerrero nunca pega con báculo: si lo lleva, vale 0 y se cambia por el mejor arma
+  const value = slot => slot === EQUIP.RHAND ? Math.max(wv(EQUIP.TWOHAND), wv(EQUIP.RHAND)) : ilv(worn(slot));
   const reqOk = d => { const st = { 10: "str", 11: "dex", 12: "vit", 13: "int", 14: "mag", 15: "chr" }[d.v4]; return ![EQUIP.HEAD, EQUIP.BODY, EQUIP.ARMS, EQUIP.LEGGINGS].includes(d.equipPos) || !st || p.stats[st] + (st === "str" ? p.pool : 0) >= d.v5; };      // v0.85.48: no compra ni se pone armadura cuya Str/Dex/Int exigida no cumple (inventory.js equip): evita comprar y quedarse desnudo
   const usable = d => d && d.type === ITYPE.EQUIP && reqOk(d) && !(d.levelLimit > p.level) && !(d.weight > (p.stats.str + p.pool) * 100) && !(d.gender === 1 && p.gender !== 1) && !(d.gender === 2 && p.gender !== 2) &&
     d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && d.effectType !== EFFECT.ATTACK_SPECABLTY && d.effectType !== EFFECT.DEFENSE_SPECABLTY && !(d.equipPos >= EQUIP.RHAND && d.equipPos <= EQUIP.TWOHAND && (SKIP_WEAPON.test(d.name) && !(isStaff(d) && (isSupport(p) || isMage(p))))) && (!isBow(d) || isArcher(p)) && (!isStaff(d) || isSupport(p) || isMage(p)) && !(isMage(p) && (d.equipPos === EQUIP.LHAND || d.equipPos === EQUIP.TWOHAND || (d.equipPos === EQUIP.RHAND && !isStaff(d)))) && !(isSupport(p) && hasStaff(p) && !isStaff(d) && (d.equipPos === EQUIP.RHAND || d.equipPos === EQUIP.TWOHAND));          // con la varita en la mano no vuelve al sable
@@ -377,9 +378,9 @@ function step(adv, w, p, b, tx, ty, run) {
   if (!hazardAt(w, p.x, p.y) && hazardAt(w, p.x + DX[d], p.y + DY[d], 200)) {                   // no entra en el fuego: prueba las direcciones vecinas o espera
     const alt = [(d % 8) + 1, ((d + 6) % 8) + 1].find(a => !hazardAt(w, p.x + DX[a], p.y + DY[a], 200) && !w.grid.blocked(p.x + DX[a], p.y + DY[a]) && !w.teleports.has(w.grid.idx(p.x + DX[a], p.y + DY[a])));
     b.path = null;
-    if (!alt) return true;
-    d = alt;
-  }
+    if (!alt) { b.hazWait ||= w.time; if (w.time - b.hazWait < 2500) return true; }          // v0.85.57: esperar ante el fuego solo 2,5 s (antes eternamente: en un PvP el guerrero se quedaba mirando); luego lo cruza
+    else d = alt;
+  } else b.hazWait = 0;
   if (!adv.command(p.id, { t: "move", dir: d, run: !!run && p.sp > 6 })) { b.path = null; b.fails++; return false; }
   b.fails = 0;
   vaiven(adv, w, p, b, tx, ty);

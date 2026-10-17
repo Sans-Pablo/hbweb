@@ -1,4 +1,5 @@
 # Estado del proyecto
+- [x] (v0.85.57) Bots quietos en PvP (espera eterna ante fuego) corregido; guerrero nunca con báculo. Pendiente: reset de stats al cambiar de arma por item level si falta Str (hoy lo cubre `allocate` con la Str del arma).
 - [x] (v0.85.56) Anti-box (matar al débil para abrir salida, rodear en PvP, débiles primero) y ranking de items por segundo stat con sets HP/MP, armas con acierto y armadura ligera. Los mínimos de Str de armadura (plate 100, chain mago <=40) los aplica `reqOk` con los datos de cada item.
 - [x] (v0.85.55) Mejoras PvP de bots (reserva de maná, no romper parálisis, escudo ante varios, stats por arma/hechizo con reinicio general) y canal de TV de peleas en el observador. Pendiente: comprobar en simulación PvP en vivo.
 - [x] (v0.85.54) Fórmulas de acierto/daño/MR para los bots (`botformulas.js`): Paralyze según MR del rival, elección de objetivo y reparto de Mag. Pendiente: sets de equipo situacionales y comprobar PvP en simulación en vivo.
