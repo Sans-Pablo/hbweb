@@ -19,7 +19,9 @@ export function groups(list, q) {
     .sort((a, c) => c.m.length - a.m.length || a.lead.localeCompare(c.lead));
   return { out, solo: solo.sort((a, c) => (a.side - c.side) || c.lv - a.lv) };
 }
-const ordered = list => { const { out, solo } = groups(list, ""); return [...out.flatMap(x => x.m), ...solo]; };
+// Los ◀ ▶ y [ ] solo recorren a quien pelea (no granjeros ni pescadores ni quien descansa/viaja); si nadie pelea, a todos.
+export const fighting = b => b.job !== "farmer" && b.job !== "fisher" && ["fight", "flee", "pit", "delve"].includes(b.mode);
+export const ordered = list => { const f = list.filter(fighting), { out, solo } = groups(f.length ? f : list, ""); return [...out.flatMap(x => x.m), ...solo]; };
 
 // Barra superior: nombre, anterior/siguiente (también teclas [ y ]), tabla completa y salir.
 export function observerBar(conn) {
@@ -122,7 +124,7 @@ export function brainHtml(b, tab, open = true) {
     h += sec(L("Atributos", "Stats")) + `<div style="display:flex;gap:10px;flex-wrap:wrap">` + ["str", "vit", "dex", "int", "mag", "chr"].map(k => `<span><span style="color:#998">${k.toUpperCase()}</span> ${b.st[k] ?? "-"}</span>`).join("") + "</div>"
       + kv(L("Nivel medio de objetos", "Average item level"), b.ilvl) + kv(L("Oro / pociones", "Gold / potions"), b.gold + " / " + b.pots) + kv(L("Bolsa", "Bag"), b.bagN + " " + L("objetos", "items"));
     h += sec(L("Equipo", "Equipment")) + (b.equip.length ? b.equip.map(([sl, n]) => kv(SLOT[sl]?.[lang] || sl, esc(n))).join("") : "—");
-    h += sec(L("Habilidades", "Skills")) + (b.skills.length ? b.skills.map(([k, v]) => `<div style="display:flex;gap:6px;align-items:center"><span style="width:100px;color:#998">${SK[k]?.[lang] || k}</span>${P(v, 100, "#6a9", 110)} ${v}</div>`).join("") : "—");
+    h += sec(L("Habilidades", "Skills")) + (b.skills.length ? b.skills.map(([k, v]) => `<div style="display:flex;gap:6px;align-items:center"><span style="width:100px;color:#998">${SK[k]?.[lang] || k}</span>${P(v, 100, "#9a8", 110)} ${v}</div>`).join("") : "—");
     const nm = a => a.map(([n, v]) => esc(String(n).replace(/-/g, " ")) + " " + v).join(", ");
     h += sec(L("Historial", "Record")) + kv(L("Bajas / muertes", "Kills / deaths"), b.kills + " / " + b.deaths) + kv("PvP", b.qa.pvp.k + " / " + b.qa.pvp.d + " · ek " + b.ek);
     if (b.qa.kills.length) h += kv(L("Más cazados", "Most hunted"), nm(b.qa.kills));

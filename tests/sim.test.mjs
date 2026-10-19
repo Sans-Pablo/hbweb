@@ -69,7 +69,7 @@ assert(golds === 0, "el oro no cae de los monstruos");
   w2.command(id2, { t: "unequip", uid: shield.uid });
   const slime = [...w2.ents.values()].find(e => e.kind === "npc" && e.name === "Slime");
   [m.x, m.y] = [slime.x - 3, slime.y]; w2.grid.release(m.fx, m.fy, m.id); w2.grid.occupy(m.x, m.y, m.id);
-  let hits = 0, mp0 = m.mp;
+  m.res = { noBreak: true }; let hits = 0, mp0 = m.mp;
   for (let i = 0; i < 40 && !slime.dead; i++) { w2.tick(1100); if (w2.command(id2, { t: "cast", spell: 0, x: slime.x, y: slime.y })) hits++; w2.tick(700); }
   assert(hits > 0 && m.mp < mp0, "el hechizo gasta maná");
   assert(w2.drainEvents().some(e => e.t === "spell") || slime.dead, "el hechizo se lanza");
@@ -119,7 +119,7 @@ let target = null;
   const m = mk({ stats: P.PRESETS.mage, gender: 2, skin: 3, hair: 5, hairCol: 9, under: 4 });
   assert(m.stats.int === 14 && m.stats.mag === 14 && m.stats.str === 10 && m.gender === 2, "plantilla de mago");
   assert(m.look.skin === 3 && m.look.hair === 5 && m.look.hairCol === 9 && m.look.under === 4, "aspecto elegido");
-  assert(m.skills[4] === 14 + 10 && m.skills[5] === 10 + 10, "habilidades iniciales según los atributos");
+  assert(m.skills[4] === 100 && m.skills[5] === 10 + 10, "habilidades iniciales según los atributos");
   assert(Object.keys(m.equip).length === 2 && m.bag.some(i => data.item(i.id).name === "Chemise(W)"), "mujer: lleva Chemise(W)");
   const bad = mk({ stats: { str: 14, vit: 14, dex: 14, int: 14, mag: 14, chr: 14 }, gender: 7, skin: 9 });   // 84 puntos: se ignora
   assert(bad.stats.str === 14 && bad.stats.vit === 14 && bad.stats.dex === 10 && bad.stats.int === 10 && bad.gender === 1 && bad.look.skin === 2, "valores fuera de regla vuelven a los de por defecto");

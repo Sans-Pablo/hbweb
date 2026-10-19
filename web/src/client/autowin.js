@@ -8,7 +8,7 @@ import { MiniWin } from "./miniwin.js";
 import { mobSprite } from "./anim.js";
 import { ACT } from "../shared/const.js";
 import { t } from "./i18n.js";
-import { PLACES, FARM, DEFAULT_RULES } from "../shared/systems/autoplay.js";
+import { PLACES, cityOf, DEFAULT_RULES } from "../shared/systems/autoplay.js";
 import { dropInfo } from "../shared/drops.js";
 
 export const AUTO_ID = 74, AUTO_MINI_ID = 75;
@@ -21,14 +21,17 @@ export class AutoWin extends Win {
   constructor(api) { super({ id: AUTO_ID, title: "Menú automático", w: 460, h: 470, x: 170, y: 40 }); this.api = api; this.tab = "hunt"; this.zi = 0; this.mi = 0; this.nopick = false; this.potions = true; this.rules = [...DEFAULT_RULES]; }
   // arranca la caza; la mini ventana (contador) se abre sola y sigue la misma orden aunque termine
   startHunt(z) {
-    const a = { kind: "hunt", mob: z.name, zone: { map: FARM, rect: z.rect }, nopick: this.nopick, potions: this.potions, rules: [...this.rules], kills: 0, exp: 0, t0: performance.now(), pit: z.id };
+    const a = { kind: "hunt", mob: z.name, zone: { map: cityOf({ side: this.side }).farm, rect: z.rect }, nopick: this.nopick, potions: this.potions, rules: [...this.rules], kills: 0, exp: 0, t0: performance.now(), pit: z.id };
     this.api.start(a); this.g?.open(AUTO_MINI_ID);
     if (this.mini) this.mini.run = a;
   }
+  // v0.85.82 (obs. 43): cada bando caza en su granja; las zonas salen de los spawns del mapa de esa ciudad (Aresden: arefarm.spawns.json; Elvine: maps/elvfarm.json)
   zones() {                                                 // zonas = spawns agrupados por criatura (id/rect del JSON de la granja)
-    return (this.api.spawns() || []).filter(s => s.name && this.api.npcDb[s.name]);
+    const sp = this.side === 2 ? this.api.citySpawns?.("elvfarm") : this.api.spawns();
+    return (sp || []).filter(s => s.name && this.api.npcDb[s.name]);
   }
   body(ui, me, world) {
+    this.side = me?.side === 2 ? 2 : 1;
     const I = this.inner, api = this.api, on = api.ctl().auto;
     ui.btn(I.x, I.y, 100, "Cazar", () => { this.tab = "hunt"; }, { active: this.tab === "hunt" });
     ui.btn(I.x + 106, I.y, 100, "Ir a…", () => { this.tab = "go"; }, { active: this.tab === "go" });
@@ -40,14 +43,14 @@ export class AutoWin extends Win {
     ui.para(I.x, I.y + 36, I.w, "Corre hasta el sitio, entra en el edificio si hace falta y abre su diálogo. Un clic cancela.", THEME.txt);
     const api = this.api;
     GO.forEach((k, i) => ui.btn(I.x + (i % 2) * 215, I.y + 76 + Math.floor(i / 2) * 30, 205, PLACES[k].es[0].toUpperCase() + PLACES[k].es.slice(1), () => api.start({ kind: "run", place: k })));
-    ui.para(I.x, I.y + 206, I.w, "Almacén, tienda y herrería se alcanzan desde la granja de Aresden.", THEME.txt, { size: 11 });
+    ui.para(I.x, I.y + 206, I.w, this.side === 2 ? "Almacén, tienda y herrería se alcanzan desde la granja de Elvine." : "Almacén, tienda y herrería se alcanzan desde la granja de Aresden.", THEME.txt, { size: 11 });
   }
   hunt(ui, me, I, on) {
     const zs = this.zones(), api = this.api;
     if (!zs.length) { ui.para(I.x, I.y + 40, I.w, "Esta cuenta no tiene zonas de caza disponibles.", THEME.txt); return; }
     this.zi = Math.min(this.zi, zs.length - 1);
     const z = zs[this.zi], cfg = api.npcDb[z.name];
-    ui.text(I.x, I.y + 36, "Mapa: Granja de Aresden", THEME.head);
+    ui.text(I.x, I.y + 36, this.side === 2 ? "Mapa: Granja de Elvine" : "Mapa: Granja de Aresden", THEME.head);
     ui.text(I.x, I.y + 56, "Zona", THEME.txt);
     ui.btn(I.x + 44, I.y + 52, 24, "<", () => { this.zi = (this.zi + zs.length - 1) % zs.length; });
     ui.text(I.x + 76, I.y + 56, (this.zi + 1) + "/" + zs.length + "  " + pitName(z) + " (" + z.rect.join(",") + ")", THEME.txt);
@@ -106,6 +109,11 @@ export class AutoMini extends MiniWin {
     const b = { ...a, rules: [...(a.rules || DEFAULT_RULES)], kills: 0, exp: 0, xp: null, t0: performance.now(), t1: 0 };
     this.api.start(b); this.run = b;
   }
+  // «Continuar»: retoma la misma caza conservando muertes, experiencia y tiempo acumulado (el reloj no corre mientras estuvo detenida)
+  resume(a) {
+    const now = performance.now(), b = { ...a, xp: null, t0: a.t0 + (a.t1 ? now - a.t1 : 0), t1: 0, idle: null, full: false, said: false };
+    this.api.start(b); this.run = b;
+  }
   rows() {
     const ctl = this.api.ctl(), a = ctl.auto?.kind === "hunt" ? ctl.auto : this.run;
     if (ctl.auto?.kind === "hunt") this.run = a;
@@ -119,7 +127,7 @@ export class AutoMini extends MiniWin {
       { k: "kv", label: "Ritmo", value: (k * 3600 / secs).toFixed(0) + " /h" },
       { k: "kv", label: "Experiencia", value: "+" + (a.exp || 0), color: THEME.head, bold: true },
       { k: "kv", label: on ? (a.nopick ? "Cazando (sin recoger)" : "Cazando") : "Detenido", value: "", color: on ? THEME.txt : THEME.bad },
-      ...(on ? [] : [{ k: "btn", label: "Reiniciar", fn: () => this.restart(a), primary: true }]),
+      ...(on ? [] : [{ k: "btn", label: "Continuar", fn: () => this.resume(a), primary: true }, { k: "btn", label: "Reiniciar", fn: () => this.restart(a) }]),
     ];
   }
 }

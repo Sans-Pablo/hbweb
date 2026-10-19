@@ -5,9 +5,9 @@ assert.ok(B.BUILDS.vanguard.w.dex > B.BUILDS.vanguard.w.str, "el guerrero priori
 assert.ok(B.BUILDS.vanguard.w.vit > B.BUILDS.vanguard.w.str, "y Vit sobre Str extra");
 assert.ok(B.BUILDS.mage.w.int > B.BUILDS.mage.w.mag && B.BUILDS.mage.w.mag > B.BUILDS.mage.w.vit, "mago: Int > Mag > Vit");
 const war = { stats: { str: 10, vit: 10, dex: 10, int: 10, mag: 10 }, res: { build: "vanguard" }, bot: {}, equip: {}, bag: [] };
-const a = B.allocate(war, 60, 30);
+const a = B.allocate(war, 200, 30);
 assert.ok(a.str >= 20, "reserva la Str que pide el arma");
-assert.ok(a.dex > 0 && a.vit > 0, "el resto va a Dex y Vit");
+assert.ok(a.vit > 0, "el resto va a Vit (Dex solo en múltiplos de 10)");
 console.log("ok bot-pvp2");
 // v0.85.56: ranking de items por segundo stat
 const at = (t2, v2) => (t2 << 12) | (v2 << 8);

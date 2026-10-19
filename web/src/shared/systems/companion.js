@@ -214,7 +214,7 @@ export function resetTalents(w, p, cmd) {
 }
 
 export function addExp(w, p, inst, xp) {
-  const c = inst.comp, cap = p.free ? MAX_COMP_LEVEL : Math.min(MAX_COMP_LEVEL, p.level);
+  const c = inst.comp, cap = MAX_COMP_LEVEL;
   if (xp <= 0 || c.lvl >= cap) return;
   c.exp += xp;
   while (c.lvl < cap && c.exp >= need(c.lvl)) {

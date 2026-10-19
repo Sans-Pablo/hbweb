@@ -20,11 +20,13 @@ import { newInst } from "../web/src/shared/systems/itemsys.js";
 import { errands, isArcher } from "../web/src/shared/systems/bot.js";
 a.spawnResident("Aldric");
 const b = a.residents().find(x => x.name === "Aldric"), w = a.farm;
-b.res.arch = "hunter"; assert.ok(isArcher(b));
+b.res.resetV = 1e6; b.res.arch = "hunter"; assert.ok(isArcher(b));
 b.level = 12; b.gold = 3000; b.hp = b.maxHp;
 Inv.addToBag(b, data, newInst(w, 76, 1));          // LongBow
 b.res._petAt = 1e12; b.res._gatherAt = 1e12; b.res._stallAt = 1e12; b.res._lzAt = 1e12;
+w.map = { ...w.map, kind: "town" };   // v0.85.99: vender solo se hace en ciudad
 for (let k = 0; k < 6; k++) errands(w, b, b.bot, k === 0);
+w.map = { ...w.map, kind: "farm" };
 w.recalc(b);
 console.log("rhand", b.equip, "bow", !!b.eff?.bow, "gold", b.gold, "arrows", b.bag.filter(i => i.id === 77).map(i => i.count), "log", b.bot.log.slice(-4));
 assert.ok(b.eff.bow, "se equipa el arco");

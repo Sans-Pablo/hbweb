@@ -65,3 +65,6 @@ Reglas: un diálogo nunca se cierra a sí mismo dentro de `draw` (usa `sweep()`)
 - `gui.js` añade las mismas bolas a todo cuadro con marco propio (`legacyFrame`: no Win, no modal/fixed/nox, ancho >= 150, no móvil): X derecha, minimizar izquierda; minimizado = barra 170x26 con título (`LEGACY_TITLES` si el cuadro no trae `title`). `nomin` en el cuadro desactiva minimizar. Sin edición por cuadro.
 - Las bolas (cerrar/minimizar/restaurar) las pinta `drawFrameBall` (uistyle.js): esfera de plata con filete, glifo grabado; misma función para `Win` y cuadros heredados. `legacyFrame` usa `"canMin" in d` para distinguir Win. La tienda (11) lleva el buscador arriba (`DlgSearch(34,33,190)`, filas desde y+73).
 - Almacén: buscador arriba y centrado. Misiones: lista desplegable. Guardia anti-turquesa en `tests/ui-guard.test.mjs`.
+
+## Constructor declarativo
+`defineDialog` (client/dlgspec.js, ficha dlgspec.md): ventanas Win por datos (pestañas, botones, casillas, campos, buscador).

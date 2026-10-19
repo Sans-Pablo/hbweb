@@ -54,9 +54,12 @@ assert.equal(dice(seq(0), 3, 6), 3);
   // defensa 1 + 100 con ataque 90 -> (90/101)*80 = 71 %: un d100 de 81 falla, sin escudo (99 %) acierta
   const rng = () => seq(0.5, 0.5, 0.5, 0.5, 0.8)();
   const free = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), player(), npc(), false);
-  const shield = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), player(), npc(), false, { protect: 4 });
+  const two = () => { const q = player(); q.equip = { 9: 1 }; return q; };       // combat.cpp:617: el escudo del objetivo solo cuenta con arma en la casilla a dos manos
+  const shield = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), two(), npc(), false, { protect: 4 });
+  const oneHand = strikeNpc(seq(0.5, 0.5, 0.5, 0.5, 0.8), player(), npc(), false, { protect: 4 });
   assert.equal(free.hit, true);
   assert.equal(shield.hit, false);
+  assert.equal(oneHand.hit, true);
   void rng;
 }
 

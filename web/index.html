@@ -27,6 +27,11 @@
   html, body, canvas, #ui, #ui * { -webkit-tap-highlight-color: transparent; }
   canvas, button { outline: none; }
   ::selection { background: transparent; }
+  /* v0.85.100 (obs. 112): el autorrelleno de Chrome pinta los campos de celeste pálido, el foco visible y el arrastre de lienzos/imágenes dejan velos azules */
+  input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill { -webkit-text-fill-color: var(--parch, #e8dcc0); box-shadow: 0 0 0 1000px #0f0e0c inset; caret-color: var(--parch, #e8dcc0); transition: background-color 99999s; }
+  *:focus, *:focus-visible { outline: none; }
+  canvas, img { -webkit-user-drag: none; -webkit-touch-callout: none; }
+  *::selection { background: transparent; }
   input::selection, textarea::selection { background: rgba(255,255,255,.28); }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated;
     touch-action: none; cursor: var(--cursor); }
@@ -216,7 +221,7 @@
   }
 #gui { position: fixed; pointer-events: none; z-index: 5; image-rendering: pixelated; }
 #hudbar { display: none !important; }
-body.pointing #game, body.pointing canvas { cursor: crosshair !important; }
+body.pointing:not(.cast-anim) #game, body.pointing:not(.cast-anim) canvas { cursor: crosshair !important; }
   body.classic-cursor canvas, body.classic-cursor #game, body.classic-cursor.pointing #game, body.classic-cursor.pointing canvas { cursor: none !important; }
 body.dialogtrans .panel { opacity: .55; }
 </style>

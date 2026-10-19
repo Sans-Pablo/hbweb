@@ -25,3 +25,6 @@ export function itemWeight(d, count = 1) {
 }
 
 export const HEAD_POSITIONS = [EQUIP.HEAD, EQUIP.BODY, EQUIP.ARMS, EQUIP.LEGGINGS];
+
+// v0.85.100 (obs. 111): objetos "Master" eliminados del juego. Ya no existen en items.json; loadSave descarta de mochila, banco y pendientes los ids desconocidos.
+export const REMOVED_MASTER_IDS = [245, 246, 1891, 1892, 1893, 1894, 1895, 1896, 1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904, 1905, 1906, 1907, 1908, 1909, 1910, 1911, 1912, 1913];

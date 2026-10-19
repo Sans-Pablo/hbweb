@@ -43,7 +43,7 @@ function hit(w, e, dmg, f) {
   dmg = Bal.scale(dmg, Bal.fieldMul());
   if (e.kind === "player") {
     if (e.st && sget(w, e, "hold")) sclear(w, e, "hold");
-    damagePlayer(w, e, dmg, { id: f.owner || 0 }, f.type === DYN.FIRE || f.type === DYN.FIRE3 ? "fire" : f.type === DYN.ICESTORM ? "ice" : f.type === DYN.PCLOUD ? "poison" : undefined);
+    damagePlayer(w, e, dmg, { id: f.owner || 0, field: true }, f.type === DYN.FIRE || f.type === DYN.FIRE3 ? "fire" : f.type === DYN.ICESTORM ? "ice" : f.type === DYN.PCLOUD ? "poison" : undefined);
     return;
   }
   if (e.kind === "npc" && !e.comp && f.owner && w.ents.get(f.owner)?.boss) return;       // los campos de un jefe no dañan a monstruos

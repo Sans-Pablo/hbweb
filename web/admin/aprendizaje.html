@@ -1,0 +1,54 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aprendizaje de bots · Helbreath Web</title>
+<style>
+:root{color-scheme:dark;--bg:#14110d;--card:#211b14;--line:#4a3d2a;--gold:#f0d27a;--txt:#e8dcc3;--ok:#9fd48a;--bad:#e08a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,sans-serif;padding:16px}
+h1{color:var(--gold);font:600 22px Georgia,serif;margin:0 0 4px}h2{color:var(--gold);font:600 16px Georgia,serif;margin:0 0 8px}.sub{opacity:.7;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto}
+table{border-collapse:collapse;width:100%}th,td{padding:4px 8px;text-align:right;border-bottom:1px solid #3a3022;white-space:nowrap}th{color:var(--gold)}th:first-child,td:first-child{text-align:left}
+svg{width:100%;height:150px;background:#120e06;border-radius:6px}.ok{color:var(--ok)}.bad{color:var(--bad)}.hint{opacity:.65;font-size:12px;margin:6px 0}
+button{font:inherit;color:var(--txt);background:#2c2418;border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+</style></head><body>
+<h1 id="t"></h1><div class="sub" id="sub"></div>
+<div class="card" style="margin-bottom:14px"><h2 id="hl"></h2><div class="hint" id="hlh"></div><div id="log" style="max-height:340px;overflow:auto;font-size:13px;line-height:1.5"></div></div>
+<div class="grid" id="curves"></div>
+<div class="grid" style="margin-top:14px"><div class="card"><h2 id="h1"></h2><div id="rank"></div></div><div class="card"><h2 id="h2"></h2><div id="cal"></div></div></div>
+<div class="card" style="margin-top:14px"><h2 id="h3"></h2><div id="mobs"></div></div>
+<script type="module">
+const en = (navigator.language || "").startsWith("en"), L = (es, e) => en ? e : es;
+const tok = new URLSearchParams(location.search).get("token"), $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+document.documentElement.lang = en ? "en" : "es";
+$("#t").textContent = L("Aprendizaje de los bots", "Bot learning");
+$("#h1").textContent = L("Ranking por arquetipo (genes entrenados)", "Ranking per archetype (trained genes)");
+$("#h2").textContent = L("Calibración en vivo del estimador de peleas", "Live fight-estimator calibration");
+$("#h3").textContent = L("Situaciones donde más mueren / peor se predice", "Situations where bots die most / are predicted worst");
+async function load() {
+  const r = await fetch("/api/admin/learning?token=" + tok);
+  if (!r.ok) { $("#sub").textContent = L("Sin acceso: abre esta página desde el PC del servidor con ?token=…", "No access: open this page from the server PC with ?token=…"); return; }
+  const d = await r.json(), T = d.trained;
+  $("#sub").innerHTML = T ? L(`Entrenamiento nº ${T.version} · ${T.at} · duelos de ${T.secs}s · `, `Training #${T.version} · ${T.at} · ${T.secs}s runs · `) + `<button id="rf">↻</button>` : L("Aún sin entrenar: ejecuta <code>node tools/train.mjs</code>", "Not trained yet: run <code>node tools/train.mjs</code>");
+  $("#rf")?.addEventListener("click", load);
+  $("#hl").textContent = L("Bitácora del entrenador (qué hago, qué pienso, resultados)", "Trainer log (what I do, what I think, results)");
+  $("#hlh").textContent = L("Lo más reciente arriba. Verde = genes adoptados; rojo = rechazados.", "Newest first. Green = adopted genes; red = rejected.");
+  $("#log").innerHTML = (d.log || []).map(e => `<div style="border-bottom:1px solid #3a3022;padding:4px 0"><span style="opacity:.55">${esc(e.at)}</span> <span class="${e.ok === true ? "ok" : e.ok === false ? "bad" : ""}">${esc(L(e.es, e.en))}</span></div>`).join("") || L("Sin entradas todavía.", "No entries yet.");
+  const runs = T?.runs || {};
+  $("#curves").innerHTML = Object.entries(runs).map(([k, r]) => {
+    const h = r.history || [], mx = Math.max(...h.map(x => x.best), r.base, 1e-9), mn = Math.min(...h.map(x => x.worst), r.base, 0);
+    const X = i => 10 + i * 280 / Math.max(1, h.length - 1), Y = v => 140 - (v - mn) / (mx - mn || 1) * 125;
+    const line = f => h.map((x, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(f(x)).toFixed(1)).join("");
+    const gain = r.base ? (r.fitness / r.base - 1) * 100 : 0;
+    return `<div class="card"><h2>${esc(k)}</h2><svg viewBox="0 0 300 150"><path d="${line(x => x.avg)}" fill="none" stroke="#887" stroke-width="1"/><path d="${line(x => x.best)}" fill="none" stroke="#f0d27a" stroke-width="2"/><line x1="10" x2="290" y1="${Y(r.base)}" y2="${Y(r.base)}" stroke="#e08a7a" stroke-dasharray="3"/></svg>
+    <div class="hint">${L("Dorado = mejor por generación, gris = media, rojo = genes originales", "Gold = best per generation, grey = mean, red = original genes")}</div>
+    <div>${L("Base", "Base")} ${r.base} → <b>${r.fitness}</b> <span class="${gain >= 0 ? "ok" : "bad"}">(${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%)</span> · ${h.length} ${L("generaciones", "generations")}</div></div>`;
+  }).join("");
+  const g = d.genes || {}, ks = ["flee", "potion", "rested", "engage", "ratio"];
+  const rows = Object.entries(g).flatMap(([cls, m]) => Object.entries(m).map(([mode, v]) => { const r = runs[cls + "/" + mode]; return `<tr><td>${esc(cls)}/${mode}</td><td>${r ? r.fitness : "–"}</td>${ks.map(k => `<td>${v[k] ?? "–"}</td>`).join("")}</tr>`; }));
+  $("#rank").innerHTML = `<table><tr><th>${L("Arquetipo/modo", "Archetype/mode")}</th><th>${L("Fitness", "Fitness")}</th>${ks.map(k => `<th>${k}</th>`).join("")}</tr>${rows.join("") || `<tr><td colspan=7>–</td></tr>`}</table><div class="hint">flee=${L("huir con vida<", "flee below HP")} · potion=${L("pocion con vida<", "potion below HP")} · rested=${L("descansado >", "rested above")} · engage=${L("atacar con vida>", "engage above HP")} · ratio=${L("ventaja mínima", "min. advantage")}</div>`;
+  const cal = d.live.cal || {};
+  $("#cal").innerHTML = `<table><tr><th>${L("Arquetipo", "Archetype")}</th><th>${L("Factor", "Factor")}</th></tr>${Object.entries(cal).map(([c, v]) => `<tr><td>${esc(c)}</td><td class="${v > 1.15 ? "bad" : v < .87 ? "ok" : ""}">${v.toFixed(2)}</td></tr>`).join("") || `<tr><td colspan=2>${L("Sin datos todavía", "No data yet")}</td></tr>`}</table><div class="hint">${L("Peleas medidas", "Fights measured")}: ${d.live.n || 0}. ${L(">1 = el estimador subestima el daño recibido; <1 = lo sobrestima.", ">1 = the estimator underestimates damage taken; <1 = overestimates.")}</div>`;
+  $("#mobs").innerHTML = `<table><tr><th>${L("Monstruo", "Monster")}</th><th>${L("Peleas", "Fights")}</th><th>${L("Muertes", "Deaths")}</th><th>${L("Daño previsto", "Predicted dmg")}</th><th>${L("Daño real", "Actual dmg")}</th><th>${L("Error", "Error")}</th></tr>${d.live.mobs.map(m => { const p = m.pred / (m.n || 1), a = m.act / (m.n || 1), e = (a + 5) / (p + 5); return `<tr><td>${esc(m.name)}</td><td>${m.n}</td><td class="${m.deaths ? "bad" : ""}">${m.deaths}</td><td>${p.toFixed(0)}</td><td>${a.toFixed(0)}</td><td class="${e > 1.3 ? "bad" : ""}">×${e.toFixed(2)}</td></tr>`; }).join("") || `<tr><td colspan=6>${L("Sin datos todavía", "No data yet")}</td></tr>`}</table>`;
+}
+load(); setInterval(load, 15000);
+</script></body></html>

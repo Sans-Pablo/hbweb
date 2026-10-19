@@ -1,43 +1,1018 @@
 {
- "build": "0.85.59",
+ "build": "0.85.101",
  "intro": {
   "es": "Esta ventana (F1) reemplaza la ayuda original. Aquí está lo que cambió, qué hay que probar y lo que se sabe que falta. Marca lo probado: se guarda en tu navegador.",
   "en": "This window (F1) replaces the original help. It lists what changed, what needs testing and what is known to be missing. Tick what you tested: it is saved in your browser."
  },
  "news": [
-  {"date":"2026-10-17","title":{"es":"Tope de nivel configurable (0.85.59)","en":"Configurable level cap (0.85.59)"},"items":[{"es":"Un solo valor (levelcap.js) define el nivel máximo; exp, oro, equipo, magias y misión de Maestría se derivan de él.","en":"A single value (levelcap.js) defines the level cap; exp, gold, gear, spells and the Mastery quest derive from it."},{"es":"Magias: Int mínima hasta 170 y libros al 98 % del precio original para nivel 140.","en":"Spells: minimum Int up to 170 and books at 98% of the original price for level 140."}]},
-  {"date":"2026-10-17","title":{"es":"Nivel 140 y reinicio (v0.85.58)","en":"Level 140 and reset (v0.85.58)"},"items":[{"es":"El nivel máximo sube a 140; el equipo conserva su nivel original y la experiencia pasada el 50 es alcanzable.","en":"Max level is now 140; gear keeps its original level and experience past 50 is reachable."},{"es":"Reinicio general: todas las estadísticas vuelven al fondo para repartirlas de nuevo y se borran todos los objetos (oro y nivel se conservan).","en":"General reset: all stats return to the pool to be re-spent and all items are deleted (gold and level are kept)."}]},
-  {"date":"2026-10-17","title":{"es":"Guerreros que pegan (v0.85.57)","en":"Warriors that fight (v0.85.57)"},"items":[{"es":"Los bots ya no se quedan parados mirando el fuego durante un PvP (esperan 2,5 s y lo cruzan) y el guerrero nunca pega con báculo: lo cambia por su mejor arma.","en":"Bots no longer stand still staring at fire during PvP (they wait 2.5 s then cross it) and warriors never fight with a staff: they swap to their best weapon."}]},
-  {"date":"2026-10-17","title":{"es":"Anti-box y ranking de items (v0.85.56)","en":"Anti-box and item ranking (v0.85.56)"},"items":[{"es":"Los bots no se dejan rodear: con una sola salida libre matan al enemigo más débil de los pegados; contra monstruos atacan primero a los débiles; en PvP rodean al rival.","en":"Bots avoid being boxed in: with one free tile left they kill the weakest adjacent enemy; vs monsters they hit weak ones first; in PvP they encircle the foe."},{"es":"Ranking de items: el segundo stat pesa mucho (convexo; guerrero HP>MR>MA, mago MP>HP>DR>PA), armas con acierto/consecutivo/reputación, armaduras ligeras, y sets HP/MP según la situación.","en":"Item ranking: the second stat weighs heavily (convex; warrior HP>MR>MA, mage MP>HP>DR>PA), weapons with hit/consecutive/reputation, light armor, and situational HP/MP sets."}]},
-  {"date":"2026-10-17","title":{"es":"Mejoras PvP y canal de peleas (v0.85.55)","en":"PvP upgrades and fight channel (v0.85.55)"},"items":[{"es":"Los bots reservan maná, no rompen la parálisis con magia, se ponen escudo si los rodean y tienen un nuevo reparto de stats (todos reiniciados). El observador tiene un canal de TV de peleas (teclas , y .).","en":"Bots keep a mana reserve, no longer break paralysis with spells, equip a shield when surrounded and have a new stat split (everyone reset). The observer has a fight TV channel (keys , and .)."}]},
-  {"date":"2026-10-17","title":{"es":"Fórmulas para los bots (v0.85.54)","en":"Formulas for the bots (v0.85.54)"},"items":[{"es":"Los bots conocen las fórmulas de acierto, daño y resistencia mágica: solo paralizan si el hechizo tiene opciones de entrar según la MR del rival, el guerrero elige al rival al que más daño saca y el mago al de menos MR, y el mago con Int 50+ reparte más puntos a Mag.","en":"Bots know the hit, damage and magic-resistance formulas: they only cast Paralyze when it has a real chance against the target MR, warriors pick the foe they damage most, mages the one with the lowest MR, and mages with Int 50+ put more points into Mag."}]},
-  {"date":"2026-10-17","title":{"es":"Táctica PvP y dos clases (v0.85.53)","en":"PvP tactics and two classes (v0.85.53)"},"items":[{"es":"Los habitantes son solo guerreros o magos (50/50). Los magos paralizan siempre, detectan PFM probando un ataque, esperan si hay protección, ponen Spike Field, liberan con Fire Field, usan Invisibility y apoyan con PFM/AMP/Berserk; el grupo remata al paralizado. Los guerreros llevan 36 de Int para Invis, PFM, Detect y Paralyze.","en":"Residents are now only warriors or mages (50/50). Mages always try to paralyze, probe for PFM with an attack, wait out protection, drop Spike Field, free allies with Fire Field, use Invisibility and support with PFM/AMP/Berserk; the group focuses the paralyzed foe. Warriors carry 36 Int for Invis, PFM, Detect and Paralyze."}]},
-  {"date":"2026-10-17","title":{"es":"PvP en la pantalla dividida (v0.85.52)","en":"PvP in split screen (v0.85.52)"},"items":[{"es":"El observador dividido tiene un panel más en el select: «⚔ PvP», con la ficha del personaje (build, stats, bonos, equipo, magias) y su pensamiento de combate contra jugadores.","en":"The split observer has one more select option: «⚔ PvP», with the character sheet (build, stats, bonuses, gear, spells) and its PvP combat thinking."}]},
-  {"date":"2026-10-16","title":{"es":"Pensamiento PvP en el admin (v0.85.51)","en":"PvP thinking in admin (v0.85.51)"},"items":[{"es":"El panel de bots tiene una pestaña PvP: ficha del personaje (stats, bonos, equipo, hechizos) y el registro de cómo elige, lanza, se protege y huye en combate contra jugadores.","en":"The bots panel has a PvP tab: character sheet (stats, bonuses, gear, spells) and a log of how they choose, cast, shield and flee against players."}]},
-  {"date":"2026-10-16","title":{"es":"Reinicio de estadísticas de los bots (v0.85.50)","en":"Bot stat reset (v0.85.50)"},"items":[{"es":"Todos los bots recuperan sus puntos y eligen rol de nuevo, con más magos (≈58 % lanzadores). Se verán más peleas de magos.","en":"All bots get their points back and pick a role again, with more mages (~58% casters). Expect more mage fights."}]},
-  {"date":"2026-10-16","title":{"es":"Magos con pociones de maná (v0.85.49)","en":"Mages carry mana potions (v0.85.49)"},"items":[{"es":"Los bots lanzadores compran pociones de maná y las beben cuando se quedan sin maná en pelea, para seguir lanzando magias.","en":"Caster bots buy mana potions and drink them when they run out of mana in a fight, so they keep casting."}]},
-  {"date":"2026-10-16","title":{"es":"Bots: equipo, Fuerza y Recall (v0.85.48)","en":"Bots: gear, Strength and Recall (v0.85.48)"},"items":[{"es":"Los bots cubren la Fuerza que pide su arma (golpe completo) y puntúan el equipo por HP/MP/DR/PA/MA/MR según su clase y el rival; no compran armadura que no pueden vestir.","en":"Bots cover the Strength their weapon needs (full swing) and score gear by HP/MP/DR/PA/MA/MR for their class and foe; they no longer buy armor they cannot wear."},{"es":"Sin pociones y con poca vida lanzan Recall y vuelven a comprar, en vez de descansar en el campo. Los magos no pegan con la vara salvo contra magos o con Absolute Magic Protection.","en":"Out of potions and low on HP they cast Recall and go buy more instead of resting in the field. Mages do not melee with the staff except against mages or Absolute Magic Protection."},{"es":"Fire Ball: el impacto ya es el correcto. Observador: icono de guerrero/mago.","en":"Fire Ball: correct impact effect. Observer: warrior/mage icon."}]},
-  {"date":"2026-10-16","title":{"es":"Magias balanceadas para nivel 50 (v0.85.47)","en":"Spells balanced for level 50 (v0.85.47)"},"items":[{"es":"La Int mínima y el precio de los libros se reescalan: hasta Int 30 y 2000 de oro igual que el original; por encima, la mitad del exceso de Int y el 35 % del exceso de oro. Ej.: Energy Strike Int 49 / 3100 oro, Lightning Strike 77 / 13600, Meteor Strike 100 / 15300, Blizzard 113 / 16400.","en":"Required Int and book prices are rescaled: up to Int 30 and 2000 gold as original; above that, half the Int excess and 35% of the gold excess. E.g. Energy Strike Int 49 / 3100 gold, Lightning Strike 77 / 13600, Meteor Strike 100 / 15300, Blizzard 113 / 16400."},{"es":"Los bots magos reparten más puntos en Int (65 %) para llegar a las magias grandes.","en":"Mage bots put more points into Int (65%) to reach the big spells."}]},
-  {"date":"2026-10-16","title":{"es":"Caza: vender botín (v0.85.45)","en":"Hunt: sell loot (v0.85.45)"},"items":[{"es":"La caza automática ya vende/guarda el botín recogido aunque empieces con la mochila casi llena.","en":"Auto hunt now sells/stores picked-up loot even if you start with a nearly full bag."}]},
-  {"date":"2026-10-16","title":{"es":"Dash corriendo (v0.85.44)","en":"Run dash (v0.85.44)"},"items":[{"es":"El dash se activa corriendo (Shift o modo correr) con SP>0, como el original (Game.cpp 30934).","en":"Dash triggers while running (Shift or run mode) with SP>0, as in the original."}]},
-  {"date":"2026-10-16","title":{"es":"Monitor económico (v0.85.43)","en":"Economy monitor (v0.85.43)"},"items":[{"es":"El panel /admin tiene una pestaña Economía: resumen, flujo en vivo, alertas, riqueza, simulación y auditoría del oro.","en":"The /admin panel has an Economy tab: overview, live flow, alerts, wealth, simulation and gold audit."}]},
-  {"date":"2026-10-16","title":{"es":"Combate como el original (v0.85.42)","en":"Original combat (v0.85.42)"},"items":[{"es":"Acierto físico con HITRATIOFACTOR 80 y orden de cálculo de daño de combat.cpp (furia, VIT, críticos, zona de lucha).","en":"Physical hit rate with HITRATIOFACTOR 80 and the damage order of combat.cpp."},{"es":"Anillos 335/337 con desgaste, inmunidad por habilidad especial y estado de guerra opcional (Apocalypse, Crusade, banderas).","en":"Rings 335/337 with wear, special-ability immunity and optional war state."},{"es":"Solo sprites de IA en el juego; arreglo del suelo cuando falla una hoja IA.","en":"AI sprites only; ground fix when an AI sheet fails."}]},
-  {"date":"2026-10-16","title":{"es":"Caja del admin (v0.85.41)","en":"Admin ledger (v0.85.41)"},"items":[{"es":"El panel /admin muestra la economía: oro creado y destruido por motivo y los últimos movimientos.","en":"The /admin panel shows the economy: gold created and destroyed by reason and the latest movements."}]},
-  {"date":"2026-10-16","title":{"es":"Puerta del admin (v0.85.40)","en":"Admin door (v0.85.40)"},"items":[{"es":"Botón «Admin» en el login: cuenta de administrador + clave abre el panel (solo desde el PC del servidor). El observador dividido es una sección del panel.","en":"«Admin» button on the login: administrator account + password opens the panel (server PC only). The split observer is now a panel section."}]},
   {
-   "date": "2026-10-16",
-   "title": { "es": "Daños como el original y solo sprites IA (v0.85.39)", "en": "Original damage rules (v0.85.39)" },
+   "date": "2026-10-19",
+   "title": {
+    "es": "Auditoría y minimapa (v0.85.101)",
+    "en": "Audit and minimap (v0.85.101)"
+   },
    "items": [
-    { "es": "Demonslayer hace +5 de daño grande a los Demon.", "en": "Demonslayer deals +5 large damage to Demons." },
-    { "es": "Anillos Emerald/Ruby (335/337) reducen el daño mágico recibido un 20%/10%.", "en": "Emerald/Ruby rings (335/337) cut incoming magic damage by 20%/10%." },
-    { "es": "Con VIT menor de 10 el daño recibido suma 1, como en el original.", "en": "With VIT below 10 incoming damage gets +1, as in the original." }
+    {
+     "es": "Minimapa y mapa superpuesto: mini esqueleto sobre cada pozo de bajada (aro de color en pisos de jefe).",
+     "en": "Minimap and overlay map: mini skeleton on every descent pit (colored ring on boss floors)."
+    },
+    {
+     "es": "Ctrl+clic izq = mover mascota, Ctrl+clic der = atacar (solo con mascota activa).",
+     "en": "Ctrl+left click = move pet, Ctrl+right click = attack (only with an active pet)."
+    },
+    {
+     "es": "Invocaciones y cadáveres desaparecen al cambiar de mapa; puestos del suelo ocupan 1 casilla; bots salen del warehouse.",
+     "en": "Summons and corpses vanish on map change; ground stalls take 1 tile; bots leave the warehouse."
+    },
+    {
+     "es": "Auditoría vs original: combate/magia, menús de NPC, alquimia, log y sonido del menú.",
+     "en": "Audit vs original: combat/magic, NPC menus, alchemy, log and menu sound."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "title": {
+    "es": "Bots II (v0.85.100)",
+    "en": "Bots II (v0.85.100)"
+   },
+   "items": [
+    {
+     "es": "Bots: 1.000.000 de oro y reposición automática.",
+     "en": "Bots: 1,000,000 gold with automatic top-up."
+    },
+    {
+     "es": "Bots: ya no llevan yelmos (se desequipan y se retiran).",
+     "en": "Bots: no longer wear helms (unequipped and removed)."
+    },
+    {
+     "es": "Bots: Berserk nunca a magos; los guerreros lo usan también en la granja; sin bucle de plate mail.",
+     "en": "Bots: Berserk never on mages; warriors also use it in the farm; no plate mail swap loop."
+    },
+    {
+     "es": "Bots: no lanzan Mass Illusion/Inhibition a monstruos (solo afectan a jugadores).",
+     "en": "Bots: no Mass Illusion/Inhibition on monsters (players only)."
+    },
+    {
+     "es": "Bots: gastan puntos de talento de todos sus summons.",
+     "en": "Bots: spend talent points on all their summons."
+    },
+    {
+     "es": "Bots: gastan el oro de sobra (más pociones, equipo y regalos), rotan hechizos en PvP, no recambian equipo a cada rato, los nv 60+ van a Promise Land (repartido por bando) y compran Hauberk/LongBoots.",
+     "en": "Bots: spend surplus gold (more potions, gear, gifts), rotate spells in PvP, stop swapping gear constantly, level 60+ go to Promise Land (balanced by side) and buy Hauberk/LongBoots."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "title": {
+    "es": "Berserk y ventana de log (v0.85.99)",
+    "en": "Berserk and log window (v0.85.99)"
+   },
+   "items": [
+    {
+     "es": "Berserk vuelve a mostrar su círculo sobre el objetivo al castear.",
+     "en": "Berserk shows its circle on the target again when cast."
+    },
+    {
+     "es": "La ventana de log (F9) se adapta a pantallas pequeñas.",
+     "en": "The log window (F9) now fits small screens."
+    },
+    {
+     "es": "Bots: magos sin Magic Missile ni Paralyze a menores, sin hechizos a vecinos de ciudad, gorro de mago, venden en ciudad.",
+     "en": "Bots: mages skip Magic Missile and Paralyze on minor foes, no spells on same-city players, wizard cap, sell in town."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Bots: armadura y mascotas (v0.85.98)",
+    "en": "Bots: armour and pets (v0.85.98)"
+   },
+   "items": [
+    {
+     "es": "Los bots compran y reparan la armadura antes de salir a cazar, olvidan hechizos que su Int no cubre, no se atacan dentro de un party y hablan mucho menos.",
+     "en": "Bots buy and repair armour before hunting, forget spells their Int cannot cover, no longer attack party mates and chat far less."
+    },
+    {
+     "es": "Mascotas sin restricciones: no exigen báculo ni tope de nivel del dueño.",
+     "en": "Pets have no restrictions: no staff or owner-level cap required."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Fidelidad (v0.85.98)",
+    "en": "Fidelity (v0.85.98)"
+   },
+   "items": [
+    {
+     "es": "El círculo bajo los enemigos es el de la cruzada original; Energy Strike vuelve a verse; ranas y Rudolph suenan como en el original.",
+     "en": "The ring under enemies is the original crusade one; Energy Strike is visible again; frogs and Rudolph sound like the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Tanda de bots (v0.85.97)",
+    "en": "Bot batch (v0.85.97)"
+   },
+   "items": [
+    {
+     "es": "Los bots respetan requisitos de armadura, no recompran lo vendido, recogen piedras y los magos eligen mejor el hechizo.",
+     "en": "Bots respect armour requirements, do not rebuy what they sold, pick up stones and mages choose spells better."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Kit de arma del guerrero (v0.85.96)",
+    "en": "Warrior weapon kit (v0.85.96)"
+   },
+   "items": [
+    {
+     "es": "Cada guerrero guardado rehace sus puntos una vez más y recibe y equipa el arma objetivo de su build (Barbarian/Battle Hammer, Battle Axe, Giant Sword/Hammer). El mínimo de Str sube a 130 y quien no llega a una pesada usa Flameberge.",
+     "en": "Each saved warrior redoes its points once more and receives and equips its build's target weapon (Barbarian/Battle Hammer, Battle Axe, Giant Sword/Hammer). Minimum Str is now 130 and anyone who cannot reach a heavy weapon uses Flameberge."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Stats por arma objetivo (v0.85.95)",
+    "en": "Stats for the target weapon (v0.85.95)"
+   },
+   "items": [
+    {
+     "es": "Los guerreros que rehacen sus puntos reparten la Str de su arma objetivo (Barbarian Hammer 200, Battle Axe 170…) aunque aún no la tengan; antes quedaban en Str 100 con una espada corta. Los pescadores guardados como magos pasan a guerreros con arco.",
+     "en": "Warriors that redo their points now spend the Str of their target weapon (Barbarian Hammer 200, Battle Axe 170…) even before owning it; before they stayed at Str 100 with a short sword. Fishers saved as mages become bow warriors."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Bots rehacen sus estadísticas (v0.85.94)",
+    "en": "Bots redo their stats (v0.85.94)"
+   },
+   "items": [
+    {
+     "es": "Todos los bots guerreros y magos guardados rehacen una vez sus puntos con el reparto actual (Jessa y Dain tenían Vit 200/Dex 200 y Str 29).",
+     "en": "Every saved warrior and mage bot redoes its points once with the current split (Jessa and Dain had Vit 200/Dex 200 and Str 29)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "title": {
+    "es": "Guerreros con Str 100 (v0.85.93)",
+    "en": "Warriors with Str 100 (v0.85.93)"
+   },
+   "items": [
+    {
+     "es": "Ningún guerrero baja de Str 100 a nivel 100 o más: los pescadores/cazadores (Ivo, Quill, Greta, Str 55-78 con estoque) ahora tienen Str 100 y Dex 135-155. Los demás siguen con su build fijo (BH 182, BBH 200, Giant 160, Battle Axe 170, Flameberge 130, Dex 120).",
+     "en": "No warrior drops below Str 100 at level 100+: fishers/hunters (Ivo, Quill, Greta, Str 55-78 with rapier) now have Str 100 and Dex 135-155. The rest keep their fixed builds."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots: equipo, reset suave y cursor (v0.85.91)",
+    "en": "Bots: gear, soft reset and cursor (v0.85.91)"
+   },
+   "items": [
+    {
+     "es": "El cursor ya no desaparece en los márgenes izquierdos.",
+     "en": "The cursor no longer vanishes in the left margins."
+    },
+    {
+     "es": "Los magos no llevan equipo que pida más Str; los guerreros compran placas y reparten sus stats por su build; los residentes no pierden tiempo con monstruos triviales.",
+     "en": "Mages no longer wear gear needing more Str; warriors buy plate and spend stats per their build; residents skip trivial monsters."
+    },
+    {
+     "es": "F1 → Herramientas → Bots: «Reset suave» (sin objetos, 1.000.000 de oro, habilidades al 100 %) para ver qué arman.",
+     "en": "F1 → Tools → Bots: soft reset (no items, 1,000,000 gold, skills 100%) to see what they assemble."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Magos de control y soporte con su kit (v0.85.90)",
+    "en": "Control and support mages use their kit (v0.85.90)"
+   },
+   "items": [
+    {
+     "es": "El mago de control lanza Mass Illusion Movement y Paralyze; el de soporte, AMP/PFM sobre sí mismo y Paralyze al monstruo que le pega. Censo 300 s (6 magos): Mass Illusion Movement 16, Paralyze 7, AMP 4 (antes 0); Magic Missile 222 de 366 casts, con Blizzard 27, Mass Ice 12, Energy Bolt 78.",
+     "en": "Control mage casts Mass Illusion Movement and Paralyze; support mage casts AMP/PFM on itself and Paralyze on the monster hitting it. 300 s census (6 mages): Mass Illusion Movement 16, Paralyze 7, AMP 4 (was 0); Magic Missile 222 of 366 casts, plus Blizzard 27, Mass Ice 12, Energy Bolt 78."
+    },
+    {
+     "es": "El mago de soporte compra y viste Chain Mail y lleva Tower Shield en la mochila. Un escudo en la mano impide lanzar (como en el original), así que solo se la pone sin maná en pelea y se la quita al recuperar el 40 %.",
+     "en": "The support mage buys and wears Chain Mail and carries a Tower Shield. A shield in hand blocks casting (as in the original), so it only equips it with no mana in a fight and removes it at 40% mana."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Builds aprobados y magos variados (v0.85.89)",
+    "en": "Approved builds and varied mages (v0.85.89)"
+   },
+   "items": [
+    {
+     "es": "12 builds de guerrero (Battle/Barbarian Hammer, Giant Sword/Hammer, Battle Axe, Flameberge; Int 10/36/59) con Dex 120 y Mag 10; el resto a Vit. 3 de mago: Blizzard (Int 195, Mag 100), control (Int 200) y soporte (Str 40, Int 133, Mag 200). Reset all, Reiniciar bots y Bots nivel 140 los aplican.",
+     "en": "12 warrior builds (Battle/Barbarian Hammer, Giant Sword/Hammer, Battle Axe, Flameberge; Int 10/36/59) with Dex 120 and Mag 10; the rest to Vit. 3 mage builds: Blizzard (Int 195, Mag 100), control (Int 200) and support (Str 40, Int 133, Mag 200). Reset all, Restart bots and Bots level 140 apply them."
+    },
+    {
+     "es": "Fix: los magos con maná lleno ya no solo lanzan Magic Missile; usan Blizzard y Mass Ice Strike y gastan maná (censo 300 s: Blizzard 4 -> 40, Mass Ice Strike 0 -> 32, Magic Missile 391 -> 269).",
+     "en": "Fix: mages with full mana no longer only cast Magic Missile; they use Blizzard and Mass Ice Strike and spend mana (300 s census: Blizzard 4 -> 40, Mass Ice Strike 0 -> 32, Magic Missile 391 -> 269)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Builds de guerrero y mago (v0.85.88)",
+    "en": "Warrior and mage builds (v0.85.88)"
+   },
+   "items": [
+    {
+     "es": "Guerrero berserker: Str 130 + Int 59 con Flameberge; lanza Berserk solo. Giant Sword/Hammer con Int 59 también. Todo guerrero Dex 100 y el resto a Vit/Dex.",
+     "en": "Berserker warrior: Str 130 + Int 59 with Flameberge, casts Berserk by itself. Giant Sword/Hammer with Int 59 too. Every warrior Dex 100, the rest to Vit/Dex."
+    },
+    {
+     "es": "Magos bot: Int 195 (Blizzard), 200 (control) o 133 (soporte, Mass Ice Strike y más Vit); el resto a Mag y Vit.",
+     "en": "Mage bots: Int 195 (Blizzard), 200 (control) or 133 (support, Mass Ice Strike, more Vit); the rest to Mag and Vit."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Builds de guerrero por arma (v0.85.87)",
+    "en": "Warrior builds per weapon (v0.85.87)"
+   },
+   "items": [
+    {
+     "es": "El guerrero bot reparte una Str fija según su arma objetivo: Battle Hammer 182, Barbarian Hammer 200, Battle Axe 170, Giant Sword/Hammer/Flameberge 160. Int 36 (Paralyze) o 10; el resto a Dex y Vit.",
+     "en": "The warrior bot spends a fixed Str by target weapon: Battle Hammer 182, Barbarian Hammer 200, Battle Axe 170, Giant Sword/Hammer/Flameberge 160. Int 36 (Paralyze) or 10; the rest to Dex and Vit."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Cierre: armas, pociones y casteo (v0.85.86)",
+    "en": "Wrap-up: weapons, potions and casting (v0.85.86)"
+   },
+   "items": [
+    {
+     "es": "Tras un reset (spawn, Reset all, Reiniciar bots) el guerrero bot reparte la Str que pide su arma objetivo y llega al Barbarian Hammer (Str 200), Battle Hammer, Battle Axe, Giant Sword o Flameberge.",
+     "en": "After a reset (spawn, Reset all, Restart bots) the warrior bot spends the Str its target weapon needs and reaches Barbarian Hammer (Str 200), Battle Hammer, Battle Axe, Giant Sword or Flameberge."
+    },
+    {
+     "es": "Los guerreros bot llevan siempre el arma de más daño que sus Str y nivel permiten (Barbarian Hammer, Battle Hammer, Battle Axe, Giant Sword; parte con Flameberge).",
+     "en": "Warrior bots always wield the highest-damage weapon their Str and level allow (Barbarian Hammer, Battle Hammer, Battle Axe, Giant Sword; some use Flameberge)."
+    },
+    {
+     "es": "Los bots solo beben poción de maná o de vida si les falta al menos lo que cura (media 2d12+10 = 23): nunca con el depósito lleno.",
+     "en": "Bots drink a mana or health potion only if they miss at least what it heals (avg 2d12+10 = 23): never at full."
+    },
+    {
+     "es": "No todo golpe corta el casteo: depende del arma (tabla del original); daño ≥ 40 y la magia siempre cortan.",
+     "en": "Not every hit breaks casting: it depends on the weapon (original table); damage ≥ 40 and magic always do."
+    },
+    {
+     "es": "El hielo de hechizo (Ice Strike/Blizzard...) libera Paralyze; solo el campo de la tormenta no.",
+     "en": "Spell ice (Ice Strike/Blizzard...) releases Paralyze; only the storm field does not."
+    },
+    {
+     "es": "Corregido el error «api is not defined» al abrir las pestañas 5 y 6 de la herrería.",
+     "en": "Fixed the «api is not defined» error when opening blacksmith tabs 5 and 6."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots con Int propia y mago móvil (v0.85.85)",
+    "en": "Bots with own Int and a mobile mage (v0.85.85)"
+   },
+   "items": [
+    {
+     "es": "Los bots guerreros eligen su Int: 32 (PFM/invi), 20 (PFA/recall), 10 (puro) o 59 (se lanzan Berserk).",
+     "en": "Warrior bots pick their Int: 32 (PFM/invis), 20 (PFA/recall), 10 (pure) or 59 (self-Berserk)."
+    },
+    {
+     "es": "Los magos bot ya no se quedan quietos: lanzan, gastan y beben maná y se alejan a 3 casillas.",
+     "en": "Mage bots no longer stand still: they cast, spend and drink mana and kite at 3 tiles."
+    },
+    {
+     "es": "Opciones (F12) con el aspecto de F1; mini ventana clásica legible; autocaza también en Elvine y demás ciudades.",
+     "en": "Options (F12) styled like F1; readable classic mini window; autohunt in Elvine and the other cities."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Mass Ice y Paralyze (v0.85.84)",
+    "en": "Mass Ice and Paralyze (v0.85.84)"
+   },
+   "items": [
+    {
+     "es": "Mass Ice-Strike (y cualquier hechizo de daño) libera Paralyze/Hold de un jugador, como en el original; la tormenta de hielo solo libera Hold Person.",
+     "en": "Mass Ice-Strike (and any damage spell) releases a player's Paralyze/Hold as in the original; the ice storm only releases Hold Person."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Casteo y golpes (v0.85.83)",
+    "en": "Casting and hits (v0.85.83)"
+   },
+   "items": [
+    {
+     "es": "Solo los golpes que aciertan y hacen daño cortan el casteo; los pequeños de jugador cortan con la probabilidad del original (iProb por arma); los de 40 o más y la magia, siempre.",
+     "en": "Only hits that land and deal damage interrupt casting; small player hits use the original per-weapon iProb; 40+ damage and magic always interrupt."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Guerreros con martillo (v0.85.82)",
+    "en": "Hammer-wielding warriors (v0.85.82)"
+   },
+   "items": [
+    {
+     "es": "Los bots guerreros buscan el arma de mayor daño que puedan usar: Barbarian Hammer, Battle Hammer, Battle Axe, Giant Sword; una cuarta parte prefiere Flameberge. Compran y cambian de arma al reabastecerse y no llevan escudo con armas a dos manos.",
+     "en": "Warrior bots seek the highest-damage weapon they can use: Barbarian Hammer, Battle Hammer, Battle Axe, Giant Sword; a quarter prefer Flameberge. They buy and swap weapons at restock and carry no shield with two-handed weapons."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Acciones admin en el replay y bots con maná (v0.85.81)",
+    "en": "Admin actions in replays and mana-aware bots (v0.85.81)"
+   },
+   "items": [
+    {
+     "es": "El replay guarda cada acción del panel admin con valores antes/después (Vit, nivel, oro…). Análisis: node tools/replay-analisis.mjs.",
+     "en": "Replays now store every admin-panel action with before/after values (Vit, level, gold…). Analysis: node tools/replay-analisis.mjs."
+    },
+    {
+     "es": "Bots: los magos beben BluePotion a tiempo, compran más, se curan antes rodeados, usan Paralyze + Blizzard contra hordas y se buffean antes de pelear.",
+     "en": "Bots: mages drink BluePotions in time, buy more, heal earlier when surrounded, use Paralyze + Blizzard against hordes and buff before fighting."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots nivel 140 y todos contra todos (v0.85.80)",
+    "en": "Level 140 bots and free-for-all (v0.85.80)"
+   },
+   "items": [
+    {
+     "es": "F1 → Herramientas → Bots: «Bots nivel 140» sube a todos con stats reseteados, 100000 de oro y magias según su Int.",
+     "en": "F1 → Tools → Bots: \"Bots to level 140\" raises everyone with reset stats, 100000 gold and spells matching their Int."
+    },
+    {
+     "es": "«Todos contra todos»: los bots pelean en Promise Land sin bandos. Apagado por defecto.",
+     "en": "\"Free-for-all\": bots fight in Promise Land with no sides. Off by default."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Casteo copia fiel (v0.85.79)",
+    "en": "Faithful casting (v0.85.79)"
+   },
+   "items": [
+    {
+     "es": "Con el hechizo ya preparado, el golpe sale en el clic (como el servidor original) en vez de esperar a la animación.",
+     "en": "With the spell already prepared, the hit lands on the click (like the original server) instead of waiting for the animation."
+    },
+    {
+     "es": "Summon Creature aparece junto al jugador objetivo; Illusion e Illusion Movement tienen estado propio.",
+     "en": "Summon Creature appears next to the target player; Illusion and Illusion Movement have their own status."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Magos PvP y cursor de casteo (v0.85.78)",
+    "en": "PvP mages and cast cursor (v0.85.78)"
+   },
+   "items": [
+    {
+     "es": "Mago bot en PvP: contra grupos usa Blizzard/Shock Wave, paraliza primero al más peligroso y solo cura con margen (replay de zzzz).",
+     "en": "PvP bot mage: uses Blizzard/Shock Wave against groups, paralyzes the most dangerous foe first and heals only with margin (zzzz replay)."
+    },
+    {
+     "es": "Cursor de casteo: la mira de apuntar solo aparece cuando termina la animación de lanzar (Game.cpp:2513, ticket 2).",
+     "en": "Cast cursor: the aiming cursor only appears once the casting animation ends (Game.cpp:2513, ticket 2)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Combate y magia fieles (v0.85.77)",
+    "en": "Faithful combat and magic (v0.85.77)"
+   },
+   "items": [
+    {
+     "es": "Datos de magia iguales al original (duraciones de Paralyze/Inhibition, Meteor, Confuse).",
+     "en": "Spell data matches the original (Paralyze/Inhibition durations, Meteor, Confuse)."
+    },
+    {
+     "es": "Los monstruos se aturden al ser golpeados con la probabilidad del original (los fuertes, menos).",
+     "en": "Monsters get stunned when hit with the original probability (strong ones less often)."
+    },
+    {
+     "es": "Escudo de defensa del objetivo y daño mínimo de monstruos como en el original.",
+     "en": "Target Defense Shield and monster minimum damage as in the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Observaciones 28-37 (v0.85.76)",
+    "en": "Observations 28-37 (v0.85.76)"
+   },
+   "items": [
+    {
+     "es": "Menú F12 nuevo con pestañas Juego, Sonido y Cuenta.",
+     "en": "New F12 menu with Game, Sound and Account tabs."
+    },
+    {
+     "es": "Promise Land: círculo rojo/azul bajo los jugadores, sin auras enemigas, y el pit en el minimapa con el color de la ciudad dominante.",
+     "en": "Promise Land: red/blue circle under players, no enemy auras, and the pit on the minimap in the dominant city's colour."
+    },
+    {
+     "es": "Observador: no puede chatear; clic sobre un personaje abre su «en vivo».",
+     "en": "Observer: cannot chat; clicking a character opens its live view."
+    },
+    {
+     "es": "Cualquier clase puede equipar cualquier pieza (como el original).",
+     "en": "Any class can equip any piece (like the original)."
+    },
+    {
+     "es": "Bots: carisma 10 salvo futuros Guildmasters, PvP hasta dominar la zona y luego PvE, compran todas las magias y huyen con Invisibility.",
+     "en": "Bots: charisma 10 except future Guildmasters, PvP until the area is held then PvE, learn every spell and flee with Invisibility."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Almacén como el original (v0.85.75)",
+    "en": "Warehouse like the original (v0.85.75)"
+   },
+   "items": [
+    {
+     "es": "El almacén muestra las instrucciones y el contador «Space Used» del original.",
+     "en": "The warehouse shows the original instructions and the “Space Used” counter."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Menú del NPC como el original (v0.85.74)",
+    "en": "NPC menu like the original (v0.85.74)"
+   },
+   "items": [
+    {
+     "es": "Al hacer clic en el tendero o el herrero ves los menús del original: Buy Potions/Misc./Outfits y Buy Weapons/Misc, (M)/(W) Armor, Sell Items.",
+     "en": "Clicking the shopkeeper or blacksmith shows the original menus: Buy Potions/Misc./Outfits and Buy Weapons/Misc, (M)/(W) Armor, Sell Items."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Un solo viaje al pueblo (v0.85.73)",
+    "en": "A single town trip (v0.85.73)"
+   },
+   "items": [
+    {
+     "es": "El auto hunt repara equipo roto y gastado, vende y guarda en una sola salida, y avisa en el log si algo no se puede vender o reparar.",
+     "en": "Auto hunt repairs broken and worn gear, sells and stores in a single trip, and warns in the log when something cannot be sold or repaired."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Venta completa en el auto hunt (v0.85.72)",
+    "en": "Full selling in auto hunt (v0.85.72)"
+   },
+   "items": [
+    {
+     "es": "Al volver al shop el auto hunt vende todos los objetos marcados, no solo uno.",
+     "en": "Back at the shop, auto hunt sells every marked item, not just one."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Almacén de oro y reparar todo (v0.85.71)",
+    "en": "Gold bank and repair all (v0.85.71)"
+   },
+   "items": [
+    {
+     "es": "Dash corregido, velocidad de golpe distinta por arma, el oro no pesa, se puede guardar oro en el almacén, botón Repair all en el herrero, Zemstone/Xelima/Merien son raras.",
+     "en": "Dash fixed, per-weapon attack speed, gold weighs nothing, gold can be stored in the warehouse, Repair all button at the blacksmith, Zemstone/Xelima/Merien are rare."
+    },
+    {
+     "es": "Auto hunt: repara el arma rota en el herrero, vende y guarda todo lo marcado al volver a la tienda y reaparece tras morir.",
+     "en": "Auto hunt: repairs a broken weapon at the blacksmith, sells and stores everything marked when back in town and respawns after dying."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Auto hunt que no se atasca (v0.85.70)",
+    "en": "Auto hunt that does not get stuck (v0.85.70)"
+   },
+   "items": [
+    {
+     "es": "El auto hunt vende cuando la mochila está llena (también por peso), vende todo lo marcado, recoge los buenos drops, reaparece si mueres y sigue. Botón Continuar junto a Reiniciar; mini ventana transparente (bola inferior izquierda) y redimensionable (asa inferior derecha).",
+     "en": "Auto hunt sells when the bag is full (also by weight), sells everything marked, picks up good drops, respawns when you die and carries on. Continue button next to Restart; transparent mini window (bottom-left ball) and resizable (bottom-right handle)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Magos que rematan (v0.85.69)",
+    "en": "Mages that finish (v0.85.69)"
+   },
+   "items": [
+    {
+     "es": "Con el rival paralizado el mago ya no se guarda el maná: lo remata con hielo (no libera la parálisis) y se aparta si lo tiene encima.",
+     "en": "With the foe paralyzed the mage no longer hoards mana: it finishes with ice (which keeps the hold) and steps away when meleed."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Magos con maná (v0.85.68)",
+    "en": "Mages with mana (v0.85.68)"
+   },
+   "items": [
+    {
+     "es": "Los magos suben Mag e Int, empiezan con Magic al 100 % y compran Ice Strike, Energy Strike y los hechizos de zona.",
+     "en": "Mages raise Mag and Int, start with Magic at 100% and buy Ice Strike, Energy Strike and area spells."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Grabador de partidas (v0.85.67)",
+    "en": "Game recorder (v0.85.67)"
+   },
+   "items": [
+    {
+     "es": "El servidor graba las partidas de los jugadores reales para estudiar cómo luchan y enseñar mejor a los bots.",
+     "en": "The server records real players' games to study how they fight and teach the bots better."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots desde cero (v0.85.66)",
+    "en": "Bots from scratch (v0.85.66)"
+   },
+   "items": [
+    {
+     "es": "Los habitantes se reinician: nivel 1, sin equipo ni stats antiguos, y construyen su propio camino con las reglas actuales.",
+     "en": "Residents are reset: level 1, no old gear or stats, each building its own path with the current rules."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots que aprenden (v0.85.64)",
+    "en": "Learning bots (v0.85.64)"
+   },
+   "items": [
+    {
+     "es": "Los bots ajustan cuándo huir, beber poción y atacar según genes entrenados por simulación (PvE y PvP) y calibran su estimación de peleas con el daño real. El admin tiene un panel «Aprendizaje de bots».",
+     "en": "Bots tune when to flee, drink potions and attack using genes trained by simulation (PvE and PvP) and calibrate their fight estimate with real damage. The admin has a “Bot learning” panel."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Observaciones al día (v0.85.63)",
+    "en": "Observations done (v0.85.63)"
+   },
+   "items": [
+    {
+     "es": "Círculo bajo los jugadores en mapas PvP (azul Elvine, rojo Aresden) y fosos tintados en el minimapa.",
+     "en": "Circle under players on PvP maps (blue Elvine, red Aresden) and tinted pits on the minimap."
+    },
+    {
+     "es": "Ctrl+D encoge los árboles como en el original.",
+     "en": "Ctrl+D shrinks trees like the original."
+    },
+    {
+     "es": "F12: ventana de opciones con el marco clásico (pestañas Juego / Sonido / Cuenta).",
+     "en": "F12: options window in the classic frame (Game / Sound / Account tabs)."
+    },
+    {
+     "es": "Bots: ayudan a aliados en PvP, limpian la basura de la mochila.",
+     "en": "Bots: help allies in PvP and clean junk from their bag."
+    },
+    {
+     "es": "Observador: panel de preguntas, aprobar todo, Ctrl+Enter, hechas plegadas, filtro PvP.",
+     "en": "Observer: Q&A panel, approve all, Ctrl+Enter, done tickets collapsed, PvP filter."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots con cabeza (v0.85.62)",
+    "en": "Bots with brains (v0.85.62)"
+   },
+   "items": [
+    {
+     "es": "Los bots se hacen Recall solos, curan con cabeza, se pasan SP y los golpes cancelan hechizos. Todos los personajes reinician stats una vez.",
+     "en": "Bots self-cast Recall, heal wisely, share SP and hits cancel casts. Every character gets a one-time stat reset."
+    }
+   ],
+   "tests": [
+    {
+     "es": "Golpea a un mago mientras lanza: el hechizo se cancela.",
+     "en": "Hit a mage mid-cast: the spell is cancelled."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Bots más listos (v0.85.61)",
+    "en": "Smarter bots (v0.85.61)"
+   },
+   "items": [
+    {
+     "es": "Los bots se equipan antes de entrenar, usan PFM contra lanzadores y eligen el hechizo más eficiente en maná.",
+     "en": "Bots gear up before training, use PFM against casters and pick the most mana-efficient spell."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Observador limpio y observaciones (0.85.60)",
+    "en": "Clean observer and notes (0.85.60)"
+   },
+   "items": [
+    {
+     "es": "Observador dividido sin marcos; ◀ ▶ solo pasan por quien pelea; panel Observaciones para anotar tickets.",
+     "en": "Split observer without frames; ◀ ▶ only cycle fighters; Notes panel for tickets."
+    }
+   ],
+   "tests": [
+    {
+     "es": "Abre observador.html, elige 📝 Observaciones y añade una nota.",
+     "en": "Open observador.html, pick 📝 Notes and add a note."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Tope de nivel configurable (0.85.59)",
+    "en": "Configurable level cap (0.85.59)"
+   },
+   "items": [
+    {
+     "es": "Un solo valor (levelcap.js) define el nivel máximo; exp, oro, equipo, magias y misión de Maestría se derivan de él.",
+     "en": "A single value (levelcap.js) defines the level cap; exp, gold, gear, spells and the Mastery quest derive from it."
+    },
+    {
+     "es": "Magias: Int mínima hasta 170 y libros al 98 % del precio original para nivel 140.",
+     "en": "Spells: minimum Int up to 170 and books at 98% of the original price for level 140."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Nivel 140 y reinicio (v0.85.58)",
+    "en": "Level 140 and reset (v0.85.58)"
+   },
+   "items": [
+    {
+     "es": "El nivel máximo sube a 140; el equipo conserva su nivel original y la experiencia pasada el 50 es alcanzable.",
+     "en": "Max level is now 140; gear keeps its original level and experience past 50 is reachable."
+    },
+    {
+     "es": "Reinicio general: todas las estadísticas vuelven al fondo para repartirlas de nuevo y se borran todos los objetos (oro y nivel se conservan).",
+     "en": "General reset: all stats return to the pool to be re-spent and all items are deleted (gold and level are kept)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Guerreros que pegan (v0.85.57)",
+    "en": "Warriors that fight (v0.85.57)"
+   },
+   "items": [
+    {
+     "es": "Los bots ya no se quedan parados mirando el fuego durante un PvP (esperan 2,5 s y lo cruzan) y el guerrero nunca pega con báculo: lo cambia por su mejor arma.",
+     "en": "Bots no longer stand still staring at fire during PvP (they wait 2.5 s then cross it) and warriors never fight with a staff: they swap to their best weapon."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Anti-box y ranking de items (v0.85.56)",
+    "en": "Anti-box and item ranking (v0.85.56)"
+   },
+   "items": [
+    {
+     "es": "Los bots no se dejan rodear: con una sola salida libre matan al enemigo más débil de los pegados; contra monstruos atacan primero a los débiles; en PvP rodean al rival.",
+     "en": "Bots avoid being boxed in: with one free tile left they kill the weakest adjacent enemy; vs monsters they hit weak ones first; in PvP they encircle the foe."
+    },
+    {
+     "es": "Ranking de items: el segundo stat pesa mucho (convexo; guerrero HP>MR>MA, mago MP>HP>DR>PA), armas con acierto/consecutivo/reputación, armaduras ligeras, y sets HP/MP según la situación.",
+     "en": "Item ranking: the second stat weighs heavily (convex; warrior HP>MR>MA, mage MP>HP>DR>PA), weapons with hit/consecutive/reputation, light armor, and situational HP/MP sets."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Mejoras PvP y canal de peleas (v0.85.55)",
+    "en": "PvP upgrades and fight channel (v0.85.55)"
+   },
+   "items": [
+    {
+     "es": "Los bots reservan maná, no rompen la parálisis con magia, se ponen escudo si los rodean y tienen un nuevo reparto de stats (todos reiniciados). El observador tiene un canal de TV de peleas (teclas , y .).",
+     "en": "Bots keep a mana reserve, no longer break paralysis with spells, equip a shield when surrounded and have a new stat split (everyone reset). The observer has a fight TV channel (keys , and .)."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Fórmulas para los bots (v0.85.54)",
+    "en": "Formulas for the bots (v0.85.54)"
+   },
+   "items": [
+    {
+     "es": "Los bots conocen las fórmulas de acierto, daño y resistencia mágica: solo paralizan si el hechizo tiene opciones de entrar según la MR del rival, el guerrero elige al rival al que más daño saca y el mago al de menos MR, y el mago con Int 50+ reparte más puntos a Mag.",
+     "en": "Bots know the hit, damage and magic-resistance formulas: they only cast Paralyze when it has a real chance against the target MR, warriors pick the foe they damage most, mages the one with the lowest MR, and mages with Int 50+ put more points into Mag."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "Táctica PvP y dos clases (v0.85.53)",
+    "en": "PvP tactics and two classes (v0.85.53)"
+   },
+   "items": [
+    {
+     "es": "Los habitantes son solo guerreros o magos (50/50). Los magos paralizan siempre, detectan PFM probando un ataque, esperan si hay protección, ponen Spike Field, liberan con Fire Field, usan Invisibility y apoyan con PFM/AMP/Berserk; el grupo remata al paralizado. Los guerreros llevan 36 de Int para Invis, PFM, Detect y Paralyze.",
+     "en": "Residents are now only warriors or mages (50/50). Mages always try to paralyze, probe for PFM with an attack, wait out protection, drop Spike Field, free allies with Fire Field, use Invisibility and support with PFM/AMP/Berserk; the group focuses the paralyzed foe. Warriors carry 36 Int for Invis, PFM, Detect and Paralyze."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": {
+    "es": "PvP en la pantalla dividida (v0.85.52)",
+    "en": "PvP in split screen (v0.85.52)"
+   },
+   "items": [
+    {
+     "es": "El observador dividido tiene un panel más en el select: «⚔ PvP», con la ficha del personaje (build, stats, bonos, equipo, magias) y su pensamiento de combate contra jugadores.",
+     "en": "The split observer has one more select option: «⚔ PvP», with the character sheet (build, stats, bonuses, gear, spells) and its PvP combat thinking."
+    }
    ]
   },
   {
    "date": "2026-10-16",
-   "title": { "es": "Libro de oro (v0.85.38)", "en": "Gold ledger (v0.85.38)" },
+   "title": {
+    "es": "Pensamiento PvP en el admin (v0.85.51)",
+    "en": "PvP thinking in admin (v0.85.51)"
+   },
    "items": [
-    { "es": "Interno: el servidor registra cada movimiento de oro para el futuro monitor de economía. Nada cambia al jugar.", "en": "Internal: the server records every gold movement for the upcoming economy monitor. Gameplay is unchanged." }
+    {
+     "es": "El panel de bots tiene una pestaña PvP: ficha del personaje (stats, bonos, equipo, hechizos) y el registro de cómo elige, lanza, se protege y huye en combate contra jugadores.",
+     "en": "The bots panel has a PvP tab: character sheet (stats, bonuses, gear, spells) and a log of how they choose, cast, shield and flee against players."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Reinicio de estadísticas de los bots (v0.85.50)",
+    "en": "Bot stat reset (v0.85.50)"
+   },
+   "items": [
+    {
+     "es": "Todos los bots recuperan sus puntos y eligen rol de nuevo, con más magos (≈58 % lanzadores). Se verán más peleas de magos.",
+     "en": "All bots get their points back and pick a role again, with more mages (~58% casters). Expect more mage fights."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Magos con pociones de maná (v0.85.49)",
+    "en": "Mages carry mana potions (v0.85.49)"
+   },
+   "items": [
+    {
+     "es": "Los bots lanzadores compran pociones de maná y las beben cuando se quedan sin maná en pelea, para seguir lanzando magias.",
+     "en": "Caster bots buy mana potions and drink them when they run out of mana in a fight, so they keep casting."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Bots: equipo, Fuerza y Recall (v0.85.48)",
+    "en": "Bots: gear, Strength and Recall (v0.85.48)"
+   },
+   "items": [
+    {
+     "es": "Los bots cubren la Fuerza que pide su arma (golpe completo) y puntúan el equipo por HP/MP/DR/PA/MA/MR según su clase y el rival; no compran armadura que no pueden vestir.",
+     "en": "Bots cover the Strength their weapon needs (full swing) and score gear by HP/MP/DR/PA/MA/MR for their class and foe; they no longer buy armor they cannot wear."
+    },
+    {
+     "es": "Sin pociones y con poca vida lanzan Recall y vuelven a comprar, en vez de descansar en el campo. Los magos no pegan con la vara salvo contra magos o con Absolute Magic Protection.",
+     "en": "Out of potions and low on HP they cast Recall and go buy more instead of resting in the field. Mages do not melee with the staff except against mages or Absolute Magic Protection."
+    },
+    {
+     "es": "Fire Ball: el impacto ya es el correcto. Observador: icono de guerrero/mago.",
+     "en": "Fire Ball: correct impact effect. Observer: warrior/mage icon."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Magias balanceadas para nivel 50 (v0.85.47)",
+    "en": "Spells balanced for level 50 (v0.85.47)"
+   },
+   "items": [
+    {
+     "es": "La Int mínima y el precio de los libros se reescalan: hasta Int 30 y 2000 de oro igual que el original; por encima, la mitad del exceso de Int y el 35 % del exceso de oro. Ej.: Energy Strike Int 49 / 3100 oro, Lightning Strike 77 / 13600, Meteor Strike 100 / 15300, Blizzard 113 / 16400.",
+     "en": "Required Int and book prices are rescaled: up to Int 30 and 2000 gold as original; above that, half the Int excess and 35% of the gold excess. E.g. Energy Strike Int 49 / 3100 gold, Lightning Strike 77 / 13600, Meteor Strike 100 / 15300, Blizzard 113 / 16400."
+    },
+    {
+     "es": "Los bots magos reparten más puntos en Int (65 %) para llegar a las magias grandes.",
+     "en": "Mage bots put more points into Int (65%) to reach the big spells."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Caza: vender botín (v0.85.45)",
+    "en": "Hunt: sell loot (v0.85.45)"
+   },
+   "items": [
+    {
+     "es": "La caza automática ya vende/guarda el botín recogido aunque empieces con la mochila casi llena.",
+     "en": "Auto hunt now sells/stores picked-up loot even if you start with a nearly full bag."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Dash corriendo (v0.85.44)",
+    "en": "Run dash (v0.85.44)"
+   },
+   "items": [
+    {
+     "es": "El dash se activa corriendo (Shift o modo correr) con SP>0, como el original (Game.cpp 30934).",
+     "en": "Dash triggers while running (Shift or run mode) with SP>0, as in the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Monitor económico (v0.85.43)",
+    "en": "Economy monitor (v0.85.43)"
+   },
+   "items": [
+    {
+     "es": "El panel /admin tiene una pestaña Economía: resumen, flujo en vivo, alertas, riqueza, simulación y auditoría del oro.",
+     "en": "The /admin panel has an Economy tab: overview, live flow, alerts, wealth, simulation and gold audit."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Combate como el original (v0.85.42)",
+    "en": "Original combat (v0.85.42)"
+   },
+   "items": [
+    {
+     "es": "Acierto físico con HITRATIOFACTOR 80 y orden de cálculo de daño de combat.cpp (furia, VIT, críticos, zona de lucha).",
+     "en": "Physical hit rate with HITRATIOFACTOR 80 and the damage order of combat.cpp."
+    },
+    {
+     "es": "Anillos 335/337 con desgaste, inmunidad por habilidad especial y estado de guerra opcional (Apocalypse, Crusade, banderas).",
+     "en": "Rings 335/337 with wear, special-ability immunity and optional war state."
+    },
+    {
+     "es": "Solo sprites de IA en el juego; arreglo del suelo cuando falla una hoja IA.",
+     "en": "AI sprites only; ground fix when an AI sheet fails."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Caja del admin (v0.85.41)",
+    "en": "Admin ledger (v0.85.41)"
+   },
+   "items": [
+    {
+     "es": "El panel /admin muestra la economía: oro creado y destruido por motivo y los últimos movimientos.",
+     "en": "The /admin panel shows the economy: gold created and destroyed by reason and the latest movements."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Puerta del admin (v0.85.40)",
+    "en": "Admin door (v0.85.40)"
+   },
+   "items": [
+    {
+     "es": "Botón «Admin» en el login: cuenta de administrador + clave abre el panel (solo desde el PC del servidor). El observador dividido es una sección del panel.",
+     "en": "«Admin» button on the login: administrator account + password opens the panel (server PC only). The split observer is now a panel section."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Daños como el original y solo sprites IA (v0.85.39)",
+    "en": "Original damage rules (v0.85.39)"
+   },
+   "items": [
+    {
+     "es": "Demonslayer hace +5 de daño grande a los Demon.",
+     "en": "Demonslayer deals +5 large damage to Demons."
+    },
+    {
+     "es": "Anillos Emerald/Ruby (335/337) reducen el daño mágico recibido un 20%/10%.",
+     "en": "Emerald/Ruby rings (335/337) cut incoming magic damage by 20%/10%."
+    },
+    {
+     "es": "Con VIT menor de 10 el daño recibido suma 1, como en el original.",
+     "en": "With VIT below 10 incoming damage gets +1, as in the original."
+    }
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "title": {
+    "es": "Libro de oro (v0.85.38)",
+    "en": "Gold ledger (v0.85.38)"
+   },
+   "items": [
+    {
+     "es": "Interno: el servidor registra cada movimiento de oro para el futuro monitor de economía. Nada cambia al jugar.",
+     "en": "Internal: the server records every gold movement for the upcoming economy monitor. Gameplay is unchanged."
+    }
    ]
   },
   {
@@ -47,10 +1022,22 @@
     "en": "Background auto hunt and fixes (v0.85.37)"
    },
    "items": [
-    { "es": "La caza automática sigue matando con la ventana en segundo plano.", "en": "Auto hunt keeps killing while the window is in the background." },
-    { "es": "Autohunt recoge el botín cercano aunque haya monstruos a la vista (respeta «No recoger objetos»).", "en": "Auto hunt picks up nearby loot even with monsters in sight (respects 'Don't pick up')." },
-    { "es": "Sin sonido aleatorio al cambiar de mapa (era el aviso de día/noche).", "en": "No random sound on map change (it was the day/night notice)." },
-    { "es": "Siempre sprites nuevos (IA/HD); Earth Shock Wave suena como el original.", "en": "Always new (AI/HD) sprites; Earth Shock Wave sounds like the original." }
+    {
+     "es": "La caza automática sigue matando con la ventana en segundo plano.",
+     "en": "Auto hunt keeps killing while the window is in the background."
+    },
+    {
+     "es": "Autohunt recoge el botín cercano aunque haya monstruos a la vista (respeta «No recoger objetos»).",
+     "en": "Auto hunt picks up nearby loot even with monsters in sight (respects 'Don't pick up')."
+    },
+    {
+     "es": "Sin sonido aleatorio al cambiar de mapa (era el aviso de día/noche).",
+     "en": "No random sound on map change (it was the day/night notice)."
+    },
+    {
+     "es": "Siempre sprites nuevos (IA/HD); Earth Shock Wave suena como el original.",
+     "en": "Always new (AI/HD) sprites; Earth Shock Wave sounds like the original."
+    }
    ]
   },
   {
@@ -60,10 +1047,22 @@
     "en": "Magic like the original (v0.85.36)"
    },
    "items": [
-    { "es": "Invisibilidad: el aliado de tu bando te ve translúcido (no desaparece); se puede lanzar sobre summons.", "en": "Invisibility: same-side allies see you translucent (no longer vanish); can be cast on summons." },
-    { "es": "No se puede lanzar con armas en las manos (solo varitas en la derecha); espera mínima entre lanzamientos 1750 ms como el servidor original.", "en": "No casting with weapons in hand (only wands in right hand); 1750 ms minimum between casts like the original server." },
-    { "es": "La mini-ventana de misión se abre con el menú de misiones, no con F5. Cursor de lanzar azul/rojo según objetivo.", "en": "Mini quest window opens with the quests menu, not F5. Cast cursor blue/red by target." },
-    { "es": "Dash: la cámara avanza suave (el cuerpo mantiene los saltos del original).", "en": "Dash: camera advances smoothly (body keeps the original steps)." }
+    {
+     "es": "Invisibilidad: el aliado de tu bando te ve translúcido (no desaparece); se puede lanzar sobre summons.",
+     "en": "Invisibility: same-side allies see you translucent (no longer vanish); can be cast on summons."
+    },
+    {
+     "es": "No se puede lanzar con armas en las manos (solo varitas en la derecha); espera mínima entre lanzamientos 1750 ms como el servidor original.",
+     "en": "No casting with weapons in hand (only wands in right hand); 1750 ms minimum between casts like the original server."
+    },
+    {
+     "es": "La mini-ventana de misión se abre con el menú de misiones, no con F5. Cursor de lanzar azul/rojo según objetivo.",
+     "en": "Mini quest window opens with the quests menu, not F5. Cast cursor blue/red by target."
+    },
+    {
+     "es": "Dash: la cámara avanza suave (el cuerpo mantiene los saltos del original).",
+     "en": "Dash: camera advances smoothly (body keeps the original steps)."
+    }
    ]
   },
   {

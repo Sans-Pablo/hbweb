@@ -21,7 +21,7 @@ s.click(30, 320); s.key({ key: "Escape" }); assert.equal(s.on, false);
 const nd = src("npcdialogs.js"), cd = src("classicdialog.js");
 assert.ok(/get focus\(\) \{ return this\.s\.on; \}/.test(nd), "tienda/almacén ceden el teclado al tutorial");
 assert.ok(/get focus\(\) \{ return !!this\.s\?\.on; \}/.test(cd));
-assert.ok(/search: true/.test(src("petdialog.js")) && /search: true, footer/.test(nd), "compañeros y hospital con buscador");
+assert.ok(/search: true/.test(src("petdialog.js")) && /k: "search"/.test(nd), "compañeros y hospital con buscador");
 assert.ok(/idx/.test(nd) && /V\[this\.view \+ i\]\.idx/.test(nd), "el almacén retira por el índice real, no el filtrado");
 assert.ok(!/hud\.toast\([^)]*(cast|lanz|hechizo)/i.test(src("main.js")), "el lanzamiento de hechizos no usa el aviso grande");
 console.log("OK dlgsearch");

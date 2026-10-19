@@ -24,7 +24,7 @@ A.level = 30; A.gender = 1; A.stats.str = 60; A.stats.dex = 60;
 for (const i of [...A.bag]) if (!Object.values(A.equip).includes(i.uid)) A.bag.splice(A.bag.indexOf(i), 1);
 const d = data.named("LongSword"), inst = { uid: w.nextItem++, id: d.id, count: 1, life: 300 };
 A.bag.push(inst); assert.ok(Inv.equip(A, data, inst.uid).ok, "espada puesta"); w.recalc(A);
-A.skills[SKILL.LONG_SWORD] = 0; A.gold = 500;
+A.skills[SKILL.LONG_SWORD] = 0; A.gold = 500; A.bot.noGrant = true;
 assert.equal(A.eff.skill, SKILL.LONG_SWORD, "la espada larga usa Espada larga");
 errands(w, A, A.bot);
 assert.equal(A.skills[SKILL.LONG_SWORD], 100, "compra y estudia el manual de su arma");

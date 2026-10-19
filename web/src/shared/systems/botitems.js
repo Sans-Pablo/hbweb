@@ -8,14 +8,25 @@ import * as Shop from "./shopsys.js";
 import { itemLevel } from "../itemlevel.js";
 import { ROD } from "./fishing.js";
 import { gold as ledger } from "./ledger.js";
+import { isMage, bonusScore } from "./builds.js";
 
-export const canWear = (q, d) => !!d && d.type === ITYPE.EQUIP && !(d.levelLimit > q.level) && !(d.gender === 1 && q.gender !== 1) && !(d.gender === 2 && q.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY;
+// requisito de atributo de la armadura (v4 = atributo, v5 = mínimo; inventory.js equip, igual que bot.js reqOk): sin él compraba, no podía ponérsela y la vendía en bucle (obs. 50, 54, 63, 70)
+const REQ = { 10: "str", 11: "dex", 12: "vit", 13: "int", 14: "mag", 15: "chr" };
+export const meetsReq = (q, d) => { const st = REQ[d.v4]; return ![EQUIP.HEAD, EQUIP.BODY, EQUIP.ARMS, EQUIP.LEGGINGS].includes(d.equipPos) || !st || (q.stats?.[st] ?? 0) >= d.v5; };
+// lo que el bot vendió hace poco no lo vuelve a comprar (bucle compra/venta, obs. 50)
+export const SOLD_MEMORY = 600000;
+export const soldRecently = (w, p, id) => w.time - (p.bot?.sold?.[id] ?? -1e9) < SOLD_MEMORY;
+// #108: los yelmos (Horned-Helm, FullHelm, Wing Helm…) no los usa ningún bot; el Wizard-Hat/Cap del mago no cuenta como yelmo
+export const isHelm = d => !!d && d.equipPos === EQUIP.HEAD && !/^Wizard-(Hat|Cap)/.test(d.name || "") && /helm/i.test(d.name || "");
+export const canWear = (q, d) => !!d && d.type === ITYPE.EQUIP && !isHelm(d) && !(d.levelLimit > q.level) && !(d.gender === 1 && q.gender !== 1) && !(d.gender === 2 && q.gender !== 2) && d.equipPos > 0 && d.equipPos < EQUIP.FULLBODY && meetsReq(q, d) &&
+  !(d.weight > (q.stats?.str ?? 0) * 100) && !(d.equipPos === EQUIP.LHAND && isMage(q));          // v0.85.99 (obs. 98): peso por Str (Wing Helm 130) y el mago no se pone escudo en la mano (impide lanzar)
 export const slotOf = d => (d.equipPos === EQUIP.TWOHAND ? EQUIP.RHAND : d.equipPos);
-export const ilvOf = (w, i) => (i ? itemLevel(w.data.item(i.id), i.attr, i.id) : 0);
+// v0.85.98 (obs. 69/74): con `p` el valor incluye lo que busca SU clase (HP/MP/MR/DR… de la armadura, ver builds.js bonusScore y los valores del admin): sin esto el botín con «MP recovery» se juzgaba basura
+export const ilvOf = (w, i, p) => { if (!i) return 0; const d = w.data.item(i.id); return itemLevel(d, i.attr, i.id) + (p && d ? Math.round(bonusScore(p, d, i.attr)) : 0); };
 // item level de lo que `q` lleva puesto en la casilla de `d` (un arma de dos manos ocupa también la mano derecha)
 export function wornLevel(w, q, d) {
   const slot = slotOf(d), uid = q.equip[slot] ?? (slot === EQUIP.RHAND ? q.equip[EQUIP.TWOHAND] : undefined);
-  return uid !== undefined ? ilvOf(w, Inv.instOf(q, uid)) : 0;
+  return uid !== undefined ? ilvOf(w, Inv.instOf(q, uid), q) : 0;
 }
 const CAP = { potion: 15, food: 8, other: 30 };
 const isConsumable = d => d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE || d.type === ITYPE.ARROW;
@@ -28,16 +39,18 @@ export function judge(w, p, i, friends = []) {
   if (!d || i.id === GOLD || i.comp) return { act: "keep", value: 0, why: "es mío" };
   const sellPrice = Shop.sellPriceOf(d, i, count) || 0;
   if (p.res?.arch === "hunter" && (i.id === 77 || (/Bow/.test(d.name) && d.skill === 6 && !p.eff?.bow))) return { act: "keep", value: sellPrice, why: "el cazador dispara con arco" };       // flechas y arco de repuesto (bot.js isArcher)
+  if (p.bot && !isMage(p) && (i.id === 77 || (/Bow/.test(d.name) && d.skill === 6)) && !p.bot.owner) return { act: "keep", value: sellPrice, why: "arco y flechas de reserva (obs. 81)" };
   if (p.res?.arch === "scholar" && !p.eff?.wtype && d.appr >= 34 && d.appr < 40 && d.equipPos === EQUIP.RHAND) return { act: "keep", value: sellPrice, why: "el invocador de apoyo necesita un báculo" };
   if (i.id === ROD && p.res) return { act: "keep", value: sellPrice, why: "la caña para pescar en sus ratos libres" };
   if (isConsumable(d)) {
-    const cap = /Potion/.test(d.name) ? (p.res ? 40 : CAP.potion) : d.type === ITYPE.EAT ? CAP.food : CAP.other;
+    const cap = /Potion/.test(d.name) ? (/Blue/.test(d.name) && isMage(p) ? 50 : p.res ? 40 : CAP.potion) : d.type === ITYPE.EAT ? CAP.food : CAP.other;
     if (count <= cap) return { act: "keep", value: sellPrice, why: "consumible que uso" };
     return { act: "sell", value: sellPrice, why: `sobran (llevo ${count}, me bastan ${cap})` };
   }
   if (d.type !== ITYPE.EQUIP) return (d.price || 0) >= 600 ? { act: "store", value: sellPrice, why: "vale mucho y no lo uso" } : { act: "sell", value: sellPrice, why: "no me sirve" };
   if (i.life === 0) return { act: "sell", value: 0, why: "está gastado" };
-  const il = ilvOf(w, i), cur = wornLevel(w, p, d), mine = canWear(p, d);
+  if (isMage(p) && /^TowerShield/.test(d.name) && d.weight <= (p.stats?.str ?? 0) * 100) return { act: "keep", value: sellPrice, why: "la torre del mago de soporte va en la mochila (BM.ensureHands)" };
+  const il = ilvOf(w, i, p), cur = wornLevel(w, p, d), mine = canWear(p, d);
   const useGain = mine ? il - cur : 0;
   if (useGain > cur * 0.08 + 0.5) return { act: "equip", value: useGain * 30, why: `me mejora (item level ${il} frente a ${cur})` };
   let fq = null, fg = 0;
@@ -53,10 +66,14 @@ export function judge(w, p, i, friends = []) {
 export const stallable = v => !v.for && (v.act === "store" || (v.act === "sell" && v.value >= 150));
 
 // Vende, guarda y ordena. `log(text)` deja constancia (registro de acciones del bot). Devuelve cuántos objetos movió.
+// v0.85.63 (obs. 23): BASURA = equipo que no mejora nada y ya vale poco (escudos básicos, atributos inútiles como resistencia al veneno en armadura).
+// Con 14+ objetos en la mochila el bot la limpia aunque no vaya cargado: lo vende al NPC (oro) en vez de acumularlo.
+export const isJunk = (w, p, i, friends = []) => { const v = judge(w, p, i, friends), d = w.data.item(i.id); return v.act === "sell" && !!d && d.type === ITYPE.EQUIP && v.value < 150; };
+
 export function manage(w, p, { force = false, friends = [], log = () => {}, stallKeep = 0 } = {}) {
   const load = Inv.totalWeight(p, w.data) / Math.max(1, Inv.maxLoad(p));
   let moved = 0;
-  if (force || load >= 0.5 || p.bag.length >= MAX_ITEMS - 36) {
+  if (force || load >= 0.5 || p.bag.length >= MAX_ITEMS - 36 || p.bag.length >= 14) {
     const worn = new Set(Object.values(p.equip));
     let sold = 0, gold = 0, stored = 0, kept = 0;
     for (const i of [...p.bag]) {
@@ -67,7 +84,7 @@ export function manage(w, p, { force = false, friends = [], log = () => {}, stal
       if (kept < stallKeep && stallable(v)) { kept++; continue; }                  // se queda en la mochila para el puesto (residents.js stallAI)
       if (v.act === "store" && (p.bank?.length || 0) < 120 && Shop.deposit(w, p, { uid: i.uid, count: i.count })) { stored++; moved++; log(`Guardo ${d.name} en el almacén: ${v.why}.`); continue; }
       const price = Shop.sellPriceOf(d, i, i.count || 1) || 0;
-      ledger(w, p, price, "bot_sell", { artificial: "bot" }); Inv.removeFromBag(p, i.uid); sold++; gold += price; moved++;
+      ledger(w, p, price, "bot_sell", { artificial: "bot" }); if (p.bot) (p.bot.sold ||= {})[i.id] = w.time; Inv.removeFromBag(p, i.uid); sold++; gold += price; moved++;
     }
     if (sold) log(`Vendo ${sold} objeto(s) que no uso por ${gold} de oro${stored ? " y guardo " + stored : ""}.`);
   }
@@ -98,13 +115,14 @@ export function tidy(w, p) {
 export function wish(w, p, gear, bad = new Set(), usableFn = canWear) {
   let best = null;
   for (const [slot, list] of gear) {
-    if (slot === EQUIP.LHAND && p.equip[EQUIP.TWOHAND] !== undefined) continue;
+    if (slot === EQUIP.LHAND && (p.equip[EQUIP.TWOHAND] !== undefined || isMage(p))) continue;
     const have = (() => { const uid = p.equip[slot] ?? (slot === EQUIP.RHAND ? p.equip[EQUIP.TWOHAND] : undefined); return uid !== undefined ? ilvOf(w, Inv.instOf(p, uid)) : 0; })();
     for (const d of list) {
       if (bad.has(d.id) || !usableFn(p, d)) continue;
       const gain = itemLevel(d) - have;
       // puntuación RELATIVA a lo que ya lleva en esa casilla (un arma sube cifras enormes, una armadura pocas): así las armaduras también compiten, y una casilla vacía pesa mucho
-      const score = (gain / (have + 6)) * 40 + (have === 0 ? 12 : 0) - d.price / 400;
+      const score = (gain / (have + 6)) * 40 + (have === 0 ? 12 : 0) - d.price / 400
+        + (have <= 3 && d.price <= p.gold ? 30 : 0);                // v0.85.97 (obs. 85): ropa del inicio y oro suficiente = comprar ya lo básico de la herrería, antes de ahorrar para lo caro
       if (gain > have * 0.15 + 1 && (!best || score > best.score)) best = { d, gain, slot, price: d.price, score };
     }
   }

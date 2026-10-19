@@ -20,6 +20,9 @@ Botón de «Personaje»: `dbg resetall` → `Adventure.resetAll()` recorre todos
 ## Reiniciar bots desde 0
 Botón `botsnew` (con confirmación). `Adventure.restartBots()` quita todos los bots y habitantes, vacía `adv.offline`, borra sus puestos de `stallDb` y llama a `adventure.onBotsRestart(nombres)`; el servidor borra entonces `saves[bkey(n)]` de los 40 habitantes y guarda. Después recrea el mismo número de habitantes, nuevos (nivel 1-4, sin historia). No toca a los jugadores humanos (para eso, Reset all). Test: `tests/debug.test.mjs`.
 
+## Bots nivel 140 y todos contra todos (v0.85.80)
+Ops `botslv140` y `botsffa` (F1 → Herramientas → Bots). `Adventure.bots140()`: resetCharacter + Bot.init nivel 1 + `Bot.maxOut` (nivel 140, puntos por `builds.allocate`, 100000 de oro, `botmagic.study` en bucle: solo magias con reqInt ≤ Int). `Adventure.setFfa(on)`: `w.ffa` en los mundos pvp; `canFight` ignora bandos y party (salvo dueño/bot propio); cada segundo `gatherFfa` lleva a los bots a Promise Land (2ndmiddle). INVENTO. Test: tests/bots-lvl140.test.mjs.
+
 ## Modo «0 restricciones» (`p.free`, v0.79.0)
 Sin báculo de familia (`staffOk`), sin tope de nivel de mascota y sin requisitos para evolucionar. Solo herramientas de prueba.
 

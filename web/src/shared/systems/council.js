@@ -18,6 +18,13 @@ export const styleOf = p => ["grinder", "explorer", "fighter", "balanced"][([...
 const wild = e => e.kind === "npc" && !e.dead && !e.master && !e.aux && !e.cfg.actionLimit;
 
 // Qué le conviene a `p` ahora: valoración (0..~3) y el motivo, para cada opción. `H.cryptNeed` viene de residents.js.
+// v0.85.91 (obs. 46): ¿ya no hay en la granja nada que rinda? (todo trivial o demasiado fuerte): entonces cazar allí es perder el tiempo y busca otra meta (cripta, Promise Land/EK)
+export function farmDry(adv, p) {
+  if (!p.res || p.level < 10) return false;
+  const home = adv.homeOf(p);
+  for (const e of home.ents.values()) if (wild(e) && !home.safeAt(e.x, e.y) && !tooStrong(home, p, e) && mobRatio(p, e) >= 0.04) return false;
+  return true;
+}
 export function evaluate(adv, p, H, party = 1) {
   const r = p.res, home = adv.homeOf(p), out = {}, lvl = p.level;
   let best = null, br = 0;
@@ -26,8 +33,11 @@ export function evaluate(adv, p, H, party = 1) {
   const dv = Math.max(1, Math.min(p.delve?.deepest || 1, 20)), need = H.cryptNeed(r, dv), ready = lvl >= need - 1;
   const nb = bossPreview(home, dv), bossOk = !nb || fightEstimate(home, p, nb).ratio * (1 + 0.5 * (party - 1)) >= 1.3;
   const sk = 1500 * (1 + 0.15 * (dv - 1)) / Math.max(100, 1);                                    // un esqueleto del piso `dv` (exp de NPC.cfg * escala de dungeon.js)
-  out.crypt = { s: ready && bossOk ? 1.0 + Math.min(1.4, sk / Math.max(300, 80 * lvl + 600)) : ready ? 0.45 : 0.12, why: !ready ? `I am level ${lvl} and the crypt floor ${dv} wants about ${need}` : !bossOk ? `the boss of floor ${dv} would crush us` : `the crypt skeletons give good experience and loot (floor ${dv}, boss ok)` };
+  const deepLoot = ready && bossOk ? Math.min(0.6, 0.05 * dv + 0.01 * Math.max(0, lvl - need)) : 0;   // v0.85.98 (nota 77): las criptas hondas sueltan mejor botín; el bot fuerte lo pesa
+  out.crypt = { s: ready && bossOk ? 1.0 + deepLoot + Math.min(1.4, sk / Math.max(300, 80 * lvl + 600)) : ready ? 0.45 : 0.12, why: !ready ? `I am level ${lvl} and the crypt floor ${dv} wants about ${need}` : !bossOk ? `the boss of floor ${dv} would crush us` : `the crypt skeletons give good experience and loot (floor ${dv}, boss ok${deepLoot > 0.2 ? "; deep floors drop better loot" : ""})` };
   out.pl = { s: lvl >= 3 ? Math.max(0.1, 0.95 + (party >= 3 ? 0.5 : party >= 2 ? 0.25 : 0) + (r.goal?.k === "pvp" || r.goal?.k === "pit" ? 1.5 : 0) + Math.min(0.5, lvl / 80) - 0.12 * (r.scare | 0) + (r.grudge > home.time ? 0.7 : 0) + (warFever(home) && lvl >= 5 ? 0.45 : 0)) : 0, why: lvl >= 3 ? `${r.grudge > home.time ? "an enemy killed me there and I want revenge, " : ""}Promise Land has the best loot and the pits give glory${party >= 3 ? ", and with this many of us we can take a pit" : ""}` : "I am too low level for Promise Land" };
+  if (p.gold < 300 && lvl >= 8 && !farmDry(adv, p)) { out.hunt.s *= 1.35; out.hunt.why += "; I am broke and need loot to sell"; }   // v0.85.98 (nota 67)
+  if (farmDry(adv, p)) { out.hunt.s *= 0.25; out.hunt.why = "the farm monsters are trivial for me now; hunting them is a waste of time"; }
   const likes = LIKES[r.arch] || {}, g = r.goal?.k;
   for (const k of KINDS) {
     out[k].s *= likes[k] || 1;

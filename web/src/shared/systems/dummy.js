@@ -88,7 +88,9 @@ const BUFFS = [
   { tal: "dpfm", key: "pfm", v: (rk, c) => Math.min(70, Math.round(20 + 6 * rk + c.lvl * 0.3)), spell: 33, ms: rk => 30000 + 4000 * (rk - 1) },
   { tal: "dberserk", key: "berserk", v: 1, spell: 50, ms: rk => 20000 + 3000 * (rk - 1), fight: true },
 ];
-const has = (w, who, b, c) => { const cur = sget(w, who, b.key); return cur >= (typeof b.v === "function" ? b.v(rank(c, b.tal), c) : b.v) - (b.key === "pfm" ? 5 : 0); };
+// Pablo (0.85.101): el buffer no lanza PFM a quien ya tiene otro escudo o un aura activa (no se pisan)
+const auraOn = (w, e) => !!(e.aura && e.aura.until > w.time);
+const has = (w, who, b, c) => { if (b.key === "pfm" && !sget(w, who, "pfm") && (sget(w, who, "protect") || auraOn(w, who))) return true; const cur = sget(w, who, b.key); return cur >= (typeof b.v === "function" ? b.v(rank(c, b.tal), c) : b.v) - (b.key === "pfm" ? 5 : 0); };
 function applyBuff(w, n, c, b, who, quiet = false) {
   const rk = rank(c, b.tal), v = typeof b.v === "function" ? b.v(rk, c) : b.v;
   sset(w, who, b.key, v, b.ms(rk));

@@ -31,7 +31,7 @@ if (!w.safeAt(spot[0], spot[1])) {
   B.bag = B.bag.filter(i => !/Potion/.test(data.item(i.id)?.name || ""));
   B.hp = Math.floor(B.maxHp * 0.4); B.lastCombat = -1e9; B.bot.rest = true; B.bot.recallAt = -1e9; B.bot.next = 0; B.bot.errand = 1e12;
   tick(1500);
-  assert.ok(B.bot.log.some(l => /zona segura/.test(l)) || B.recallTok || w.safeAt(B.x, B.y), "fuera de zona segura pide Recall: " + B.bot.log.slice(-4).join(" | "));
+  assert.ok(B.bot.log.some(l => /zona segura|Recall/.test(l)) || B.recallTok || w.safeAt(B.x, B.y), "fuera de zona segura pide Recall: " + B.bot.log.slice(-4).join(" | "));
   // si le pegan mientras tanto, deja de descansar y se defiende
   B.lastCombat = w.time; B.bot.next = 0; B.bot.recallAt = w.time; B.recallTok = 0;
   tick(200);

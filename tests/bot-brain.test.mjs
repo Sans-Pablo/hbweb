@@ -18,7 +18,7 @@ for (const p of a.residents()) {
   assert.equal(b.id, p.id); assert.ok(b.mode && b.map && b.lv >= 1 && Array.isArray(b.log) && Array.isArray(b.near) && b.goal);
   JSON.stringify(b);
   // ficha completa del centro de observación
-  assert.ok(b.name === p.name && ["dead","rest","follow","delve-go","delve","pit","trip","pet","travel","flee","fight","farm","idle","trade"].includes(b.mode) && modeOf(a, p, a.worldFor(p.id)) === b.mode);
+  assert.ok(b.name === p.name && ["dead","rest","follow","delve-go","delve","pit","trip","pet","travel","flee","fight","farm","idle","trade","fish"].includes(b.mode) && modeOf(a, p, a.worldFor(p.id)) === b.mode);
   assert.ok(Array.isArray(b.quests) && b.quests.every(q => [0, 1, 2].includes(q.st)) && Array.isArray(b.mates) && Array.isArray(b.equip) && Array.isArray(b.skills) && Array.isArray(b.rel));
   assert.ok(b.st && typeof b.ilvl === "number" && b.exp >= 0 && b.exp <= 100 && b.qa && b.qa.pvp && b.qa.pet && "guild" in b && "delveInfo" in b);
 }

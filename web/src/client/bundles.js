@@ -2,6 +2,7 @@
 // El original carga todo el .pak al arrancar; aquí un nivel 1 en la granja solo descarga las losetas del
 // mapa y los monstruos que lo habitan (los dragones y demonios llegan al entrar en su mapa).
 import { DUNGEON_ASSETS } from "../shared/dungeon.js";
+import { MOB_SFX } from "./audio.js";
 
 const TILE_KEY = /^t\d+$/;
 export const isTileKey = k => TILE_KEY.test(k);
@@ -73,7 +74,8 @@ export function bundleOfWorld(world, manifest, npcDb, index = new Map()) {
     const cfg = npcDb[name];
     if (!cfg) continue;
     mobs.push(...sheetsOf(manifest, cfg.sprite, index));
-    if (cfg.sound) for (let i = 0; i <= 3; i++) sounds.add("M" + (cfg.sound + i));   // M<n>: reposo, golpe, daño, muerte (HGServer/Game.cpp, sonidos de NPC)
+    if (MOB_SFX[cfg.type]) for (const k of Object.values(MOB_SFX[cfg.type])) sounds.add(k);
+    else if (cfg.sound) for (let i = 0; i <= 3; i++) sounds.add("M" + (cfg.sound + i));   // M<n>: reposo, golpe, daño, muerte (HGServer/Game.cpp, sonidos de NPC)
   }
   if (world.map?.kind === "dungeon") sounds.add("M" + (npcDb.Skeleton?.sound ?? 0));
   return { tiles, mobs: [...new Set(mobs)], sounds: [...sounds] };

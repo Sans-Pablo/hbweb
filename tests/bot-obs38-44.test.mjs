@@ -1,0 +1,25 @@
+// v0.85.84 (obs. 38-40, 44): Int del guerrero a elegir (32/20/10/59), Berserk sobre si mismo, PFM contra cualquier jugador, kite largo del mago
+import assert from "node:assert";
+import { warInt, WAR_INT_CHOICES, allocate } from "../web/src/shared/systems/builds.js";
+import { plan, CAST_RANGE, WAR_STUDY } from "../web/src/shared/systems/botmagic.js";
+const seen = new Set();
+for (let i = 0; i < 60; i++) seen.add(warInt({ id: "bot" + i }));
+assert.deepEqual([...seen].sort((a, b) => a - b), [...WAR_INT_CHOICES].sort((a, b) => a - b), "los cuatro valores aparecen");
+assert.equal(warInt({ id: "x" }), warInt({ id: "x" }), "estable por personaje");
+const war = { id: "bot7", stats: { str: 10, dex: 10, int: 10, mag: 10, vit: 10 }, bot: {}, res: { build: "vanguard" } };
+assert.equal(allocate(war, 500).int, Math.max(0, warInt(war) - 10) || undefined, "el reparto sube Int solo hasta su meta");
+assert.ok(WAR_STUDY.includes(50), "estudia Berserk");
+assert.ok(CAST_RANGE > 1);
+const magic = { 50: { name: "Berserk", mana: 57, reqInt: 59 }, 33: { name: "Protection From Magic", mana: 20, reqInt: 32 } };
+const p = { id: "p", kind: "player", x: 5, y: 5, hp: 100, maxHp: 100, mp: 300, maxMp: 300, level: 100, stats: { int: 70, mag: 50 }, skills: { 4: 100 }, eff: {}, magic: { 50: 1, 33: 1 }, bot: {}, res: { build: "vanguard" }, status: {} };
+const npc = { id: "n", kind: "npc", x: 6, y: 5, hp: 50, maxHp: 50, dead: false, status: {} };
+const w = { time: 1e5, magic, ents: new Map([["p", p], ["n", npc]]), map: { kind: "farm" } };
+const pl = plan(w, p, { target: npc, cd: {} });
+assert.equal(pl?.id, 50, "en la granja y con el monstruo cerca se lanza Berserk");
+const pl2 = plan(w, p, { target: npc, cd: { selfbz: w.time } });
+assert.equal(pl2, null, "con enfriamiento no repite");
+const foe = { id: "f", kind: "player", x: 7, y: 5, hp: 100, maxHp: 100, mp: 10, dead: false, eff: {}, status: {} };
+w.map = { kind: "open" }; w.ents.set("f", foe);
+const pl3 = plan(w, p, { target: foe, cd: { selfbz: w.time } });
+assert.equal(pl3?.id, 33, "contra un jugador (no mago) se pone PFM");
+console.log("OK bot-obs38-44");

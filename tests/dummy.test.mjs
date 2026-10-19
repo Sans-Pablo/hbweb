@@ -1,5 +1,6 @@
 // Dummy: summon de apoyo único (3 clases, radio por nivel, auras por nivel, MASS, reflejo de agro). Solo afecta al grupo.
 import assert from "node:assert/strict";
+import { PET_RULES } from "../web/src/shared/systems/npcsys.js"; PET_RULES.staff = true;   // v0.85.98: estos tests ejercitan las reglas del báculo, ahora desactivadas por defecto (#90)
 import { readFileSync } from "node:fs";
 import { World } from "../web/src/shared/world.js";
 import { GameData } from "../web/src/shared/data.js";

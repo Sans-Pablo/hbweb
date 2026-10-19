@@ -25,3 +25,18 @@ INVENTO del port (Olympia tenía auto-caza; el original no). Lógica pura en `sh
 - `a.potions` (ON por defecto): con poca vida bebe una poción de vida de la mochila; si no tiene, para.
 - `ctl.auto.exp` (0.85.23) se mide por fotograma con `trackExp` (delta de `me.exp`, con acarreo al subir de nivel); no depende del evento `exp`. `AutoMini` extiende `MiniWin` (`client/miniwin.js`) y muestra «Reiniciar» al detenerse; la mini ventana lo muestra. F5 reabre la mini ventana si hay una caza (o la última) y estaba cerrada.
 - Test: `tests/autoplay.test.mjs`.
+
+## 0.85.70
+- Llena = ≥47 huecos, peso ≥90 % de `maxLoad` o recogida fallida (`a.full`). Va a vender; `sellList` se prefiltra con `sellValue` (descarta cannot 1/2) y repite por tandas mientras `a.full`. Al quedar sitio se limpian `skip`/`tries`.
+- Muerte: `decide` no para en hunt; `Controller.update` manda `respawn` a los 2,5 s y la caza retoma (viaTeleport a la zona).
+- `AutoMini.resume`: «Continuar» conserva kills/exp/tiempo acumulado; «Reiniciar» pone a cero.
+- `MiniWin`: bola inferior izquierda = transparente/opaca (`clear`), asa inferior derecha = redimensionar (`setSize`, 170-520 px).
+
+## v0.85.71
+- Equipo roto (life 0, categorías 1-10): corre al herrero y manda `repairall`; tras 3 intentos fallidos se desiste (`noRepair`).
+- Los envíos de venta/guardado se espacian `SEND_GAP_MS` (700 ms) para no gastar los reintentos de `a.bad` antes de la respuesta del servidor.
+
+## v0.85.73
+- `a.worn` recuerda el equipo puesto (`trackWorn`); `brokenGear`/`damagedGear` salen de ahí.
+- Un solo viaje: herrero (`repairall` con `uids`, también gastado si `full` y hay oro), tienda (tandas de 12, seguimiento de envíos) y almacén (`sends`, varios depósitos).
+- Aviso único en el log (`saidCant`) si algo no se puede vender o reparar.

@@ -21,7 +21,7 @@ import { errands, isSupport } from "../web/src/shared/systems/bot.js";
 let b, w = a.farm;
 for (const nm of ["Aldric", "Brenna", "Cael", "Dorna", "Edric", "Fenna"]) { a.spawnResident(nm); const c = a.residents().find(x => x.name === nm); c.res.arch = "scholar"; if (isSupport(c)) { b = c; break; } }
 assert.ok(b, "algún mago es de apoyo");
-b.level = 30; b.gold = 4000; b.hp = b.maxHp;
+b.res.resetV = 5; b.res.mageV = 1; b.res.build = "mage"; b.level = 30; b.gold = 4000; b.hp = b.maxHp;
 b.res._petAt = 1e12; b.res._gatherAt = 1e12; b.res._stallAt = 1e12; b.res._lzAt = 1e12;
 for (let k = 0; k < 6; k++) errands(w, b, b.bot, k === 0);
 w.recalc(b);

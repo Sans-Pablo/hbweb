@@ -103,11 +103,17 @@ export function cast(w, p, cmd) {
   // HG.cpp PlayerMagicHandler resuelve al recibir la orden; aquí la animación retrasa el golpe, así que se sigue al ocupante de la casilla
   // hasta que sale el hechizo (si no, un monstruo en movimiento lo esquiva)
   const tid = w.grid.occupant(x, y);
-  w.after(pre ? wait + 80 : ms, () => {
+  const ctok = p.castTok = (p.castTok | 0) + 1;                       // v0.85.62 (obs. 11): descasteo; un golpe mientras canaliza anula el hechizo (combatsys.damagePlayer)
+  // v0.85.79: con el hechizo ya preparado (animacion de UseMagic/OBJECTMAGIC hecha, el clic de PointCommandHandler solo llega con m_bCommandAvailable, Game.cpp:31842)
+  // el golpe sale AL RECIBIR LA ORDEN, como PlayerMagicHandler (HG.cpp:10202); solo si la animacion sigue en curso se espera a que acabe.
+  const go = () => {
+    if (p.castTok !== ctok) return;
+    p.castTok = ctok + 1;
     const t = tid === undefined ? null : w.ents.get(tid);
     const live = t && !t.dead && !t.feign && t.id !== p.id;
     resolve(w, p, cmd.spell, sp, live ? t.x : x, live ? t.y : y, cost);
-  });
+  };
+  if (pre && !wait) go(); else w.after(pre ? wait : ms, go);
   return true;
 }
 
@@ -147,7 +153,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
   // daño mágico a un monstruo: resistencia, absorción, protección, y la mitad de experiencia en golpes de zona
   const hurt = (tgt, n, d, k, half = false) => {
     if (tgt && tgt.kind === "player") return hurtPlayer(tgt, n, d, k);
-    if (!tgt || tgt.kind !== "npc" || tgt.dead) return null;
+    if (!tgt || tgt.kind !== "npc" || tgt.dead || tgt.crop) return null;       // v0.85.100: los cultivos (farming.js, sin generador) no mueren por hechizos de zona (rompía killNpc)
     if (tgt.master && (tgt.master === p.id || (p.party && w.ents.get(tgt.master)?.party?.id === p.party.id))) return null;   // los hechizos de zona no dañan a tus summons ni a los de tu grupo
     if (resist(w, tgt, power)) { w.emit({ t: "resist", id: tgt.id }); return null; }
     if (tgt.cfg.actionLimit === 1 || tgt.cfg.actionLimit === 2 || tgt.cfg.actionLimit === 4 || tgt.cfg.actionLimit === 6) return null;     // invulnerables (HG.cpp:18800: límites 1, 2, 4 y 6)
@@ -241,7 +247,8 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
         // HOLDOBJECT (HG.cpp:11102) contra jugador: nada si ya está inmovilizado, si lanzador u objetivo están en casilla segura/sin ataque (iGetAttribute 0x6),
         // si son del mismo grupo (m_iPartyID) o si m_iAddPR >= 500.
         if (target.kind === "player" && ((target.eff.addPR || 0) >= 500 || sget(w, target, "hold") || w.safeAt(p.x, p.y) || w.safeAt(target.x, target.y)
-          || (p.party && target.party && p.party.id === target.party.id))) break;
+          || (p.party && target.party && p.party.id === target.party.id)
+          || (p.bot && !canFight(w, p, target)))) break;          // v0.85.97 (obs. 62): un bot nunca inmoviliza a un aliado (mismo bando); el original sí lo permitiría, solo vale para bots
         sset(w, target, "hold", sp.v4, secs);
       } else if (target) w.emit({ t: "resist", id: target.id });
       break;
@@ -280,7 +287,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       } else if (target && target.kind === "player") sclear(w, target, "poison");
       break;
     case 18:                                                           // Berserk
-      if (sp.v4 === 1 && target && !target.dead && !sget(w, target, "berserk") && !(target.kind === "npc" && (target.cfg.actionLimit || target.cfg.side !== p.side))) sset(w, target, "berserk", 1, secs);
+      if (sp.v4 === 1 && target && !target.dead && !sget(w, target, "berserk") && !(target.kind === "npc" && (target.cfg.actionLimit || (target.side ?? target.cfg.side) !== p.side))) sset(w, target, "berserk", 1, secs);
       break;
     case 19:                                                           // rayo lineal
     case 30:
@@ -294,8 +301,9 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
     case 23:                                                           // hielo en área
       area(sp.v2, sp.v3, t => { if (iceHurt(t, sp.v4, sp.v5, sp.v6, true)) freeze(t, sp.v10); });
       break;
-    case 25:                                                           // área sin centro, con daño v4..v6
-      area(sp.v2, sp.v3, t => hurt(t, sp.v4, sp.v5, sp.v6, true));
+    case 25:                                                           // área sin centro, con daño v4..v6 (cfg 27, Earthworm: DAMAGE_AREA_NOSPOT_SPDOWN, HG.cpp:10859)
+      // cada jugador alcanzado pierde además dice(v7, v8) + v9 de aguante (Effect_SpDown_Spot, HG.cpp:19025)
+      area(sp.v2, sp.v3, t => { if (hurt(t, sp.v4, sp.v5, sp.v6, true) && t.kind === "player" && !t.dead) t.sp = Math.max(0, t.sp - (dice(w.rng, sp.v7, sp.v8) + sp.v9)); });
       break;
     case 26:                                                           // Blizzard: línea de hielo
       line(t => { if (iceHurt(t, sp.v7, sp.v8, sp.v9, true)) freeze(t, sp.v10); });
@@ -307,7 +315,7 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       break;
     case 9: {                                                          // Summon Creature: sobre un jugador (uno mismo); no en zonas de lucha
       if (target && target.kind === "player" && target.side === p.side && !w.fightZone) {      // HG.cpp:10933-10958: el objetivo debe ser un jugador del mismo bando
-        const n = activeBall(p) ? spawnCompanion(w, p, null, true) : summonFor(w, p, 0, M.freeFor(p), !!p.gm);   // con bola elegida: siempre esa especie
+        const n = activeBall(p) ? spawnCompanion(w, p, null, true) : summonFor(w, p, 0, M.freeFor(p), !!p.gm, target);   // con bola elegida: siempre esa especie
         if (!n) w.emit({ t: "nomagic", id: p.id });
       }
       break;
@@ -321,10 +329,12 @@ function resolve(w, p, id, sp, x, y, cost, item = false) {
       break;
     case 16:                                                           // Confusion / Illusion: el jugador se mueve al azar (la mitad de los pasos); no sobre uno mismo
       // CONFUSE (HG.cpp:11337): efecto de área (v2 x v3), solo jugadores; salta a los del propio bando (m_side == caster->m_side) y a los ya confundidos.
+      // v0.85.79 tipos 3 y 4 (HG.cpp:11360-11410): mismo flujo; el 3 (Illusion) pone STATUS_ILLUSION y el 4 STATUS_ILLUSIONMOVEMENT (clave "illusion"). Primero la tirada de resistencia y despues "ya confundido" (el hueco MAGICTYPE_CONFUSE es unico).
       area(sp.v2, sp.v3, t => {
-        if (!t || t === p || t.kind !== "player" || t.dead || t.side === p.side || sget(w, t, "confuse")) return;
-        if (resist(w, t, power)) w.emit({ t: "resist", id: t.id });
-        else sset(w, t, "confuse", sp.v4, secs);
+        if (!t || t === p || t.kind !== "player" || t.dead || t.side === p.side) return;
+        if (resist(w, t, power)) { w.emit({ t: "resist", id: t.id }); return; }
+        if (sget(w, t, "confuse") || sget(w, t, "illusion")) return;
+        sset(w, t, sp.v4 >= 3 ? "illusion" : "confuse", sp.v4, secs);
       });
       break;
     case 31:                                                           // Inhibition Casting (HG.cpp:10608): sin tirada de resistencia; solo la anula Protect AMP (5)

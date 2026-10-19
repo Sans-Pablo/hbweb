@@ -43,3 +43,6 @@ Test: `tests/item-effects.test.mjs`. Código: `itemsys.js` `useItem`, `magicsys.
 - **MAGIC**: antes de nada quita la invisibilidad (17752). v1=2 lanza Invisibility sobre uno mismo gratis; v1=3 Detect Invisibility salvo en zona de lucha (el objeto se gasta igual).
 - **CHANGEATTR**: v1=1 color de pelo (0..15 con vuelta), 2 peinado (0..7), 3 piel (1..3), 5 ropa interior (0..7).
 - **Pendientes / no aplicables**: v1=1 teletransporte, 4 bisle/fightzone, 5 Heldenian (sin objetos en el port); cambio de sexo (CHANGEATTR 4); FIRMSTAMINAR (`m_iTimeLeft_FirmStamina`, tope 600) sin consumidor en el port; pizarras antiguas (SLATES); STUDYMAGIC; `SpecEffectValue` por instancia; `case 20` (magia de resistencia). Reliquias de Astoria: pendientes.
+
+## Cast al recibir la orden (v0.85.79)
+`magicsys.cast`: con `cmd.pre` y el hechizo ya preparado (animación hecha) `resolve` corre en el mismo tick, como PlayerMagicHandler (HG.cpp:10202); si la animación sigue, espera solo lo que falta. Summon (`summonFor(..., at)`) nace en el anillo del tile objetivo y cuenta los seguidores del objetivo (HG.cpp:10933). Confusion v4=3/4 usa la clave `illusion` (HG.cpp:11360). Test: tests/magic-cast-on-receipt.test.mjs. Sin portar: UseMagic modo combate/objeto en mano/SPELLDISABLED (no existen en el port).

@@ -88,7 +88,8 @@ export function strikeNpc(rng, p, n, sameDir, ctx = {}) {
   if (ctx.crit || ctx.dash) critDashBonus(a, p.level | 0, p.eff.wtype === 0 ? 5 : p.eff.skill, ctx.crit, ctx.dash);
   if (bow && ctx.protect === 1) return { hit: false, damage: 0 };                 // Protección contra flechas: la flecha se pierde sin tocar el combo
   let defense = n.cfg.defenseRatio;
-  if (!bow) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;     // escudo de defensa del objetivo
+  // escudo de defensa del objetivo: en el original (combat.cpp:617-659) el +40/+100 está dentro de `if (EQUIPPOS_TWOHAND != -1)` del atacante jugador (quirk): solo con arma en la casilla a dos manos
+  if (!bow && p.equip?.[EQUIP.TWOHAND] !== undefined) defense += ctx.protect === 3 ? 40 : ctx.protect === 4 ? 100 : 0;
   if (bow && ctx.weather) a.hit = bowHitWithWeather(a.hit, ctx.weather);          // la lluvia estorba a los arcos
   // Orden de calculateAttackEffect (char/combat.cpp): furia x2 (697, solo attackMode<20) -> +AddPhysicalDamage (700) -> ataque cercano /2 (705) ->
   // VIT del objetivo jugador (711: -(dice(1,vit/10)-1), una tirada por cada AP) -> DarkExecutor/LightingBlade +10 (721) -> minimo 1 (734) -> tirada de acierto (742).

@@ -30,7 +30,7 @@ export class Gui {
     this.ctx = canvas.getContext("2d");
     this.manifest = null;
     this.img = {};
-    this.mouse = { x: -1, y: -1, down: false };
+    this.mouse = { x: -1, y: -1, down: false, seen: false };
     this.rect = { x: 0, y: 0, w: W, h: H };
     this.dialogs = new Map();                      // id -> { id, x, y, w, h, draw(g, me), click(g, x, y, me), title }
     this.order = [];                               // de atrás hacia delante
@@ -312,7 +312,7 @@ export class Gui {
   // ---------------------------------------------------------------- ratón
   move(cx, cy) {
     const [x, y] = this.toGui(cx, cy);
-    this.mouse.x = x; this.mouse.y = y;
+    this.mouse.x = x; this.mouse.y = y; this.mouse.seen = true;
     if (this.cap) this.cap.fn(x, y);
     if (this.drag) {
       const d = this.dialogs.get(this.drag.id);
@@ -338,7 +338,7 @@ export class Gui {
       if (button === 0 && d.press?.(this, x - d.x, y - d.y, me)) return true;       // empieza a arrastrar un objeto
       if (button === 0 && this.legacyFrame(d)) { const r = this.ballHit(d, x - d.x, y - d.y); if (r) { this.onSound?.(14); if (r === "x") this.close(d.id); else this.legacyMin(d); return true; } }
       const used = (button === 0 && d.lmin) ? false : button === 0 && d.click?.(this, x - d.x, y - d.y, me, { button });
-      if (used) this.onSound?.(14);
+      if (used && !d.silent) this.onSound?.(14);      // d.silent: cuadros cuyo clic original no suena (NpcActionQuery)
       if (!used && button === 0 && !d.fixed && !this.mobile) this.drag = { id: d.id, dx: x - d.x, dy: y - d.y };
       return true;
     }
@@ -347,6 +347,7 @@ export class Gui {
       return true;
     }
     if (this.petBall && button === 0 && x >= 103 && x <= 204 && y >= 515 && y <= 538) { this.onAction?.("petname"); return true; }   // clic en el nombre del compañero: renombrar
+    if (this.petBall && button === 0 && x > 322 + ADDX + RESX && x < 360 + ADDX + RESX && y >= 423 + RESY && y < 435 + RESY) { this.onAction?.("petcmd"); return true; }   // botón «ORD»: órdenes a la mascota (ir / atacar)
     if (!this.mobile && y >= 548 && y < H) { if (button === 0) this.panelClick(x, y, me); return true; }
     return false;
   }
@@ -406,7 +407,7 @@ export class Gui {
     if (this.item) this.item.draw(this, this.mouse.x, this.mouse.y);
     this.itemTooltip(me);
     for (const [x, y, s] of this.tips) this.text(x, y, s, "#fafadc", { shadow: true });
-    if (info.cursor !== undefined && this.mouse.x >= 0) this.put("interface_0", info.cursor, this.mouse.x, this.mouse.y);   // cursor del cliente original
+    if (info.cursor !== undefined && this.mouse.seen) this.put("interface_0", info.cursor, this.mouse.x, this.mouse.y);   // cursor del cliente original (v0.85.91, obs. 45: también en los márgenes de la pantalla ancha, donde x o y en coordenadas GUI son negativas)
   }
 
   // estadísticas del objeto que se arrastra o sobre el que está el cursor
@@ -416,34 +417,12 @@ export class Gui {
     if (!me) return;
     const info = uid ? (this.describe && this.describe(uid)) : (def && this.describeDef && this.describeDef(def));
     if (!info) return;
-    // Ficha estilo Olympia (ticket 14): cabecera con el nombre (color de rareza) y el icono, la estadística principal (daño/defensa) destacada,
-    // las bonificaciones en verde y, tras una línea fina, los datos secundarios (peso, fuerza, durabilidad) atenuados.
-    const c = this.ctx, MAIN = /^(Daño|Defensa|Damage|Defense)/, SUB = /^(Peso|Weight|Fuerza necesaria|Required strength)/;
-    const main = [], body = [], sub = [];
-    for (const l of info.lines) {
-      const r = { t: l.t, c: l.c || "#e8e8d0" };
-      if (MAIN.test(l.t) && !l.c) { r.c = "#fff2c0"; r.big = true; main.push(r); }
-      else if (SUB.test(l.t) && !l.c) { r.c = "#a89f88"; sub.push(r); }
-      else body.push(r);
-    }
-    const hdrH = Math.max(24, info.sprite ? 44 : 0), pad = info.sprite ? 46 : 0, RH = 14;
-    c.font = "bold 13px Tahoma, Verdana, sans-serif"; let tw = c.measureText(t(info.name)).width + pad;
-    c.font = "12px Tahoma, Verdana, sans-serif"; for (const r of [...main, ...body, ...sub]) tw = Math.max(tw, c.measureText(t(r.t)).width + (r.big ? 8 : 0));
-    const w = Math.ceil(tw) + 20, nRows = main.length + body.length + sub.length;
-    const h = hdrH + 6 + (nRows ? nRows * RH + 4 : 0) + (sub.length && main.length + body.length ? 5 : 0) + 4;
-    let x = this.mouse.x + 18, y = this.mouse.y + 14;
-    if (x + w > this.W) x = this.mouse.x - w - 8;
-    if (y + h > this.H) y = this.H - h;
-    c.fillStyle = "rgba(10,8,4,.92)"; c.fillRect(x, y, w, h);
-    const gr = c.createLinearGradient(x, y, x, y + hdrH); gr.addColorStop(0, "rgba(120,92,40,.75)"); gr.addColorStop(1, "rgba(50,36,14,.75)");
-    c.fillStyle = gr; c.fillRect(x + 1, y + 1, w - 2, hdrH - 1);
-    c.strokeStyle = "#b8964a"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
-    c.fillStyle = "rgba(184,150,74,.55)"; c.fillRect(x + 1, y + hdrH, w - 2, 1);
-    if (info.sprite) this.putGame(info.sprite[0], info.sprite[1], x + 25, y + hdrH / 2 + 2);
-    this.text(x + 8 + pad, y + Math.round((hdrH - 13) / 2), info.name, info.color || "#ffe9a0", { bold: true, size: 13, shadow: true });
-    let ty = y + hdrH + 5;
-    for (const r of [...main, ...body]) { this.text(x + 9, ty, r.t, r.c, r.big ? { bold: true } : {}); ty += RH; }
-    if (sub.length) { if (main.length + body.length) { c.fillStyle = "rgba(184,150,74,.3)"; c.fillRect(x + 8, ty + 1, w - 16, 1); ty += 5; } for (const r of sub) { this.text(x + 9, ty, r.t, r.c); ty += RH; } }
+    // Formato del original (Game.cpp, bloque de arrastre/hover de objetos): sin caja; nombre en (msX, msY+25) en blanco (verde si es especial)
+    // y cada línea secundaria (GetItemName cStr2/cStr3, nivel, peso, durabilidad) en gris RGB(150,150,150), de 15 en 15.
+    const x = this.mouse.x, y = this.mouse.y + 25;
+    this.text(x, y, info.name, info.color || "rgb(255,255,255)", { shadow: true });
+    let ty = y + 15;
+    for (const l of info.lines) { this.text(x, ty, l.t, l.c || "rgb(150,150,150)", { shadow: true }); ty += 15; }
   }
 
   // panel inferior (DrawDialogBox_IconPannel y DrawDialogBox_GaugePannel)
@@ -474,6 +453,11 @@ export class Gui {
       cx.save(); cx.beginPath(); cx.rect(dx, dy + dh * (1 - k), dw, dh * k + 1); cx.clip();      // lo que queda de vida: se pierde desde arriba
       cx.drawImage(this.spr.img[mi.key], sx, sy, w, h, dx, dy, dw, dh); cx.restore();
     }
+    const oc = !!this.petCmd, ob = by - 13;
+    cx.fillStyle = oc ? "rgba(200,170,60,.85)" : "rgba(10,8,4,.7)"; cx.fillRect(bx, ob, 38, 12);
+    cx.strokeStyle = oc ? "#ffe070" : "#8a7a4a"; cx.strokeRect(bx + .5, ob + .5, 37, 11);
+    this.text(bx + 19, ob + 10, "ORD", oc ? "#201800" : "#e8dcc3", { align: "center", shadow: !oc, size: 9 });
+    if (m.x > bx && m.x < bx + 38 && m.y >= ob && m.y < ob + 12) this.tip("Órdenes a la mascota (Ctrl+B): clic en monstruo = atacar, en el suelo = ir");
     this.text(bx + 36, by + 25, atk ? "ATQ" : "PAZ", atk ? "#ff9a7a" : "#9fe07f", { align: "right", shadow: true, size: 9 });
     // barra de vida del compañero, sobre la del personaje
     const x0 = 23 + RESX, y0 = 531, wd = 101;
@@ -670,7 +654,9 @@ export class Gui {
     if ((me.superAttack | 0) > 0 && crit100 && this.alt) this.put("gamedialog2_6", 3, 368 + a, 439 + RESY, null, false, 0.6);   // ALT pulsado: resalte (SPRID_INTERFACE_ND_ICONPANNEL frame 3, PutTransSprite en 368,439)
     if ((me.superAttack | 0) > 0) this.num(380 + a, 454 + RESY, me.superAttack, crit100 ? [220, 200, 200] : [10, 10, 10]);
     if (m.x > 362 + a && m.x < 404 + a && m.y > 434 + RESY && m.y < 475 + RESY) {
-      this.put("gamedialog2_6", 16, 362 + a - 1, 434 + RESY);
+      // el fotograma 16 de la hoja es turquesa (50,134,128); el resto de la barra resalta en naranja → se gira el tono (celeste erróneo, #112)
+      this.ctx.save(); this.ctx.filter = "hue-rotate(205deg) saturate(1.3) brightness(1.15)";
+      this.put("gamedialog2_6", 16, 362 + a - 1, 434 + RESY); this.ctx.restore();
       this.tip(this.flags.combat ? (this.flags.safe ? "Safe Attack" : "Attack") : "Peace");
     }
     const ctrl = info.ctrl;

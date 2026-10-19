@@ -22,4 +22,6 @@ if (rd.includes("rgba(90,170,255,\" + (0.12") || rd.includes("ctx.moveTo(x, y - 
 { const g2 = fs.readFileSync(path.join(root, "src/client/gui.js"), "utf8");
   if (/hue-rotate((1[5-9]|2[0-4])d?deg)/.test(g2) || g2.includes("#2fd0b0")) fail("tinte turquesa/azul en la barra o la ficha del compañero");
   if (/#(7fc4ff|8de4ff|bde8ff)/i.test(rd)) fail("etiquetas o puntos del minimapa turquesa/celeste en renderer.js"); }
+if (!/input:-webkit-autofill[^{]*\{[^}]*box-shadow/.test(html)) fail("falta neutralizar el autorrelleno celeste de Chrome (obs. 112)");
+if (!/\*:focus-visible\s*\{\s*outline:\s*none/.test(html)) fail("falta quitar el foco visible (obs. 112)");
 console.log("OK ui-guard");

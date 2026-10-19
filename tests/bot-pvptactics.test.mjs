@@ -14,5 +14,5 @@ assert.ok(r === null || r.id === 41 || r.id === 32 || r.id === 65, "plan devuelv
 const war = { stats: { str: 10, vit: 10, dex: 10, int: 10, mag: 10 }, res: { build: "glass" }, bot: {}, equip: {}, bag: [] };
 assert.equal(B.buildOf(war), "vanguard", "solo dos clases: el cañón de cristal es guerrero");
 assert.equal(B.buildOf({ ...war, res: { build: "summoner" } }), "mage", "el invocador pasa a mago");
-assert.ok(B.allocate(war, 40, 0).int >= 26, "el guerrero sube Int hacia 36");
+assert.equal(B.allocate(war, 40, 0).int || 0, Math.max(0, B.warInt(war) - 10), "el guerrero sube Int solo hasta su meta (32/20/10/59, obs. 38)");
 console.log("OK bot-pvptactics");

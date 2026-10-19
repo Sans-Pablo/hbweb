@@ -13,7 +13,7 @@ export const instOf = (p, uid) => p.bag.find(i => i.uid === uid);
 export const isEquipped = (p, uid) => Object.values(p.equip).includes(uid);
 
 export function totalWeight(p, data) {
-  let w = itemWeight(data.item(GOLD), p.gold || 0);
+  let w = 0;                                   // el oro no pesa (petición del autor)
   for (const i of p.bag) { const d = data.item(i.id); w += itemWeight(real(d, i), isStack(d) ? i.count : 1); }
   return w;
 }

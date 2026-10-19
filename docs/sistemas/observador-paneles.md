@@ -6,3 +6,6 @@
 
 ## Desde GitHub Pages (0.79.7)
 `dashboard.js` resuelve el servidor igual que `main.js` (`?server=` > `data/server.json` > mismo origen) para `/api/bots` y `/api/stats`, y reenvía `?server=` al marco del juego.
+
+## 0.85.63
+- Panel 💬 Preguntas (qaInit en dashboard.js), aprobar todo, Ctrl+Enter, hechas plegadas, filtro PvP.

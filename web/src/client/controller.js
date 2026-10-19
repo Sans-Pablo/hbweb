@@ -34,6 +34,7 @@ export class Controller {
       if (e.button === 0 && ui.minimapOpen?.() && renderer.minimapHit(e.clientX, e.clientY) && !ui.gui.dialogAt(...ui.gui.toGui(e.clientX, e.clientY))) { renderer.miniDragStart(e.clientX, e.clientY); canvas.setPointerCapture?.(e.pointerId); return; }   // arrastrar el minimapa
       if (ui.gui.down(e.clientX, e.clientY, e.button, this.me)) { this.guiDrag = true; canvas.setPointerCapture?.(e.pointerId); return; }
       this.pointer = [e.clientX, e.clientY];
+      if (e.ctrlKey && !e.altKey && (e.button === 0 || e.button === 2) && this.petOrder(e.button === 2)) return;   // v0.85.100: Ctrl+clic = mover la mascota, Ctrl+clic derecho = que ataque (solo con mascota activa)
       if (e.altKey && e.button === 0) { const en = this.target().ent; if (en && (en.kind === "npc" || (en.kind === "player" && en.id !== this.me?.id))) { this.critNext = true; this.intent = { t: "attack", id: en.id }; this.path = []; return; } }   // Alt + clic: ataque crítico (el «super ataque» del original)
       this.ctrl = e.ctrlKey; this.shift = e.shiftKey;
       this.btn = e.button === 2 ? 2 : 0;
@@ -63,6 +64,7 @@ export class Controller {
     }, { passive: false });
 
     addEventListener("keydown", e => {
+      if (e.key === "F5" && !e.ctrlKey) e.preventDefault();      // v0.85.98 (nota 75): F5 abre el personaje, nunca recarga la página (tampoco con el foco en un campo)
       if (e.target instanceof HTMLInputElement) return;
       if (e.target instanceof HTMLElement && e.target !== document.body && /^(BUTTON|A|SELECT|SUMMARY)$/.test(e.target.tagName)) e.target.blur();      // un botón con el foco se «pulsaría» con la barra espaciadora o Intro
       if ((e.key === " " || e.key === "Backspace" || e.key.startsWith("Arrow") || e.key === "PageDown") && !e.ctrlKey && !e.altKey) e.preventDefault();      // el navegador no desplaza ni retrocede la página
@@ -184,6 +186,7 @@ export class Controller {
     this.auto = null;
     const me = this.me;
     if (!me || me.dead || !this.pointer) return;
+    if (this.ui.petCmd) { this.ui.togglePetCmd(false); return; }
     if (this.ui.pointing != null || this.ui.petPointing != null) { this.ui.cancelPointing(); return; }
     if (this.ui.partyCb) { this.ui.cancelPick(); this.ui.gui.dialogs.get(32).mode = 0; return; }
     const { ent, x, y } = this.target();
@@ -196,9 +199,24 @@ export class Controller {
     if (dir && dir !== me.dir && !this.world.busy(me)) this.conn.send({ t: "turn", dir });
   }
 
+  petOrder(attack) {
+    const me = this.me; if (!me || me.dead || !this.pointer) return false;
+    let has = false; for (const n of this.world.ents.values()) if (n.master === me.id && !n.dead) { has = true; break; }
+    if (!has) return false;
+    const { ent, x, y } = this.target();
+    if (attack) { if (!ent || ent.id === me.id || ent.master === me.id || (ent.kind !== "npc" && ent.kind !== "player")) return true; this.conn.send({ t: "pettarget", target: ent.id }); }
+    else this.conn.send({ t: "petgo", x, y });
+    this.noHold = true; this.intent = null; this.path = [];
+    return true;
+  }
+
   click(first) {
     if (!this.pointer) return;
-    if (first && this.auto) { this.auto = null; this.ui.autoLog?.(["Modo automático cancelado.", "Auto mode cancelled."]); }
+    if (first && this.auto && !this.me?.dead) { this.auto = null; this.ui.autoLog?.(["Modo automático cancelado.", "Auto mode cancelled."]); }
+    if (this.conn.observing) {                            // v0.85.76 (obs. 32): observando, el clic sobre otro personaje abre su «en vivo» (analizar PvP); no se anda
+      if (first) { const [px, py] = this.r.toWorld(this.pointer[0], this.pointer[1]), p = this.playerAt(px, py); if (p) this.ui.watchPlayer?.(p.id); }
+      return;
+    }
     const me = this.me;
     if (!me || me.dead) return;
     if (this.ui.partyCb) {                                // invitar a un grupo: este clic elige el personaje
@@ -206,6 +224,14 @@ export class Controller {
       return;
     }
     const { ent, x: tx, y: ty } = this.target();
+    if (this.ui.petCmd) {                                 // órdenes a la mascota: suelo = petgo, enemigo = pettarget
+      if (first) {
+        if (ent && ent.id !== me.id && ent.master !== me.id && (ent.kind === "npc" || ent.kind === "player")) this.conn.send({ t: "pettarget", target: ent.id });
+        else if (!ent) this.conn.send({ t: "petgo", x: tx, y: ty });
+        this.noHold = true; this.intent = null; this.path = [];
+      }
+      return;
+    }
     if (this.ui.petPointing != null) {                    // hechizo del summon (pgcast): este clic elige el objetivo
       if (first) { this.conn.send({ t: "pgcast", spell: this.ui.petPointing, x: tx, y: ty }); this.ui.cancelPointing(true); this.noHold = true; this.intent = null; this.path = []; }
       return;
@@ -222,6 +248,10 @@ export class Controller {
     if (!ent && first) { const [px, py] = this.r.toWorld(this.pointer[0], this.pointer[1]); if (this.playerAt(px, py)) { this.intent = null; this.path = []; this.noHold = true; return; } }   // Game.cpp: FOE >= 0 (aliado/neutral) -> el clic no hace nada
     if ((this.ctrl || (this.ui.autoAttack && ent?.kind === "npc" && !ent.comp)) && ent) { this.intent = { t: "attack", id: ent.id }; return; }     // Ctrl + izquierdo: atacar
     if (!first && this.intent && this.intent.t === "attack") return;
+    if (first) {                                          // clic/toque sobre la entrada o salida de la cripta estando a 1 casilla = la tecla E (móvil no tiene E)
+      const gate = this.world?.map?.portals?.find(g => Math.max(Math.abs(g.x - tx), Math.abs(g.y - ty)) <= 1 && Math.max(Math.abs(g.x - me.x), Math.abs(g.y - me.y)) <= 1);
+      if (gate) { this.intent = null; this.path = []; this.noHold = true; this.conn.send({ t: "portal", portal: gate.id }); return; }
+    }
     if (tx === me.x && ty === me.y) { this.intent = null; this.conn.send({ t: "pickup" }); return; }
     this.intent = { t: "move", x: tx, y: ty };
     const ok = !this.grid.blocked(tx, ty);
@@ -239,7 +269,15 @@ export class Controller {
       this.hoverCit = this.hoverEnt ? null : this.pickCitizen(wx, wy);
       this.hoverPlayer = this.playerAt(wx, wy); this.hoverSelf = !!this.playerAt(wx, wy, true);
     } else { this.hover = null; this.hoverEnt = null; this.hoverCit = null; this.hoverPlayer = null; this.hoverSelf = false; }
-    if (!me || me.dead) { this.intent = null; this.path = []; return; }
+    if (!me || me.dead) {
+      this.intent = null; this.path = [];
+      if (me && this.auto?.kind === "hunt") {                // caza automática: al morir reaparece y sigue (el auto vuelve a la zona por el teletransportador)
+        this.auto.deaths ||= 0; this.deadT ??= performance.now();
+        if (performance.now() - this.deadT > 2500) { this.deadT = performance.now() + 4000; this.auto.deaths++; this.auto.idle = null; this.auto.said = false; this.conn.send({ t: "respawn" }); this.ui.autoLog?.(["Has muerto: reaparezco y sigo con la caza.", "You died: respawning and resuming the hunt."]); }
+      }
+      return;
+    }
+    this.deadT = null;
 
     // mantener pulsado = seguir andando hacia el cursor (como Diablo / el original)
     if (this.down && !this.noHold && performance.now() - this.lastHold > 120) { this.lastHold = performance.now(); if (this.btn === 2) this.rightClick(); else this.click(false); }
@@ -250,6 +288,7 @@ export class Controller {
       if (d.msg) this.ui.autoLog?.(d.msg);
       if (d.stop) this.auto = null;
       if (d.send) this.conn.send(d.send);
+      for (const m of d.sends || []) this.conn.send(m);
       if (d.open) this.ui.npcClick(d.open);
       if (d.intent) this.intent = d.intent;
     }

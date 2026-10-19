@@ -4,11 +4,12 @@
 //  - relaciones con los jugadores que conoce (los saluda, los recuerda, acepta o no unirse a su grupo);
 //  - respuestas al chat con frases propias y, si el servidor lo ofrece (`adv.llm`, un modelo local como Ollama), con texto generado.
 // Todo es determinista salvo `adv.llm` (solo existe en el servidor). El estado (`p.res`) se guarda en el save del habitante.
+import { learnDeath } from "./botgenes.js";
 import { dist } from "../const.js";
 import * as Party from "./party.js";
-import { isSupport } from "./bot.js";
+import { isSupport, futureMaster } from "./bot.js";
 import { hasStaff } from "./dummy.js";
-import { blog, tooStrong, fightEstimate, bossPreview } from "./bot.js";
+import { blog, tooStrong, fightEstimate, bossPreview, strNeedOf, giveWarKit } from "./bot.js";
 import * as Council from "./council.js";
 import * as Human from "./human.js";
 import * as Builds from "./builds.js";
@@ -207,7 +208,7 @@ export function attach(w, p, saved) {
   { const job = JOBS[p.name]; p.res.job = job || null; if (job === "support") p.res.arch = "scholar"; else if (job) p.res.arch = job === "fisher" ? "hunter" : "trader";
     if (job && p.bot) { p.bot.farmer = job === "farmer"; p.bot.fixed = job; } }
   if (!p.res.goal) newGoal(w, p);
-  if (!p.res.chr20) { p.res.chr20 = 1; if (p.level >= 15 && p.stats.chr < 20) p.pool += 20 - p.stats.chr; }       // una sola vez: los veteranos reciben los puntos de carisma que exige fundar un guild
+  if (!p.res.chr20) { p.res.chr20 = 1; if (futureMaster(p.name) && p.level >= 15 && p.stats.chr < 20) p.pool += 20 - p.stats.chr; }       // una sola vez: los veteranos reciben los puntos de carisma que exige fundar un guild
   p.res.lvl = p.level; p.res.kills0 = p.kills || 0;
   if (!p.res.mem.length) remember(p, "Llegué a Aresfarm buscando mi camino.", "I arrived in Aresfarm looking for my way.");
 }
@@ -607,7 +608,11 @@ function learnFromDeath(w, p, r) {
   if (!r._pvpDeath && k && k !== "?" && !adv_isPlayer(w, k)) { (r.dlv ||= {})[ks] = Math.max(r.dlv[ks] || 0, p.level); (r.dlt ||= {})[ks] = w.time; blog(w, p, `Aprendo: «${k}»${ks !== k ? " en el piso " + w.map.level : ""} me mató a nivel ${p.level}; no lo peleo hasta el ${p.level + 3}.`); }
   // MORIR ES MALO (además de la pérdida de experiencia del juego): pierde oro, recuerda el miedo (más prudencia durante un rato) y no se arriesga igual
   const lostGold = Math.floor(p.gold * 0.1); ledger(w, p, -lostGold, "resident_death"); r.scare = Math.min(5, (r.scare || 0) + 1); r.scareAt = w.time;
-  if (r._pvpDeath) { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }          // rencor: el grupo tenderá a volver a Promise Land
+  if (r._pvpDeath) {                                                                                  // v0.85.92 (obs. 56): 2 muertes PvP en 3 min → sin revancha y más miedo (antes: volvía a morir cada ~40 s)
+    r.pvpDeaths = [...(r.pvpDeaths || []).filter(t => w.time - t < 180000), w.time];
+    if (r.pvpDeaths.length >= 2) { r.grudge = 0; r.scare = Math.min(5, (r.scare || 0) + 2); blog(w, p, "Me han matado dos veces seguidas en Promise Land: dejo la revancha y me preparo mejor."); }
+    else { r.grudge = w.time + 15 * 60000; blog(w, p, "Me mató un enemigo en Promise Land: quiero la revancha."); }
+  }          // rencor: el grupo tenderá a volver a Promise Land
   blog(w, p, `Morir me cuesta: pierdo ${lostGold} de oro y experiencia; seré más prudente.`);
   if (w.map.kind === "dungeon") { (r.dd ||= {})[w.map.level] = (r.dd[w.map.level] || 0) + 1; blog(w, p, `Aprendo: morí en la cripta nivel ${w.map.level}; bajaré más fuerte.`); }
 }
@@ -639,7 +644,7 @@ function qaTick(adv, w, p, r) {
   if (b?.broken && !r._brokenRep) { r._brokenRep = true; report(adv, p, "bug", "brain", "Mi cerebro de bot se ha parado por un error interno.", "My bot brain stopped on an internal error."); }
   // muertes: contra qué y a qué nivel
   if (p.dead && !r._deathLogged) {
-    r._deathLogged = true; const m = r._killer || r._lastHit || "?"; r.qa.deaths[m] = (r.qa.deaths[m] || 0) + 1;
+    r._deathLogged = true; const m = r._killer || r._lastHit || "?"; r.qa.deaths[m] = (r.qa.deaths[m] || 0) + 1; learnDeath(w, m);
     if (m !== "?") report(adv, p, "balance", "death:" + m, `Me mata «${m}» siendo nivel ${p.level} (vida máx. ${p.maxHp}, ${r.qa.deaths[m]} veces). ¿Demasiado fuerte aquí?`, `«${m}» kills me at level ${p.level} (max HP ${p.maxHp}, ${r.qa.deaths[m]} times). Too strong here?`, { n: r.qa.deaths[m] });
   } else if (!p.dead) r._deathLogged = false;
   if (w.time < (r._qaAt ||= w.time + 20000)) return;
@@ -647,7 +652,7 @@ function qaTick(adv, w, p, r) {
   if (p.dead) return;
   // atascado (solo en la granja: dentro de tiendas y criptas el bot no sabe qué hacer y vuelve solo)
   if (w !== adv.homeOf(p)) { r._pt = w.time; r._px = -1; }       // quieto > 40 s sin descansar ni pelear = atascado
-  else if (r._px !== p.x || r._py !== p.y || b.rest || r._gather || r._leis || w.time - p.lastCombat < 6000 || w.busy(p) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; r._stuckN = 0; }
+  else if (r._px !== p.x || r._py !== p.y || b.rest || r._gather || r._leis || w.time - p.lastCombat < 6000 || w.busy(p) || (w.time - (b.waitSum || -1e9) < 6000 && (r._waitN = (r._waitN | 0) + 1) <= 9) || (b.owner != null && adv.bots.get(b.owner) && dist(adv.bots.get(b.owner), p) <= 4)) { r._px = p.x; r._py = p.y; r._pt = w.time; r._stuckN = 0; if (r._px !== p.x || r._py !== p.y) r._waitN = 0; }
   else if (w.time - r._pt > 40000) {
     r._pt = w.time;
     b.path = null; b.goal = null; b.wander = null; b.target = null; b.fails = 0; b.ignore?.clear?.();          // se desatasca solo: olvida camino y objetivo y, a la segunda vez seguida, usa Recall (vuelve a la ciudad)
@@ -669,7 +674,7 @@ function qaTick(adv, w, p, r) {
     if (lv && dist(p, lv) > 18 && !b.travel) { if ((r._petFar = (r._petFar | 0) + 1) >= 3) report(adv, p, "bug", "pet-far", `Mi summon ${ball.comp.nm} se queda a ${dist(p, lv)} casillas de mí y no me alcanza (${w.map.name || w.map.id}, ${p.x},${p.y}).`, `My summon ${ball.comp.nm} stays ${dist(p, lv)} tiles away and doesn't catch up (${w.map.name || w.map.id}, ${p.x},${p.y}).`); } else r._petFar = 0; }
   if (p.bag.length >= 46) report(adv, p, "comfort", "bagfull", "La mochila (50 huecos) se llena enseguida; no hay forma rápida de vender o tirar lo inútil.", "The 50-slot bag fills up fast; no quick way to sell or drop junk.");
   if (p.level >= 8 && p.gold < 60) report(adv, p, "balance", "poor", `Nivel ${p.level} y solo ${p.gold} de oro: las pociones y el equipo cuestan más de lo que gano.`, `Level ${p.level} with only ${p.gold} gold: potions and gear cost more than I earn.`);
-  if (p.gold > 20000) report(adv, p, "idea", "goldsink", `Tengo ${p.gold} de oro y nada útil en que gastarlo: faltan sumideros de oro.`, `I hold ${p.gold} gold with nothing worthwhile to spend it on: gold sinks are missing.`);
+  if (p.gold > 20000 && !p.bot) report(adv, p, "idea", "goldsink", `Tengo ${p.gold} de oro y nada útil en que gastarlo: faltan sumideros de oro.`, `I hold ${p.gold} gold with nothing worthwhile to spend it on: gold sinks are missing.`);
   // ritmo: cada ~8 min exp/min, muertes y bajas
   if (!r._paceAt) { r._paceAt = w.time + 480000; r._paceExp = p.exp; r._paceK = Object.values(r.qa.kills).reduce((a, c) => a + c, 0); r._paceD = Object.values(r.qa.deaths).reduce((a, c) => a + c, 0); }
   else if (w.time >= r._paceAt) {
@@ -708,12 +713,29 @@ function worldChanged(adv, w, p, r, home) {
 // Los líderes (sin jefe) salen de vez en cuando de su granja: a Promise Land por el teletransportador normal (cazan, combaten y dominan fosos; vuelven con Recall)
 // o a la cripta de esqueletos (bajan niveles despejándolos). Lo que toca lo decide la meta (pvp/pit → Promise Land, crypt → cripta) o el azar.
 const FOSOS = adv => adv.maps["2ndmiddle"]?.meta.spawns || [];
+// Ayudar a un aliado de mi ciudad que tiene un enemigo encima (a menos de 12 casillas de él): voy hacia él; el cerebro del bot elige al enemigo al llegar.
+function helpAlly(w, p, b, r) {
+  if (!(p.side > 0)) return false;
+  for (const a of w.ents.values()) {
+    if (a.kind !== "player" || a === p || a.dead || a.side !== p.side || dist(p, a) < 8) continue;
+    for (const e of w.ents.values()) if (e.kind === "player" && !e.dead && e.side > 0 && e.side !== p.side && dist(a, e) <= 12) { b.travel = { x: a.x, y: a.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Ayudo a ${a.name}: tiene a ${e.name} encima.`); return true; }
+  }
+  return false;
+}
 const pitCenter = z => ({ x: (z.rect[0] + z.rect[2]) >> 1, y: (z.rect[1] + z.rect[3]) >> 1 });
 // Elige foso: los que tiene el enemigo o nadie atraen; los propios y los lejanos, menos.
 function pickPit(adv, w, p, zones) {
   let best = null, bs = 1e9;
   for (const z of zones) { if ((adv.lessons?.pits.get(z.id) || 0) > w.time) continue; const st = adv.pits?.get(z.id), s = dist(p, pitCenter(z)) * 0.5 - (st && st.side !== p.side ? 70 : 0) + (st && st.side === p.side ? 140 : 0) + w.rng() * 50; if (s < bs) { best = z; bs = s; } }
   return best;
+}
+export const CRYPT_MAX_LV = 60, PL_SIDE_GAP = 3;
+export const cryptTooLow = p => p.level >= CRYPT_MAX_LV;
+// ¿mi bando ya tiene PL_SIDE_GAP residentes más que el contrario en Promise Land?
+export function plSideFull(adv, p) {
+  let mine = 0, other = 0;
+  for (const id of adv.bots.keys()) { const q = adv.worldFor(id)?.ents.get(id); if (!q || q === p || !q.res || adv.worldFor(id).map.id !== "2ndmiddle") continue; if (q.side === p.side) mine++; else if (q.side > 0) other++; }
+  return mine >= other + PL_SIDE_GAP;
 }
 function expedition(adv, w, p, r, home) {
   const b = p.bot;
@@ -744,6 +766,7 @@ function expedition(adv, w, p, r, home) {
         let foe = null, fd = pit ? 40 : 320;
         for (const e of w.ents.values()) if (e.kind === "player" && canFight(w, p, e) && e.level <= p.level + 12 && e.hp <= p.hp * 3.5) { const d = pit ? dist(pc, e) : dist(p, e); if (d < fd) { foe = e; fd = d; } }
         if (foe && dist(p, foe) > 10) { b.travel = { x: foe.x, y: foe.y, w, until: w.time + 9000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Busco a ${foe.name} (${foe.side === 1 ? "Aresden" : foe.side === 2 ? "Elvine" : "viajero"}, nv ${foe.level}) a ${dist(p, foe)} casillas.`); }
+        else if (!foe && helpAlly(w, p, b, r)) { /* v0.85.63 (obs. 25): prioridad en PL: 1 PvP, 2 matar a la otra ciudad, 3 ayudar a los aliados, 4 PvE */ }
         else if (pit && !foe && dist(p, pc) > 14) { b.travel = { x: pc.x, y: pc.y, w, until: w.time + 40000, seek: true }; b.path = null; b.goal = null; blog(w, p, `Voy al foso ${pit.id} (${pit.name}) en (${pc.x},${pc.y}) para dominarlo.`); }
         else if (pit && dist(p, pc) <= 14) b.home = { x: pc.x, y: pc.y };       // en el foso: pasea por él esperando enemigos
       }
@@ -751,6 +774,7 @@ function expedition(adv, w, p, r, home) {
     return;
   }
   if (!r._tripAt) r._tripAt = w.time + 60000 + Math.floor(w.rng() * 120000);
+  if (w === home && w.time > (r._cryptBlock || 0) && Council.farmDry(adv, p) && r._tripAt > w.time + 20000) { r._tripAt = w.time + 3000 + Math.floor(w.rng() * 12000); r._dry = (r._dry | 0) + 1; blog(w, p, "En la granja ya no queda nada que me rinda: busco otra cosa (cripta, Promise Land o mejor equipo)."); }
   if (w !== home || w.time < r._tripAt || p.dead || p.hp < p.maxHp * 0.7 || p.level < 2 || b.rest || b.travel) return;
   const g = r.goal?.k, plan = r._plan && w.time < r._plan.until ? r._plan : null;
   // QUÉ HACER: lo que decidió el grupo (council.js) o, en solitario, lo que más le conviene según lo que rinde cada cosa (hunt / crypt / pl)
@@ -760,9 +784,13 @@ function expedition(adv, w, p, r, home) {
     if (w.time - (r._evalLog || 0) > 120000) { r._evalLog = w.time; blog(w, p, `Evalúo qué me conviene: ${Council.KINDS.map(k => k + " " + ev[k].s).join(", ")} → ${Council.labelOf(kind)} (${ev[kind].why}).`); }
   }
   if (g === "crypt" && p.quests && !plan) kind = questReady(w, p) ? "crypt" : "hunt";                                           // misión de cripta: baja sí o sí (el consejo solo decide cuando no hay misión)
+  // #119: mapa objetivo por nivel (la cripta nv1/2 no da nada a un nv alto) y reparto por bando en Promise Land (Elvine llegó a ser el 80-90 %)
+  if (kind === "crypt" && g !== "crypt" && cryptTooLow(p)) kind = "pl";                                  // una meta explícita de cripta (misión, piso, rey) se respeta
+  if (kind === "pl" && plSideFull(adv, p)) kind = "hunt";
   if (kind === "hunt") { r._tripAt = plan ? plan.until : w.time + 90000; return; }                   // se queda cazando en la granja (la caza prefiere lo que más rinde)
   const pl = p.level >= 3 && kind === "pl";
-  if (!pl) return startDelve(adv, w, p, r, home);
+  const blocked = w.time < (r._cryptBlock || 0);                                                    // v0.85.99: la cripta ya dijo "no puedo con el siguiente piso": no se vuelve a la entrada en bucle, se va a Promise Land
+  if (!pl && !(blocked && p.level >= 3)) return startDelve(adv, w, p, r, home);
   const tps = (adv.maps[home.map.id]?.meta.teleports || []).filter(t => t.map === "2ndmiddle");
   if (!tps.length) return startDelve(adv, w, p, r, home);
   const tp = tps[tps.length >> 1], zones = FOSOS(adv);
@@ -822,7 +850,7 @@ function delve(adv, w, p, r, home) {
       let start = Math.min(cl + 1, 20);                                                            // elige el piso de inicio entre los despejados (el siguiente al último es el máximo): el más hondo cuyo jefe pueda vencer y cuyo nivel le alcance
       while (start > 1) { const bp = bossPreview(w, start); if ((!bp || fightEstimate(w, p, bp).ratio >= 1.3) && p.level >= cryptNeed(r, start) - 2) break; start--; }
       const cap = Quests.cryptCap(p);                                                              // v0.78.6: un piso ya despejado no se repite: si el siguiente aún no se puede (jefe o nivel) o el tope de misiones lo impide, no baja y vuelve a intentarlo más tarde
-      if (cl > 0 && (start < cl + 1 || cl + 1 > cap)) { r._delve = null; r._tripAt = w.time + 240000; blog(w, p, `Tengo despejado hasta el piso ${cl}, pero aún no puedo con el ${cl + 1}: no repito el ${cl}, me preparo más.`); return; }
+      if (cl > 0 && (start < cl + 1 || cl + 1 > cap)) { r._delve = null; r._tripAt = w.time + 20000; r._cryptBlock = w.time + 900000; blog(w, p, `Tengo despejado hasta el piso ${cl}, pero aún no puedo con el ${cl + 1}: no repito el ${cl}, me preparo más.`); return; }
       const restart = start === 1;
       if (cl > 0) blog(w, p, `Tengo despejado hasta el piso ${cl}: empiezo en el ${start}, sin repetir el jefe.`);
       adv.command(p.id, { t: "portal", portal: "mid-entry", restart, level: start }); }
@@ -944,7 +972,8 @@ function pets(adv, w, p, r, home) {
       if ((r._petUseFails = (r._petUseFails | 0) + 1) >= 3 && !live) { c.bad = true; r._petUseFails = 0; r.petN = (r.petN | 0) + 1; report(adv, p, "bug", "summon:" + c.sp, `No consigo invocar a mi summon de especie ${c.sp} (la bola no lo saca nunca).`, `I can't summon my ${c.sp} companion (the ball never produces it).`); blog(w, p, `Mi summon ${c.sp} no se deja invocar: lo dejo y probaré otra especie.`); }
     } else if (live) r._petUseFails = 0;
     // talentos: gasta los puntos libres según su arquetipo
-    if (Tal.pointsFree(c) > 0) for (const id of (Tal.isDummy(c) ? SUPPORT_PLAN[c.cls] : null) || TALENT_PLAN[r.arch] || TALENT_PLAN.hunter) if (!Tal.canLearn(c, id)) { adv.command(p.id, { t: "talent", uid: ball.uid, talent: id }); blog(w, p, `Gasto un punto de talento de ${c.nm} en «${Tal.talent(id).name}».`); break; }
+    // (#107) también los summons guardados en la mochila: cada uno con su propio plan
+    for (const bl of balls(p)) { const cc = bl.comp; if (Tal.pointsFree(cc) > 0) for (const id of (Tal.isDummy(cc) ? SUPPORT_PLAN[cc.cls] : null) || TALENT_PLAN[r.arch] || TALENT_PLAN.hunter) if (!Tal.canLearn(cc, id)) { adv.command(p.id, { t: "talent", uid: bl.uid, talent: id }); blog(w, p, `Gasto un punto de talento de ${cc.nm} en «${Tal.talent(id).name}».`); break; } }
     // los summons de escuela aprenden hechizos (barato primero) y los lanzan contra su objetivo
     const school = Sch.SCHOOL_OF[c.sp];
     if (school && w.magic) {
@@ -1007,17 +1036,36 @@ function pets(adv, w, p, r, home) {
 }
 // ---- REPARTO NUEVO (build): de vez en cuando prueban otro reparto de puntos para descubrir builds mejores (builds.js). Van al mago de la tienda general
 // (Gandlf, reinicio de estadísticas de respec.js), recuperan sus puntos, los reparten según el nuevo build y miden cuánta experiencia por minuto sacan.
-const RESET_V = 4;
+const RESET_V = 5;
 function rebuild(adv, w, p, r, home) {
   const b = p.bot;
   if (p.dead) { r._reb = null; return; }
+  if (p.pool === 0 && !r._reb && w.magic && p.magic) { const gone = []; for (const id of Object.keys(p.magic)) { const sp = w.magic[id]; if (sp && p.stats.int < sp.reqInt) { delete p.magic[id]; gone.push(sp.name || id); } } if (gone.length) blog(w, p, `Olvido ${gone.length} hechizo(s) (${gone.slice(0, 3).join(", ")}…): mi Int ${p.stats.int} no llega a su requisito (tras reiniciar estadísticas).`); }          // v0.85.98 (obs. 93): Pip tenía Int 10 con magias de círculo 6 (el reinicio de puntos no olvidaba hechizos)
+  if (r.job === "fisher" && (r.fishV | 0) < 1 && Builds.buildOf(p) === "mage") { r.fishV = 1; r.strV = 0; p.res.build = "vanguard"; p.res.arch = "hunter"; if (p.bot) p.bot.mage = false; }          // v0.85.95: el pescador usa arco: nunca mago
+  if ((r.resetV | 0) >= RESET_V && Builds.buildOf(p) === "mage" && (r.mageV | 0) < 3) {          // v0.85.68: los magos actuales rehacen sus estadísticas (más Mag/Int), Magic al 100 % y oro para comprar Ice/Energy Strike, Blizzard…
+    r.mageV = 3; r._reb = null; r.builds = []; r.bperf = null;
+    Respec.freeReset(w, p); p.skills[4] = Math.max(100, p.skills[4] | 0); p.gold = Math.max(p.gold, 60000); r.forcedDone = false;
+    for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool, Builds.weaponStrNeed(p, w.data)))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
+    if (p.pool > 0) adv.command(p.id, { t: "stat", stat: "mag", n: p.pool });
+    blog(w, p, "Reinicio de mago: más Mag para el maná, Int para los hechizos grandes, Magic al 100 % y oro para estudiar Ice Strike, Energy Strike y Blizzard.");
+    return;
+  }
+  if ((r.resetV | 0) >= RESET_V && Builds.buildOf(p) !== "mage" && ((r.strV | 0) < 4 && p.level >= 5)) {          // v0.85.93: también los guerreros con oficio (pescadores) con Str < 100 rehacen sus puntos
+    r.strV = 4;          // v0.85.94: todos los guerreros (con o sin oficio) rehacen una vez más; v0.85.91 (obs. 48): los guerreros actuales rehacen sus estadísticas (change stat) con el reparto de su build (Str de su arma objetivo, Dex 120…)
+    r.warV = 1; r._reb = null; r.builds = []; r.bperf = null; Respec.freeReset(w, p); r.forcedDone = false;
+    for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool, strNeedOf(w, p)))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
+    if (p.pool > 0) adv.command(p.id, { t: "stat", stat: "str", n: p.pool });
+    const kit = giveWarKit(w, p);          // v0.85.96 (Pablo): kit de arma objetivo (o Flameberge con Str 130)
+    blog(w, p, "Cambio de estadísticas: reparto mis puntos como pide mi build de guerrero" + (kit ? " y me equipo " + kit : "") + ".");
+    return;
+  }
   if ((r.resetV | 0) < RESET_V) {                                   // v0.85.50: reinicio general de estadísticas y nueva elección de rol (más magos)
     r.resetV = RESET_V; r._reb = null;
     let mg = 0, wr = 0; for (const e of w.ents.values()) if (e.kind === "player" && e.res && e !== p && (e.res.resetV | 0) >= RESET_V) { if (Builds.buildOf(e) === "mage") mg++; else wr++; }
-    const nb = mg <= wr ? "mage" : "vanguard";                       // v0.85.53: solo guerreros y magos, mitad y mitad
+    const nb = r.job === "support" ? "mage" : mg <= wr ? "mage" : "vanguard";                       // v0.85.53: solo guerreros y magos, mitad y mitad
     Respec.freeReset(w, p);
     r.builds = []; r.bperf = null; p.res.build = nb;
-    if (!p.quests) p.res.arch = nb === "mage" ? "scholar" : "warrior";
+    if (!r.job) p.res.arch = nb === "mage" ? "scholar" : "warrior";                  // v0.85.66: el arquetipo siempre sigue al rol elegido (antes con misiones quedaba scholar + build guerrero)
     r.forcedDone = false; r.sig = Builds.itemSig(p);
     for (const [stat, n] of Object.entries(Builds.allocate(p, p.pool, Builds.weaponStrNeed(p, w.data)))) if (n > 0) adv.command(p.id, { t: "stat", stat, n });
     if (p.pool > 0) adv.command(p.id, { t: "stat", stat: nb === "mage" ? "int" : "str", n: p.pool });
@@ -1095,7 +1143,8 @@ function pits(adv, w, p, r) {
   if (dt > 0 && dt <= 5000) {
     const z = FOSOS(adv).find(q => p.x >= q.rect[0] - 6 && p.x <= q.rect[2] + 6 && p.y >= q.rect[1] - 6 && p.y <= q.rect[3] + 6), st = z && adv.pits?.get(z.id);
     if (st && st.side === p.side) r.qa.pvp.held = (r.qa.pvp.held || 0) + dt / 1000;
-  }
+    r._dom = !!(st && st.side === p.side && w.time - st.since > 8000);        // v0.85.76 (obs. 35): zona dominada → deja el PvP y pasa a PvE (bot.js pickTarget)
+  } else if (dt > 5000) r._dom = false;
 }
 // Grupos de hasta 4 del mismo bando: el de más nivel lidera, los demás lo siguen (party real) y se disuelven al cabo de un rato para mezclarse.
 function social(adv, w, p, r) {
@@ -1145,7 +1194,9 @@ const CANNED = {
   admire: [["¡{n}, qué summon tan grande! ¿Es de nivel máximo?", "{n}, what a huge summon! Is it max level?"], ["Guau {n}, ese summon al máximo da miedo.", "Wow {n}, that maxed summon is scary."]],
   tnoneed: ["{n}, eso no me hace falta ahora.", "{n}, I don't need that right now."], tcounter: ["{n}, mi objeto vale más que eso.", "{n}, my item is worth more than that."],
 };
+const IDLE_KEYS = new Set(["greet", "again", "admire", "idle"]);
 const say2 = (adv, w, p, key, who, extra = {}) => {
+  if (IDLE_KEYS.has(key)) { if (w.pvp || w.time - (p.res.chatAt ?? -1e9) < 120000) return; p.res.chatAt = w.time; }          // v0.85.98 (obs. 88): charla espontánea muy escasa (nunca en Promise Land; una cada 2 min); las respuestas a un jugador no se limitan
   let c = CANNED[key];
   if (c && Array.isArray(c[0])) c = c[Math.floor(w.rng() * c.length)];
   if (c && (typeof adv.llm !== "function" || adv.llm.ready === false)) {

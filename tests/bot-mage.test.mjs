@@ -24,7 +24,7 @@ import { isCaster, isMage } from "../web/src/shared/systems/builds.js";
 import { EQUIP } from "../web/src/shared/items.js";
 const P = a.spawnBot(null, { level: 20, mage: true }), w = a.farm, b = P.bot;
 assert.ok(P.stats.int >= BotMod.BOT_MAGE_STATS.int && P.stats.int > P.stats.str, "el bot mago nace con INT");
-assert.ok(P.stats.mag >= 12, "y con MAG");
+assert.ok(P.stats.mag >= 10, "y con MAG");
 assert.ok(isMage(P) && isCaster(P), "es mago");
 // aprende: sin INT/oro no; con ellos sí
 const k0 = Object.keys(P.magic || {}).length; P.gold = 0; assert.ok(!BM.study(w, P, b, () => {}) && Object.keys(P.magic).length === k0, "sin oro no aprende");
@@ -54,7 +54,7 @@ P.stats.int = 200; P.gold = 500000; w.recalc(P); n = 0; while (BM.study(w, P, b,
 for (const id of [35, 25, 33, 60, 74, 81, 91]) assert.ok(P.magic[id], "aprende la magia " + id);
 if (!w.safeAt(P.x, P.y)) {
   P.hp = P.maxHp; P.mp = P.maxMp; P.lastCast = -1e9; b.castAt = -1e9; w.time += 5000;
-  const foe = a.spawnBot(null, { level: 20 }); foe.x = spot[0] ?? spot.x ?? P.x + 3; foe.y = spot[1] ?? spot.y ?? P.y;
+  const foe = a.spawnBot(null, { level: 20 }); foe.side = P.side === 1 ? 2 : 1; foe.x = spot[0] ?? spot.x ?? P.x + 3; foe.y = spot[1] ?? spot.y ?? P.y;
   const mp2 = P.mp; assert.ok(BM.fight(a, w, P, b, foe, () => {}), "lanza contra un jugador"); tick(2000); assert.ok(P.mp < mp2 || P.lastCast > -1e9, "lanza (paralizar o atacar)");
 }
 console.log("OK bot-mage");

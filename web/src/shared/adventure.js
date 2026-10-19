@@ -1,5 +1,5 @@
 import { JAIL_MAP } from "./systems/pk.js";
-import { spawnCompanion } from "./systems/npcsys.js";
+import { spawnCompanion, dismissCompanion } from "./systems/npcsys.js";
 import { activeBall } from "./systems/companion.js";
 // Enruta jugadores entre Aresfarm e instancias privadas. Compartido por Node y navegador.
 import { World } from "./world.js";
@@ -24,7 +24,7 @@ export const MAP_NAMES = { aresden: "Aresden", arefarm: "Aresfarm", aresdend1: "
 
 // Punto de retorno de Aresfarm (Recall, muerte, salidas de cripta/arena/tienda): lo pidió el diseño; el original usa el punto de reaparición de cada mapa (Map.cfg initial)
 export const FARM_HOME = [65, 75];
-export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f", "arejail", "elvjail"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
+export const ALLOWED_MAPS = new Set(["arefarm", "elvfarm", "2ndmiddle", "gshop_1f", "bsmith_1f", "wrhus_1f", "gshop_2f", "bsmith_2f", "wrhus_2f", "arejail", "elvjail"]);        // Promise Land (2ndmiddle) une las dos granjas y es zona de lucha entre bandos
 
 // HG.cpp iGetMapLocationSide: arefarm/elvfarm (y sus almacenes) pertenecen a un bando; el teletransporte (HG.cpp ~11714) se deniega a quien no es de ese bando salvo GM o neutral
 export const FARM_SIDE = { arefarm: 1, elvfarm: 2 };
@@ -75,7 +75,7 @@ export class Adventure {
       arenaBack: (p, from) => { const b = p.arenaBack || { map: ARENA.shop }, to = b.map === "arefarm" ? this.farm : this.staticWorld(b.map) || this.staticWorld(ARENA.shop) || this.farm; p.arenaBack = null; return this.transfer(p, from, to, b.x ? [b.x, b.y] : to.start); },
       player: id => this.worldFor(id).ents.get(id),
       bot: (p, c) => this.botOp(p, c),
-      resetAll: () => this.resetAll(), restartBots: () => this.restartBots(),
+      resetAll: () => this.resetAll(), restartBots: () => this.restartBots(), bots140: () => this.bots140(), botsSoft: () => this.botsSoft(), ffa: on => this.setFfa(on),
       watched: this.watched,
       party: this.partyReg,
       guild: this.guildReg,
@@ -231,6 +231,38 @@ export class Adventure {
       resetCharacter(w, p, p.bot ? (p.bot.mage ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS) : null);
       if (p.bot) { Bot.init(w, p, { level: 1, owner: p.bot.owner }); if (p.res) { p.res = null; Residents.attach(w, p, null); } }
       n++;
+    }
+    return n;
+  }
+  // F1 → Bots nivel 140: todos los bots y habitantes vuelven a stats base y suben a MAX_LEVEL con su build, 100000 de oro y magias compradas (bot.js maxOut)
+  bots140() {
+    let n = 0;
+    for (const id of [...this.bots.keys()]) {
+      const w = this.worldFor(id), p = w?.ents.get(id); if (!p || p.kind !== "player" || p.dead || !p.bot) continue;
+      const res = !!p.res;
+      resetCharacter(w, p, p.bot.mage ? Bot.BOT_MAGE_STATS : Bot.BOT_STATS);
+      Bot.init(w, p, { level: 1, owner: p.bot.owner });
+      if (res) { p.res = null; Residents.attach(w, p, null); }
+      if (Bot.maxOut(w, p)) n++;
+    }
+    return n;
+  }
+  // F1 → Reset suave de bots (obs. 49): quita objetos, reparte stats, habilidades 100 %, 1.000.000 de oro (bot.js softReset)
+  botsSoft() { let n = 0; for (const id of [...this.bots.keys()]) { const w = this.worldFor(id), p = w?.ents.get(id); if (p && p.kind === "player" && p.bot && Bot.softReset(w, p)) n++; } return n; }
+  // F1 → Todos contra todos: los bots van a Promise Land y allí se atacan todos (también del mismo bando y party). Apagado por defecto.
+  setFfa(on) {
+    this.ffa = !!on;
+    const pl = this.staticWorld("2ndmiddle"); if (pl) pl.ffa = this.ffa;
+    for (const w of this.worlds.values()) w.ffa = w.pvp && this.ffa;
+    if (this.ffa) this.gatherFfa();
+    return this.ffa;
+  }
+  gatherFfa() {
+    const pl = this.staticWorld("2ndmiddle"); if (!pl) return 0;
+    const c = pl.start; let n = 0;
+    for (const id of [...this.bots.keys()]) {
+      const w = this.worldFor(id), p = w?.ents.get(id); if (!p || p.dead || w === pl || w.pvp) continue;
+      if (this.transfer(p, w, pl, [c[0] + Math.floor(pl.rng() * 21) - 10, c[1] + Math.floor(pl.rng() * 21) - 10])) n++;
     }
     return n;
   }
@@ -440,6 +472,8 @@ export class Adventure {
   transfer(p, from, to, near) {
     const spot = to.freeSpotNear(...near);
     if (!spot) return false;
+    dismissCompanion(from, p);
+    for (const e of [...from.ents.values()]) if (e.master === p.id) { from.grid.release(e.x, e.y, e.id); from.ents.delete(e.id); from.emit({ t: "remove", id: e.id }); }   // v0.85.100: invocaciones y cadáveres no se quedan en el mapa que se deja
     from.grid.release(p.x, p.y, p.id);
     for (const n of from.ents.values()) if (n.target === p.id) n.target = null;
     from.ents.delete(p.id);
@@ -485,7 +519,7 @@ export class Adventure {
     Human.tick(this);                                                                        // horarios de los habitantes (human.js; apagado salvo en el servidor)
     for (const b of this.bots.values()) { Bot.think(this, b); if (b.res) Residents.think(this, b); }
     if (this.time - (this._guardAt || 0) >= 1000) { this._guardAt = this.time; for (const w of [...this.instances.values()]) this.guardPrivate(w); }
-    if (this.time - (this._sideAt || 0) >= 1000) { this._sideAt = this.time; this.recallEnemies(); this.enforceJail(); }
+    if (this.time - (this._sideAt || 0) >= 1000) { this._sideAt = this.time; this.recallEnemies(); this.enforceJail(); if (this.ffa) this.gatherFfa(); }
     for (const w of this.worlds.values()) {
       w.tick(dt);
       const dungeon = w.map.kind === "dungeon";

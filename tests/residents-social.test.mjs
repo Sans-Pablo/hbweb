@@ -23,7 +23,7 @@ const give = (p, name, n = 1) => { const inst = newInst(w, data.named(name).id, 
 
 // ---- 1. equipo por item level: se pone el arma del botín aunque no esté en el catálogo de la tienda
 a.spawnResident("Aldric");
-const A = a.residents().find(x => x.name === "Aldric"); A.level = 12; w.recalc(A); A.gold = 50;
+const A = a.residents().find(x => x.name === "Aldric"); A.level = 12; A.res.resetV = 1e6; A.stats.str = 60; w.recalc(A); A.gold = 50; A.bot.noGrant = true;
 const good = data.named("LongSword"), before = Object.values(A.equip).map(u => Inv.instOf(A, u)).filter(Boolean);
 const inst = newInst(w, good.id, 1, { attr: (7 << 20) | (8 << 16) }); Inv.addToBag(A, data, inst);
 tick(8000);

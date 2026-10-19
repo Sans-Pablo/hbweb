@@ -35,7 +35,7 @@ import { setEconSink } from "../web/src/shared/systems/ledger.js";
 import { openLlm } from "./llm.mjs";
 import { openReport } from "./report.mjs";
 import * as Residents from "../web/src/shared/systems/residents.js";
-import { isCaster } from "../web/src/shared/systems/builds.js";
+import { isCaster, setBotValues, botValues } from "../web/src/shared/systems/builds.js";
 import * as ObsStats from "../web/src/shared/systems/obsstats.js";
 import * as Human from "../web/src/shared/systems/human.js";
 import { RESIDENT_NAMES } from "../web/src/shared/systems/residents.js";
@@ -43,6 +43,7 @@ import { Accounts, Limiter, cleanName, validName, readJson, writeJson } from "./
 import { ADMIN_PAGE, helpText } from "./admin.mjs";
 import { openBotStats } from "./botstats.mjs";
 import { openBugs } from "./bugs.mjs";
+import { setGenes, getGenes } from "../web/src/shared/systems/botgenes.js";
 
 const PROTO = NET_PROTO;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -55,12 +56,15 @@ const MAX_PLAYERS = Number(env.HB_MAX || CFG.maxPlayers);
 const ORIGINS = (env.HB_ORIGINS ? env.HB_ORIGINS.split(",") : CFG.origins).map(o => o.trim().replace(/\/$/, "")).filter(Boolean);
 const ADMINS = new Set((env.HB_ADMINS ? env.HB_ADMINS.split(",") : CFG.admins).map(n => n.trim().toLowerCase()).filter(Boolean));
 const STORE = env.HB_DATA || path.join(HERE, "data");                  // cuentas, partidas, bloqueos (no se versionan)
+try { setBotValues(JSON.parse(fs.readFileSync(path.join(STORE, "botvalues.json"), "utf8"))); } catch { /* sin valores propios */ }
+import { createRecorder } from "./recorder.mjs";
 const store = await openStore(STORE, { accountsFile: env.ACCOUNTS_FILE, savesFile: env.SAVE_FILE, log: (...a) => console.log(...a) });    // SQLite (store.mjs)
 const accounts = new Accounts("", store);
 const economy = createEconomy({ store });
 setInterval(() => { try { economy.evaluate(); } catch (e) { console.log("alertas:", e.message); } }, 60000).unref();
 { const boot = Date.now().toString(36); let n = 0;      // monitor económico (docs/sistemas/economia.md): cada movimiento de oro va a econ_events; event_id único = arranque + contador
   setEconSink((w, ev) => { try { economy.noteIngest(true); store.econAdd({ eventId: boot + ":" + (++n), ts: Date.now(), gt: ev.time, reason: ev.reason, cls: ev.cls, delta: ev.delta, actor: ev.actor, peer: ev.peer, artificial: ev.artificial, bal: ev.bal, map: w.map?.id ?? null }); } catch { economy.noteIngest(false); } }); }
+const recorder = createRecorder(path.join(STORE, "replays"), { log: (k, m) => console.log(k, m) });          // v0.85.67: graba el 100 % de las partidas de jugadores reales
 const BANS = path.join(STORE, "bans.json");
 const bans = readJson(BANS, { accounts: {}, ips: {} });
 const TOKEN_FILE = path.join(STORE, "admin-token.txt");
@@ -89,6 +93,9 @@ try {
     maps[id] = { meta: mm, grid: id === "arefarm" ? null : new Grid(mm.w, mm.h, new Uint8Array(fs.readFileSync(path.join(DATA, "maps", id + ".bin")))) };
   }
 } catch {}
+let TRAINED = null; try { TRAINED = JSON.parse(fs.readFileSync(path.join(DATA, "botgenes.json"), "utf8")); setGenes(TRAINED.genes); } catch {}   // genes de los bots entrenados con tools/train.mjs (v0.85.64)
+function reloadGenes() { try { const t = JSON.parse(fs.readFileSync(path.join(DATA, "botgenes.json"), "utf8")); if (!TRAINED || t.version !== TRAINED.version) { TRAINED = t; setGenes(t.genes); } } catch {} }   // el entrenador continuo reescribe el fichero: se recarga en caliente
+setInterval(reloadGenes, 30000).unref?.();
 const adventure = new Adventure({ grid, npcDb, data, spawns, start: meta.start, maps, clock: () => new Date().getMinutes() });   // día y noche como el cliente local
 
 const clients = new Set();
@@ -125,7 +132,7 @@ function persist(force = false) {
   try { store.flush(force); } catch (e) { console.error("No se pudo guardar:", e.message); }
 }
 // Segunda ronda de análisis: al subir BOT_EPOCH todos los habitantes vuelven a nivel 1 y el informe se archiva y empieza vacío (una sola vez por época).
-const BOT_EPOCH = "2";
+const BOT_EPOCH = "4";
 function resetResidents() {
   for (const k of Object.keys(saves)) if (k.startsWith("bot:") || k === "sys:guilds") delete saves[k];
   try { const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-"); for (const f of ["informe-bots.jsonl", "Informe de bots.md"]) { const p = path.join(STORE, f); if (fs.existsSync(p)) fs.renameSync(p, path.join(STORE, "ronda-" + stamp + " " + f)); } } catch (e) { console.error("archivo del informe:", e.message); }
@@ -216,6 +223,35 @@ const server = http.createServer((req, res) => {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     json(req, res, 200, adminState()); return;
   }
+  if (url.pathname === "/api/admin/botvalues") {                              // v0.85.98 (nota 69): puntos extra por tipo de bonus y por objeto que usan los bots al valorar equipo
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    const file = path.join(STORE, "botvalues.json");
+    if (req.method !== "POST") { json(req, res, 200, botValues); return; }
+    let b = ""; req.on("data", d => { b += d; if (b.length > 20000) req.destroy(); });
+    req.on("end", () => { try { const o = JSON.parse(b || "{}"); setBotValues(o); fs.writeFileSync(file, JSON.stringify(botValues)); json(req, res, 200, botValues); } catch (e) { json(req, res, 400, { error: e.message }); } });
+    return;
+  }
+  if (url.pathname === "/api/admin/obs") {                                    // observaciones del propietario (mini tickets, 0.85.60): docs/observaciones.json
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    const file = path.join(HERE, "..", "docs", "observaciones.json");
+    const load = () => { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return { tickets: [] }; } };
+    if (req.method !== "POST") { json(req, res, 200, load()); return; }
+    let b = ""; req.on("data", d => { b += d; if (b.length > 20000) req.destroy(); });
+    req.on("end", () => { try {
+      const o = JSON.parse(b || "{}"), db = load(), t = db.tickets.find(x => x.id === o.id);
+      if (o.op === "add" && String(o.text || "").trim()) db.tickets.push({ id: Math.max(0, ...db.tickets.map(x => x.id)) + 1, text: String(o.text).slice(0, 2000), state: "nueva", proposal: "", comments: [], at: new Date().toISOString() });
+      else if (t && o.op === "comment" && String(o.text || "").trim()) t.comments.push({ text: String(o.text).slice(0, 2000), at: new Date().toISOString() });
+      else if (t && o.op === "state" && ["nueva", "analizada", "aprobada", "corregir", "hecha"].includes(o.state)) t.state = o.state;
+      else if (o.op === "all") {                                   // v0.85.62 (obs. 15): analizar / aprobar / mandar a desarrollo todas juntas
+        const FROM = { analizada: ["nueva"], aprobada: ["nueva", "analizada"], dev: ["aprobada"] }[o.state] || [], sel = db.tickets.filter(x => FROM.includes(x.state));
+        for (const x of sel) { if (o.state === "dev") x.dev = new Date().toISOString(); else x.state = o.state; }
+        if (o.state === "dev" && sel.length) fs.writeFileSync(path.join(HERE, "..", "docs", "COLA.md"), "# Cola de desarrollo (observaciones aprobadas)\n\n" + sel.map(x => `- #${x.id}: ${x.text.replace(/\n/g, " ")}${x.proposal ? " — " + x.proposal : ""}`).join("\n") + "\n");
+      }
+      else if (t && o.op === "del") db.tickets.splice(db.tickets.indexOf(t), 1);
+      fs.writeFileSync(file, JSON.stringify(db, null, 1)); json(req, res, 200, db);
+    } catch (e) { json(req, res, 400, { error: e.message }); } });
+    return;
+  }
   if (url.pathname === "/api/admin/bots" || url.pathname === "/api/admin/botanalysis" || url.pathname === "/api/admin/botdetail" || url.pathname === "/api/admin/botparties") {
     if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
     try {
@@ -224,6 +260,14 @@ const server = http.createServer((req, res) => {
       else if (url.pathname === "/api/admin/botparties") json(req, res, 200, { parties: botStats.parties() });
       else json(req, res, 200, botStats.detail(url.searchParams.get("name") || "") || { error: "no existe" });
     } catch (e) { json(req, res, 500, { error: e.message }); }
+    return;
+  }
+  if (url.pathname === "/api/admin/learning") {
+    if (!adminAllowed(req, url)) { res.writeHead(403); res.end(); return; }
+    reloadGenes();
+    let log = []; try { log = JSON.parse(fs.readFileSync(path.join(DATA, "botlearn-log.json"), "utf8")).entries.slice(-120).reverse(); } catch {}
+    const L = adventure.farm.learn || { cal: {}, mobs: {}, n: 0 };
+    json(req, res, 200, { log, trained: TRAINED, genes: getGenes(), live: { cal: L.cal, n: L.n, mobs: Object.entries(L.mobs).map(([name, m]) => ({ name, ...m })).sort((a, b) => b.deaths - a.deaths || b.n - a.n).slice(0, 25) } });
     return;
   }
   if (url.pathname === "/api/admin/balance") {
@@ -620,6 +664,12 @@ function processQueue(c) {
         q.held = true;
         if (Date.now() - q.at < 700) return;
       } else if (q.held && world.time - readyAt < 100) backdate = readyAt;
+      else if (q.cmd.t === "attack") {
+        // El original procesa al recibir; aquí se atiende en el tick siguiente. Se fecha el golpe en el instante
+        // real de llegada (nunca antes de quedar libre) para no sumar 0-50 ms de cuantización a cada golpe.
+        const arrived = Math.max(readyAt, world.time - Math.min(Date.now() - q.at, 50));
+        if (arrived < world.time) backdate = arrived;
+      }
     }
     q.held = false;
     c.queue.shift();
@@ -633,6 +683,7 @@ function processQueue(c) {
       crashLog("cmd:" + q.cmd.t, e); if (++c.cmdErrors > 25) { drop(c, "Demasiadas órdenes no válidas."); return; }
     }
     finally { world.time = now; }
+    recorder.cmd(c.pid, world, q.cmd);
     c.ack = q.seq;
     if (changedMap && adventure.worldFor(c.pid) !== world) { c.queue = []; return; }
     if (TIMED.has(q.cmd.t)) return;          // como mucho una acción con tiempo por tick
@@ -708,6 +759,7 @@ const tickOnce = () => {
   for (const c of clients) if (c.pid) processQueue(c);
   adventure.tick(dt);
   const eventsByMap = adventure.drainEvents();
+  recorder.tick(clients, adventure, eventsByMap);
   const perWorld = new Map();                              // por mundo y tick: lo que es igual para todos los clientes se calcula una sola vez
   const shared = world => {
     let s = perWorld.get(world);
@@ -807,4 +859,4 @@ if (process.stdin.isTTY) readline.createInterface({ input: process.stdin }).on("
 // Cierre brusco (ventana cerrada, error inesperado): guardar todo antes de salir; el lanzador vuelve a arrancar el servidor
 process.on("uncaughtException", e => { console.error("Error inesperado:", e); crashLog("uncaught", e); try { persist(true); store.close(); } catch {} process.exit(1); });
 process.on("unhandledRejection", e => { console.error("Promesa rechazada:", e); crashLog("rejection", e); });
-for (const sig of ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); informe.flush(); store.close(); setTimeout(() => process.exit(0), 150); });
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"]) process.on(sig, () => { for (const c of [...clients]) send(c, { t: "kicked", msg: "El servidor se apaga." }); clearInterval(saveTimer); persist(true); recorder.close(); informe.flush(); store.close(); setTimeout(() => process.exit(0), 150); });

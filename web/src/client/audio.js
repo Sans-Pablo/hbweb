@@ -17,6 +17,10 @@ export function attackSfx(ev) {
 // Sonido del golpe recibido según el arma del atacante (MapData.cpp ~2880-2960; sAttackerWeapon de combat.cpp): sin arma/hechizo C5, 1-39 C6, 40-59 C7.
 export function hitSfx(t) { return t >= 40 && t < 60 ? "C7" : t >= 1 && t < 40 ? "C6" : "C5"; }
 
+// #87: sonidos por tipo que no siguen la regla base+0..3 (MapData.cpp, OBJECTMOVE/ATTACK/DAMAGE/DYING: Giant-Frog 57 y Rudolph 61)
+export const MOB_SFX = { 57: { step: "M73", attack: "M77", hit: "M81", death: "M85" }, 61: { step: "C11", attack: "M38", hit: "M69", death: "M65" } };
+export const mobSfx = cfg => cfg && MOB_SFX[cfg.type];
+
 export class Sound {
   constructor(world, me) {
     this.world = world;
@@ -201,7 +205,7 @@ export class Sound {
   // M(base) andar, M(base+1) atacar, M(base+2) daño, M(base+3) morir
   onEvent(ev) {
     const e = this.world.ents.get(ev.id);
-    const mob = e && e.kind === "npc" ? e.cfg.sound : 0;
+    const mob = e && e.kind === "npc" ? e.cfg.sound : 0, ov = e && e.kind === "npc" ? mobSfx(e.cfg) : null;
     switch (ev.t) {
       case "equip": if (ev.id === this.me) this.playRaw("E28", 1, 0); break;
       case "unequip": if (ev.id === this.me) this.playRaw("E29", 1, 0); break;
@@ -218,7 +222,8 @@ export class Sound {
         break;
       case "companion-lost": if (ev.id === this.me && ev.sp === "Tutelary-Angel") this.playRaw("M62", 0.7, 0); break;
       case "attack":
-        if (mob) this.play("M" + (mob + 1), ev.id);
+        if (ov) this.play(ov.attack, ev.id);
+        else if (mob) this.play("M" + (mob + 1), ev.id);
         else {
           // sonido del arma por tipo y fotograma (MapData.cpp OBJECTATTACK ~2610): 1-19 en el fotograma 5; 20-39 (C18) en el 2; 41-59 (C3) en el 3; sin arma, ninguno
           { const k = attackSfx(ev), wt = ev.wt | 0, fr = wt >= 20 && wt < 40 ? 2 : wt > 40 ? 3 : 5, id = ev.id, dur = e?.actDur || 296; if (k) setTimeout(() => this.play(k, id, 0.8), dur * fr / 8); }
@@ -230,14 +235,16 @@ export class Sound {
         }
         break;
       case "damage":
-        if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }
+        if (ov) { this.play("C6", ev.id); this.play(ov.hit, ev.id, 0.8); }
+        else if (mob) { this.play("C6", ev.id); this.play("M" + (mob + 2), ev.id, 0.8); }
         else { this.play("C5", ev.id); this.play(e?.gender === 2 ? "C13" : "C12", ev.id, 0.8); }   // quejido: hombre C12, mujer C13
         break;
       case "death":
-        this.play(mob ? "M" + (mob + 3) : e?.gender === 2 ? "C15" : "C14", ev.id);   // muerte: hombre C14, mujer C15
+        this.play(ov ? ov.death : mob ? "M" + (mob + 3) : e?.gender === 2 ? "C15" : "C14", ev.id);   // muerte: hombre C14, mujer C15
         break;
       case "step":
-        if (mob) this.play("M" + mob, ev.id, 0.35);
+        if (ov) this.play(ov.step, ev.id, 0.35);
+        else if (mob) this.play("M" + mob, ev.id, 0.35);
         else this.play("C8", ev.id, 0.35);
         break;
     }

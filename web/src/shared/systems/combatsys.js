@@ -78,6 +78,7 @@ export function isFoe(p, t) {
 }
 export function canFight(w, p, t) {
   if (!w.pvp || t === p || t.kind !== "player" || p.dead || t.dead || w.safeAt(p.x, p.y) || w.safeAt(t.x, t.y)) return false;
+  if (w.ffa && !(p.bot?.owner === t.id || t.bot?.owner === p.id || (p.party && t.party && p.party.id === t.party.id))) return true;          // v0.85.98 (obs. 94): ni siquiera en «todos contra todos» se pegan los miembros de un mismo grupo (Korin y Edric)                   // modo «todos contra todos» (adventure.setFfa): sin bandos ni parties; solo se respeta al dueño de un bot
   if (!isFoe(p, t)) return false;
   return !(p.party && t.party && p.party.id === t.party.id);
 }
@@ -336,6 +337,18 @@ export function releaseHold(w, t, any = false) {
 // sAttackerWeapon de OBJECTDAMAGE (combat.cpp 1128/1381): (m_sAppr2 & 0x0FF0) >> 4 si atacan jugadores, 1 si es un monstruo; el hechizo manda NULL (0).
 // El cliente elige con él el sonido del golpe recibido (MapData.cpp).
 function attackerWeapon(a) { return a.kind === "player" ? (a.eff?.wtype | 0) : 1; }
+// ¿El golpe recibido corta el casteo? En el original el casteo es del cliente y lo corta el movimiento de daño que el servidor manda SOLO si el golpe acierta y hace daño
+// (combat.cpp ~1100-1190): daño >= 40 (MOVE_DAMAGE_PLAYER/NPC, CombatConfig.h) -> NOTIFY_DAMAGEMOVE, siempre corta; si es menor, OBJECTDAMAGE solo si dice(1,10000) >= iProb,
+// con iProb por habilidad del arma del jugador atacante (arquería 3500, espada larga 1000, esgrima 2900, hacha 2500, martillo 2000, vara 2000; resto y monstruos 1).
+// La magia (HG.cpp Effect_Damage_Spot ~18780-18830, umbral MOVE_DAMAGE_MAGIC 50) corta siempre. Ver docs/sistemas/casteo-golpes.md.
+export const MOVE_DAMAGE = 40;
+export const INTERRUPT_PROB = { 6: 3500, 8: 1000, 7: 2900, 10: 2500, 14: 2000, 21: 2000 };
+export function hitInterrupts(w, dmg, from, elem) {
+  if (!(dmg > 0)) return false;
+  if (elem || dmg >= MOVE_DAMAGE) return true;
+  const iProb = from?.kind === "player" && from.eff?.wtype ? INTERRUPT_PROB[from.eff.skill] || 1 : 1;
+  return R.dice(w.rng, 1, 10000) >= iProb;
+}
 export function damagePlayer(w, p, dmg, from, elem) {
   if (p.god) return;                                                   // herramientas de prueba: inmortal
   if (elem && p.eff?.prot?.[elem]) dmg = Math.max(0, Math.round(dmg * (100 - p.eff.prot[elem]) / 100));     // protección elemental del equipo
@@ -344,7 +357,8 @@ export function damagePlayer(w, p, dmg, from, elem) {
   { const ab = sget(w, p, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico
   p.hp -= dmg;
   p.lastCombat = p.lastDamage = w.time;                                 // m_lastDamageTime (combat.cpp:1090): el Recall lo exige 10 s en calma
-  releaseHold(w, p, !!elem && elem !== "ice");
+  releaseHold(w, p, !!elem && !(elem === "ice" && from.field));     // HG.cpp Effect_Damage_Spot (~18307/18834): todo hechizo de daño suelta Hold/Paralyze, también Mass Ice-Strike; solo la tormenta de hielo (campo, ~19451) suelta únicamente Hold Person
+  if (dmg > 0 && !p.dead && p.act === ACT.MAGIC && w.busy(p) && p.castTok && !p.res?.noBreak && hitInterrupts(w, dmg, from, elem)) { p.castTok++; p.prep = null; w.emit({ t: "castbreak", id: p.id }); }   // descasteo: golpe durante el lanzamiento cancela el hechizo (el maná ya se gasta en resolve, no se pierde)
   if (dmg > 0 && !p.dead) chargeCritHit(p);
   w.emit({ t: "damage", id: p.id, from: from.id, amount: dmg, hp: Math.max(0, p.hp), max: p.maxHp, wt: elem ? 0 : attackerWeapon(from) });
   if (p.hp <= 0) {
@@ -372,12 +386,13 @@ export function npcStrikes(w, n, t) {
   const miss = () => w.emit({ t: "miss", id: t.id, from: n.id });
   let { damage, hitRatio } = R.npcMelee(w.rng, n);
   const prot = sget(w, t, "protect");                                  // escudo de defensa (3) / gran escudo (4): +40 / +100 de defensa
+  if (prot === 1 && (n.type === 54 || n.type === 36) && (Math.abs(t.x - n.x) >= 1 || Math.abs(t.y - n.y) >= 1)) return miss();   // combat.cpp:664-671: Protection From Arrows para las flechas de Dark-Elf (54) y Arrow Guard Tower (36)
   const defense = t.defense + (prot === 3 ? 40 : prot === 4 ? 100 : 0);
   if (R.dice(w.rng, 1, 100) > R.hitChance(hitRatio, defense, n.dir === t.dir)) return miss();
   if (sget(w, n, "berserk")) damage *= 2;                              // furia: el doble de daño
-  damage = Math.max(1, Bal.scale(damage, Bal.monsterDmgMul(n.name)));
-  let ap = R.absorbOnPlayer(w.rng, damage, t.stats);
-  if (ap <= 0) return miss();
+  damage = Bal.scale(damage, Bal.monsterDmgMul(n.name));
+  // combat.cpp:729-731: el mínimo 1 previo es solo del atacante jugador; al jugador le llega siempre ≥1 tras la absorción (combat.cpp:941)
+  let ap = Math.max(1, R.absorbOnPlayer(w.rng, damage, t.stats));
   const a = absorbOnHit(w.rng, t, ap, n.dir === t.dir);
   if (t.side !== 0) {
     if (a.shielded) wear(w, t, t.equip[EQUIP.LHAND], 1);
@@ -393,8 +408,11 @@ export function npcStrikes(w, n, t) {
 
 // Contraataque (iCalculateAttackEffect): con 1/3 de probabilidad un monstruo herido se vuelve contra el atacante;
 // si ya persigue a otro, solo cambia cuando el atacante está igual o más cerca.
+// combat.cpp:1316-1331: sin contraataque contra alguien de su propio bando (salvo tipos 21, 55 y 56), contra una cp (51) ni con ataque permanente.
 function retarget(w, n, p) {
   if (n.cfg.actionLimit !== 0 && n.cfg.actionLimit !== undefined) return;
+  if ((n.side ?? n.cfg.side) === p.side && n.type !== 21 && n.type !== 55 && n.type !== 56) return;
+  if (n.type === 51 || n.permAttack) return;
   if (R.dice(w.rng, 1, 3) !== 2) return;
   const cur = n.target && w.ents.get(n.target);
   if (cur && !cur.dead) {
@@ -407,17 +425,21 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
   dmg = Boss.mitigate(w, n, dmg, p, skill == null ? "spell" : "hit");     // jefes: escudo, clones, reflejo
   if (dmg <= 0) return;
   { const ab = sget(w, n, "armorbreak"); if (ab) dmg = Math.round(dmg * (100 + ab) / 100); }          // Armor Break psíquico: más daño recibido
+  const lim = n.cfg.actionLimit;
+  if (lim === 1 || lim === 2 || lim === 4 || lim === 6) return;          // combat.cpp:1253-1295: solo los límites 0, 3 y 5 pierden vida (el 4 solo retrocede)
   n.hp -= dmg;
   p.lastCombat = w.time;
   const vamp = auraVamp(w, p);                                          // Vampiric Aura del Dummy: parte del daño vuelve como vida
   if (vamp > 0 && p.hp < p.maxHp && !p.dead) { const heal = Math.max(1, Math.round(dmg * vamp / 100)); p.hp = Math.min(p.maxHp, p.hp + heal); w.emit({ t: "heal", id: p.id, amount: heal, by: p.id }); }
   w.emit({ t: "damage", id: n.id, from: p.id, amount: dmg, hp: Math.max(0, n.hp), max: n.maxHp, wt: skill == null ? 0 : attackerWeapon(p) });
   // experiencia por golpe: el daño hecho, hasta agotar los 2/3 de la experiencia del monstruo
-  if (n.noDieRemainExp > 0) {
+  if (n.noDieRemainExp > 0 && !n.master) {                                                      // combat.cpp:1491: sin exp por golpe a invocados (m_bIsSummoned)
     const gain = Math.min(dmg, n.noDieRemainExp);
     n.noDieRemainExp -= gain;
     let xp = gain + (p.eff.addExp ? Math.floor((p.eff.addExp / 100) * gain) : 0);              // atributo "Experiencia +%"
-    giveExp(w, p, half ? Math.floor(xp / 2) : xp);                                            // los golpes de zona dan la mitad
+    if (w.crusade) xp = Math.floor(xp / 3);                                                   // combat.cpp:~1513: en cruzada /3
+    if (p.level > 100 && (n.type === 55 || n.type === 56)) xp = 0;                            // combat.cpp:~1515: Rabbit/Cat no dan exp por encima de nivel 100
+    giveExp(w, p, half ? Math.floor(xp / 2) : xp);                                           // los golpes de zona dan la mitad
   }
   if (n.hp <= 0) {
     // experiencia de habilidad por matar: 1d(dados de golpe del monstruo), doble con poca vida
@@ -425,7 +447,7 @@ export function damageNpc(w, n, dmg, p, skill, half = false) {
     return w.killNpc(n, p);
   }
   retarget(w, n, p);
-  if (R.dice(w.rng, 1, 3) === 2 && !n.cfg.actionLimit) {
+  if (R.dice(w.rng, 1, Math.floor((n.cfg.gold || 0) / 55) + 3) === 1 && !n.cfg.actionLimit) {      // aturdimiento (combat.cpp:1375): 1d(dwGoldDropValue/55+3)==1
     n.nextAct = w.time + n.cfg.actionTime;
   }
   releaseHold(w, n, skill == null);                                      // skill null = hechizo

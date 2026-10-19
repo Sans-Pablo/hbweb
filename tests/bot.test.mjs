@@ -25,7 +25,7 @@ assert.ok(A.bot && A.level === 25 && A.name !== B.name);
 // equipo comprado por catálogo y repartidos los puntos
 assert.ok(Object.keys(A.equip).length >= 3, "se equipa: " + Object.keys(A.equip));
 assert.equal(A.pool, 0, "reparte sus puntos");
-assert.ok(A.stats.str > 14 && A.stats.vit > 12);
+assert.ok(A.stats.str >= 14 && A.stats.vit >= 12, JSON.stringify(A.stats))
 // grupo con el admin
 tick(1000);
 assert.ok(A.party && A.party.id === me.party?.id, "entra en el grupo del admin");

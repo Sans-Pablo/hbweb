@@ -24,10 +24,12 @@ export const GOOD = "#1a6b1a", DIM = "#5a4636", BLUE = "#2a4ea8";
 // Bola de botón (cerrar / minimizar / restaurar): cúpula oscura con filete dorado y glifo claro (diseño original de las ventanas). Común a `Win` y a los cuadros heredados (gui.js).
 export function drawFrameBall(c, cx, cy, glyph, over) {
   const bad = glyph === "x";
-  c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = over ? (bad ? "#b8372a" : "#a88a48") : (bad ? "#6a2218" : "#3a2c14"); c.fill(); c.strokeStyle = over ? "#fff0c0" : "#c9a95c"; c.lineWidth = 1; c.stroke();
-  c.strokeStyle = over ? "#fff" : "#f0e2bd"; c.lineWidth = 1.6; c.beginPath();
+  // v0.85.82 (obs. 42): sin fondo propio; se ve la bola de piedra del marco. El símbolo lleva un contorno oscuro y color vivo para destacar
+  if (over) { c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fillStyle = bad ? "rgba(184,55,42,.45)" : "rgba(255,225,160,.25)"; c.fill(); }
+  const glyphPath = () => { c.beginPath();
   if (glyph === "x") { c.moveTo(cx - 3, cy - 3); c.lineTo(cx + 3, cy + 3); c.moveTo(cx + 3, cy - 3); c.lineTo(cx - 3, cy + 3); }
   else if (glyph === "-") { c.moveTo(cx - 3.5, cy + 1.5); c.lineTo(cx + 3.5, cy + 1.5); }
-  else c.rect(cx - 3, cy - 3, 6, 6);
-  c.stroke(); c.lineWidth = 1;
+  else c.rect(cx - 3, cy - 3, 6, 6); c.stroke(); };
+  c.strokeStyle = "rgba(20,10,0,.85)"; c.lineWidth = 3.4; glyphPath();
+  c.strokeStyle = bad ? (over ? "#fff" : "#ff7a5a") : (over ? "#fff" : "#ffd75a"); c.lineWidth = 1.6; glyphPath(); c.lineWidth = 1;
 }

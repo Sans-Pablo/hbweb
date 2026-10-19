@@ -12,10 +12,11 @@ import { mobOf } from "./orders.js";
 import { findPath } from "../path.js";
 import { rarityOf } from "../rarity.js";
 import { EFFECT, ITYPE, isStack } from "../items.js";
-import { isEquipped } from "../inventory.js";
-import { MAX_BANK, MAX_SELL_LIST } from "./shopsys.js";
+import { isEquipped, totalWeight, maxLoad } from "../inventory.js";
+import { MAX_BANK, MAX_SELL_LIST, sellValue, repairCost } from "./shopsys.js";
+import { realStats } from "../attributes.js";
 
-export const HP_STOP = 0.35, IDLE_STOP_MS = 20000, SIGHT = 40, LOOT_RANGE = 7, BAG_MAX = 50, ZONE_PAD = 8;
+export const HP_STOP = 0.35, IDLE_STOP_MS = 20000, SIGHT = 40, LOOT_RANGE = 7, BAG_MAX = 50, ZONE_PAD = 8, BAG_NEAR = 47, LOAD_FULL = 0.9;
 // Acción por rareza (0 normal, 1 mágico, 2 raro, 3 único): ignore = lo deja en el suelo; sell = lo recoge y, con la mochila llena, lo vende en la tienda;
 // store = lo recoge y, con la mochila llena, lo guarda en el almacén (si el almacén se llena, termina el hunt).
 export const DEFAULT_RULES = ["sell", "sell", "store", "store"];
@@ -25,8 +26,27 @@ export function disposable(w, me, a, act) {
   a.bag0 ||= new Set((me.bag || []).map(i => i.uid));
   return (me.bag || []).filter(i => !a.bag0.has(i.uid) && !isEquipped(me, i.uid) && ruleOf(a, i) === act && (a.bad?.[i.uid] || 0) < 3);
 }
+// Equipo que lleva puesto el cazador (a.worn). Al romperse, el servidor lo quita del cuerpo (combatsys: Inv.unequip), así que hay que recordarlo para repararlo y volver a ponerlo.
+export function trackWorn(me, a) { const w = (a.worn ||= new Set()); for (const u of Object.values(me.equip || {})) w.add(u); return w; }
+const smithCat = (w, i) => { const c = w.data.item(i.id)?.category; return c >= 1 && c <= 10; };
+const wornBag = (w, me, a) => (me.bag || []).filter(i => a.worn?.has(i.uid) && smithCat(w, i));
+// roto (vida 0) y gastado (menos vida que el máximo) entre lo que llevaba puesto
+export const brokenGear = (w, me, a) => wornBag(w, me, a).filter(i => i.life !== undefined && i.life <= 0);
+export const damagedGear = (w, me, a) => wornBag(w, me, a).filter(i => { const d = w.data.item(i.id); return i.life !== undefined && repairCost(i, d) > 0 && i.life < realStats(d, i).maxLife; });
+// ya arreglado pero sin ponerse otra vez
+export const unworn = (w, me, a) => wornBag(w, me, a).filter(i => !isEquipped(me, i.uid) && !(i.life <= 0) && (a.eqTry?.[i.uid] || 0) < 3);
+export const SEND_GAP_MS = 700, SENT_WAIT_MS = 3000;       // SENT_WAIT: lo enviado se da por «en camino» ese tiempo; solo se reenvía (y cuenta como intento) si la respuesta no llegó
+const inflight = (a, w, uid) => a.sent?.[uid] !== undefined && w.time - a.sent[uid] < SENT_WAIT_MS;
+const mark = (a, w, list) => { a.sent ||= {}; a.bad ||= {}; for (const i of list) { if (a.sent[i.uid] !== undefined) a.bad[i.uid] = (a.bad[i.uid] || 0) + 1; a.sent[i.uid] = w.time; } };
+const gap = (a, w) => a.sentAt && w.time - a.sentAt < SEND_GAP_MS;                                   // espera entre dos órdenes de tienda: sin ella, la respuesta llegaba tarde y `a.bad` marcaba el objeto como rechazado
 export const FARM = "arefarm", FARM_HOME = [65, 75];               // adventure.js FARM_HOME
-export const BUILDINGS = { warehouse: "wrhus_1f", shop: "gshop_1f", smith: "bsmith_1f" };   // mapa interior de cada destino de ciudad
+export const BUILDINGS = { warehouse: "wrhus_1f", shop: "gshop_1f", smith: "bsmith_1f" };   // mapa interior de cada destino de ciudad (Aresden)
+// v0.85.82 (obs. 43): cada bando tiene su granja, su punto de retorno y sus interiores (elvfarm.json: teleports a wrhus_2f, gshop_2f, bsmith_2f)
+export const CITIES = {
+  1: { farm: FARM, home: FARM_HOME, buildings: BUILDINGS },
+  2: { farm: "elvfarm", home: [124, 151], buildings: { warehouse: "wrhus_2f", shop: "gshop_2f", smith: "bsmith_2f" } },
+};
+export const cityOf = me => CITIES[me?.side === 2 ? 2 : 1];
 // destino -> filtro de habitante (los de rol propio llevan e.role; el resto, e.type de shopsys.js NPC)
 export const PLACES = {
   farm: { re: /^(granja|farm|casa|home|aresfarm)$/, es: "la granja", en: "the farm" },
@@ -67,9 +87,9 @@ export const label = (a, lang = "es") => !a ? "" : a.kind === "hunt" ? a.mob : P
 // Paso hacia el mapa `to`: desde la granja se pisa el teletransportador de ese edificio; desde dentro, el que sale a la granja.
 // null = ya estás; { stop } si no hay camino (otro mapa, la granja de Elvine, la cripta…).
 export function viaTeleport(w, me, to) {
-  const cur = w.map?.id || FARM;
+  const hub = cityOf(me).farm, cur = w.map?.id || hub;
   if (cur === to) return null;
-  const next = cur === FARM ? to : FARM;
+  const next = cur === hub ? to : hub;
   let best = null, bd = 1e9;
   for (const t of w.teleports?.values?.() || []) {                       // varias entradas (el almacén tiene dos): la de camino más corto, no la más cercana en línea recta
     if (String(t.map).toLowerCase() !== next) continue;
@@ -96,17 +116,20 @@ export function approach(w, me, e) {
 
 export function decide(w, me, a) {
   if (!a) return {};
+  if (me.dead && a.kind === "hunt") return {};                                    // la caza espera: controller.js reaparece y sigue
   if (me.dead) return { stop: true, msg: ["Has muerto: modo automático detenido.", "You died: auto mode stopped."] };
   if (a.kind === "run") {
     if (a.place === "farm") {
-      const v = viaTeleport(w, me, FARM); if (v) return v;
-      if (dist(me, { x: FARM_HOME[0], y: FARM_HOME[1] }) <= 3) return { stop: true, msg: ["Estoy en la granja.", "I'm at the farm."] };
-      const sp = w.freeSpotNear?.(...FARM_HOME) || FARM_HOME;
+      const C = cityOf(me), HOME = C.home;
+      const v = viaTeleport(w, me, C.farm); if (v) return v;
+      if (dist(me, { x: HOME[0], y: HOME[1] }) <= 3) return { stop: true, msg: ["Estoy en la granja.", "I'm at the farm."] };
+      const sp = w.freeSpotNear?.(...HOME) || HOME;
       return { intent: { t: "move", x: sp[0], y: sp[1] } };
     }
     const e = placeEnt(w, me, a.place);
-    if (!e && BUILDINGS[a.place]) { const v = viaTeleport(w, me, BUILDINGS[a.place]); if (v) return v; }
-    else if (!e && (w.map?.id || FARM) !== FARM) { const v = viaTeleport(w, me, FARM); if (v && !v.stop) return v; }
+    const C = cityOf(me);
+    if (!e && C.buildings[a.place]) { const v = viaTeleport(w, me, C.buildings[a.place]); if (v) return v; }
+    else if (!e && (w.map?.id || C.farm) !== C.farm) { const v = viaTeleport(w, me, C.farm); if (v && !v.stop) return v; }
     if (!e) return { stop: true, msg: ["No hay " + PLACES[a.place].es + " en este mapa.", "There is no " + PLACES[a.place].en + " on this map."] };
     if (dist(me, e) <= 2) return { stop: true, open: e, msg: ["Llegué a " + PLACES[a.place].es + ".", "Arrived at " + PLACES[a.place].en + "."] };
     const spot = approach(w, me, e);
@@ -122,33 +145,67 @@ export function decide(w, me, a) {
   }
   a.bag0 ||= new Set((me.bag || []).map(i => i.uid));                                // foto de la mochila al empezar (antes se tomaba al llenarse y todo el botín contaba como tuyo)
   const z = a.zone;
+  trackWorn(me, a);
+  if (a.repair !== false && !a.noRepair && (a.fixing || brokenGear(w, me, a).length || (a.full && me.gold > 0 && damagedGear(w, me, a).length))) {   // arma o armadura rota: a la herrería a repararla, volver a ponérsela y seguir cazando
+    a.fixing = true;
+    const r = decide(w, me, { kind: "run", place: "smith" });
+    if (r.open) {
+      if (gap(a, w)) return {};
+      const dmg = damagedGear(w, me, a);
+      if (dmg.length && !(me.gold > 0)) { a.noRepair = true; a.fixing = false; return { msg: ["Sin oro para reparar: sigo sin reparar.", "No gold to repair: carrying on unrepaired."] }; }
+      if (dmg.length) {
+        a.sentAt = w.time;
+        if (++a.fixTries > 3) { a.noRepair = true; a.fixing = false; return { msg: ["No puedo reparar (¿sin oro?): sigo sin reparar.", "Can't repair (no gold?): carrying on unrepaired."] }; }
+        return { send: { t: "repairall", whom: NPC.BLACKSMITH, uids: dmg.map(i => i.uid) } };
+      }
+      const back = unworn(w, me, a);
+      if (back.length) {
+        a.sentAt = w.time; a.eqTry ||= {}; for (const i of back) a.eqTry[i.uid] = (a.eqTry[i.uid] || 0) + 1;
+        return { sends: back.map(i => ({ t: "equip", uid: i.uid })) };
+      }
+      a.fixing = false; a.fixTries = 0;
+      return { msg: ["Equipo reparado: sigo cazando.", "Gear repaired: back to hunting."] };
+    }
+    a.fixTries ||= 0;
+    if (r.stop) { a.noRepair = true; a.fixing = false; return { msg: r.msg }; }
+    if (!a.saidFix) { a.saidFix = true; return { ...r, msg: ["Equipo roto: voy a repararlo.", "Gear broken: going to repair it."] }; }
+    return r;
+  }
+  if (!a.fixing) { a.saidFix = false; a.fixTries = 0; if (!a.full && !brokenGear(w, me, a).length) a.noRepair = false; }       // con el viaje a la ciudad en curso no se reintenta lo que ya falló
   if (z) {                                                                        // caza con zona: ir, cazar dentro y volver a la granja con la mochila llena
-    if ((me.bag?.length || 0) >= BAG_MAX) a.full = true;
+    if ((me.bag?.length || 0) >= BAG_NEAR || totalWeight(me, w.data) >= maxLoad(me) * LOAD_FULL) a.full = true;       // llena por casillas o por peso (con el peso al límite no se recoge nada aunque queden casillas)
     if (a.full) {                                                                      // mochila llena: vender y guardar lo recogido según su rareza y retomar la caza
       const sell = disposable(w, me, a, "sell"), store = disposable(w, me, a, "store");
       if (!sell.length && !store.length) {
-        if (me.bag.length >= BAG_MAX) return { stop: true, msg: ["Mochila llena sin nada que vender ni guardar: caza detenida.", "Bag full with nothing to sell or store: hunt stopped."] };
-        a.full = false; a.said = false;
+        if (me.bag.length >= BAG_MAX || totalWeight(me, w.data) >= maxLoad(me)) return { stop: true, msg: ["Mochila llena sin nada que vender ni guardar: caza detenida.", "Bag full with nothing to sell or store: hunt stopped."] };
+        a.full = false; a.said = false; a.skip = null; a.tries = null;           // con sitio otra vez, el botín descartado se reintenta
       } else {
         const place = sell.length ? "shop" : "warehouse";
         if (place === "warehouse" && (me.bank?.length || 0) >= MAX_BANK - 1 && !store.some(i => me.bank.some(b => b.id === i.id && isStack(w.data.item(i.id)))))
           return { stop: true, msg: ["Almacén lleno: caza detenida.", "Warehouse full: hunt stopped."] };
         const r = decide(w, me, { kind: "run", place });
         if (r.open) {
+          if (gap(a, w)) return {};
           if (place === "shop") {
-            const items = sell.slice(0, MAX_SELL_LIST);
-            for (const i of items) (a.bad ||= {})[i.uid] = (a.bad[i.uid] || 0) + 1;     // si la tienda no lo compra, a la tercera lo deja
-            return { send: { t: "selllist", items: items.map(i => ({ uid: i.uid, count: i.count || 1 })) } };
+            let nope = 0;
+            const items = sell.filter(i => { const v = sellValue(w, me, i, i.count || 1); if (v.cannot) { (a.bad ||= {})[i.uid] = 3; nope++; return false; } return !inflight(a, w, i.uid); }).slice(0, MAX_SELL_LIST);
+            const warn = nope && !a.saidCant ? { msg: [nope + " objeto(s) no se pueden vender aquí: los dejo en la mochila.", nope + " item(s) can't be sold here: keeping them in the bag."] } : {};
+            if (nope) a.saidCant = true;
+            if (!items.length) return warn;
+            a.sentAt = w.time; mark(a, w, items);
+            return { ...warn, send: { t: "selllist", items: items.map(i => ({ uid: i.uid, count: i.count || 1 })) } };
           }
-          const i = store[0]; (a.bad ||= {})[i.uid] = (a.bad[i.uid] || 0) + 1;
-          return { send: { t: "deposit", uid: i.uid, count: i.count || 1 } };
+          const items = store.filter(i => !inflight(a, w, i.uid)).slice(0, MAX_SELL_LIST);
+          if (!items.length) return {};
+          a.sentAt = w.time; mark(a, w, items);
+          return { sends: items.map(i => ({ t: "deposit", uid: i.uid, count: i.count || 1 })) };
         }
         if (r.stop) return r;
         if (!a.said) { a.said = true; return { ...r, msg: place === "shop" ? ["Mochila llena: voy a vender.", "Bag full: going to sell."] : ["Mochila llena: voy a guardar.", "Bag full: going to store."] }; }
         return r;
       }
     }
-    if ((w.map?.id || FARM) !== z.map) { const v = viaTeleport(w, me, z.map); if (v) return v; }
+    if ((w.map?.id || cityOf(me).farm) !== z.map) { const v = viaTeleport(w, me, z.map); if (v) return v; }
   }
   let t = null, bd = 1e9;
   for (const e of w.ents.values()) {
@@ -167,7 +224,7 @@ export function decide(w, me, a) {
     t = lt;
     const k = t.x + "," + t.y; a.tries ||= {}; a.skip ||= new Set();
     a.tries[k] ||= 0;
-    if (t.x === me.x && t.y === me.y && ++a.tries[k] > 2) a.skip.add(k);       // no cabe en la mochila: no insiste
+    if (t.x === me.x && t.y === me.y && ++a.tries[k] > 2) { a.skip.add(k); a.full = true; }       // no cabe en la mochila: no insiste y va a vender (a.full se apaga solo si no hay nada que vender)
     return { intent: { t: "pickup", x: t.x, y: t.y } };
   }
   if (t) { a.idle = null; return { intent: { t: "attack", id: t.id } }; }

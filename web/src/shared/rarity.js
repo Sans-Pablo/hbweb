@@ -14,8 +14,11 @@ export const RARITY_COLOR = ["#e8e2d0", "#7fb2ff", "#f0d060", "#ff9a3c"];
 export const RARITY_EN = ["normal", "magic", "rare", "unique"];
 
 // 0 normal, 1 mágico (algún atributo), 2 raro (dos atributos o uno muy alto), 3 único
+// piedras de Xelima, Merien y Zem: raras aunque no lleven atributos (650 ZemstoneofSacrifice, 656 StoneOfXelima, 657 StoneOfMerien)
+const RARE_IDS = new Set([650, 656, 657]);
 export function rarityOf(id, attr) {
   if (UNIQUE_IDS.has(id)) return 3;
+  if (RARE_IDS.has(id)) return 2;
   if (!attr) return 0;
   const a = parseAttr(attr);
   if (a.t2 && a.v1 + a.v2 >= 12) return 2;

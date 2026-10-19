@@ -12,5 +12,5 @@ assert.ok(F.meleeAvg(me) > 4.5, "la Str suma al daño medio");
 assert.ok(F.pointGain({ ...me, stats: { mag: 60 } }, "mag") > F.pointGain({ ...me, stats: { int: 60 } }, "int"), "Mag > 50 rinde más que Int");
 const mage = { stats: { str: 10, vit: 10, dex: 10, int: 60, mag: 10 }, res: { build: "mage" }, bot: {}, equip: {}, bag: [] };
 const lo = B.allocate({ ...mage, stats: { ...mage.stats, int: 20 } }, 40, 0), hi = B.allocate(mage, 40, 0);
-assert.ok(hi.mag > lo.mag, "con Int >= 50 el mago manda más puntos a Mag");
+assert.ok((hi.mag | 0) > (lo.mag | 0), "con Int >= 50 el mago manda más puntos a Mag");
 console.log("OK bot-formulas");

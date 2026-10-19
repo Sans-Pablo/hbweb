@@ -8,7 +8,8 @@ import { shown } from "../shared/systems/evolutions.js";
 import { EQUIP, ITYPE, isStack } from "../shared/items.js";
 import { listPrice, NPC, MAX_BANK, MAX_SELL_LIST } from "../shared/systems/shopsys.js";
 import { attrLines } from "../shared/attributes.js";
-import { ClassicDialog } from "./classicdialog.js";
+import { defineDialog } from "./dlgspec.js";
+import { THEME } from "./window.js";
 import { DlgSearch } from "./dlgsearch.js";
 import { DialogBox } from "./dialogbox.js";
 import { SPECIES, HOSPITAL, CANDY_PRICE, treatCost, hpOf, maxOf } from "../shared/systems/companion.js";
@@ -20,6 +21,20 @@ import { getLang, t } from "./i18n.js";
 const INK = "#2d1919", QINK = "#371919", DARK = "#040032", WHITE = "#fff", RED = "#c31919", ALERT = "#c31919";
 const BTN = { w: 74, h: 20, left: 30, right: 154, y: 292 };                          // DEF_BTNSZX/Y, DEF_LBTNPOSX, DEF_RBTNPOSX, DEF_BTNPOSY
 const NPC_NAMES = { [NPC.SHOP]: "Shop Keeper", [NPC.MAGE]: "Sorcerer", [NPC.WAREHOUSE]: "Warehouse Keeper", [NPC.BLACKSMITH]: "BlackSmith Keeper" };
+// modo 4 de DrawDialogBox_NpcActionQuery: Guard 21, Unicorn 32, Mcgaffin 67, Perry 68, Devlin 69 -> nombre y texto de TALKTONPC (lan_eng.h)
+const TOWN = { 21: ["Guard", "Talking to Guard..."], 32: ["Unicorn", "Talking to Unicorn..."], 67: ["Mcgaffin", "Talking to a town man..."], 68: ["Perry", "Talking to a town maiden..."], 69: ["Devlin", "Talking to a town magician..."] };
+// TALKING_TO_* (lan_eng.h) del botón Talk de los modos 0/5
+const TALKING = { [NPC.SHOP]: "Talking to Shop Keeper...", [NPC.BLACKSMITH]: "Talking to Blacksmith Keeper...", [NPC.WAREHOUSE]: "Talking to Warehouse Keeper...", [NPC.MAGE]: "Talking to Sorcerer..." };
+const MENU_TITLE = { 7: ["Blacksmith Keeper", 65, 61], 8: ["Shop Keeper", 70, 66], 9: ["Cityhall Officer", 70, 66] };   // DRAW_BLACKSMITH / DRAW_SHOP / DRAW_CITYHALL
+// subcatálogos del original (tipos de tienda 1 pociones, 2 varios, 3 ropa; 4 armas/varios, 5 armadura M, 6 armadura W): aquí un catálogo por NPC, se filtra
+const SUBSHOP = {
+  1: (r, api) => r.type === 3 && /Potion/.test(r.name),
+  2: (r, api) => !(r.type === 3 && /Potion/.test(r.name)) && r.type !== 1,
+  3: (r, api) => r.type === 1,
+  4: (r, api) => r.type !== 1 || [7, 8, 9].includes(r.equipPos),
+  5: (r, api) => r.type === 1 && ![7, 8, 9].includes(r.equipPos) && (api.itemByName(r.name)?.gender || 0) !== 2,
+  6: (r, api) => r.type === 1 && ![7, 8, 9].includes(r.equipPos) && (api.itemByName(r.name)?.gender || 0) !== 1,
+};
 // NpcTalkHandler: iWho 2 tienda, 3 herrería, 5 almacén, 6 mago -> texto contents{iWho+150}
 const TALK_ID = { [NPC.SHOP]: 152, [NPC.BLACKSMITH]: 153, [NPC.WAREHOUSE]: 155, [NPC.MAGE]: 156 };
 const SHOP_ROWS = 13, SHOP_ROW_H = 18, BANK_ROWS = 13, BANK_ROW_H = 15;
@@ -45,7 +60,7 @@ export function registerNpcDialogs(gui, api) {
   // texto "en negrita" del original: se dibuja dos veces con un píxel de diferencia
   const shadowed = (g, x, y, s, color) => { g.text(x, y, s, color); g.text(x + 1, y, s, color); };
   // botón de texto del menú del NPC: blanco bajo el cursor, azul oscuro en reposo
-  const link = (g, lx, ly, x, y, s, x1, x2) => shadowed(g, x, y, s, inside(lx, ly, x1, x2, y - 5, y + 15) ? WHITE : DARK);
+  const link = (g, lx, ly, x, y, s, x1, x2) => shadowed(g, x, y, s, inside(lx, ly, x1, x2, y, y + 15) ? WHITE : DARK);      // msY > sY+y && msY < sY+y+15 (Game.cpp:34250)
   const button = (g, lx, ly, x, norm, hover) => g.put("dialogtext_1", within(lx, ly, x, x + BTN.w, BTN.y, BTN.y + BTN.h) ? hover : norm, x, BTN.y);
   const onButton = (lx, ly, x) => within(lx, ly, x, x + BTN.w, BTN.y, BTN.y + BTN.h);
   const rel = (g, d) => [g.mouse.x - d.x, g.mouse.y - d.y];
@@ -114,20 +129,40 @@ export function registerNpcDialogs(gui, api) {
       if (m === 0 || m === 5) {
         const name = NPC_NAMES[this.npcType] || "";
         g.text(33, 23, name, INK); g.text(32, 22, name, WHITE);
+      } else if (m === 4) {
+        const name = (TOWN[this.npcType] || [""])[0];
+        g.text(35, 25, name, INK); g.text(34, 24, name, WHITE);
+      } else if (m === 6) { g.text(33, 23, "Heldenian staff officer", INK); g.text(32, 22, "Heldenian staff officer", WHITE); }
+      else if (m >= 7 && m <= 9) {
+        const [title, tx, ux] = MENU_TITLE[m];
+        g.text(tx, 5, title, "#000"); g.text(tx - 1, 4, title, WHITE);      // RGB(0,0,0) y subrayado negro (modos 7-9)
+        g.text(ux, 5, m === 7 ? "________________" : "____________", "#000");
       }
       if (m === 0) {
         const first = { 20: "Withdraw", 19: "Learn" }[this.npcType] || "Trade";
         link(g, lx, ly, 28, 55, first, 25, 100);
-        link(g, lx, ly, 125, 55, "Talk", 125, 180);
+        if (!gui.isOpen(21)) link(g, lx, ly, 125, 55, "Talk", 125, 180);      // solo con NpcTalk cerrado (m_bIsDialogEnabled[21] == FALSE)
       } else if (m === 5) {
         link(g, lx, ly, 28, 55, "Trade", 25, 100);
         link(g, lx, ly, 103, 55, "Sell", 104, 155);
-        link(g, lx, ly, 155, 55, "Talk", 155, 210);
+        if (!gui.isOpen(21)) link(g, lx, ly, 155, 55, "Talk", 155, 210);
+        if (this.npcType === NPC.BLACKSMITH) link(g, lx, ly, 28, 72, "Repair all", 25, 100);
+      } else if (m === 4) { if (!gui.isOpen(21)) link(g, lx, ly, 125, 55, "Talk", 125, 180); }
+      else if (m === 6) link(g, lx, ly, 28, 55, "Trade", 25, 100);
+      else if (m === 7) {      // cajas x 25..100 / 125..175 (Game.cpp DrawDialogBox_NpcActionQuery modos 7-9)
+        link(g, lx, ly, 25, 30, "Buy Weapons/Misc", 25, 100); link(g, lx, ly, 125, 30, "Buy (M) Armor", 125, 175);
+        link(g, lx, ly, 125, 50, "Buy (W) Armor", 125, 175); link(g, lx, ly, 25, 50, "Sell Items", 25, 100);
+      } else if (m === 8) {
+        link(g, lx, ly, 25, 30, "Buy Potions", 25, 100); link(g, lx, ly, 125, 30, "Buy Misc.", 125, 175);
+        link(g, lx, ly, 125, 50, "Buy Outfits", 125, 175); link(g, lx, ly, 25, 50, "Sell Items", 25, 100);
+      } else if (m === 9) {
+        link(g, lx, ly, 25, 30, "Offer", 25, 100); link(g, lx, ly, 125, 50, "Buy Weapons", 125, 175); link(g, lx, ly, 25, 50, "Talk", 25, 100);
       } else if (m === 2 || m === 3) {
         const it = bagItem(me, this.uid);
         if (!it) return;
-        g.aligned(0, this.w, 20, this.count + " " + itemName(it.id, it.attr, it.comp) + " to", INK);
-        g.aligned(0, this.w, 35, this.who, INK);
+        const put = m === 3 ? (y, s) => g.aligned(0, 240, y, s, INK) : (y, s) => g.text(24, y, s, INK);      // modo 2: alineado a la izquierda (24,20)/(24,35)
+        put(20, this.count + " " + itemName(it.id, it.attr, it.comp) + " to");
+        put(35, this.who);
         if (m === 3) link(g, lx, ly, 28, 55, "Deposit", 25, 105);
         else {
           link(g, lx, ly, 28, 55, "Sell", 25, 100);
@@ -138,14 +173,32 @@ export function registerNpcDialogs(gui, api) {
     },
     click(g, lx, ly) {
       const me = api.me(), npc = trade.npc, m = this.mode;
+      if (gui.isOpen(33)) { api.log("Item transaction not finished."); return false; }      // m_bIsDialogEnabled[27] (intercambio): BITEMDROP_SKILLDIALOG1
       if (m === 0 || m === 5) {
         if (inside(lx, ly, 25, 100, 55, 70)) {                    // Trade / Learn / Withdraw
           if (m === 5) g.open(11), shop.begin(this.shop); else g.open(this.link);
           g.close(20); return true;
         }
+        if (m === 5 && this.npcType === NPC.BLACKSMITH && inside(lx, ly, 25, 100, 72, 87)) { api.send({ t: "repairall", whom: this.npcType }); g.close(20); return true; }
         if (m === 5 && inside(lx, ly, 104, 155, 55, 70)) { g.open(31); g.close(20); return true; }
         const talk = m === 5 ? [155, 210] : [125, 180];
-        if (inside(lx, ly, talk[0], talk[1], 55, 70)) { talkText.begin(TALK_ID[this.npcType]); g.close(20); return true; }
+        if (!g.isOpen(21) && inside(lx, ly, talk[0], talk[1], 55, 70)) { api.log(TALKING[this.npcType] || ""); talkText.begin(TALK_ID[this.npcType]); g.close(20); return true; }
+      } else if (m === 4) {
+        if (!g.isOpen(21) && inside(lx, ly, 125, 180, 55, 70)) api.log((TOWN[this.npcType] || [])[1] || "");
+        g.close(20); return true;      // DlgBoxClick_NpcActionQuery modo 4: cualquier clic cierra el cuadro
+      } else if (m === 6) { if (inside(lx, ly, 25, 100, 55, 70)) { g.open(51); g.close(20); return true; } return false; }
+      else if (m === 7 || m === 8) {
+        const pick = t => { g.open(11); shop.begin(this.shop, false, t); g.close(20); return true; };      // Buy Weapons|Potions / (M) Armor|Misc. / (W) Armor|Outfits
+        if (inside(lx, ly, 25, 100, 30, 45)) return pick(m === 7 ? 4 : 1);
+        if (inside(lx, ly, 125, 175, 30, 45)) return pick(m === 7 ? 5 : 2);
+        if (inside(lx, ly, 125, 175, 50, 65)) return pick(m === 7 ? 6 : 3);
+        if (inside(lx, ly, 25, 100, 50, 65)) { g.open(31); g.close(20); return true; }
+        return false;
+      } else if (m === 9) {
+        if (inside(lx, ly, 25, 100, 30, 45)) { g.open(13); g.close(20); return true; }
+        if (inside(lx, ly, 125, 175, 50, 65)) { g.open(53); g.close(20); return true; }
+        if (inside(lx, ly, 25, 100, 50, 65)) { api.log("Talking to Cityhall Officer..."); talkText.begin(154); return true; }      // TALKTONPC 4 (el diálogo 20 sigue abierto)
+        return false;
       } else if (m === 2) {
         if (inside(lx, ly, 25, 100, 55, 70)) { api.send({ t: "sellreq", uid: this.uid, count: this.count, whom: this.npcType }); g.close(20); return true; }
         const it = bagItem(me, this.uid), d = it && itemDef(it.id);
@@ -162,7 +215,71 @@ export function registerNpcDialogs(gui, api) {
     },
     onClose() { trade.busy.delete(this.uid); },
   };
+  query.silent = true;      // DlgBoxClick_NpcActionQuery no llama a PlaySound (el resto de cuadros sí: E,14,5)
   gui.register(query);
+
+  // ------------------------------------------------------------ 26: alquimia (DrawDialogBox_SkillDlg modos 1/2, DlgBoxClick_SkillDlg, bItemDrop_SkillDialog)
+  // Cuenco de alquimia (AlchemyBowl, spriteFrame 55). Seis huecos de ingredientes; «Try Now!» -> «Creating...» 3 s -> orden alchemy (ReqCreatePortionHandler).
+  // Fabricación (modos 3-8, BuildItem.cfg / CraftItem.cfg) sin portar: el servidor del port no la tiene (docs/AUDITORIA-2026-10-19.md).
+  const SLOT_XY = [[55, 55], [100, 55], [145, 55], [55, 100], [100, 100], [145, 100]];       // sX+iAdjX+55+45*i, sY+iAdjY+55|100
+  const rgb8 = (r, g, b) => "rgb(" + r * 8 + "," + g * 8 + "," + b * 8 + ")";                 // PutString_SprFont: valores 0..31 -> 0..255
+  const alchemy = {
+    id: 26, x: 180, y: 120, w: 195, h: 215, mode: 1, slots: [], t1: 0, step: 0,
+    // Alquimia por el cuenco o por el botón del libro de magia
+    begin(fromBook) {
+      const me = api.me(); if (!me) return false;
+      if (!(me.skills && me.skills[12])) { api.log(fromBook ? "You should learn alchemy skill to use alchemy skill. Alchemy manual is purchasable in Shop." : "You should learn alchemy skill to use this item."); return false; }
+      if (fromBook && !me.bag.some(i => { const d = itemDef(i.id); return d && d.type === ITYPE.USE_SKILL_DLG && d.spriteFrame === 55; })) return false;
+      if (!gui.isOpen(26)) { gui.close(17); gui.close(20); gui.close(23); }                  // EnableDialogBox(26,1): DisableDialogBox(17/20/23)
+      this.mode = 1; this.slots = []; this.step = 0;
+      gui.open(26); api.log("Using alchemy skill...");
+      return true;
+    },
+    onClose() { for (const u of this.slots) trade.busy.delete(u); this.slots = []; },
+    draw(g, me) {
+      const c = this.step, sh = c ? () => c - Math.floor(Math.random() * c * 2) : () => 0;
+      const ox = c ? 5 + sh() : 0, oy = c ? 8 + sh() : 0;
+      g.put("interface2_0", 1, ox, oy);
+      const jit = () => 1 - Math.floor(Math.random() * 3);
+      this.slots.forEach((uid, i) => {
+        const it = bagItem(me, uid), d = it && itemDef(it.id); if (!d) return;
+        g.putGame(iconKey(d), d.spriteFrame, ox + 5 + SLOT_XY[i][0] + jit(), oy + 8 + SLOT_XY[i][1] + jit(), 0.5);      // PutTransSprite50
+      });
+      const [lx, ly] = rel(g, this), hov = within(lx, ly, 65, 158, 183, 203);
+      if (this.mode === 1) g.text(ox + 65, oy + 183, "Try Now!", hov ? rgb8(16, 16, 30) : rgb8(6, 6, 20), { bold: true, size: 14 });
+      else g.text(ox + 65, oy + 183, "Creating...", rgb8(20, 6, 6), { bold: true, size: 14 });
+    },
+    click(g, lx, ly) {
+      if (this.mode !== 1 || !within(lx, ly, 65, 158, 183, 203)) return false;
+      this.mode = 2; this.step = 1; this.t1 = performance.now();
+      api.log("Mixing a potion..."); g.onSound?.(41);
+      return true;
+    },
+    // bItemDrop_SkillDialog (modo 1)
+    drop(uid) {
+      const me = api.me(), it = me && bagItem(me, uid), d = it && itemDef(it.id);
+      if (!d || this.mode !== 1 || trade.busy.has(uid)) return;
+      if (gui.isOpen(17) || gui.isOpen(23) || (gui.isOpen(20) && (query.mode === 1 || query.mode === 2))) { api.log("Item transaction not finished."); return; }
+      const stack = d.type === ITYPE.CONSUME;
+      if (stack && this.slots.filter(u => u === uid).length >= it.count) return;
+      if (d.type !== ITYPE.EAT && d.type !== ITYPE.CONSUME && d.type !== ITYPE.NONE) return;
+      if (this.slots.length >= 6) { api.log("There is no more space for ingredients."); return; }
+      this.slots.push(uid);
+      if (!(stack && it.count > 1)) trade.busy.add(uid);
+    },
+    // por fotograma (regla 4: nada se cierra dentro de draw): cuenta 1 s por paso; al cuarto envía y cierra
+    tick(me) {
+      this.slots = this.slots.filter(u => bagItem(me, u));
+      if (this.mode !== 2) return;
+      const now = performance.now();
+      if (now - this.t1 > 1000) { this.t1 = now; this.step++; }
+      if (this.step >= 4) {
+        const uids = this.slots.slice();
+        gui.close(26); api.send({ t: "alchemy", uids }); gui.onSound?.(42);
+      }
+    },
+  };
+  gui.register(alchemy);
 
   // hacia dónde se abre el menú: pegado al cursor (tX = msX - 117, tY = msY - 50)
   const place = (mx, my) => { query.x = clamp(mx - 117, 0, 799 - 235); query.y = clamp(my - 50, 0, 599 - 100); };
@@ -171,7 +288,8 @@ export function registerNpcDialogs(gui, api) {
     "Usa el manual para aprender Farming; la azada se compra en la herrería. Siembra la bolsa de semillas en tierra libre y cosecha con la azada.",
   ];
   const MENU = {          // qué abre cada NPC (Game.cpp, CommandProcessor)
-    [NPC.SHOP]: { mode: 5, link: 11, shop: 1 }, [NPC.BLACKSMITH]: { mode: 5, link: 11, shop: 2 },
+    [NPC.SHOP]: { mode: 8, link: 11, shop: 1 }, [NPC.BLACKSMITH]: { mode: 7, link: 11, shop: 2 },
+    21: { mode: 4 }, 32: { mode: 4 }, 67: { mode: 4 }, 68: { mode: 4 }, 69: { mode: 4 }, 25: { mode: 9 }, 90: { mode: 6 },
     [NPC.MAGE]: { mode: 0, link: 16 }, [NPC.WAREHOUSE]: { mode: 0, link: 14 },
   };
 
@@ -188,6 +306,7 @@ export function registerNpcDialogs(gui, api) {
     const cfg = MENU[e.type]; if (!cfg) return false;
     trade.npc = { id: e.id, type: e.type, x: e.x, y: e.y };
     Object.assign(query, { mode: cfg.mode, npcType: e.type, link: cfg.link, shop: cfg.shop || 0, w: cfg.mode === 5 ? 252 : 215 });
+    if (cfg.mode === 8 || cfg.mode === 7) query.w = 215;
     place(mx, my);
     gui.open(20);
     return true;
@@ -217,7 +336,7 @@ export function registerNpcDialogs(gui, api) {
     key(e) { return this.s.key(e); },
     get focus() { return this.s.on; },                   // el tutorial cede el teclado mientras se escribe en el buscador
     onClose() { this.s.reset(); },
-    begin(type, farm = false) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => farm ? /^(SeedBag[(]|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
+    begin(type, farm = false, sub = 0) { Object.assign(this, { type, rows: (api.shops[type] || []).filter(r => !/^Master|(Master)/.test(r.name)).filter(r => sub && !SUBSHOP[sub](r, api) ? false : farm ? /^(SeedBag[(]|FarmingManual$)/.test(r.name) : !/^(Big|Super|Power)(Red|Blue|Green)Potion$/.test(r.name)), view: 0, mode: 0, qty: 1 }); },
     onOpen() { if (!this.rows.length) this.begin(this.type); },
     maxQty(me) { return Math.max(1, MAX_ITEMS - bagCount(me)); },
     price(me, row) { return listPrice(stat(me, "chr"), row.price); },
@@ -438,14 +557,22 @@ export function registerNpcDialogs(gui, api) {
         g.put("gamedialog_1", 7, 242, Math.floor((274 * this.view) / (n - BANK_ROWS)) + 35);
         if (this.drag && g.mouse.down) this.scrollTo(ly, n); else this.drag = false;
       }
+      // oro: «Deposit gold» guarda todo el oro de la bolsa, «Withdraw gold» saca todo el del almacén
+      this.goldBtn(g, lx, ly, 30, t("Guardar oro"));
+      this.goldBtn(g, lx, ly, 140, t("Sacar oro") + " (" + (me?.bankGold | 0) + ")");
       if (!hovered) {
-        g.aligned(0, 253, 60, "Either drag an item to restore from bag", INK);
-        g.aligned(0, 253, 75, "or click an item to take out on the list.", INK);
-        g.aligned(0, 253, 90, "item to take out on the list.", INK);
+        // DRAW_DIALOGBOX_BANK3..6 (lan_eng.h): sY+35/50/65 y, en blanco, «Space Used %d Of %d Items» a sY+85
+        g.aligned(0, 253, 35, "Drop an item from your bag to the", INK);
+        g.aligned(0, 253, 50, "bank window to deposit.", INK);
+        g.aligned(0, 253, 65, "Click an item to withdraw it.", INK);
+        g.aligned(0, 253, 85, "Space Used " + n + " Of " + (MAX_BANK - 1) + " Items", WHITE);
       }
     },
+    goldBtn(g, lx, ly, x, label) { g.text(x, 318, label, inside(lx, ly, x, x + 90, 316, 330) ? WHITE : INK); },
     click(g, lx, ly) {
       const me = api.me(), V = this.vis(), list = V.map(e => e.it);
+      if (inside(lx, ly, 30, 120, 316, 330)) { api.send({ t: "depositgold", amount: me.gold | 0 }); return true; }
+      if (inside(lx, ly, 140, 250, 316, 330)) { api.send({ t: "withdrawgold", amount: me.bankGold | 0 }); return true; }
       if (this.s.click(lx, ly)) return true;
       if (list.length > BANK_ROWS && within(lx, ly, 230, 260, 10, 330)) { this.drag = true; if (ly >= 40) this.scrollTo(ly, list.length); else this.view = 0; return true; }
       for (let i = 0; i < BANK_ROWS; i++) {
@@ -471,78 +598,83 @@ export function registerNpcDialogs(gui, api) {
   gui.register(bank);
 
   // ------------------------------------------------------------ 41: hospital de compañeros (invento del port, ver shared/systems/companion.js)
-  const hospital = new class extends ClassicDialog {
-    constructor() { super({ id: 41, title: "Hospital de compañeros", tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], search: true, footer: "Un caído no se invoca hasta revivirlo." }); }
-    // BUG-008: texto de la pestaña de ayuda (cada elemento es un párrafo; se ajusta al ancho del cuadro)
-    static HELP = ["CUIDADOS: cura a los heridos (2 de oro por punto de vida) o revive a los caídos (más caro).",
-      "EVOLUCIÓN: Orc, Pixie y Skeleton nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
-      "BOLAS: compra una bola de nivel 1; previsualiza antes.",
-      "CARAMELOS: rojo vida, azul maná, verde revive. Arrástralos al compañero.",
-      "COMIDA: el pescado da mejoras permanentes y la granja cura; arrástrala al compañero o a su bola.",
-      "DOOMY: Healer (verde) cura, Buff (amarillo) protege, Aura (azul) regenera."];
-    helpLines(g) { return this.constructor.HELP.flatMap(p => this.wrap(g, t(p), this.w - 40, 10)); }
-    rows(me) {
-      if (this.tab === 3) return [];
-      if (this.tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
-      if (this.tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp) && (api.hasNpc?.(sp) ?? true)).map(sp => ({ sp, ball: { id: SPECIES[sp][1], comp: { sp, ...(CLS_OF[sp] ? { cls: CLS_OF[sp] } : {}) } }, text: (CLS_OF[sp] ? DUMMY_NAMES[CLS_OF[sp]] : shown(sp)) + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
-      const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || shown(i.comp.sp)) + " → " + TIER2[i.comp.sp], right: "Lv1", color: "#1a6b1a", tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
-      return ups.concat(me.bag.filter(i => i.comp).map(i => {
-        const c = i.comp, hp = hpOf(me, c), mx = maxOf(me, c), st = c.down ? "Inconsciente" : hp < mx ? "Herido " + hp + "/" + mx : "Sano";
-        const kind = c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : shown(c.sp);
-        return { uid: i.uid, ball: i, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? RED : DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
-      }));
-    }
-    drawBody(g, me) {
-      if (this.tab === 3) { const L = this.helpLines(g); L.forEach((l, i) => i < 15 && g.text(this.mx, 66 + i * 13, l, INK, { size: 10 })); return; }
-      g.text(14, 62, this.tab === 2 ? "Caramelos" : this.tab ? "Bolas de prueba" : "Curar o revivir compañeros", INK, { size: 10 }); g.text(this.w - 44, 62, "Oro", INK, { size: 10 });
-      if (!this.rows(me).length) g.aligned(0, this.w, 120, "No llevas ninguna bola de compañero.", INK);
-    }
-    pick(r) {
-      if (this.tab === 2) api.send({ t: "candybuy", npc: trade.npc.id, item: r.candy, count: 1 });
-      else if (this.tab === 1) api.preview(r.sp, trade.npc.id);
-      else if (r.up) api.send({ t: "petup", npc: trade.npc.id, uid: r.up });
-      else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
-    }
-  }();
+  const HELP = ["CUIDADOS: cura a los heridos (2 de oro por punto de vida) o revive a los caídos (más caro).",   // BUG-008: pestaña de ayuda, un párrafo por elemento
+    "EVOLUCIÓN: Orc, Pixie y Skeleton nivel 50+ pasan a Demon, Frost y Liche (nivel 1).",
+    "BOLAS: compra una bola de nivel 1; previsualiza antes.",
+    "CARAMELOS: rojo vida, azul maná, verde revive. Arrástralos al compañero.",
+    "COMIDA: el pescado da mejoras permanentes y la granja cura; arrástrala al compañero o a su bola.",
+    "DOOMY: Healer (verde) cura, Buff (amarillo) protege, Aura (azul) regenera."];
+  const hospRows = (tab, me) => {
+    if (tab === 3) return [];
+    if (tab === 2) return Object.entries(CANDY_PRICE).map(([id, price]) => ({ candy: +id, text: api.itemName?.(+id) || ({ 780: "Red Candy", 781: "Blue Candy", 782: "Green Candy" })[id], right: price, tip: ({ 780: "Restores life to your summon", 781: "Restores mana to your summon (school summons need it)", 782: "Revives an unconscious summon" })[id] }));
+    if (tab === 1) return Object.keys(SPECIES).filter(sp => !isTier2(sp) && (api.hasNpc?.(sp) ?? true)).map(sp => ({ sp, ball: { id: SPECIES[sp][1], comp: { sp, ...(CLS_OF[sp] ? { cls: CLS_OF[sp] } : {}) } }, text: (CLS_OF[sp] ? DUMMY_NAMES[CLS_OF[sp]] : shown(sp)) + " (bola nivel 1)", right: HOSPITAL.ballPrice, tip: "Bola de prueba" }));
+    const ups = me.bag.filter(i => i.comp && TIER2[i.comp.sp] && i.comp.lvl >= TRADE_LEVEL && !i.comp.down).map(i => ({ up: i.uid, text: "Evolve " + (i.comp.nm || shown(i.comp.sp)) + " → " + TIER2[i.comp.sp], right: "Lv1", color: THEME.good, tip: "Trade this level-50 summon for a level-1 " + TIER2[i.comp.sp] + " (more life, mana and damage). Keep it stored first." }));
+    return ups.concat(me.bag.filter(i => i.comp).map(i => {
+      const c = i.comp, hp = hpOf(me, c), mx = maxOf(me, c), st = c.down ? "Inconsciente" : hp < mx ? "Herido " + hp + "/" + mx : "Sano";
+      const kind = c.cls && DUMMY_NAMES[c.cls] ? DUMMY_NAMES[c.cls] : shown(c.sp);
+      return { uid: i.uid, ball: i, text: (c.nm || c.sp) + " (" + kind + " nv " + c.lvl + ") · " + st, right: treatCost(me, c), color: c.down ? THEME.bad : DUMMY_COLORS[c.cls] ? DUMMY_COLORS[c.cls] : null, tip: c.down ? "Revivir es caro" : "Curar: 2 de oro por punto de vida" };
+    }));
+  };
+  const hospPick = r => {
+    const tab = hospital.tab;
+    if (tab === 2) api.send({ t: "candybuy", npc: trade.npc.id, item: r.candy, count: 1 });
+    else if (tab === 1) api.preview(r.sp, trade.npc.id);
+    else if (r.up) api.send({ t: "petup", npc: trade.npc.id, uid: r.up });
+    else api.send({ t: "petheal", npc: trade.npc.id, uid: r.uid });
+  };
+  const hospital = defineDialog({
+    id: 41, title: "Hospital de compañeros", w: 300, h: 340, tabs: ["Cuidados", "Bolas", "Caramelos", "Ayuda"], footer: "Un caído no se invoca hasta revivirlo.",
+    items: (me, world, win, tab) => {
+      if (tab === 3) return HELP.map(p => ({ k: "para", s: p }));
+      return [{ k: "search", id: "q" },
+        { k: "draw", h: 14, fn: (ui, x, y, w) => { ui.text(x, y, tab === 2 ? "Caramelos" : tab ? "Bolas de prueba" : "Curar o revivir compañeros", THEME.dim, { size: 10 }); ui.text(x + w - 24, y, "Oro", THEME.dim, { size: 10 }); } },
+        { k: "list", key: "h" + tab, rows: hospRows(tab, me), h: 200, filter: true, pick: hospPick, empty: "No llevas ninguna bola de compañero." }];
+    },
+  });
+  hospital.HELP = HELP; hospital.rows = me => hospRows(hospital.tab, me); hospital.pick = hospPick;
   gui.register(hospital);
 
   // ------------------------------------------------------------ 44: arena de apuestas (invento del port, ver shared/systems/arena.js)
-  const arena = new class extends ClassicDialog {
-    constructor() { super({ id: 44, title: "Apuestas · Arena", tabs: ["Combate", "Historial"], top: 130, rowH: 15, footer: "Solo miras: la casa se queda un 10 %." }); this.o = null; this.amount = 500; this.wait = false; }
-    open() { this.tab = 0; this.view = 0; this.wait = true; this.o = null; api.send({ t: "arenainfo", npc: trade.npc.id }); gui.open(44); }
-    got(ev) { this.o = ev; this.wait = false; this.amount = clamp(this.amount, ev.min, ev.max); }
-    roleName(r) { return r === "none" ? "sin rama" : BRANCH_NAMES[r] || r; }
-    rows(me) {
-      const o = this.o;
-      if (this.tab === 1) return (o?.hist || []).slice().reverse().map(h => ({ text: (h.win ? "Ganada · " : "Perdida · ") + h.a + " vs " + h.b, right: (h.net >= 0 ? "+" : "") + h.net, color: h.win ? "#1a6b1a" : RED, tip: "Apostaste " + h.amount + " por " + (h.side === "a" ? h.a : h.b) }));
-      if (!o || o.none || o.busy || this.wait) return [];
-      const f = (k, side) => ({ side, text: "Apostar por " + k.nm, right: "x" + (side === "a" ? o.oa : o.ob).toFixed(2), tip: "Si gana, cobras " + Math.round(this.amount * (side === "a" ? o.oa : o.ob)) + " de oro" });
-      const rows = [f(o.a, "a"), f(o.b, "b"),
-        { act: "+100", text: "Subir apuesta", right: "+100" }, { act: "+1000", text: "Subir apuesta", right: "+1000" }, { act: "-100", text: "Bajar apuesta", right: "-100" },
-        { act: "max", text: "Apuesta máxima", right: String(o.max) }, { act: "new", text: "Otro retador", tip: "Se genera otro combate" }];
-      if ((o.balls || []).length > 1) rows.push({ act: "ball", text: "Cambiar de compañero", tip: "Elige otro de tus compañeros" });
-      return rows;
-    }
-    drawBody(g, me) {
-      const o = this.o;
-      if (this.tab === 1) { g.text(this.mx, 62, "Últimos combates", INK, { size: 10 }); g.text(this.w - 44, 62, "Neto", INK, { size: 10 }); if (!this.rows(me).length) g.aligned(0, this.w, 120, "Aún no has apostado.", INK); return; }
-      if (this.wait) return g.aligned(0, this.w, 120, "…", INK);
-      if (!o || o.none) return this.wrap(g, t("Necesitas un compañero (bola) sano para combatir."), this.w - 50, 11).forEach((l, i) => g.aligned(0, this.w, 110 + i * 14, l, INK, { size: 11 }));
-      if (o.busy) return g.aligned(0, this.w, 110, "Hay un combate en curso…", INK);
-      const line = (k, p, y) => { g.text(this.mx, y, k.nm + (k.champion ? " ★" : ""), INK, { size: 11, bold: true }); g.text(this.mx, y + 12, shown(k.sp) + " nv " + k.lvl + " · " + this.roleName(k.role) + " · " + Math.round(p * 100) + " %", INK, { size: 10 }); };
-      line(o.a, o.pa, 64); g.text(this.w - 44, 80, "VS", RED, { size: 11, bold: true }); line(o.b, o.pb, 92);
-      g.text(this.mx, 116, "Apuesta: " + this.amount + " de oro  (" + o.min + " – " + o.max + ")", DARK, { size: 10 });
-    }
-    pick(r, me) {
-      const o = this.o; if (!o) return;
-      if (r.side) { api.send({ t: "arenabet", npc: trade.npc.id, offer: o.offer, side: r.side, amount: this.amount }); return; }
-      const step = { "+100": 100, "+1000": 1000, "-100": -100 }[r.act];
-      if (step) this.amount = clamp(this.amount + step, o.min, Math.min(o.max, Math.max(o.min, me.gold ?? o.max)));
-      else if (r.act === "max") this.amount = Math.min(o.max, Math.max(o.min, me.gold ?? o.max));
-      else if (r.act === "new") { this.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: o.uid }); }
-      else if (r.act === "ball") { const bs = o.balls, i = bs.findIndex(b => b.uid === o.uid); this.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: bs[(i + 1) % bs.length].uid }); }
-    }
-  }();
+  const arenaRole = r => r === "none" ? "sin rama" : BRANCH_NAMES[r] || r;
+  const arenaRows = (win, tab) => {
+    const o = win.o;
+    if (tab === 1) return (o?.hist || []).slice().reverse().map(h => ({ text: (h.win ? "Ganada · " : "Perdida · ") + h.a + " vs " + h.b, right: (h.net >= 0 ? "+" : "") + h.net, color: h.win ? THEME.good : THEME.bad, tip: "Apostaste " + h.amount + " por " + (h.side === "a" ? h.a : h.b) }));
+    if (!o || o.none || o.busy || win.wait) return [];
+    const f = (k, side) => ({ side, text: "Apostar por " + k.nm, right: "x" + (side === "a" ? o.oa : o.ob).toFixed(2), tip: "Si gana, cobras " + Math.round(win.amount * (side === "a" ? o.oa : o.ob)) + " de oro" });
+    const rows = [f(o.a, "a"), f(o.b, "b"),
+      { act: "+100", text: "Subir apuesta", right: "+100" }, { act: "+1000", text: "Subir apuesta", right: "+1000" }, { act: "-100", text: "Bajar apuesta", right: "-100" },
+      { act: "max", text: "Apuesta máxima", right: String(o.max) }, { act: "new", text: "Otro retador", tip: "Se genera otro combate" }];
+    if ((o.balls || []).length > 1) rows.push({ act: "ball", text: "Cambiar de compañero", tip: "Elige otro de tus compañeros" });
+    return rows;
+  };
+  const arenaPick = r => {
+    const o = arena.o, me = arena.me || api.me(); if (!o) return;
+    if (r.side) { api.send({ t: "arenabet", npc: trade.npc.id, offer: o.offer, side: r.side, amount: arena.amount }); return; }
+    const step = { "+100": 100, "+1000": 1000, "-100": -100 }[r.act];
+    if (step) arena.amount = clamp(arena.amount + step, o.min, Math.min(o.max, Math.max(o.min, me.gold ?? o.max)));
+    else if (r.act === "max") arena.amount = Math.min(o.max, Math.max(o.min, me.gold ?? o.max));
+    else if (r.act === "new") { arena.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: o.uid }); }
+    else if (r.act === "ball") { const bs = o.balls, i = bs.findIndex(b => b.uid === o.uid); arena.wait = true; api.send({ t: "arenainfo", npc: trade.npc.id, uid: bs[(i + 1) % bs.length].uid }); }
+  };
+  const arena = defineDialog({
+    id: 44, title: "Apuestas · Arena", w: 300, h: 340, tabs: ["Combate", "Historial"], footer: "Solo miras: la casa se queda un 10 %.",
+    items: (me, world, win, tab) => {
+      win.me = me;
+      const o = win.o, hdr = (a, b) => ({ k: "draw", h: 14, fn: (ui, x, y, w) => { ui.text(x, y, a, THEME.dim, { size: 10 }); ui.text(x + w - 24, y, b, THEME.dim, { size: 10 }); } });
+      if (tab === 1) return [hdr("Últimos combates", "Neto"), { k: "list", key: "hist", rows: arenaRows(win, 1), h: 230, pick: arenaPick, empty: "Aún no has apostado." }];
+      if (win.wait) return [{ k: "text", s: "…" }];
+      if (!o || o.none) return [{ k: "para", s: "Necesitas un compañero (bola) sano para combatir." }];
+      if (o.busy) return [{ k: "para", s: "Hay un combate en curso…" }];
+      const line = (k, p) => ({ k: "draw", h: 30, fn: (ui, x, y) => { ui.text(x, y, k.nm + (k.champion ? " ★" : ""), THEME.hi, { size: 11, bold: true }); ui.text(x, y + 13, shown(k.sp) + " nv " + k.lvl + " · " + arenaRole(k.role) + " · " + Math.round(p * 100) + " %", THEME.dim, { size: 10 }); } });
+      return [line(o.a, o.pa), { k: "draw", h: 14, fn: (ui, x, y, w) => ui.text(x + w - 24, y, "VS", THEME.bad, { size: 11, bold: true }) }, line(o.b, o.pb),
+        { k: "text", s: "Apuesta: " + win.amount + " de oro  (" + o.min + " – " + o.max + ")", color: THEME.dim },
+        { k: "list", key: "bet", rows: arenaRows(win, 0), h: 130, pick: arenaPick }];
+    },
+  });
+  arena.o = null; arena.amount = 500; arena.wait = false;
+  arena.open = () => { arena.tab = 0; arena.wait = true; arena.o = null; api.send({ t: "arenainfo", npc: trade.npc.id }); gui.open(44); };
+  arena.got = ev => { arena.o = ev; arena.wait = false; arena.amount = clamp(arena.amount, ev.min, ev.max); };
+  arena.rows = () => arenaRows(arena, arena.tab); arena.pick = arenaPick;
   gui.register(arena);
 
   // ------------------------------------------------------------ notificaciones del servidor
@@ -575,6 +707,8 @@ export function registerNpcDialogs(gui, api) {
       case "nogold": api.log("Not enough Gold."); gui.close(23); break;
       case "cantcarry": api.log("You can't carry anymore items."); api.log(" Your bag is full."); break;
       case "sold": gui.close(23); api.log("You sold " + (ev.count > 1 ? ev.count + " " : "") + nm(ev.item) + " for " + ev.price + " Gold.", "gold"); break;   // el original no avisa; invento del port
+      case "bankgold": api.log(t("Oro en el almacén") + ": " + ev.gold, "gold"); break;
+      case "repairedall": api.log(ev.count ? t("Reparados {n} objetos por {p} de oro.").replace("{n}", ev.count).replace("{p}", ev.price) : t("No hay nada que reparar."), "gold"); break;
       case "repaired": gui.close(23); api.log("Item " + nm(ev.item) + ": repaired."); break;
       case "pettreated": api.log((ev.revived ? "Has revivido a " : "Has curado a ") + (ev.nm || ev.sp) + " por " + ev.cost + " de oro.", "gold"); break;
       case "candybought": api.log("Compras " + ev.count + " × " + ev.name + " por " + ev.price + " de oro."); break;
@@ -582,6 +716,11 @@ export function registerNpcDialogs(gui, api) {
       case "petbought": api.log("Compras la bola de " + (DUMMY_NAMES[ev.cls] || shown(ev.sp)) + " (" + ev.nm + ") por " + ev.price + " de oro."); break;
       case "bounty": api.log("Recompensa por derrotar a " + ev.victim + ": " + ev.gold + " de oro.", "gold"); break;
       case "bankfull": api.log("There is no empty space left in warehouse."); break;
+      // NOTIFY_PORTIONSUCCESS / PORTIONFAIL / LOWPORTIONSKILL / NOMATCHINGPORTION (NOTIFY_MSG_HANDLER46-49)
+      case "potion-ok": api.log("You successfully mixed a potion!"); break;
+      case "potion-fail": api.log("You failed on mixing a potion."); break;
+      case "potion-lowskill": api.log("Your alchemy level is too low to mix the potion."); break;
+      case "potion-nomatch": api.log("Incorrect ingredients to mix the potion."); break;
       case "cantsell": {
         const it = mine && bagItem(mine, ev.uid), name = it ? itemName(it.id, it.attr, it.comp) : nm(ev.item);
         if (ev.why === 1) api.log("Item " + name + ": You can't sell this item here.");
@@ -602,12 +741,13 @@ export function registerNpcDialogs(gui, api) {
 
   const bag = { disabled: uid => trade.busy.has(uid) };
   return {
-    clickNpc, dropOnNpc, onEvent, trade, bag, hooks,
+    clickNpc, dropOnNpc, onEvent, trade, bag, hooks, alchemy,
     // cierra los cuadros cuyo objeto ya no está en la mochila (vendido, soltado...); se llama una vez por fotograma
     sweep() {
       const me = api.me(); if (!me) return;
       const gone = uid => !bagItem(me, uid);
       if (gui.isOpen(17) && gone(quantity.ask?.uid)) gui.close(17);
+      if (gui.isOpen(26)) alchemy.tick(me);
       if (gui.isOpen(23) && gone(confirm.uid)) gui.close(23);
       if (gui.isOpen(20) && (query.mode === 2 || query.mode === 3) && gone(query.uid)) gui.close(20);
       for (const u of [...trade.busy]) if (gone(u) && !(gui.isOpen(17) && quantity.ask?.uid === u)) trade.busy.delete(u);
@@ -621,6 +761,7 @@ export function registerNpcDialogs(gui, api) {
       for (const u of [...trade.stamp.keys()]) if (!trade.busy.has(u)) trade.stamp.delete(u);
     },
     dropOn(dlg, uid, mx, my) {                                          // objeto soltado sobre un cuadro de NPC
+      if (dlg.id === 26) { alchemy.drop(uid); return true; }
       if (dlg.id === 31) { sellList.drop(uid, mx, my); return true; }
       if (dlg.id === 14) { bank.drop(uid, mx, my); return true; }
       return false;

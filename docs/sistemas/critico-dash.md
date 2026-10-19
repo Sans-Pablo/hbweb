@@ -30,3 +30,6 @@ Ctrl+clic = atacar; con el objetivo a 2 casillas en línea, arma de alcance 1, c
 ## 0.85.23
 - Cartel Critical: el original guarda el daño en un byte sin signo leído como char con signo; 128-255 muestran "Critical", 0 muestra " * Failed! *" (fx.js).
 - Dash completo (OBJECTATTACKMOVE): `PLAYER.dashMs = 12*78`, golpe a los 4 fotogramas (`dashHitMs`), evento `dash`, `ACT.ATTACKMOVE = 7`; cliente: anim.js, renderer.js (fantasma), connection.js. NET_PROTO 13.
+
+## v0.85.71
+- Si el servidor rechaza un dash (`reject why:"dash"`) el cliente se resincroniza; la predicción de ataque usa `attackMs + speedNib·12·8` como el original.

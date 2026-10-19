@@ -33,7 +33,7 @@ a.transfer(s1, sw, shop, shop.freeSpotNear(62, 50) || [62, 50]);
 assert.ok(a.command(s1.id, { t: "stallopen", title: "Ocasion", items: [{ uid: s1.bag.find(i => i.id === +pick[0]).uid, price: 100, count: 1 }] }), "el vendedor abre el puesto");
 s1.res._stall = { until: a.time + 5000, done: true, back: a.time + 1 };
 a.transfer(buyer, a.worldFor(buyer.id), shop, shop.freeSpotNear(64, 50) || [64, 50]); buyer.res._stall = { tp: { x: tp.x, y: tp.y }, until: a.time + 120000, buy: true };          // el comprador ya está en el Almacén (el trayecto es largo y por el camino puede mejorar su equipo)
-buyer.res._buyAt = 1e12; buyer.res._stallAt = 1e12; buyer.res._petAt = 1e12; buyer.res._gatherAt = 1e12;
+buyer.bot.noGrant = true; buyer.res._buyAt = 1e12; buyer.res._stallAt = 1e12; buyer.res._petAt = 1e12; buyer.res._gatherAt = 1e12;
 
 
 assert.ok(run(240000, () => a.stallDb.find(x => x.owner === "aldric").items.length === 0 && buyer.gold < 20000), "el comprador adquiere el objeto; registro: " + buyer.bot.log.filter(l => /tienda|puesto|Cambio/.test(l)).join(" | ") + " map=" + a.worldFor(buyer.id).map.id + " st=" + JSON.stringify(buyer.res._stall));

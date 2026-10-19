@@ -23,6 +23,8 @@ import * as Boss from "./bosses.js";
 import * as Quests from "./quests.js";
 import { pickMob, MOB_TABLE, MOB_DEFAULT, MOB_COUNT, GROUP_KEEP_1_IN_5, GROUP_DROP_1_IN_5 } from "../randommob.gen.js";
 import { sset } from "./status.js";
+// v0.85.98 (#90, Pablo): mascotas sin restricciones (ni báculo ni tope de nivel del dueño); PET_RULES.staff = true devuelve las reglas del báculo
+export const PET_RULES = { staff: false };
 
 export function spawnFrom(w, g) {
   const cfg = w.npcDb[g.name];
@@ -44,6 +46,7 @@ export function spawnFrom(w, g) {
     // Cripta de esqueletos: cada nivel multiplica vida, daño y experiencia (g.scale); los jefes llevan además g.boss (1..4).
     if (g.scale) { n.hp = Math.ceil(n.hp * g.scale.hp); n.exp = Math.ceil(n.exp * g.scale.exp); n.dmgMul = g.scale.dmg; }
     if (g.boss) { n.boss = g.boss; n.cfg = { ...cfg, searchRange: Math.max(cfg.searchRange, 12), attackRange: Math.max(cfg.attackRange, 1) }; }   // los jefes ven de lejos y no se quedan quietos
+    if (g.name === "Tutelary-Angel" && cfg.attackRange < 2) n.cfg = { ...n.cfg, attackRange: 2 };      // v0.85.97 (obs. 68): el Pixie (y su forma superior) ataca a 2 casillas
     n.hp = Math.max(1, Bal.scale(n.hp, Bal.monsterHpMul(g.name), Math.ceil));
     n.maxHp = n.hp;
     n.noDieRemainExp = n.exp - Math.floor(n.exp / 3);
@@ -181,9 +184,10 @@ const SUMMON_BY_MAGERY = ["", "Slime", "Giant-Ant", "Amphis", "Orc", "Skeleton",
 const SUMMON_BY_V1 = ["", "Orc", "Skeleton", "Clay-Golem", "Stone-Golem", "Hellbound", "Cyclops", "Troll", "Orge"];
 export const SUMMON_MS = 300000;
 export const followersOf = (w, p) => [...w.ents.values()].filter(e => e.master === p.id && !e.dead);
-export function summonFor(w, p, v1, free, nolimit) {
+export function summonFor(w, p, v1, free, nolimit, at = null) {
+  const owner = at || p;                                                        // v0.85.79 HG.cpp:10933-10958: nace junto al TILE objetivo (dX,dY; ese tile lo ocupa el jugador, asi que el anillo contiguo), sigue al jugador de ese tile y se cuentan SUS seguidores; el tope usa la magia del lanzador
   const mag = p.skills[4] || 0, limit = Math.max(free ? 1 : 0, Math.floor(mag / 20));
-  if (!nolimit && followersOf(w, p).filter(e => !e.comp).length >= limit) return null;      // tope magery/20 (HG.cpp:10958); el GM no lo tiene
+  if (!nolimit && followersOf(w, owner).filter(e => !e.comp).length >= limit) return null;      // tope magery/20 (HG.cpp:10958); el GM no lo tiene
   let name;
   if (v1 > 0) name = SUMMON_BY_V1[v1];
   else {
@@ -192,10 +196,10 @@ export function summonFor(w, p, v1, free, nolimit) {
     name = SUMMON_BY_MAGERY[Math.max(1, Math.min(10, r))];
   }
   if (!w.npcDb[name]) return null;
-  const gen = { name, rect: [p.x - 2, p.y - 2, p.x + 2, p.y + 2], alive: 0, max: 0, respawn: false };
+  const gen = { name, rect: [owner.x - 1, owner.y - 1, owner.x + 1, owner.y + 1], alive: 0, max: 0, respawn: false };
   const n = spawnFrom(w, gen);
   if (!n) return null;
-  Object.assign(n, { master: p.id, summonedAt: w.time, noDrop: true, side: p.side });
+  Object.assign(n, { master: owner.id, summonedAt: w.time, noDrop: true, side: p.side });
   n.exp = 0; n.noDieRemainExp = 0;
   return n;
 }
@@ -215,10 +219,10 @@ function followerThink(w, n) {
   let tc = null;
   if (n.comp) {
     refreshCompanion(w, n, m); tc = Inv.instOf(m, n.ball)?.comp; if (tc) Tal.regen(w, n, tc);
-    if (tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
+    if (PET_RULES.staff && tc && Tal.isDummy(tc) && !m.bot && !Dummy.hasStaff(m)) {                   // sin báculo en la mano el Dummy no se mantiene
       tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, Dummy.STAFF_MSG); return;
     }
-    const need = tc && STAFF_FOR[tc.sp];                                                  // las especies superiores con báculo (evolutions.js) exigen su báculo en la mano (classgear.js)
+    const need = PET_RULES.staff && tc && STAFF_FOR[tc.sp];                                                  // las especies superiores con báculo (evolutions.js) exigen su báculo en la mano (classgear.js)
     if (need && !staffOk(m, w.data, need)) {
       tc.on = false; dismissCompanion(w, m, n.ball); w.emit({ t: "companion", id: m.id, sp: tc.sp, on: false, nm: tc.nm }); w.reject(m, { t: "use" }, STAFF_MSG[need]); return;
     }
@@ -476,8 +480,8 @@ export function toggleCompanion(w, p, inst) {
   if (c.down) return w.reject(p, { t: "use" }, "tu compañero está inconsciente: llévalo al hospital de compañeros");
   if (c.on && out) { c.on = false; dismissCompanion(w, p, inst.uid); w.emit({ t: "companion", id: p.id, sp: c.sp, on: false, nm: c.nm }); return true; }
   if (w.fightZone) return w.reject(p, { t: "use" }, "no en zonas de lucha");
-  if (Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
-  const need = STAFF_FOR[c.sp];
+  if (PET_RULES.staff && Tal.isDummy(c) && !Dummy.hasStaff(p)) return w.reject(p, { t: "use" }, Dummy.STAFF_MSG);
+  const need = PET_RULES.staff && STAFF_FOR[c.sp];
   if (need && !staffOk(p, w.data, need)) return w.reject(p, { t: "use" }, STAFF_MSG[need]);
   const cost = p.bot ? 0 : Math.max(1, Math.ceil((p.maxMp || 0) * Math.min(100, Math.max(1, c.lvl | 0)) / 100));   // invocar cuesta un % de tu maná máximo igual al nivel del summon (nivel 1 = 1 %, nivel 50 = 50 %)
   if ((p.mp || 0) < cost) return w.reject(p, { t: "use" }, "no tienes maná para invocarlo (" + cost + ")");
@@ -506,6 +510,7 @@ function companionStruck(w, n, t) {
 export function companionHurt(w, n, t, dmg) {
   if (t.dead) return;
   { const ad = Dummy.auraDefense(w, t); if (ad) dmg = Math.max(1, Math.round(dmg * (100 - ad) / 100)); }
+  { const pr = sget(w, t, "protect"); if (pr) dmg = pr === 5 ? 0 : Math.max(1, Math.round(dmg * (pr >= 4 ? 0.5 : pr === 2 ? 0.5 : 0.75))); }   // escudos (Defense Shield / Great / AMP) también valen para los compañeros
   t.hp -= dmg; t.hurtAt = w.time;
   w.emit({ t: "damage", id: t.id, from: n.id, amount: dmg, hp: Math.max(0, t.hp), max: t.maxHp });
   if (t.hp > 0) {

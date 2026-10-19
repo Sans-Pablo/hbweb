@@ -63,7 +63,7 @@ function newCharacter(w, p, create) {
     bag: [], equip: {}, bank: [], gold: 0, ssn: {}, magic: allSpells(w),
   });
   const s = p.stats;
-  p.skills = { 3: Math.floor(s.mag / 3), 4: s.mag + 10, 5: s.str + 10, 7: s.dex + 10 };
+  p.skills = { 3: Math.floor(s.mag / 3), 4: 100, 5: s.str + 10, 7: s.dex + 10 };
   const give = (name, equip = false) => {
     const d = w.data.named(name);
     if (!d) return;
@@ -92,6 +92,8 @@ export function addPlayer(w, name, save = null, create = null) {
   Object.assign(p, { name, lastMove: -1e9, lastAttack: -1e9, lastCombat: -1e9, lastVitals: w.time, kills: 0, deadAt: 0 });
   newCharacter(w, p, create);
   if (save) loadSave(w, p, save);
+  if (save && (save.statV | 0) < STAT_V) { let back = 0; for (const k of Object.keys(p.stats)) { const g = Math.max(0, p.stats[k] - 10); back += g; p.stats[k] -= g; } p.pool += back; const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed; }   // v0.85.62 (obs. 14): reinicio único de estadísticas de todos
+  p.statV = STAT_V;
   Tut.restore(p, save || {}); if (!p.tut) Tut.init(p, !save);
   Quests.restore(p, save || {}); if (!p.quests) Quests.init(p);        // personaje nuevo: tutorial en curso; partida antigua sin tutorial: ya lo conoce
   recalc(w, p);
@@ -111,9 +113,10 @@ function wipeOnce(w, p, s) {
   if ((s.wipeV | 0) >= WIPE_V) return;
   let back = 0; for (const k of Object.keys(p.stats)) { const give = Math.max(0, p.stats[k] - 10); back += give; p.stats[k] -= give; }
   p.pool += back; const owed = Math.min(p.lvDebt | 0, p.pool); p.pool -= owed; p.lvDebt = (p.lvDebt | 0) - owed;
-  p.bag = []; p.equip = {}; p.bank = []; delete p.pending;
+  p.bag = []; p.equip = {}; p.bank = []; p.bankGold = 0; delete p.pending;
 }
 
+const STAT_V = 1;
 function loadSave(w, p, s) {
   for (const k of ["level", "exp", "pool", "lvDebt", "gold", "kills", "ek", "respecs", "gender", "side", "pkCount", "reputation", "enemyKillCount", "rewardGold", "elo"]) if (Number.isFinite(s[k])) p[k] = s[k];
   if (s.stats) for (const k in p.stats) if (Number.isFinite(s.stats[k])) p.stats[k] = s.stats[k];
@@ -127,6 +130,7 @@ function loadSave(w, p, s) {
   if (s.ssn) p.ssn = { ...s.ssn };
   if (s.specialAbilityTime > 0) p.specialAbilityTime = s.specialAbilityTime | 0;          // m_iSpecialAbilityTime se guarda con el personaje (HG.cpp:4147)
   if (s.magic) p.magic = { ...s.magic, ...allSpells(w) };
+  p.bankGold = Math.max(0, s.bankGold | 0);
   if (Array.isArray(s.bank)) p.bank = s.bank.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
   if (Array.isArray(s.pending) && s.pending.length) p.pending = s.pending.filter(i => w.data.item(i.id)).map(i => ({ uid: w.nextItem++, id: i.id, count: i.count || 1, life: i.life ?? w.data.item(i.id).maxLife, ...(i.attr ? { attr: i.attr } : {}), ...(i.attr || i.color ? { color: i.color || 0 } : {}), ...(i.comp ? { comp: Tal.fixSupport({ ...i.comp }) } : {}) }));
   if (s.hunt) p.hunt = { ...s.hunt };
@@ -156,8 +160,9 @@ export function saveOf(w, id) {
   const p = w.ents.get(id);
   if (!p || p.kind !== "player") return null;
   return {
-    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, wipeV: p.wipeV ?? WIPE_V, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
+    level: p.level, exp: p.exp, pool: p.pool, lvDebt: p.lvDebt | 0, gold: p.gold, kills: p.kills, ek: p.ek || 0, pkCount: p.pkCount | 0, reputation: p.reputation | 0, enemyKillCount: p.enemyKillCount | 0, rewardGold: p.rewardGold | 0, elo: p.elo || 1500, wipeV: p.wipeV ?? WIPE_V, statV: p.statV | 0, respecs: p.respecs | 0, kinds: p.kinds ? { ...p.kinds } : {}, guild: p.guild ? { name: p.guild.name, rank: p.guild.rank } : null, gender: p.gender, side: p.side, look: { ...p.look }, charName: p.name, persona: p.persona || null, cls: p.cls || "warrior",
     stats: { ...p.stats }, skills: { ...p.skills }, ssn: { ...p.ssn }, magic: { ...p.magic }, specialAbilityTime: p.specialAbilityTime || 0, hunger: p.hunger, hp: p.dead ? 0 : p.hp, mp: p.mp, sp: p.sp,
+    bankGold: p.bankGold | 0,
     bank: (p.bank || []).map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })),
     ...(p.pending?.length ? { pending: p.pending.map(i => ({ id: i.id, count: i.count, life: i.life, ...(i.comp ? { comp: { ...i.comp } } : {}), ...(i.attr ? { attr: i.attr } : {}), ...(i.color ? { color: i.color } : {}) })) } : {}),
     hunt: { ...(p.hunt || {}) }, arenaHist: (p.arenaHist || []).slice(-20), ...(p.bet ? { bet: { ...p.bet } } : {}), delve: { deepest: p.delve?.deepest || 1, ...(p.delve?.cleared ? { cleared: p.delve.cleared } : {}), ...(p.delve?.king ? { king: p.delve.king } : {}) }, tut: Tut.toSave(p), quests: Quests.toSave(p),

@@ -4,12 +4,12 @@ import { Win, THEME, wrap } from "./window.js";
 import { t } from "./i18n.js";
 
 export const CHAT_ID = 10;
-const COL = { 0: "#e1e1e1", 1: "#82c882", 2: "#ff8282", 3: "#8282ff", 4: "#e6e682", 5: "#7fc2ff", 6: "#ffa060", 7: "#8fe08f", 8: "#d6a0ff", 10: "#b4ffb4" };
+const COL = { 0: "#e1e1e1", 1: "#82ff82", 2: "#ff8282", 3: "#8282ff", 4: "#e6e682", 5: "#7fc2ff", 6: "#ffa060", 7: "#8fe08f", 8: "#d6a0ff", 10: "#b4ffb4" };
 const TABS = [["Todo", null], ["Chat", [0, 6, 7]], ["Grupo", [5]], ["Clan", [8]], ["Sistema", [1, 2, 3, 4, 10]]];
 const LH = 15;
 
 export class ChatWin extends Win {
-  constructor(api) { super({ id: CHAT_ID, title: "Chat Log", w: 540, h: 340, x: 130, y: 190, esc: true }); this.api = api; this.tab = 0; this.cache = { key: "", rows: [] }; }
+  constructor(api) { super({ id: CHAT_ID, title: "Chat Log", w: 540, h: 340, x: 130, y: 190, esc: true }); this.api = api; this.pad = { x: this.inner.x, y: this.inner.y, b: 340 - this.inner.y - this.inner.h }; this.tab = 0; this.cache = { key: "", rows: [] }; }
   rows(c, tab, wpx) {
     const log = this.api.chatLog, key = tab + "|" + log.length + "|" + (log[0]?.t || "") + "|" + wpx;
     if (this.cache.key === key) return this.cache.rows;
@@ -24,7 +24,13 @@ export class ChatWin extends Win {
     this.cache = { key, rows };
     return rows;
   }
+  fit(ui) { const G = ui.g || ui;                                                            // responsive: se encoge a la pantalla (móvil/ventana pequeña) y no se sale del borde
+    const w = Math.max(240, Math.min(540, G.W - 8)), h = Math.max(160, Math.min(340, G.H - 8));
+    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; const p = this.pad; this.inner = { x: p.x, y: p.y, w: w - 2 * p.x, h: h - p.y - p.b }; }
+    this.x = Math.max(0, Math.min(this.x, G.W - this.w)); this.y = Math.max(0, Math.min(this.y, G.H - this.h));
+  }
   body(ui) {
+    this.fit(ui);
     const I = this.inner; let x = I.x;
     TABS.forEach(([n], i) => {
       const w = Math.ceil(ui.tw(n)) + 22;

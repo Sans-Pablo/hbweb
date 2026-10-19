@@ -1,4 +1,14 @@
 # Estado del proyecto
+- [x] (v0.85.100, sin subir versión) Ticket 66 ritmo de ataque: medido ~626 ms/golpe = original (624). Corregida la cuantización de 50 ms del tick (golpe fechado a su llegada). Pendiente: congelado/reliquia no modelados; propuesta de acortar attackMs si sigue lento. Test attack-cadence.
+- [x] (v0.85.91) Tickets 45-49 (cursor en márgenes, presas triviales [parcial], mago/Wing Helm, guerrero con placas, reset suave de bots). Sin verificar en pantalla.
+- [x] (v0.85.89) Backlog de Pablo: builds aprobados (12 guerrero, 3 mago) repartidos entre los bots, arma/hechizos según build, y fix de magos que solo lanzaban Magic Missile. Pendiente: Paralyze/PFM/AMP/Mass Illusion Movement en control y soporte; comprar cota+escudo torre al soporte.
+- [x] (v0.85.88) Builds pedidos por Pablo: guerrero berserker/giant59/heavy36/heavy10 (Dex>=100, resto Vit 80 % / Dex 20 %) y mago Blizzard 195 / control 200 / soporte 133 (Mag 60 %/40 %, resto Vit). Test bot-builds88 + war-str-table. Pendiente: comportamiento de apoyo del mago bot (seguir guerreros, buffs, Paralyze) y reparto de los residentes.
+- [x] (v0.85.87) Builds de guerrero por arma pedidos por Pablo: tabla fija de Str (BH 200, Battle Hammer 182, Battle Axe 170, Giant Sword/Hammer/Flameberge 160), Int 36 o 10, resto Dex/Vit. Builds de mago pendientes (los define Pablo). Sin verificar en pantalla.
+- [x] (v0.85.86) Cierre pedido por el propietario: armas máximas del guerrero bot, pociones solo con falta (no a tope), Confuse 3/4 y UseMagic confirmados, bug `api` de npcdialogs arreglado (cerrado en bugs.jsonl). Sin verificar en pantalla. Fichas bots-arma-guerrero, casteo-golpes.
+- [x] (v0.85.85) Tickets 38-44 (Int guerrero, mago móvil, Berserk propio, Opciones F1, mini ventana, autocaza Elvine, bots PvP con PFM/Paralyze/Berserk). Sin verificar en pantalla. Ficha bots-obs38-44.
+- [x] (v0.85.62) Bots con cabeza: tickets 6-15 (maestros fuera, Recall propio, sin buffs en granja, curas, SP, descasteo, mejor hechizo, reparto stats + reinicio, observador). Pendientes aparte: 16, 17.
+- [x] (v0.85.61) Bots listos: tickets 1-5 (preparación, PFM/worthBuff, DShield, hechizo eficiente). Ficha botsmart.md.
+- [x] (v0.85.60) Observador: limpio, ◀ ▶ solo combatientes, panel Observaciones (tickets). Pendiente (aprobación del propietario): tickets 1-5 de bots en docs/observaciones.json.
 - [x] (v0.85.59) Adaptación completa a nivel 140 con tope único derivado (levelcap.js): exp, oro, equipo, magias, misión, cliente. Pendiente: afinar monstruos/jefes/precios y cripta 50–140.
 - [x] (v0.85.58) Nivel máximo 140, reinicio de stats y borrado de items; reajuste de oro/exp/requisitos (monstruos y magias a 140 pendiente de afinar).
 - [x] (v0.85.57) Bots quietos en PvP (espera eterna ante fuego) corregido; guerrero nunca con báculo. Pendiente: reset de stats al cambiar de arma por item level si falta Str (hoy lo cubre `allocate` con la Str del arma).
@@ -24,14 +34,16 @@
 
 ## Hilo MOTOR/COMBATE (pedido 2026-10-15)
 - [x] 1 Críticos: contador en HUD (v0.84.11); la lógica ya coincidía con el original. [x] 2 Pretend Corpse (v0.84.12, docs/sistemas/pretend-corpse.md). [x] 3 Paralyze (v0.84.13, docs/sistemas/paralyze.md). [x] 6 Efecto de protección (v0.84.16), [x] 7 Sin indicador de tiempo sobre la cabeza (v0.84.17) [x] 5 Granjas enemigas (v0.84.15 farm-side) [x] 8 Dash arreglado (SP > 0, Shift cuenta como correr) y [x] 9 sin controles Shift del summon (v0.84.18) [x] 4 Magia sin daño (v0.84.14, objetivo en movimiento; fórmulas de acierto/resistencia ya coincidían con el original).
-- [ ] Pendiente (pedido 2026-10-15): reimplementar el control de pet/summon (ir a casilla / atacar) con otra tecla; Shift queda libre para la mecánica original (v0.84.18). Cierre 2026-10-15 (v0.84.19): Alt-resaltado del crítico, recall forzado fuera de granja enemiga, Paralyze por daño mágico, Pretend Corpse con cadáver; verificado en localhost.
+- [x] (hecho, sin bump) Control de pet/summon: **Ctrl+B** o botón **ORD** (sobre el panel del compañero) activa el modo órdenes: clic en suelo = `petgo`, clic en enemigo = `pettarget`; Esc/clic derecho/Ctrl+B salen (test `petcmd`). F5 (pelo): ya estaba — F5 abre el diálogo de personaje, que muestra el pelo con su tinte como el original. Falta verlo en pantalla (requiere login). Shift queda libre para la mecánica original (v0.84.18). Cierre 2026-10-15 (v0.84.19): Alt-resaltado del crítico, recall forzado fuera de granja enemiga, Paralyze por daño mágico, Pretend Corpse con cadáver; verificado en localhost.
 - [x] (pedido 2026-10-16, v0.85.12) Fidelidad 24 botín: drops.js desde HG.cpp:29315 (sin corte débil). 25 exp fiel (v0.85.13). 26 npc.json/spawns (v0.85.14). 27 generador de spawns (v0.85.15, docs/sistemas/spawns.md). 28 mobs aleatorios (v0.85.16). Tarea 5 cliente (v0.85.17): fantasma del dash; chispas del crítico y berserk ya portados.
 - [x] Backlog motor (v0.85.5): sonidos de arma por tipo; combate revisado contra el original (furia no duplica crítico, critBonus, dash sin gasto de SP); "Connection lost" en segundo plano arreglado (reconexión automática y resync). Sin verificar en navegador real con pestaña dormida.
 
 ## Hilo UI (pedido 2026-10-15, v0.83.7)
-- [x] (backlog nuevo UI, v0.85.0) 1 sin elegir personaje · 2 chat nuevo · 3 rastreador+opción · 4 ventanas movibles (lienzo y rastreador; chat/log Legacy DOM no, borde exacto sin probar) · 5 buscadores (tienda verificada de punta a punta; almacén y hospital se ven; compañeros sin filas sin probar) · 6 fuente homogénea · 7 hospital: ClassicDialog con pestañas + buscador (no es un Win) · 8 bordes de barras · 9 flechas de dirección opcionales (apagadas) · 10 texto de hechizo con fuente original. Ficha: docs/sistemas/buscadores.md.
+- [x] (backlog nuevo UI, v0.85.0) 1 sin elegir personaje · 2 chat nuevo · 3 rastreador+opción · 4 ventanas movibles (lienzo y rastreador; chat/log Legacy DOM no, borde exacto sin probar) · 5 buscadores (tienda verificada de punta a punta; almacén y hospital se ven; compañeros sin filas sin probar) · 6 fuente homogénea · 7 hospital: ClassicDialog con pestañas + buscador (desde el lote 1 de migración es un Win vía defineDialog) · 8 bordes de barras · 9 flechas de dirección opcionales (apagadas) · 10 texto de hechizo con fuente original. Ficha: docs/sistemas/buscadores.md.
 - [x] 1 hover turquesa (solo la huella) · [x] 2 tutorial (reaparece/bloqueo; sin verificar en vivo la tienda) · [~] 10 opciones limpias hecho; falta modos solo Remastered/Legacy y F1 ON/OFF (son órdenes del servidor, no UI)
-- [ ] 3-9, 11-14 sin empezar (ventanas, constructor de diálogos, misiones, hospital, botón mascota, cripta E, interfaz original, pelo F5, stats Olympia)
+- [ ] (obsoleto; ver tickets) Pendiente real: NpcTalk/Quest ND_GAME2 (ver auditoría en línea 576). Misiones (diario/rastreador), stats Olympia y aviso de la cripta (E) revisados: hechos.
+- [x] Constructor de diálogos: `defineDialog` (client/dlgspec.js, tests/dlgspec.test.mjs, docs/sistemas/dlgspec.md). Migrados a él (lote 1, sin ver en pantalla salvo lo indicado abajo): hospital (41) y arena (44), con filas nuevas `list` (scroll, buscador, bola) y `draw` y opción `footer`. Pendientes de migrar (aún ClassicDialog): trade, stall, guild, petmage, petdialog, summonpreview y el de dialogs.js.
+- [ ] Hospital (id 41) y paridad con el original: revisados solo por lectura; el hospital no existe en el original (invento del port); su comportamiento (pestañas Cuidados/Bolas/Caramelos/Ayuda, buscador, órdenes petheal/candybuy/preview) lo cubre tests/hospital.test.mjs, sin verlo en pantalla. Auditoría corregida: cabeceras ITEM/PRICE de la tienda y Space Used del almacén ya existían. Hecho: confirmación de soltar objeto al arrastrar fuera (main.js, gui.confirm, sin ver en pantalla). El almacén ya trae "Space Used".
 
 - [x] (pedido 2026-10-15, cierre hilo UI) **Verificación en navegador de lo pendiente:** móvil vertical/horizontal, minimapa en cripta real (nivel 1 y 4), chat Legacy, plegado ▾/▸ del rastreador, pozo cerrado (mini esqueleto + aro de jefe) y abierto. Arreglado: el rastreador de misión se apartaba mal (tapaba el diálogo en horizontal móvil, lo tapaba el minimapa ampliado de cripta) -> `questUi.avoid` + media query; el log Legacy pisaba la línea de fps (top 24px). Flecha del tutorial: vista solo en el paso de mapa (sin probar talk/kill). Minimapa en móvil: sin probar.
 
@@ -99,7 +111,7 @@
 - [ ] Protocolo/versión: comprobar que clientes viejos reciben el aviso de recargar.
 - [x] (0.79.6) Cuentas: backups diarios de `hb.sqlite`; el límite de registro queda ilimitado por decisión del propietario.
 - [ ] Comprobar que el cliente de GitHub Pages conecta con `https://pablo.tail495855.ts.net`.
-- [ ] Bots: atasco en Aresfarm (61,77); `cryptentry`, `crypt-exit`, `pet-far`/`pet-missing` residuales.
+- [ ] Bots (0.85.100, sim 8 h seed 11 sin crash): avisos `bug:stuck` sueltos (1 por sitio, ya sin el atasco fijo de Aresfarm), `cryptentry` 5, `crypt-exit` 19, `pet-missing` 9, pet-far sin tocar; NO corregidos en 0.85.100 (solo el tope de 25 s del mago). Quietos 60 s abundan en skeleton-11/27 (cripta) y 2ndmiddle: sin investigar.
 - [ ] Criterio de listo: 8 h con 40 bots sin avisos de «bloqueado» ni caídas.
 
 ### P1 · Experiencia del tester
@@ -523,3 +535,114 @@ Arco portado (flecha, consumo, sin flechas, grupo 7 del cuerpo), botón derecho 
 
 - [x] 0.85.42: combate original (ver CHANGELOG); pendiente near, saActive, orden absorción elemental/anillo; 1817 claves sin IA (docs/SPRITES.md).
 - [x] (v0.85.43) Monitor económico completo según el manual (pedido 2026-10-16: «implementa todos los puntos del documento»). Sin auth por decisión del dueño; SVG en vez de MUI/visx; precios/ítems sin instrumentación (ver MISSING).
+
+- [x] (v0.85.63) «realiza todas las observaciones»: tickets 16-27 (ver CHANGELOG); 10-27 marcadas hechas.
+- [x] (v0.85.64) «quiero que los bots realmente aprendan a pelear, PvP y PvE» + panel admin: genes por arquetipo/modo, `tools/train.mjs` (evolución PvE/PvP), calibración online, panel Aprendizaje. Pendiente: arena PvP con más variedad de rivales (hoy un duelo vs clase contraria con genes de fábrica) y entrenar el modo `cal` por mapa.
+
+- Entrenamiento continuo (0.85.64, sin release nuevo): bucle activo con bitácora en /admin/aprendizaje. Corregido bug del mago con escudo (ensureHands) y farmers fuera del arnés; mago PvE 172→427 XP/min. Pendiente: ficha botlearn.md y release 0.85.65 si se aprueba.
+- 0.85.65: saber de ítems de los bots (botlore.js): aprenden qué piezas rinden más y corrigen el item level al equipar/comprar; reinicio de stats ya existente.
+- 0.85.65: harness PvP del guerrero usa rival espejo (guerrero) en semillas pares y duelo de 90 s (vs mago todo eran empates); el guerrero corre al acercarse a un jugador. Hallazgo: el guerrero vence al mago siempre pero tarda (el mago hace kite).
+- 0.85.65: anti-kite del guerrero (apunta a donde estará el rival): duelo espejo 1.02→1.30, victorias 2→6 de 10.
+- 0.85.66: reinicio total de habitantes (BOT_EPOCH 3): nivel 1, sin equipo ni stats heredados, para eliminar inconsistencias (Brenna: arch scholar + build vanguard, Str 10 con daga). Petición del autor.
+- 0.85.66: causa de la inconsistencia arch/build: el rol del reinicio general se elegía por balance y el arquetipo solo se igualaba sin misiones; ahora siempre se iguala (salvo oficios). Época 4.
+
+- v0.85.67 Grabador de partidas: server/recorder.mjs graba todas las sesiones de jugadores reales (petición del autor); pendiente: analizarlas (tools/replay-analyze.mjs) cuando haya partidas.
+
+- 0.85.68 Magos con maná: reparto Mag/Int, Magic 100 %, compra de Ice/Energy Strike, reset y oro a magos actuales. Entrenamiento relanzado.
+
+- 0.85.68 (diagnóstico, sin versión nueva): `tools/mage-duel.mjs` + `runPvp` da 60000 de oro y hechizos ya aprendidos al mago de entrenamiento. Hallazgo: en el duelo cada hechizo se interrumpe (`castbreak`) porque el mago lanza pegado al vanguard, que lo golpea cada segundo; el maná nunca se gasta y el rival no pierde vida. PENDIENTE: el mago de PvP debe mantener distancia (kite/retroceder) y lanzar fuera del alcance cuerpo a cuerpo; Paralyze apenas entra. Entrenamiento detenido hasta arreglarlo.
+- 0.85.69 Magos que rematan: causa del "no daña" = la reserva de maná (2xParalyze+curación) bloqueaba los ataques con el rival ya paralizado, y el golpe cuerpo a cuerpo rompía el lanzamiento. Arreglo en `botmagic.fight` (hielo y reserva mínima si hold) + kite en `bot.js`. Duelo nv40: el rival baja a ~190-226/282 (no muere en 90 s). Entrenamiento relanzado.
+
+- 0.85.70 Auto hunt: venta con mochila llena por peso, venta completa por tandas, respawn y continuar tras morir, botón Continuar, mini ventana transparente/redimensionable, botín bueno no se pierde (petición del autor). Pendiente verificar en juego el respawn sin zona.
+- 0.85.71 Dash que se queda en el tile del enemigo, velocidad de golpe por arma, repair all (herrero y auto hunt), oro sin peso, oro en almacén, piedras raras, venta/guardado completos al volver del shop, revivir en auto hunt (peticiones del autor). Pendiente verificar en juego el revivir.
+- 0.85.72 Auto hunt vendía solo 1 objeto: se quita el límite de peso al vender (oro sin peso) y sellList ya no se detiene en el primer fallo. Probado en navegador.
+- 0.85.73 Auto hunt: un solo viaje al pueblo (repara roto y gastado, vende en tandas, guarda raras, avisos en log). Petición del usuario «aplica esos cambios y haz la versión».
+
+## Auditoría de paridad con el original (2026-10-17, tras 0.85.72)
+- v0.85.77: combate/magia: magic.json regenerado del cfg, stun por oro, Defense Shield solo con arma a dos manos, NPC→jugador mínimo 1 tras absorber. Pendiente combate: SA de arma (tipos 1-5, veneno NPC), orden de modificadores (fightzone/apocalipsis/banderas/cruzada), exp 0 tipos 55/56 nv>100 y NoDieRemainExp/3 en cruzada, retroceso actionLimit 4, contraataque 1/3. Pendiente magia: cast al recibir orden (HG.cpp:36523), Summon en tile objetivo, Confuse 3/4, ICE_LINEAR (Earthworm), spellfx cliente. Cliente combate sin auditar. Tests: tests/magic-original, combat.
+- v0.85.80: bots nivel 140 (petición del propietario): F1→Herramientas→Bots «Bots nivel 140» (reset stats, puntos por build, 100000 oro, magias según Int) y «Todos contra todos» (Promise Land, sin bandos, apagado por defecto). Falta verificar en pantalla.
+- v0.85.81: log de acciones admin en el replay (`dbgact`: op, antes/después) + `tools/replay-analisis.mjs`; bots: maná con BluePotion (35 %/2 Blizzard, compra hasta 50), margen de RedPotion con horda, base Paralyze+Blizzard contra hordas, buffs al ver al monstruo. Falta verificar en pantalla: un mago bot cazando en 2ndmiddle con 30 enemigos (¿bebe a tiempo? ¿sigue sin maná?).
+- v0.85.82: bots guerreros con arma de daño máximo (Barbarian Hammer/Battle Hammer/Battle Axe/Giant Sword, 25 % Flameberge), compra y cambio al reabastecerse (`botweapon.js`, ficha bots-arma-guerrero). Por verificar en pantalla: guerreros con martillo sin escudo.
+- v0.85.83: el casteo solo lo cortan golpes que aciertan con daño; pequeños con iProb del original (ficha casteo-golpes). Por verificar: bonos de ar/dr sin auditar.
+- v0.85.84: Mass Ice-Strike libera Paralyze (ficha mass-ice-paralyze). Pendiente: bots beben pots con maná lleno (bot.js lo está editando otra sesión, con error de sintaxis al momento de parar).
+- v0.85.79: casteo copia fiel (petición del propietario): cast al recibir la orden con el hechizo preparado (HG.cpp:36523/10202), Summon junto al tile objetivo (HG.cpp:10933), Illusion/Illusion Movement como estado propio (HG.cpp:11360). Pendiente de verificar en pantalla: sensación del casteo (golpe en el clic), Summon sobre otro jugador, Illusion en PvP. Sin portar: UseMagic modo combate/objeto en mano/SPELLDISABLED (no existen en el port), rango varita <41/<=39, Berserk NPC, type 27 Earthworm, spellfx. Petición registrada.
+- v0.85.78: casteo y magos PvP: cursor de apuntar tras la animación (ticket 2), magos bot con área/amenaza/cura con margen (bots-magia.md). Auditoría de casteo: el port resuelve tras castMs y el original al recibir la orden (HG.cpp:36523, pendiente, de hb-fidelidad); UseMagic del cliente (HP>0, DLGBOX_CLICK_MAGIC1/2, SPELLDISABLED, auto-combate) sin portar; rango varita cliente <41 vs servidor <=39. Petición: "casteo fiel + magos bot PvP" registrada.
+- v0.85.75: Bank textos BANK3-6 portados; sonido E,14,5 y Amount y57 ya estaban. Tooltip «Olympia» (gui.js:419) es ficha propia del port, decisión de producto pendiente.
+- v0.85.76: obs. 28-37 hechas (auras enemigas ocultas por petición, círculos PvP, F12 con pestañas, observer sin chat y clic para ver «en vivo», sin classgear, bots chr 10 salvo futuros GM, PvP→PvE al dominar, magias y huida invisible). Pendiente: comprobación visual de 28/29/30/36.
+- v0.85.74: NpcActionQuery modos 2/3/4/6/7/8/9 portados. Falta modo 1 (Give/Exchange), SkillDlg, NpcTalk/Quest ND_GAME2, Bank, Shop headers, sonido E,14,5, HUD audit_C, tooltip Olympia.
+Fuentes: audit_A/B/C (carpeta de notas de la sesión) + revisión de tests. Estado de tests: 189 verdes (corregidos archer, botsmart, residents-social y sim: eran tests desfasados por cambios de diseño 0.85.58-0.85.68: reinicio de stats con rol solo guerrero/mago, Magic=100, mago con más Int/Mag; no regresiones de código salvo el arco del cazador, ya corregido en bot.js).
+Backlog priorizado (pendiente, ninguno porta lógica de servidor perdida salvo el punto 1):
+1. NpcActionQuery modos 1, 7, 8, 9, 4, 6 (comportamiento perdido) — audit_B.
+2. SkillDlg de Manufacture/Alchemy (falta completo) — audit_B.
+3. NpcTalk y Quest como ventanas ND_GAME2 fieles; Banco ("Space Used...", "Taking back items."); Tienda (cabeceras, colores); Guild (papeles/arena). AUDITORÍA (misiones): en el original DrawDialogBox_NpcTalk (id 21, modos OK/Accept-Decline) y DrawDialogBox_Quest (id 28, cazar/entregar con sType, sWho, sCurrentCount, NpcTalkHandler) las dirige el servidor con su protocolo de misiones; el port usa un sistema propio (ids 9101-9111, `p.quests`, diario y rastreador) sin esos mensajes. Portarlas fieles exige modelar misiones tipo hunt/deliver del servidor original: decisión de producto, no se hizo. Diario/rastreador siguen funcionando (tests verdes). Sin verificar en pantalla.
+4. Sonido de UI `PlaySound('E',14,5)` en todos los clicks de Character/Inventory/Magic/Skill/Party/LevelUp — audit_A.
+5. HUD (audit_C): "Required Exp" y colores 250,250,220; tooltips originales; orden nombre/guild/side con Berserked/Frozen; colores exactos de chat; log sin líneas duplicadas; fx.js sin dx aleatorio; GuideMap 128 px con marco.
+6. [x] Ficha de objeto: `gui.itemTooltip` sustituida por el formato del original (Game.cpp, hover/arrastre: sin caja, nombre en (x, y+25) blanco —color de rareza del port si lo hay—, líneas secundarias en gris 150 de 15 en 15). Cantidad y57 ya estaba (v0.85.75). Verificado solo por test (`fichas-pozos`), sin ver en pantalla. Sin sprite ni caja: se pierde la ficha Olympia del ticket 14 (v0.84.9) por fidelidad.
+Pasada de eficiencia y checklist de producción: pendientes (ver bloque siguiente).
+
+## v0.85.92 (PvP bots)
+- Tickets 51,56,57,58,59 corregidos: foco fijo de objetivo, huida PvP más temprana, fin de revancha tras 2 muertes en 3 min, memoria PFM por rival, cooldown desarme 15 s. Sim FFA: muertes 31→15.
+- Pendientes: 50 (compra/venta en bucle), 52/60 (duelos sin persecución), 53, 54, 55. Sin probar en servidor real.
+
+## v0.85.93 (Guerreros Str 100)
+- Petición de Pablo: bots con builds no viables (Str<100). Causa: pescadores Ivo/Quill/Greta (arquetipo hunter, strNeedOf=0) con Str 55-78. Fix: WAR_STR_MIN=100 en allocate a nivel >=100. Los 23 guerreros a nivel 140 salen con Str>=100 y arma dentro de su Str. Test bot-warrior-str100; 208 tests OK. Sin commit.
+- Pendiente: antes de nivel 100 el pozo no alcanza para Str 100 (el arma se limita por Str en errands).
+
+- v0.85.93 (aclaración, Jessa y Dain): sus partidas guardadas (server/data/hb.sqlite) son guerreros (arch warrior, build vanguard, nv 140) con Str 29 / Vit 200 / Dex 200 / Int 36 de un reparto antiguo (warV 1, sin strV). Con el rebuild por `strV` rehacen sus puntos al cargar (simulado: Str 100, Vit 200, Dex 155). En una simulación nueva salen magos; la diferencia es solo la partida guardada.
+
+- v0.85.94: rebuild general de todos los bots guardados (strV 2 / mageV 2). Petición de Pablo: "sube nueva versión y arregla a todos los bots".
+
+- v0.85.95: observación de bots guardados (hb.sqlite): guerreros con Str 100/Dex 129-155 y ShortSword (rebuild usaba la arma puesta), pescadores como magos. Corregido; pendiente: que compren la arma objetivo (oro bajo, 2-140).
+
+- v0.85.96: kit de arma para cada guerrero (petición «si dales un kit a cada uno») y Str mínima 130 con Flameberge («los de 100 fuerza podrían tener 130»). Hecho; pendiente: observar en vivo que los guardados con 2-140 de oro se equipan.
+- v0.85.97: tanda de observaciones aprobadas de bots (ver docs/sistemas/bots-v85-97.md); abiertas solo 66/70/73 (sin cambio, ver tickets); v0.85.98 amplía.
+
+- [v0.85.99 propuesta, sin versionar] Bots "trabados en la farm": Cael (nv140) con cripta despejada hasta el 5 y sin poder con el 6 cancelaba la bajada, y farmDry reiniciaba _tripAt a 3-15 s → bucle eterno en la entrada con el grupo "sigue al líder". Fix en residents.js: _cryptBlock 15 min tras el rechazo, farmDry no reinicia el timer durante el bloqueo y se va a Promise Land. Pendiente verificar en servidor real.
+
+- v0.85.98 (bloque FIDELIDAD): #92 círculo de foe = fx38 de la cruzada; #87 sonidos de Giant-Frog y Rudolph; #73 Energy Strike (rayos 16 en píxeles); #66 sin cambio (evidencia en ticket). Ficha docs/sistemas/fidelidad-v85-98.md, test tests/fidelidad-v85-98.test.mjs. Sin verificar visual/auditivamente.
+- v0.85.98: BLOQUE BOTS (#88 #89 #90 #91 #93 #94 hechas; #70 inviable). Ficha docs/sistemas/bots-v85-98.md, test tests/bot-v85-98b.test.mjs.
+
+- v0.85.99 (cliente): #105 Berserk fx58 sobre el objetivo; #96 ventana log F9 responsive; #66 sin cambio (2ª revisión). Ficha docs/sistemas/efectos-v85-99.md, test tests/efectos-v85-99.test.mjs. Sin verificar visualmente.
+- v0.85.99 (bots): #70 #95 #97 #98 #99 #100 #101 #102 #103 #104 #106 hechas; ficha docs/sistemas/bots-v85-99.md, test tests/bot-v85-99.test.mjs.
+- v0.85.100 (cliente, sin subir versión): #111 quitados los objetos Master (ids 245, 246, 1891-1913; ficha docs/sistemas/master-items.md, test tests/master-items.test.mjs; original-data.test.mjs los exime). #112 velo celeste: no reproducible en vivo (requiere login); defensas CSS añadidas (autofill/foco/drag) — NO verificado en pantalla, reabrir si persiste.
+
+- Aviso de la cripta (E): sobre el portal aparece el rótulo y, a 1 casilla, «· E»; E funciona en entrada, bajada y salida (main.js). Nuevo: clic/toque sobre el portal a 1 casilla equivale a E (controller.js), para móvil. Sin verificar en pantalla.
+- v0.85.100 (bots, fase B): #116-#122 hechas (revisión de bots); test tests/bot-v85-100b.test.mjs; ficha bots-v85-100.md. Residuales: gemas no comprables, tope de pociones por peso, exención de histéresis los primeros 5 min; no verificada la simulación larga (sim-bots).
+
+## Pedido 2026-10-19 (0.85.100)
+- [x] F9 rompía la interfaz: `chatwin.js` usaba `ui.W/H` (indefinidos) → ahora `ui.g.W/H`; test `efectos-v85-99`.
+- [x] Pet buffer no lanza PFM a quien ya tiene otro escudo o aura activa (`dummy.js`).
+- [x] Las pets reciben escudos (`protect`) en `companionHurt`; berserk y auras ya les afectaban.
+- [x] Berserk correcto, fps ok (confirmados por Pablo).
+- [ ] Pendiente: ticket 115 (ms, fps, nombre y versión arriba en el modo observador); hospital: casillas neutras fuera del hospital, migrar diálogos/constructor, modos Remastered/Legacy, barra a los bordes, interfaz original total y minimapa móvil, stats Olympia y mini mob en el foso; vaciar en almacén y repetir ciclo del AUTO; overlay celeste #112 sin reproducir; soak de 8 h de sim-bots; alojamiento (diferido).
+- [x] (2026-10-19, 0.85.100) Celeste erróneo (#112): el hover del botón Paz/Ataque (gamedialog2_6 f16) era turquesa en la hoja; ahora se gira a naranja como el resto de la barra (`gui.js`).
+- [x] Ticket 115: el panel dividido del observador muestra de nuevo fps, ms, versión y nombre (`main.js`).
+- [ ] Sigue abierto (trabajo de diseño grande, no cerrable en un ciclo): migrar diálogos al sistema de ventanas + constructor, modos Remastered/Legacy, barra a bordes, interfaz original total + minimapa móvil, stats Olympia + mini mob en foso, casillas neutras globales; soak 8 h sim-bots; alojamiento.
+
+## Pedido 2026-10-19 (0.85.100) — bots/invocaciones/puestos
+- Bots ociosos en un edificio salen por la puerta más cercana tras 8 s (`bot.js`). Hecho.
+- Invocaciones y cadáveres del dueño se retiran del mapa al cambiar de mapa (`adventure.js transfer`). Hecho, `summon-mapchange.test.mjs`.
+- Puesto en el suelo: dibujo reducido a 1 casilla (`renderer.js stallChest`). Hecho.
+- Comandos de mascota con Ctrl+clic / Ctrl+clic derecho: pendiente de decisión del usuario (opciones dadas en chat).
+
+## Pedido 2026-10-19 (0.85.100) — backlog de UI del cliente
+1. Casillas neutras sin turquesa: todas las casillas usan `drawSlot` (gris con bisel; `window.js`), también fuera del hospital. El único turquesa en código (`#6a9` en `dashboard.js`/`watchpanel.js`) pasó a `#9a8`. Guardián nuevo `tests/ui-teal.test.mjs` (escanea colores hex de `client/*.js`, excepto tintes de `look.js`). Hecho; sin verificar visualmente (filtros CSS `hue-rotate` de huella de invocaciones y hover Paz/Ataque en `gui.js` no se han revisado en pantalla).
+2. Stats Olympia y mini mob en el foso: stats Olympia ya existen (`/stats`, `statsim.js`, ficha de objeto con formato original). Mini mob (`pitMob`) NO restaurado: se quitó a propósito en 0.85.7 y `fichas-pozos.test.mjs` lo exige ausente; restaurarlo exige que el usuario lo revoque. Sin cambios.
+3. Barra inferior pegada a bordes: ya implementada (`edgeFill` en `gui.js`, solo Remastered/HD y no móvil, fijado por `edgefill.test.mjs`); sin cambios. Sin verificar visualmente.
+4. Modos Remastered/Legacy y minimapa móvil: ya existen (opción «Remastered (apagado: Legacy)», `body.classic`, `renderer.miniSize=100` y `miniTop=84` en móvil); fijado con `tests/ui-modos-mini.test.mjs`. «Interfaz original total» (cada ventana en su posición original) sigue sin definirse; sin verificar visualmente en móvil.
+
+## Pedido 2026-10-19 (0.85.100) — backlog de bots (soak 8 h, armas, mago PvP)
+- [x] Soak 8 h simuladas (`HOURS=8 node tools/sim-bots-v85-99.mjs 11`, ~25 min reales, 40 bots): sin bucles farm/cripta ni repeticiones de muerte significativas (44 tipos `balance:death`, casi todos en Promise Land, 1–2 por bot). `bug:stuck` solo 1 vez por bot en Aresfarm/Elvine Farm, salvo el arranque en Elvine Farm (205 bots·aviso entre t80–t280, bloqueo de spawn que se disuelve solo). `quietos60s`: 40 bots con rachas >60 s, todas en farm/interior; el máximo es Nils 1575 s de 28800 s (granjero/pescador/soporte, quietos por rol). Sin ventas de objetos (`sold:0`). Avisos menores: `pet-far`, `pet-after-death`, `pet-missing` (1 cada uno). No se encontró nada que corregir en `bot.js`/`residents.js`.
+- [x] Bots guardados con poco oro compran el arma objetivo: ya cubierto por la concesión de oro de `errands()` (oro < 500k → 1M); test nuevo `bot-v85-100c` (oro 2 y 140 → acaba con BarbarianHammer).
+- [x] Mago PvP mantiene distancia: el umbral de huida (`bot.js`, bloque kite 0.85.69) sube de 3 a 5 casillas; en `tools/mage-duel.mjs` (6 semillas) los Ice Strike pasan de 22 a 31 y Spike Field de 5 a 12, el mago termina casi con la vida llena. Sigue sin ganar en 90 s (6 empates): el duelo contra vanguardia es lento, no un bug.
+- [x] (audit_F 2026-10-19) exp por golpe: cruzada /3 y tipos 55/56 nivel>100 = 0 (combat.cpp ~1513); informe en docs/AUDITORIA-2026-10-19.md
+
+## Cierre 2026-10-19 (0.85.100)
+- Ctrl+clic izq/der con mascota activa = mover/atacar: IMPLEMENTADO (`controller.petOrder`). Sin verificar a mano en navegador.
+- Mini mob del foso (`renderer.pitMob`): RESTAURADO, pero EN EL MINIMAPA (y mapa superpuesto) sobre cada pozo, no en el dungeon (aclaración del usuario); `fichas-pozos.test.mjs` actualizado. Sin verificar visualmente (aro de jefe, pozo cerrado).
+- Auditoría integral: ver `docs/AUDITORIA-2026-10-19.md` (un arreglo de combate; el resto registrado como sin verificar).
+
+## Auditoría combate/magia (audit G, 2026-10-19, sin versión)
+- [x] Contraataque (bando, cp, permanente), actionLimit 1/2/4/6 sin daño, sin exp por golpe a invocados, PFA vs Dark-Elf/AGT, Berserk NPC por bando efectivo, Earthworm SPDOWN, manuales de hechizo (STUDYMAGIC). Test `tests/combat-audit-g.test.mjs`; detalle y sin resolver en `docs/AUDITORIA-2026-10-19.md`.
+- [ ] Pendiente: manuales de habilidad (original nivel 20 y se gastan siempre; port 100), SA de arma 1-5, tipos de magia (enum del servidor desplazado respecto al cfg), drops/DropConfig sin auditar.
+- Auditoría cliente diálogos/HUD (2026-10-19, sin versión; ver docs/AUDITORIA-2026-10-19.md): NpcActionQuery 7/8/9/3/4 y Talk ajustados al original, menú sin sonido, diálogo de alquimia (id 26) funcional (antes la orden `alchemy` no se enviaba nunca), log sin duplicados. Pendiente: modo 1 Give/Exchange, fabricación (SkillDlg 3-8), MAXBANKITEMS 121 vs 200, sonido E14 botón a botón, HUD en renderer.js. Test: tests/npcquery-alchemy.test.mjs.

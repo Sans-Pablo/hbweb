@@ -1,0 +1,4 @@
+# Constructor de diálogos (`client/dlgspec.js`)
+`defineDialog({id,title,w,h,x,y,tabs?,items})` devuelve una `Win` lista para `gui.register()`. `items` es una lista o `(me,world,win,tab)=>lista`; las filas se apilan con `LAYOUT.gap`.
+Filas: `head, text, para, rule, gap, btn, row (botones en fila), check, slider, input, combo, search` (ver cabecera del fichero). `win.tab` es la pestaña activa y `win.query` el texto del buscador.
+Test: `tests/dlgspec.test.mjs`. Ventanas a medida siguen usando `Win` (ventanas.md); esto cubre formularios y paneles simples. Migrados: hospital (41) y arena (44) en `npcdialogs.js`, que exponen `rows`/`pick`/`HELP`/`o`/`got` sobre la propia ventana para los tests. Siguen en `ClassicDialog`: trade, stall, guild, petmage, petdialog, summonpreview, dialogs.js. `DialogBox` (conversaciones) no se migra.

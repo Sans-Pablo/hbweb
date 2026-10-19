@@ -92,7 +92,9 @@ export class SpellFx {
         break;
       case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 250: e.mx = sx * T; e.my = sy * T - 40; break;   // destello de crítico (bAddNewEffect: mX=sX*32, mY=sY*32-40)
       case 81: e.mx = sx * T; e.my = sy * T; break;                // StormBlade (tipo 15)
-      case 16: case 34: case 71: case 196: e.mx = sx * T; e.my = sy * T - (type === 71 || type === 196 ? 0 : 40); e.err = 0; break;
+      case 16: if (v1 === 1) { e.mx = sx; e.my = sy; e.err = 0; e.px = 1; break; }   // desde 160: píxeles (Game.cpp:14636)
+      // fallthrough
+      case 34: case 71: case 196: e.mx = sx * T; e.my = sy * T - (type === 71 || type === 196 ? 0 : 40); e.err = 0; break;
       case 100: case 110: case 120: case 130: case 137: case 161: case 182: case 251:
         e.mx = px(sx); e.my = px(sy) - 40; e.dir = dirTo(sx, sy, dx, dy) || 1; break;
       case 143: case 151: e.mx = type === 151 ? px(sx) : px(dx); e.my = (type === 151 ? px(sy) : px(dy)) - 50; e.rx = 5 - rnd(10); e.ry = 5 - rnd(10); break;
@@ -166,8 +168,9 @@ export class SpellFx {
       case 13: if (f < 15) { e.mx += rnd(2) ? 1 : -1; e.my--; } done(); break;
       case 15: e.my += e.ry; done(); break;
       case 16:
-        fly(40); spark8(1);
-        if (near(e.dx, e.dy)) { at(18, e.dx, e.dy); for (let i = 0; i < 5; i++) at(9, e.mx + 20 - rnd(40), e.my + 20 - rnd(40), -rnd(2)); end(); }
+        if (e.px) fly(40, e.dx, e.dy); else fly(40);
+        spark8(1);
+        if (e.px ? near(e.dx, e.dy) : near(X, Y)) { at(18, e.dx, e.dy); for (let i = 0; i < 5; i++) at(9, e.mx + 20 - rnd(40), e.my + 20 - rnd(40), -rnd(2)); end(); }
         break;
       case 34:
         fly(50, e.dx, e.dy); at(33, e.mx + rnd(30) - 15, e.my + rnd(30) - 15, -rnd(4));
@@ -263,7 +266,7 @@ export class SpellFx {
       }
       case 160:
         if (f > e.max) end();
-        else { this.add(16, e.sx * T + 16, e.sy * T + 16 - 20, X + 50 - rnd(100), Y + 50 - rnd(100)); this.snd(1, e.dx, e.dy); }
+        else { this.add(16, e.sx * T + 16, e.sy * T + 16 - 20, X + 50 - rnd(100), Y + 50 - rnd(100), 0, 1); this.snd(1, e.dx, e.dy); }
         break;
       case 161: case 120: case 130: case 137: case 251: {
         fly(50);
@@ -420,6 +423,7 @@ export class SpellFx {
         case 165: if (f >= 0) P(53, f, tx, ty); break;
         case 166: if (f >= 0) { P(55, f, tx, ty + 35, "rev", .6); P(54, f, tx, ty, "add", .5); } break;
         case 176: if (f >= 0) P(90, f, tx + 50, ty + 85); break;
+        case 150: P(58, f, tx, ty, "add"); break;               // Berserk: círculo fx58 sobre el objetivo (Game.cpp:7182, PutTransSprite_NoColorKey)
         case 177: case 180: if (f >= 0) P(60, f, tx, ty, "add", f < 9 ? 1 : fade((f - 5) * -3)); break;
         case 190: case 195: if (f >= 0) P(61, f, tx, ty, "add", f < 9 ? 1 : fade((f - 5) * -3)); break;
         case 183: if (f >= 0) P(94, f, tx, ty + 40, "add", f < 9 ? 1 : fade((f - 5) * -3)); break;

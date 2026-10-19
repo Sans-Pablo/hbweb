@@ -1,5 +1,7 @@
 import { drawBall } from "./compicon.js";
+import { ClassicDialog, RED } from "./classicdialog.js";
 import { buttonCanvas } from "./window.js";
+import { registerOptions } from "./optwin.js";
 // Cuadros de diálogo del cliente original (Game.cpp, DrawDialogBox_*). Cada uno: { id, x, y, w, h, draw(g, me, world), click(g, x, y, me) }
 // con coordenadas relativas a la esquina del cuadro. Posición inicial = m_stDialogBoxInfo[n] (+ SCREENX 80, SCREENY 60).
 import { getLang, setLang, t } from "./i18n.js";
@@ -246,7 +248,7 @@ export function registerDialogs(gui, api) {
         y += 18;
       }
       TAB_HIT.forEach(([a, b], i) => { if (lx >= a && lx <= b && ly >= 240 && ly <= 268) this.view = i; });
-      if (lx >= 154 && lx <= 228 && ly >= 285 && ly <= 305) api.log("You should learn alchemy skill to use this item.");
+      if (lx >= 154 && lx <= 228 && ly >= 285 && ly <= 305) { if (g.dialogs.get(26)?.begin(true)) return true; }      // DlgBoxClick_MagicCircle: busca el cuenco (INVENTORY10/16)
       return false;
     },
     wheel(g, dir) { this.view = (this.view + (dir > 0 ? -1 : 1) + 10) % 10; },
@@ -393,56 +395,7 @@ export function registerDialogs(gui, api) {
   gui.register(sys);
 
   // ------------------------------------------------------------ 60: opciones (F12): todas juntas
-  const optTog = (k, n) => ({ n, get: () => !!api.mods()[k], set: v => api.setOpt(k, v) });
-  const SECTIONS = [
-    ["Juego", [optTog("autoAttack", "Ataque automático"), optTog("run", "Correr"), optTog("hpBars", "Barras de vida"), optTog("groundInfo", "Info de objetos del suelo"), optTog("groundCost", "Precio de objetos del suelo"), optTog("statusPanel", "Panel de estados (DR/MR)"), optTog("map", "Minimapa"), optTog("grid", "Casillas bloqueadas"), optTog("dirArrows", "Indicadores de dirección"), optTog("questTrack", "Mini misión (rastreador)")]],
-    ["Gráficos", [{ n: "Remastered (apagado: Legacy)", get: () => api.mods().mode === "remastered", set: v => api.setOpt("mode", v ? "remastered" : "classic") }, optTog("hdSprites", "Sprites y terreno HD")]],
-    ["Sonido y chat", [{ n: "Sonido", get: () => api.sys().sound, set: v => api.setSys({ sound: v }) }, { n: "Música", get: () => api.sys().music, set: v => api.setSys({ music: v }) }, { n: "Susurros", get: () => api.sys().whisper, set: v => api.setSys({ whisper: v }) }, { n: "Gritos", get: () => api.sys().shout, set: v => api.setSys({ shout: v }) }]],
-  ];
-  const optRows = [];                                   // [x, y, fila] de cada interruptor, calculado al dibujar
-  const mods = {
-    id: 60, x: 210, y: 62, w: 380, h: 472,
-    draw(g, me) {
-      const c = g.ctx, S = api.sys(), m = g.mouse, lx = m.x - this.x, ly = m.y - this.y;
-      c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#8a7448"; c.lineWidth = 2; c.strokeRect(1, 1, this.w - 2, this.h - 2);
-      g.text(this.w / 2, 12, "Opciones", "#f0d080", { align: "center", bold: true });
-      optRows.length = 0; let y = 38;
-      for (const [title, rows] of SECTIONS) {
-        g.text(16, y, title, "#f0d080", { bold: true }); c.fillStyle = "#8a7448"; c.fillRect(16, y + 15, this.w - 32, 1); y += 22;
-        rows.forEach((r, i) => {
-          const x = i % 2 ? 196 : 16, yy = y + (i >> 1) * 20, on = r.get(), hot = lx >= x && lx < x + 170 && ly >= yy - 2 && ly < yy + 16;
-          c.strokeStyle = "#8a7448"; c.strokeRect(x + 0.5, yy + 0.5, 12, 12); if (on) { c.fillStyle = "#9fe39a"; c.fillRect(x + 3, yy + 3, 7, 7); }
-          g.text(x + 20, yy, r.n, hot ? "#fff" : "#e8dcc3"); optRows.push([x, yy, r]);
-        });
-        y += Math.ceil(rows.length / 2) * 20 + 8;
-      }
-      for (const [k, n] of [["soundVol", "Volumen del sonido"], ["musicVol", "Volumen de la música"]]) {       // deslizadores: mantener pulsado
-        g.text(16, y, n, "#e8dcc3"); c.fillStyle = "#4a3c26"; c.fillRect(196, y + 5, 150, 4); c.fillStyle = "#9fe39a"; c.fillRect(196, y + 5, S[k] * 1.5, 4); c.fillStyle = "#f0d080"; c.fillRect(194 + S[k] * 1.5, y + 1, 5, 12);
-        if (m.down && g.order[g.order.length - 1] === 60 && lx >= 190 && lx <= 352 && ly >= y - 2 && ly <= y + 16) api.setSys({ [k]: Math.max(0, Math.min(100, Math.round((lx - 196) / 1.5))) });
-        y += 22;
-      }
-      this._y = y + 6;
-      const btn = (x, w, t, i) => { const yy = this._y + Math.floor(i / 3) * 26, xx = 16 + (i % 3) * 116, hot = lx >= xx && lx < xx + 108 && ly >= yy && ly < yy + 22; c.fillStyle = hot ? "#5a4a2c" : "#3c3020"; c.fillRect(xx, yy, 108, 22); c.strokeStyle = "#8a7448"; c.strokeRect(xx + 0.5, yy + 0.5, 107, 21); g.text(xx + 54, yy + 5, t, hot ? "#fff" : "#e8dcc3", { align: "center" }); };
-      ["Idioma: " + (getLang() === "es" ? "Español" : "English"), "Guardar ahora", "Repetir tutorial", "Exportar copia", "Importar copia", "Menú clásico"].forEach((t, i) => btn(0, 0, t, i));
-      const yb = this._y + 58, hotL = lx >= 16 && lx < 124 && ly >= yb && ly < yb + 22;
-      c.fillStyle = hotL ? "#6a2c20" : "#4a2018"; c.fillRect(16, yb, 108, 22); c.strokeStyle = "#8a7448"; c.strokeRect(16.5, yb + 0.5, 107, 21); g.text(70, yb + 5, S.logoutCount === null ? "Cerrar sesión" : "Cancelar salida", "#fff", { align: "center" });
-      g.text(this.w - 16, yb + 5, "Clic derecho: cerrar", "#9a8f7a", { align: "right" });
-    },
-    click(g, lx, ly) {
-      for (const [x, y, r] of optRows) if (lx >= x && lx < x + 170 && ly >= y - 2 && ly < y + 16) { r.set(!r.get()); return true; }
-      const i = Math.floor((ly - this._y) / 26), col = Math.floor((lx - 16) / 116);
-      if (ly >= this._y && ly < this._y + 22 + 26 && i >= 0 && i <= 1 && col >= 0 && col <= 2 && (lx - 16) % 116 < 108 && (ly - this._y) % 26 < 22) {
-        const n = i * 3 + col, A = g.actions || {};
-        if (n === 0) setLang(getLang() === "es" ? "en" : "es"); else if (n === 1) A.save?.(); else if (n === 2) A.tutorial?.();
-        else if (n === 3) { if (A.canExport) A.exportSave?.(); } else if (n === 4) A.importSave?.(); else g.toggle(19);
-        return true;
-      }
-      const yb = this._y + 58;
-      if (lx >= 16 && lx < 124 && ly >= yb && ly < yb + 22) { api.logout(); return true; }
-      return false;
-    },
-  };
-  gui.register(mods);
+  registerOptions(gui, api);                                    // v0.85.76 (obs. 30): ventana al estilo F1 / menú automático (optwin.js)
 
   // ------------------------------------------------------------ 15: habilidades (F8), lista de Skill.cfg
   const SKILLS = [["Mining", 1], ["Fishing", 1], ["Farming", 1], ["Magic-Resistance", 0], ["Magic", 0], ["Hand-Attack", 0], ["Archery", 0], ["Short-Sword", 0], ["Long-Sword", 0], ["Fencing", 0], ["Axe-Attack", 0], ["Shield", 0], ["Alchemy", 1], ["Manufacturing", 1], ["Hammer", 0], ["????", 1], ["????", 1], ["????", 1], ["????", 1], ["Pretend-Corpse", 2], ["????", 1], ["Staff-Attack", 0], ["????", 1], ["Poison-Resistance", 1]];

@@ -38,10 +38,10 @@ Original: `HelbreathOriginal\Helbreath.Client\Helbreath.Client\Game.cpp`. Audito
 | Item drop confirm (4) | l.18133 "Are you sure to drop away this item?" | no existe (suelta directo) | FALTA |
 | Cantidad (17) | QueryDropItemAmount | y/tinta ✔; mensajes "You entered 0…" sin verificar | DIFERENTE (menor) |
 | Tooltips de objeto | función original no localizada | tarjeta "Olympia" propia | DIFERENTE (inventado) |
-| Tienda (11) | npcdialogs.js:214-332 | aviso ✔; cabeceras ITEM/PRICE, aviso de STR a y288, género solo en armadura | DIFERENTE (menor) |
+| Tienda (11) | npcdialogs.js:214-332 | aviso ✔; cabeceras ITEM/PRICE, aviso de STR a y288, género solo en armadura | cabeceras ITEM/PRICE ✔ (npcdialogs.js:287); resto menor |
 | Lista de venta / Reparar | | | OK |
 | NpcActionQuery (20) | modos 0-9 | solo 0, 2, 3, 5; faltan 1, 4, 6, 7, 8, 9 | DIFERENTE |
-| Warehouse (14) | | falta "Space Used %d Of %d Items" y aviso de bolsa llena | DIFERENTE (menor) |
+| Warehouse (14) | npcdialogs.js:496 | "Space Used %d Of %d Items" ✔ | IGUAL (aviso de bolsa llena pendiente) |
 | Menú de herrería (modo 7) | | | FALTA |
 | Fabricación/Alquimia (SkillDlg) | Game.cpp:35358 | solo ajuste `manufill` | FALTA |
 | NpcTalk (21) | ventana ND_GAME2, líneas y57+15i | DialogBox de piedra con un párrafo | DIFERENTE |

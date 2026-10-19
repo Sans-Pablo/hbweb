@@ -102,6 +102,10 @@ export class NewsWin extends Win {
       num(f, "bn", 1, 1, 10, 44); f.text("Lv"); num(f, "blv", 1, 1, 50, 52);
       f.btn(es("Invocar bot (en tu grupo)", "Summon bot (joins your party)"), () => this.send({ op: "bot", n: n("bn"), level: n("blv") }));
       f.btn(es("Bot suelto", "Solo bot"), () => this.send({ op: "bot", n: n("bn"), level: n("blv"), solo: true }));
+      f.btn(es("Bots nivel 140 (100000 oro, magias)", "Bots to level 140 (100000 gold, spells)"), async () => { if (await this.g.confirm("Reset every bot's stats and raise them to level 140?")) this.send({ op: "botslv140" }); });
+      f.btn(es("Reset suave de bots (sin objetos, 1.000.000 de oro)", "Bots soft reset (no items, 1,000,000 gold)"), async () => { if (await this.g.confirm("Remove every bot items, reset stats, skills 100% and give 1,000,000 gold?")) this.send({ op: "botssoft" }); });
+      f.btn(es("Todos contra todos: activar", "Free-for-all: on"), () => this.send({ op: "botsffa", on: true }));
+      f.btn(es("Todos contra todos: desactivar", "Free-for-all: off"), () => this.send({ op: "botsffa", on: false }));
       f.btn(es("Reiniciar bots desde 0", "Restart all bots from scratch"), async () => { if (await this.g.confirm("Restart all bots from scratch?")) this.send({ op: "botsnew" }); });
       f.btn(es("Quitar bots", "Remove bots"), s({ op: "botclear" }));
     });

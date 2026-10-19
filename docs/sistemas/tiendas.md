@@ -29,3 +29,9 @@ Clic izquierdo (sin Ctrl) a ≤ 8 casillas abre el menú.
 `tests/shop.test.mjs` (descuentos, compra, venta, reparación, lista, depósito, guardado) y la comprobación visual con Playwright
 (compra, venta por arrastre sobre el tendero, depósito/retirada, Learn de Gandlf).
 Para probar con dinero: `/gold N` en el chat (solo partida local).
+
+## v0.85.71
+- Oro del almacén: `depositgold`/`withdrawgold` (`p.bankGold`, persistido). Herrero/tendero: `repairall {whom}` repara todo lo suyo de la mochila y avisa con `repairedall`. El oro no cuenta en `totalWeight`.
+
+## v0.85.73
+- `repairall` acepta `cmd.uids` (solo repara esos); `sellList` se salta uids inválidos y sigue; `MAX_SELL_LIST=12`.

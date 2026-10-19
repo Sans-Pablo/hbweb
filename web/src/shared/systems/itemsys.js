@@ -153,7 +153,8 @@ export function useItem(w, p, uid, destUid) {
       break;
     case EFFECT.STUDYSKILL: {
       // Manuales (HGServer/Game.cpp ~27249, TrainSkillResponse): v1 = habilidad, v2 = nivel inicial; solo si aún no se tiene (nivel 0).
-      // Diferencia con el original: el manual da el 100 % de la habilidad (no su nivel inicial); no se gasta si ya la tienes al 100.
+      // Diferencia con el original (HG.cpp:17718-17735 + TrainSkillResponse 12993: nivel = SpecEffectValue1 || v2 = 20, el objeto se gasta siempre):
+      // aquí el manual da el 100 % (decisión de producto: los bots y las pruebas bot-crit/bot-manuals/pets dependen de ello) y no se gasta si ya se tiene al 100.
       const sk = d.v1, lvl = 100;
       if (!(sk >= 0 && sk <= 100)) return w.reject(p, { t: "use" }, "no se puede usar");
       if ((p.skills[sk] || 0) >= 100) return w.reject(p, { t: "use" }, "ya conoces esa habilidad");
@@ -161,6 +162,15 @@ export function useItem(w, p, uid, destUid) {
       Inv.removeFromBag(p, uid);
       w.recalc(p);
       w.emit({ t: "skilllearn", id: p.id, skill: sk, level: lvl, item: d.id });
+      return true;
+    }
+    case EFFECT.STUDYMAGIC: {
+      // ITEMEFFECTTYPE_STUDYMAGIC (HG.cpp:17736): RequestStudyMagicHandler(v1, bIsPurchase = FALSE): sin oro ni tienda; hace falta Int >= ReqInt y no conocerlo ya
+      // (HG.cpp:12894-12896). El objeto se gasta siempre.
+      const sp = w.magic[d.v1];
+      if (sp && !p.magic[d.v1] && p.stats.int >= sp.reqInt) { p.magic[d.v1] = 1; w.emit({ t: "learned", id: p.id, spell: d.v1 }); }
+      Inv.removeFromBag(p, uid);
+      w.recalc(p);
       return true;
     }
     default: return w.reject(p, { t: "use" }, "no implementado");

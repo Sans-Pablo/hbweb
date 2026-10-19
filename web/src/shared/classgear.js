@@ -3,7 +3,7 @@
 //    encaja en ninguna regla es libre. tests/classgear.test.mjs lista todos para que no quede ninguno sin clasificar.
 //  - Niveles: las armas y armaduras con levelLimit > 30 se comprimen a 31..50 (acto 1, nivel máximo 50): applyGear al construir GameData.
 //  - Báculos: BerserkWand = Ice Wand (hielo), ResurWand = Darkness Staff (oscuridad), BlackMageTemple = Hero Staff (fuego). Los summons
-//    Las especies superiores con familia (evolutions.js: Demon, Beholder, Liche) exigen en la mano su báculo (o el maestro de su familia, ids 9001..9003 inventados).
+//    Las especies superiores con familia (evolutions.js: Demon, Beholder, Liche) exigen en la mano su báculo.
 export const CLASSES = ["warrior", "mage", "summoner"];
 const W = "warrior", M = "mage", S = "summoner";
 
@@ -19,24 +19,22 @@ export function classesOf(d) {
   for (const [re, cl] of RULES[d.equipPos] || []) if (re.test(d.name)) return cl;
   return null;
 }
-export const classOk = (p, d) => { const c = classesOf(d); return !c || c.includes(p.cls || W); };
+// v0.85.76 (obs. 33): sin restricción de equipo por clase (como el original: cualquier clase lleva cualquier pieza de Item.cfg). Poner a true para reactivarla.
+export const CLASS_GEAR = false;
+export const classOk = (p, d) => { if (!CLASS_GEAR) return true; const c = classesOf(d); return !c || c.includes(p.cls || W); };
 export const CLASS_NAME = { warrior: "Guerrero", mage: "Mago", summoner: "Invocador" };
-export const classLabel = d => { const c = classesOf(d); return c && c.length < 3 ? c.map(x => CLASS_NAME[x]).join(" / ") : ""; };
+export const classLabel = d => { if (!CLASS_GEAR) return ""; const c = classesOf(d); return c && c.length < 3 ? c.map(x => CLASS_NAME[x]).join(" / ") : ""; };
 
 import { MAX_LEVEL } from "./levelcap.js";
 export const MAX_GEAR_LEVEL = MAX_LEVEL;
 export const remapLevel = L => Math.min(MAX_GEAR_LEVEL, L);   // v0.85.58: con tope 140 el equipo conserva el nivel original (antes se comprimía a 31..50)
 
 // ---- báculos: familia → ids. Los 9xxx son los maestros (nivel 50, 1 de oro, mismo sprite con tinte más fuerte y efecto)
-export const FAMILIES = { ice: [861, 862, 9001], dark: [865, 866, 9002], fire: [746, 9003], psychic: [9004] };
+export const FAMILIES = { ice: [861, 862], dark: [865, 866], fire: [746], psychic: [9004] };
 // Psychic Controller (invento): la Kloness Wand (863, sprite 17 fotograma 5) como mando de los summons psíquicos. Cualquier clase puede llevarla
 // (también el mago: cambia de arma a cambio de control PvP). Sin ella en la mano los summons psíquicos no se mantienen. Se vende en el herrero.
 export const PSYCHIC_ITEM = { id: 9004, from: 863, display: "Psychic Controller", family: "psychic", price: 3000 };
-export const MASTERS = {
-  9001: { from: 861, family: "ice", display: "Master Ice Wand", tint: 19 },
-  9002: { from: 865, family: "dark", display: "Master Darkness Staff", tint: 20 },
-  9003: { from: 746, family: "fire", display: "Master Hero Staff", tint: 21 },
-};
+export const MASTERS = {};                                                        // v0.85.62 (obs. 6): sin báculos maestros; queda el mapa vacío por compatibilidad
 const NORMAL = { 861: ["Ice Wand(MS.20)", 16], 862: ["Ice Wand(MS.10)", 16], 865: ["Darkness Staff(MS.20)", 17], 866: ["Darkness Staff(MS.10)", 17], 746: ["Hero Staff", 18] };
 export const familyOf = id => { for (const k in FAMILIES) if (FAMILIES[k].includes(id)) return k; return null; };
 export const isMaster = id => id in MASTERS;
@@ -59,11 +57,7 @@ export function applyGear(items) {
   for (const [id, d] of Object.entries(items)) {
     if (d.type === 1 && d.levelLimit > 30 && d.equipPos !== 0) d.levelLimit = remapLevel(d.levelLimit);
     const n = NORMAL[id]; if (n) { d.display = n[0]; d.tint = n[1]; d.family = familyOf(+id); }
-    const c = classesOf(d); if (c) d.cls = c;
-  }
-  for (const [id, m] of Object.entries(MASTERS)) {
-    const src = items[m.from]; if (!src) continue;
-    items[id] = { ...src, name: m.display.replace(/ /g, ""), display: m.display, tint: m.tint, family: m.family, master: true, price: 1, levelLimit: MASTER_LEVEL, buyLevel: MASTER_LEVEL, v4: 30, maxLife: 30000 };
+    if (CLASS_GEAR) { const c = classesOf(d); if (c) d.cls = c; }
   }
   const pc = PSYCHIC_ITEM, ps = items[pc.from];
   if (ps) items[pc.id] = { ...ps, name: pc.display.replace(/ /g, ""), display: pc.display, family: pc.family, price: pc.price, levelLimit: 1, buyLevel: 0, maxLife: 30000, cls: undefined };

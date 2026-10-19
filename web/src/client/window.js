@@ -22,7 +22,7 @@ export function drawSlot(c, x, y, s, on = false, sel = false) {
   c.strokeStyle = on || sel ? (sel ? THEME.lineOn : "rgba(225,225,225,.85)") : "rgba(20,20,20,.55)"; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, s - 1, s - 1);
   c.strokeStyle = on ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(x + 1.5, y + s - 1.5); c.lineTo(x + 1.5, y + 1.5); c.lineTo(x + s - 1.5, y + 1.5); c.stroke(); c.restore();
 }
-const MIN_W = 170, MIN_H = 26;
+const MIN_W = 170, MIN_H = 31;
 const KEY = "gamedialog_1", FRAME = 2, BTN = "dialogtext_1";
 const cache = new Map();
 
@@ -54,6 +54,7 @@ export function frameCanvas(g, w, h) {
   sl(0, 0, 24, 31, 0, 0); sl(234, 0, 24, 31, w - 24, 0); sl(0, 317, 24, 22, 0, h - 22); sl(234, 317, 24, 22, w - 24, h - 22);
   c.fillStyle = "rgba(0,0,0,.6)"; c.fillRect(17 * S, 31 * S, (w - 34) * S, S); c.fillRect(17 * S, 31 * S, S, (h - 53) * S);          // hueco hundido
   c.fillStyle = "rgba(255,225,170,.28)"; c.fillRect(17 * S, (h - 23) * S, (w - 34) * S, S); c.fillRect((w - 18) * S, 31 * S, S, (h - 53) * S);
+  if (cache.size > 60) cache.clear();                                            // las mini ventanas cambian de tamaño al arrastrar: no acumular marcos
   cache.set(id, e = cv); return e;
 }
 // botón de piedra sin rótulo: tapas del «Ok» original y el centro repetido (el texto va pintado aparte)
@@ -299,20 +300,25 @@ export class Win {
   draw(g, me, world) {
     const c = g.ctx, ui = this.ui = new Ui(this, g); this.g = g;
     if (this.minimized) {
-      c.fillStyle = "#2a2014"; c.fillRect(0, 0, this.w, this.h); c.strokeStyle = "#a88a48"; c.strokeRect(.5, .5, this.w - 1, this.h - 1);
-      c.strokeStyle = "rgba(255,225,170,.25)"; c.strokeRect(1.5, 1.5, this.w - 3, this.h - 3);
-      if (this.title) g.text(this.w / 2, 7, this.title, THEME.hi, { align: "center", bold: true });
-      this.ball(ui, 13, this.h / 2, "o", "Restaurar", () => { this.restore(); return true; });
-      this.ball(ui, this.w - 13, this.h / 2, "x", "Cerrar", () => { g.close(this.id); return true; });
+      // v0.85.82 (obs. 42): minimizada = la barra de título del marco de piedra (clásica), no una barra plana moderna
+      const fr = frameCanvas(g, this.w, 53), S = fr ? fr.width / this.w : 1;
+      if (fr) c.drawImage(fr, 0, 0, fr.width, 31 * S, 0, 0, this.w, 31); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); }
+      c.fillStyle = "rgba(0,0,0,.55)"; c.fillRect(0, this.h - 1, this.w, 1);
+      if (this.title) g.text(this.w / 2, LAYOUT.titleY, this.title, this.clear ? THEME.hi : THEME.title, { align: "center", bold: true, shadow: !!this.clear });
+      this.ball(ui, 9, 9, "o", "Restaurar", () => { this.restore(); return true; });
+      this.ball(ui, this.w - 9, 9, "x", "Cerrar", () => { g.close(this.id); return true; });
       ui.finish(); return;
     }
-    const fr = frameCanvas(g, this.w, this.h);
-    if (fr) c.drawImage(fr, 0, 0, fr.width, fr.height, 0, 0, this.w, this.h); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); c.fillStyle = "#2a2014"; c.fillRect(17, 31, this.w - 34, this.h - 53); }
-    if (this.title) g.text(this.w / 2, LAYOUT.titleY, this.title, THEME.title, { align: "center", bold: true });
+    this.paintFrame(g, c);
+    if (this.title) g.text(this.w / 2, LAYOUT.titleY, this.title, this.clear ? THEME.hi : THEME.title, { align: "center", bold: true, shadow: !!this.clear });   // transparente: sin piedra el título oscuro no se lee (obs. 42)
     this.body(ui, me, world);
     ui.finish();
     if (!this.nox) this.ball(ui, this.w - 9, 9, "x", "Cerrar", () => { g.close(this.id); return true; });
     if (this.canMin) this.ball(ui, 9, 9, "-", "Minimizar", () => { this.minimize(); return true; });
+  }
+  paintFrame(g, c) {
+    const fr = frameCanvas(g, this.w, this.h);
+    if (fr) c.drawImage(fr, 0, 0, fr.width, fr.height, 0, 0, this.w, this.h); else { c.fillStyle = "#5a4630"; c.fillRect(0, 0, this.w, this.h); c.fillStyle = "#2a2014"; c.fillRect(17, 31, this.w - 34, this.h - 53); }
   }
   body() {}
 

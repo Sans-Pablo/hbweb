@@ -58,7 +58,7 @@ const C = a.residents().find(b => b !== B && b !== A && !b.bot.owner && !R.JOBS[
 C.res.rel.Pablo = 0; a.relocate(C, w, [me.x + 2, me.y + 1]); say.length = 0; C.res._tripAt = w.time + 1e9; C.res._stallAt = w.time + 1e9; C.res._stall = null; C.res._pet = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null; C.res._delve = null; C.res._trip = null; C.res._plan = null; C.bot.owner = null; C.bot.travel = null;
 a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await flush(); tick(9000);
 assert.notEqual(C.bot.owner, hid, "aún no se fía");   // otro habitante sí puede reclutarlo: lo que importa es que no sigue al jugador
-C.res.rel.Pablo = 5; C.res._delve = null; C.res._delveAt = w.time + 1e9; C.res._plan = null; C.res.followUntil = w.time + 20000; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await flush(); for (let k = 0; k < 18 && C.bot.owner !== hid; k++) tick(500);      // se comprueba cada medio segundo: otro grupo (consejo) podría reclutarla después
+C.res.rel.Pablo = 5; C.bot.owner = null; C.res.followUntil = 0; C.res._delve = null; C.res._delveAt = w.time + 1e9; C.res._plan = null; C.res.followUntil = w.time + 20000; a.command(hid, { t: "say", text: C.name + " ven conmigo" }); await flush(); for (let k = 0; k < 18 && C.bot.owner !== hid; k++) tick(500);      // se comprueba cada medio segundo: otro grupo (consejo) podría reclutarla después
 assert.equal(C.bot.owner, hid, "acepta acompañar al amigo");
 C.res.followUntil = w.time + 100; tick(1000);
 assert.notEqual(C.bot.owner, hid, "vuelve a su vida");

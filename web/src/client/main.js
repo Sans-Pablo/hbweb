@@ -47,7 +47,7 @@ import { setNpcDb } from "./compicon.js";
 import { Sky, trackFor } from "./sky.js";
 import { Tutorial } from "./tutorial.js";
 import { pickBot } from "./observer.js";
-import { observerBar, rosterPanel, brainPanel, fightChannel } from "./watchpanel.js";
+import { observerBar, rosterPanel, brainPanel, fightChannel, watchTo } from "./watchpanel.js";
 import { FEED } from "../shared/systems/companion.js";
 import { isMobile, initMobileOpts, Mobile } from "./mobile.js";
 import { t as tr, getLang, setLang, onLang, startDomTranslation } from "./i18n.js";
@@ -139,7 +139,7 @@ async function main() {
   const gui = new Gui(document.getElementById("gui"));
   gui.mobile = mobile;
   
-  const autoWin = registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
+  const autoWin = registerAutoWin(gui, { npcDb: assets.npcDb, spawns: () => assets.spawns, citySpawns: id => assets.maps?.[id]?.meta?.spawns, want: k => stream.want(k, 2), itemName: id => assets.data.item?.(id)?.name || id, ctl: () => ctl, log: m => hud.log(m[getLang() === "en" ? 1 : 0]), start: a => { ctl.setAuto(a); hud.log(getLang() === "en" ? "Auto mode started (click to cancel)." : "Modo automático iniciado (un clic lo cancela)."); } });
   registerNews(gui); const questMini = registerQuests(gui); registerPrompts(gui); registerStatSim(gui);
   registerBug(gui, () => { const m = world.ents.get(pid); return { user: m?.name, map: world.map?.id, x: m?.x, y: m?.y }; });
   if (mobile) { renderer.miniSize = 100; renderer.miniTop = 84; }
@@ -167,7 +167,7 @@ async function main() {
     setOpt: (k, v) => setOpt(k, v),
     setMod: (k, v) => { setOpt(k, v); hud.log(k + (v ? ' activado.' : ' desactivado.')); },
     setSys: o => {
-      if ("detail" in o) { flags.detail = o.detail; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][o.detail]); }
+      if ("detail" in o) { flags.detail = renderer.detail = o.detail; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][o.detail]); }
       if ("sound" in o) setOpt("sound", o.sound);
       if ("music" in o) setOpt("music", o.music);
       if ("whisper" in o) flags.whisper = o.whisper;
@@ -311,7 +311,7 @@ async function main() {
       if (Math.max(Math.abs(tx - me.x), Math.abs(ty - me.y)) === 1) conn.send({ t: "turn", dir: dirTo(me.x, me.y, tx, ty) });
       conn.send({ t: "use", uid: inst.uid });
     } else if (!dlg && y < 548 && (it.from === 2 || it.from === 1)) {   // fuera de la interfaz: tirar al suelo (también lo que llevas puesto, p. ej. set Hero/Knight; el servidor lo desequipa)
-      hud.act("drop", inst.uid);
+      gui.confirm("Are you sure to drop away this item?").then(ok => { if (ok) hud.act("drop", inst.uid); });   // dialog 4 (Game.cpp:18133)
     }
   };
   hud.magicData = assets.data.magic;
@@ -334,7 +334,7 @@ async function main() {
   const sky = new Sky();
   let raining = false;
   const view = { showGrid: false, showMinimap: true };
-  const INDOOR = new Set(["gshop_1f", "bsmith_1f", "wrhus_1f"]);       // tienda, herrería y almacén: sin minimapa
+  const INDOOR = new Set(["gshop_1f", "bsmith_1f", "wrhus_1f", "gshop_2f", "bsmith_2f", "wrhus_2f"]);       // tienda, herrería y almacén: sin minimapa
   const miniOn = () => view.showMinimap && !INDOOR.has(world.map?.id);
 
   function setMode(m) {
@@ -381,6 +381,7 @@ async function main() {
   let recent = null;
   const flag = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); };
   const ui = {
+    watchPlayer: id => { if (EMBED) parent.postMessage({ hbPick: id }, location.origin); else watchTo(id, conn); },       // observador: clic sobre un personaje (obs. 32); en el panel dividido avisa al padre
     minimapOpen: () => miniOn() && view.mapStyle !== "overlay",
     closeMinimap: () => { setOpt("map", false); hud.log("Minimapa oculto (se vuelve a activar en Opciones)."); },
     gui,
@@ -438,7 +439,10 @@ async function main() {
       if (!me || me.dead || ui.pointing != null) return;
       ui.petPointing = id; document.body.classList.add("pointing");
     },
+    petCmd: false,                                    // modo órdenes a la mascota (Ctrl+B / botón ORD): el siguiente clic manda petgo / pettarget
+    togglePetCmd(on = !ui.petCmd) { ui.cancelPointing(true); ui.petCmd = on; gui.petCmd = on; document.body.classList.toggle("pointing", on); hud.log(on ? "Órdenes a la mascota: clic en el suelo = ir, clic en un enemigo = atacar (Esc o clic derecho para salir)." : "Órdenes a la mascota desactivadas."); },
     cancelPointing(silent) {
+      if (ui.petCmd && !silent) { ui.petCmd = false; gui.petCmd = false; document.body.classList.remove("pointing"); hud.log("Órdenes a la mascota desactivadas."); return; }
       if (ui.petPointing != null) { ui.petPointing = null; document.body.classList.remove("pointing"); if (!silent) hud.log("Hechizo cancelado."); return; }
       if (ui.pointing == null) return;
       ui.pointing = null; document.body.classList.remove("pointing");
@@ -502,8 +506,9 @@ async function main() {
           return;
         }
         switch (K) {
+          case "b": e.preventDefault(); ui.togglePetCmd(); return;
           case "a": e.preventDefault(); flag("force", "Auto Attack Mode has been enabled.", "Auto Attack Mode has been disabled."); return;
-          case "d": e.preventDefault(); flags.detail = (flags.detail + 1) % 3; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][flags.detail]); return;      // Game.cpp OnKeyUp 'D': m_cDetailLevel 0→1→2→0 con NOTIFY_MSG_DETAIL_LEVEL_*
+          case "d": e.preventDefault(); flags.detail = renderer.detail = (flags.detail + 1) % 3; hud.log(["Detail Level : Low", "Detail Level : Medium", "Detail Level : High"][flags.detail]); return;      // Game.cpp OnKeyUp 'D': m_cDetailLevel 0→1→2→0 con NOTIFY_MSG_DETAIL_LEVEL_*
           case "f": e.preventDefault(); gui.toggle(43); return;                                  // Game.cpp OnKeyUp 'F': lista de amigos (cuadro 43)
           case "h": e.preventDefault(); ui.key("news"); return;
           case "p": e.preventDefault(); ui.autoParty(); return;
@@ -593,9 +598,10 @@ async function main() {
   hud.stamp = () => flags.timestamp; hud.muted = n => !!n && !!flags.mutes?.has(n);     // /timestamp y /tooff (bCheckLocalChatCommand)
   hud.onLog = (t, cls) => { chatLog.unshift({ t: tr(t), type: cls === "bad" ? 2 : cls === "gold" ? 4 : cls === "chat" ? 0 : cls === "party" ? 5 : cls === "shout" ? 6 : cls === "side" ? 7 : cls === "guild" ? 8 : 1 }); if (chatLog.length > 500) chatLog.pop(); };
   hud.onButton = k => ui.key(k);
-  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), quests: () => gui.toggle(QUEST_ID), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
+  gui.onAction = a => ({ restart: () => conn.send({ t: "respawn" }), combat: () => ui.hotkey({ key: "Tab", preventDefault() {} }), petname: () => openChat("/petname "), petcmd: () => ui.togglePetCmd(),petmode: () => { const b = world.ents.get(pid)?.bag?.find(i => i.comp && i.comp.on); if (b) conn.send({ t: "petmode", mode: b.comp.mode === "peace" ? "attack" : "peace" }); }, char: () => ui.key("char"), pets: () => gui.toggle(43), recall: () => conn.send({ t: "recall" }), inv: () => ui.key("inv"), book: () => ui.key("book"), skill: () => ui.key("skill"), quests: () => gui.toggle(QUEST_ID), chat: () => gui.toggle(10), sys: () => ui.key("options") })[a]?.();
   hud.onSpell = id => ui.useMagic(id);
   hud.onItem = id => ui.noteItemUse(id);
+  hud.onAlchemy = () => npcUi.alchemy.begin(false);
   const ctl = new Controller({ conn, grid, renderer, canvas, ui });
   const mobileMenu = id => ({
     char: () => gui.onAction("char"), inv: () => gui.onAction("inv"), pets: () => gui.onAction("pets"), skill: () => gui.onAction("skill"), log: () => gui.onAction("chat"),
@@ -637,7 +643,8 @@ async function main() {
     const l = (flags.whispers || []).filter(n => n.toLowerCase() !== name.toLowerCase());
     l.unshift(name); l.length = Math.min(l.length, WHISPER_MAX); flags.whispers = l; flags.wIdx = 0;
   }
-  function openChat(pre = "") { chatBox.classList.add("open"); chatIn.value = pre || flags.chPrefix || ""; chTag(); chatIn.focus(); }
+  function openChat(pre = "") { if (conn.observing) return;       // observador: solo se mira, no se escribe (obs. 31)
+    chatBox.classList.add("open"); chatIn.value = pre || flags.chPrefix || ""; chTag(); chatIn.focus(); }
   // Órdenes locales del chat: Game.cpp bCheckLocalChatCommand (textos de lan_eng.h BCHECK_LOCAL_CHAT_COMMAND1..21)
   const mutes = new Set();
   const localToggle = (k, on, off) => { flags[k] = !flags[k]; hud.log(flags[k] ? on : off); return true; };
@@ -669,6 +676,7 @@ async function main() {
   }
   chatIn.addEventListener("keydown", e => {
     e.stopPropagation();
+    if (e.key === "Enter" && conn.observing) { chatBox.classList.remove("open"); chatIn.blur(); return; }
     if (e.key === "Enter") {
       const t = chatIn.value.trim();
       if (t === "/options") document.getElementById("options").classList.add("open");   // provisional: copia de seguridad de la partida
@@ -709,7 +717,7 @@ async function main() {
 
   let qSum = 0, qN = 0, qGood = 0;
   let last = performance.now(), fps = 0, frames = 0, fpsT = 0, drawSum = 0, drawMax = 0;
-  const fpsEl = document.getElementById("fps");
+  const fpsEl = document.getElementById("fps");                   // panel dividido: también muestra fps, ms, versión y nombre (ticket 115)
   let buildTag = "";                                // versión y nombre de la compilación (data/version.json), junto a los fps
   fetch("data/version.json", { cache: "no-cache" }).then(r => r.json()).then(v => { buildTag = " · v" + v.version + " " + v.name; }).catch(() => {});
   // Un error en un fotograma no debe parar el juego (la pantalla se quedaba congelada): se anota una vez y el bucle sigue.
@@ -805,6 +813,8 @@ async function main() {
     npcUi.sweep();
     { const m = world.ents.get(pid); if (m?.dead && !ui.wasDead) gui.open(19); ui.wasDead = !!m?.dead; }      // GAME.cpp: al morir aparece el cuadro con Restart
     // cursor del original (interface.pak, sprite 0): 0 flecha · 3 enemigo · 6 otro jugador · 4/5 hechizo amigo/enemigo · 10 mano para recoger
+    // Game.cpp:2513-2530: con hechizo elegido el cursor de apuntar solo vale con m_bCommandAvailable (animacion de lanzar terminada); antes, el normal (ticket 2)
+    document.body.classList.toggle("cast-anim", (ui.pointing != null || ui.petPointing != null) && world.busy(world.ents.get(pid) || { busyUntil: 0 }));
     let cur;
     if (opts.classicCursor) {
       const ov = gui.dialogAt(gui.mouse.x, gui.mouse.y) || gui.mouse.y >= 548;

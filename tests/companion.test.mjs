@@ -48,7 +48,7 @@ const before = ball.comp.exp + 0;
 C.addExp(w, p, ball, C.need(1));
 assert.equal(ball.comp.lvl, 2);
 C.addExp(w, p, ball, 10 ** 9);
-assert.equal(ball.comp.lvl, p.level, "tope = nivel del dueño");
+assert.equal(ball.comp.lvl, C.MAX_COMP_LEVEL, "v0.85.98 (#90): sin tope por nivel del dueño");
 assert.ok(ball.comp.exp < C.need(ball.comp.lvl));
 
 // guardado: la bola conserva especie, nivel y estado

@@ -215,6 +215,7 @@ const COMMANDS = {
   },
   attack(w, p, cmd) {
     const t = w.ents.get(cmd.target);
+    if (!t || t.dead) return false;                          // v0.85.98: golpe a un objetivo ya muerto (llegó tarde): se ignora sin rechazo ni mensaje
     if (!t || t.dead || Feign.feigning(t) || (t.kind !== "npc" ? !Combat.canFight(w, p, t) : t.master && !Npc.foeOf(w, p, t))) return w.reject(p, cmd, "sin objetivo");
     if (w.busy(p)) return w.reject(p, cmd, "ocupado");
     if (w.time - p.lastAttack < PLAYER.attackGapMs) return w.reject(p, cmd, "demasiado rápido");
@@ -224,6 +225,7 @@ const COMMANDS = {
     // el original (OBJECTATTACKMOVE) exige SP, maestría 100 y el objetivo a 2 casillas EN LÍNEA (recta o diagonal); no hace falta haber corrido antes
     const dx = Math.abs(p.x - t.x), dy = Math.abs(p.y - t.y);
     const dash = !!cmd.dash && gap === 2 && reach === 1 && (dx === 0 || dy === 0 || dx === dy) && p.sp >= 1 && mastered(p);
+    if (cmd.dash && !dash && gap <= reach) w.emit({ t: "reject", id: p.id, cmd: "attack", why: "dash" });   // el cliente ya predijo el avance (el rival se acercó mientras tanto): se resincroniza para no quedar encima de él
     if (gap > reach && !dash) return w.reject(p, cmd, "lejos");
     if (dash && sget(w, p, "hold")) return w.reject(p, cmd, "paralizado");   // un paralizado no se mueve NUNCA (tampoco con el dash)
     p.dir = dirTo(p.x, p.y, t.x, t.y);
@@ -291,6 +293,9 @@ const COMMANDS = {
   repairconfirm: (w, p, cmd) => Shop.repairConfirm(w, p, cmd),
   deposit: (w, p, cmd) => Shop.deposit(w, p, cmd),
   withdraw: (w, p, cmd) => Shop.withdraw(w, p, cmd),
+  depositgold: (w, p, cmd) => Shop.depositGold(w, p, cmd),
+  withdrawgold: (w, p, cmd) => Shop.withdrawGold(w, p, cmd),
+  repairall: (w, p, cmd) => Shop.repairAll(w, p, cmd),
   alchemy: (w, p, cmd) => Alchemy.craft(w, p, cmd),                                              // ReqCreatePortionHandler (HG.cpp:23503)
   petheal: (w, p, cmd) => Companion.treat(w, p, cmd),
   statreset: (w, p, cmd) => Respec.respec(w, p, cmd),

@@ -14,8 +14,8 @@ const EN = {
   "Cuenta o clave incorrectas, o la cuenta no es de administrador.": "Wrong account or password, or the account is not an administrator.",
   "El panel solo se abre desde el PC del servidor.": "The panel only opens from the server PC.", "Demasiados intentos; espera unos minutos.": "Too many attempts; wait a few minutes.",
   // ---- menú automático (autowin.js, autoplay.js)
-  "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
-  "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Cerrar": "Close", "Minimizar": "Minimize", "Restaurar": "Restore", "Objetos del suelo según su rareza": "Ground items by rarity", "Normal": "Normal", "Mágico": "Magic", "Raro": "Rare", "Único": "Unique", "ignorar": "ignore", "vender": "sell", "guardar": "store", "Tomar pociones con poca vida": "Drink potions when health is low", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",
+  "Guardar oro": "Deposit gold", "Sacar oro": "Withdraw gold", "Oro en el almacén": "Gold in warehouse", "Reparados {n} objetos por {p} de oro.": "Repaired {n} items for {p} gold.", "No hay nada que reparar.": "Nothing to repair.", "Menú automático": "Auto menu", "Cazar": "Hunt", "Ir a…": "Go to…", "Parar": "Stop", "Empezar": "Start", "Reiniciar caza": "Restart hunt",
+  "No recoger objetos": "Don't pick up items", "Auto hunt": "Auto hunt", "Continuar": "Continue", "Transparente": "Transparent", "Opaca": "Opaque", "Redimensionar": "Resize", "Has muerto: reaparezco y sigo con la caza.": "You died: respawning and resuming the hunt.", "Cerrar": "Close", "Minimizar": "Minimize", "Restaurar": "Restore", "Objetos del suelo según su rareza": "Ground items by rarity", "Normal": "Normal", "Mágico": "Magic", "Raro": "Rare", "Único": "Unique", "ignorar": "ignore", "vender": "sell", "guardar": "store", "Tomar pociones con poca vida": "Drink potions when health is low", "Pozo": "Pit", "Muertes": "Kills", "Tiempo": "Time", "Ritmo": "Rate",
   "Cazando": "Hunting", "Cazando (sin recoger)": "Hunting (no pickup)", "Detenido": "Stopped",
   "Objetivo": "Goal", "Diario": "Journal",
   "Sin caza activa. Empieza una desde el menú AUTO.": "No active hunt. Start one from the AUTO menu.",
@@ -80,6 +80,8 @@ const EN = {
   "Poción de vida": "Health potion", "Poción de maná": "Mana potion", "Poción de resistencia": "Stamina potion", "Personaje (F5)": "Character (F5)", "Mochila (F6)": "Bag (F6)",
   "Magia (F7)": "Magic (F7)", "Gráficos": "Graphics", "Sonido": "Sound", "Opciones (F12)": "Options (F12)", "Novedades (F1)": "News (F1)", "Mochila": "Bag", "Libro de magia": "Spellbook",
   "Aprende con oro y elige uno. Elige un hechizo: el siguiente clic izquierdo lo lanza, el derecho cancela.": "Learn spells with gold and pick one. Pick a spell: the next left click casts it, right click cancels.",
+  "Sonido y chat": "Sound and chat", "Opciones del juego": "Game options", "Pulsa un botón para activar o desactivar la opción: iluminado = activada.": "Press a button to turn the option on or off: lit = on.", "Partida": "Game",
+  "Mapa: Granja de Elvine": "Map: Elvine Farm", "Almacén, tienda y herrería se alcanzan desde la granja de Elvine.": "Warehouse, shop and blacksmith are reached from the Elvine farm.", "Clic derecho o Esc: cerrar": "Right click or Esc: close", "Idioma: Español": "Idioma: Español",
   "Opciones": "Options", "Estilo del mapa": "Map style", "Esquina": "Corner", "Superpuesto (estilo Diablo II)": "Overlay (Diablo II style)",
   "Ataque automático (clic izquierdo sobre un monstruo)": "Auto attack (left click on a monster)", "Mostrar casillas bloqueadas": "Show blocked tiles", "Mejoras": "Enhancements",
   "Cursor clásico del juego": "Classic game cursor", "Sprites y terreno en HD (solo Remastered)": "HD sprites and terrain (Remastered only)", "Luz y viñeta (solo Remastered)": "Lighting and vignette (Remastered only)",
@@ -347,6 +349,9 @@ for (const [es, en] of TPL) {
 
 
 for (const c of CHAINS) EN[c.es] = c.en;                                               // fichas de las especies superiores: salen de la tabla de evoluciones (shared/systems/evolutions.js)
+// v0.85.63: ventana de opciones clásica (F12) y panel de preguntas del observador
+Object.assign(EN, { "Juego": "Game", "Volumen del sonido": "Sound volume", "Susurros": "Whispers", "Gritos": "Shouts", "Música": "Music", "Correr": "Run", "Barras de vida": "Health bars", "Minimapa": "Minimap", "Casillas bloqueadas": "Blocked tiles", "Info de objetos del suelo": "Ground item info", "Precio de objetos del suelo": "Ground item price" });
+
 const cache = new Map();
 export function t(s) {
   if (lang !== "en" || typeof s !== "string" || s.length < 2) return s;

@@ -21,9 +21,9 @@ import { gold as ledger } from "./ledger.js";
 export const CLASS_LINE = { warrior: "warrior", mage: "mage", summoner: "summoner" };
 // especie de compañero, báculo y summon final de cada clase
 export const PATH = {
-  warrior: { sp: "Orc", final: "Demon", staff: 9003, family: "fire" },
-  mage: { sp: "Tutelary-Angel", final: "Frost", staff: 9001, family: "ice" },
-  summoner: { sp: "Skeleton", final: "Liche", staff: 9002, family: "dark" },
+  warrior: { sp: "Orc", final: "Demon", staff: 746, family: "fire" },
+  mage: { sp: "Tutelary-Angel", final: "Frost", staff: 861, family: "ice" },
+  summoner: { sp: "Skeleton", final: "Liche", staff: 865, family: "dark" },
 };
 export const CRYPT_START = 5;                       // sin misiones solo se baja hasta el rey carmesí (nivel 5)
 
@@ -97,7 +97,7 @@ function build(cls) {
     Q("bond50", 4, T("Vínculo supremo", "Supreme bond"), T("Tu " + speciesName.es + " debe llegar al nivel 50 para poder evolucionar.", "Your " + speciesName.en + " must reach level 50 to evolve."),
       { k: "pet", n: 50 }, { gold: 10000 }),
     // Capítulo 5 · Ascensión (71-100)
-    Q("king4", 5, T("El Rey dorado", "The Golden King"), T("El último rey guarda " + ({ fire: "el Hero Staff", ice: "la Ice Wand", dark: "el Darkness Staff" }[P.family]) + " maestro. Derrótalo y quédate con su báculo.", "The last king guards the master " + ({ fire: "Hero Staff", ice: "Ice Wand", dark: "Darkness Staff" }[P.family]) + ". Defeat him and take his staff."),
+    Q("king4", 5, T("El Rey dorado", "The Golden King"), T("El último rey guarda " + ({ fire: "el Hero Staff", ice: "la Ice Wand", dark: "el Darkness Staff" }[P.family]) + ". Derrótalo y quédate con su báculo.", "The last king guards the " + ({ fire: "Hero Staff", ice: "Ice Wand", dark: "Darkness Staff" }[P.family]) + ". Defeat him and take his staff."),
       { k: "staff" }, { gold: 20000, exp: 4 }, { trade: 1 }),
     Q("evolve", 5, T("Ascensión", "Ascension"), T("Pídele a Gail que evolucione a tu " + speciesName.es + " en " + finalName.es + ". Se pierde el nivel, no el vínculo.", "Ask Gail to evolve your " + speciesName.en + " into a " + finalName.en + ". The level is lost, not the bond."),
       { k: "trade" }, { gold: 5000, items: [9110] }),

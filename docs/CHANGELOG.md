@@ -1,5 +1,125 @@
 # Changelog
 
+## 0.85.101 — Auditoría y minimapa
+- Mini mob del foso restaurado en el minimapa/mapa superpuesto (`renderer.pitMob`).
+- Ctrl+clic con mascota (`controller.petOrder`); invocaciones/cadáveres se quitan en `Adventure.transfer`; puesto de suelo en 1 casilla; bots salen de interiores.
+- Auditoría integral vs original: ver docs/AUDITORIA-2026-10-19.md (combate/magia, NpcActionQuery, alquimia, log, sonido de menú).
+
+## 0.85.100 — Sin objetos Master (hilo cliente) + bots II
+- Bots (#116-#122, revisión de bots): sumidero de oro, rotación de hechizos, histéresis de equipo, mapa por nivel y reparto por bando, huecos de equipo. Ficha docs/sistemas/bots-v85-100.md.
+- BOTS (#107 #108 #109 #110 #113 #114 + cripta/Aresfarm/mascotas): ver docs/sistemas/bots-v85-100.md. Oro 1.000.000 con reposición, sin yelmos (migración), Berserk no a magos y en la granja, plate sin bucle, magias inútiles en PvE descartadas, talentos a todos los summons. Test tests/bot-v85-100.test.mjs.
+- #111: eliminados los 25 objetos Master (ids 245, 246, 1891-1913) de items.json; loadSave descarta esos ids de mochila, banco y pendientes (migración implícita). Se conserva 2027 ElfMasterBall (mascota). Lista en `REMOVED_MASTER_IDS` (shared/items.js). Test tests/master-items.test.mjs.
+- #112: velo celeste de la UI — sin causa reproducible (no hay sesión local); neutralizado el autorrelleno azul de Chrome, el foco visible y el arrastre de lienzos/imágenes (index.html, guardia en ui-guard.test.mjs).
+
+## 0.85.99 — Cliente y bots
+- BOTS (#70 #95 #97 #98 #99 #100 #101 #102 #103 #104 #106): ver docs/sistemas/bots-v85-99.md. Test tests/bot-v85-99.test.mjs.
+- CLIENTE (#105 #96): Berserk dibuja el círculo fx58 al castear (spellfx.js, Game.cpp:7182); ventana de log F9 responsive (chatwin.js `fit`). #66 sin cambio. Test tests/efectos-v85-99.test.mjs, ficha docs/sistemas/efectos-v85-99.md.
+
+## 0.85.98 — Bots: armadura y mascotas
+- #89/#91 `armorCare` (bot.js): compra/equipa piezas de armadura que faltan y repara <50 % antes de cazar. #93 `rebuild` olvida hechizos sobre la Int. #94 `canFight`: ffa respeta el party. #88 charla ociosa limitada, PvP en silencio. #90 mascotas sin báculo ni tope de nivel (`PET_RULES`). Golpe a objetivo muerto sin rechazo. #70 sigue inviable. Ficha `docs/sistemas/bots-v85-98.md`.
+- FIDELIDAD (hilo cliente): #92 círculo de foe = fx38 de la cruzada (Game.cpp:17850); #87 sonidos de Giant-Frog/Rudolph por tipo (MapData.cpp); #73 Energy Strike: rayos 16 en píxeles (Game.cpp:14230/14636); #66 sin cambio (fórmula ya original). Ficha `docs/sistemas/fidelidad-v85-98.md`.
+
+## 0.85.95 — Stats por arma objetivo
+- `rebuild` de residentes usa `strNeedOf` (arma objetivo del guerrero) en vez de la arma puesta: los pobres con ShortSword ya no se quedan en Str 100. Pescadores guardados como magos (Ivo, Quill, Greta…) pasan a vanguard/hunter (`fishV`).
+
+## 0.85.94 — Bots rehacen stats
+- Todos los bots guardados (guerreros con o sin oficio: `strV` 2; magos: `mageV` 2) rehacen una vez sus puntos con el reparto actual; arregla Jessa/Dain (Str 29, Vit/Dex 200).
+
+## 0.85.91 · Bots: equipo, reset suave y cursor (2026-10-17)
+- [fix] Obs. 45-49: cursor visible en los márgenes, residentes sin presas triviales, magos sin equipo de Str ajena, guerreros con placas y stats por build, botón F1 «Reset suave de bots». Ficha bots-obs45-49; test bot-obs45-49.
+
+## 0.85.85 · Bots con Int propia y mago móvil (2026-10-17)
+- [mejora] Obs. 38-44: Int del guerrero a elegir (32/20/10/59, `warInt`), Berserk propio del guerrero (también en granja), mago que se mueve (maná, pociones, huida a 3 casillas, sin quedarse quieto fuera de alcance), PFM/Paralyze/Berserk entre jugadores, ventana Opciones estilo F1, mini ventana clásica legible, autocaza de Elvine y resto de ciudades. Ficha bots-obs38-44; test bot-obs38-44.
+
+## 0.85.84 · Mass Ice y Paralyze (2026-10-17)
+- [fix] El hielo de hechizo libera Paralyze (HG.cpp Effect_Damage_Spot); solo el campo de tormenta no. Ficha mass-ice-paralyze; test paralyze.
+
+## 0.85.83 · Casteo y golpes (2026-10-17)
+- [fix] `damagePlayer`: descasteo según el original (combat.cpp ~1100-1190), iProb por arma. Test combat-castbreak.
+
+## 0.85.81 · Acciones admin en el replay y bots con maná (2026-10-17)
+- [nuevo] Cada orden `dbg` (panel admin) emite el evento `dbgact` {op, cmd, before, after, change} y el grabador lo guarda en el replay: así un salto de vida/maná máximos se explica (replay zzzz_620: Vit 200→100 a los 242 s, HP máx 980→900→600).
+- [nuevo] `tools/replay-analisis.mjs` (zzzz por defecto): duración, nivel, mínimos de HP/MP, muertes, hechizos por nombre, pociones (clasificadas por el salto tras `use`, con MP/HP medio al beber) y lista ADMIN/DBG; marca los saltos de máximos sin orden admin cercana.
+- [mejora] Bots (INVENTO, umbrales del replay zzzz_620 y zzzz_637): el mago bebe BluePotion por debajo del 35 % de maná o de dos Blizzard (el dueño bebió con 27 % de media, mín. 13/780, una poción cada ~0,2-3 s), sin esperar 1,5 s; compra hasta 50 (el dueño llevó 43). Con 3 o más monstruos a ≤3 casillas bebe RedPotion 15 % antes (mín. 339/980 HP rodeado, 0 muertes). Contra hordas (≥4 juntos) base Paralyze al que ya le alcanza + Blizzard (31 y 21 de 147 lanzamientos). Buffs PFM/AMP al ver al monstruo, no a mitad de pelea.
+- Tests: tests/bot-mana-dbgact.test.mjs.
+## 0.85.80 · Bots nivel 140 y todos contra todos (2026-10-17)
+- [nuevo] F1 → Herramientas → Bots: «Bots nivel 140» (op `botslv140`): todos los bots y habitantes vuelven a stats base, suben a nivel 140 con los puntos repartidos por build (el mago sube Int hasta 200), reciben 100000 de oro y compran solo las magias que su Int permite (botmagic.study respeta reqInt y coste de Magic.cfg).
+- [nuevo] «Todos contra todos» (op `botsffa`, apagado por defecto): los bots viajan a Promise Land y se atacan sin bandos ni party (`canFight` con `w.ffa`); se puede apagar.
+- INVENTO (no es del original); tests/bots-lvl140.test.mjs (42 bots, tick medio ~1 ms).
+
+## 0.85.79 · Casteo copia fiel (2026-10-17)
+- [fix] Con el hechizo preparado (UseMagic/OBJECTMAGIC hecho) el golpe sale AL RECIBIR LA ORDEN, como PlayerMagicHandler (HG.cpp:10202, cooldown de bCheckClientMagicFrequency HG.cpp:36523); antes esperaba castMs tras el clic. Sin preparar sigue esperando su animación.
+- [fix] Summon Creature nace junto al tile objetivo y cuenta los seguidores del objetivo (HG.cpp:10933-10958).
+- [fix] Confusion tipos 3/4 (Illusion / Illusion Movement, HG.cpp:11360-11410): estado propio "illusion"; resistencia antes de "ya confundido".
+- UseMagic del cliente (Game.cpp:41563): ya cubierto HP>0, hechizo ya en puntería y maná; modo combate, objeto en mano y SPELLDISABLED no existen en el port (sin portar). Rango de varita cliente <41 vs servidor <=39 sin cambios.
+- Test magic-cast-on-receipt.
+
+## 0.85.78 · Magos PvP y cursor de casteo (2026-10-17)
+- [fix] Cursor de casteo: con hechizo elegido, la mira (crosshair) del modo normal solo aparece al acabar la animación de lanzar, como el sprite 8→4/5 del clásico (Game.cpp:2513-2530; ticket 2 de Ricky).
+- [feat] Magos bot en PvP (botmagic.js): área (Blizzard/Earth/Bloody Shock Wave) contra 2+ rivales juntos, Paralyze al más peligroso, Great Heal solo sin 2+ rivales encima. Test bot-mage-pvp-aoe; ficha en docs/sistemas/bots-magia.md.
+- Auditado, sin cambiar (pendiente, comparte backlog con hb-fidelidad): resolución del cast al recibir la orden (HG.cpp:36523), Summon en tile objetivo, Confuse 3/4.
+
+## 0.85.77 · Combate y magia fieles (2026-10-17)
+- [fix] magic.json regenerado del cfg original (duraciones de Paralyze/Inhibition, Meteor, Confuse); aturdimiento de monstruos por oro; Defense Shield solo con arma a dos manos; daño mínimo NPC→jugador tras absorber.
+
+## 0.85.76 · Observaciones 28-37 (2026-10-17)
+- [feat] Obs. 28: los jugadores enemigos en Promise Land ya no muestran aura (renderer.hideAura). Nota: el original NO las oculta; se hace por petición del propietario.
+- [feat] Obs. 29: círculo bajo los jugadores de Promise Land como en la cruzada (Aresden rojo, Elvine azul); el cliente online ahora marca `w.pvp` (connection.js).
+- [feat] Obs. 30: el menú F12 (Opciones) se rehace como ventana con pestañas Juego/Sonido/Cuenta (client/optwin.js), al estilo de las ventanas F1/automático; el menú clásico sigue en Cuenta.
+- [feat] Obs. 31: el observador no puede enviar chat (openChat y Enter).
+- [feat] Obs. 32: en observer, clic sobre otro personaje abre su «en vivo» (también dentro del panel dividido, vía postMessage hbPick).
+- [feat] Obs. 33: sin restricciones de equipo por clase (CLASS_GEAR=false en classgear.js; como el original). Ficha equipo-clase.md.
+- [feat] Obs. 34: carisma de bots 10; solo 1 de cada 5 residentes (futuros Guildmasters, `futureMaster`) sube a 20.
+- [feat] Obs. 35: en Promise Land los bots hacen PvP hasta dominar su zona (foso del mismo bando >8 s) y entonces pasan a PvE.
+- [feat] Obs. 36: el pit de Promise Land se pinta en el minimapa con el color de la ciudad dominante.
+- [feat] Obs. 37: los bots con Int compran todas las magias posibles (botmagic.studyList) y huyen con Invisibility (escapeInvis). Test bot-obs34-37.
+
+## 0.85.75 · Almacén como el original (2026-10-17)
+- [fix] Bank (DrawDialogBox_Bank): textos de ayuda BANK3-5 en sY+35/50/65 y «Space Used %d Of %d Items» (BANK6) a sY+85 en blanco, en lugar de los textos inventados. Comprobado: el sonido E,14,5 ya suena en todos los clics de diálogo (gui.js onSound) y el campo Cantidad ya está en y57.
+
+## 0.85.74 · Menú del NPC como el original (2026-10-17)
+- [fix] NpcActionQuery (Game.cpp DrawDialogBox_NpcActionQuery / DlgBoxClick_NpcActionQuery): tienda y herrero abren los modos 8 y 7 (Buy Potions/Misc./Outfits, Buy Weapons/Misc, (M)/(W) Armor, Sell Items, título y subrayado), más los modos 4 (Guard/Unicorn/Mcgaffin/Perry/Devlin), 6 (Heldenian) y 9 (Cityhall). Modo 2 con texto a la izquierda y mensaje "here is no empty space left in warehouse." literal. Se quita el "Repair all" inventado del menú (el comando sigue). Modo 1 (Give/Exchange a jugadores) pendiente.
+
+## 0.85.73 · Un solo viaje al pueblo (2026-10-17)
+- [fix] Auto hunt: recuerda el equipo que llevabas puesto; al ir al pueblo repara en el herrero el equipo roto y también el gastado (repairall con uids), vende por tandas de 12 con seguimiento de envíos, guarda varias raras de una vez en el almacén y avisa en el log si algo no se puede vender o reparar. Todo en una sola salida (herrero, tienda y almacén). Probado en navegador y con tests.
+
+## 0.85.72 · Venta completa en el auto hunt (2026-10-17)
+- [fix] La venta ya no se corta en el primer objeto: sellValue no rechaza por peso (el oro no pesa) y sellList se salta lo no vendible y sigue con el resto. Probado en navegador: 6 objetos vendidos en una sola lista.
+
+## 0.85.71 · Almacén de oro y reparar todo (2026-10-17)
+- [fix] Dash: si el servidor lo rechaza el cliente se resincroniza (ya no queda en el mismo tile que el enemigo). Velocidad de golpe por arma como el original (attackMs + speedNib·12·8). El oro no pesa. Oro en el almacén (depositgold/withdrawgold, guardado en bankGold). Botón «Repair all» del herrero (repairall). Piedras Zemstone/Xelima/Merien = raras.
+- [fix] Auto hunt: repara el equipo roto en el herrero y sigue; venta/guardado ya no descartan objetos por reenviar cada tick (SEND_GAP_MS); un clic estando muerto ya no cancela el modo auto.
+
+## 0.85.70 · Auto hunt que no se atasca (2026-10-17)
+- [invento] Auto hunt: mochila llena por peso (≥90 %) o ≥47 huecos o recogida fallida → va a vender y vende todo lo marcado en tandas (descarta lo invendible); si muere reaparece y sigue; botón «Continuar» (conserva muertes, exp y tiempo) junto a «Reiniciar»; mini ventana con modo transparente (bola inferior izquierda) y redimensionable (asa inferior derecha).
+
+## 0.85.69 · Magos que rematan (2026-10-17)
+- [invento] Mago de PvP: con el rival paralizado usa reserva de maná mínima y remata con hielo (no libera Paralyze, `releaseHold`); si lo golpean cuerpo a cuerpo se aparta 3 casillas (cada golpe rompe el hechizo). El mago de entrenamiento (`runPvp`) nace con oro y hechizos aprendidos. Herramienta `tools/mage-duel.mjs`, test `mage-pvp-damage`. Los fitness anteriores no son comparables.
+
+## 0.85.67 · Grabador de partidas (2026-10-17)
+- Servidor: graba el 100 % de las partidas de jugadores reales en server/data/replays/ (órdenes, fotos cada 250 ms, eventos) para analizar PvP. Ver docs/sistemas/grabador.md.
+
+## 0.85.66 · Bots desde cero (2026-10-17)
+- [invento] Época 3 de habitantes (`BOT_EPOCH`): todos vuelven a nivel 1 sin equipo ni stats heredados y arman su propio camino (rol, reparto, armas y armadura) con las reglas actuales, sin restos de mentalidades antiguas (p. ej. arquetipo mago con build guerrero). El informe anterior queda archivado.
+
+## 0.85.65 · Bots que conocen sus ítems (2026-10-17)
+- [invento] Saber de ítems (`botlore.js`): los bots miden exp/min y muertes por ítem equipado, comparten lo aprendido y corrigen el item level al equipar y comprar. Arreglo: el mago con escudo libera las manos para lanzar. El reinicio de stats y reparto ya existían.
+
+## 0.85.64 · Bots que aprenden (2026-10-17)
+- [invento] Los bots aprenden a pelear en PvP y PvE: genes por arquetipo y modo (`botgenes.js`: huir, poción, descanso, atacar, ventaja mínima), entrenador evolutivo sin navegador (`tools/train.mjs`, semillas fijas, guarda `web/data/botgenes.json` con la curva por generación), calibración online del estimador de peleas (daño previsto vs real) y registro de muertes por monstruo. Panel admin «Aprendizaje de bots» (`/admin/aprendizaje.html`, `/api/admin/learning`) y test de regresión `botlearn.test.mjs`. Ficha botlearn.md.
+
+## 0.85.63 · Observaciones al día (2026-10-17)
+- Observaciones 16-27: círculo PvP, fosos en minimapa, Ctrl+D árboles, opciones F12 clásicas, panel de preguntas, aprobar todo, Ctrl+Enter, plegado de hechas, filtro PvP, bots ayudan a aliados y limpian basura (botitems.isJunk).
+
+## 0.85.62 · Bots con cabeza (2026-10-17)
+- [invento] Tickets 6-15: sin báculos maestros inventados; el bot se lanza Recall a sí mismo (hechizo 12); sin buffs en la granja; Heal/Great Heal según la vida que falta y huida con 5+ enemigos; el mago da SP (Staminar Recovery 23/28) a guerreros; los magos usan su mejor hechizo (no el báculo) y esperan maná; descasteo (un golpe cancela el hechizo en curso, evento `castbreak`); reparto de stats por requisitos → Dex/Mag en decenas → Vit con reinicio único de todos (statV); observador: Ctrl+letra va al juego y botones Analizar/Aprobar/A desarrollo todas. Ficha botsmart.md, test botsmart.
+
+## 0.85.61 · Bots listos (2026-10-17)
+- [invento] Puerta de preparación, PFM por amenaza mágica, Escudo de Defensa solo contra-PFM en PvP, hechizo por eficiencia de maná. Ficha docs/sistemas/botsmart.md, test botsmart.
+
+## 0.85.60 · Observaciones (2026-10-17)
+- [invento] Observador dividido: sin bordes ni márgenes ni etiqueta de fps en el marco; ◀ ▶ y [ ] recorren solo a quien pelea (no granja/pesca/descanso; si nadie pelea, todos). Panel nuevo «📝 Observaciones» (mini tickets en `docs/observaciones.json`, API `/api/admin/obs`), con comentarios y estados. Cache-bust del script para que aparezca PvP. Ficha `docs/sistemas/observaciones.md`, test `observer-split`.
+
 ## 0.85.59 · Tope único (2026-10-17)
 - [invento] `shared/levelcap.js` es la única fuente del nivel máximo; exp, oro, equipo, magias (`magicbal`), misión de Maestría, cliente y botstats se derivan. Magias reescaladas a 140. Test `levelcap.test.mjs`, doc en `nivel-140.md`.
 

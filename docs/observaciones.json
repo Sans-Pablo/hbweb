@@ -1,0 +1,1208 @@
+{
+ "tickets": [
+  {
+   "id": 1,
+   "text": "Los bots van a entrenar sin hacerse más fuertes y sin equipamiento: deberían pensar antes y equiparse primero.",
+   "state": "hecha",
+   "proposal": "Puerta de preparación en bot.js: antes de elegir zona de caza, calcular 'poder' (nivel + equipo vs. el nivel recomendado del mapa). Si falta equipo (arma/armadura sin poner o mejor en la mochila) → equipar (w.recalc) o comprar; si el poder es bajo → zona más fácil, nunca la de nivel superior.",
+   "comments": [
+    {
+     "text": "la idea es que se equipen con lo basico y busquen mejores zonas para mejores drops y calidad de items",
+     "at": "2026-10-17T08:45:20.104Z"
+    }
+   ],
+   "at": "2026-10-17T00:00:00.000Z"
+  },
+  {
+   "id": 2,
+   "text": "Ante los cíclopes usar siempre PFM (lanzan magia).",
+   "state": "hecha",
+   "proposal": "Regla de amenaza en botmagic.js: si el objetivo o alguno cercano es un lanzador (Cyclops, etc.; lista por NPC.cfg) → lanzar Protection From Magic al inicio y renovarlo al caducar.",
+   "comments": [],
+   "at": "2026-10-17T00:00:00.000Z"
+  },
+  {
+   "id": 3,
+   "text": "Defense Shield se usa casi solo para anular que un enemigo use PFM sobre sí mismo; no usarlo como defensa.",
+   "state": "hecha",
+   "proposal": "Quitar Defense Shield del uso defensivo; solo se lanza como contra-PFM en PvP cuando el rival tiene PFM activo y el bot necesita que su magia entre.",
+   "comments": [],
+   "at": "2026-10-17T00:00:00.000Z"
+  },
+  {
+   "id": 4,
+   "text": "Analizar si vale la pena PFM o AMP: contra slimes no, en raid de Promiseland sí.",
+   "state": "hecha",
+   "proposal": "Función worthBuff(amenaza): puntúa daño mágico esperado recibido (nivel de los lanzadores × cantidad) contra el coste de maná y de tiempo; PFM/AMP solo si supera un umbral. Slimes (sin magia) → 0; raid/jefe/cíclopes → alto.",
+   "comments": [
+    {
+     "text": "contra otros enemigos especialmente si son magos de la ciudad contraria maxima prioridad para  usar pfm o amp",
+     "at": "2026-10-17T08:44:09.528Z"
+    }
+   ],
+   "at": "2026-10-17T00:00:00.000Z"
+  },
+  {
+   "id": 5,
+   "text": "Los magos deben elegir la magia con inteligencia (coste de maná vs. daño): contra esqueletos Energy Bolt gasta mucho maná y muchos casteos; quizá basta un Energy Strike.",
+   "state": "hecha",
+   "proposal": "Elegir la magia que minimiza maná por baja: para cada hechizo conocido, casteos = ceil(HP del monstruo / daño medio ajustado por resistencia), coste = casteos × maná; escoger el menor, con desempate por tiempo. Debe tener en cuenta la inmunidad/resistencia (esqueletos).",
+   "comments": [],
+   "at": "2026-10-17T00:00:00.000Z"
+  },
+  {
+   "id": 6,
+   "text": "remueve lso items que cree yo nuevos, ocmo los staff masters\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:47:31.538Z"
+  },
+  {
+   "id": 7,
+   "text": "los bots tienen que prestar atencion a su stamina, tomar pociones verdes oo usar great stamina , tienen que ayudarse entre si, usualmente los magos cargan sp de los warriros por que los wars no tienen mucha mana para gastar, es prefible que la usen para invi, pfm, detect etc..\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:48:15.498Z"
+  },
+  {
+   "id": 8,
+   "text": "desde el cuadrante, (lo llamemos de ahora en mas cuadrante) no puedo enviar comandos como ctrl + S para sacar el sonido del juego.\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:48:58.220Z"
+  },
+  {
+   "id": 9,
+   "text": "los bots tienen que analizar cuando conviene tirarse great heal (heal no cura mucho) si tengo  5 enemigos pegandome lo mejor es c orrer y luego tirarme heal no estar recibiendo dañlo para intentar curarme no es un trade valido de hp , porque pierdo mas vida de la que gano",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:49:43.681Z"
+  },
+  {
+   "id": 10,
+   "text": "los bots no pueden usar mas la funcionalidad de auto recall, remuevela del juego completamente,  tienen que castear la magia y tirarla sobre si mismos para poder volver a la cidudad , como en el juego original\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:50:10.121Z"
+  },
+  {
+   "id": 11,
+   "text": "revisa que no esta portado el \"descasteo\" revisa porque cuando al castear una magia recibimos un golpe, el casting de la magia se cancela.\nesto es util para los warriors para evitar que los magos nos  tiren magfias poderosas.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:50:45.804Z"
+  },
+  {
+   "id": 12,
+   "text": "usar pfm, pfa, defence etc en la farm no tiene sentido , no hay enemigos que valgan la pena. tienen que concordar con el sistema que tenmos  de pensamiento d e los bots ",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:51:16.230Z"
+  },
+  {
+   "id": 13,
+   "text": "aun sigo viendo pesonajes  mago intentando matar por ejemplo un stone golem con el staff.  no pueden, lo que tienen que hacer es matarlos con magias, con la mejor magia que t engan .\nsi no es productivo matar, tienen que buscar mejores magias.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:54:34.764Z"
+  },
+  {
+   "id": 14,
+   "text": "reinicia los stats de todos en el servidor , que los bots vuelvan a elegir sus stats ,ahora que tienen nivel 140 deberian  tener otra estrategia.\nrecuerda siempre, buscar una magia o arma que sea lo mejor para el bot, poner los requisitos para esa arma o magia. luego dex o magia (multiplos de 10) y el resto vit. quiero que sean mas inteligentes armando sus builds\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:55:33.205Z"
+  },
+  {
+   "id": 15,
+   "text": "crea un boton en el cuadrante para analizar todas las nuevas observaciones juntas y que tu las revises, para aprobar todas juntas y para mandar todas juntas a desarrollo",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T08:56:03.858Z"
+  },
+  {
+   "id": 16,
+   "text": "agega el circulo debajo del jugador como cuando hay cruzada indicando que es un enemigo, que elvine tenga azul y aresden rojo en los mapas donde exista el pvp\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:04:16.851Z"
+  },
+  {
+   "id": 17,
+   "text": "en los mapas pvp quiero que sombrees levemente en el minimapa que ciudad esta dominando cada pit, que sea un azul o un rojo leve para que los bots y los players sepan como es la situacion del lugar que sea peligroso o que sea un buen lugar para ir a buscar kills ",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:05:16.036Z"
+  },
+  {
+   "id": 18,
+   "text": "agrega como en el helbreath original cuando aprieto control + D el cambio de los sprites de los arboles para que se hagan mas pequeños y poder ver detras de ellos. copia exactamente la funcionalidad tal cual esta en el servidor original.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:06:46.607Z"
+  },
+  {
+   "id": 19,
+   "text": "agregaste en otro menu los botones de aporbar todas etc, tiene que ser en el cuadrante de Observaciones.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:08:30.544Z"
+  },
+  {
+   "id": 20,
+   "text": "quiero un cuadrante nuevo de preguntas tipo chat.\npor ejemplo quiero preguntar \"porque el bot X tiene Y de inteligencia\" y que me respondas segun las inteligencia del bot o porque razono esto. me va a ayudar a entender y mejroar el razonamiento de los bots.\ncomo siempre un nuevo menu en pantalla, que pueda agregarlo al cuadrante.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:10:25.104Z"
+  },
+  {
+   "id": 21,
+   "text": "remueve todo lo que no es parte del cuadrante de la ventana del cuadrante",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:10:41.789Z"
+  },
+  {
+   "id": 22,
+   "text": "revamp de la ventan de opciones F12 al estilo helbreath clasico (como F1)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:11:15.107Z"
+  },
+  {
+   "id": 23,
+   "text": "los bots siguen acumulando mugre en sus inventarios. veo bots con escudos basicos, con atributos como poison resistance que no sirven para nada, quiero que los hagan oro y que entiendan mejor la escala de los items para mejorar.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:11:52.868Z"
+  },
+  {
+   "id": 24,
+   "text": "agrega en la pantalla de en vivo , en el menu de arriba en el selector quiero  tener un checkbox que sea pvp , para que cuando apriete los botones <> me lleve unicamente a los p ersonakes que estan haciendo pvp y peleando (promoiseland)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:15:21.708Z"
+  },
+  {
+   "id": 25,
+   "text": "veo muchos personajes en pl , hay 2 peleando entre ellos y el resto matando npvcs.. esto no deberia ser, siempre se prioriza el pvp, matar a los tde la otra ciudad, ayudar a los aliados y luego cuando ya no hay enemigos , seguir con el pve",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:16:13.635Z"
+  },
+  {
+   "id": 26,
+   "text": "has toggle las observaciones, las hechas comienzan cerradas para limpiar un pcoo la visual.\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:19:20.121Z"
+  },
+  {
+   "id": 27,
+   "text": "ctrl + enter para añadir la observacion asi escribo y aprieto control enter y se agrega",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:19:44.242Z"
+  },
+  {
+   "id": 28,
+   "text": "revcvisa en el codigo original: no deberian poder verse las auras de los enemigos",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:32:44.173Z",
+   "dev": "2026-10-17T12:09:28.049Z"
+  },
+  {
+   "id": 29,
+   "text": "no veo los circulos de enemigos basate en la cruzada. recuerda ares rojos , elvines azules\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:33:47.563Z",
+   "dev": "2026-10-17T12:09:28.049Z"
+  },
+  {
+   "id": 30,
+   "text": "horrible el menu  F12, basate en el menu automatico o el F1, ese debe ser el estilo clasico al que me refiero",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T09:34:07.209Z",
+   "dev": "2026-10-17T12:09:28.049Z"
+  },
+  {
+   "id": 31,
+   "text": "dehabilita la posibilidad de enviar chats desde el modo observer no funciona y entorpece",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T11:05:18.123Z"
+  },
+  {
+   "id": 32,
+   "text": "si hago click sobre otro personaje en la pantalla del modo observer quiero abrir el vivo de ese personaje, me va a servir para nalizarlos durante los pvp",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T11:06:01.614Z"
+  },
+  {
+   "id": 33,
+   "text": "remueve las restricciones \"solo para guerrero\" \"solo para mago\" vuelve los items a los que son por defecto en el juego original.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T12:07:45.379Z"
+  },
+  {
+   "id": 34,
+   "text": "los personajes estan perdiendo stats con carisma, solo necesitan carisma los que van a ser guildmasters el resto lo mantiene en 10.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T16:06:59.685Z"
+  },
+  {
+   "id": 35,
+   "text": "aun veo personajes no haciendo pvp y haciendo pve cuando tienen enemigos muy cerca, deberian hacer pvp hasta dominar el area y luego pve.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T16:08:35.906Z"
+  },
+  {
+   "id": 36,
+   "text": "no veo la coloracion del minimapa por dominacion de pit que te pedi en promiseland, tiene que ppintarse el pit del color de la ciudad",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T16:08:56.058Z"
+  },
+  {
+   "id": 37,
+   "text": "si t ienen la int, deben comprar todas las magias que puedan y utilizarlas, veo personajes como Bram, tiene 36 de int, pero no tiene comprado nada . puede hacerse invi apra escapar o tirar paralizae pero no lo hace porque no aprendio las magias",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-17T16:10:36.773Z"
+  },
+  {
+   "id": 38,
+   "text": "no es obligatorio para los warrior tener 36 de int era una sugerencia,\npueden tener 32 solo para pfm invi etc\npueden tener 20 para tirar pfa y recall \no bien 10 de int nomas y serian pure warrior, \nson como los puntos clasicos de los warrior\no 59 para poder tirarse berzerk solos y cazar mas rapido",
+   "state": "hecha",
+   "proposal": "v0.85.85: warInt: 32/20/10/59 por bot. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:18:56.971Z"
+  },
+  {
+   "id": 39,
+   "text": "es muy raro como entrenan los magos, se quedan quietos sin hacer nada. los magos tienen que ir , tirar sus mejores magias, gastar su mana, tomar pociones de mana , seguir entrenando etc.\nel kite que hacen es muy poco tienen que correr lejos y recien trar magia. analiza los patrones de los magos son malo. peudo jugar yo como mago y darte una idea si necesitas",
+   "state": "hecha",
+   "proposal": "v0.85.85: Mago móvil: maná, pociones, huida, hold solo en alcance. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:20:04.248Z"
+  },
+  {
+   "id": 40,
+   "text": "veo que los bots cuando se dan berserk no esta funcionando",
+   "state": "hecha",
+   "proposal": "v0.85.85: Berserk propio antes de noBuffZone; test. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:20:13.335Z"
+  },
+  {
+   "id": 41,
+   "text": "rediseña completamente la ventana de opciones, tiene que quedar como el menu de herramientas de F1",
+   "state": "hecha",
+   "proposal": "v0.85.85: OptWin rediseñada estilo F1. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:22:12.671Z"
+  },
+  {
+   "id": 42,
+   "text": "me gusta el diseño de la mini ventana del modo auto,\ncuando la minimizo al minimo, medio que desentona el diseño parece muy moderna (diseño claude) y no una ventan de helbreath.\nen el modo transparente el titulo tiene un color muy oscuro y no se lee, quieor que titulos ,textos , subtitulos etc sean todos parejos en todas las ventanas\npuedes remover el background de los iconos de las puntas? quiero ver como queda el icono nuestro con el fondo de la bola de la ventan tradicional, quizas cambiale el color al icono para que resalte\n",
+   "state": "hecha",
+   "proposal": "v0.85.85: Mini ventana clásica y títulos legibles. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:24:56.769Z"
+  },
+  {
+   "id": 43,
+   "text": "Elvine tambien  tiene que tener autohunt, tiene que ser en su propio lugar,  cuando desarrolles algo, asegurate que las otras ciudades tambien lo tengan\n",
+   "state": "hecha",
+   "proposal": "v0.85.85: Autocaza Elvine y resto de ciudades. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:25:22.206Z"
+  },
+  {
+   "id": 44,
+   "text": "no veo a los bots usando protection from magic, paralize, berzerk etc quiero que usen magiuas en los pvp como un usuario normal.",
+   "state": "hecha",
+   "proposal": "v0.85.85: PFM/Paralyze/Berserk entre jugadores sin exigir mago. Sin verificar en pantalla.",
+   "comments": [],
+   "at": "2026-10-17T16:26:01.583Z"
+  },
+  {
+   "id": 45,
+   "text": "el cursor desaparece cuando voy cerca de los margenes izqauierdos ",
+   "state": "hecha",
+   "proposal": "gui.js: el cursor se dibuja con mouse.seen (x GUI negativa en márgenes).",
+   "comments": [],
+   "at": "2026-10-17T20:04:11.752Z"
+  },
+  {
+   "id": 46,
+   "text": "los bots siguen matando slimes sin sentido, si noo tienen quest o son level bajo deberian estar buscando eks, mejor equipo o intentando pasar el dungeon\n",
+   "state": "hecha",
+   "proposal": "Completa: presas triviales ignoradas (trivialPrey) + council.farmDry: con la granja seca el residente sale antes de expedición a cripta / Promise Land (EKs) o equipo. Test bot-obs46.",
+   "comments": [],
+   "at": "2026-10-17T20:04:34.060Z"
+  },
+  {
+   "id": 47,
+   "text": "algunos magos usa wing  helm que pide 130 de fueraza, y esos magos no la  tienen",
+   "state": "hecha",
+   "proposal": "La reserva de puntos no cuenta como Str en casters y se desequipa lo que incumple.",
+   "comments": [],
+   "at": "2026-10-17T20:13:45.889Z"
+  },
+  {
+   "id": 48,
+   "text": "sigo viendo warriors sin armadura plate y peleando con armas que no son las adecuadas (short sword) porque no eligen hammer o armas con mas daño? deberian buscar maximizar siemepr eel daño, que hagan change stat",
+   "state": "hecha",
+   "proposal": "Compra y equipa placas, reparte stats por build una vez.",
+   "comments": [],
+   "at": "2026-10-17T20:14:18.744Z"
+  },
+  {
+   "id": 49,
+   "text": "quiero un boton para \nremover todos los items,\nremover los stats de  todos los bots\ndarles 100% a todos los skills\ndarles 1000000 gold para que compren lo que necesiten\nseria un \"reset soft\" para los bots\nla idea es poder testear como se comportan y que builds arman.",
+   "state": "hecha",
+   "proposal": "Botón F1 Tools Bots: softReset.",
+   "comments": [],
+   "at": "2026-10-17T20:17:52.051Z"
+  },
+  {
+   "id": 50,
+   "text": "BOTS NV140 — Bucle comprar/vender equipo sin fin (visto en 600 s de PvP en Promise Land y en Aresfarm). Lars: 52 \"Compro equipo\" y 38 \"Vendo objetos\"; Joss 78 compras / 64 ventas y se queda con 3k de oro; en total 772 compras, 552 ventas y 745 \"Me equipo MasterRapier\" en 10 min de 42 bots. Venden por 900-1500 y recompran la misma pieza a los 3-7 s (judge() en botitems.js dice sell/equip según item level que cambia al equiparla). Un jugador razonable compra una vez y se queda. Pierde oro y tiempo de combate (Lars solo 17 ataques en Aresfarm).",
+   "state": "hecha",
+   "proposal": "Histéresis en judge(): no vender una pieza que se compró hace < N min; no recomprar un item vendido por el mismo bot; comparar con el item level del equipo YA puesto y exigir mejora > 8 % antes de comprar. Registrar lista de recién vendidos en b.sold con caducidad de 10 min.",
+   "comments": [
+    "v0.85.97: requisitos de armadura y memoria de lo vendido"
+   ],
+   "at": "2026-10-17T20:35:34.451Z"
+  },
+  {
+   "id": 51,
+   "text": "BOTS GUERREROS — Se quitan arma y escudo para lanzar un hechizo y no lanzan nada (churn de equipo). 957 veces \"⚔ Me quito arma y escudo para lanzar un hechizo\" y 639 \"Me equipo KnightShield\" en 10 min de PvP. Rhea: 184 unequip/181 equip con solo 4 casts; Tora 165/165 con 3 casts; Cora 68/68 con ~16 casts. En botmagic.js ~L336 desarma si hay plan, pero el cast no se completa (maná, cooldown, objetivo cambió) y a los 2.5 s se re-equipan. Durante ese tiempo van sin escudo/arma en PvP y reciben golpes gratis. En el original un guerrero no se desarma para lanzar.",
+   "state": "hecha",
+   "proposal": "Antes de desarmar comprobar que el cast se podrá ejecutar este mismo tick (maná, rango, castChance). Si se desarmó y no hubo cast en 2 s, no repetir en 30 s. O mejor: guerreros solo lanzan hechizos que no exigen manos libres (o quitar el requisito para ellos).",
+   "comments": [
+    "v0.85.92: corregido; sim FFA 600s: muertes 31→15, máx/bot 8→4, desarmes 957→395"
+   ],
+   "at": "2026-10-17T20:35:34.452Z"
+  },
+  {
+   "id": 52,
+   "text": "BOTS PVP — Duelos infinitos entre guerreros iguales sin progreso. Joss vs Dana: 117 líneas \"Combate\" en 600 s, vida de ambos oscila 836-907/907 durante ≥360 s, sin muerte (0 muertes de guerreros en 600 s salvo 1 de Cora; los magos mueren 1-4 veces cada uno). Joss 4008 ataques, 120 moves, 88 % quieto; Lars vs Bea 115 líneas, sin decidir. Un jugador cambiaría de objetivo o usaría paralyze/berserk/pociones de fuerza; en el original estos duelos se resuelven por el daño crítico y los buffs.",
+   "state": "hecha",
+   "proposal": "Detectar duelo sin progreso (daño neto < 5 % en 30 s): cambiar de objetivo a un mago/otro rival, o activar Berserk/Paralyze/Absolute Magic Protection, o retirarse a curarse. Enlaza con ticket 44.",
+   "comments": [
+    "v0.85.98: duelo sin progreso (20 s, <5 % de vida) -> suelta al rival 12 s y busca otro (bot.js pickTarget)"
+   ],
+   "at": "2026-10-17T20:35:34.452Z"
+  },
+  {
+   "id": 53,
+   "text": "BOTS NV140 — Siguen cazando monstruos triviales y farmeando en vez de combatir. Magos nv140: 245 \"Objetivo: Slime\", 123 Giant-Ant, 98 Stone-Golem; guerreros 292 Slime, 121 Giant-Ant (ticket 46 sigue reproducible). Cora y Nils: 98-99 % quietos en Aresfarm con la Hoe equipada (839 y 741 ataques con la azada) y 8-14 usos de SeedBag con maná/vida llenos; Finn 23 usos de FishingRod. Un nv140 con 500k de oro no pierde el tiempo con slimes ni equipa azada como arma.",
+   "state": "hecha",
+   "proposal": "Filtrar objetivos de caza por nivel: ignorar monstruos con nivel < 25 % del propio salvo misión/recogida. Granja/pesca solo si el bot está en modo oficio explícito y volver a arma de combate si hay enemigo cerca. Revisar que la azada no cuente como arma equipada.",
+   "comments": [
+    "v0.85.97: los Master no se compran y los no residentes ignoran presas triviales"
+   ],
+   "at": "2026-10-17T20:35:34.452Z"
+  },
+  {
+   "id": 54,
+   "text": "BOTS MAGOS — Compran ropa que no pueden llevar y arman mal el equipo. \"Me quito MasterRobe: no cumplo su requisito de atributo\" varias veces; llevan MasterPlateMail/MasterHelm con Str 10 en builds de mago (Aldric/Ilsa Str 200, Mira Str 39 con PlateMail puesta). Además 49 \"Dejé el grupo de X por desacuerdo\" frente a 29 uniones (churn de grupo) y 31 \"un mago sin su summon no sirve de nada: voy al hospital de compañeros\" y 22 \"cancelado (no llego)\". Los magos solo hacen 5-30 casts en 10 min con 1700 moves, y gastan 30-88 BluePotion.",
+   "state": "hecha",
+   "proposal": "Comprobar canWear() también al comprar (no gastar oro en lo que se quita al instante). Estabilizar la lógica de grupo (histéresis de 2 min antes de dejarlo). Reducir desplazamientos del mago: que lance al primer enemigo en rango en vez de recolocarse.",
+   "comments": [
+    "v0.85.97: memoria de lo vendido evita recomprar"
+   ],
+   "at": "2026-10-17T20:35:34.452Z"
+  },
+  {
+   "id": 55,
+   "text": "BOTS — Se gastan casi todo el oro tras el reinicio y compran habilidades sin uso. Tras el soft reset de 1M, Dov queda con 25k, Jan 4k, Ned 11k (builds de guerrero), Joss 3k. Mensaje \"Compro Manual … sin esa habilidad fallo todos los golpes\" 67 veces y un guerrero (Lars) con WandAttackManual comprado y estudiado. Compras repetidas del mismo item (ver bucle compra/venta).",
+   "state": "hecha",
+   "proposal": "Presupuesto: reservar 30 % del oro para pociones. No comprar manuales de habilidad que no use el arma equipada. Relacionado con tickets 1 y 48.",
+   "comments": [
+    "v0.85.97: limitador de manuales a 5 min"
+   ],
+   "at": "2026-10-17T20:35:34.452Z"
+  },
+  {
+   "id": 56,
+   "text": "BOTS PVP — Muertes repetidas en bucle (spawn-death). En 600 s de FFA en Promise Land: Gus muere 8 veces (24, 49, 88, 122, 167, 189, 282, 371 s; matadores Brann, Moe, Vera, Ned, Cora, Quin, Yara, Ivo); Aldric 3 veces en 50 s (24, 45, 73 s); Ilsa 3 (35, 292, 310 s); Moe 3. Cada muerte cuesta ~65-80k de oro y experiencia a los nv140 (\"Morir me cuesta: pierdo 80066\") y el bot lo dice (\"seré más prudente\") pero vuelve al mismo sitio en seguida (31 \"quiero la revancha\"). Un jugador tras morir 2 veces seguidas se iría de la zona, se pondría PFM/Absolute Magic Protection o esperaría a curarse.",
+   "state": "hecha",
+   "proposal": "Contador de muertes recientes por mapa: tras 2 muertes en 3 min, no volver a Promise Land en 10 min (ir a farm) y, si vuelve, entrar con buffs (PFM, Protection) y vida/maná al 100 %. La \"revancha\" solo si el rival está solo y por debajo del 60 % de vida.",
+   "comments": [
+    "v0.85.92: corregido; sim FFA 600s: muertes 31→15, máx/bot 8→4, desarmes 957→395"
+   ],
+   "at": "2026-10-17T20:36:19.989Z"
+  },
+  {
+   "id": 57,
+   "text": "BOTS PVP — Huyen demasiado tarde. \"Huir: vida 3 %: huyo de Ulla\" (Aldric, y murió en ese segundo 24), \"vida 18 %\", \"vida 23 %\"; 69 huidas en total y los magos que huyen mueren igualmente. Con vida 3-24 % y un guerrero encima no se escapa; hay que huir/curarse (Great Heal, poción, Invisibility, recall) cuando aún queda ~45 %. Veo \"Me curo con Great Heal\" 853 veces pero muertes igual: se curan mientras reciben, no rompen distancia.",
+   "state": "hecha",
+   "proposal": "Subir el umbral de huida a ~40-45 % cuando hay un físico en melee, usar primero Invisibility/Paralyze propio o Recall en vez de caminar, y exigir distancia antes de curar (Great Heal cuesta un turno sin moverse).",
+   "comments": [
+    "v0.85.92: corregido; sim FFA 600s: muertes 31→15, máx/bot 8→4, desarmes 957→395"
+   ],
+   "at": "2026-10-17T20:36:19.990Z"
+  },
+  {
+   "id": 58,
+   "text": "BOTS PVP — Focus mal elegido: los magos se pelean entre sí en vez de apoyar o atacar al guerrero/curandero. 650 \"Elijo pelear con X: nv 140, mago\" + 325 \"venganza\" vs 357 \"físico\". Aldric elige tres objetivos distintos en 3 s (Brann a 8 casillas, Yara a 4, Cai a 1, todos \"venganza\") con 3 % de vida, sin acabar ninguno. Cambiar de objetivo cada segundo dispersa el daño: nadie cae, y ellos sí. Un jugador finaliza al rival con menos vida o al más peligroso.",
+   "state": "hecha",
+   "proposal": "Fijar objetivo (soft-lock) hasta que muera, salga de rango o la vida propia baje del umbral de huida. Prioridad: rival con menor vida que esté en rango > mago > guerrero. Histéresis de cambio: solo si el nuevo es 30 % más débil.",
+   "comments": [
+    "v0.85.92: corregido; sim FFA 600s: muertes 31→15, máx/bot 8→4, desarmes 957→395"
+   ],
+   "at": "2026-10-17T20:36:19.990Z"
+  },
+  {
+   "id": 59,
+   "text": "BOTS PVP — Spam de Paralyze inútil y mal uso de hechizos/buffs. 1121 \"Paralizo a X con Paralyze\" y 165 \"N Paralyze seguidos no entran a X: ¿PFM?\" (hasta 103 + 62 veces) gastando maná y turnos: cada vez prueban con Blizzard/Lightning \"para comprobarlo\" en vez de recordar que el rival tiene PFM. 37 \"Mi ataque no le hace nada a X: tiene protección mágica\" y 111 \"Mi ataque le entra: no tiene PFM, el Paralyze falló por suerte; lo reintento\". 115 \"Me aparto de X: cada golpe suyo rompe mis hechizos\" (mago que se mueve en vez de lanzar). Además 957 desarmes de guerreros (ver ticket 51). En el original Paralyze no se lanza dos veces seguidas a quien tiene PFM; un mago pierde 2 turnos.",
+   "state": "hecha",
+   "proposal": "Recordar por objetivo \"tiene PFM\" durante ~60 s tras 2 fallos y pasar a daño directo/Dispel (Cancellation); no reintentar Paralyze al mismo en < 20 s. Enlaza con ticket 44.",
+   "comments": [
+    "v0.85.92: corregido; sim FFA 600s: muertes 31→15, máx/bot 8→4, desarmes 957→395"
+   ],
+   "at": "2026-10-17T20:36:19.990Z"
+  },
+  {
+   "id": 60,
+   "text": "BOTS PVP — Duelos que no se cierran y sin persecución eficaz: 117 líneas Joss vs Dana, 115 Lars vs Bea (ver ticket 52); en 600 s solo 31 muertes entre 42 bots (3 magos nv140 mueren mucho más que cualquier guerrero: Cora 1, resto 0 de los 12 guerreros). Los guerreros con TowerShield/Rapier (Hugo, Joss, Dana) apenas se mueven (88-95 % quietos, 4008 ataques) y nunca persiguen al mago que huye; los magos rivales con Invisibility se les escapan (82 \"un rival invisible cerca\").",
+   "state": "hecha",
+   "proposal": "Que el guerrero persiga al mago que huye hasta 12 casillas y, si no lo alcanza, cambie a quien tenga menos vida. Usar Berserk/Paralyze al iniciar el duelo contra un guerrero igual.",
+   "comments": [
+    "v0.85.98: igual que 52"
+   ],
+   "at": "2026-10-17T20:36:19.990Z"
+  },
+  {
+   "id": 61,
+   "text": "agrega la opcion para que dede el live en admin, pueda guardar el log de lo que estoy viendo para darte exactamente una descripcion. y que entiendas la situacion que estoy describibendo",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: botón 💾 en el panel En vivo: descarga JSON con ficha, cerebro, historial y pensamiento PvP del observado"
+   ],
+   "at": "2026-10-18T10:21:10.232Z"
+  },
+  {
+   "id": 62,
+   "text": "veo bots atacando y tidando paralize a aliaddos de su misma ciudad, esto  no debe paasar",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: Paralyze se rompe si el bot ya no puede pelear"
+   ],
+   "at": "2026-10-18T10:21:25.992Z"
+  },
+  {
+   "id": 63,
+   "text": "veo bots aun desnudos, veo bots con helms que no les corresponden, por ejeemplo wing hellm con 30 de str, el wing pide mas fuerza.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: requisitos de armadura al equipar"
+   ],
+   "at": "2026-10-18T10:22:15.325Z"
+  },
+  {
+   "id": 64,
+   "text": "los bots deberian aprender a buscar items que necesiten para la batalla, ropa mp, hp recovery , ma , mr , dr etc segun sus necesidades y hacer sets para ausarlos e intercambiar en la pelea\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: el juez valora bonus de rol (bonusScore) y no descarta armadura de recuperación de PM"
+   ],
+   "at": "2026-10-18T10:22:42.460Z"
+  },
+  {
+   "id": 65,
+   "text": "los warriors itnene 36 de int por ejemplo  pero no tienen aprendida ninguna magia, tienen que aprender todas las magias que les alcance con su int y utilizarlas en el pvp",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: estudian hechizos con Int>=20"
+   ],
+   "at": "2026-10-18T10:23:28.687Z"
+  },
+  {
+   "id": 66,
+   "text": "la velocidad de ataque no se siente bien, copia la misma que en el servidor original, quizas es la animacion o el sprite? averigua la causa , se siento como que pegan lento",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: sin cambio: el ritmo ya es el original (8 fotogramas x 78 ms + 12 ms por punto de velocidad del arma, MapData.cpp:31); el cliente usa la misma fórmula",
+    "v0.85.98: sin cambio de código tras revisar de nuevo: fórmula 8x78 ms + 12 ms/punto idéntica a MapData.cpp y el servidor (HG.cpp:6223) solo registra, no limita; no se modelan el retardo extra de congelado/reliquia (pedir ejemplo concreto)",
+    "v0.85.99: sin cambio: segunda revisión; la fórmula y el servidor coinciden con el original; no se modelan los retardos de congelado/reliquia.",
+    "v0.85.100: causa medida (servidor real, LAG 0-200 ms): ~626 ms/golpe vs 624 nominales del original; fórmula, velocidades de armas (135 armas) y 8x78 ms idénticos. Única diferencia real: el servidor atendía el golpe en el tick siguiente (0-50 ms extra por golpe, ~25 de media); ahora se fecha en el instante de llegada. Sin modelar congelado (frameTime>>2) y reliquia (frameTime/3). Propuesta si sigue lento: acortar attackMs de forma opcional (p. ej. -10 %), decisión del propietario. Test attack-cadence."
+   ],
+   "at": "2026-10-18T10:24:40.170Z"
+  },
+  {
+   "id": 67,
+   "text": "si los bots no tienen oro para reparar sus armaduras, o revivir a sus pets o hacer cualquier cosa que requiere oro, tienen que ir a huntear enemigos npcs, recoger items del suelo y los que sean basura, venderlos. ahora estan ignorando todo el loot.\nanalizanq, si el item tiene un buen valor papra usarlos ellos mismos lo  guardan, si no, lo venden.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: sin oro caza más y recoge/vende botín modesto"
+   ],
+   "at": "2026-10-18T10:26:01.357Z"
+  },
+  {
+   "id": 68,
+   "text": "quiero que las pixies tengan 2 tiles de rango para atacar",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: el Pixie (Tutelary-Angel) ataca a 2 casillas (npcsys); sin test propio"
+   ],
+   "at": "2026-10-18T10:26:19.671Z"
+  },
+  {
+   "id": 69,
+   "text": "acabo de ver un item brillando amarillo en el suelo, light chain mail mp recovery es un item perfecto para magos por que requiere baja str y da mana, ningun bot la recogio del suelo..\ndiseña un sistema papra analizar que items son buenos y que los bots aprendan, si hace falta dejame alguna pantalla en el admin para que yo setee estos valores y los bots  tomen como referencia desde ahi ",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: valores de bonus ajustables: /api/admin/botvalues + panel del dashboard"
+   ],
+   "at": "2026-10-18T10:27:51.923Z"
+  },
+  {
+   "id": 70,
+   "text": "magos debeiran usar wizard cap o wizard hat dependiendo de su nivel y los requerimientos  del equipo",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: inviable: Wizard Cap Str 110 / Hat Str 130 frente a Str 10-39 del mago; los builds aprobados prohíben subir Str",
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.422Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T10:28:38.706Z"
+  },
+  {
+   "id": 71,
+   "text": "no veo a los bots magos comprando mana poots y tomando cuando las necesiten",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: ya implementado; test lo confirma"
+   ],
+   "at": "2026-10-18T10:29:15.557Z"
+  },
+  {
+   "id": 72,
+   "text": "ten cuidado que los magos estan administando mal la mana, vi un mago matar un orc con blizzard, cuando simpeloemtene otra magia menor pudiera haber bastado,, q ue sepan los dañlos de las magias, la  vida y resistencia de los npc y decidan para ser eficientes",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: cheapest() reescrita"
+   ],
+   "at": "2026-10-18T10:29:49.428Z"
+  },
+  {
+   "id": 73,
+   "text": "la animacion de energy strike no está.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: la animación ya está portada (spellfx.js caso 160 -> efecto 16, igual que Game.cpp); sin reproducción visual, pedir ejemplo",
+    "v0.85.98: causa hallada: el efecto 160 lanzaba rayos (16) con coordenadas en píxeles pero el caso 16 las trataba como casillas y nunca llegaban ni morían; corregido en spellfx.js (Game.cpp:14636). Sin verificación visual en navegador"
+   ],
+   "at": "2026-10-18T10:29:57.176Z"
+  },
+  {
+   "id": 74,
+   "text": "los bots no se estan equipando con armaduras o armas con stats, tienen que revisar si lo que encuentran como loot es mejor de lo que tienen y utilizarlo",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: ver 64/69"
+   ],
+   "at": "2026-10-18T10:30:42.915Z"
+  },
+  {
+   "id": 75,
+   "text": "aprete F5 desde el observador y en ves de abrirme el panel del peprsonaje me refresco la web, no deberia ocurrir",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: F5 ya no recarga la página (controller.js y dashboard.js)"
+   ],
+   "at": "2026-10-18T10:31:15.921Z"
+  },
+  {
+   "id": 76,
+   "text": "veo un warrior con 59 de int y sin magias aprendidas, el proposito de ponerle 59 de int es que pueda utilizar berserk y las otras magias ",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: estudian hechizos con Int>=20"
+   ],
+   "at": "2026-10-18T10:32:02.163Z"
+  },
+  {
+   "id": 77,
+   "text": " los bots tienen que saber que en las criptas de nivel alto, encuentran buen loot tanto para pve como para pvp",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: la cripta profunda suma por mejor botín en Council.evaluate"
+   ],
+   "at": "2026-10-18T10:32:18.593Z"
+  },
+  {
+   "id": 78,
+   "text": "remueve todos los items  Master de los shops\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: ver ficha bots-v85-97"
+   ],
+   "at": "2026-10-18T10:32:42.506Z"
+  },
+  {
+   "id": 79,
+   "text": "el punto de ponerle 40 de str al mago es que peuda utilizar tower shield en situaciones de reisgo o cuando les peguen los warriors",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: escudo de torre también con poca vida"
+   ],
+   "at": "2026-10-18T10:33:32.510Z"
+  },
+  {
+   "id": 80,
+   "text": "acabo de ver a un mago matando escorps pve  con el staff teniendo full mana, deberia priorizar tirar magias para pve porque con el staff los magos son bastante debiles",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: cheapest() y espera de enfriamiento en vez de bastón"
+   ],
+   "at": "2026-10-18T10:34:30.535Z"
+  },
+  {
+   "id": 81,
+   "text": "todos los warriors deberian tener un arco, es una b uena forma de evitar a los enemigos que estan escapando o para ayudar desde lejos o matar enemigos en terrenos que no pueden alcanzar",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: los guerreros llevan arco y flechas (uso táctico pendiente)"
+   ],
+   "at": "2026-10-18T10:35:47.083Z"
+  },
+  {
+   "id": 82,
+   "text": "agrega un buscador en el panel de notas para que peuda buscar notas anteriore y revisar su solucion.\nagrega la version en la que la solucion fue implementada y un comentario de como fue la implementacion y quie cambio",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: buscador en el panel de notas (texto, propuesta y comentarios con «vX.Y.Z: solución»)"
+   ],
+   "at": "2026-10-18T10:36:56.092Z"
+  },
+  {
+   "id": 83,
+   "text": "agrega el boton de record donde estan los controles de pvp >< en el panel live",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: botón ⏺/⏹ junto a ◀▶ en el panel En vivo: graba el lienzo en webm (MediaRecorder)"
+   ],
+   "at": "2026-10-18T10:37:10.716Z"
+  },
+  {
+   "id": 84,
+   "text": "stone of xelima, merien stone y zemstone son items valiosos, los bots deberian agarrarlos y venderlso en sus shops",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: las piedras se recogen y se venden por |precio|/2"
+   ],
+   "at": "2026-10-18T10:38:17.109Z"
+  },
+  {
+   "id": 85,
+   "text": "cuando hacemos cambios tienen que ser para TODOS lso bots vigentes, me parece qeu los bots de aresden tienen mejor equipamento? arrancaron con oro y los elvine no ? veo que los elvine estan peleando con malas armaduras o la ropa del inicio en ves de comprar el equimaiento inicial en el blacksmith",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: bonus de compra de básicos (efecto por observar)"
+   ],
+   "at": "2026-10-18T10:39:16.084Z"
+  },
+  {
+   "id": 86,
+   "text": "si el mago tienne mim, tienen que tener todas las otras masgias no solo eso elos supports. como support me refiero que en ves de gastar y ser agresivo con blizzard ayudan a los warrirors y luego tiran magias",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.97: estudian hechizos con Int>=20"
+   ],
+   "at": "2026-10-18T10:40:15.894Z"
+  },
+  {
+   "id": 87,
+   "text": "las frogs y los rudolf tienen mal asignados los sonidos",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: sonidos por tipo como MapData.cpp (Giant-Frog M73/M77/M81/M85; Rudolph C11/M38/M69/M65) en audio.js MOB_SFX"
+   ],
+   "at": "2026-10-18T10:43:11.663Z"
+  },
+  {
+   "id": 88,
+   "text": "reduce el tiempo de chat de los bots, parece que estan hablando mucho, sobre todo en pvp ",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: charla ociosa limitada (60 s bots, 120 s residentes) y silencio total en PvP.",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T10:44:19.230Z"
+  },
+  {
+   "id": 89,
+   "text": "los bots no deberian ir a pelear con partes de la armadura faltante, como miinimo tienen que comprar el set knight en los shops o lo que corresponda, una pieza de armadura faltante es muchia menos dfefensa",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: armorCare compra/equipa las piezas de armadura que falten y repara antes de cazar.",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T10:45:11.431Z"
+  },
+  {
+   "id": 90,
+   "text": "remueve todas las restricciones de las pets, que todos puedan usar las support pets en cualquier momento, es una buena idea para que los bots trabajen con los skills de las pets",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: mascotas sin restricciones: sin báculo, sin tope de nivel del dueño (PET_RULES.staff en npcsys.js).",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T10:48:49.180Z"
+  },
+  {
+   "id": 91,
+   "text": "los bots deberian reparar su armaduras anates de ir a promiseland, van con armaduras casi  rotas y son muy vulnerables a ataques con hammers que se las sacan\n",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: igual que #89; además repara piezas por debajo del 50 % y el bot no va a Promise Land con hueco de armadura.",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T10:50:00.541Z"
+  },
+  {
+   "id": 92,
+   "text": "el circulo debajo de los pies es un invento, quiero exactamente el mismo circulo que se usa en la cruzada para simbolizawr a enemigos.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.98: círculo de enemigo = fx38 fotogramas 0-4 en aditivo, como DrawObjectFOE (Game.cpp:17850); se quita la elipse inventada"
+   ],
+   "at": "2026-10-18T11:00:35.041Z"
+  },
+  {
+   "id": 93,
+   "text": "porque pip tiene todas las magias y tiene solo 10 de int ?no esta bien",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: causa: el reset de stats bajaba Int pero conservaba hechizos; rebuild olvida los que superan la Int actual.",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T11:01:41.215Z"
+  },
+  {
+   "id": 94,
+   "text": "en los logs veo a korin edric peleando entre si? los demas de la party nomas quietos viendo? tiene algo que ver porque no tienen mana? porque no tienen pots de mana los magos? tienen cosas en la mochila que son basura y no la vendieron",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.98: en modo ffa los miembros del mismo party ya no se atacan; pociones de maná y venta de basura ya cubiertas en v0.85.97.",
+     "at": "2026-10-18T11:50:54.434Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-18T11:02:19.742Z"
+  },
+  {
+   "id": 95,
+   "text": "veo que los magos se quedan quietos por que no tiene nmas mana, pero tampoco los veo tomando pociones, deberian siempre tener max cantidad de pociones de mana para seguir jugando. tambien enfocarse en tener items mana regen para que su mana se regenera mas",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:17:55.875Z"
+  },
+  {
+   "id": 96,
+   "text": "la ventana de log deberia ser toggle in game y no esta siendo responsive",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.99: la ventana de log (F9, botón 💬 en móvil) ya se adapta a pantallas pequeñas: se encoge y no se sale del borde. Sin verificar en dispositivo real."
+   ],
+   "at": "2026-10-19T07:18:16.366Z"
+  },
+  {
+   "id": 97,
+   "text": "Dain no esta usando armadura, revisa ese comportamiento incorrecto. Talia tampoco. Si no tienen oro deberian entrenar en lugares como stone golem en farm y buscar items para vender y jutar oro para comprar armaduras en blacksmith o bien buscar items que les convenga en el stone golem pit",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:19:42.680Z"
+  },
+  {
+   "id": 98,
+   "text": "veo persoanjes como Marek con 39 defuerza (deberian tener 40) los magos que usan tower shield y con wing help equipado cuando wing helm deberia pedir 130 str.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:20:44.179Z"
+  },
+  {
+   "id": 99,
+   "text": "evita que los magos usen maggic missile, no se utiliza entre los jugadores. que no le tiren paralize a los mounstros menores tampoco",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:21:42.157Z"
+  },
+  {
+   "id": 100,
+   "text": "encontre un bug que los bots estan tomando pociones con la mana full, la gastan de esa forma y se quedan sin pociones. revisa bien",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:22:05.889Z"
+  },
+  {
+   "id": 101,
+   "text": "Brenna esta usando full helm cuando tiene 200 str, por defecto deberia usar horned helm que da mucha mas defensa\nrevisa esto en los bots, los helm siguen estando mal asignados a los bots",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:23:00.844Z"
+  },
+  {
+   "id": 102,
+   "text": "los warrior que usen 160 str deberian pegar con hammer o giant sword a meno que tengan una flmaberge que sea mucho mejor en daño, en ese caso deberian reiniciar sus stats y asignarse 130 str",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:24:01.607Z"
+  },
+  {
+   "id": 103,
+   "text": "noto que los bots se tiran detect invi entre los de la misma ciudad, no deberia ser el caso",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:29:13.319Z"
+  },
+  {
+   "id": 104,
+   "text": "veo que los bots siguen tirandose magias entre los de la misma ciudad, vi varias veces magos intentando paralizar a jugadores de la misma ciudad",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:30:06.273Z"
+  },
+  {
+   "id": 105,
+   "text": "restaura el efecto de berserk la animacion que aparece sobre el personaje al castear la magia, revisa todo porque esta faltando",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.99: Berserk dibujaba solo la tinta del cuerpo; ahora dibuja el círculo fx58 sobre el objetivo al castear (Game.cpp:7182). Auditados el resto de efectos de magia: ningún otro falta (57 y 73-77 no se lanzan en el original). Sin verificar visualmente."
+   ],
+   "at": "2026-10-19T07:30:43.062Z"
+  },
+  {
+   "id": 106,
+   "text": "me parece que los bots no estan haciendo viajes al shop o blacksmith para vender, los veo con muchos items basura en sus bags y con poco oro, deberian ir a vender lo que concideran que no sirve, lo que consideran que sirve y no es para ellos ,agregrlos a un shop en el warehouse",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    {
+     "text": "v0.85.99: hecha (ver docs/sistemas/bots-v85-99.md).",
+     "at": "2026-10-19T07:44:39.452Z",
+     "by": "claude"
+    }
+   ],
+   "at": "2026-10-19T07:32:42.666Z"
+  },
+  {
+   "id": 107,
+   "text": "revisa que los bots asignen skills a los summons cuando corresponda",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T07:52:19.577Z"
+  },
+  {
+   "id": 108,
+   "text": "remueve todos los helms de todos, aun siguen usando helms ocn restricciones de str , calculo que es porque no se los desequiparon nunca",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T07:52:38.694Z"
+  },
+  {
+   "id": 109,
+   "text": "no tiene sentido tirar berzerk a un mago porqeu no pegan  con golpes fisicos",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T07:53:34.340Z"
+  },
+  {
+   "id": 110,
+   "text": "analiza un warrior con bersekr, no lo esta utilizando nisquiera para entrenar pve, tambien esquipa y desequipa su plate mail todo el tiempo, la cambia por otra sin sentido.",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T08:20:17.831Z"
+  },
+  {
+   "id": 111,
+   "text": "remueve los items Master del juego",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.100: 25 objetos Master quitados (ids 245, 246, 1891-1913); migración vía loadSave; ver docs/sistemas/master-items.md"
+   ],
+   "at": "2026-10-19T08:20:28.344Z"
+  },
+  {
+   "id": 112,
+   "text": "sigo viendo el overlay celeste en la UI arregalo",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [
+    "v0.85.100: sin causa reproducible sin sesión de juego; neutralizados autofill azul de Chrome, foco visible y arrastre de canvas/img. Sin verificar en pantalla: reabrir si persiste."
+   ],
+   "at": "2026-10-19T08:21:01.616Z"
+  },
+  {
+   "id": 113,
+   "text": "los bots tienen que aprender que magias son efectivas para pve, le tiran mass ilusion a los mounstros cuando no les afuecta",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T08:21:50.391Z"
+  },
+  {
+   "id": 114,
+   "text": "dale 1 millon de gold a los bots para que siempre tengan oro para comprar armaduras y armas en blacksmith, pocione y todo lo que necesiten",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T08:25:04.801Z"
+  },
+  {
+   "id": 115,
+   "text": "quiero que me muestres ms, fps , nombre y numero de version etc en lap arte superior de la pantalla del observacor, como estaba antes",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T08:35:56.906Z"
+  },
+  {
+   "id": 116,
+   "text": "Bots: sumidero de oro (pociones/manuales/gemas/tienda entre residentes) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 117,
+   "text": "Bots mago: rotación de hechizos (~6 ataques por rival/maná/distancia) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 118,
+   "text": "Bots: histéresis de equipo/compras (<5 % o <5 min no recambia) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 119,
+   "text": "Bots: mapa objetivo por nivel (nv140 fuera de cripta nv1/2, reparto equilibrado por bando) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 120,
+   "text": "Bots: coherencia build–hechizos (no aprender con INT insuficiente; oficios con kit acorde) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 121,
+   "text": "Bots: huecos de equipo (Orin, Leif; Shirt(W)→hauberk) (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 122,
+   "text": "Bots: umbral de curación/huida <45 % en PvP (docs/revision-bots.md)",
+   "state": "hecha",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T09:04:03.932Z"
+  },
+  {
+   "id": 123,
+   "text": "remueve la info de peso , que sea un toggle en las opciones para que los usuarios elijan si quieren verla o no ",
+   "state": "nueva",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T15:43:30.816Z"
+  },
+  {
+   "id": 124,
+   "text": "agrega un toggel para sacar el nombre visible constante de laas pets, o que sea solo visible cuando hacemos hooer",
+   "state": "nueva",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T15:43:51.032Z"
+  },
+  {
+   "id": 125,
+   "text": "agrega 120 mag al wizzard hat (revisa este numero con los archivos originales) \nremueve los helmets de todos los jugadores para aplicar esta restriccion\n\n",
+   "state": "nueva",
+   "proposal": "",
+   "comments": [],
+   "at": "2026-10-19T15:51:07.856Z"
+  }
+ ]
+}

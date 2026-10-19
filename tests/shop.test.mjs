@@ -62,6 +62,15 @@ ev.length = 0; cmd({ t: "repairreq", uid: dag.uid, whom: 24 });
 const rp = ev.find(e => e.t === "repairprice"); assert(rp && rp.price === Math.trunc(dd.price / 2) - Math.trunc(0.5 * 0.5 * dd.price) , "precio de reparación " + (rp && rp.price));
 const g1 = p.gold; cmd({ t: "repairconfirm", uid: dag.uid });
 assert(dag.life === dd.maxLife && p.gold === g1 - rp.price, "reparada");
+// v0.85.71: oro del almacén, reparar todo, el oro no pesa
+{ const { totalWeight } = await import("../web/src/shared/inventory.js");
+  p.gold = 500; p.bankGold = 0; cmd({ t: "depositgold", amount: 300 }); assert(p.gold === 200 && p.bankGold === 300, "guardar oro");
+  assert(A.saveOf(pid).bankGold === 300, "el oro del almacén se guarda"); cmd({ t: "withdrawgold", amount: 1e9 }); assert(p.gold === 500 && p.bankGold === 0, "sacar oro");
+  const w0 = totalWeight(p, data); p.gold = 1e6; assert(totalWeight(p, data) === w0, "el oro no pesa");
+  dag.life = 0; ev.length = 0; cmd({ t: "repairall", whom: 24 });
+  assert(dag.life === dd.maxLife && ev.some(e => e.t === "repairedall" && e.count >= 1), "reparar todo con el herrero"); 
+  dag.life = 0; ev.length = 0; cmd({ t: "repairall", whom: 24, uids: [-5] }); assert(dag.life === 0, "repairall con uids solo repara los pedidos");
+  cmd({ t: "repairall", whom: 24, uids: [dag.uid] }); assert(dag.life === dd.maxLife, "repairall con uids repara el pedido"); }
 
 // lista de venta
 const ws = p.bag.find(i => i.id === id("WoodShield")), bp = p.bag.find(i => i.id === id("BluePotion"));
@@ -77,5 +86,7 @@ assert(p.bank.length === 1 && p.bank[0].count === 20 && count("Arrow") === 0, "l
 const sd = p.bag.find(i => i.id === id("Dagger")); cmd({ t: "deposit", uid: sd.uid });
 assert(p.bank.length === 2 && !p.bag.includes(sd), "depositar un arma");
 cmd({ t: "withdraw", index: 0 }); assert(count("Arrow") === 20 && p.bank.length === 1, "retirar");
-const sv = A.saveOf(pid); assert(sv.bank.length === 1, "el almacén se guarda");
+const sv = A.saveOf(pid); assert(sv.bank.length === 1, "el almacén se guarda");// la lista de venta se salta lo que no se puede vender y sigue con el resto (antes se paraba en el primero)
+{ const a1 = p.bag.find(i => i.id === id("Dagger")); const bad = { uid: -999, count: 1 };
+  if (a1) { const nb = p.bag.length; cmd({ t: "selllist", items: [bad, { uid: a1.uid, count: 1 }] }); assert(p.bag.length === nb - 1, "selllist salta el invalido y vende el resto"); } }
 console.log("OK");

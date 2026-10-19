@@ -7,7 +7,7 @@ import { GameData } from "../web/src/shared/data.js";
 import { seededRandom, setDungeonPalette } from "../web/src/shared/dungeon.js";
 import { NPC } from "../web/src/shared/systems/shopsys.js";
 import { MAX_BANK } from "../web/src/shared/systems/shopsys.js";
-import { decide, parseAuto, placeOf, placeEnt, approach, viaTeleport, PLACES, IDLE_STOP_MS, FARM_HOME, BAG_MAX } from "../web/src/shared/systems/autoplay.js";
+import { decide, parseAuto, placeOf, placeEnt, approach, viaTeleport, PLACES, IDLE_STOP_MS, FARM_HOME, BAG_MAX, brokenGear, cityOf, CITIES } from "../web/src/shared/systems/autoplay.js";
 import { groundPush } from "../web/src/shared/systems/ground.js";
 import { newInst } from "../web/src/shared/systems/itemsys.js";
 
@@ -50,7 +50,7 @@ w.items.clear(); d = decide(w, me, au); assert.ok(!d.stop && !d.intent);
 w.time += IDLE_STOP_MS + 1000; d = decide(w, me, au); assert.ok(d.stop, "sin presas se detiene");
 // ---- vida baja y muerte
 me.hp = 1; assert.ok(decide(w, me, { kind: "hunt", mob: "Slime", potions: false }).stop, "vida baja: para");
-me.hp = me.maxHp; me.dead = true; assert.ok(decide(w, me, { kind: "hunt", mob: "Slime" }).stop); me.dead = false;
+me.hp = me.maxHp; me.dead = true; assert.ok(!decide(w, me, { kind: "hunt", mob: "Slime" }).stop); assert.ok(decide(w, me, { kind: "run", place: "shop" }).stop); me.dead = false;   // v0.85.70: la caza no se detiene al morir (reaparece y sigue)
 // ---- ruta: habitante más cercano, intención de andar junto a él, y al llegar abre su diálogo
 const e = placeEnt(w, me, "farmer"); assert.ok(e && e.role === "farmer", "el granjero existe en Aresfarm");
 me.x = e.x + 10; me.y = e.y;
@@ -83,8 +83,8 @@ d = decide(w, me, zau); assert.ok(zau.full, "mochila llena: marca el ciclo"); as
 { const sh = w.makeEnt("citizen", me.x + 1, me.y); sh.type = NPC.SHOP; sh.role = null;
   d = decide(w, me, zau); assert.equal(d.send?.t, "selllist", "junto al tendero manda la venta"); assert.equal(d.send.items.length, 12, "hasta 12 por lista");
   zau.rules = ["store", "store", "store", "store"]; zau.bad = {}; me.bank = new Array(MAX_BANK - 1).fill({ id: 99999 });
-  d = decide(w, me, zau); assert.ok(d.stop && /Almac|Warehouse/.test(d.msg[0] + d.msg[1]), "almacén lleno: termina el hunt");
-  me.bank = []; sh.type = NPC.WAREHOUSE; d = decide(w, me, zau); assert.equal(d.send?.t, "deposit", "junto al almacenero guarda"); w.ents.delete(sh.id); w.teleports.delete(tpKey); }
+  w.time += 1000; d = decide(w, me, zau); assert.ok(d.stop && /Almac|Warehouse/.test(d.msg[0] + d.msg[1]), "almacén lleno: termina el hunt");
+  me.bank = []; sh.type = NPC.WAREHOUSE; w.time += 1000; d = decide(w, me, zau); assert.equal(d.sends?.[0]?.t, "deposit", "junto al almacenero guarda"); w.ents.delete(sh.id); w.teleports.delete(tpKey); }
 zau.rules = ["ignore", "ignore", "ignore", "ignore"]; d = decide(w, me, zau); assert.ok(d.stop, "todo en ignorar y mochila llena: se detiene");
 w.items.clear(); { const [ix, iy] = spot(2, 2); groundPush(w, ix, iy, newInst(w, 1, 1)); me.bag = [];
   assert.ok(!decide(w, me, { kind: "hunt", mob: "Zzz", rules: ["ignore", "ignore", "ignore", "ignore"] }).intent, "regla ignorar: no recoge");
@@ -101,5 +101,32 @@ zs.dead = true; me.x = fx; me.y = fy; w.items.clear(); { const [bx, by] = spot(2
   const v = viaTeleport(fw, me, "wrhus_1f"); assert.equal(v.intent?.t, "move"); assert.deepEqual([v.intent.x, v.intent.y], [ax, ay], "entrada más corta");
   const c = w.makeEnt("citizen", ax + 1, ay); const sp = approach(fw, me, c);
   assert.ok(sp && !tp.has(w.grid.idx(sp[0], sp[1])), "approach no elige una casilla de teletransporte"); }
+// ---- v0.85.70: llena por peso (aunque queden casillas) también va a vender
+{ const au = { kind: "hunt", mob: "Slime", zone, full: false, bag0: new Set() }; me.bag = [newInst(w, 1, 1)]; au.bag0 = new Set();
+  const st = me.stats.str; me.stats.str = 0; me.level = 0; decide(w, me, au); assert.ok(au.full, "peso al límite: marca llena"); me.stats.str = st; me.level = me.level || 1; }
+// ---- v0.85.71: piedras raras y arma rota => va a reparar
+{ const { rarityOf } = await import("../web/src/shared/rarity.js"); for (const id of [650, 656, 657]) assert.equal(rarityOf(id, 0), 2, "piedra rara " + id); }
+// el arma rota sale del cuerpo (combatsys): se recuerda lo puesto, se repara solo eso y se vuelve a equipar
+{ const wid = [...Array(2000).keys()].find(i => { const it = data.item(i); return it && it.category >= 1 && it.category <= 10 && it.maxLife > 0; });
+  const wp = newInst(w, wid, 1); me.bag = [wp]; me.equip = { rhand: wp.uid }; me.x = fx; me.y = fy; me.gold = 100000;
+  const ra = { kind: "hunt", mob: "Slime", zone }; decide(w, me, ra); assert.ok(ra.worn.has(wp.uid), "recuerda lo puesto");
+  wp.life = 0; delete me.equip.rhand;                       // se rompe: el servidor la quita del cuerpo
+  assert.equal(brokenGear(w, me, ra).length, 1, "detecta el arma rota aunque ya no esté puesta");
+  const sm = w.makeEnt("citizen", me.x + 6, me.y); sm.type = NPC.BLACKSMITH; sm.role = null;
+  d = decide(w, me, ra); assert.ok(ra.fixing && d.intent?.t === "move", "arma rota: va a la herrería");
+  sm.x = me.x + 1; w.time += 1000; d = decide(w, me, ra); assert.equal(d.send?.t, "repairall", "junto al herrero repara"); assert.deepEqual(d.send.uids, [wp.uid], "solo lo que llevaba puesto");
+  wp.life = data.item(wid).maxLife; w.time += 1000; d = decide(w, me, ra); assert.deepEqual(d.sends, [{ t: "equip", uid: wp.uid }], "reparada: se la vuelve a poner");
+  me.equip.rhand = wp.uid; w.time += 1000; d = decide(w, me, ra); assert.ok(!ra.fixing, "terminó de reparar"); w.ents.delete(sm.id); me.equip = {}; me.bag = []; }
+// v0.85.73: con la mochila llena y equipo gastado (no roto), el viaje pasa antes por el herrero
+{ const wid = [...Array(2000).keys()].find(i => { const it = data.item(i); return it && it.category >= 1 && it.category <= 10 && it.maxLife > 0; });
+  const wp = newInst(w, wid, 1); wp.life = 1; me.bag = [wp]; me.equip = { rhand: wp.uid }; me.gold = 100000; me.x = fx; me.y = fy;
+  const rb = { kind: "hunt", mob: "Slime", zone, full: true }; decide(w, me, rb); assert.ok(!rb.fixing, "sin herrero cerca no se bloquea");
+  const sm = w.makeEnt("citizen", me.x + 1, me.y); sm.type = NPC.BLACKSMITH; sm.role = null; rb.noRepair = false; w.time += 1000;
+  d = decide(w, me, rb); assert.equal(d.send?.t, "repairall", "llena + gastado: repara de camino"); w.ents.delete(sm.id); me.equip = {}; me.bag = []; }
 for (const k of Object.keys(PLACES)) assert.ok(PLACES[k].es && PLACES[k].en);
+// v0.85.82 (obs. 43): Elvine tiene su granja, su retorno y sus interiores; Aresden queda como estaba
+assert.equal(cityOf({ side: 1 }).farm, "arefarm"); assert.equal(cityOf({}).farm, "arefarm");
+assert.equal(cityOf({ side: 2 }).farm, "elvfarm"); assert.deepEqual(cityOf({ side: 2 }).buildings, { warehouse: "wrhus_2f", shop: "gshop_2f", smith: "bsmith_2f" });
+{ const em = json("maps/elvfarm.json"); assert.ok(em.spawns.length && CITIES[2].home.length === 2);
+  for (const b of Object.values(CITIES[2].buildings)) assert.ok(em.teleports.some(t => (t.to || t.map || t.dest) === b || JSON.stringify(t).includes(b)), "elvfarm enlaza con " + b); }
 console.log("OK autoplay");

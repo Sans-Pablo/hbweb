@@ -58,29 +58,30 @@ function wearPrice(inst, d, count) {
   return price + (add1 - Math.trunc(add1 / 3)) + (add2 - Math.trunc(add2 / 3));
 }
 
+// Piedras de valor (Zemstone, Xelima, Merien; precio negativo en Item.cfg): los bots las recogen y las venden (obs. 84, INVENTO)
+export const STONES = new Set([650, 656, 657]);
 // Precio de venta de una unidad sin comprobar el peso (para mostrarlo en el suelo). 0 = no se vende.
 export function sellPriceOf(d, inst, count = 1) {
   const cat = d.category;
   let price;
-  if (cat >= 11 && cat <= 50) price = (FISH_PRICE[d.id] ?? Math.trunc(d.price / 2)) * count;
+  if ((cat >= 11 && cat <= 50) || STONES.has(d.id)) price = (FISH_PRICE[d.id] ?? Math.trunc(Math.abs(d.price) / 2)) * count;   // v0.85.97 (obs. 84): las piedras (precio negativo) valen su valor absoluto
   else if (cat >= 1 && cat <= 10) { if (!(inst.life > 0 || inst.life === undefined)) return 0; price = wearPrice(inst, d, count); }
   else return 0;
   return Math.min(Math.max(price, 1), MAX_PRICE);
 }
 
-// Cuánto pagan por `count` unidades de este objeto. Devuelve { price } o { cannot: motivo } (1 aquí no, 2 gastado, 4 pesa demasiado)
+// Cuánto pagan por `count` unidades de este objeto. Devuelve { price } o { cannot: motivo } (1 aquí no, 2 gastado; el oro no pesa, ya no hay 4)
 export function sellValue(w, p, inst, count) {
   const d = w.data.item(inst.id);
   const cat = d.category;
   let price;
-  if (cat >= 11 && cat <= 50) price = (FISH_PRICE[d.id] ?? Math.trunc(d.price / 2)) * count;
+  if ((cat >= 11 && cat <= 50) || STONES.has(d.id)) price = (FISH_PRICE[d.id] ?? Math.trunc(Math.abs(d.price) / 2)) * count;   // v0.85.97 (obs. 84): las piedras (precio negativo) valen su valor absoluto
   else if (cat >= 1 && cat <= 10) {
     if (!(inst.life > 0)) return { cannot: 2 };
     price = wearPrice(inst, d, count);
   } else return { cannot: 1 };
   if (price <= 0) price = 1;
   if (price > MAX_PRICE) price = MAX_PRICE;
-  if (Inv.totalWeight(p, w.data) + itemWeight(w.data.item(GOLD), price) > Inv.maxLoad(p)) return { cannot: 4 };
   return { price };
 }
 
@@ -96,12 +97,13 @@ const instCount = (d, inst) => (isStack(d) ? inst.count : 1);
 
 // ------------------------------------------------------------------ compra
 // cmd: { name, count }. "10Arrows" y "100Arrows" son 10 y 100 flechas de una vez.
+export const IS_MASTER_ITEM = /^Master|^Master-|(Master)/;
 export function buy(w, p, cmd) {
   let name = String(cmd.name || ""), units = 1;
   if (name.startsWith("10Arrows")) { name = "Arrow"; units = 10; }
   else if (name.startsWith("100Arrows")) { name = "Arrow"; units = 100; }
   const d = w.data.named(name), n = Math.max(1, Math.min(50, cmd.count | 0));
-  if (!d || !(d.price > 0) || BANNED_ITEMS.has(d.id)) return false;
+  if (!d || !(d.price > 0) || BANNED_ITEMS.has(d.id) || IS_MASTER_ITEM.test(d.name)) return false;      // v0.85.97 (obs. 78): ningún objeto Master se vende en las tiendas
   if (d.buyLevel && p.level < d.buyLevel) return w.reject(p, cmd, "nivel " + d.buyLevel + " necesario");           // báculos maestros (classgear.js)                          // price < 0: no está a la venta
   let bought = 0;
   for (let i = 0; i < n; i++) {
@@ -148,11 +150,11 @@ export function sellConfirm(w, p, uid, count) {
   return true;
 }
 
-// Lista de venta (hasta 12 objetos a la vez): vende por orden hasta el primer hueco
+// Lista de venta (hasta 12 objetos a la vez): vende por orden y se salta lo que no se pueda
 export function sellList(w, p, cmd) {
   const list = Array.isArray(cmd.items) ? cmd.items.slice(0, MAX_SELL_LIST) : [];
   let any = false;
-  for (const e of list) { if (!e || !sellConfirm(w, p, e.uid, e.count | 0)) break; any = true; }
+  for (const e of list) { if (e && sellConfirm(w, p, e.uid, e.count | 0)) any = true; }
   return any;
 }
 
@@ -213,6 +215,44 @@ export function withdraw(w, p, cmd) {
   w.recalc(p);
   w.emit({ t: "retrieved", id: p.id, item: it.id, count: it.count });
   return true;
+}
+
+// Oro en el almacén (invento del port: el oro no pesa ni ocupa hueco, pero tampoco se perdía al morir de otro modo)
+export function depositGold(w, p, cmd) {
+  const n = Math.min(p.gold | 0, cmd.amount | 0);
+  if (!(n > 0)) return false;
+  ledger(w, p, -n, "bank_deposit");
+  p.bankGold = (p.bankGold | 0) + n;
+  w.emit({ t: "bankgold", id: p.id, gold: p.bankGold });
+  return true;
+}
+export function withdrawGold(w, p, cmd) {
+  const n = Math.min(p.bankGold | 0, cmd.amount | 0);
+  if (!(n > 0)) return false;
+  p.bankGold -= n;
+  ledger(w, p, n, "bank_withdraw");
+  w.emit({ t: "bankgold", id: p.id, gold: p.bankGold });
+  return true;
+}
+
+// «Reparar todo»: arregla cada objeto dañado que pueda arreglar este NPC (herrero o tendero) mientras alcance el oro
+export function repairAll(w, p, cmd) {
+  let n = 0, total = 0, short = false;
+  const only = Array.isArray(cmd.uids) ? new Set(cmd.uids) : null;                       // el auto hunt solo arregla lo que llevaba puesto
+  for (const inst of p.bag) {
+    const d = w.data.item(inst.id), who = d && repairer(d);
+    if (!who || who !== cmd.whom || (only && !only.has(inst.uid))) continue;
+    const price = repairCost(inst, d);
+    if (!(price > 0)) continue;
+    if (p.gold < price) { short = true; continue; }
+    inst.life = realStats(d, inst).maxLife;
+    ledger(w, p, -price, "shop_repair");
+    n++; total += price;
+  }
+  if (n) w.recalc(p);
+  if (short) w.emit({ t: "nogold", id: p.id });
+  w.emit({ t: "repairedall", id: p.id, count: n, price: total });
+  return n > 0;
 }
 
 export { ITYPE };

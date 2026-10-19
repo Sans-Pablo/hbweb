@@ -2,6 +2,7 @@
 //   classic    -> 800x600 del original, cámara fija al personaje, sin efectos añadidos
 //   remastered -> pantalla completa (más campo de visión), cámara suave, zoom con la rueda,
 //                 luz y viñeta, destellos, barras de vida, etiquetas de objetos, partículas
+import { isFoe } from "../shared/systems/combatsys.js";
 import { rarityOf, RARITY_COLOR } from "../shared/rarity.js";
 import { t } from "./i18n.js";
 import { BOSS_COLORS, BOSS_NAMES } from "../shared/dungeon.js";
@@ -415,7 +416,9 @@ export class Renderer {
         const t = this.grid.tile(tx, ty);
         if (!t || !t.obj) continue;
         const cx = tx * T + 16 - camX, cy = ty * T + 16 - camY;
-        if (t.obj >= 100 && t.obj < 150) {             // árbol: sombra + árbol
+        if (t.obj >= 100 && t.obj < 150 && this.detail === 0) {             // Game.cpp 2251: detalle bajo (Ctrl+D) = árbol pequeño único (104/109/123/132), sin sombra
+          this.spr.put(ctx, "t" + (t.obj < 111 ? 104 : t.obj < 123 ? 109 : t.obj < 132 ? 123 : 132), t.objFrame, cx - 16, cy - 16); continue;
+        } else if (t.obj >= 100 && t.obj < 150) {             // árbol: sombra + árbol
           ctx.globalAlpha = 0.45;
           this.spr.put(ctx, "t" + (t.obj + 50), t.objFrame, cx, cy);
           ctx.globalAlpha = 1;
@@ -451,6 +454,8 @@ export class Renderer {
   }
 
   // Auras de los escudos y del veneno (CheckActiveAura / CheckActiveAura2 del cliente original)
+  // obs. 28: las auras (protección/veneno) de un jugador enemigo no se ven (en el original sí; se oculta por petición del propietario)
+  hideAura(e, s) { return e.kind === "player" && e.id !== s.pid && !!s.world.pvp && s.me?.side > 0 && e.side !== s.me.side; }
   auras(e, x, y, w, below) {
     if (!e.st || !below) return;
     const sp = this.fx?.sp || null;
@@ -591,6 +596,18 @@ export class Renderer {
     }
   }
 
+  // v0.85.101: mini Skeleton sobre cada pozo de bajada EN EL MINIMAPA (y mapa superpuesto), para ver dónde están los pozos; aro del color de BOSS_COLORS si el piso siguiente es de jefe (cada 5); atenuado si está cerrado
+  pitMob(x, y, closed, level, size = 26) {
+    const { ctx } = this, m = miniOf("Skeleton", k => this.spr.frames(k)); if (!m || !this.spr.ready(m.key)) return;
+    const fr = this.spr.frame(m.key, m.f); if (!fr) return;
+    const next = (level || 0) + 1, boss = next % 5 === 0 ? BOSS_COLORS[Math.min(4, next / 5)] : null;
+    const [sx, sy, w, h] = fr, k = size / Math.max(w, h, 1);
+    ctx.save(); ctx.globalAlpha = closed ? 0.45 : 1;
+    if (boss) { ctx.strokeStyle = boss; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x, y, size * 0.5, size * 0.25, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.drawImage(this.spr.img[m.key], sx, sy, w, h, x - w * k / 2, y - h * k, w * k, h * k);
+    ctx.restore();
+  }
+
   // Demon Lv 50: al caminar deja una estela sutil de brasas pequeñas que se apagan en ~1,2 s (como la nieve del Frost). Coordenadas de mundo (this.cam = cámara);
   // en el bestiario, sin cámara, el suelo se desliza hacia atrás a velocidad de paso.
   emberTrail(e, x, y, casting) {
@@ -641,12 +658,13 @@ export class Renderer {
     if (e.kind === "player") {
       const ap = apparelOf(e, itemDef), bow = !!ap && ap.weapon >= 40 && ap.weapon < 60;        // arma 40..59 = arco (DrawObject_OnAttack)
       let { group, f, d } = playerSprite(e, time, bow);
+      if (s.world.pvp && e.id !== s.pid && !e.dead && f <= 4 && this.fx?.sp && (s.world.ffa || isFoe({ pkCount: s.me?.pkCount || s.me?.pk || 0, side: s.me?.side }, { pkCount: e.pkCount || e.pk || 0, side: e.side }))) this.fx.sp.put(ctx, 38, f, x, y, "add");   // #92 / DrawObjectFOE (Game.cpp:17850): _iGetFOE()<0 -> círculo rojo de cruzada = m_pEffectSpr[38], fotogramas 0..4 (PutTransSprite) bajo el enemigo; sustituye al aro inventado de v0.85.63
       const look = e.look || DEFAULT_LOOK, gender = e.gender || 1;
       if (group === 7 && !this.spr.has(bodyKey(gender, look, 7, d))) group = 6;
       const body = bodyKey(gender, look, group, d);
       const w = s.world, invis = sget(w, e, "invis"), ice = sget(w, e, "ice") || (e.chillUntil || 0) > w.time, zerk = sget(w, e, "berserk");
       if (invis && e.id !== s.pid && !(s.me?.side > 0 && e.side === s.me.side && !(s.me.pkCount || s.me.pk) && !(e.pk > 0))) return;   // Game.cpp 7933: solo uno mismo o _iGetFOE()==1 (mismo bando) ve al invisible, semitransparente; el resto no lo dibuja
-      this.auras(e, x, y, w, true);
+      if (!this.hideAura(e, s)) this.auras(e, x, y, w, true);
       if (invis) ctx.globalAlpha = 0.4;
       if (this.crowd < (this.crowdMax || 70) || e.id === s.pid) spr.shadow(ctx, body, f, x, y, remaster ? 0.5 : 0.75, ...this.shK);
       if (!this.pcache.draw(ctx, gender, look, group, d, f, x, y, ap, Math.min(2, Math.ceil(this.scale * 2) / 2))) { const T = performance.now(); drawPerson(ctx, spr, gender, look, group, d, f, x, y, ap); this.pcache.st.msDirect += performance.now() - T; this.pcache.st.nDirect = (this.pcache.st.nDirect || 0) + 1; }
@@ -655,7 +673,7 @@ export class Renderer {
         if (gp) { const v = DASH_BACK[e.dir] || [0, 0]; ctx.globalAlpha = 0.5; this.pcache.draw(ctx, gender, look, group, d, f, x + v[0] * gp, y + v[1] * gp, ap, Math.min(2, Math.ceil(this.scale * 2) / 2)); ctx.globalAlpha = 1; } }
       if (ice) spr.tinted(ctx, body, f, x, y, "#4a8cff", 0.5);
       if (zerk) spr.transRGB(ctx, body, f, x, y, 0, -5, -5);     // Game.cpp: PutTransSpriteRGB(…, 0, -5, -5)
-      this.auras(e, x, y, w, false);
+      if (!this.hideAura(e, s)) this.auras(e, x, y, w, false);
       if (remaster && flashAge < 140) spr.tinted(ctx, body, f, x, y, "#ff3020", 0.55 * (1 - flashAge / 140));
       // nombre de los demás jugadores y bocadillo de chat
       const other = s.pid !== undefined && e.id !== s.pid;
@@ -1036,8 +1054,8 @@ export class Renderer {
   // Puesto: género expuesto con sprites reales del original (cesta de flores, baguette, saco de semillas), sin dibujo propio
   stallChest(x, y) {
     const c = this.ctx;
-    c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(x, y + 2, 22, 7, 0, 0, Math.PI * 2); c.fill();
-    for (const [id, dx, dy] of [[98, -14, 0], [801, 14, 0], [521, 0, -3]]) { const d = itemDef(id); if (d) this.spr.put(c, groundKey(d), d.spriteFrame, x + dx, y + dy); }
+    c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(x, y + 2, 15, 5, 0, 0, Math.PI * 2); c.fill();
+    for (const [id, dx, dy] of [[98, -8, 1], [801, 8, 1], [521, 0, -3]]) { const d = itemDef(id); if (d) this.spr.put(c, groundKey(d), d.spriteFrame, x + dx, y + dy); }
   }
 
 
@@ -1447,6 +1465,7 @@ export class Renderer {
     ctx.fillRect(0, 0, this.viewW, this.viewH);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.overlayImg, ox, oy, this.grid.w * sc, this.grid.h * sc);
+    for (const gate of s.world.map?.portals || []) if (gate.target === "down") this.pitMob(ox + gate.x * sc + 2, oy + gate.y * sc + 6, gate.locked && (s.world.map.remainingEnemies ?? 1) > 0, s.world.map.level, 16);
     for (const e of s.world.ents.values()) {
       if (e.kind !== "npc" || e.dead) continue;
       if (e.comp || e.master) { if (e.master === s.me.id && !this.miniPet(e, ox + e.x * sc + 1, oy + e.y * sc + 1, 18)) { ctx.fillStyle = "#9fe07f"; ctx.fillRect(ox + e.x * sc, oy + e.y * sc, 3, 3); } continue; }
@@ -1511,6 +1530,7 @@ export class Renderer {
       ctx.fillStyle = e.special ? "#ffd34d" : "#e2584a";
       ctx.fillRect(x0 + e.x * sc - 1, y0 + e.y * sc - 1, 2, 2);
     }
+    if (s.world.pvp) for (const z of s.world.meta?.spawns || []) { if (!z.rect) continue; const n = { 1: 0, 2: 0 }; for (const e of s.world.ents.values()) if (e.kind === "player" && !e.dead && e.side > 0 && e.x >= z.rect[0] - 6 && e.x <= z.rect[2] + 6 && e.y >= z.rect[1] - 6 && e.y <= z.rect[3] + 6) n[e.side]++; const o = n[1] && !n[2] ? 1 : n[2] && !n[1] ? 2 : 0; if (!o) continue; ctx.fillStyle = o === 1 ? "rgba(224,80,58,.28)" : "rgba(74,143,224,.28)"; ctx.fillRect(x0 + z.rect[0] * sc, y0 + z.rect[1] * sc, (z.rect[2] - z.rect[0]) * sc, (z.rect[3] - z.rect[1]) * sc); }   // v0.85.63 (obs. 17): foso dominado = tinte de su ciudad
     // Mapas PvP (hay jugadores de la otra ciudad): círculos con el color de la ciudad (1 Aresden, 2 Elvine), algo más pequeños.
     const SIDE_COL = { 1: "#e0503a", 2: "#4a8fe0" };
     let pvp = false;
@@ -1522,6 +1542,7 @@ export class Renderer {
     }
     for (const gate of s.world.map?.portals || []) {
       ctx.fillStyle = "#f2e3a0"; ctx.fillRect(x0 + gate.x * sc - 2, y0 + gate.y * sc - 2, 4, 4);
+      if (gate.target === "down") this.pitMob(x0 + gate.x * sc, y0 + gate.y * sc + 5, gate.locked && (s.world.map.remainingEnemies ?? 1) > 0, s.world.map.level, 14);
     }
     if (s.world.teleports?.size) for (const g of this.teleportGroups(s.world.teleports)) { ctx.fillStyle = g.open ? "#5aaaff" : "#a06a5a"; ctx.fillRect(x0 + g.x * sc - 2, y0 + g.y * sc - 2, 4, 4); }   // salidas del mapa (ticket 6)
     ctx.fillStyle = pvp && SIDE_COL[s.me.side] || "#9fe07f";

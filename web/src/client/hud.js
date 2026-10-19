@@ -61,6 +61,11 @@ export class Hud {
 
   log(text, cls = "") {
     if (this.stamp?.() && /^(chat|shout|side|party|guild)$/.test(cls)) { const n = new Date(); text = "[" + String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0") + "] " + text; }      // /timestamp
+    if (!/^(chat|shout|side|party|guild|whisper)$/.test(cls)) {      // AddEventList (Game.cpp:5046): una línea igual a la última no se repite (solo mientras sigue a la vista, 5 s)
+      const now = performance.now();
+      if (text === this.lastEvt && now - this.lastEvtAt < 5000) return;
+      this.lastEvt = text; this.lastEvtAt = now;
+    }
     this.onLog?.(text, cls);
     const d = document.createElement("div");
     d.textContent = text;
@@ -161,6 +166,7 @@ export class Hud {
     if (!d) return;
     if (it.comp) this.act("use", uid);
     else if (d.type === ITYPE.EQUIP) this.act(this.isEquipped(me, uid) ? "unequip" : "equip", uid);
+    else if (d.type === ITYPE.USE_SKILL_DLG && d.spriteFrame === 55) { if (it.life === 0) this.log("You can't use this item because it is exhausted."); else this.onAlchemy?.(); }      // cuenco de alquimia: abre el SkillDlg (Game.cpp:27882)
     else if (d.type === ITYPE.EAT || d.type === ITYPE.USE_DEPLETE || d.effectType === 30) this.act("use", uid);          // 30 = bolsa de semillas (ITEMEFFECTTYPE_ITEMFARM, tipo 11): siembra en la casilla que se mira
   }
   // atajo F2/F3 de un objeto: equipar/quitar el equipo o usar el consumible

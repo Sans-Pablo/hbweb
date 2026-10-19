@@ -49,6 +49,9 @@ const OPS = {
   skills(w, p, c) { const n = num(c.n, 0, 100, 100); for (const k of Object.keys(SKILL_NAMES)) p.skills[k] = n; w.recalc(p); say(w, p, "All skills set to " + n); },
   // todos (jugadores y habitantes, en todos los mapas) vuelven al nivel 1 con sus atributos de partida, como al arrancar el servidor
   resetall(w, p) { const n = w.hooks?.resetAll?.(); say(w, p, n ? "Reset all: " + n + " character(s) back to level 1" : "Reset all not available here"); },
+  botssoft(w, p) { const n = w.hooks?.botsSoft?.(); say(w, p, n ? "Soft reset of " + n + " bots" : "Not available here"); },
+  botslv140(w, p) { const n = w.hooks?.bots140?.(); say(w, p, n ? "Bots at level 140 (" + n + ")" : "Not available here"); },
+  botsffa(w, p, c) { const on = w.hooks?.ffa?.(!!c.on); say(w, p, on == null ? "Not available here" : "Free-for-all: " + (on ? "ON" : "OFF")); },
   botsnew(w, p) { const n = w.hooks?.restartBots?.(); say(w, p, n ? "Bots restarted from scratch (" + n + " new residents)" : "Not available here"); },
   // ---- objetos
   give(w, p, c) {
@@ -133,11 +136,17 @@ const OPS = {
   },
 };
 
+// Foto de lo que una orden de administración puede cambiar (v0.85.81): va antes/después en el evento «dbgact» que graba el replay.
+const snap = p => ({ lvl: p.level, exp: p.exp, pool: p.pool, gold: p.gold, st: { ...p.stats }, hp: p.hp, mhp: p.maxHp, mp: Math.floor(p.mp ?? 0), mmp: p.maxMp, sp: p.sp, msp: p.maxSp, god: !!p.god, fm: !!p.fullMage, free: !!p.free });
+const diff = (a, b) => { const d = {}; for (const k of Object.keys(a)) { if (k === "st") { for (const s of Object.keys(a.st)) if (a.st[s] !== b.st[s]) d[s] = [a.st[s], b.st[s]]; } else if (a[k] !== b[k]) d[k] = [a[k], b[k]]; } return d; };
 export function run(w, p, cmd) {
   if (!DEBUG.enabled) return w.reject(p, cmd, "debug tools disabled");
   const f = OPS[cmd.op];
   if (!f) return w.reject(p, cmd, "unknown op");
+  const before = snap(p);
   f(w, p, cmd);
+  const after = snap(p);
+  w.emit({ t: "dbgact", id: p.id, op: cmd.op, cmd: { ...cmd, t: undefined }, before, after, change: diff(before, after) });       // el grabador (server/recorder.mjs) lo guarda: nada de dudas sobre saltos de vida/maná
   return true;
 }
 export const OP_NAMES = Object.keys(OPS);
